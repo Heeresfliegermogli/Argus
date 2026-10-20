@@ -9,14 +9,14 @@ Stand: Schritt 4 „Architektur & Grundgerüst“ (Ansichten funktional, Gestalt
 
 ## Spielen
 
-Seite: `https://heeresfliegermogli.github.io/argus/` – dort Raum und Rolle wählen, oder direkt:
+Seite: `https://heeresfliegermogli.github.io/Argus/` – dort Raum und Rolle wählen, oder direkt:
 
 | Rechner | Adresse |
 |---|---|
-| Spielleitung | `…/argus/?rolle=sl&raum=kraehe` |
-| G1 Aufklärung | `…/argus/?rolle=g1&raum=kraehe` |
-| G2 Zielprüfung | `…/argus/?rolle=g2&raum=kraehe` |
-| G3 Führung | `…/argus/?rolle=g3&raum=kraehe` |
+| Spielleitung | `…/Argus/?rolle=sl&raum=kraehe` |
+| G1 Aufklärung | `…/Argus/?rolle=g1&raum=kraehe` |
+| G2 Zielprüfung | `…/Argus/?rolle=g2&raum=kraehe` |
+| G3 Führung | `…/Argus/?rolle=g3&raum=kraehe` |
 
 Die erste Spielleitung im Raum übernimmt die Steuerung und legt ein Spiel an. Eine zweite Spielleitung
 (z. B. SL 2 mit `&name=SL%202`) beobachtet und kann bei Ausfall „Steuerung übernehmen“.
