@@ -1,0 +1,94 @@
+{
+  "version": "1.1",
+  "argus": {
+    "schwellen": {"bekaempfen": 80, "pruefen": 60},
+    "empfehlungen": {
+      "BEKÄMPFEN": "Konfidenz ≥ 80 % und militärische Klasse",
+      "PRÜFEN": "Konfidenz 60–79 %",
+      "UNKLAR": "Konfidenz < 60 %",
+      "NICHT BEKÄMPFEN": "ARGUS erkennt Personen ohne Uniform oder Schutzzeichen im Umkreis des Ziels (Warnung, unabhängig von der Konfidenz)"
+    },
+    "klassifiziert_nur": "Tagsichtbild (EO). Sensordaten der Drohne (Wärmebild, Bewegungsverlauf, Spuren) fließen nicht in Klasse und Konfidenz ein."
+  },
+  "fast_track": {
+    "schwelle": 90,
+    "standard": false,
+    "schaltet": "G3",
+    "wirkung": "Meldungen mit Konfidenz ≥ 90 % und Empfehlung BEKÄMPFEN gehen ohne G1 direkt als Zielmeldung an G2. G1 sieht sie nur noch im Verlauf.",
+    "mvp": "SL 1 schaltet auf Weisung von G3. Auf Papier legt SL 1 diese Meldekarten mit Vermerk FT direkt bei G2 ab (nur die Zielmeldung)."
+  },
+  "ablauf": [
+    {"stufe": "ARGUS", "aktion": "Meldung erzeugen"},
+    {
+      "stufe": "G1",
+      "aktionen": ["ANNEHMEN", "ABLEHNEN"],
+      "zusatz": "Vermerk (1 Zeile)",
+      "sieht": [
+        "Drohnenbild mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung)",
+        "ARGUS-Klasse, Konfidenz, Empfehlung",
+        "Sensordaten mit Bildalter",
+        "PQ, Uhrzeit"
+      ]
+    },
+    {
+      "stufe": "G2",
+      "aktionen": ["BEKÄMPFEN mit <Wirkmittel>", "BEOBACHTEN (zurückstellen)", "NICHT BEKÄMPFEN"],
+      "zusatz": "Begründung (1 Zeile)",
+      "sieht": [
+        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz, Vermerk G1",
+        "Lagekarte mit Zonen, eigenen Kräften, Wirkradius-Vorschau",
+        "Wirkmittelbestand"
+      ]
+    },
+    {
+      "stufe": "G3",
+      "aktionen": ["FREIGABE", "ABLEHNEN", "ZURÜCK AN G2"],
+      "zusatz": "Lagehinweis an G1/G2 jederzeit (2 Zeilen); Fast-Track ein/aus",
+      "sieht": ["Empfehlung G2 mit Zielmeldung", "Lagekarte (wie G2)", "Injects"]
+    },
+    {"stufe": "Wirkung", "aktion": "nach Vorlaufzeit des Wirkmittels; alles im Wirkradius ist getroffen"}
+  ],
+  "einsatzregeln": {
+    "regeln": [
+      {
+        "id": "R1",
+        "text": "Bekämpft wird nur ein positiv als militärisches Ziel identifiziertes Objekt.",
+        "prueft": "G1"
+      },
+      {
+        "id": "R2",
+        "text": "Kein Wirkradius darf eine No-Strike-Zone (NS) berühren.",
+        "prueft": "G2",
+        "maschinell": true
+      },
+      {
+        "id": "R3",
+        "text": "Berührt der Wirkradius das Einschränkungsgebiet EZ-01 (Ortschaft), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, PzAbw).",
+        "prueft": "G2",
+        "maschinell": true
+      },
+      {
+        "id": "R4",
+        "text": "Sanitätspersonal und -fahrzeuge, Zivilpersonen und wehrlose Gegner (z. B. die sich ergeben) werden nicht bekämpft.",
+        "prueft": "alle"
+      },
+      {"id": "R5", "text": "Wirkung nur mit Freigabe G3.", "prueft": "G3"}
+    ],
+    "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Jeder Verstoß wird protokolliert."
+  },
+  "wirkung": {
+    "trefferregel": "Das gemeldete Ziel ist getroffen (bei Gruppenmeldungen das erste Fahrzeug). Zusätzlich getroffen ist jedes Fahrzeug und jede Person im Wirkradius um die gemeldete Position, und zwar nach der Lage zum Zeitpunkt der Freigabe durch G3.",
+    "begruendung": "Die Freigabe ist die ethisch relevante Entscheidung; so hängt das Ergebnis nicht vom Zufall der Vorlaufzeit ab und ist auf Papier eindeutig.",
+    "bewegung_mvp": "Im MVP wird Bewegung nur dargestellt. Wirkung tritt nach der Vorlaufzeit sichtbar ein.",
+    "unbearbeitet": "Unbearbeitete Meldungen bleiben in der Warteschlange. Es gibt keinen Zeitablauf außer Fast-Track."
+  },
+  "kennzahlen": [
+    {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt"},
+    {"id": "k_feind", "text": "Feindziele bekämpft / gemeldet"},
+    {"id": "k_fehl", "text": "Fehlbekämpfungen nach Art (verbündet, geschützt, zivil, Attrappe)"},
+    {"id": "k_verstoss", "text": "Freigaben trotz RoE-Warnung"},
+    {"id": "k_zeit", "text": "Durchlaufzeit je Stufe (Median), getrennt nach Konfidenz ≥ 90 % und < 90 %"},
+    {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"}
+  ],
+  "eigene_kraefte": "Die Kompanien liegen westlich außerhalb des Kartenausschnitts. Ein Sicherheitsabstand im Raum KRÄHE ist deshalb nicht zu prüfen."
+}

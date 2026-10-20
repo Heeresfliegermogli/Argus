@@ -1,0 +1,39 @@
+{
+  "version": "1.1",
+  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Vorlaufzeit und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt.",
+  "wirkmittel": [
+    {
+      "id": "MRS",
+      "name": "Mörser 120 mm (Steilfeuer)",
+      "kurz": "Mrs",
+      "wirkradius_m": 80,
+      "vorlauf_s": 90,
+      "bestand": 12,
+      "einsatzbereich": null,
+      "effekt": "explosion_mittel"
+    },
+    {
+      "id": "LM",
+      "name": "Loitering Munition (Präzision)",
+      "kurz": "LM",
+      "wirkradius_m": 10,
+      "vorlauf_s": 120,
+      "bestand": 10,
+      "einsatzbereich": null,
+      "effekt": "explosion_klein"
+    },
+    {
+      "id": "PZA",
+      "name": "Panzerabwehr (eigene Kp, direktes Feuer)",
+      "kurz": "PzAbw",
+      "wirkradius_m": 5,
+      "vorlauf_s": 30,
+      "bestand": null,
+      "einsatzbereich": {
+        "x_max": 500,
+        "text": "nur Ziele bis zum Bach ELSTER einschließlich Brücke (x < 500 m), geschossen aus Stellungen westlich des Kartenrands"
+      },
+      "effekt": "treffer_direkt"
+    }
+  ]
+}

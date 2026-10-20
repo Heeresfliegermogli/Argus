@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-offline/
+e2e-bilder/
+tools/firebase-testserver/node_modules/
+__pycache__/
+*.log
+.DS_Store

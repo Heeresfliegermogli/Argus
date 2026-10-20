@@ -1,0 +1,11 @@
+{
+  "name": "argus-firebase-testserver",
+  "private": true,
+  "description": "Nachbildung der Firebase Realtime Database für Tests (firebase-server, WebSocket) mit den Regeln aus firebase/database.rules.json. Nur für Tests, nicht für das Spiel.",
+  "type": "commonjs",
+  "scripts": { "start": "node start.js" },
+  "dependencies": {
+    "firebase": "8.10.1",
+    "firebase-server": "1.1.0"
+  }
+}
