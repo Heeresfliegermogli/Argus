@@ -1099,8 +1099,8 @@
         "datei": "drohne/M10.webp",
         "beschreibung": "Militär-Lkw am Waldrand DACHS, daneben Munitionskisten. Ein Tarnnetz verdeckt den größten Teil des Lkw.",
         "sicht": [{"art": "tarnnetz", "anteil": 0.7, "lage": "Ziel", "seite": "hinten"}],
-        "zustand": {"Z-12": "kisten"},
-        "personen": [{"bei": "Z-12", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}]
+        "zustand": {"Z-29": "kisten"},
+        "personen": [{"bei": "Z-29", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}]
       },
       "loesung": {"G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Echtes Ziel unter Tarnnetz, ARGUS unsicher."
@@ -2123,7 +2123,9 @@
             "bild": {
               "datei": "drohne/V5-M1.webp",
               "beschreibung": "Zwei Militär-Lkw stehen am Feldweg Nordost, Soldaten laden Kisten ab.",
-              "sicht": [{"art": "dunst", "anteil": 0.2, "lage": "oben"}]
+              "sicht": [{"art": "dunst", "anteil": 0.2, "lage": "oben"}],
+              "zustand": {"V5-1": "kisten"},
+              "personen": [{"bei": "V5-1", "art": "soldat", "anzahl": 4, "versatz_m": [-5.8, 2.6]}]
             },
             "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
             "zweck": "Routine (Verstärkung)."

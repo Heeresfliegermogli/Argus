@@ -168,6 +168,28 @@ def bildstoerung(img, staerke, rng):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
+def bildstoerung_ebene(w, h, staerke, rng):
+    """Bildstörung als Ebene (RGBA) für das Live-Drohnenbild: dieselben hellen Streifen und das graue Band
+    wie bildstoerung() (gleiche Zufallsfolge), aber ohne Rauschen und Zeilenversatz – die macht die
+    Oberfläche (Wackeln, Körnung), weil sie sich bewegen sollen."""
+    rng.normal(0, 34 * staerke, (h, w, 3))                      # gleiche Folge wie bildstoerung()
+    P = np.zeros((h, w, 3), np.float32)                         # vormultiplizierte Farbe
+    a = np.zeros((h, w), np.float32)
+
+    def ueber(sl, farbe, al):
+        P[sl] = P[sl] * (1 - al) + farbe * al
+        a[sl] = a[sl] * (1 - al) + al
+    for _ in range(int(22 * staerke)):
+        y, hh = int(rng.integers(0, h - 6)), int(rng.integers(1, 5))
+        ueber(slice(y, y + hh), rng.uniform(120, 200), 0.65)
+    for _ in range(int(8 * staerke)):
+        rng.integers(0, h - 40), rng.integers(6, 36), rng.integers(-28, 28)
+    by = int(rng.integers(0, h - 60))
+    ueber(slice(by, by + 48), 128.0, 0.4)
+    rgb = P / np.maximum(a, 1e-6)[..., None]
+    return Image.fromarray(np.dstack([np.clip(rgb, 0, 255), np.clip(a, 0, 1) * 255]).astype(np.uint8), "RGBA")
+
+
 def bewegungsunschaerfe(a, laenge_px, winkel_grad):
     """Lineare Bewegungsunschärfe eines Bildausschnitts (float-Array h×w×3) entlang winkel
     (Grad, 0 = Osten, im Uhrzeigersinn): Mittel aus verschobenen Kopien."""

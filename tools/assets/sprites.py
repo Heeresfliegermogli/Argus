@@ -75,5 +75,24 @@ def fahrzeug_atlas(d):
         bilder[name + ".png"] = img
         info[name + ".png"] = {"luftfahrzeug": name, "px_pro_m": PX_PRO_M,
                                "groesse_m": [round(img.width / PX_PRO_M, 2), round(img.height / PX_PRO_M, 2)]}
+    # Schritt 5b: Zustände als eigene Sprites (z. B. Z-24 nach dem Treffer: Kette abgesprungen) …
+    for fid, zustaende in F.ZUSTAND_SPRITES.items():
+        f = d.fahrzeuge.get(fid)
+        if not f or not f.get("sprite"):
+            continue
+        for zu in zustaende:
+            name = F.zustand_sprite(f["sprite"], zu)
+            img = F.fahrzeug(fid, f["groesse_m"], PX_PRO_M, zustand=zu, seed=7)
+            bilder[name] = img
+            info[name] = {"typ": fid, "wrack": False, "zustand": zu, "px_pro_m": PX_PRO_M,
+                          "groesse_m": [round(img.width / PX_PRO_M, 2), round(img.height / PX_PRO_M, 2)]}
+    # … und Personen-Varianten für die Figuren der Live-Drohnenbilder (Farbe, Kind, weißes Tuch)
+    for v in F.person_varianten():
+        name = F.person_variante(v["art"], v["farbe"], v["klein"], v["tuch"])
+        img = F.person(v["art"], PX_PRO_M_PERSON, np.random.default_rng(9), klein=v["klein"], haende_hoch=v["haende_hoch"],
+                       tuch=v["tuch"], farbe=v["farbe"], haar=v["farbe"] + 1)
+        bilder[name] = img
+        info[name] = {"person": v["art"], "variante": True, "klein": v["klein"], "tuch": v["tuch"], "px_pro_m": PX_PRO_M_PERSON,
+                      "groesse_m": [round(img.width / PX_PRO_M_PERSON, 2), round(img.height / PX_PRO_M_PERSON, 2)]}
     atlas, lage = packe(bilder)
     return atlas, lage, info

@@ -7,6 +7,7 @@ import json
 import math
 import os
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 FD = "/usr/share/fonts/truetype/dejavu/"
@@ -42,12 +43,14 @@ def mit_rahmen(bild, eintrag, meldung):
             d.text((x + 5, ly + 2), lab, font=f, fill=(12, 14, 12))
     if a:
         d.rectangle([0, 0, img.width, 28], fill=(0, 0, 0, 130))
-        d.text((10, 5), f"ARGUS 3.2 │ UAV-2 MILAN │ {eintrag['uhr']} │ PQ {eintrag['pq']} │ {a['empfehlung']}", font=f, fill=(232, 232, 226))
+        uhr = eintrag["uhr"] or f"Einspielen + {eintrag['t_s']} s"
+        d.text((10, 5), f"ARGUS 3.2 │ UAV-2 MILAN │ {uhr} │ PQ {eintrag['pq']} │ {a['empfehlung']}", font=f, fill=(232, 232, 226))
     return img
 
 
 def kontaktbogen(assets, manifest, szenario, pfad, spalten=4, breite=512):
     meld = {m["id"]: m for m in szenario["meldungen"]}
+    meld.update({m["id"]: m for g in (szenario.get("verstaerkungen") or {}).get("gruppen", []) for m in g["meldungen"]})
     eintraege = list(manifest["drohne"].items()) + list(manifest.get("zielbilder", {}).items())
     zeilen = math.ceil(len(eintraege) / spalten)
     h = int(breite * 640 / 1024)
@@ -88,6 +91,54 @@ def spritebogen(assets, manifest, pfad):
         bogen.paste(t.convert("RGB"), (0, y))
         y += t.height + 20
     bogen.save(pfad)
+    return pfad
+
+
+def _schach(w, h, k=16):
+    yy, xx = np.mgrid[0:h, 0:w]
+    v = np.where(((xx // k) + (yy // k)) % 2 == 0, 150, 110).astype(np.uint8)
+    return Image.fromarray(np.dstack([v, v, v, np.full_like(v, 255)]), "RGBA")
+
+
+def ebenen_bogen(assets, manifest, d, pfad, ids, breite=400):
+    """Je Meldung: Standbild | Ebenen zusammengesetzt (Live zur Meldezeit) | Boden | Kronen + Störung auf Schachbrett."""
+    from live import Live
+    live = Live(d, assets, manifest)
+    h = int(breite * 640 / 1024)
+    f = schrift("DejaVuSans-Bold.ttf", 14)
+    bogen = Image.new("RGB", (4 * (breite + 6) + 6, len(ids) * (h + 26) + 6), (28, 30, 34))
+    dr = ImageDraw.Draw(bogen)
+    for n, mid in enumerate(ids):
+        e = manifest["drohne"][mid]
+        eb = e["ebenen"]
+        teile = [Image.open(os.path.join(assets, e["datei"])).convert("RGB"), live.bild(mid, e["t_s"]),
+                 Image.open(os.path.join(assets, eb["boden"])).convert("RGB")]
+        oben = _schach(1024, 640)
+        for k in ("kronen", "stoerung"):
+            if eb.get(k):
+                oben.alpha_composite(Image.open(os.path.join(assets, eb[k])).convert("RGBA"))
+        teile.append(oben.convert("RGB"))
+        y = 6 + n * (h + 26)
+        for i, t in enumerate(teile):
+            bogen.paste(t.resize((breite, h), Image.LANCZOS), (6 + i * (breite + 6), y + 20))
+        dr.text((6, y + 2), f"{mid} · Standbild | Ebenen zusammengesetzt (Meldezeit) | Boden | Kronen + Störung · "
+                            f"Ebenen {eb['bytes'] // 1024} KB, {len(eb['fahrzeuge'])} Fahrzeuge, {len(eb['figuren'])} Figuren", font=f, fill=(235, 235, 230))
+    bogen.save(pfad, quality=86)
+    return pfad
+
+
+def live_animation(assets, manifest, d, mid, pfad, dauer_s=24, schritt_s=1.0, breite=640):
+    """Animiertes WebP: Live-Drohnenbild ab der Meldezeit (Fahrzeuge fahren, Effekte laufen)."""
+    from live import Live
+    live = Live(d, assets, manifest)
+    t0 = manifest["drohne"][mid]["t_s"]
+    bilder = []
+    for k in range(int(dauer_s / schritt_s)):
+        t = t0 + k * schritt_s
+        img = live.bild(mid, t, effekte_zeit=k * schritt_s).resize((breite, int(breite * 640 / 1024)), Image.LANCZOS)
+        ImageDraw.Draw(img).text((8, 6), f"{mid}  t = {t:.0f} s", font=schrift("DejaVuSansMono-Bold.ttf", 14), fill=(242, 169, 0))
+        bilder.append(img)
+    bilder[0].save(pfad, "WEBP", save_all=True, append_images=bilder[1:], duration=int(schritt_s * 1000 / 4), loop=0, quality=70)
     return pfad
 
 

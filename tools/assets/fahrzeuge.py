@@ -509,12 +509,13 @@ PERSON_FARBEN = {
 HAARE = [(40, 30, 24), (90, 64, 40), (196, 170, 110), (30, 28, 26), (130, 124, 116)]
 
 
-def person(art, s, rng, klein=False, haende_hoch=False, tuch=False, hdg=0.0):
-    """Person in Draufsicht auf eigener Leinwand (RGBA), Mitte = Person. s = Pixel je Meter (ohne Überabtastung)."""
+def person(art, s, rng, klein=False, haende_hoch=False, tuch=False, hdg=0.0, farbe=None, haar=None):
+    """Person in Draufsicht auf eigener Leinwand (RGBA), Mitte = Person. s = Pixel je Meter (ohne Überabtastung).
+    farbe/haar: feste Indizes (Sprite-Varianten im Atlas); sonst Zufall aus rng (Drohnenbilder)."""
     k = 0.72 if klein else 1.0
     lw = Leinwand(0.95, 0.95, s * SS, rng=rng)
     farben = PERSON_FARBEN.get(art, PERSON_FARBEN["zivil"])
-    c = farben[rng.integers(len(farben))]
+    c = farben[rng.integers(len(farben)) if farbe is None else farbe % len(farben)]
     rot = hdg
     lw.dr.ellipse(lw.P([(-0.24 * k, -0.34 * k)], rot=0) + lw.P([(0.24 * k, 0.34 * k)], rot=0), fill=(20, 20, 18, 110))   # Kontur
     lw.ell(0.0, 0.0, 0.2 * k, 0.3 * k, c, rot=rot)                                  # Schultern
@@ -526,11 +527,38 @@ def person(art, s, rng, klein=False, haende_hoch=False, tuch=False, hdg=0.0):
         if art == "sanitaet":
             lw.ell(0.0, 0.0, 0.055, 0.055, (236, 236, 230), rot=rot)
     else:
-        lw.ell(0.0, 0.0, 0.12 * k, 0.12 * k, HAARE[rng.integers(len(HAARE))], rot=rot)
+        lw.ell(0.0, 0.0, 0.12 * k, 0.12 * k, HAARE[rng.integers(len(HAARE)) if haar is None else haar % len(HAARE)], rot=rot)
     if tuch:
         lw.kasten(-0.05, 0.3, 0.32, 0.85, (248, 248, 244), rot=rot)
         lw.linie([(0.0, 0.25), (0.0, 0.34)], (206, 176, 146), 0.06, rot=rot)
     return lw.ergebnis()
+
+
+def person_variante(art, farbe, klein=False, tuch=False):
+    """Name der Personen-Variante im Fahrzeug-Atlas (Figuren der Live-Drohnenbilder, Schritt 5b)."""
+    n = len(PERSON_FARBEN.get(art, PERSON_FARBEN["zivil"]))
+    teil = {"besatzung_ergibt_sich": "besatzung"}.get(art, art)
+    return f"person_{teil}{'_kind' if klein else ''}{'_tuch' if tuch else ''}_c{farbe % n}.png"
+
+
+def person_varianten():
+    """Alle Varianten: je Kleidungsfarbe, Zivilpersonen auch als Kind, Besatzung mit und ohne weißes Tuch."""
+    out = []
+    for art, farben in PERSON_FARBEN.items():
+        for c in range(len(farben)):
+            for klein in ((False, True) if art == "zivil" else (False,)):
+                for tuch in ((False, True) if art == "besatzung_ergibt_sich" else (False,)):
+                    out.append(dict(art=art, farbe=c, klein=klein, tuch=tuch, haende_hoch=art == "besatzung_ergibt_sich"))
+    return out
+
+
+# Zustände, die das Fahrzeug selbst verändern (eigene Sprites); „feuert“ ist ein Effekt (muendungsblitz),
+# „kisten“ liegt am Boden, „furt“ ist Gischt im Standbild.
+ZUSTAND_SPRITES = {"kpz_t72": ("luk_offen", "kette_ab"), "kpz_pt91": ("luk_offen", "kette_ab"), "spaehpz_brdm2": ("luk_offen",)}
+
+
+def zustand_sprite(sprite, zustand):
+    return sprite.replace(".png", f"_{zustand}.png")
 
 
 # ====================================================================== Ausdehnung und Sprites

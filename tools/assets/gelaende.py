@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from scipy.ndimage import binary_dilation, gaussian_filter, grey_dilation, zoom
 
-from daten import Daten, dist, dist_polylinie, drehe, im_polygon, linie_punkte, position, rechteck
+from daten import Daten, abstand_polygon, dist, dist_polylinie, drehe, im_polygon, linie_punkte, position, rechteck
 
 DACH = [(148, 68, 50), (132, 62, 48), (112, 72, 58), (72, 74, 78), (150, 152, 150)]
 AUTOS = [(176, 30, 30), (210, 212, 214), (40, 44, 52), (90, 96, 110), (200, 200, 196)]
@@ -162,14 +162,33 @@ class Gelaende:
         for z in d.szenario["ziele"]:
             l, b = d.groesse(z)
             self.haus_frei.append((z["pos"][0], z["pos"][1], max(l, b) / 2 + 8))
-            for pe in z.get("personen") or []:
-                for t in (pe.get("ab_s") or 0, 1500):
-                    q = position(pe, t) if pe.get("bewegung") else pe["pos"]
-                    self.frei.append((q[0], q[1], 5.0))
-                    self.haus_frei.append((q[0], q[1], 6.0))
+        # Seit Szenario 2.0 fahren die Fahrzeuge (Live-Lage): Kein Haus darf auf einer Route stehen, auch nicht
+        # bei den Verstärkungen, damit kein Fahrzeug durch ein Haus fährt oder darin hält (Schritt 5b).
+        # Geprüft wird gegen den Grundriss des Hauses: Abstand ≥ halbe Fahrzeugbreite + 0,8 m.
+        self.routen_frei = []      # (x, y, abstand) Punkte alle 2 m entlang aller Routen
+        for z in list(d.szenario["ziele"]) + list(d.v_ziele.values()):
+            r = (z.get("bewegung") or {}).get("route")
+            if not r:
+                continue
+            l, b = d.groesse(z)
+            for (_, xa, ya), (_, xb, yb) in zip(r, r[1:]):
+                n = max(1, int(math.hypot(xb - xa, yb - ya) / 2))
+                for k in range(n + 1):
+                    f = k / n
+                    self.routen_frei.append((xa + f * (xb - xa), ya + f * (yb - ya), b / 2 + 0.8))
         self.flaechen_frei = [f["punkte"] for f in d.flaechen("schule") + d.flaechen("hof")]
 
-    def haus_erlaubt(self, cx, cy, groesse):
+    def auf_route(self, cx, cy, groesse, grundriss):
+        """Steht der Grundriss auf oder zu nah an einer Route (auch der Verstärkungen)?"""
+        for x, y, ab in getattr(self, "routen_frei", []):
+            if abs(x - cx) < groesse and abs(y - cy) < groesse and \
+                    (im_polygon((x, y), grundriss) or abstand_polygon((x, y), grundriss) < ab):
+                return True
+        return False
+
+    def haus_erlaubt(self, cx, cy, groesse, grundriss=None):
+        if grundriss is not None and self.auf_route(cx, cy, groesse, grundriss):
+            return False
         for h in self.haeuser:
             if math.hypot(h[0] - cx, h[1] - cy) < 15:
                 return False
@@ -273,31 +292,45 @@ class Gelaende:
         beb = d.karte.get("bebauung") or {}
         ab = beb.get("abstand_m", [13, 21])
         schritt = beb.get("schritt_m", 17)
+        # Häuser entlang der Straße: je Seite der Reihe nach, Lücke 3–8 m (im Mittel wie schritt_m). Ein Haus
+        # steht nie auf einer Route (auch nicht der Verstärkungen); dann rückt es weiter (Schritt 5b).
         for abschnitt in beb.get("abschnitte", []):
             l = next(l for l in d.karte["linien"] if l["id"] == abschnitt["linie"])
             pts = np.array(linie_punkte(l))
-            proben, letzte = [], None
-            for k in range(1, len(pts) - 1):
-                x, y = pts[k]
-                if not (abschnitt.get("x_von", -1e9) <= x <= abschnitt.get("x_bis", 1e9)):
-                    continue
-                if not (abschnitt.get("y_von", -1e9) <= y <= abschnitt.get("y_bis", 1e9)):
-                    continue
-                tx, ty = pts[k + 1] - pts[k - 1]
-                Lg = math.hypot(tx, ty)
-                if letzte is None or math.hypot(x - letzte[0], y - letzte[1]) >= schritt:
-                    proben.append((x, y, tx / Lg, ty / Lg))
-                    letzte = (x, y)
-            for (x, y, tx, ty) in proben:
-                for seite in (-1, 1):
+            seg = np.hypot(*(pts[1:] - pts[:-1]).T)
+            kum = np.concatenate([[0], np.cumsum(seg)])
+
+            def punkt(sb):
+                k = int(np.clip(np.searchsorted(kum, sb) - 1, 0, len(seg) - 1))
+                f = (sb - kum[k]) / max(seg[k], 1e-6)
+                (x0, y0), (x1, y1) = pts[k], pts[k + 1]
+                return x0 + f * (x1 - x0), y0 + f * (y1 - y0), (x1 - x0) / max(seg[k], 1e-6), (y1 - y0) / max(seg[k], 1e-6)
+
+            def im_abschnitt(x, y):
+                return (abschnitt.get("x_von", -1e9) <= x <= abschnitt.get("x_bis", 1e9)
+                        and abschnitt.get("y_von", -1e9) <= y <= abschnitt.get("y_bis", 1e9))
+            for seite in (-1, 1):
+                sb = rng.uniform(0, schritt / 2)
+                while sb < kum[-1]:
+                    x, y, tx, ty = punkt(sb)
+                    if not im_abschnitt(x, y):
+                        sb += 2
+                        continue
                     off = rng.uniform(*ab)
-                    nxv, nyv = -ty * seite, tx * seite
-                    cx, cy = x + nxv * off, y + nyv * off
-                    ang = math.degrees(math.atan2(ty, tx)) + (90 if rng.random() < 0.25 else 0)
+                    quer = rng.random() < 0.25
                     w_, t_ = rng.uniform(10, 14), rng.uniform(8, 10)
                     dach = DACH[rng.choice(len(DACH), p=[0.35, 0.2, 0.2, 0.15, 0.1])]
-                    if self.haus_erlaubt(cx, cy, max(w_, t_)):
+                    entlang = t_ if quer else w_
+                    x, y, tx, ty = punkt(sb + entlang / 2)
+                    nxv, nyv = -ty * seite, tx * seite
+                    cx, cy = x + nxv * off, y + nyv * off
+                    ang = math.degrees(math.atan2(ty, tx)) + (90 if quer else 0)
+                    gr = drehe(rechteck(-w_ / 2, w_ / 2, -t_ / 2, t_ / 2), (cx, cy), ang)
+                    if im_abschnitt(x, y) and self.haus_erlaubt(cx, cy, max(w_, t_), gr):
                         self.haeuser.append((cx, cy, w_, t_, ang, dach))
+                        sb += entlang + rng.uniform(3, 8)
+                    else:
+                        sb += 2
 
         garten = self.maske(lambda dr: [dr.polygon(self.PTS(drehe(rechteck(-h[2] / 2 - 7, h[2] / 2 + 7, -h[3] / 2 - 8, h[3] / 2 + 12),
                                                                     (h[0], h[1]), h[4])), fill=255) for h in self.haeuser])

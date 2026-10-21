@@ -1,10 +1,10 @@
 // Zugriff auf die Assets (Karte, Drohnenbilder, Sprites, Effekte) über das Manifest.
 // Die Quelle (Netz oder in die Offline-Datei eingebettet) wählt der Build über den Alias @assetquelle.
 import { assetQuelle, assetUrl, holeJsonAsset, holeManifest } from "@assetquelle";
-import type { AssetManifest, Drohnenbild } from "./typen";
+import type { AssetManifest, DrohnenEbenen, Drohnenbild } from "./typen";
 
 export { assetUrl };
-export type { AssetManifest, Drohnenbild };
+export type { AssetManifest, DrohnenEbenen, Drohnenbild };
 
 let laden: Promise<AssetManifest> | null = null;
 
@@ -20,6 +20,14 @@ export function ladeManifest(): Promise<AssetManifest> {
 /** Drohnenbild einer Meldung (oder eines Zielbilds der Spielleitung). */
 export function drohnenbild(man: AssetManifest, id: string): Drohnenbild | null {
   return man.drohne[id] ?? man.zielbilder[id] ?? null;
+}
+
+/** Ebenen des Live-Drohnenbilds einer Meldung (oder Verstärkung) und alle Dateien, die dafür zu laden sind. */
+export function drohnenEbenen(man: AssetManifest, id: string): { ebenen: DrohnenEbenen; dateien: string[] } | null {
+  const e = drohnenbild(man, id)?.ebenen;
+  if (!e) return null;
+  const dateien = [e.boden, e.kronen, e.stoerung, man.drohne_ebenen.kamera].filter((d): d is string => !!d);
+  return { ebenen: e, dateien };
 }
 
 /** Spritesheet-Daten eines Atlas: JSON (PixiJS-Format) und Adresse des Bildes. */
