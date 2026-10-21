@@ -14,12 +14,16 @@ import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HIER, "..", ".."))
+# Repository: tools/assets + tools/referenz/argus_lib.py + public/daten
+# Projekt PolBil: claude/tools/assets + claude/tools/argus_lib.py + claude/daten
+sys.path.insert(0, os.path.join(REPO, "tools"))
 sys.path.insert(0, os.path.join(REPO, "tools", "referenz"))
 
 import argus_lib as L  # noqa: E402
 
-DATEN = os.path.join(REPO, "public", "daten")
-ASSETS = os.path.join(REPO, "public", "assets")
+_REPO_DATEN = os.path.join(REPO, "public", "daten")
+DATEN = _REPO_DATEN if os.path.isdir(_REPO_DATEN) else os.path.join(REPO, "daten")
+ASSETS = os.path.join(REPO, "public", "assets") if os.path.isdir(_REPO_DATEN) else os.path.join(REPO, "assets")
 
 
 class Daten:
