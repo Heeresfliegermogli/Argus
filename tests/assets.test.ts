@@ -88,7 +88,8 @@ describe("Assets Raum KRÄHE", () => {
       const amZiel = m.bild.sicht.some((sv) => sv.lage === "Ziel" && sv.art !== "unschaerfe") || m.bild.sicht.some((sv) => sv.ziel_anteil);
       if (!amZiel) for (const z of b.ziele) expect(z.verdeckt, `${m.id} ${z.id} frei`).toBeLessThan(0.05);
     }
-    expect(gestoert).toBe(19);
+    expect(gestoert).toBe(inh.szenario.meldungen.filter((m) => m.bild.sicht.length).length);
+    expect(gestoert).toBeGreaterThanOrEqual(15);                                         // viel visueller Stress (2.0: 16 von 27)
   });
 
   it("Schlüsselfälle bleiben erkennbar", async () => {

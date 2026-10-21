@@ -1,13 +1,14 @@
 {
-  "version": "1.1",
-  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Vorlaufzeit und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt.",
+  "version": "2.0",
+  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung).",
   "wirkmittel": [
     {
       "id": "MRS",
       "name": "Mörser 120 mm (Steilfeuer)",
       "kurz": "Mrs",
       "wirkradius_m": 80,
-      "vorlauf_s": 90,
+      "vorlauf_s": 35,
+      "vorlauf_text": "ca. 35 s (Feuerbereitschaft und Flug)",
       "bestand": 12,
       "einsatzbereich": null,
       "effekt": "explosion_mittel"
@@ -17,8 +18,10 @@
       "name": "Loitering Munition (Präzision)",
       "kurz": "LM",
       "wirkradius_m": 10,
-      "vorlauf_s": 120,
-      "bestand": 10,
+      "vorlauf_s": 40,
+      "vorlauf_text": "Start 5 s, dann Flug mit ca. 30 m/s ab Startpunkt westlich des Kartenrands: 30–50 s je nach Entfernung",
+      "flug": {"start": [-300, 380], "geschwindigkeit_mps": 30, "vorbereitung_s": 5},
+      "bestand": 11,
       "einsatzbereich": null,
       "effekt": "explosion_klein"
     },
@@ -27,7 +30,8 @@
       "name": "Panzerabwehr (eigene Kp, direktes Feuer)",
       "kurz": "PzAbw",
       "wirkradius_m": 5,
-      "vorlauf_s": 30,
+      "vorlauf_s": 10,
+      "vorlauf_text": "ca. 10 s",
       "bestand": null,
       "einsatzbereich": {
         "x_max": 500,

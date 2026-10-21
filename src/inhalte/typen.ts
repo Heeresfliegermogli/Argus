@@ -36,6 +36,9 @@ export interface GroundTruth {
   legitim: boolean;
   hinweis?: string;
   bezug?: string;
+  /** Seit Szenario 2.0: Zustandswechsel im Gefecht. gt gilt ab ab_s, davor vorher (z. B. Z-24 erst ab 10:19:30 außer Gefecht). */
+  ab_s?: number;
+  vorher?: Omit<GroundTruth, "ab_s" | "vorher">;
 }
 
 export interface Ziel {

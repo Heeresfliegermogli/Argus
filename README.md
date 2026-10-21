@@ -10,6 +10,12 @@ taktische Zeichen mit milsymbol), großem Drohnenbild mit Lupe, Wirkradius-Vorsc
 Kontrollkarte und Einweisungskarten. Bewegung und Animationen folgen in Schritt 7. Überblick:
 [`docs/UI.md`](docs/UI.md).
 
+Inhalte: Szenario KRÄHE-01 **v2.0** (Schritt 2b, Konzept v2): russischer Angriff in fünf Phasen,
+27 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
+neue Wirkmittel-Spielwerte. Die Engine rechnet Treffer noch nach der Lage bei der Freigabe; die
+Trefferregel nach der Lage beim Einschlag, Bewegung, Hintergrundgefecht und Verstärkungen setzt
+Schritt 6b/7 um (Referenz: `tools/referenz/argus_lib.py`, Funktionen `wirkung`, `einschlag`, `gt_bei`).
+
 ## Spielen
 
 Seite: `https://heeresfliegermogli.github.io/Argus/` – dort Raum und Rolle wählen, oder direkt:

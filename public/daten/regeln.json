@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "2.0",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -14,8 +14,8 @@
     "schwelle": 90,
     "standard": false,
     "schaltet": "G3",
-    "wirkung": "Meldungen mit Konfidenz ≥ 90 % und Empfehlung BEKÄMPFEN gehen ohne G1 direkt als Zielmeldung an G2. G1 sieht sie nur noch im Verlauf.",
-    "mvp": "SL 1 schaltet auf Weisung von G3. Auf Papier legt SL 1 diese Meldekarten mit Vermerk FT direkt bei G2 ab (nur die Zielmeldung)."
+    "wirkung": "Meldungen mit Konfidenz ≥ 90 % und Empfehlung BEKÄMPFEN gehen ohne G1 direkt als Zielmeldung an G2. G1 prüft sie nicht.",
+    "mvp": "G3 schaltet Fast-Track in der eigenen Ansicht (je Team). Auf Papier legt SL 1 diese Meldekarten mit Vermerk FT direkt bei G2 ab (nur die Zielmeldung)."
   },
   "ablauf": [
     {"stufe": "ARGUS", "aktion": "Meldung erzeugen"},
@@ -36,7 +36,7 @@
       "zusatz": "Begründung (1 Zeile)",
       "sieht": [
         "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz, Vermerk G1",
-        "Lagekarte mit Zonen, eigenen Kräften, Wirkradius-Vorschau",
+        "Lagekarte mit Zonen, Spuren der gemeldeten Ziele, Wirkradius-Vorschau am vorausberechneten Einschlagort",
         "Wirkmittelbestand"
       ]
     },
@@ -44,9 +44,16 @@
       "stufe": "G3",
       "aktionen": ["FREIGABE", "ABLEHNEN", "ZURÜCK AN G2"],
       "zusatz": "Lagehinweis an G1/G2 jederzeit (2 Zeilen); Fast-Track ein/aus",
-      "sieht": ["Empfehlung G2 mit Zielmeldung", "Lagekarte (wie G2)", "Injects"]
+      "sieht": [
+        "Empfehlung G2 mit Zielmeldung",
+        "Lagekarte (wie G2) mit Warnungen zum Einschlag",
+        "Lagemeldungen (Injects)"
+      ]
     },
-    {"stufe": "Wirkung", "aktion": "nach Vorlaufzeit des Wirkmittels; alles im Wirkradius ist getroffen"}
+    {
+      "stufe": "Wirkung",
+      "aktion": "schlägt nach der Flugzeit am Ort des Ziels ein; getroffen ist alles im Wirkradius nach der Lage beim Einschlag"
+    }
   ],
   "einsatzregeln": {
     "regeln": [
@@ -74,21 +81,24 @@
       },
       {"id": "R5", "text": "Wirkung nur mit Freigabe G3.", "prueft": "G3"}
     ],
-    "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Jeder Verstoß wird protokolliert."
+    "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Die Warnung gilt für den vorausberechneten Einschlagort. Jeder Verstoß wird protokolliert."
   },
   "wirkung": {
-    "trefferregel": "Das gemeldete Ziel ist getroffen (bei Gruppenmeldungen das erste Fahrzeug). Zusätzlich getroffen ist jedes Fahrzeug und jede Person im Wirkradius um die gemeldete Position, und zwar nach der Lage zum Zeitpunkt der Freigabe durch G3.",
-    "begruendung": "Die Freigabe ist die ethisch relevante Entscheidung; so hängt das Ergebnis nicht vom Zufall der Vorlaufzeit ab und ist auf Papier eindeutig.",
-    "bewegung_mvp": "Im MVP wird Bewegung nur dargestellt. Wirkung tritt nach der Vorlaufzeit sichtbar ein.",
-    "unbearbeitet": "Unbearbeitete Meldungen bleiben in der Warteschlange. Es gibt keinen Zeitablauf außer Fast-Track."
+    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (bei Zugmeldungen dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, PzAbw ca. 10 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
+    "begruendung": "Fahrzeuge bewegen sich während der Flugzeit weiter. Wer freigibt, verantwortet auch, wo die Wirkung tatsächlich einschlägt: Ein Ziel kann während des Anflugs an der Schule vorbeifahren oder Zivilpersonen können in den Wirkradius kommen.",
+    "vorhersage": "Die Warnungen bei G2 und G3 rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
+    "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
+    "hintergrund": "Die eigenen Kompanien und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
+    "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie."
   },
   "kennzahlen": [
-    {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt"},
+    {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},
     {"id": "k_feind", "text": "Feindziele bekämpft / gemeldet"},
-    {"id": "k_fehl", "text": "Fehlbekämpfungen nach Art (verbündet, geschützt, zivil, Attrappe)"},
-    {"id": "k_verstoss", "text": "Freigaben trotz RoE-Warnung"},
+    {"id": "k_fehl", "text": "Fehlbekämpfungen nach Art (verbündet, geschützt, zivil, Attrappe, außer Gefecht)"},
+    {"id": "k_verstoss", "text": "Freigaben trotz RoE-Warnung (am vorausberechneten Einschlagort)"},
     {"id": "k_zeit", "text": "Durchlaufzeit je Stufe (Median), getrennt nach Konfidenz ≥ 90 % und < 90 %"},
-    {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"}
+    {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"},
+    {"id": "k_vergleich", "text": "Teamvergleich je Schlüsselfall: richtig / falsch / nicht erreicht"}
   ],
   "eigene_kraefte": "Die Kompanien liegen westlich außerhalb des Kartenausschnitts. Ein Sicherheitsabstand im Raum KRÄHE ist deshalb nicht zu prüfen."
 }

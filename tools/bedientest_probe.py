@@ -8,6 +8,8 @@ Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
 """
 import argparse
 import sys
+import json
+import os
 import time
 
 from playwright.sync_api import sync_playwright
@@ -28,7 +30,7 @@ def main():
             f()
             ergebnis.append((name, True, time.time() - t0, ""))
         except Exception as e:  # noqa: BLE001 – jede Ausnahme ist ein nicht gelöster Schritt
-            ergebnis.append((name, False, time.time() - t0, str(e).splitlines()[0][:120]))
+            ergebnis.append((name, False, time.time() - t0, (str(e).splitlines() or [type(e).__name__])[0][:120]))
 
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
@@ -101,7 +103,11 @@ def main():
             warte(lambda: g2.locator(".eintrag", has_text="zurückgestellt").count() == 1, 10, "zurückgestellt sichtbar")
 
         def g2_4():
-            assert g2.locator("label[data-wm=LM]").get_by_text("übrig").inner_text().strip().startswith("10")
+            kat = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "daten", "katalog_wirkmittel.json"),
+                                 encoding="utf-8"))
+            lm = next(w["bestand"] for w in kat["wirkmittel"] if w["id"] == "LM")      # vor der Freigabe noch voller Bestand
+            text = g2.locator("label[data-wm=LM]").get_by_text("übrig").inner_text().strip()
+            assert text.startswith(str(lm)), text
 
         for n, f in [("G2-1 bekämpfen ohne Warnung", g2_1), ("G2-2 Warnung R3", g2_2), ("G2-3 zurückstellen", g2_3),
                      ("G2-4 Bestand LM", g2_4)]:

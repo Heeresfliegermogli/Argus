@@ -12,7 +12,7 @@
 // die Lagezeit fortlaufend setzt.
 import type { GtKategorie, Inhalte, Meldung, Punkt } from "../inhalte/typen";
 import { zeichenArgus, zeichenZiel } from "../karte/zeichen";
-import { feinlage, position, vorhanden } from "./geometrie";
+import { feinlage, gtBei, position, vorhanden } from "./geometrie";
 import { gemeldetePosition } from "./regeln";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
@@ -229,21 +229,22 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
     const pos = position(ziel, zerstoert ? tZerst : tLage);
     const f = inh.fahrzeuge[ziel.typ];
     const meld = gemeldetIn.get(ziel.id) ?? [];
+    const gt = gtBei(ziel, zerstoert ? tZerst : tLage);
     objekte.push({
       id: ziel.id,
       pos,
-      sidc: zeichenZiel(inh, ziel, zerstoert),
+      sidc: zeichenZiel(inh, { ...ziel, gt }, zerstoert),
       text: ziel.id,
       titel: `${ziel.id} · ${f?.name ?? ziel.typ}`,
       zeilen: [
-        `${GT_NAME[ziel.gt.kategorie]}: ${ziel.gt.text}`,
+        `${GT_NAME[gt.kategorie]}: ${gt.text}`,
         ziel.ungemeldet ? "von ARGUS nicht gemeldet" : `gemeldet in ${meld.join(", ")}`,
         ...(zerstoert ? [`zerstört ${uhrzeit(start, tZerst)}`] : []),
       ],
       zustand: zerstoert ? "bekaempft" : "offen",
-      kategorie: ziel.gt.kategorie,
+      kategorie: gt.kategorie,
       ungemeldet: !!ziel.ungemeldet,
-      schutz: ziel.gt.kategorie === "geschuetzt" ? (f?.symbol?.art === "sanitaet" ? "rotes_kreuz" : "geschuetzt") : undefined,
+      schutz: gt.kategorie === "geschuetzt" ? (f?.symbol?.art === "sanitaet" ? "rotes_kreuz" : "geschuetzt") : undefined,
       sprite: f?.sprite ? { name: (zerstoert ? f.sprite_wrack : f.sprite) ?? f.sprite, hdg: ziel.hdg } : undefined,
     });
     (ziel.personen ?? []).forEach((p, i) => {

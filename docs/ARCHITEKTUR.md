@@ -78,7 +78,7 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 | `g1_entscheid` | meldung, entscheid (annehmen/ablehnen), vermerk? | G1 |
 | `g2_empfehlung` | meldung, empfehlung (bekaempfen/beobachten/nicht_bekaempfen), wirkmittel?, begruendung?, warnungen? | G2; Warnungen (R2, R3, Einsatzbereich) berechnet der Host |
 | `g3_entscheid` | meldung, entscheid (freigabe/ablehnen/zurueck), bemerkung?, wirkmittel?, warnungen? | G3; bei Freigabe Warnungen zur Freigabezeit |
-| `wirkung` | meldung, wirkmittel, pos, t_freigabe, getroffen[] | Zeitplan nach Vorlaufzeit; Treffer nach der Lage zur Freigabe |
+| `wirkung` | meldung, wirkmittel, pos, t_freigabe, getroffen[] | Zeitplan nach Vorlaufzeit; Treffer nach der Lage zur Freigabe (Szenario 2.0 beschreibt die Lage beim Einschlag; Umsetzung in Schritt 6b/7) |
 | `inject` | inject, manuell? | Zeitplan (fest und bedingt) oder SL |
 | `inject_quittiert` | inject | G3 („gelesen“) |
 | `lagehinweis` | text, an [g1, g2] | G3 |

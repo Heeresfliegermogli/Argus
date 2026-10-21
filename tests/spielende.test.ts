@@ -57,9 +57,9 @@ describe("Spielende", () => {
 describe("Bedingte Injects für die Spielleitung", () => {
   const basis: [Ereignis["typ"], unknown, number][] = [
     ["spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "1.3", titel: "x" }, 0],
-    ["meldung", { meldung: "M19" }, 1215],
-    ["g1_entscheid", { meldung: "M19", entscheid: "annehmen" }, 1230],
-    ["g2_empfehlung", { meldung: "M19", empfehlung: "bekaempfen", wirkmittel: "PZA" }, 1240],
+    ["meldung", { meldung: "M20" }, 1215],
+    ["g1_entscheid", { meldung: "M20", entscheid: "annehmen" }, 1230],
+    ["g2_empfehlung", { meldung: "M20", empfehlung: "bekaempfen", wirkmittel: "PZA" }, 1240],
   ];
 
   it("ohne Freigabe: I-08a wartet, I-08b und E-01 kommen zur festen Zeit, I-09 wartet", async () => {
@@ -74,7 +74,7 @@ describe("Bedingte Injects für die Spielleitung", () => {
 
   it("Freigabe auf die PT-91: I-08a kommt 60 s später, I-08b und E-01 entfallen", async () => {
     const inh = await inhalte();
-    const z = zustandAus(ereignisse([...basis, ["g3_entscheid", { meldung: "M19", entscheid: "freigabe", wirkmittel: "PZA" }, 1250]]), inh);
+    const z = zustandAus(ereignisse([...basis, ["g3_entscheid", { meldung: "M20", entscheid: "freigabe", wirkmittel: "PZA" }, 1250]]), inh);
     const st = Object.fromEntries(bedingtStand(inh, z, 1260).map((b) => [b.id, b]));
     expect(st["I-08a"].status).toBe("erfuellt");
     expect(st["I-08a"].t).toBe(1310);
@@ -86,11 +86,11 @@ describe("Bedingte Injects für die Spielleitung", () => {
     const inh = await inhalte();
     const z = zustandAus(ereignisse([
       ["spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "1.3", titel: "x" }, 0],
-      ["meldung", { meldung: "M21" }, 1290],
-      ["g1_entscheid", { meldung: "M21", entscheid: "annehmen" }, 1295],
-      ["g2_empfehlung", { meldung: "M21", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1300],
-      ["g3_entscheid", { meldung: "M21", entscheid: "freigabe", wirkmittel: "LM" }, 1305],
+      ["meldung", { meldung: "M23" }, 1320],
+      ["g1_entscheid", { meldung: "M23", entscheid: "annehmen" }, 1325],
+      ["g2_empfehlung", { meldung: "M23", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1330],
+      ["g3_entscheid", { meldung: "M23", entscheid: "freigabe", wirkmittel: "LM" }, 1335],
     ]), inh);
-    expect(bedingtStand(inh, z, 1310).find((b) => b.id === "I-09")!.status).toBe("entfaellt");
+    expect(bedingtStand(inh, z, 1340).find((b) => b.id === "I-09")!.status).toBe("entfaellt");
   });
 });

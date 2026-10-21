@@ -18,8 +18,8 @@ describe("Inhalte", () => {
     const inh = await inhalte();
     const b = pruefeInhalte(inh);
     expect(b.fehler).toEqual([]);
-    expect(inh.szenario.meldungen).toHaveLength(25);
-    expect(Object.keys(inh.ziele)).toHaveLength(28);
+    expect(inh.szenario.meldungen).toHaveLength(27);
+    expect(Object.keys(inh.ziele)).toHaveLength(36);
   });
 });
 
@@ -39,7 +39,7 @@ describe("Spielstand aus dem Protokoll", () => {
     const z = zustandAus(p, inh);
     expect(z.meldungen.M01.stufe).toBe("erledigt");
     expect(z.meldungen.M01.ergebnis).toBe("bekaempft");
-    expect(z.bestand.LM).toBe(9);
+    expect(z.bestand.LM).toBe(10);
     expect(z.zerstoert["Z-01"]).toBe(220);
     expect(z.aktionen).toEqual({ a1: 4, a2: 5, a3: 6 });
     expect(z.meldungen.M01.verlauf).toEqual([3, 4, 5, 6, 7]);
@@ -80,7 +80,7 @@ describe("Spielstand aus dem Protokoll", () => {
 });
 
 describe("Zeitplan und Aktionen", () => {
-  it("Fast-Track schickt M19 (96 %) an G1 vorbei, M18 (63 %) nicht", async () => {
+  it("Fast-Track schickt M20 (96 %) an G1 vorbei, M19 (89 %) nicht", async () => {
     const inh = await inhalte();
     seq = 0;
     const z = zustandAus([
@@ -88,10 +88,10 @@ describe("Zeitplan und Aktionen", () => {
       e("fast_track", { an: true }, 870),
     ], inh);
     const f = faellig(inh, z, 1216).filter((x) => x.typ === "meldung");
-    const m18 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M18")!;
     const m19 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M19")!;
-    expect(m18.daten).toEqual({ meldung: "M18" });
-    expect(m19.daten).toEqual({ meldung: "M19", fast_track: true });
+    const m20 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M20")!;
+    expect(m19.daten).toEqual({ meldung: "M19" });
+    expect(m20.daten).toEqual({ meldung: "M20", fast_track: true });
   });
 
   it("I-08b kommt nur ohne Freigabe auf die PT-91, I-08a nach Freigabe +60 s", async () => {
@@ -99,16 +99,16 @@ describe("Zeitplan und Aktionen", () => {
     seq = 0;
     const basis = [
       e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
-      e("meldung", { meldung: "M19" }, 1215),
-      e("g1_entscheid", { meldung: "M19", entscheid: "annehmen" }, 1230),
-      e("g2_empfehlung", { meldung: "M19", empfehlung: "bekaempfen", wirkmittel: "PZA" }, 1240),
+      e("meldung", { meldung: "M20" }, 1215),
+      e("g1_entscheid", { meldung: "M20", entscheid: "annehmen" }, 1230),
+      e("g2_empfehlung", { meldung: "M20", empfehlung: "bekaempfen", wirkmittel: "PZA" }, 1240),
     ];
     const ohne = zustandAus(basis, inh);
     const injectsOhne = faellig(inh, ohne, 1490).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
     expect(injectsOhne).toContain("I-08b");
     expect(injectsOhne).not.toContain("I-08a");
 
-    const mit = zustandAus([...basis, e("g3_entscheid", { meldung: "M19", entscheid: "freigabe", wirkmittel: "PZA" }, 1250)], inh);
+    const mit = zustandAus([...basis, e("g3_entscheid", { meldung: "M20", entscheid: "freigabe", wirkmittel: "PZA" }, 1250)], inh);
     const injectsMit = faellig(inh, mit, 1311).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
     expect(injectsMit).toContain("I-08a");
     expect(faellig(inh, mit, 1490).some((x) => x.typ === "inject" && x.daten.inject === "I-08b")).toBe(false);
@@ -116,9 +116,9 @@ describe("Zeitplan und Aktionen", () => {
 
   it("I-09 nur, wenn die Freigabe auf den Mörser im Hof RABE Zivilpersonen trifft", async () => {
     const inh = await inhalte();
-    // M16 um 10:18: Zivilpersonen 10 m neben dem Mörser, auch LM trifft sie. M21 um 10:21:30: sie sind
-    // ca. 70 m weg; LM trifft sie nicht mehr, der Mörser (80 m) schon.
-    const faelle = [["M16", 1095, "LM", true], ["M16", 1095, "MRS", true], ["M21", 1290, "LM", false], ["M21", 1290, "MRS", true]] as const;
+    // M18 um 10:18:15: Zivilpersonen keine 10 m neben dem Mörser, auch LM trifft sie. Ab 10:21:40 fliehen sie nach
+    // Westen; Freigabe der Folgemeldung M23 um 10:22:00: gut 50 m weg, LM trifft sie nicht mehr, der Mörser (80 m) schon.
+    const faelle = [["M18", 1095, "LM", true], ["M18", 1095, "MRS", true], ["M23", 1305, "LM", false], ["M23", 1305, "MRS", true]] as const;
     for (const [mid, t, wm, erwartet] of faelle) {
       seq = 0;
       const z = zustandAus([

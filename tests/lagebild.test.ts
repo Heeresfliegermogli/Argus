@@ -56,16 +56,16 @@ describe("Lagebild G2/G3", () => {
       ["meldung", { meldung: "M03" }, 240],
       ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 70],
       ["g1_entscheid", { meldung: "M02", entscheid: "ablehnen" }, 160],
-      ["meldung", { meldung: "M19", fast_track: true }, 1215],
+      ["meldung", { meldung: "M20", fast_track: true }, 1215],
     ]), inh);
     const lb = lagebildZielmeldungen(inh, z, "g2");
-    expect(lb.objekte.map((o) => o.id).sort()).toEqual(["Z-01", "Z-15–17"]);
+    expect(lb.objekte.map((o) => o.id).sort()).toEqual(["Z-01–02", "Z-15–17"]);
     expect(lb.personen).toEqual([]);
     const pt = lb.objekte.find((o) => o.id === "Z-15–17")!;
     expect(pt.sidc).toBe("SHGPEVAT-------"); // ARGUS meint T-72 – G2 sieht keinen Verbündeten
     expect(pt.menge).toBe(3);
     expect(pt.zustand).toBe("offen");
-    expect(pt.pos.map(Math.round)).toEqual([476, 612]);
+    expect(pt.pos.map(Math.round)).toEqual([477, 617]);
     expect(JSON.stringify(lb)).not.toMatch(/verb[uü]ndet|PT-91|Twardy/);
     // G3 sieht noch nichts: keine Empfehlung von G2
     expect(lagebildZielmeldungen(inh, z, "g3").objekte).toEqual([]);
@@ -75,24 +75,24 @@ describe("Lagebild G2/G3", () => {
     const inh = await inhalte();
     const z = zustandAus(protokoll([
       ...START,
-      ["meldung", { meldung: "M16" }, 1095],
-      ["g1_entscheid", { meldung: "M16", entscheid: "annehmen" }, 1100],
-      ["g2_empfehlung", { meldung: "M16", empfehlung: "beobachten" }, 1110],
-      ["meldung", { meldung: "M21" }, 1290],
-      ["g1_entscheid", { meldung: "M21", entscheid: "annehmen" }, 1295],
-      ["g2_empfehlung", { meldung: "M21", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1300],
-      ["g3_entscheid", { meldung: "M21", entscheid: "freigabe", wirkmittel: "LM" }, 1310],
-      ["wirkung", { meldung: "M21", wirkmittel: "LM", pos: [768, 305], t_freigabe: 1310, getroffen: [{ ziel: "Z-19", was: "fahrzeug", kategorie: "feind" }] }, 1430],
+      ["meldung", { meldung: "M18" }, 1095],
+      ["g1_entscheid", { meldung: "M18", entscheid: "annehmen" }, 1100],
+      ["g2_empfehlung", { meldung: "M18", empfehlung: "beobachten" }, 1110],
+      ["meldung", { meldung: "M23" }, 1320],
+      ["g1_entscheid", { meldung: "M23", entscheid: "annehmen" }, 1325],
+      ["g2_empfehlung", { meldung: "M23", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1330],
+      ["g3_entscheid", { meldung: "M23", entscheid: "freigabe", wirkmittel: "LM" }, 1340],
+      ["wirkung", { meldung: "M23", wirkmittel: "LM", pos: [768, 305], t_freigabe: 1340, getroffen: [{ ziel: "Z-19", was: "fahrzeug", kategorie: "feind" }] }, 1380],
     ]), inh);
     const g2 = lagebildZielmeldungen(inh, z, "g2");
     expect(g2.objekte).toHaveLength(1);
-    expect(g2.objekte[0].text).toBe("M16/M21");
+    expect(g2.objekte[0].text).toBe("M18/M23");
     expect(g2.objekte[0].zustand).toBe("bekaempft");
     expect(g2.objekte[0].sidc[3]).toBe("X");
-    expect(g2.wirkungen.map((w) => w.id)).toEqual(["W-M21"]);
+    expect(g2.wirkungen.map((w) => w.id)).toEqual(["W-M23"]);
     expect(g2.wirkungen[0].zeilen.join(" ")).not.toMatch(/getroffen/); // kein Ergebnis für G2
     const g3 = lagebildZielmeldungen(inh, z, "g3");
-    expect(g3.objekte.map((o) => o.meldungen)).toEqual([["M21"]]); // M16 kam nie bei G3 an
+    expect(g3.objekte.map((o) => o.meldungen)).toEqual([["M23"]]); // M18 kam nie bei G3 an
   });
 });
 
@@ -116,11 +116,11 @@ describe("Kontrollkarte", () => {
     const inh = await inhalte();
     const z = zustandAus(protokoll([
       ...START,
-      ["meldung", { meldung: "M16" }, 1095],
-      ["g1_entscheid", { meldung: "M16", entscheid: "annehmen" }, 1100],
-      ["g2_empfehlung", { meldung: "M16", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1110],
-      ["g3_entscheid", { meldung: "M16", entscheid: "freigabe", wirkmittel: "LM" }, 1120],
-      ["wirkung", { meldung: "M16", wirkmittel: "LM", pos: [768, 305], t_freigabe: 1120, getroffen: [
+      ["meldung", { meldung: "M18" }, 1095],
+      ["g1_entscheid", { meldung: "M18", entscheid: "annehmen" }, 1100],
+      ["g2_empfehlung", { meldung: "M18", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1110],
+      ["g3_entscheid", { meldung: "M18", entscheid: "freigabe", wirkmittel: "LM" }, 1120],
+      ["wirkung", { meldung: "M18", wirkmittel: "LM", pos: [768, 305], t_freigabe: 1120, getroffen: [
         { ziel: "Z-19", was: "fahrzeug", kategorie: "feind" }, { ziel: "Z-19", was: "personen", kategorie: "soldat", anzahl: 5 },
         { ziel: "Z-19", was: "personen", kategorie: "zivil", anzahl: 4 }] }, 1240],
     ]), inh);
@@ -156,7 +156,7 @@ describe("Freigegebene Wirkung (Vorlaufzeit läuft)", () => {
       expect(lb.wirkungen).toHaveLength(1);
       expect(lb.wirkungen[0].geplant).toBe(true);
       expect(lb.wirkungen[0].radius_m).toBe(80);
-      expect(lb.wirkungen[0].text).toBe("M01 Mrs · 10:03:05"); // Freigabe 10:01:35 + 1:30 Vorlauf
+      expect(lb.wirkungen[0].text).toBe("M01 Mrs · 10:02:10"); // Freigabe 10:01:35 + 35 s bis zum Einschlag
     }
     const nach = zustandAus(protokoll([...bis,
       ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [880, 300], t_freigabe: 95, getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 185],

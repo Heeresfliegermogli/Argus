@@ -2,7 +2,7 @@
 """Bildschirmfotos aller Ansichten in 1530 × 800 mit einem kurzen, gespielten Ablauf.
 
 Öffnet SL, G1, G2, G3 und Plenum im selben Raum (lokaler Sync), spielt bis kurz nach der Attrappe
-(S1, M07) und fotografiert jede Ansicht in typischen Zuständen. Prüft dabei das Layout:
+(S1, M08) und fotografiert jede Ansicht in typischen Zuständen. Prüft dabei das Layout:
 kein Rollbalken auf der Seite und kein abgeschnittener Inhalt in festen Feldern (nur Listen, die
 mit data-liste markiert sind, dürfen innerhalb ihres Feldes rollen).
 
@@ -98,23 +98,23 @@ def main():
         for r in ["g1", "g2", "g3"]:
             foto(s[r], f"{r}_leer")
 
-        # Spielzeit 08:25, Start, bis M07 (Attrappe) da ist, dann anhalten
+        # Spielzeit 08:25, Start, bis M08 (Attrappe) da ist, dann anhalten
         sl.fill("[data-testid=sl-zeit]", "08:25")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
-        warte(lambda: g1.locator("[data-meldung=M07]").count() > 0, 30, "M07 bei G1")
+        warte(lambda: g1.locator("[data-meldung=M08]").count() > 0, 30, "M08 bei G1")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
 
-        # G1: M01–M06 annehmen (M04 mit Vermerk), M07 bleibt offen
-        for mid in ["M01", "M02", "M03", "M04", "M05", "M06"]:
+        # G1: M01–M07 annehmen (M04 mit Vermerk), M08 bleibt offen
+        for mid in ["M01", "M02", "M03", "M04", "M05", "M06", "M07"]:
             g1.locator(f".eintrag[data-meldung={mid}]").first.click()
             if mid == "M04":
                 g1.fill("[data-testid=g1-vermerk]", "Wärme und Kettenspuren bestätigen")
             g1.get_by_test_id("g1-annehmen").click()
             warte(lambda: g1.locator(f"[data-testid=g1-offen]").count() == 1 and g1.locator(f".eintrag:not(.gedimmt)[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
-        g1.locator(".eintrag[data-meldung=M07]").first.click()
+        g1.locator(".eintrag[data-meldung=M08]").first.click()
         g1.wait_for_timeout(600)
-        foto(g1, "g1_meldung_M07")
+        foto(g1, "g1_meldung_M08")
         g1.locator("[data-testid=drohnenbild]").click()
         g1.wait_for_timeout(400)
         g1.mouse.move(W / 2 + 40, H / 2 + 20)

@@ -1,6 +1,6 @@
 // Geometrie, Raster und Bewegung. Portiert aus argus_lib.py (Referenz in tools/referenz/),
 // gleiche Ergebnisse prüft tests/regeln.test.ts. Koordinaten in Metern, x Ost, y Süd.
-import type { Geometrie, Karte, Person, Punkt, Ziel, Zone } from "../inhalte/typen";
+import type { Geometrie, GroundTruth, Karte, Person, Punkt, Ziel, Zone } from "../inhalte/typen";
 
 export function dist(a: Punkt, b: Punkt): number {
   return Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -90,6 +90,13 @@ export function position(obj: Beweglich, t: number): Punkt {
   }
   const letzter = r[r.length - 1];
   return [letzter[1], letzter[2]];
+}
+
+/** Ground Truth zur Zeit t (wie argus_lib.gt_bei): gt gilt ab gt.ab_s, davor gt.vorher. */
+export function gtBei(ziel: Pick<Ziel, "gt">, t: number): GroundTruth {
+  const gt = ziel.gt;
+  if (gt.vorher && t < (gt.ab_s ?? 0)) return gt.vorher;
+  return gt;
 }
 
 /** Ab wann ein Objekt im Raum ist: ab_s, sonst Routenbeginn, sonst wie das Elternobjekt, sonst 0. */

@@ -1,7 +1,7 @@
 // Einsatzregeln und Trefferregel. Portiert aus argus_lib.py (pruefe_wirkmittel) und
 // simuliere_durchlauf.py (Trefferregel). Reine Funktionen, Ergebnis hängt nur von Inhalten und t ab.
 import type { Inhalte, Meldung, Punkt, Regeln } from "../inhalte/typen";
-import { abstandZone, dist, position, vorhanden } from "./geometrie";
+import { abstandZone, dist, gtBei, position, vorhanden } from "./geometrie";
 
 export type ArgusEmpfehlungSoll = "BEKÄMPFEN" | "PRÜFEN" | "UNKLAR";
 
@@ -79,8 +79,8 @@ export function pruefeWirkmittel(
   for (const z of inh.szenario.ziele) {
     if (ausgenommen.includes(z.id)) continue;
     if (vorhanden(z, t) && dist(zielPos, position(z, t)) <= r) {
-      const attrappe = z.gt.kategorie === "attrappe";
-      getroffen.push({ ziel: z.id, was: attrappe ? "attrappe" : "fahrzeug", kategorie: z.gt.kategorie });
+      const kat = gtBei(z, t).kategorie;
+      getroffen.push({ ziel: z.id, was: kat === "attrappe" ? "attrappe" : "fahrzeug", kategorie: kat });
     }
     for (const p of z.personen ?? []) {
       if (vorhanden(p, t, z) && dist(zielPos, position(p, t)) <= r) {
@@ -110,9 +110,8 @@ export function berechneWirkung(
   const haupt = inh.ziele[m.ziele[0]];
   const schonDabei = getroffen.some((g) => g.ziel === haupt.id && g.was !== "personen");
   if (vorhanden(haupt, tFreigabe) && !schonDabei) {
-    getroffen.push({
-      ziel: haupt.id, was: haupt.gt.kategorie === "attrappe" ? "attrappe" : "fahrzeug", kategorie: haupt.gt.kategorie,
-    });
+    const kat = gtBei(haupt, tFreigabe).kategorie;
+    getroffen.push({ ziel: haupt.id, was: kat === "attrappe" ? "attrappe" : "fahrzeug", kategorie: kat });
   }
   return { pos, pruefung, getroffen };
 }
