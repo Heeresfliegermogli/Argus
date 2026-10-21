@@ -6,16 +6,8 @@ import type { Sitzung } from "../sitzung/sitzung";
 import { G1Ansicht } from "./g1";
 import { G2Ansicht } from "./g2";
 import { G3Ansicht } from "./g3";
-import { Platzhalter } from "./gemeinsam/bausteine";
+import { PlenumAnsicht } from "./plenum";
 import { SLAnsicht } from "./sl";
-
-function PlenumAnsicht(_: { s: Sitzung }) {
-  return (
-    <main class="inhalt">
-      <Platzhalter titel="Plenumsansicht (Einweisung und Auswertung)" text="folgt mit Schritt 6/8 (Soll)" stil="height:100%" />
-    </main>
-  );
-}
 
 export const ANSICHTEN: Record<Rolle, (p: { s: Sitzung }) => JSX.Element> = {
   g1: G1Ansicht,

@@ -43,7 +43,7 @@ const PERSONEN_TEXT: Record<string, string> = {
 };
 
 function abstandText(a: number): string {
-  return a === 0 ? "Ziel im Gebiet" : `${Math.round(a)} m`;
+  return a === 0 ? "Ziel liegt im Gebiet" : `Abstand ${Math.round(a)} m`;
 }
 
 export const SCHUTZ_KATEGORIEN = ["zivil", "geschuetzt", "verbuendet", "besatzung_ergibt_sich", "ausser_gefecht"];
@@ -67,13 +67,13 @@ export function pruefeWirkmittel(
     if (z.typ === "einschraenkung" && a < r && r > (z.max_wirkradius_m ?? Infinity)) {
       verstoesse.push({
         regel: "R3", zone: z.id, abstand_m: a,
-        text: `${z.id}: Wirkradius > ${z.max_wirkradius_m} m (${abstandText(a)})`,
+        text: `${z.id} im Wirkradius, dort nur bis ${z.max_wirkradius_m} m erlaubt (${abstandText(a)})`,
       });
     }
   }
   const xMax = wm.einsatzbereich?.x_max;
   if (xMax !== undefined && zielPos[0] >= xMax) {
-    verstoesse.push({ regel: "EB", text: `außerhalb Einsatzbereich (${wm.einsatzbereich!.text})` });
+    verstoesse.push({ regel: "EB", text: `außerhalb des Einsatzbereichs (${wm.einsatzbereich!.text.split(",")[0]})` });
   }
   const getroffen: Treffer[] = [];
   for (const z of inh.szenario.ziele) {

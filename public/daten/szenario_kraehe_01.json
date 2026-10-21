@@ -141,7 +141,7 @@
       "id": "EZ-01",
       "typ": "einschraenkung",
       "name": "Ortschaft KRÄHE mit Hof RABE",
-      "max_wirkradius_m": 50,
+      "max_wirkradius_m": 50, "beschriftung": [812, 402],
       "geometrie": {
         "typ": "polygon",
         "punkte": [

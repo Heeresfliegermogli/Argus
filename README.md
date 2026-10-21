@@ -5,7 +5,10 @@ bearbeiten Zielmeldungen des fiktiven KI-Systems ARGUS: G1 Aufklärung, G2 Zielp
 Die Spielleitung steuert Uhr und Ablauf. **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind
 frei erfunden.**
 
-Stand: Schritt 5 „Assets“ (Ansichten funktional, Kartenpaket, Drohnenbilder, Sprites und Effekte liegen vor; Gestaltung und Karte folgen in Schritt 6).
+Stand: Schritt 6 „UI der Ansichten“ – G1, G2, G3, Spielleitung und Plenum mit Lagekarte (PixiJS,
+taktische Zeichen mit milsymbol), großem Drohnenbild mit Lupe, Wirkradius-Vorschau, Postfach,
+Kontrollkarte und Einweisungskarten. Bewegung und Animationen folgen in Schritt 7. Überblick:
+[`docs/UI.md`](docs/UI.md).
 
 ## Spielen
 
@@ -17,6 +20,11 @@ Seite: `https://heeresfliegermogli.github.io/Argus/` – dort Raum und Rolle wä
 | G1 Aufklärung | `…/Argus/?rolle=g1&raum=kraehe` |
 | G2 Zielprüfung | `…/Argus/?rolle=g2&raum=kraehe` |
 | G3 Führung | `…/Argus/?rolle=g3&raum=kraehe` |
+| Plenum (Smartboard) | `…/Argus/?rolle=plenum&raum=kraehe` (oder „Plenum öffnen“ in der Spielleitung) |
+
+Vor Spielbeginn öffnet sich in jeder Gruppenansicht die Einweisungskarte (Knopf „Einweisung“ oben
+rechts). Druckfassung, A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit Unbeteiligten:
+[`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
 
 Die erste Spielleitung im Raum übernimmt die Steuerung und legt ein Spiel an. Eine zweite Spielleitung
 (z. B. SL 2 mit `&name=SL%202`) beobachtet und kann bei Ausfall „Steuerung übernehmen“.
@@ -46,6 +54,14 @@ python3 tools/e2e_vier_fenster.py file://$PWD/dist/argus-offline.html          #
 npm --prefix tools/firebase-testserver install && node tools/firebase-testserver/start.js &
 python3 tools/e2e_vier_fenster.py http://localhost:4173/ --sync firebase --transport auto \
   --db "http://localhost:5555?ns=argus-test"                                   # Firebase-Nachbildung mit Regeln
+```
+
+Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
+
+```bash
+python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
+python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, volle Listen, lange Texte
+python3 tools/bedientest_probe.py http://localhost:4173/                  # Aufgaben des Bedientests lösbar?
 ```
 
 Die Regelprüfung (R2, R3, Einsatzbereich, Trefferregel) ist aus `argus_lib.py` portiert;

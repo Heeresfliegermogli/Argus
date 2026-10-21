@@ -6,6 +6,7 @@
 import type { Inhalte, Meldung } from "../inhalte/typen";
 import { berechneWirkung } from "../kern/regeln";
 import type { Spielzustand } from "../kern/zustand";
+import { uhrzeit } from "../kern/uhr";
 import { type Entwurf, entwurf } from "./entwurf";
 
 export function fastTrackGreift(inh: Inhalte, z: Spielzustand, m: Meldung): boolean {
@@ -90,9 +91,63 @@ export function faellig(inh: Inhalte, z: Spielzustand, t: number): Entwurf[] {
 
   const dauer = sz.spieluhr.dauer_s;
   if (t >= dauer && !z.ende) {
-    liste.push(entwurf("uhr", { befehl: "pause", laeuft: false, t_s: dauer, tempo: z.uhr.tempo }, { t_geplant: dauer }));
+    // Uhr nur anhalten, wenn sie noch läuft – sonst entstünde bei jedem Takt ein neues Uhr-Ereignis
+    // und das Spielende käme nie (Fehler bis Schritt 5).
+    if (z.uhr.laeuft) liste.push(entwurf("uhr", { befehl: "pause", laeuft: false, t_s: dauer, tempo: z.uhr.tempo }, { t_geplant: dauer }));
     liste.push(entwurf("spielende", { grund: "Spielzeit abgelaufen" }, { t_geplant: dauer }));
   }
 
   return liste.sort((a, b) => (a.t_geplant ?? t) - (b.t_geplant ?? t));
+}
+
+/** Stand eines bedingten Injects oder Skriptereignisses für die Spielleitung. */
+export interface BedingtStand {
+  id: string;
+  art: "inject" | "ereignis";
+  /** wartet: Bedingung offen · erfuellt: kommt zur Zeit t · ausgeloest · entfaellt */
+  status: "wartet" | "erfuellt" | "ausgeloest" | "entfaellt";
+  text: string;
+  t?: number;
+}
+
+function bedingungText(inh: Inhalte, b: NonNullable<Inhalte["szenario"]["injects"][number]["bedingung"]>): string {
+  const ziele = b.ziele.length > 1 ? `${b.ziele[0]}–${b.ziele[b.ziele.length - 1].slice(2)}` : b.ziele[0];
+  const uhr = (t: number) => uhrzeitKurz(inh, t);
+  if (b.typ === "keine_freigabe_bis") return `wenn bis ${uhr(b.t_s)} keine Freigabe auf ${ziele}`;
+  if (b.typ === "freigabe_mit_zivil") return `${b.verzoegerung_s} s nach Freigabe auf ${ziele}, wenn Zivilpersonen im Wirkradius`;
+  return `${b.verzoegerung_s} s nach Freigabe auf ${ziele}`;
+}
+
+function uhrzeitKurz(inh: Inhalte, t: number): string {
+  return uhrzeit(inh.szenario.spieluhr.start, t);
+}
+
+/**
+ * Was die Spielleitung zu bedingten Injects (I-08a, I-08b, I-09) und Skriptereignissen (E-01) wissen
+ * muss: wartet die Bedingung noch, ist sie erfüllt (und wann kommt es), ist es ausgelöst oder entfällt
+ * es. Gleiche Logik wie faellig(), nur als Anzeige.
+ */
+export function bedingtStand(inh: Inhalte, z: Spielzustand, t: number): BedingtStand[] {
+  const frei = freigaben(inh, z);
+  const aus: BedingtStand[] = [];
+  const pruefe = (id: string, art: BedingtStand["art"], b: Inhalte["szenario"]["injects"][number]["bedingung"] & object, ausgeloest: boolean) => {
+    const text = bedingungText(inh, b);
+    if (ausgeloest) return aus.push({ id, art, status: "ausgeloest", text });
+    if (b.typ === "keine_freigabe_bis") {
+      const frueh = b.ziele.map((zid) => frei.get(zid)).filter((f) => f && f.t <= b.t_s).sort((a, c) => a!.t - c!.t)[0];
+      if (frueh) return aus.push({ id, art, status: "entfaellt", text: `${text} – entfällt (Freigabe ${frueh.meldung} ${uhrzeitKurz(inh, frueh.t)})` });
+      return aus.push({ id, art, status: t >= b.t_s ? "erfuellt" : "wartet", text, t: b.t_s });
+    }
+    const treffer = b.ziele.map((zid) => frei.get(zid)).filter((f) => f !== undefined).sort((a, c) => a.t - c.t);
+    if (!treffer.length) return aus.push({ id, art, status: "wartet", text });
+    const erste = treffer[0];
+    if (b.typ === "freigabe_mit_zivil") {
+      const zivil = erste.wirkmittel && berechneWirkung(inh, inh.meldungen[erste.meldung], erste.wirkmittel, erste.t).getroffen.some((g) => g.kategorie === "zivil");
+      if (!zivil) return aus.push({ id, art, status: "entfaellt", text: `${text} – entfällt (keine Zivilpersonen bei Freigabe ${uhrzeitKurz(inh, erste.t)})` });
+    }
+    return aus.push({ id, art, status: "erfuellt", text: `${text} – Freigabe ${erste.meldung} ${uhrzeitKurz(inh, erste.t)}`, t: erste.t + b.verzoegerung_s });
+  };
+  for (const i of inh.szenario.injects) if (i.bedingung) pruefe(i.id, "inject", i.bedingung, !!z.injects[i.id]);
+  for (const e of inh.szenario.ereignisse ?? []) pruefe(e.id, "ereignis", e.bedingung, false);
+  return aus;
 }

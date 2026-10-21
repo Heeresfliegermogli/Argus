@@ -1,4 +1,4 @@
-# ARGUS – Architektur und Datenformate (Stand Schritt 5)
+# ARGUS – Architektur und Datenformate (Stand Schritt 6)
 
 Inhalte, Spiellogik, Netz und Ansichten sind getrennte Module. Neue Lagen, Karten, Fahrzeuge oder
 Wirkmittel sind JSON-Dateien, kein Code. Zwischen Variante A (Firebase) und C (ein PC, mehrere
@@ -21,7 +21,9 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host (nur steue
 | `src/engine/` | Host: prüft Aktionen (`aktionen.ts`), spielt den Zeitplan ab (`ablauf.ts`), vergibt Laufnummern und schreibt (`host.ts`) |
 | `src/sync/` | Schnittstelle (`adapter.ts`), Firebase RTDB (`firebase.ts`), lokal per localStorage + BroadcastChannel (`lokal.ts`) |
 | `src/sitzung/` | verbindet ein Fenster mit dem Adapter, hält Protokoll und Stand, bewirbt sich als Host (nur SL) |
-| `src/ansichten/` | Preact-Ansichten je Rolle, Eintrag in `register.tsx`; Drohnenbild mit ARGUS-Markierung in `gemeinsam/drohnenbild.tsx` |
+| `src/kern/lagebild.ts` | was eine Rolle auf der Lagekarte sieht: Zielmeldungen (G2/G3) oder Kontrollkarte (SL/Plenum), reine Funktion von Inhalten, Spielstand und Lagezeit |
+| `src/karte/` | Lagekarte mit PixiJS (`lagekarte.ts`, wird bei Bedarf nachgeladen), taktische Zeichen nach APP-6/MIL-STD-2525C mit milsymbol (`zeichen.ts`) |
+| `src/ansichten/` | Preact-Ansichten je Rolle (G1, G2, G3, SL, Plenum), Eintrag in `register.tsx`; Einweisungskarten (`einweisung.tsx`); gemeinsam: Drohnenbild mit Lupe, Lagekarte als Baustein, Bausteine, Rahmen. Überblick: [`UI.md`](UI.md) |
 | `src/assets/` | Asset-Manifest (`typen.ts`), Zugriff (`assets.ts`: Manifest, Bildadresse, Atlas, Vorladen), Quelle Netz oder eingebettet (Alias `@assetquelle`) |
 | `public/assets/` | Bilder und Manifest aus `tools/assets/gen_assets.py` (Karte, Drohnenbilder, Sprites, Effekte), siehe [`ASSETS.md`](ASSETS.md) |
 
@@ -108,3 +110,6 @@ Vorlaufzeit, Spielende. **Offen für Schritt 7:** Skriptereignis E-01 (polnische
 G1 sieht die volle Meldung (Bild, ARGUS, Sensordaten, Kleingedrucktes, Bildalter). G2 und G3 sehen nur
 die Zielmeldung (Meldung, Ziel-Nr., Feinlage, ARGUS-Klasse, Konfidenz, Empfehlung, Vermerk G1). Injects
 an G3 sieht nur G3. Die Trennung ist eine Frage der Anzeige: Alle Rechner laden dieselben Dateien.
+Auf der Lagekarte sehen G2 und G3 die Zielmeldungen an der gemeldeten Position mit dem Zeichen der
+ARGUS-Klasse; Ground Truth, Personen und ungemeldete Ziele zeigt nur die Kontrollkarte (Spielleitung,
+Plenum nach Spielende) – festgelegt in `src/kern/lagebild.ts`, geprüft in `tests/lagebild.test.ts`.

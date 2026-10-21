@@ -1,6 +1,6 @@
 // Zugriff auf die Assets (Karte, Drohnenbilder, Sprites, Effekte) über das Manifest.
 // Die Quelle (Netz oder in die Offline-Datei eingebettet) wählt der Build über den Alias @assetquelle.
-import { assetUrl, holeJsonAsset, holeManifest } from "@assetquelle";
+import { assetQuelle, assetUrl, holeJsonAsset, holeManifest } from "@assetquelle";
 import type { AssetManifest, Drohnenbild } from "./typen";
 
 export { assetUrl };
@@ -26,6 +26,11 @@ export function drohnenbild(man: AssetManifest, id: string): Drohnenbild | null 
 export async function atlas(man: AssetManifest, welcher: "fahrzeuge" | "effekte"): Promise<{ json: unknown; bildUrl: string }> {
   const a = man[welcher];
   return { json: await holeJsonAsset(a.json), bildUrl: assetUrl(a.bild) };
+}
+
+/** Luftbild-Kacheln (0,25 m/px) gibt es nur auf der Webseite, nicht in der Offline-Datei. */
+export function kachelnVerfuegbar(): boolean {
+  return assetQuelle === "netz";
 }
 
 const vorgeladen = new Set<string>();

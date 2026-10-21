@@ -3,7 +3,7 @@
 
 Prüft das Fertig-Kriterium von Schritt 4: Die Fenster bleiben synchron (gleiche Laufnummer und
 gleicher Fingerabdruck des Spielstands), und jede Aktion steht im Protokoll der Spielleitung.
-Außerdem: Jede Ansicht passt ohne Rollbalken in 1530 × 800 Pixel.
+Außerdem: Jede Ansicht passt ohne Rollbalken in 1530 × 800 Pixel, feste Felder schneiden nichts ab.
 
 Aufruf:
   python3 tools/e2e_vier_fenster.py http://localhost:4173/            # gebaute Seite, lokaler Sync
@@ -58,7 +58,7 @@ def main():
     fehler = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(args=["--allow-file-access-from-files"])
+        browser = p.chromium.launch(args=["--allow-file-access-from-files", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
         ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
         konsole = []
         seiten = {}
@@ -70,6 +70,10 @@ def main():
             seiten[r] = s
             if r == "sl":
                 warte(lambda: s.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
+            else:
+                # Vor Spielbeginn öffnet sich die Einweisungskarte der Gruppe (Schritt 6)
+                warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 10, f"Einweisung {r}")
+                s.get_by_test_id("einweisung-schliessen").click()
         sl, g1, g2, g3 = (seiten[r] for r in ROLLEN)
 
         def attr(s, name):
@@ -86,7 +90,7 @@ def main():
         print("Start:", stand(sl))
 
         # Spielleitung: Uhr auf 00:55, Tempo ×10, Start → M01 (01:00) und M02 (02:30) kommen
-        sl.fill("input.feld.mono", "00:55")
+        sl.fill("[data-testid=sl-zeit]", "00:55")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="×10").click()
         sl.get_by_role("button", name="▶ Start").click()
@@ -105,7 +109,7 @@ def main():
 
         # G3: Inject quittieren, Lagehinweis, Freigabe
         warte(lambda: g3.locator("[data-inject]").count() > 0, 20, "Inject bei G3")
-        g3.get_by_role("button", name="Gelesen – quittieren").first.click()
+        g3.locator("[data-inject]").first.get_by_role("button", name="Gelesen", exact=True).click()
         g3.fill("textarea", "Feldweg Süd: kein Feuer ohne Rückfrage")
         g3.get_by_role("button", name="Senden").click()
         g3.get_by_role("button", name="FREIGABE").click()
@@ -143,18 +147,24 @@ def main():
         seqs = [e["seq"] for e in protokoll]
         if seqs != list(range(1, len(seqs) + 1)):
             fehler.append("Protokoll nicht lückenlos")
+        sl.locator(".reiter button", has_text="Protokoll").click()
+        warte(lambda: sl.locator("[data-testid=protokoll] tr").count() == len(protokoll), 5, "Protokollanzeige vollständig")
         zeilen = sl.locator("[data-testid=protokoll] tr").count()
         if zeilen != len(protokoll):
             fehler.append(f"Protokollanzeige {zeilen} Zeilen, Protokoll {len(protokoll)} Einträge")
         nutzer = [e for e in protokoll if e.get("aktion")]
         print(f"Protokoll: {len(protokoll)} Einträge, davon {len(nutzer)} aus Aktionen ({len(aktionen_im_protokoll)} verschiedene)")
 
-        # Layout: kein Rollbalken auf Seitenebene in 1530 × 800
+        # Layout: kein Rollbalken auf Seitenebene in 1530 × 800, nichts abgeschnitten in festen Feldern
         for r in ROLLEN:
             s = seiten[r]
             groesse = s.evaluate("() => [document.documentElement.scrollWidth, document.documentElement.scrollHeight]")
             if groesse[0] > W or groesse[1] > H:
                 fehler.append(f"{r}: Seite {groesse[0]}×{groesse[1]} größer als {W}×{H}")
+            abgeschnitten = s.evaluate("""() => [...document.querySelectorAll('.panel > .rumpf:not([data-liste])')]
+                .filter((x) => x.scrollHeight > x.clientHeight + 2).map((x) => x.parentElement.querySelector('h2').textContent)""")
+            if abgeschnitten:
+                fehler.append(f"{r}: Inhalt abgeschnitten in {abgeschnitten}")
             s.screenshot(path=os.path.join(a.bilder, f"{r}.png"))
         with open(os.path.join(a.bilder, "protokoll.json"), "w", encoding="utf-8") as f:
             json.dump(protokoll, f, ensure_ascii=False, indent=1)

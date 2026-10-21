@@ -26,6 +26,9 @@ export function pruefeInhalte(inh: Inhalte): Pruefbericht {
   for (const z of sz.ziele) {
     if (!inh.fahrzeuge[z.typ]) fehler.push(`${z.id}: Typ ${z.typ} fehlt im Fahrzeugkatalog`);
   }
+  for (const f of Object.values(inh.fahrzeuge)) {
+    if (!f.symbol?.sidc) warnungen.push(`Fahrzeugkatalog ${f.id}: kein taktisches Zeichen (symbol.sidc), Karte zeigt ein allgemeines Zeichen`);
+  }
   const faelle = new Set([...sz.schluesselfaelle, ...(sz.nebenfaelle ?? [])].map((f) => f.id));
   const gemeldet = new Set<string>();
   let vorher = -1;

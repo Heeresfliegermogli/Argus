@@ -166,6 +166,8 @@ export interface Zone {
   geometrie: Geometrie;
   regel: string;
   entstehung?: string;
+  /** nur Darstellung: Lage der Beschriftung auf der Lagekarte (sonst berechnet) */
+  beschriftung?: Punkt;
 }
 
 export interface Kraft {
@@ -274,7 +276,11 @@ export interface Fahrzeug {
   argus_klasse: string | null;
   gepanzert: boolean;
   groesse_m: [number, number];
-  symbol: { art: string };
+  /**
+   * Taktisches Zeichen: sidc = Funktionsteil nach MIL-STD-2525C/APP-6 (z. B. „EVAT“ Kampfpanzer),
+   * groesse = Größenangabe (z. B. „E“ Kompanie). Zugehörigkeit und Status setzt die Oberfläche.
+   */
+  symbol: { art: string; sidc?: string; groesse?: string };
   generator: string | null;
   sprite: string | null;
   sprite_wrack: string | null;

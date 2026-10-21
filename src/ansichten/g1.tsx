@@ -1,5 +1,6 @@
-// G1 Aufklärung: sieht jede ARGUS-Meldung zuerst – Drohnenbild, ARGUS-Daten, Sensordaten,
-// Kleingedrucktes – und entscheidet ANNEHMEN oder ABLEHNEN mit einem Vermerk.
+// G1 Aufklärung: sieht jede ARGUS-Meldung zuerst – großes Drohnenbild mit ARGUS-Markierung,
+// ARGUS-Daten, Sensordaten, Kleingedrucktes – und entscheidet ANNEHMEN oder ABLEHNEN mit Vermerk.
+//   ① Meldung wählen (Eingang)  ② Bild und Daten prüfen  ③ entscheiden
 import { useState } from "preact/hooks";
 import { feinlage } from "../kern/geometrie";
 import { gemeldetePosition } from "../kern/regeln";
@@ -30,6 +31,7 @@ export function G1Ansicht(p: { s: Sitzung }) {
   const ms = gewaehlt ? z.meldungen[gewaehlt] : null;
   const wartet = !!gewaehlt && s.wartetAuf("g1_entscheid", gewaehlt);
   const start = inh.szenario.spieluhr.start;
+  const gesperrt = !m || z.ende;
 
   const entscheiden = (entscheid: "annehmen" | "ablehnen") => {
     if (!gewaehlt) return;
@@ -38,83 +40,99 @@ export function G1Ansicht(p: { s: Sitzung }) {
   };
 
   const bildalter = m && ms ? Math.max(0, Math.round(t - ms.erschienen.t_s)) + (m.sensor.bildalter_s ?? 0) : 0;
+  const historie = verlauf(z, "g1");
 
   return (
-    <main class="inhalt spalten-3">
+    <main class="inhalt ansicht-g1">
       <div class="stapel">
-        <Panel titel="Eingang ARGUS" rechts={<span class="badge" data-testid="g1-offen">{offen.length}</span>} stil="flex:1 1 55%">
-          {offen.length === 0 ? <Leer>keine offenen Meldungen</Leer> : (
+        <Panel schritt={1} titel="Eingang ARGUS" rechts={<span class={`badge ${offen.length ? "neu" : ""}`} data-testid="g1-offen">{offen.length}</span>} liste stil="flex:1.2 1 0">
+          {offen.length === 0 ? <Leer>Keine offene Meldung. Neue ARGUS-Meldungen erscheinen hier.</Leer> : (
             <ul class="liste">
               {offen.map((x) => <MeldungsEintrag key={x.id} inh={inh} st={x} aktiv={x.id === gewaehlt} onWahl={() => waehle(x.id)} />)}
             </ul>
           )}
         </Panel>
-        <Panel titel="Verlauf" stil="flex:1 1 45%">
-          <ul class="liste">
-            {verlauf(z, "g1").map((x) => (
-              <MeldungsEintrag key={x.id} inh={inh} st={x} gedimmt
-                unter={<>{uhrzeit(start, x.erschienen.t_s)} · {x.ergebnis ? ERGEBNIS_TEXT[x.ergebnis] : x.fastTrack && !x.g1 ? "Fast-Track an G1 vorbei" : STUFE_TEXT[x.stufe]}</>} />
-            ))}
-          </ul>
+        <Lagehinweise inh={inh} z={z} rolle="g1" />
+        <Panel titel="Verlauf" liste rechts={historie.length ? <span class="badge">{historie.length}</span> : null}>
+          {historie.length === 0 ? <div class="hinweistext">Bearbeitete Meldungen</div> : (
+            <ul class="liste">
+              {historie.map((x) => (
+                <MeldungsEintrag key={x.id} inh={inh} st={x} gedimmt
+                  unter={<>{uhrzeit(start, x.erschienen.t_s)} · {x.ergebnis ? ERGEBNIS_TEXT[x.ergebnis] : x.fastTrack && !x.g1 ? "Fast-Track, an G1 vorbei" : STUFE_TEXT[x.stufe]}</>} />
+              ))}
+            </ul>
+          )}
         </Panel>
       </div>
 
-      <Panel titel={m ? `Meldung ${m.id} · ${uhrzeit(start, ms!.erschienen.t_s)} · ${feinlage(gemeldetePosition(inh, m), inh.karte)}` : "Meldung"}>
-        {!m || !ms ? <Leer>Warten auf ARGUS-Meldungen …</Leer> : (
-          <div class="stapel">
+      <Panel schritt={2} testid="g1-bildfeld"
+        titel={m && ms ? <>Meldung {m.id} prüfen <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)} · Lage {feinlage(gemeldetePosition(inh, m), inh.karte)}</span></> : "Meldung prüfen"}
+        rechts={ms?.fastTrack ? <span class="badge warn">Fast-Track</span> : null}>
+        {!m || !ms ? (
+          <div class="stapel" style="height:100%;justify-content:center">
+            <Leer>Warten auf ARGUS-Meldungen … Das Drohnenbild erscheint hier, sobald links unter ① eine Meldung steht.</Leer>
+          </div>
+        ) : (
+          <div>
             <DrohnenbildAnzeige meldung={m} uhr={uhrzeit(start, ms.erschienen.t_s)} bildalter={bildalter}
               naechste={offen.filter((x) => x.id !== m.id).map((x) => x.id)} />
-            <div class="klein leise" style="margin-top:-6px">
-              {m.bild.beschreibung}
-              {m.bild.sicht.length > 0 && <span> · Sicht: {m.bild.sicht.map((v) => `${SICHT_TEXT[v.art] ?? v.art} ${Math.round(v.anteil * 100)} % (${v.lage})`).join(", ")}</span>}
-            </div>
-            <div class="zeile" style="align-items:stretch;gap:10px">
-              <div class="argus-box" style="flex:1 1 50%">
-                <h3>{inh.szenario.argus_system.name}</h3>
-                <table class="tabelle">
-                  <tbody>
-                    <tr><th>Klasse</th><td><b>{m.argus.klasse}</b>{m.argus.einzeln && <span class="leise"> ({m.ziele.length} Fahrzeuge: {m.argus.einzeln.join(" / ")} %)</span>}</td></tr>
-                    <tr><th>Konfidenz</th><td><Konfidenz wert={m.argus.konfidenz} /></td></tr>
-                    <tr><th>Empfehlung</th><td><Empfehlung wert={m.argus.empfehlung} /></td></tr>
-                    {m.argus.hinweis && <tr><th>Hinweis</th><td>{m.argus.hinweis}</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-              <div class="panel" style="flex:1 1 50%;padding:10px 12px">
-                <h2 style="margin-bottom:6px">Sensordaten Drohne</h2>
-                <table class="tabelle">
-                  <tbody>
-                    <tr><th>Wärmebild</th><td>{m.sensor.waerme}</td></tr>
-                    <tr><th>Bewegung</th><td>{m.sensor.bewegung}</td></tr>
-                    <tr><th>Spuren</th><td>{m.sensor.spuren}</td></tr>
-                    <tr><th>Kennzeichnung</th><td>{m.sensor.kennzeichnung}</td></tr>
-                    <tr><th>Personen</th><td>{m.sensor.personen}</td></tr>
-                    <tr><th>Bildalter</th><td class="mono">{bildalter} s</td></tr>
-                  </tbody>
-                </table>
-              </div>
+            <div class="sichtleiste">
+              {m.bild.sicht.length === 0 ? <span>Sicht frei</span> : <>
+                <span>Sicht gestört:</span>
+                {m.bild.sicht.map((v) => <span class="badge">{SICHT_TEXT[v.art] ?? v.art} {v.lage === "Ziel" ? "am Ziel" : v.lage} {Math.round(v.anteil * 100)} %</span>)}
+              </>}
             </div>
           </div>
         )}
       </Panel>
 
       <div class="stapel">
-        <Panel titel="Entscheidung G1" klasse="flach">
-          <div class="stapel">
-            <input class="feld" placeholder="Vermerk an G2 (eine Zeile, optional)" maxLength={TEXT_MAX.vermerk} value={vermerk}
-              onInput={(e) => setVermerk((e.target as HTMLInputElement).value)} disabled={!m} data-testid="g1-vermerk" />
+        <section class="argus-box" data-testid="argus-box">
+          <h3><span>{inh.szenario.argus_system.name}</span><span class="mono" style="font-weight:500">{m?.id ?? ""}</span></h3>
+          {!m ? <div class="klein sehr-leise">keine Meldung gewählt</div> : (
+            <table class="tabelle">
+              <tbody>
+                <tr><th>Klasse</th><td><b>{m.argus.klasse}</b>{m.argus.einzeln && <span class="klein"> · {m.ziele.length} Fahrzeuge</span>}</td></tr>
+                <tr><th>Konfidenz</th><td><Konfidenz wert={m.argus.konfidenz} />{m.argus.einzeln && <div class="klein">einzeln {m.argus.einzeln.join(" / ")} %</div>}</td></tr>
+                <tr><th>Empfehlung</th><td><Empfehlung wert={m.argus.empfehlung} /></td></tr>
+                {m.argus.hinweis && <tr><th>Hinweis</th><td>{m.argus.hinweis}</td></tr>}
+              </tbody>
+            </table>
+          )}
+        </section>
+        <Panel titel="Sensordaten Drohne" klasse="flach">
+          {!m ? <div class="klein sehr-leise">–</div> : (
+            <table class="tabelle" data-testid="sensordaten">
+              <tbody>
+                <tr><th>Wärmebild</th><td>{m.sensor.waerme}</td></tr>
+                <tr><th>Bewegung</th><td>{m.sensor.bewegung}</td></tr>
+                <tr><th>Spuren</th><td>{m.sensor.spuren}</td></tr>
+                <tr><th>Kennzeichnung</th><td>{m.sensor.kennzeichnung}</td></tr>
+                <tr><th>Personen</th><td>{m.sensor.personen}</td></tr>
+                <tr><th>Bildalter</th><td class="zahl">{bildalter} s</td></tr>
+              </tbody>
+            </table>
+          )}
+        </Panel>
+        <Panel schritt={3} titel="Entscheidung G1" klasse="flach">
+          <div class="stapel" style="gap:8px">
+            <input class="feld" placeholder="Vermerk an G2 (eine Zeile, freiwillig)" maxLength={TEXT_MAX.vermerk} value={vermerk}
+              onInput={(e) => setVermerk((e.target as HTMLInputElement).value)} disabled={gesperrt} data-testid="g1-vermerk"
+              onKeyDown={(e) => e.key === "Enter" && e.preventDefault()} />
             <div class="knopf-reihe">
-              <AktionsKnopf s={s} wartet={wartet} gesperrt={!m} klasse="gross gut" onClick={() => entscheiden("annehmen")}>ANNEHMEN</AktionsKnopf>
-              <AktionsKnopf s={s} wartet={wartet} gesperrt={!m} klasse="gross schlecht" onClick={() => entscheiden("ablehnen")}>ABLEHNEN</AktionsKnopf>
+              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("annehmen")} testid="g1-annehmen">
+                ANNEHMEN<span class="unterzeile">als Ziel an G2</span>
+              </AktionsKnopf>
+              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("ablehnen")} testid="g1-ablehnen">
+                ABLEHNEN<span class="unterzeile">kein Ziel</span>
+              </AktionsKnopf>
             </div>
-            <div class="klein sehr-leise">ANNEHMEN schickt die Zielmeldung an G2. G2 und G3 sehen weder Bild noch Sensordaten.</div>
           </div>
         </Panel>
-        <Panel titel="ARGUS – Herstellerangaben" klasse="flach">
-          <div class="klein leise" style="margin-bottom:6px">{inh.szenario.argus_system.herstellerangabe}</div>
-          <div class="kleingedruckt">{inh.szenario.argus_system.kleingedrucktes}</div>
-        </Panel>
-        <Lagehinweise inh={inh} z={z} rolle="g1" />
+        <div class="kleingedruckt" style="padding:0 2px" data-testid="kleingedrucktes">
+          <div style="margin-bottom:3px">{inh.szenario.argus_system.herstellerangabe}</div>
+          <div>{inh.szenario.argus_system.kleingedrucktes}</div>
+        </div>
       </div>
     </main>
   );

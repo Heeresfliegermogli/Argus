@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
 
 /** Stand der Sitzung; die Komponente zeichnet bei jeder Änderung neu. */
@@ -8,13 +8,25 @@ export function useStand(s: Sitzung): SitzungsStand {
   return s.stand;
 }
 
-/** Aktuelle Spielzeit in s, wird lokal mehrmals pro Sekunde fortgeschrieben. */
+/**
+ * Aktuelle Spielzeit in s. Jede Darstellung rechnet sie frisch aus (auch wenn ein neues Ereignis die
+ * Ansicht neu zeichnet); der Takt sorgt nur dafür, dass eine laufende Uhr weiterzählt.
+ */
 export function useSpielzeit(s: Sitzung, intervallMs = 250): number {
-  const [t, setT] = useState(() => s.spielzeit());
+  const [, setTakt] = useState(0);
+  const letzte = useRef(s.spielzeit());
   useEffect(() => {
-    const id = setInterval(() => setT(s.spielzeit()), intervallMs);
+    const id = setInterval(() => {
+      const v = s.spielzeit();
+      if (v !== letzte.current) {
+        letzte.current = v;
+        setTakt((n) => n + 1);
+      }
+    }, intervallMs);
     return () => clearInterval(id);
   }, [s, intervallMs]);
+  const t = s.spielzeit();
+  letzte.current = t;
   return t;
 }
 

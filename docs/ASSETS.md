@@ -119,13 +119,15 @@ erzeugen und `npm test` laufen lassen.
   (Webseite: `assets/…`; Offline-Datei: eingebettete data:-Adresse). Atlas für PixiJS:
   `atlas(man, "fahrzeuge")` liefert JSON und Bildadresse.
 - **Drohnenbild (G1):** `gemeinsam/drohnenbild.tsx` zeigt Bild, Eckrahmen (`ziele[].box`), Klasse und
-  Konfidenz (bei M19 je Fahrzeug aus `argus.einzeln`) und lädt die nächsten Bilder vor. Derzeit
-  528 × 330 px wie der Platzhalter aus Schritt 4 – für S2 (Rotes Kreuz), S4 (Kinder) und N2 (weißes Tuch)
-  sollte G1 das Bild in Schritt 6 größer zeigen (≥ 900 px breit) oder per Klick vergrößern.
+  Konfidenz (bei M19 je Fahrzeug aus `argus.einzeln`) und lädt die nächsten Bilder vor. Seit Schritt 6
+  ca. 900 × 562 px; Klick öffnet die Vergrößerung (ca. 1140 px) mit Lupe 1,6–6-fach (Mausrad) – für S2
+  (Rotes Kreuz), S4 (Kinder) und N2 (weißes Tuch).
 - **Fahrzeuge auf der Karte:** Sprite um `hdg` drehen (0 = Osten, im Uhrzeigersinn), Anker Mitte,
   Maßstab `px_pro_m` (Fahrzeuge 12, Personen 24). Bei 1,1 px/m auf der Lagekarte wären Fahrzeuge
   maßstäblich nur 8 px groß – mit Überhöhung (z. B. ×3) oder als taktisches Zeichen (milsymbol)
   zeigen, Sprites beim Hineinzoomen. Schatten: denselben Sprite schwarz, Alpha 0,45, 1,2 m nach Südost.
+  Umgesetzt in Schritt 6 (`src/karte/lagekarte.ts`): taktische Zeichen, auf der Kontrollkarte ab
+  2,6 px/m Sprite mit Schatten bzw. Wrack-Sprite; Luftbild-Kacheln ab 2 px/m.
 - **Wirkung:** Effekt je Wirkmittel aus dem Katalog; Größe `groesse_m` (sichtbare Größe, nicht der
   Wirkradius – der bleibt ein Kreis nach Spielregel). Danach Wrack-Sprite, `krater` darunter, bei
   Fahrzeugen `rauch`/`feuer` als Schleife.

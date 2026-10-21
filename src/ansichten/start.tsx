@@ -5,11 +5,12 @@ import { type Einstellungen, adresseFuer, merken } from "../config";
 import { RAUM_MUSTER, type Rolle } from "../kern/ereignisse";
 import { ROLLEN_NAME } from "../kern/sichten";
 
-const ROLLEN_TEXT: Record<Exclude<Rolle, "plenum">, string> = {
+const ROLLEN_TEXT: Record<Rolle, string> = {
   g1: "ARGUS-Meldungen prüfen",
   g2: "Einsatzregeln, Wirkmittel",
-  g3: "Freigabe, Lage-Injects",
-  sl: "Uhr, Zeitplan, Protokoll",
+  g3: "Freigabe, Lagemeldungen",
+  sl: "Uhr, Kontrollkarte, Protokoll",
+  plenum: "Smartboard: Einweisung, Auflösung",
 };
 
 export function Start(p: { e: Einstellungen }) {
@@ -49,7 +50,7 @@ export function Start(p: { e: Einstellungen }) {
         </div>
         {!raumOk && <div class="warnung">Raumname: 3–32 Zeichen, nur Kleinbuchstaben, Ziffern und Bindestrich.</div>}
         <div class="rollenwahl">
-          {(["g1", "g2", "g3", "sl"] as const).map((r) => (
+          {(["g1", "g2", "g3", "sl", "plenum"] as const).map((r) => (
             <a key={r} href={raumOk ? adresseFuer(e, r) : undefined} class={`rolle-${r}`} onClick={(ev) => { ev.preventDefault(); if (raumOk) geh(r); }}>
               {ROLLEN_NAME[r]}<span>{ROLLEN_TEXT[r]}</span>
             </a>
@@ -58,6 +59,9 @@ export function Start(p: { e: Einstellungen }) {
         <div class="zeile zwischen">
           <span class="klein sehr-leise">Pro Gruppenrechner eine Rolle öffnen. Die Spielleitung startet das Spiel.</span>
           <button type="button" class="knopf klein" disabled={!raumOk} onClick={vierFenster}>Alle vier Fenster öffnen (Test)</button>
+        </div>
+        <div class="zeile zwischen">
+          <a class="klein" style="color:var(--info)" href={`${location.pathname}?druck=einweisung`} target="_blank" rel="noopener">Einweisungskarten drucken (A5)</a>
         </div>
         <div class="klein sehr-leise">Version {__ARGUS_VERSION__} · {__ARGUS_STAND__}{__ARGUS_OFFLINE__ ? " · Offline-Datei" : ""}</div>
       </div>

@@ -1,26 +1,26 @@
-// Spielleitung: Uhr, Zeitplan mit manuellem Auslösen, Reserve-Injects, Fast-Track, neues Spiel,
-// Teilnehmer und das vollständige Protokoll (mit Export). Das Fenster der steuernden Spielleitung
-// ist zugleich der Host. Die Spielleitung sieht die Ground Truth.
-import { useMemo, useState } from "preact/hooks";
+// Spielleitung: Uhr, Kontrollkarte (Ground Truth), bedingte Injects und Reserve, Zeitplan mit
+// manuellem Auslösen, Teilnehmer, Notiz und das vollständige Protokoll (mit Export). Das Fenster der
+// steuernden Spielleitung ist zugleich der Host.
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { bedingtStand } from "../engine/ablauf";
 import { pruefeInhalte } from "../inhalte/pruefen";
 import { absenderText, beschreibe } from "../kern/beschreibung";
 import { TEXT_MAX } from "../kern/ereignisse";
+import { GT_NAME, LAGE_TAKT_S, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { istVeraltet } from "../sync/adapter";
 import type { Sitzung } from "../sitzung/sitzung";
 import { AktionsKnopf, Leer, Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
+import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 
-const GT_TEXT: Record<string, string> = {
-  feind: "Feind", verbuendet: "verbündet", zivil: "zivil", geschuetzt: "geschützt", attrappe: "Attrappe", ausser_gefecht: "außer Gefecht",
-};
 const TEMPI = [1, 2, 5, 10, 20];
 
 interface Plan {
   art: "meldung" | "inject";
   id: string;
-  t: number | null;
+  t: number;
   text: string;
   zusatz: string;
   fall?: string;
@@ -44,6 +44,15 @@ function exportieren(s: Sitzung): void {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
+function plenumOeffnen(): void {
+  const u = new URL(location.href);
+  u.searchParams.set("rolle", "plenum");
+  u.searchParams.delete("name");
+  window.open(u.toString(), "argus-plenum");
+}
+
+const STATUS_TEXT = { wartet: "wartet", erfuellt: "kommt", ausgeloest: "ausgelöst", entfaellt: "entfällt" } as const;
+
 export function SLAnsicht(p: { s: Sitzung }) {
   const { s } = p;
   const st = useStand(s);
@@ -55,26 +64,24 @@ export function SLAnsicht(p: { s: Sitzung }) {
   const bericht = useMemo(() => pruefeInhalte(inh), [inh]);
   const [notiz, setNotiz] = useState("");
   const [zeitEingabe, setZeitEingabe] = useState("");
-  const [filter, setFilter] = useState<"alle" | "meldung" | "inject">("alle");
+  const [reiter, setReiter] = useState<"zeitplan" | "protokoll">("zeitplan");
   const jetzt = s.adapter.serverJetzt();
   const darfSteuern = st.istHost || (!!st.host && !istVeraltet(st.host.puls, jetzt));
+  const tLage = Math.floor(Math.min(t, sz.spieluhr.dauer_s) / LAGE_TAKT_S) * LAGE_TAKT_S;
+  const lagebild = useMemo(() => lagebildKontrolle(inh, z, tLage), [inh, z, tLage]);
+  const bedingt = bedingtStand(inh, z, t);
 
   const plan = useMemo<Plan[]>(() => {
     const liste: Plan[] = sz.meldungen.map((m) => {
-      const gt = [...new Set(m.ziele.map((id) => GT_TEXT[inh.ziele[id].gt.kategorie]))].join("/");
-      return { art: "meldung", id: m.id, t: m.t_s, text: `${m.argus.klasse} ${m.argus.konfidenz} % ${m.argus.empfehlung}`, zusatz: `GT: ${gt}`, fall: m.fall };
+      const gt = [...new Set(m.ziele.map((id) => GT_NAME[inh.ziele[id].gt.kategorie]))].join("/");
+      return { art: "meldung", id: m.id, t: m.t_s, text: `${m.argus.klasse} ${m.argus.konfidenz} % ${m.argus.empfehlung}`, zusatz: `Ground Truth: ${gt}`, fall: m.fall };
     });
     for (const i of sz.injects) {
-      const b = i.bedingung;
-      const bed = !b ? "" : b.typ === "keine_freigabe_bis" ? `bedingt: keine Freigabe auf ${b.ziele[0]}… bis ${uhrzeit(start, b.t_s)}`
-        : `bedingt: ${b.typ === "freigabe_mit_zivil" ? "Freigabe mit Zivilpersonen" : "Freigabe"} auf ${b.ziele.join(", ")} +${b.verzoegerung_s} s`;
-      liste.push({ art: "inject", id: i.id, t: i.t_s ?? null, text: `${i.von} → ${i.an}`, zusatz: bed, fall: i.fall });
+      if (i.t_s === undefined) continue;
+      liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
     }
-    for (const r of sz.reserve_injects ?? []) liste.push({ art: "inject", id: r.id, t: null, text: `Reserve: ${r.von} → ${r.an}`, zusatz: r.einsatz });
-    return liste.sort((a, b) => (a.t ?? 1e9) - (b.t ?? 1e9));
+    return liste.sort((a, b) => a.t - b.t);
   }, [inh]);
-
-  const sichtbar = plan.filter((x) => filter === "alle" || x.art === filter);
 
   const zeitSetzen = () => {
     const m = zeitEingabe.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -83,8 +90,16 @@ export function SLAnsicht(p: { s: Sitzung }) {
     setZeitEingabe("");
   };
 
+  // Zeitplan: nächsten Eintrag sichtbar halten
+  const naechster = plan.find((x) => !(x.art === "meldung" ? z.meldungen[x.id] : z.injects[x.id]))?.id;
+  const zeitplanRef = useRef<HTMLTableElement>(null);
+  useEffect(() => {
+    if (reiter !== "zeitplan" || !naechster) return;
+    zeitplanRef.current?.querySelector(`[data-plan="${naechster}"]`)?.scrollIntoView({ block: "center" });
+  }, [naechster, reiter]);
+
   return (
-    <main class="inhalt spalten-sl">
+    <main class="inhalt ansicht-sl">
       <div class="stapel">
         <Panel titel="Steuerung" klasse="flach" rechts={st.istHost ? <span class="badge gut" data-testid="host">steuert</span> : <span class="badge">beobachtet</span>}>
           <div class="stapel" style="gap:8px">
@@ -93,51 +108,85 @@ export function SLAnsicht(p: { s: Sitzung }) {
               {!st.istHost && <div>Steuerung: {st.host ? `„${st.host.name}“${istVeraltet(st.host.puls, jetzt) ? " (keine Rückmeldung)" : ""}` : "niemand"}</div>}
             </div>
             {!st.istHost && <button type="button" class="knopf warn" onClick={() => void s.uebernehmen()}>Steuerung übernehmen</button>}
-            <div class="knopf-reihe">
-              <AktionsKnopf s={s} wartet={s.wartetAuf("uhr")} gesperrt={!darfSteuern || !st.lauf} klasse={z.uhr.laeuft ? "warn gross" : "gut gross"}
-                onClick={() => s.senden("uhr", { befehl: z.uhr.laeuft ? "pause" : "start" })}>
-                {z.uhr.laeuft ? "❚❚ Anhalten" : "▶ Start"}
-              </AktionsKnopf>
-            </div>
-            <div class="zeile">
-              <span class="klein leise">Tempo</span>
+            <AktionsKnopf s={s} wartet={s.wartetAuf("uhr")} gesperrt={!darfSteuern || !st.lauf || z.ende} klasse={z.uhr.laeuft ? "warn gross" : "gut gross"}
+              onClick={() => s.senden("uhr", { befehl: z.uhr.laeuft ? "pause" : "start" })}>
+              {z.uhr.laeuft ? "❚❚ Anhalten" : "▶ Start"}
+            </AktionsKnopf>
+            <div class="zeile" style="gap:4px">
+              <span class="klein leise" style="margin-right:4px">Tempo</span>
               {TEMPI.map((v) => (
-                <button type="button" class={`knopf klein ${z.uhr.tempo === v ? "an" : ""}`} onClick={() => s.senden("uhr", { befehl: "tempo", tempo: v })}>×{v}</button>
+                <button type="button" class={`knopf klein ${z.uhr.tempo === v ? "an" : ""}`} disabled={!darfSteuern} onClick={() => s.senden("uhr", { befehl: "tempo", tempo: v })}>×{v}</button>
               ))}
             </div>
-            <div class="zeile">
-              <input class="feld mono" style="width:90px" placeholder={mmss(t)} value={zeitEingabe} onInput={(e) => setZeitEingabe((e.target as HTMLInputElement).value)} />
-              <button type="button" class="knopf klein" onClick={zeitSetzen}>Spielzeit setzen</button>
+            <div class="zeile" style="flex-wrap:nowrap">
+              <input class="feld zahl" style="width:80px" placeholder={mmss(t)} value={zeitEingabe} onInput={(e) => setZeitEingabe((e.target as HTMLInputElement).value)}
+                onKeyDown={(e) => e.key === "Enter" && zeitSetzen()} data-testid="sl-zeit" />
+              <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={zeitSetzen}>Spielzeit setzen</button>
             </div>
             <div class="zeile zwischen">
-              <span class="klein">Fast-Track <b>{z.fastTrack ? "EIN" : "AUS"}</b></span>
+              <span class="klein">Fast-Track <b>{z.fastTrack ? "EIN" : "AUS"}</b> <span class="sehr-leise">(auf Zuruf von G3)</span></span>
               <AktionsKnopf s={s} wartet={s.wartetAuf("fast_track")} klasse="klein" onClick={() => s.senden("fast_track", { an: !z.fastTrack })}>
-                {z.fastTrack ? "ausschalten" : "einschalten"}
+                {z.fastTrack ? "aus" : "ein"}
               </AktionsKnopf>
             </div>
-            <button type="button" class="knopf schlecht klein" disabled={!st.istHost}
-              onClick={() => { if (confirm("Neues Spiel beginnen? Der jetzige Lauf bleibt gespeichert.")) void s.neuesSpiel(); }}>
-              Neues Spiel
-            </button>
+            <div class="knopf-reihe">
+              <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
+              <button type="button" class="knopf schlecht klein" disabled={!st.istHost}
+                onClick={() => { if (confirm("Neues Spiel beginnen? Der jetzige Lauf bleibt gespeichert.")) void s.neuesSpiel(); }}>
+                Neues Spiel
+              </button>
+            </div>
             {(bericht.fehler.length > 0 || bericht.warnungen.length > 0) && (
-              <div class={bericht.fehler.length ? "warnung" : "klein leise"} title={[...bericht.fehler, ...bericht.warnungen].join("\n")}>
+              <div class={bericht.fehler.length ? "warnung" : "klein sehr-leise"} title={[...bericht.fehler, ...bericht.warnungen].join("\n")}>
                 Szenario-Prüfung: {bericht.fehler.length} Fehler, {bericht.warnungen.length} Warnungen
               </div>
             )}
           </div>
         </Panel>
-        <Panel titel="Fenster im Raum" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
-          <table class="tabelle">
-            <tbody>
-              {[...st.teilnehmer].sort((a, b) => a.rolle.localeCompare(b.rolle)).map((x) => (
-                <tr key={x.client}>
-                  <th>{ROLLEN_NAME[x.rolle] ?? x.rolle}</th>
-                  <td>{x.name !== ROLLEN_NAME[x.rolle] ? x.name : ""}{x.client === st.client ? " (dieses)" : ""}{st.host?.id === x.client ? " · steuert" : ""}</td>
-                  <td class="mono klein sehr-leise" style="text-align:right">{Math.max(0, Math.round((jetzt - x.puls) / 1000))} s</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <Panel titel="Bedingte Injects, Ereignis und Reserve" liste>
+          <div class="bedingt-liste" data-testid="bedingt">
+            {bedingt.map((b) => {
+              const inj = inh.injects[b.id];
+              const ereignis = b.art === "ereignis" ? sz.ereignisse.find((e) => e.id === b.id) : undefined;
+              return (
+                <div class={`bedingt ${b.status}`} key={b.id} data-bedingt={b.id} title={ereignis?.name ?? `${inj?.von}: „${inj?.text}“`}>
+                  <div>
+                    <div><b>{b.id}</b> <span class="status">· {STATUS_TEXT[b.status]}{b.t !== undefined && b.status !== "ausgeloest" ? ` ${uhrzeit(start, b.t)}` : ""}</span></div>
+                    <div class="status">{b.text}{ereignis ? " · ab Schritt 7 automatisch, bis dahin nach Kontrollkarte" : ""}</div>
+                  </div>
+                  {b.art === "inject" && b.status !== "ausgeloest" && (
+                    <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={() => s.senden("inject_ausloesen", { inject: b.id })}>jetzt</button>
+                  )}
+                </div>
+              );
+            })}
+            {(sz.reserve_injects ?? []).map((r) => {
+              const da = z.injects[r.id];
+              return (
+                <div class={`bedingt ${da ? "ausgeloest" : ""}`} key={r.id} data-reserve={r.id} title={`${r.von}: „${r.text}“`}>
+                  <div>
+                    <div><b>{r.id}</b> <span class="status">· Reserve an {r.an}{da ? ` · ausgelöst ${uhrzeit(start, da.erschienen.t_s)}` : ""}</span></div>
+                    <div class="status">{r.einsatz}</div>
+                  </div>
+                  {!da && <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={() => s.senden("inject_ausloesen", { inject: r.id })}>auslösen</button>}
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+        <Panel titel="Fenster im Raum" klasse="flach" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
+          <div class="fenster-liste" data-testid="fenster">
+            {[...st.teilnehmer].sort((a, b) => a.rolle.localeCompare(b.rolle)).map((x) => {
+              const alter = Math.max(0, Math.round((jetzt - x.puls) / 1000));
+              return (
+                <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`}
+                  title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""} · letzte Rückmeldung vor ${alter} s`}>
+                  <i class={`rolle-${x.rolle}`} />{x.rolle === "plenum" ? "Plenum" : x.rolle.toUpperCase()}{x.name !== ROLLEN_NAME[x.rolle] ? ` ${x.name}` : ""}
+                  {st.host?.id === x.client && <b> ★</b>}<span class="sehr-leise zahl">{alter} s</span>
+                </span>
+              );
+            })}
+          </div>
         </Panel>
         <Panel titel="Notiz ins Protokoll" klasse="flach">
           <div class="zeile" style="flex-wrap:nowrap">
@@ -149,50 +198,51 @@ export function SLAnsicht(p: { s: Sitzung }) {
         </Panel>
       </div>
 
-      <Panel titel="Zeitplan" rechts={
-        <div class="zeile">
-          {(["alle", "meldung", "inject"] as const).map((f) => (
-            <button type="button" class={`knopf klein ${filter === f ? "an" : ""}`} onClick={() => setFilter(f)}>{f === "alle" ? "Alle" : f === "meldung" ? "Meldungen" : "Injects"}</button>
-          ))}
-        </div>}>
-        <table class="tabelle raster" data-testid="zeitplan">
-          <tbody>
-            {sichtbar.map((x) => {
-              const ms = x.art === "meldung" ? z.meldungen[x.id] : undefined;
-              const is = x.art === "inject" ? z.injects[x.id] : undefined;
-              const erschienen = ms?.erschienen ?? is?.erschienen;
-              const status = ms ? STUFE_TEXT[ms.stufe] + (ms.fastTrack ? " · FT" : "")
-                : is ? (is.quittiert ? "quittiert" : "ausgelöst") : "";
-              return (
-                <tr key={x.id} style={erschienen ? "opacity:.6" : ""}>
-                  <td class="mono">{x.t === null ? "—" : uhrzeit(start, x.t)}</td>
-                  <td class="mono"><b>{x.id}</b>{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
-                  <td>{x.text}<div class="klein sehr-leise">{x.zusatz}</div></td>
-                  <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
-                  <td style="text-align:right">
-                    {!erschienen && (
-                      <button type="button" class="knopf klein" disabled={!darfSteuern}
-                        onClick={() => x.art === "meldung" ? s.senden("meldung_ausloesen", { meldung: x.id }) : s.senden("inject_ausloesen", { inject: x.id })}>
-                        jetzt
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <Panel titel="Kontrollkarte" klasse="ohne-rand"
+        rechts={<span class="klein sehr-leise">Ground Truth, Lage {uhrzeit(start, tLage)} · Ziele mit Maus zeigen · Mausrad zoomt (Fahrzeuge ab Zoom)</span>}>
+        <LagekarteAnsicht inh={inh} lagebild={lagebild} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={17} testid="kontrollkarte" />
       </Panel>
-
-      <Panel titel={`Protokoll · ${st.protokoll.length} Einträge`} rechts={
-        <button type="button" class="knopf klein" disabled={!st.protokoll.length} onClick={() => exportieren(s)}>Export JSON</button>}>
-        {st.protokoll.length === 0 ? <Leer>noch keine Einträge</Leer> : (
+      <Panel liste titel={
+        <div class="reiter">
+          <button type="button" class={reiter === "zeitplan" ? "an" : ""} onClick={() => setReiter("zeitplan")}>Zeitplan</button>
+          <button type="button" class={reiter === "protokoll" ? "an" : ""} onClick={() => setReiter("protokoll")}>Protokoll · {st.protokoll.length}</button>
+        </div>}
+        rechts={reiter === "protokoll" ? <button type="button" class="knopf klein" disabled={!st.protokoll.length} onClick={() => exportieren(s)}>Export JSON</button> : null}>
+        {reiter === "zeitplan" ? (
+          <table class="tabelle raster" data-testid="zeitplan" ref={zeitplanRef}>
+            <tbody>
+              {plan.map((x) => {
+                const ms = x.art === "meldung" ? z.meldungen[x.id] : undefined;
+                const is = x.art === "inject" ? z.injects[x.id] : undefined;
+                const erschienen = ms?.erschienen ?? is?.erschienen;
+                const status = ms ? STUFE_TEXT[ms.stufe] + (ms.fastTrack ? " · FT" : "")
+                  : is ? (is.quittiert ? "quittiert" : "ausgelöst") : "";
+                return (
+                  <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
+                    <td class="zahl klein">{uhrzeit(start, x.t)}</td>
+                    <td><b>{x.id}</b>{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
+                    <td class="klein">{x.text}<div class="sehr-leise">{x.zusatz}</div></td>
+                    <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
+                    <td style="text-align:right">
+                      {!erschienen && (
+                        <button type="button" class="knopf klein" disabled={!darfSteuern}
+                          onClick={() => x.art === "meldung" ? s.senden("meldung_ausloesen", { meldung: x.id }) : s.senden("inject_ausloesen", { inject: x.id })}>
+                          jetzt
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : st.protokoll.length === 0 ? <Leer>noch keine Einträge</Leer> : (
           <table class="tabelle protokoll" data-testid="protokoll">
             <tbody>
               {[...st.protokoll].reverse().map((e) => (
                 <tr key={e.seq} class={`${e.typ === "aktion_abgelehnt" ? "abgelehnt" : ""} ${e.von.rolle === "system" ? "system" : ""}`} data-seq={e.seq} data-aktion={e.aktion ?? ""}>
-                  <td class="mono sehr-leise">{e.seq}</td>
-                  <td class="mono">{uhrzeit(start, e.t_s)}</td>
+                  <td class="zahl sehr-leise">{e.seq}</td>
+                  <td class="zahl">{uhrzeit(start, e.t_s)}</td>
                   <td class="typ">{absenderText(e)}</td>
                   <td>{beschreibe(e, inh)}</td>
                 </tr>
