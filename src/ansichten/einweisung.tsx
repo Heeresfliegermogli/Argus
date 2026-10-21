@@ -74,11 +74,11 @@ function texte(inh: Inhalte): Record<KartenRolle, KartenText> {
     },
     sl: {
       lage: "spielleitung",
-      unter: "SL 1 steuert, SL 2 beobachtet und protokolliert.",
+      unter: "SL 1 steuert alle Teams, SL 2 beobachtet und protokolliert.",
       schritte: [
-        { nr: null, zeichen: "▶", titel: "Vor dem Spiel", text: <>Fenster G1–G3 öffnen, „Plenum öffnen“ für das Smartboard. Die Gruppen lesen ihre Einweisungskarte. Dann <M k="weiter">▶ Start</M> – die Uhr läuft {von}–{bis}.</> },
-        { nr: null, zeichen: "◷", titel: "Während des Spiels", text: <>Meldungen und Injects kommen von selbst. Fast-Track auf Zuruf von G3, Reserve-Injects nach Lage. Links unter der Steuerung steht, welche bedingten Injects kommen. Beobachtungen als Notiz ins Protokoll.</> },
-        { nr: null, zeichen: "■", titel: "Spielende", text: <>Um {bis} hält die Uhr an und die Gruppen-Ansichten sperren. Das Plenum zeigt die Auflösung. Protokoll als JSON exportieren.</> },
+        { nr: null, zeichen: "▶", titel: "Vor dem Spiel", text: <>Sitzung anlegen, „Plenum öffnen“ – das Smartboard zeigt den Code. Die Teilnehmer geben ihn ein und bilden Teams à drei (Doppelrolle, wenn jemand fehlt). Dann <M k="weiter">Spiel öffnen – alle Teams</M>, Einweisung lesen lassen, <M k="weiter">▶ Uhr starten – alle</M>. Die Uhr läuft {von}–{bis}.</> },
+        { nr: null, zeichen: "◷", titel: "Während des Spiels", text: <>Meldungen und Injects kommen von selbst. Die Übersicht zeigt je Team Eingang, Schlüsselfälle und Fehltreffer. „ansehen ›“ öffnet ein Team: Steuerung (Fast-Track, Reserve, Notiz) oder Zuschauen bei G1–G3.</> },
+        { nr: null, zeichen: "■", titel: "Spielende", text: <>Um {bis} hält die Uhr an und die Ansichten der Teams sperren. Das Plenum zeigt die Auflösung je Team. Protokolle je Team als JSON exportieren.</> },
       ],
       sieht: "alles: Ground Truth, ungemeldete Ziele, alle Entscheidungen, Protokoll",
       siehtNicht: "–",

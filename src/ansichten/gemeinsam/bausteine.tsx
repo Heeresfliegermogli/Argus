@@ -6,7 +6,8 @@ import type { Rolle } from "../../kern/ereignisse";
 import { STUFE_TEXT, type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
 import { uhrzeit } from "../../kern/uhr";
 import type { MeldungsStand, Spielzustand } from "../../kern/zustand";
-import type { Sitzung } from "../../sitzung/sitzung";
+import type { Hinweis } from "../../sitzung/hinweise";
+import type { Sicht } from "../../sitzung/sicht";
 
 /** Schrittnummer wie auf der Einweisungskarte. */
 export function Schritt(p: { nr: number }) {
@@ -162,22 +163,68 @@ export function Platzhalter(p: { titel: string; text: string; stil?: string }) {
   );
 }
 
-/** Knopf, der eine Aktion sendet und solange „gesendet …“ zeigt, bis sie im Protokoll steht. */
+/** Knopf, der eine Aktion sendet und solange „gesendet …“ zeigt, bis sie im Protokoll steht. Beim Zuschauen gesperrt. */
 export function AktionsKnopf(p: {
-  s: Sitzung; wartet: boolean; klasse?: string; gesperrt?: boolean; onClick: () => void; children: ComponentChildren; titel?: string;
+  s: Sicht; wartet: boolean; klasse?: string; gesperrt?: boolean; onClick: () => void; children: ComponentChildren; titel?: string;
   testid?: string;
 }) {
   return (
-    <button type="button" class={`knopf ${p.klasse ?? ""}`} disabled={p.wartet || p.gesperrt} onClick={p.onClick} title={p.titel} data-testid={p.testid}>
+    <button type="button" class={`knopf ${p.klasse ?? ""}`} disabled={p.wartet || p.gesperrt || p.s.nurLesen} onClick={p.onClick}
+      title={p.s.nurLesen ? "Zuschauen – nur lesen" : p.titel} data-testid={p.testid}>
       {p.wartet ? "gesendet …" : p.children}
     </button>
   );
 }
 
-export function Hinweise(p: { s: Sitzung }) {
+export function Hinweise(p: { liste: Hinweis[] }) {
   return (
     <div class="hinweise" aria-live="polite">
-      {p.s.stand.hinweise.map((h) => <div key={h.id} class={`hinweis ${h.art}`}>{h.text}</div>)}
+      {p.liste.map((h) => <div key={h.id} class={`hinweis ${h.art}`}>{h.text}</div>)}
     </div>
+  );
+}
+
+/**
+ * Kleines Auswahlmenü an einem Element (Spielleitung: Spieler verschieben). Schließt bei Klick
+ * daneben oder Escape.
+ */
+export function Menue(p: { offen: boolean; schliessen: () => void; children: ComponentChildren; rechts?: boolean; testid?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!p.offen) return;
+    const weg = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) p.schliessen(); };
+    const taste = (e: KeyboardEvent) => { if (e.key === "Escape") p.schliessen(); };
+    const t = setTimeout(() => document.addEventListener("mousedown", weg), 0);
+    document.addEventListener("keydown", taste);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("mousedown", weg);
+      document.removeEventListener("keydown", taste);
+    };
+  }, [p.offen]);
+  if (!p.offen) return null;
+  return <div ref={ref} class={`menue ${p.rechts ? "rechts" : ""}`} data-testid={p.testid} onClick={(e) => e.stopPropagation()}>{p.children}</div>;
+}
+
+/**
+ * Knopf für Folgenreiches (neues Spiel, Team löschen): Der erste Klick fragt im Knopf nach, der
+ * zweite führt aus; nach 5 s ohne zweiten Klick ist er wieder entschärft. Kein confirm(): Ein
+ * Browser-Dialog hielte im Fenster der Spielleitung die Hosts aller Teams an.
+ */
+export function BestaetigenKnopf(p: {
+  klasse?: string; frage: ComponentChildren; onClick: () => void; children: ComponentChildren; gesperrt?: boolean; titel?: string; testid?: string;
+}) {
+  const [scharf, setScharf] = useState(false);
+  useEffect(() => {
+    if (!scharf) return;
+    const t = setTimeout(() => setScharf(false), 5000);
+    return () => clearTimeout(t);
+  }, [scharf]);
+  return (
+    <button type="button" class={`knopf ${p.klasse ?? ""} ${scharf ? "scharf" : ""}`} disabled={p.gesperrt} title={p.titel} data-testid={p.testid}
+      data-scharf={scharf ? "1" : undefined}
+      onClick={() => { if (scharf) { setScharf(false); p.onClick(); } else setScharf(true); }}>
+      {scharf ? p.frage : p.children}
+    </button>
   );
 }

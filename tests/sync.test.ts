@@ -1,8 +1,11 @@
 // Mehrere Fenster in einem Prozess: jede Sitzung mit eigenem LokalAdapter, gemeinsamer Ablage
 // und BroadcastChannel (wie mehrere Browserfenster an einem PC).
+// Hier der Direktaufruf ohne Lobby (ein Team, wie bis Schritt 6); Teams und Lobby: teams.test.ts.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Rolle } from "../src/kern/ereignisse";
+import { DIREKT_TEAM } from "../src/kern/sitzungen";
 import { fingerabdruck } from "../src/kern/zustand";
+import { Sicht } from "../src/sitzung/sicht";
 import { Sitzung } from "../src/sitzung/sitzung";
 import { LokalAdapter } from "../src/sync/lokal";
 import { bis, inhalte, warte } from "./hilfen";
@@ -10,14 +13,17 @@ import { bis, inhalte, warte } from "./hilfen";
 let sitzungen: Sitzung[] = [];
 let raumNr = 0;
 
-async function fenster(raum: string, rolle: Rolle, name?: string): Promise<Sitzung> {
-  const s = new Sitzung(await inhalte(), new LokalAdapter(raum), rolle, name);
+/** Fenster im Direktaufruf …/?rolle=…&raum=…: gibt die Sicht der Rolle auf das eine Team zurück. */
+async function fenster(raum: string, rolle: Rolle, name?: string): Promise<Sicht> {
+  const art = rolle === "sl" ? "sl" : rolle === "plenum" ? "plenum" : "tt";
+  const s = new Sitzung(await inhalte(), new LokalAdapter(raum), { art, name, direkt: { rolle } });
   sitzungen.push(s);
   await s.starten();
-  return s;
+  await bis(() => !!s.spiel(DIREKT_TEAM), 3000, `${rolle}: Team da`);
+  return new Sicht(s, s.spiel(DIREKT_TEAM)!, rolle);
 }
 
-const gleich = (liste: Sitzung[]) => {
+const gleich = (liste: Sicht[]) => {
   const f = liste.map((s) => `${s.stand.zustand.seq}:${fingerabdruck(s.stand.zustand)}`);
   return f.every((x) => x === f[0]);
 };
@@ -31,7 +37,7 @@ afterEach(() => {
   sitzungen = [];
 });
 
-describe("Vier Fenster bleiben synchron (lokaler Adapter)", () => {
+describe("Vier Fenster bleiben synchron (lokaler Adapter, Direktaufruf)", () => {
   it("Spielleitung startet, G1–G3 arbeiten eine Meldung ab, alle Stände gleich, jede Aktion im Protokoll", async () => {
     const raum = `test-${raumNr}`;
     const sl = await fenster(raum, "sl");
@@ -65,6 +71,8 @@ describe("Vier Fenster bleiben synchron (lokaler Adapter)", () => {
     const typen = sl.stand.protokoll.map((e) => e.typ);
     expect(typen.slice(0, 2)).toEqual(["spiel_neu", "uhr"]);
     expect(sl.stand.protokoll.map((e) => e.seq)).toEqual(sl.stand.protokoll.map((_, i) => i + 1));
+    // Absender im Protokoll: Rolle und Fenster
+    expect(sl.stand.protokoll.find((e) => e.typ === "g1_entscheid")?.von).toMatchObject({ rolle: "g1", client: g1.sitzung.client });
   });
 
   it("Neu geladenes Fenster baut denselben Stand aus dem Protokoll auf", async () => {
@@ -93,8 +101,8 @@ describe("Vier Fenster bleiben synchron (lokaler Adapter)", () => {
     await bis(() => g1.stand.geladen, 3000);
     sl1.senden("meldung_ausloesen", { meldung: "M02" }); // Aktion vom alten Host-Fenster geht an den neuen Host
     await bis(() => g1.stand.zustand.meldungen.M02?.stufe === "g1", 3000, "neuer Host verarbeitet");
-    expect(sl1.hostAktiv).toBe(false);
-    expect(sl2.hostAktiv).toBe(true);
+    expect(sl1.spiel.hostAktiv).toBe(false);
+    expect(sl2.spiel.hostAktiv).toBe(true);
   });
 
   it("Neues Spiel: alle Fenster wechseln in den neuen Lauf, der alte bleibt gespeichert", async () => {
@@ -105,10 +113,19 @@ describe("Vier Fenster bleiben synchron (lokaler Adapter)", () => {
     const alt = sl.stand.lauf!;
     sl.senden("meldung_ausloesen", { meldung: "M03" });
     await bis(() => g3.stand.zustand.meldungen.M03 !== undefined, 3000);
-    await warte(1100); // neue Lauf-Kennung braucht eine andere Minute oder anderen Zufall
     await sl.neuesSpiel();
     await bis(() => g3.stand.lauf !== alt && g3.stand.zustand.seq >= 2, 3000, "Wechsel");
     expect(g3.stand.zustand.meldungen.M03).toBeUndefined();
-    expect((await sl.adapter.ladeProtokoll(alt)).length).toBeGreaterThanOrEqual(3);
+    expect((await sl.adapter.ladeProtokoll(DIREKT_TEAM, alt)).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Zuschauen: eine Sicht mit nurLesen sendet nichts", async () => {
+    const raum = `test-${raumNr}`;
+    const sl = await fenster(raum, "sl");
+    await bis(() => sl.stand.zustand.seq >= 2, 3000);
+    const zu = new Sicht(sl.sitzung, sl.spiel, "g1", { nurLesen: true });
+    expect(zu.senden("g1_entscheid", { meldung: "M01", entscheid: "annehmen" })).toBeNull();
+    expect(zu.stand.nurLesen).toBe(true);
+    expect(zu.stand.zustand).toBe(sl.stand.zustand);
   });
 });

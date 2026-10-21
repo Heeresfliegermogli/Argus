@@ -9,13 +9,13 @@ import { gemeldetePosition } from "../kern/regeln";
 import { ENTSCHEID_TEXT, ERGEBNIS_TEXT, STUFE_TEXT, injectsFuer, verlauf, warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import type { InjectStand } from "../kern/zustand";
-import type { Sitzung } from "../sitzung/sitzung";
+import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, Konfidenz, Empfehlung, Leer, MeldungsEintrag, Panel } from "./gemeinsam/bausteine";
 import { useAuswahl, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { vorschauFuer } from "./g2";
 
-function Postfach(p: { s: Sitzung; injects: InjectStand[] }) {
+function Postfach(p: { s: Sicht; injects: InjectStand[] }) {
   const { s } = p;
   const inh = s.inh;
   const start = inh.szenario.spieluhr.start;
@@ -58,7 +58,7 @@ function Postfach(p: { s: Sitzung; injects: InjectStand[] }) {
   );
 }
 
-export function G3Ansicht(p: { s: Sitzung }) {
+export function G3Ansicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 1000);

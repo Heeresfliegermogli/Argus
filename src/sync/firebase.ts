@@ -2,6 +2,7 @@
 // Offizielles SDK; WebSocket ist im Hörsaalnetz gesperrt, deshalb standardmäßig Long-Polling
 // (Sync-Test 19.10.: Median 449 ms, max. 596 ms). Eigene REST-Aufrufe werden nicht verwendet,
 // weil der Proxy HTTP-DELETE blockiert.
+// Pfad je Sitzung: argus/v1/sitzungen/<sitzung>/ (Aufbau siehe adapter.ts).
 import { type FirebaseApp, deleteApp, initializeApp } from "firebase/app";
 import {
   type Database, type DatabaseReference, type Unsubscribe, forceLongPolling, getDatabase, onChildAdded,
@@ -10,7 +11,8 @@ import {
 import type { Aktion, Ereignis } from "../kern/ereignisse";
 import { bereinigt, protokollSchluessel, zufall } from "../kern/ereignisse";
 import {
-  type Abmelden, type HostInfo, PULS_INTERVALL_MS, type SyncAdapter, type Teilnehmer, type Verbindung, istVeraltet,
+  type Abmelden, type HostInfo, PULS_INTERVALL_MS, type SitzungsInfo, type SpielerEintrag, type SyncAdapter,
+  type TeamDaten, type TeamKopf, type Teilnehmer, type Verbindung, istVeraltet,
 } from "./adapter";
 
 export interface FirebaseEinstellungen {
@@ -31,11 +33,12 @@ export class FirebaseAdapter implements SyncAdapter {
   private abos: Unsubscribe[] = [];
   private timer: ReturnType<typeof setInterval>[] = [];
   private anwRef: DatabaseReference | null = null;
+  private anwTimer: ReturnType<typeof setInterval> | null = null;
   private hostId: string | null = null;
   private hostTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(readonly raum: string, private readonly cfg: FirebaseEinstellungen) {
-    this.b = `argus/v1/raeume/${raum}`;
+  constructor(readonly sitzung: string, private readonly cfg: FirebaseEinstellungen) {
+    this.b = `argus/v1/sitzungen/${sitzung}`;
     this.verbindung = { verbunden: false, art: this.artText() };
   }
 
@@ -48,9 +51,13 @@ export class FirebaseAdapter implements SyncAdapter {
     return this.db;
   }
 
+  private r(pfad: string): DatabaseReference {
+    return ref(this.d, `${this.b}/${pfad}`);
+  }
+
   async verbinden(): Promise<void> {
     if (this.cfg.transport === "lp") forceLongPolling();
-    this.app = initializeApp({ databaseURL: this.cfg.databaseURL }, `argus-${this.raum}-${zufall(4)}`);
+    this.app = initializeApp({ databaseURL: this.cfg.databaseURL }, `argus-${this.sitzung}-${zufall(4)}`);
     this.db = getDatabase(this.app);
     this.abos.push(onValue(ref(this.db, ".info/serverTimeOffset"), (s) => { this.versatz = Number(s.val()) || 0; }));
     this.abos.push(onValue(ref(this.db, ".info/connected"), (s) => {
@@ -64,6 +71,8 @@ export class FirebaseAdapter implements SyncAdapter {
     this.abos = [];
     this.timer.forEach(clearInterval);
     this.timer = [];
+    if (this.anwTimer) clearInterval(this.anwTimer);
+    this.anwTimer = null;
     if (this.hostTimer) clearInterval(this.hostTimer);
     if (this.app) void deleteApp(this.app);
     this.app = null;
@@ -82,7 +91,7 @@ export class FirebaseAdapter implements SyncAdapter {
 
   neueId(): string {
     // push() ohne Wert erzeugt nur einen zeitlich sortierbaren Schlüssel, schreibt nichts.
-    return push(ref(this.d, `${this.b}/ids`)).key!;
+    return push(this.r("ids")).key!;
   }
 
   private abo(u: Unsubscribe): Abmelden {
@@ -93,61 +102,102 @@ export class FirebaseAdapter implements SyncAdapter {
     };
   }
 
-  // ---------------------------------------------------------------- Lauf
+  // ---------------------------------------------------------------- Sitzung
 
-  aufAktuellenLauf(cb: (lauf: string | null) => void): Abmelden {
-    return this.abo(onValue(ref(this.d, `${this.b}/aktuell`), (s) => cb((s.val() as string | null) ?? null), (e) => this.fehler(e)));
+  async legeAn(info: SitzungsInfo): Promise<boolean> {
+    try {
+      const erg = await runTransaction(this.r("info"), (alt: SitzungsInfo | null) => (alt ? undefined : bereinigt(info)));
+      return erg.committed;
+    } catch (e) {
+      // Gibt es den Code schon, lehnt die Regel „nur anlegen“ den ersten Versuch ab, bevor der
+      // Vergleich mit dem Bestand greift. Dann ist der Code eben vergeben.
+      const da = await new Promise<boolean>((ok) => onValue(this.r("info"), (s) => ok(s.exists()), () => ok(false), { onlyOnce: true }));
+      if (da) return false;
+      throw e;
+    }
   }
 
-  async setzeAktuellenLauf(lauf: string): Promise<void> {
-    await set(ref(this.d, `${this.b}/aktuell`), lauf);
+  aufInfo(cb: (info: SitzungsInfo | null) => void): Abmelden {
+    return this.abo(onValue(this.r("info"), (s) => cb((s.val() as SitzungsInfo | null) ?? null), (e) => this.fehler(e)));
+  }
+
+  // ---------------------------------------------------------------- Teams
+
+  aufTeams(cb: (teams: Record<string, TeamDaten>) => void): Abmelden {
+    return this.abo(onValue(this.r("teams"), (s) => cb((s.val() ?? {}) as Record<string, TeamDaten>), (e) => this.fehler(e)));
+  }
+
+  async setzeTeam(team: string, kopf: TeamKopf, spieler?: { client: string; eintrag: SpielerEintrag }): Promise<void> {
+    // update statt set: legt an oder ergänzt, ohne vorhandene Spieler zu überschreiben.
+    const werte: Record<string, unknown> = { name: kopf.name, farbe: kopf.farbe, erstellt: kopf.erstellt };
+    if (spieler) werte[`spieler/${spieler.client}`] = bereinigt(spieler.eintrag);
+    await update(this.r(`teams/${team}`), werte);
+  }
+
+  async aendereTeam(team: string, teil: Partial<Pick<TeamDaten, "name" | "farbe" | "lauf">>): Promise<void> {
+    await update(this.r(`teams/${team}`), bereinigt(teil));
+  }
+
+  async loescheTeam(team: string): Promise<void> {
+    await set(this.r(`teams/${team}`), null);
+  }
+
+  async setzeSpieler(team: string | null, client: string, eintrag: SpielerEintrag | null, ausTeams: string[] = []): Promise<void> {
+    // Mehrere Pfade in einem Schreibvorgang: Teamwechsel ist entweder ganz oder gar nicht passiert.
+    const werte: Record<string, unknown> = {};
+    for (const t of ausTeams) if (t !== team) werte[`${t}/spieler/${client}`] = null;
+    if (team) werte[`${team}/spieler/${client}`] = eintrag ? bereinigt(eintrag) : null;
+    if (Object.keys(werte).length) await update(this.r("teams"), werte);
   }
 
   // ---------------------------------------------------------------- Protokoll
 
-  async ladeProtokoll(lauf: string): Promise<Ereignis[]> {
+  async ladeProtokoll(team: string, lauf: string): Promise<Ereignis[]> {
     // onValue mit onlyOnce statt get(): gleiches Ergebnis, funktioniert auch mit älteren Test-Servern.
     const v = await new Promise<Record<string, Ereignis> | null>((ok, fehler) => {
-      onValue(ref(this.d, `${this.b}/laeufe/${lauf}/protokoll`), (s) => ok(s.val() as Record<string, Ereignis> | null), fehler, { onlyOnce: true });
+      onValue(this.r(`laeufe/${team}/${lauf}/protokoll`), (s) => ok(s.val() as Record<string, Ereignis> | null), fehler, { onlyOnce: true });
     });
     return Object.values(v ?? {}).sort((a, b) => a.seq - b.seq);
   }
 
-  aufProtokoll(lauf: string, abSeq: number, cb: (e: Ereignis) => void): Abmelden {
-    const q = query(ref(this.d, `${this.b}/laeufe/${lauf}/protokoll`), orderByKey(), startAfter(protokollSchluessel(abSeq)));
+  aufProtokoll(team: string, lauf: string, abSeq: number, cb: (e: Ereignis) => void): Abmelden {
+    const q = query(this.r(`laeufe/${team}/${lauf}/protokoll`), orderByKey(), startAfter(protokollSchluessel(abSeq)));
     return this.abo(onChildAdded(q, (s) => cb(s.val() as Ereignis), (e) => this.fehler(e)));
   }
 
-  async schreibeEreignis(lauf: string, e: Ereignis): Promise<void> {
-    await set(ref(this.d, `${this.b}/laeufe/${lauf}/protokoll/${protokollSchluessel(e.seq)}`), bereinigt(e));
+  async schreibeEreignis(team: string, lauf: string, e: Ereignis): Promise<void> {
+    await set(this.r(`laeufe/${team}/${lauf}/protokoll/${protokollSchluessel(e.seq)}`), bereinigt(e));
   }
 
   // ---------------------------------------------------------------- Aktionen
 
-  async sendeAktion(lauf: string, a: Aktion): Promise<void> {
-    await set(ref(this.d, `${this.b}/laeufe/${lauf}/aktionen/${a.id}`), bereinigt(a));
+  async sendeAktion(team: string, lauf: string, a: Aktion): Promise<void> {
+    await set(this.r(`laeufe/${team}/${lauf}/aktionen/${a.id}`), bereinigt(a));
   }
 
-  aufAktionen(lauf: string, cb: (a: Aktion) => void): Abmelden {
-    const q = query(ref(this.d, `${this.b}/laeufe/${lauf}/aktionen`), orderByKey());
+  aufAktionen(team: string, lauf: string, cb: (a: Aktion) => void): Abmelden {
+    const q = query(this.r(`laeufe/${team}/${lauf}/aktionen`), orderByKey());
     return this.abo(onChildAdded(q, (s) => cb(s.val() as Aktion), (e) => this.fehler(e)));
   }
 
   // ---------------------------------------------------------------- Anwesenheit
 
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void {
-    this.anwRef = ref(this.d, `${this.b}/anwesenheit/${t.client}`);
+    this.anwRef = this.r(`anwesenheit/${t.client}`);
     const r = this.anwRef;
+    // Ganzer Eintrag bei jedem Puls (nicht nur puls): kommt auch nach einem Verbindungsabbruch wieder.
+    const schreiben = () => set(r, bereinigt({ ...t, puls: serverTimestamp() })).catch((e: Error) => this.fehler(e));
     onDisconnect(r).remove().catch(() => {});
-    set(r, bereinigt({ ...t, puls: serverTimestamp() })).catch((e: Error) => this.fehler(e));
-    this.timer.push(setInterval(() => void update(r, { puls: serverTimestamp() }), PULS_INTERVALL_MS));
+    void schreiben();
+    if (this.anwTimer) clearInterval(this.anwTimer);
+    this.anwTimer = setInterval(() => void schreiben(), PULS_INTERVALL_MS);
   }
 
   aufAnwesenheit(cb: (liste: Teilnehmer[]) => void): Abmelden {
     let letzte: Record<string, Teilnehmer> = {};
     const melden = () => cb(Object.values(letzte).filter((t) => !istVeraltet(t.puls, this.serverJetzt())));
     const t = setInterval(melden, PULS_INTERVALL_MS);
-    const ab = this.abo(onValue(ref(this.d, `${this.b}/anwesenheit`), (s) => {
+    const ab = this.abo(onValue(this.r("anwesenheit"), (s) => {
       letzte = (s.val() ?? {}) as Record<string, Teilnehmer>;
       melden();
     }));
@@ -160,7 +210,7 @@ export class FirebaseAdapter implements SyncAdapter {
   // ---------------------------------------------------------------- Host
 
   async beanspruche(host: Omit<HostInfo, "puls">, erzwingen: boolean): Promise<boolean> {
-    const r = ref(this.d, `${this.b}/host`);
+    const r = this.r("host");
     const erg = await runTransaction(r, (alt: HostInfo | null) => {
       const jetzt = this.serverJetzt();
       if (alt && alt.id !== host.id && !erzwingen && !istVeraltet(alt.puls, jetzt)) return undefined;
@@ -179,7 +229,7 @@ export class FirebaseAdapter implements SyncAdapter {
   }
 
   async gibFrei(id: string): Promise<void> {
-    const r = ref(this.d, `${this.b}/host`);
+    const r = this.r("host");
     if (this.hostTimer) clearInterval(this.hostTimer);
     this.hostTimer = null;
     this.hostId = null;
@@ -188,7 +238,7 @@ export class FirebaseAdapter implements SyncAdapter {
   }
 
   aufHost(cb: (h: HostInfo | null) => void): Abmelden {
-    return this.abo(onValue(ref(this.d, `${this.b}/host`), (s) => cb((s.val() as HostInfo | null) ?? null)));
+    return this.abo(onValue(this.r("host"), (s) => cb((s.val() as HostInfo | null) ?? null)));
   }
 
   private fehler(e: Error): void {

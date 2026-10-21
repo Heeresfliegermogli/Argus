@@ -7,7 +7,7 @@ import { gemeldetePosition } from "../kern/regeln";
 import { ERGEBNIS_TEXT, STUFE_TEXT, verlauf, warteschlange } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { TEXT_MAX } from "../kern/ereignisse";
-import type { Sitzung } from "../sitzung/sitzung";
+import type { Sicht } from "../sitzung/sicht";
 import {
   AktionsKnopf, Empfehlung, Konfidenz, Lagehinweise, Leer, MeldungsEintrag, Panel,
 } from "./gemeinsam/bausteine";
@@ -18,7 +18,7 @@ const SICHT_TEXT: Record<string, string> = {
   wolke: "Wolke", rauch: "Rauch", dunst: "Dunst", baeume: "Bäume", tarnnetz: "Tarnnetz", stoerung: "Bildstörung", unschaerfe: "Unschärfe",
 };
 
-export function G1Ansicht(p: { s: Sitzung }) {
+export function G1Ansicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 1000);

@@ -8,21 +8,29 @@ import { useMemo, useState } from "preact/hooks";
 import { LAGE_TAKT_S, LEER, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { phaseZu, uhrzeit } from "../kern/uhr";
-import type { Sitzung } from "../sitzung/sitzung";
+import type { Sicht } from "../sitzung/sicht";
 import { Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { gruppenKurz } from "./einweisung";
+import { TeamMarke } from "./gemeinsam/rahmen";
+
+/** Was Teilnehmer zum Mitspielen brauchen (Sitzung mit Lobby): Seite, Code und die Teams bisher. */
+export interface Beitritt {
+  code: string;
+  adresse: string;
+  teams: { id: string; name: string; farbe: string; spieler: number }[];
+}
 
 type Modus = "einweisung" | "lage" | "aufloesung";
 
 /** Name des Raums aus der Karte, ohne Zusatz „(fiktiv)“. */
-function raumName(inh: Sitzung["inh"]): string {
+function raumName(inh: Sicht["inh"]): string {
   return inh.karte.titel.replace(/\s*\(.*\)\s*$/, "");
 }
 const MODUS_TEXT: Record<Modus, string> = { einweisung: "Einweisung", lage: "Lage", aufloesung: "Auflösung" };
 
-export function PlenumAnsicht(p: { s: Sitzung }) {
+export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 1000);
@@ -44,7 +52,7 @@ export function PlenumAnsicht(p: { s: Sitzung }) {
           ))}
         </div>
       </div>
-      {modus === "einweisung" && <Einweisung s={s} />}
+      {modus === "einweisung" && <PlenumEinweisung inh={inh} beitritt={p.beitritt} />}
       {modus === "lage" && (
         <div class="plenum-raster plenum-lage">
           <Panel titel="Lagekarte" klasse="ohne-rand">
@@ -68,9 +76,11 @@ export function PlenumAnsicht(p: { s: Sitzung }) {
   );
 }
 
-function Einweisung(p: { s: Sitzung }) {
-  const inh = p.s.inh;
+/** Einweisung am Smartboard: Lage für alle, die drei Rollen, Lagekarte; in einer Sitzung dazu Code und Teams. */
+export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) {
+  const inh = p.inh;
   const sz = inh.szenario;
+  const b = p.beitritt;
   const lage = sz.lage.plenum;
   return (
     <div class="plenum-raster plenum-einweisung">
@@ -85,14 +95,28 @@ function Einweisung(p: { s: Sitzung }) {
           <div class="klein leise">{sz.ablauf_unterricht.map((a) => `${a.phase} ${a.dauer_min} min`).join(" · ")}</div>
         </div>
       </Panel>
-      <Panel titel={raumName(inh)} klasse="ohne-rand" rechts={<span class="klein sehr-leise">Gelände, Einheiten und Namen sind frei erfunden</span>}>
-        <LagekarteAnsicht inh={inh} lagebild={LEER} hintergrund="topo" legende="gelaende" />
-      </Panel>
+      <div class="stapel">
+        {b && (
+          <section class="beitritt" data-testid="beitritt">
+            <div>
+              <div class="leise">Mitspielen: <span class="mono">{b.adresse}</span></div>
+              <div class="beitritt-code">Code <b class="mono" data-testid="plenum-code">{b.code}</b></div>
+            </div>
+            <div class="beitritt-teams">
+              {b.teams.length === 0 ? <span class="sehr-leise">noch keine Teams</span>
+                : b.teams.map((t) => <span key={t.id}><TeamMarke name={t.name} farbe={t.farbe} /> <span class="sehr-leise zahl">{t.spieler}/3</span></span>)}
+            </div>
+          </section>
+        )}
+        <Panel titel={raumName(inh)} klasse="ohne-rand" rechts={<span class="klein sehr-leise">Gelände, Einheiten und Namen sind frei erfunden</span>}>
+          <LagekarteAnsicht inh={inh} lagebild={LEER} hintergrund="topo" legende="gelaende" />
+        </Panel>
+      </div>
     </div>
   );
 }
 
-function Aufloesung(p: { s: Sitzung; t: number }) {
+function Aufloesung(p: { s: Sicht; t: number }) {
   const inh = p.s.inh;
   const z = p.s.stand.zustand;
   const start = inh.szenario.spieluhr.start;

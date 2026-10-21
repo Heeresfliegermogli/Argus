@@ -1,15 +1,18 @@
-# ARGUS – Architektur und Datenformate (Stand Schritt 6)
+# ARGUS – Architektur und Datenformate (Stand Schritt 4b)
 
 Inhalte, Spiellogik, Netz und Ansichten sind getrennte Module. Neue Lagen, Karten, Fahrzeuge oder
 Wirkmittel sind JSON-Dateien, kein Code. Zwischen Variante A (Firebase) und C (ein PC, mehrere
-Fenster) wird nur der Sync-Adapter getauscht.
+Fenster) wird nur der Sync-Adapter getauscht. Seit Schritt 4b spielen mehrere Teams in einer Sitzung,
+jedes in einem eigenen Spielstand (Lauf); Sitzung, Lobby und Teams: [`SITZUNG.md`](SITZUNG.md).
 
 ```
 public/daten/*.json ──lädt──▶ Inhalte (src/inhalte)
                                  │
-Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host (nur steuernde SL) ──Ereignis──▶ Protokoll
-        ▲                       (src/sync)        (src/engine)                        │
-        └──── Spielstand = reduce(Protokoll) (src/kern/zustand.ts) ◀── Sync-Adapter ◀─┘
+Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host des Teams (im Fenster ──Ereignis──▶ Protokoll
+  (Sicht: ein Team,             (src/sync)        der steuernden SL, je Team       des Teams
+   eine Rolle)                                    einer, ein Takt) (src/engine)        │
+        ▲                                                                              │
+        └──── Spielstand = reduce(Protokoll) (src/kern/zustand.ts) ◀── Sync-Adapter ◀──┘
 ```
 
 ## Module
@@ -19,18 +22,20 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host (nur steue
 | `src/inhalte/` | Typen der JSON-Dateien (`typen.ts`), Laden (`laden.ts`, Quelle `fetch` oder eingebettet), Konsistenzprüfung (`pruefen.ts`) |
 | `src/kern/` | Protokollformat (`ereignisse.ts`), Spielstand als reine Funktion des Protokolls (`zustand.ts`), Spieluhr (`uhr.ts`), Geometrie und Einsatzregeln aus `argus_lib.py` portiert (`geometrie.ts`, `regeln.ts`), wer was sieht (`sichten.ts`), Klartext je Ereignis (`beschreibung.ts`) |
 | `src/engine/` | Host: prüft Aktionen (`aktionen.ts`), spielt den Zeitplan ab (`ablauf.ts`), vergibt Laufnummern und schreibt (`host.ts`) |
-| `src/sync/` | Schnittstelle (`adapter.ts`), Firebase RTDB (`firebase.ts`), lokal per localStorage + BroadcastChannel (`lokal.ts`) |
-| `src/sitzung/` | verbindet ein Fenster mit dem Adapter, hält Protokoll und Stand, bewirbt sich als Host (nur SL) |
+| `src/sync/` | Schnittstelle (`adapter.ts`), Firebase RTDB (`firebase.ts`), lokal per localStorage + BroadcastChannel + storage-Ereignis (`lokal.ts`), Auswahl (`fabrik.ts`) |
+| `src/sitzung/` | `sitzung.ts`: ein Fenster in einer Sitzung (Lobby, Teams, Host-Bewerbung); `spiel.ts`: Spielstand eines Teams (Protokoll, Aktionen, im Host-Fenster mit Host); `sicht.ts`: ein Team aus Sicht einer Rolle für die Ansichten (auch nur lesen) |
+| `src/kern/sitzungen.ts`, `src/kern/uebersicht.ts` | Codes, Teamnamen und -farben, Rollen im Team; Übersicht der Spielleitung je Team (Eingang, Schlüsselfälle live) |
+| `src/engine/taktgeber.ts` | gemeinsamer Takt aller Team-Hosts im Fenster der Spielleitung |
 | `src/kern/lagebild.ts` | was eine Rolle auf der Lagekarte sieht: Zielmeldungen (G2/G3) oder Kontrollkarte (SL/Plenum), reine Funktion von Inhalten, Spielstand und Lagezeit |
 | `src/karte/` | Lagekarte mit PixiJS (`lagekarte.ts`, wird bei Bedarf nachgeladen), taktische Zeichen nach APP-6/MIL-STD-2525C mit milsymbol (`zeichen.ts`) |
-| `src/ansichten/` | Preact-Ansichten je Rolle (G1, G2, G3, SL, Plenum), Eintrag in `register.tsx`; Einweisungskarten (`einweisung.tsx`); gemeinsam: Drohnenbild mit Lupe, Lagekarte als Baustein, Bausteine, Rahmen. Überblick: [`UI.md`](UI.md) |
+| `src/ansichten/` | Preact-Ansichten je Rolle (G1, G2, G3, SL, Plenum), Eintrag in `register.tsx`; Einweisungskarten (`einweisung.tsx`); Startseite, Lobby, Teilnehmer-Fenster mit Doppelrolle, Übersicht und Fenster der Spielleitung (`start.tsx`, `lobby.tsx`, `tt-fenster.tsx`, `uebersicht.tsx`, `sl-fenster.tsx`); gemeinsam: Drohnenbild mit Lupe, Lagekarte als Baustein, Bausteine, Rahmen. Überblick: [`UI.md`](UI.md) |
 | `src/assets/` | Asset-Manifest (`typen.ts`), Zugriff (`assets.ts`: Manifest, Bildadresse, Atlas, Vorladen), Quelle Netz oder eingebettet (Alias `@assetquelle`) |
 | `public/assets/` | Bilder und Manifest aus `tools/assets/gen_assets.py` (Karte, Drohnenbilder, Sprites, Effekte), siehe [`ASSETS.md`](ASSETS.md) |
 
 ## Grundsätze
 
-* **Ein gültiger Spielstand.** Nur der Host – das Fenster der steuernden Spielleitung – schreibt ins
-  Protokoll. Alle anderen Fenster schicken Aktionen. Der Host prüft Rechte und Stand; was nicht passt,
+* **Ein gültiger Spielstand je Team.** Nur der Host – das Fenster der steuernden Spielleitung, dort je
+  Team einer – schreibt ins Protokoll des Teams. Alle anderen Fenster schicken Aktionen. Der Host prüft Rechte und Stand; was nicht passt,
   wird als `aktion_abgelehnt` protokolliert. Damit steht **jede Aktion im Protokoll**.
 * **Stand = Protokoll.** Jedes Fenster berechnet den Spielstand selbst mit `anwenden()` aus dem
   Protokoll. Gleiches Protokoll ⇒ gleicher Stand (Fingerabdruck `fingerabdruck()` zum Vergleichen).
@@ -44,17 +49,21 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host (nur steue
 * **Läufe bleiben erhalten.** „Neues Spiel“ beginnt einen neuen Lauf; Testlauf und echter Durchlauf
   bleiben für die Auswertung gespeichert.
 
-## Datenmodell im Sync (Firebase-Pfad `argus/v1/raeume/<raum>/`)
+## Datenmodell im Sync (Firebase-Pfad `argus/v1/sitzungen/<code>/`)
 
 ```
-aktuell                        Kennung des laufenden Laufs, z. B. 20261125-0931-k3x9
-host                           { id, name, puls }  steuernde Spielleitung
-anwesenheit/<client>           { client, rolle, name, puls, version }
-laeufe/<lauf>/protokoll/e000001 …   Ereignisse (nur anhängen)
-laeufe/<lauf>/aktionen/<push-id>    Aktionen der Ansichten (nur anhängen)
+info                                   { code, szenario, version, titel, erstellt, von }  einmal angelegt
+host                                   { id, name, puls }  steuernde Spielleitung (eine für alle Teams)
+anwesenheit/<client>                   { client, art (tt|sl|plenum), name, puls, version, team? }
+teams/<team>                           { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen, seit } }
+laeufe/<team>/<lauf>/protokoll/e000001 Ereignisse des Teams (nur anhängen)
+laeufe/<team>/<lauf>/aktionen/<id>     Aktionen der Ansichten des Teams (nur anhängen)
 ```
 
-Der lokale Adapter legt dieselbe Struktur im localStorage ab (`argus:v1:<raum>:…`).
+`lauf` am Team ist der aktuelle Lauf (z. B. `20261125-0931-k3x9`); „Neues Spiel“ setzt einen neuen,
+alte bleiben für die Auswertung. Der Direktaufruf `?rolle=…&raum=kraehe` ist eine Sitzung `kraehe`
+mit einem Team `traum`. Der lokale Adapter legt dieselbe Struktur im localStorage ab
+(`argus:v1:s:<code>:…`). Bis Schritt 6 lag alles unter `argus/v1/raeume/<raum>/` ohne Teams.
 
 ## Protokollformat
 

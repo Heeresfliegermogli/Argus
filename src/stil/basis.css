@@ -360,3 +360,125 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 .fenster { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; background: var(--flaeche-2); font-size: 13px; white-space: nowrap; }
 .fenster i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .fenster.still { box-shadow: inset 0 0 0 1px var(--schlecht); }
+
+/* ================================================================ Schritt 4b: Sitzung, Lobby, Teams
+   Teamfarben (kern/sitzungen.ts) stehen nie allein, immer mit dem Teamnamen. */
+
+/* ---------------------------------------------------------------- Startseite */
+.start { --rollenfarbe: var(--info); }
+.start-rahmen { width: min(1040px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.start-titel h1 { font-size: 30px; letter-spacing: .12em; color: var(--argus); }
+.start-spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+.start-rahmen .start-karte { width: auto; padding: 20px 24px; }
+.start-karte > h2 { font-size: 19px; margin-bottom: 12px; }
+.start-tt { border-color: #36628f; }
+.code-feld { font: 600 30px/1.1 var(--mono); letter-spacing: .08em; text-align: center; padding: 12px 14px; text-transform: uppercase; }
+.code-feld::placeholder { color: #3e4a56; }
+.start-test summary { cursor: pointer; color: var(--text-2); font-size: 14px; }
+.start-test[open] summary { margin-bottom: 2px; }
+label.wahl.klein { padding: 3px 8px; font-size: 13px; align-items: center; }
+label.wahl.klein input { margin-top: 0; }
+
+/* ---------------------------------------------------------------- Team-Marke, Auswahl */
+.team-marke { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 16px; min-width: 0; white-space: nowrap; }
+.team-marke i { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.team-marke span { overflow: hidden; text-overflow: ellipsis; }
+.team-marke.klein { font-size: 13.5px; gap: 5px; }
+.team-marke.klein i { width: 9px; height: 9px; }
+.team-wahl { display: inline-flex; align-items: center; gap: 6px; background: var(--flaeche-2); border: 1px solid var(--linie-2); border-radius: 5px; padding: 3px 4px 3px 8px; }
+.team-wahl i { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+.team-wahl select { background: transparent; border: 0; font-weight: 700; font-size: 15px; max-width: 190px; cursor: pointer; }
+.team-wahl select option { background: #1c232a; color: var(--text); }
+
+/* ---------------------------------------------------------------- Lobby */
+.rolle-lobby { background: #d8d2c2; }
+.lobby .kopf { grid-template-columns: 1fr auto 1fr; }
+.lobby-schritt { font-size: 18px; font-weight: 600; white-space: nowrap; }
+.lobby-inhalt { grid-template-columns: 390px minmax(0, 1fr); }
+.team-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; align-content: start; }
+.team-karte { --teamfarbe: var(--sl); border: 1px solid var(--linie); border-radius: 8px; background: var(--flaeche-2); box-shadow: inset 4px 0 0 var(--teamfarbe);
+  padding: 8px 10px 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.team-karte.eigen { border-color: var(--teamfarbe); background: var(--flaeche-3); }
+.team-karte > header { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; }
+.slot { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 6px; background: var(--flaeche); min-height: 44px; border: 1px solid transparent; }
+.slot.frei { border: 1px dashed var(--linie-2); background: transparent; }
+.slot.meins { border-color: var(--teamfarbe); }
+.slot-rolle { display: inline-grid; place-items: center; width: 36px; height: 26px; border-radius: 5px; color: #0e1317; font-weight: 700; font-size: 13.5px; }
+.slot-mitte { min-width: 0; }
+.slot-titel { font-size: 12.5px; color: var(--text-3); line-height: 1.15; }
+.slot-wer { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slot-wer > * + * { margin-left: 6px; }
+.rollen-knoepfe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.knopf.rolle-knopf { color: #0e1317; border: 0; font-weight: 700; padding: 11px 4px; font-size: 15px; }
+.knopf.rolle-knopf.rolle-g1 { background: var(--g1); } .knopf.rolle-knopf.rolle-g2 { background: var(--g2); } .knopf.rolle-knopf.rolle-g3 { background: var(--g3); }
+.knopf.wuerfel { font-size: 18px; padding: 3px 10px; line-height: 1.2; }
+.hinweis-box { background: var(--flaeche-2); border-left: 3px solid var(--info); padding: 8px 10px; border-radius: 0 5px 5px 0; font-size: 14px; }
+.rollen-erklaerung { display: flex; flex-direction: column; gap: 7px; font-size: 14px; }
+.rollen-erklaerung > div:not(.klein) { display: grid; grid-template-columns: 42px 1fr; gap: 8px; align-items: start; }
+.lobby-leer { padding: 60px 20px; font-size: 16px; }
+
+/* ---------------------------------------------------------------- Doppelrolle: Umschalter im Kopf */
+.rollenwahl-kopf { align-self: stretch; display: flex; align-items: stretch; }
+.marke-klein { display: flex; align-items: center; padding: 0 12px 0 14px; font-weight: 700; letter-spacing: .12em; font-size: 13px; color: var(--text-3); }
+.rolle-tab { border: 0; padding: 0 14px; font-weight: 700; font-size: 15px; color: #0e1317; opacity: .5; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.rolle-tab:hover { opacity: .8; }
+.rolle-tab.an { opacity: 1; font-size: 17px; }
+.rolle-tab .badge { padding: 0 7px; }
+
+/* ---------------------------------------------------------------- Spielleitung: Leiste und Übersicht */
+.sl-leiste { align-self: stretch; display: flex; align-items: center; gap: 10px; }
+.sl-zurueck { align-self: stretch; border: 0; background: var(--sl); color: #0e1317; font-weight: 700; font-size: 14px; padding: 0 12px 0 14px; cursor: pointer; white-space: nowrap; }
+.sl-zurueck:hover { filter: brightness(1.1); }
+.sl-rollen { align-self: stretch; display: flex; gap: 2px; padding: 7px 0; }
+.sl-rollen .rolle-tab { padding: 0 10px; font-size: 14px; border-radius: 5px; }
+.sl-rollen .rolle-tab.an { font-size: 14px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
+.code-anzeige { display: flex; align-items: baseline; gap: 8px; font-size: 16px; }
+.code-anzeige b { font: 600 26px/1 var(--mono); letter-spacing: .06em; color: var(--text); }
+
+.uebersicht { grid-template-rows: auto minmax(0, 1fr) auto; }
+.steuer-zeile { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.steuer-zeile .knopf.gross { padding: 8px 14px; font-size: 16px; }
+.trenner { width: 1px; align-self: stretch; background: var(--linie); }
+.team-tabelle { font-size: 14px; }
+.team-tabelle th { padding: 4px 8px; border-bottom: 1px solid var(--linie); width: auto; vertical-align: bottom; }
+.team-tabelle td { padding: 6px 8px; border-bottom: 1px solid var(--linie); vertical-align: middle; }
+.team-tabelle tr.laeuft td:first-child { box-shadow: inset 3px 0 0 var(--gut); }
+.team-tabelle td.aktionen { white-space: nowrap; text-align: right; }
+.team-tabelle td.aktionen .knopf + .knopf { margin-left: 4px; }
+.rolle-punkt { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.rollen-zelle { min-width: 140px; max-width: 220px; }
+.spieler-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 99px; background: var(--flaeche-2); border: 1px solid var(--linie); font-size: 14px; cursor: pointer; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spieler-chip:hover { border-color: var(--linie-2); }
+.spieler-chip .punkt { color: var(--gut); flex: 0 0 auto; }
+.spieler-chip.weg { opacity: .65; }
+.spieler-chip.weg .punkt { color: var(--schlecht); }
+.spieler-chip.frei { border-style: dashed; color: var(--text-3); background: transparent; }
+.spieler-chip.klein { font-size: 13px; cursor: default; }
+.menue-anker { position: relative; display: inline-block; margin: 1px 2px 1px 0; }
+.menue { position: absolute; top: calc(100% + 4px); left: 0; z-index: 45; background: #10161b; border: 1px solid var(--linie-2); border-radius: 8px;
+  padding: 9px 11px; min-width: 270px; box-shadow: 0 10px 28px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 6px; }
+.menue.rechts { left: auto; right: 0; }
+.menue-kopf { font-size: 14px; }
+.menue-titel { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+.menue-zeile { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; }
+.faelle { display: inline-flex; gap: 3px; }
+.fall { display: inline-grid; place-items: center; min-width: 28px; height: 22px; padding: 0 4px; border-radius: 4px; font-weight: 700; font-size: 12.5px; background: #2a3139; color: var(--text-3); }
+.fall.offen { background: #234467; color: #dcebff; }
+.fall.richtig { background: #1f4a30; color: #c9f1d5; }
+.fall.falsch { background: #7a2722; color: #ffe1de; }
+.rot { color: #ff8f86; }
+.eingang { font-weight: 600; white-space: nowrap; }
+.team-name-zelle { max-width: 230px; }
+.team-name-knopf { border: 0; background: transparent; cursor: text; padding: 2px 0; text-align: left; min-width: 0; overflow: hidden; }
+.team-name-knopf:hover .team-marke span { text-decoration: underline dotted; }
+.team-umbenennen { width: 190px; padding: 3px 7px; font-weight: 700; }
+.knopf.loeschen { padding: 1px 6px; color: var(--text-3); }
+.knopf.scharf, .knopf.loeschen.scharf { background: #8e2620; border-color: #c0453b; color: #fff; }
+.uebersicht-fuss { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; flex-wrap: wrap; }
+.uebersicht-fuss .fall { min-width: 18px; height: 17px; font-size: 11px; }
+
+/* ---------------------------------------------------------------- Plenum: Code und Teams */
+.beitritt { background: var(--flaeche); border: 1px solid #36628f; border-radius: var(--radius); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.beitritt-code { font-size: 20px; margin-top: 2px; }
+.beitritt-code b { font: 600 36px/1 var(--mono); letter-spacing: .06em; margin-left: 6px; }
+.beitritt-teams { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: flex-end; max-width: 62%; }

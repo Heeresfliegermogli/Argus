@@ -1,17 +1,41 @@
-# ARGUS – Bedientest (Fertig-Kriterium Schritt 6)
+# ARGUS – Bedientest (Fertig-Kriterien Schritt 6 und 4b)
 
-**Kriterium:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min.
+**Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Schritt 6, Teil B). Die Lobby ist
+ohne Erklärung bedienbar (Schritt 4b, Teil A – kommt vor Teil B, dauert ca. 8 min).
 **Unbeteiligt** heißt: nicht an der Entwicklung beteiligt und möglichst nicht Teilnehmer des Lehrgangs
 (sonst kennen sie die Fallen vorher). Dauer ca. 25 min für beide Personen zusammen.
 
 Der Test bleibt in Phase 1 (10:00–10:07). Die Schlüsselfälle beginnen erst um 10:08:30 (M07) und werden
 so nicht verraten.
 
+## Teil A: Startseite und Lobby (Schritt 4b)
+
+**Aufbau:** zwei Rechner (oder ein Rechner mit Synchronisation **Lokal** und zwei Fenstern nebeneinander).
+Der Testleiter legt auf https://heeresfliegermogli.github.io/Argus/ eine Sitzung an (Name „SL 1“,
+**Neue Sitzung anlegen**) und schreibt nur den Code auf einen Zettel. Die Testpersonen bekommen je ein
+Fenster mit der Startseite und den Zettel. Nichts erklären.
+
+| Nr | Aufgabe (vorlesen) | Person | gelöst, wenn |
+|---|---|---|---|
+| A1 | „Tretet der Sitzung auf dem Zettel bei.“ | A, B | Code eingegeben, Lobby offen |
+| A2 | „Gründe ein Team mit dem Namen ‚Adler‘. Du bist G2.“ | A | Teamname, **G2 Zielprüfung** |
+| A3 | „Tritt dem Team Adler als G1 bei.“ | B | **beitreten** in der Teamkarte bei G1 |
+| A4 | „Ihr seid nur zu zweit. Wer übernimmt G3? Richtet das ein.“ | A oder B | **+ dazu** bei G3, „Deine Rolle: … und G3 Führung“ |
+| A5 | „B, wechsle von G1 zu G3 – G1 bleibt frei.“ (vorher A4 rückgängig, falls B G3 hat) | B | **abgeben**, dann **beitreten**/+ dazu bei G3 |
+| A6 | „Lass dir einen Teamnamen vorschlagen und gründe ein zweites Team.“ | B | 🎲, Rollenknopf, B ist in neuem Team |
+| A7 | Testleiter: **Spiel öffnen – alle Teams**. „Wo seid ihr jetzt, und wie kommt ihr bei zwei Rollen zur anderen?“ | A, B | Einweisung gelesen; mit Doppelrolle: Umschalter oben links |
+
+Bestanden, wenn beide A1–A7 ohne Hilfe lösen (eine Rückfrage erlaubt). Unklarheiten in die Änderungsliste.
+`tools/lobby_probe.py` löst dieselben Aufgaben und weitere (Spielleitung, Plenum, Neuladen) nur über
+sichtbare Beschriftungen – das ersetzt den Test mit Menschen nicht.
+
+## Teil B: Ansichten G1, G2, G3 (Schritt 6)
+
 ## Aufbau
 
 1. Rechner mit Edge, Fenster ca. 1530 × 800 (Dienst-PC mit 125 % Skalierung ist genau das).
-2. https://heeresfliegermogli.github.io/Argus/ → Raum `bedientest`, Synchronisation **Lokal** →
-   „Alle vier Fenster öffnen“. Zusätzlich ein Plenum-Fenster ist nicht nötig.
+2. https://heeresfliegermogli.github.io/Argus/ → Synchronisation **Lokal** → „Test ohne Lobby“ aufklappen →
+   Raum `bedientest` → „Alle vier Fenster öffnen“. Zusätzlich ein Plenum-Fenster ist nicht nötig.
    (Mit zwei Rechnern: Synchronisation Firebase, gleicher Raum, je Rechner eine Rolle.)
 3. Die Spielleitung (Testleiter) bedient SL und die Gruppenfenster, die gerade keine Testperson hat.
 4. Nichts erklären. Die Testperson bekommt nur ihr Fenster; die Einweisungskarte öffnet sich dort von selbst.
@@ -88,7 +112,9 @@ Rückfrage zur Bedienung je Ansicht. Jede Unklarheit kommt in die Änderungslist
 | 2 | A | G3 | 4 | ☐ ja ☐ nein | | |
 | 2 | A | G3 | 5 | ☐ ja ☐ nein | | |
 | 2 | B | G1 | 1–5 | ☐ ja ☐ nein | | |
+| A | A | Lobby | A1–A7 | ☐ ja ☐ nein | | |
+| A | B | Lobby | A1–A7 | ☐ ja ☐ nein | | |
 
 Abschlussfrage an beide: „Was hat euch beim ersten Hinsehen am meisten verwirrt?“
 
-Ergebnis mit Datum in `claude/Entscheidungen.md` eintragen; danach Arbeitsplan Schritt 6 auf „Fertig“.
+Ergebnis mit Datum in `claude/Entscheidungen.md` eintragen; danach Arbeitsplan Schritt 6 und 4b auf „Fertig“.

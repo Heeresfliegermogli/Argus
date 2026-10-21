@@ -1,13 +1,15 @@
-// Host: läuft nur im Fenster der steuernden Spielleitung und hält den einzigen gültigen Spielstand.
-// Er nimmt Aktionen entgegen, prüft sie, vergibt Laufnummer und Zeiten und schreibt Ereignisse ins
-// Protokoll. Dazu spielt er den Zeitplan des Szenarios ab. Fällt der Host aus, kann eine andere
-// Spielleitung übernehmen: Der neue Host baut den Stand aus dem Protokoll auf und macht weiter;
-// bereits verarbeitete Aktionen erkennt er an ihrer Kennung.
+// Host: läuft nur im Fenster der steuernden Spielleitung und hält den einzigen gültigen Spielstand
+// eines Teams. Er nimmt Aktionen entgegen, prüft sie, vergibt Laufnummer und Zeiten und schreibt
+// Ereignisse ins Protokoll. Dazu spielt er den Zeitplan des Szenarios ab. Fällt der Host aus, kann
+// eine andere Spielleitung übernehmen: Der neue Host baut den Stand aus dem Protokoll auf und macht
+// weiter; bereits verarbeitete Aktionen erkennt er an ihrer Kennung.
+// Das Fenster der Spielleitung führt je Team einen Host; den gemeinsamen Takt gibt der Taktgeber
+// (taktgeber.ts), dann hat der Host keinen eigenen Zeitgeber (taktMs: 0).
 import type { Inhalte } from "../inhalte/typen";
 import { type Absender, type Aktion, type Ereignis, bereinigt } from "../kern/ereignisse";
 import { spielzeit } from "../kern/uhr";
 import { type Spielzustand, anwenden, zustandAus } from "../kern/zustand";
-import type { Abmelden, SyncAdapter } from "../sync/adapter";
+import type { Abmelden, TeamKanal } from "../sync/adapter";
 import { faellig } from "./ablauf";
 import { verarbeiteAktion } from "./aktionen";
 import { type Entwurf, entwurf } from "./entwurf";
@@ -15,6 +17,7 @@ import { type Entwurf, entwurf } from "./entwurf";
 export interface HostOptionen {
   /** Schreiben fehlgeschlagen (z. B. zweiter Host): Host hat sich beendet. */
   beiFehler: (fehler: Error) => void;
+  /** eigener Takt in ms (Standard 250); 0 = kein eigener Zeitgeber, der Taktgeber ruft takt() auf */
   taktMs?: number;
 }
 
@@ -30,7 +33,7 @@ export class Host {
 
   constructor(
     private readonly inh: Inhalte,
-    private readonly adapter: SyncAdapter,
+    private readonly adapter: TeamKanal,
     readonly lauf: string,
     protokoll: Ereignis[],
     private readonly ich: Absender,
@@ -44,6 +47,10 @@ export class Host {
     return this.z;
   }
 
+  get aktiv(): boolean {
+    return !this.gestoppt;
+  }
+
   starten(): void {
     if (this.z.seq === 0) {
       const sz = this.inh.szenario;
@@ -51,7 +58,8 @@ export class Host {
       this.ausgeben(entwurf("uhr", { befehl: "setzen", laeuft: false, t_s: 0, tempo: sz.spieluhr.tempo || 1 }, { von: this.ich }));
     }
     this.abmelden.push(this.adapter.aufAktionen(this.lauf, (a) => this.aktion(a)));
-    this.timer = setInterval(() => this.takt(), this.opt.taktMs ?? 250);
+    const takt = this.opt.taktMs ?? 250;
+    if (takt > 0) this.timer = setInterval(() => this.takt(), takt);
     this.takt();
   }
 
@@ -97,7 +105,7 @@ export class Host {
   }
 
   /** Zeitplan abarbeiten: ein fälliges Ereignis nach dem anderen, jeweils auf dem neuen Stand. */
-  private takt(): void {
+  takt(): void {
     if (this.gestoppt) return;
     for (let i = 0; i < 200; i++) {
       const naechstes = faellig(this.inh, this.z, this.jetztT())[0];

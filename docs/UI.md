@@ -1,10 +1,16 @@
-# ARGUS – Ansichten (Schritt 6)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b)
 
 Fünf Ansichten in 1530 × 800 ohne Rollbalken: G1 Aufklärung, G2 Zielprüfung, G3 Führung,
 Spielleitung und Plenum. Jede Gruppe hat eine Einweisungskarte (im Spiel und als Druck, A5 quer).
 Bewegung und Animationen folgen in Schritt 7, Kennzahlen und Replay in Schritt 8.
 
-Adressen wie bisher: `…/Argus/?rolle=g1|g2|g3|sl|plenum&raum=…`, Druck der Einweisungskarten
+Seit Schritt 4b davor: **Startseite** (Code eingeben bzw. Sitzung anlegen), **Lobby** (Teams bilden),
+**Übersicht der Spielleitung** über alle Teams mit Teamansicht und Zuschauen – siehe
+[`SITZUNG.md`](SITZUNG.md). Die Ansichten selbst zeigen in der Kopfzeile das Team; bei Doppelrolle
+schaltet ein Umschalter oben links zwischen den Rollen.
+
+Adressen: `…/Argus/` (Startseite), `?sitzung=CODE` (Teilnehmer), `&rolle=sl|plenum`; ohne Lobby wie
+bisher `…/Argus/?rolle=g1|g2|g3|sl|plenum&raum=…`. Druck der Einweisungskarten
 `…/Argus/?druck=einweisung`. Die Spielleitung öffnet das Plenum mit „Plenum öffnen“.
 
 ## Die Ansichten
@@ -23,6 +29,20 @@ immer schon gewählt; nach einer Entscheidung springt die Auswahl zur nächsten.
 
 Bei Spielende sperrt eine Tafel die Gruppenansichten („Ansicht ansehen“ blendet sie aus, Eingaben
 bleiben gesperrt).
+
+## Startseite, Lobby, Übersicht (Schritt 4b)
+
+| Fenster | Inhalt |
+|---|---|
+| **Startseite** | links „Mitspielen“: ein großes Codefeld und **Beitreten** (falscher Code: „Die Sitzung … gibt es nicht“); rechts „Spielleitung“: Name, **Neue Sitzung anlegen**, bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; darunter eingeklappt der Test ohne Lobby |
+| **Lobby** | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links Name, „Neues Team“ (Name, 🎲, drei Rollenknöpfe in Rollenfarbe) bzw. „Du bist im Team“, die drei Rollen in je einem Satz; rechts alle Teams als Karten (bis 8 ohne Rollen), je Rolle eine Zeile mit Name oder **beitreten** / **wechseln** / **+ dazu**, eigene Rolle **abgeben** |
+| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams; Tabelle je Team (Spieler als Chips mit Menü, Spielzeit, Eingang, S1–S4, Fehl, FT, da, ▶/❚❚, ansehen ›); Fuß mit Teilnehmern ohne Team |
+| **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, Steuerung · G1 · G2 · G3; G1–G3 nur lesen („Zuschauen – nur lesen“) |
+| **Plenum** | vor dem ersten Spiel Einweisung mit Code und Teams; danach ein Team (Wahl oben links) |
+
+Gestaltung: Teamfarben (Rosa, Gelb, Grün, Cyan, Indigo, Magenta, Hellgrau, Braun) sind weder Rollen-
+noch Signalfarbe und stehen nie ohne Namen. Folgenreiches (neues Spiel, Team löschen) fragt im Knopf
+nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die Engine aller Teams an).
 
 ## Lagekarte
 

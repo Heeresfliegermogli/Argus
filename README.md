@@ -1,14 +1,14 @@
 # ARGUS – Planspiel „Auswirkungen von KI auf die Entscheidungsfindung“
 
-Browserbasiertes Planspiel für den Lehrgang OL TrD (Politische Bildung, Militärethik). Drei Gruppen
-bearbeiten Zielmeldungen des fiktiven KI-Systems ARGUS: G1 Aufklärung, G2 Zielprüfung, G3 Führung.
-Die Spielleitung steuert Uhr und Ablauf. **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind
-frei erfunden.**
+Browserbasiertes Planspiel für den Lehrgang OL TrD (Politische Bildung, Militärethik). Fünf Teams à
+drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen des fiktiven KI-Systems
+ARGUS: G1 Aufklärung, G2 Zielprüfung, G3 Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
+**Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Schritt 6 „UI der Ansichten“ – G1, G2, G3, Spielleitung und Plenum mit Lagekarte (PixiJS,
-taktische Zeichen mit milsymbol), großem Drohnenbild mit Lupe, Wirkradius-Vorschau, Postfach,
-Kontrollkarte und Einweisungskarten. Bewegung und Animationen folgen in Schritt 7. Überblick:
-[`docs/UI.md`](docs/UI.md).
+Stand: Schritt 4b „Sitzung, Lobby und Teams“ – Sitzung mit Code, Lobby (Team mit eigenem Namen
+erstellen, beitreten, Rolle wählen, Doppelrolle), Host für alle Teams im Fenster der Spielleitung,
+Übersicht aller Teams mit Zuschauen und Start für alle. Überblick: [`docs/SITZUNG.md`](docs/SITZUNG.md),
+Ansichten: [`docs/UI.md`](docs/UI.md).
 
 Inhalte: Szenario KRÄHE-01 **v2.0** (Schritt 2b, Konzept v2): russischer Angriff in fünf Phasen,
 27 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
@@ -18,40 +18,45 @@ Schritt 6b/7 um (Referenz: `tools/referenz/argus_lib.py`, Funktionen `wirkung`, 
 
 ## Spielen
 
-Seite: `https://heeresfliegermogli.github.io/Argus/` – dort Raum und Rolle wählen, oder direkt:
+Seite: `https://heeresfliegermogli.github.io/Argus/`
 
-| Rechner | Adresse |
+1. **Spielleitung:** Name, **Neue Sitzung anlegen** → Übersicht mit Code (z. B. `KRAEHE-7Q`),
+   **Plenum öffnen** für das Smartboard.
+2. **Teilnehmer:** Seite öffnen, Code eingeben, **Beitreten** → Lobby: Team erstellen (Name frei, 🎲
+   schlägt einen vor) oder einem Team beitreten, Rolle wählen; zu zweit übernimmt eine Person zwei
+   Rollen (**+ dazu**).
+3. **Spielleitung:** **Spiel öffnen – alle Teams** (Ansichten mit Einweisung erscheinen), dann
+   **▶ Uhr starten – alle**. „ansehen ›“ öffnet ein Team: Steuerung oder Zuschauen bei G1–G3.
+4. **Zweite Spielleitung:** Startseite → Code → **als Spielleitung**; beobachtet und kann
+   „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst).
+
+| Fenster | Adresse |
 |---|---|
-| Spielleitung | `…/Argus/?rolle=sl&raum=kraehe` |
-| G1 Aufklärung | `…/Argus/?rolle=g1&raum=kraehe` |
-| G2 Zielprüfung | `…/Argus/?rolle=g2&raum=kraehe` |
-| G3 Führung | `…/Argus/?rolle=g3&raum=kraehe` |
-| Plenum (Smartboard) | `…/Argus/?rolle=plenum&raum=kraehe` (oder „Plenum öffnen“ in der Spielleitung) |
+| Teilnehmer | `…/Argus/?sitzung=KRAEHE-7Q` |
+| Spielleitung | `…/Argus/?sitzung=KRAEHE-7Q&rolle=sl` |
+| Plenum (Smartboard) | `…/Argus/?sitzung=KRAEHE-7Q&rolle=plenum` |
+| Test ohne Lobby (ein Team, wie bis Schritt 6) | `…/Argus/?rolle=g1&raum=kraehe` (g1, g2, g3, sl, plenum) |
 
-Vor Spielbeginn öffnet sich in jeder Gruppenansicht die Einweisungskarte (Knopf „Einweisung“ oben
-rechts). Druckfassung, A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit Unbeteiligten:
-[`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
-
-Die erste Spielleitung im Raum übernimmt die Steuerung und legt ein Spiel an. Eine zweite Spielleitung
-(z. B. SL 2 mit `&name=SL%202`) beobachtet und kann bei Ausfall „Steuerung übernehmen“.
+Druckfassung der Einweisungskarten, A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
+Unbeteiligten: [`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
 
 Weitere Parameter: `sync=lokal` (alle Fenster an einem PC, ohne Netz), `transport=auto`
 (WebSocket zulassen; Standard ist Long-Polling, weil WebSocket im Hörsaalnetz gesperrt ist),
-`db=…` (andere Firebase-Datenbank), `szenario=…json`.
+`db=…` (andere Firebase-Datenbank), `szenario=…json`, `name=…` (Name der Spielleitung).
 
 **Rückfall ohne Netz (Variante C):** `argus-offline.html` (liegt auf der Seite und im Build) per
-Doppelklick öffnen, Rollen wie oben über die Startseite oder „Alle vier Fenster öffnen“.
+Doppelklick öffnen, Sitzung anlegen, weitere Fenster derselben Datei öffnen und den Code eingeben.
 
 ## Entwickeln
 
 ```bash
 npm install
-npm run dev            # http://localhost:5173/?rolle=sl&raum=test&sync=lokal
+npm run dev            # http://localhost:5173/?sync=lokal (Startseite) oder ?rolle=sl&raum=test&sync=lokal
 npm test               # Unit-, Sync- und Regeltests (Vitest)
 npm run build          # dist/ (Webseite) und dist/argus-offline.html (eine Datei)
 ```
 
-Ende-zu-Ende-Test mit vier echten Browserfenstern (Python + Playwright):
+Ende-zu-Ende-Test mit vier echten Browserfenstern im Direktaufruf (Python + Playwright):
 
 ```bash
 npx vite preview --port 4173 &
@@ -60,6 +65,17 @@ python3 tools/e2e_vier_fenster.py file://$PWD/dist/argus-offline.html          #
 npm --prefix tools/firebase-testserver install && node tools/firebase-testserver/start.js &
 python3 tools/e2e_vier_fenster.py http://localhost:4173/ --sync firebase --transport auto \
   --db "http://localhost:5555?ns=argus-test"                                   # Firebase-Nachbildung mit Regeln
+```
+
+Sitzung, Lobby und Teams mit 16 echten Browserfenstern (5 Teams à 3 + Spielleitung, alles über die
+Oberfläche) und die Aufgaben der Lobby nur über sichtbare Beschriftungen:
+
+```bash
+python3 tools/e2e_teams.py http://localhost:4173/                                # lokaler Sync
+python3 tools/e2e_teams.py file://$PWD/dist/argus-offline.html                   # Offline-Datei
+python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport auto \
+  --db "http://localhost:5555?ns=argus-test"                                      # Firebase-Nachbildung mit Regeln
+python3 tools/lobby_probe.py http://localhost:4173/                              # 19 Aufgaben der Lobby
 ```
 
 Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
@@ -80,8 +96,9 @@ Nach Änderungen an Szenario oder Regeln: `python3 tools/referenz/erzeuge_refere
   (`.github/workflows/pages.yml`). Einmalig: Repository → Settings → Pages → Source „GitHub Actions“.
 * **Firebase-Regeln** (`firebase/database.rules.json`): Firebase-Konsole → Projekt `argus-sync-e9fbc`
   → Realtime Database → Regeln → Inhalt ersetzen → Veröffentlichen. Die Regeln ersetzen den
-  Testmodus (läuft ca. 18.11.2026 ab): nur der Raum-Bereich `argus/v1/raeume/…` und der Sync-Test
-  (`rooms/…`) sind beschreibbar, Protokoll und Aktionen nur anhängbar, Formate werden geprüft.
+  Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…` (Info, Teams,
+  Anwesenheit, Host, Läufe je Team) und der Sync-Test (`rooms/…`) sind beschreibbar, eine Liste aller
+  Sitzungen ist nicht lesbar, Protokoll und Aktionen nur anhängbar, Formate werden geprüft.
 
 ## Inhalte pflegen
 
@@ -107,4 +124,4 @@ Inhalt, Manifest und Einbindung: [`docs/ASSETS.md`](docs/ASSETS.md).
 ## Aufbau
 
 Siehe [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md): Module, Sync-Datenmodell, Protokollformat,
-Ablauf einer Meldung.
+Ablauf einer Meldung; Sitzung, Teams und Host für mehrere Teams: [`docs/SITZUNG.md`](docs/SITZUNG.md).

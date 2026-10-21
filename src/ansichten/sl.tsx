@@ -10,8 +10,9 @@ import { GT_NAME, LAGE_TAKT_S, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { istVeraltet } from "../sync/adapter";
-import type { Sitzung } from "../sitzung/sitzung";
-import { AktionsKnopf, Leer, Panel } from "./gemeinsam/bausteine";
+import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
+import { rollenAnzeige } from "../kern/sitzungen";
+import { AktionsKnopf, BestaetigenKnopf, Leer, Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 
@@ -26,12 +27,14 @@ interface Plan {
   fall?: string;
 }
 
-function exportieren(s: Sitzung): void {
+function exportieren(s: Sicht): void {
   const st = s.stand;
   const daten = {
     format: "argus-protokoll/1",
     szenario: s.inh.szenario.id,
     version: s.inh.szenario.version,
+    sitzung: st.raum,
+    team: st.teamName,
     lauf: st.lauf,
     exportiert: new Date().toISOString(),
     protokoll: st.protokoll,
@@ -39,21 +42,29 @@ function exportieren(s: Sitzung): void {
   const blob = new Blob([JSON.stringify(daten, null, 1)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `argus-protokoll-${st.lauf ?? "ohne-lauf"}.json`;
+  const team = st.teamName.replace(/[^A-Za-z0-9ÄÖÜäöüß-]+/g, "_");
+  a.download = `argus-protokoll-${st.raum}-${team}-${st.lauf ?? "ohne-lauf"}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-function plenumOeffnen(): void {
+export function plenumOeffnen(): void {
   const u = new URL(location.href);
   u.searchParams.set("rolle", "plenum");
   u.searchParams.delete("name");
   window.open(u.toString(), "argus-plenum");
 }
 
+/** Reihenfolge in der Fensterleiste: Spielleitung, G1, G2, G3, Plenum. */
+function fensterRang(x: SichtTeilnehmer): number {
+  if (x.art === "sl") return 0;
+  if (x.art === "plenum") return 9;
+  return 1 + ["g1", "g2", "g3"].indexOf(x.rollen[0] ?? "g3");
+}
+
 const STATUS_TEXT = { wartet: "wartet", erfuellt: "kommt", ausgeloest: "ausgelöst", entfaellt: "entfällt" } as const;
 
-export function SLAnsicht(p: { s: Sitzung }) {
+export function SLAnsicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 500);
@@ -131,10 +142,10 @@ export function SLAnsicht(p: { s: Sitzung }) {
             </div>
             <div class="knopf-reihe">
               <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
-              <button type="button" class="knopf schlecht klein" disabled={!st.istHost}
-                onClick={() => { if (confirm("Neues Spiel beginnen? Der jetzige Lauf bleibt gespeichert.")) void s.neuesSpiel(); }}>
+              <BestaetigenKnopf klasse="schlecht klein" gesperrt={!st.istHost} onClick={() => void s.neuesSpiel()}
+                frage="Wirklich? Klick = neues Spiel" titel="Neuer Lauf für dieses Team. Der jetzige Lauf bleibt gespeichert.">
                 Neues Spiel
-              </button>
+              </BestaetigenKnopf>
             </div>
             {(bericht.fehler.length > 0 || bericht.warnungen.length > 0) && (
               <div class={bericht.fehler.length ? "warnung" : "klein sehr-leise"} title={[...bericht.fehler, ...bericht.warnungen].join("\n")}>
@@ -174,14 +185,16 @@ export function SLAnsicht(p: { s: Sitzung }) {
             })}
           </div>
         </Panel>
-        <Panel titel="Fenster im Raum" klasse="flach" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
+        <Panel titel={`Fenster · ${st.teamName}`} klasse="flach" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
           <div class="fenster-liste" data-testid="fenster">
-            {[...st.teilnehmer].sort((a, b) => a.rolle.localeCompare(b.rolle)).map((x) => {
+            {[...st.teilnehmer].sort((a, b) => fensterRang(a) - fensterRang(b) || a.name.localeCompare(b.name)).map((x) => {
               const alter = Math.max(0, Math.round((jetzt - x.puls) / 1000));
+              const marke = x.art === "tt" ? (x.rollen[0] ?? "sl") : x.art;
+              const kurz = x.art === "plenum" ? "Plenum" : x.art === "sl" ? "SL" : rollenAnzeige(x.rollen);
               return (
                 <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`}
                   title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""} · letzte Rückmeldung vor ${alter} s`}>
-                  <i class={`rolle-${x.rolle}`} />{x.rolle === "plenum" ? "Plenum" : x.rolle.toUpperCase()}{x.name !== ROLLEN_NAME[x.rolle] ? ` ${x.name}` : ""}
+                  <i class={`rolle-${marke}`} />{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}
                   {st.host?.id === x.client && <b> ★</b>}<span class="sehr-leise zahl">{alter} s</span>
                 </span>
               );

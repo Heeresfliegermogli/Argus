@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import type { Sicht, SichtStand } from "../../sitzung/sicht";
+import { meldeSicht } from "../../sitzung/fehlersuche";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
 
-/** Stand der Sitzung; die Komponente zeichnet bei jeder Änderung neu. */
-export function useStand(s: Sitzung): SitzungsStand {
+/** Stand der Sicht; die Komponente zeichnet bei jeder Änderung neu. */
+export function useStand(s: Sicht): SichtStand {
   const [, setZaehler] = useState(0);
   useEffect(() => s.abonnieren(() => setZaehler((n) => n + 1)), [s]);
   return s.stand;
@@ -12,7 +14,7 @@ export function useStand(s: Sitzung): SitzungsStand {
  * Aktuelle Spielzeit in s. Jede Darstellung rechnet sie frisch aus (auch wenn ein neues Ereignis die
  * Ansicht neu zeichnet); der Takt sorgt nur dafür, dass eine laufende Uhr weiterzählt.
  */
-export function useSpielzeit(s: Sitzung, intervallMs = 250): number {
+export function useSpielzeit(s: Sicht, intervallMs = 250): number {
   const [, setTakt] = useState(0);
   const letzte = useRef(s.spielzeit());
   useEffect(() => {
@@ -35,4 +37,60 @@ export function useAuswahl(ids: string[]): [string | null, (id: string) => void]
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
   const aktuell = gewaehlt && ids.includes(gewaehlt) ? gewaehlt : ids[0] ?? null;
   return [aktuell, setGewaehlt];
+}
+
+/** Stand einer Sitzung (Lobby, Spielleitung); zeichnet bei jeder Änderung neu, auch bei Spielständen der Teams. */
+export function useSitzung(s: Sitzung): SitzungsStand {
+  const [, setZaehler] = useState(0);
+  useEffect(() => {
+    const ab = [s.abonnieren(() => setZaehler((n) => n + 1)), s.hinweise.abonnieren(() => setZaehler((n) => n + 1))];
+    return () => ab.forEach((f) => f());
+  }, [s]);
+  return s.stand;
+}
+
+/** Takt für Anzeigen, die die Uhr mehrerer Teams zeigen (Übersicht der Spielleitung). */
+export function useTakt(intervallMs = 500): number {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setN((x) => x + 1), intervallMs);
+    return () => clearInterval(id);
+  }, [intervallMs]);
+  return n;
+}
+
+/** Meldet die gezeigte Sicht für Fehlersuche und Tests (window.argus), solange die Komponente steht. */
+export function useMeldeSicht(s: Sicht | null): void {
+  useEffect(() => {
+    meldeSicht(s);
+    return () => meldeSicht(null);
+  }, [s]);
+}
+
+/**
+ * Stand einer Sitzung, aber nur neu zeichnen, wenn sich der Schlüssel ändert. Für Fenster, die nur
+ * wissen müssen, WAS sie zeigen (Lobby oder Spiel, welches Team): Die Anwesenheit aller Fenster pulst
+ * alle 5 s, das allein soll keine ganze Ansicht neu zeichnen.
+ */
+export function useSitzungWert(s: Sitzung, schluessel: (st: SitzungsStand) => string): SitzungsStand {
+  const [, setZaehler] = useState(0);
+  const f = useRef(schluessel);
+  f.current = schluessel;
+  // Schlüssel beim Zeichnen merken: Ändert sich der Stand zwischen Zeichnen und Abonnieren, fiele die
+  // Änderung sonst unter den Tisch (Befund 21.10.: Direktaufruf blieb bei „Spiel wird angelegt …“).
+  const gezeichnet = useRef("");
+  gezeichnet.current = schluessel(s.stand);
+  useEffect(() => {
+    const pruefen = () => {
+      const neu = f.current(s.stand);
+      if (neu !== gezeichnet.current) {
+        gezeichnet.current = neu;
+        setZaehler((n) => n + 1);
+      }
+    };
+    const ab = s.abonnieren(pruefen);
+    pruefen();
+    return ab;
+  }, [s]);
+  return s.stand;
 }

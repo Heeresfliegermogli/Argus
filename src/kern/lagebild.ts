@@ -93,8 +93,8 @@ export const GT_NAME: Record<GtKategorie, string> = {
   ausser_gefecht: "außer Gefecht",
 };
 
-/** Kategorien, deren Treffer eine Fehlbekämpfung ist (für die Kontrollkarte). */
-const FEHL = new Set(["verbuendet", "zivil", "geschuetzt", "attrappe", "ausser_gefecht", "besatzung_ergibt_sich"]);
+/** Kategorien, deren Treffer eine Fehlbekämpfung ist (Kontrollkarte, Übersicht der Spielleitung). */
+export const FEHL = new Set(["verbuendet", "zivil", "geschuetzt", "attrappe", "ausser_gefecht", "besatzung_ergibt_sich"]);
 
 /** Hat diese Rolle die Meldung als Zielmeldung bekommen? */
 function erreicht(st: MeldungsStand, rolle: "g2" | "g3"): boolean {

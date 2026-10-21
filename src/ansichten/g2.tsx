@@ -11,7 +11,7 @@ import { ENTSCHEID_TEXT, ERGEBNIS_TEXT, STUFE_TEXT, verlauf, warteschlange, ziel
 import { uhrzeit } from "../kern/uhr";
 import type { Vorschau } from "../karte/lagekarte";
 import type { Inhalte, Punkt } from "../inhalte/typen";
-import type { Sitzung } from "../sitzung/sitzung";
+import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, Lagehinweise, Leer, MeldungsEintrag, Panel, ZielmeldungLeiste } from "./gemeinsam/bausteine";
 import { useAuswahl, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
@@ -54,7 +54,7 @@ export function Abstaende(p: { inh: Inhalte; pos: Punkt }) {
   );
 }
 
-export function G2Ansicht(p: { s: Sitzung }) {
+export function G2Ansicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 1000);
