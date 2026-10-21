@@ -346,6 +346,7 @@
         {
           "art": "zivil",
           "anzahl": 4,
+          "klein": 2,
           "text": "Familie aus dem Wohnhaus, will fliehen",
           "bewegung": {"route": [[0, 762, 313], [1250, 762, 313], [1290, 712, 345]]},
           "pos": [762, 313]
@@ -490,7 +491,11 @@
         "kennzeichnung": "keine erkannt",
         "personen": "–"
       },
-      "bild": {"beschreibung": "Vierrädriger Spähpanzer im freien Feld, fährt auf die Ortschaft zu.", "sicht": []},
+      "bild": {
+        "datei": "drohne/M01.webp",
+        "beschreibung": "Vierrädriger Spähpanzer im freien Feld, fährt auf die Ortschaft zu.",
+        "sicht": []
+      },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Einlaufen: erste einfache Meldung, Bedienung lernen."
     },
@@ -508,8 +513,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M02.webp",
         "beschreibung": "Geländewagen in Tarnfarbe auf dem Feldweg Nordost. Eine Wolke verdeckt die rechte Bildhälfte; das Fahrzeug steht am Wolkenrand.",
-        "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts"}]
+        "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts", "ziel_anteil": 0.12}]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Einlaufen, Vertrauen in ARGUS aufbauen."
@@ -527,7 +533,13 @@
         "kennzeichnung": "keine erkannt",
         "personen": "1 Person im Turmluk, Fernglas"
       },
-      "bild": {"beschreibung": "Spähpanzer steht auf der Hauptstraße kurz vor der Brücke, Turmluk offen.", "sicht": []},
+      "bild": {
+        "datei": "drohne/M03.webp",
+        "beschreibung": "Spähpanzer steht auf der Hauptstraße kurz vor der Brücke, Turmluk offen.",
+        "sicht": [],
+        "zustand": {"Z-03": "luk_offen"},
+        "personen": [{"bei": "Z-03", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}]
+      },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Erste Regelprüfung: Nähe zu EZ-01 und NS-01 schließt den Mörser aus."
     },
@@ -546,9 +558,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M04.webp",
         "beschreibung": "Unter einer Baumgruppe ist nur das Heck eines Kettenfahrzeugs zu sehen.",
-        "generator": "Baumgruppe bei (812, 214) ergänzen, Fahrzeug halb verdeckt",
-        "sicht": [{"art": "baeume", "anteil": 0.6, "lage": "Ziel"}]
+        "sicht": [{"art": "baeume", "anteil": 0.6, "lage": "Ziel", "seite": "vorn"}]
       },
       "loesung": {"G1": "ANNEHMEN (Wärme und Kettenspuren bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "ARGUS ist unsicher, aber richtig. Die Sensordaten bestätigen das Ziel."
@@ -567,8 +579,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M05.webp",
         "beschreibung": "Kampfpanzer zwischen Häusern und Allee auf der Nordstraße. Alleebäume verdecken das Heck.",
-        "sicht": [{"art": "baeume", "anteil": 0.2, "lage": "Ziel"}]
+        "sicht": [{"art": "baeume", "anteil": 0.2, "lage": "Ziel", "seite": "hinten"}]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Ziel in der Ortschaft: nur LM zulässig."
@@ -587,6 +600,7 @@
         "personen": "6 Personen in Uniform"
       },
       "bild": {
+        "datei": "drohne/M06.webp",
         "beschreibung": "Zwei Mörserrohre mit Bedienung am Waldrand, Munitionskisten. Mündungsrauch zieht über die Stellung.",
         "sicht": [{"art": "rauch", "anteil": 0.25, "lage": "Ziel"}]
       },
@@ -608,8 +622,7 @@
         "personen": "–"
       },
       "bild": {
-        "datei": "Z-07_argus.jpg",
-        "vorhanden": true,
+        "datei": "drohne/M07.webp",
         "beschreibung": "Panzerförmiges Objekt unter Tarnnetz am Waldrand FUCHS, Rohr ragt heraus, im Gras keine Spuren.",
         "sicht": []
       },
@@ -634,8 +647,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M08.webp",
         "beschreibung": "Kampfpanzer auf der Hauptstraße östlich der Ortschaft. Eine Wolke deckt die obere Bildhälfte und ein Drittel des Panzers.",
-        "sicht": [{"art": "wolke", "anteil": 0.5, "lage": "oben"}]
+        "sicht": [{"art": "wolke", "anteil": 0.5, "lage": "oben", "ziel_anteil": 0.33}]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Routine."
@@ -654,6 +668,7 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M09.webp",
         "beschreibung": "Schützenpanzer auf der Nordstraße zwischen Häusern. Das Fahrzeug ist unter Alleebäumen und zwischen Häusern nur zu etwa 40 % zu sehen.",
         "sicht": [{"art": "baeume", "anteil": 0.6, "lage": "Ziel"}]
       },
@@ -674,8 +689,11 @@
         "personen": "2 Personen in Uniform"
       },
       "bild": {
+        "datei": "drohne/M10.webp",
         "beschreibung": "Militär-Lkw am Waldrand DACHS, daneben Munitionskisten. Ein Tarnnetz verdeckt den größten Teil des Lkw.",
-        "sicht": [{"art": "tarnnetz", "anteil": 0.7, "lage": "Ziel"}]
+        "sicht": [{"art": "tarnnetz", "anteil": 0.7, "lage": "Ziel", "seite": "hinten"}],
+        "zustand": {"Z-10": "kisten"},
+        "personen": [{"bei": "Z-10", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}]
       },
       "loesung": {"G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Echtes Ziel unter Tarnnetz, ARGUS unsicher."
@@ -694,6 +712,7 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M11.webp",
         "beschreibung": "Achträdriger Radpanzer mit Waffenturm auf der Hauptstraße in der Ortschaft.",
         "sicht": []
       },
@@ -715,10 +734,12 @@
         "personen": "2 Personen am Heck"
       },
       "bild": {
-        "datei": "Z-12_argus.jpg",
-        "vorhanden": true,
+        "datei": "drohne/M12.webp",
         "beschreibung": "Achträdriger Radpanzer ohne Waffenturm steht auf der Hauptstraße; auf dem Dach ein weißes Feld mit rotem Kreuz, zwei Personen am Heck. Die Schule ist am Bildrand zu sehen.",
-        "sicht": [{"art": "dunst", "anteil": 0.2, "lage": "links"}]
+        "sicht": [{"art": "dunst", "anteil": 0.2, "lage": "links"}],
+        "ausschnitt_m": 130,
+        "versatz_m": [17, 29],
+        "personen": [{"bei": "Z-12", "art": "sanitaet", "anzahl": 2, "versatz_m": [-4.6, 0.3]}]
       },
       "loesung": {
         "G1": "ABLEHNEN (Rotes Kreuz)",
@@ -741,6 +762,7 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M13.webp",
         "beschreibung": "Kampfpanzer auf der Hauptstraße in der Ortschaft. Rauch eines brennenden Hauses zieht über das linke Bilddrittel.",
         "sicht": [{"art": "rauch", "anteil": 0.4, "lage": "links"}]
       },
@@ -761,8 +783,10 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M14.webp",
         "beschreibung": "Schützenpanzer an der Brücke ELSTER Ost, Mündungsfeuer. Mündungsrauch verdeckt den Bug.",
-        "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel"}]
+        "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel", "seite": "vorn"}],
+        "zustand": {"Z-14": "feuert"}
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (PzAbw oder LM)", "G3": "FREIGABE"},
       "zweck": "Druck an der Brücke kurz vor dem polnischen Gegenangriff."
@@ -781,8 +805,10 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M15.webp",
         "beschreibung": "Schützenpanzer in der Furt, Wasser spritzt. Wolkenfetzen im unteren Bilddrittel.",
-        "sicht": [{"art": "wolke", "anteil": 0.35, "lage": "unten"}]
+        "sicht": [{"art": "wolke", "anteil": 0.35, "lage": "unten"}],
+        "zustand": {"Z-18": "furt"}
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Feind am Bach: Dringlichkeit."
@@ -807,8 +833,10 @@
         "personen": "5 in Uniform am Mörser, 4 ohne Uniform an der Hauswand (2 klein)"
       },
       "bild": {
+        "datei": "drohne/M16.webp",
         "beschreibung": "Mörser im Hof zwischen Scheune und Wohnhaus; an der Hauswand vier Personen in Zivil, zwei davon klein.",
-        "sicht": [{"art": "rauch", "anteil": 0.15, "lage": "Ziel"}]
+        "sicht": [{"art": "rauch", "anteil": 0.15, "lage": "Ziel"}],
+        "ausschnitt_m": 60
       },
       "loesung": {
         "G1": "ANNEHMEN mit Vermerk Zivilpersonen",
@@ -831,8 +859,11 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M17.webp",
         "beschreibung": "Kampfpanzer am Ortsrand, die Schule am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
-        "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}]
+        "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}],
+        "ausschnitt_m": 140,
+        "versatz_m": [0, 25]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
       "zweck": "Gegenstück zu Z-12: gleiche Nähe zur Schule, aber echtes Ziel."
@@ -851,8 +882,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M18.webp",
         "beschreibung": "Schützenpanzer am Waldrand DACHS, Rohr nach Westen. Das Fahrzeug steht halb im Wald, nur Bug und Rohr sind frei.",
-        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel"}]
+        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel", "seite": "hinten"}]
       },
       "loesung": {
         "G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)",
@@ -876,8 +908,7 @@
         "personen": "–"
       },
       "bild": {
-        "datei": "Z-15_argus.jpg",
-        "vorhanden": true,
+        "datei": "drohne/M19.webp",
         "beschreibung": "Drei Kampfpanzer im Abstand von ca. 30 m auf dem Feldweg Süd, Tarnanstrich dreifarbig gefleckt.",
         "sicht": []
       },
@@ -903,8 +934,11 @@
         "personen": "3 ohne Waffen neben dem Fahrzeug, Hände erhoben, eine schwenkt ein weißes Tuch"
       },
       "bild": {
+        "datei": "drohne/M20.webp",
         "beschreibung": "Kampfpanzer steht schief im Feld, rechte Kette liegt daneben; daneben drei Personen mit erhobenen Händen, eine hält ein weißes Tuch hoch.",
-        "sicht": []
+        "sicht": [],
+        "ausschnitt_m": 70,
+        "zustand": {"Z-24": "kette_ab"}
       },
       "loesung": {
         "G1": "ABLEHNEN (außer Gefecht, ergibt sich)",
@@ -934,6 +968,7 @@
         "personen": "5 in Uniform am Mörser; 4 Zivilpersonen 70 m westlich, entfernen sich"
       },
       "bild": {
+        "datei": "drohne/M21.webp",
         "beschreibung": "Mörser im Hof; die Zivilpersonen sind am linken Bildrand auf dem Weg nach Westen.",
         "sicht": [{"art": "rauch", "anteil": 0.2, "lage": "Ziel"}]
       },
@@ -955,6 +990,7 @@
         "personen": "2 auf dem Fahrzeug, 3 auf dem Anhänger, ohne Uniform"
       },
       "bild": {
+        "datei": "drohne/M22.webp",
         "beschreibung": "Traktor mit beladenem Anhänger auf dem Feldweg Nordwest, Menschen auf dem Anhänger.",
         "sicht": [{"art": "wolke", "anteil": 0.3, "lage": "oben links"}]
       },
@@ -976,6 +1012,7 @@
         "bildalter_s": 6
       },
       "bild": {
+        "datei": "drohne/M23.webp",
         "beschreibung": "Lkw mit Antennenmast im Feld östlich der Ortschaft. Bildrauschen und Streifen: Der Datenlink ist gestört.",
         "sicht": [{"art": "stoerung", "anteil": 0.5, "lage": "ganzes Bild"}]
       },
@@ -1000,6 +1037,7 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M24.webp",
         "beschreibung": "Militär-Lkw auf der Hauptstraße, fährt nach Osten weg. Bewegungsunschärfe.",
         "sicht": [{"art": "unschaerfe", "anteil": 0.3, "lage": "Ziel"}]
       },
@@ -1020,8 +1058,9 @@
         "personen": "–"
       },
       "bild": {
+        "datei": "drohne/M25.webp",
         "beschreibung": "Spähpanzer auf der Nordstraße, fährt aus der Ortschaft nach Norden. Eine dichte Wolke verdeckt fast das ganze Fahrzeug.",
-        "sicht": [{"art": "wolke", "anteil": 0.6, "lage": "Mitte"}]
+        "sicht": [{"art": "wolke", "anteil": 0.6, "lage": "Mitte", "ziel_anteil": 0.8}]
       },
       "loesung": {
         "G1": "ANNEHMEN (ARGUS unsicher; fährt aus der Ortschaft nach Norden)",

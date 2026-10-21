@@ -1,4 +1,4 @@
-# ARGUS – Architektur und Datenformate (Stand Schritt 4)
+# ARGUS – Architektur und Datenformate (Stand Schritt 5)
 
 Inhalte, Spiellogik, Netz und Ansichten sind getrennte Module. Neue Lagen, Karten, Fahrzeuge oder
 Wirkmittel sind JSON-Dateien, kein Code. Zwischen Variante A (Firebase) und C (ein PC, mehrere
@@ -21,7 +21,9 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host (nur steue
 | `src/engine/` | Host: prüft Aktionen (`aktionen.ts`), spielt den Zeitplan ab (`ablauf.ts`), vergibt Laufnummern und schreibt (`host.ts`) |
 | `src/sync/` | Schnittstelle (`adapter.ts`), Firebase RTDB (`firebase.ts`), lokal per localStorage + BroadcastChannel (`lokal.ts`) |
 | `src/sitzung/` | verbindet ein Fenster mit dem Adapter, hält Protokoll und Stand, bewirbt sich als Host (nur SL) |
-| `src/ansichten/` | Preact-Ansichten je Rolle, Eintrag in `register.tsx` |
+| `src/ansichten/` | Preact-Ansichten je Rolle, Eintrag in `register.tsx`; Drohnenbild mit ARGUS-Markierung in `gemeinsam/drohnenbild.tsx` |
+| `src/assets/` | Asset-Manifest (`typen.ts`), Zugriff (`assets.ts`: Manifest, Bildadresse, Atlas, Vorladen), Quelle Netz oder eingebettet (Alias `@assetquelle`) |
+| `public/assets/` | Bilder und Manifest aus `tools/assets/gen_assets.py` (Karte, Drohnenbilder, Sprites, Effekte), siehe [`ASSETS.md`](ASSETS.md) |
 
 ## Grundsätze
 

@@ -3,8 +3,9 @@
 // Zwei Builds aus demselben Code:
 //   vite build                 → dist/          Webseite (GitHub Pages). Inhalte werden zur Laufzeit
 //                                               aus dist/daten/*.json geladen, also ohne Neubau austauschbar.
-//   vite build --mode offline  → dist-offline/  eine einzige HTML-Datei mit eingebetteten Inhalten.
-//                                               Läuft per Doppelklick (file://), Rückfall Variante C.
+//   vite build --mode offline  → dist-offline/  eine einzige HTML-Datei mit eingebetteten Inhalten und Bildern
+//                                               (ohne Luftbild-Kacheln). Läuft per Doppelklick (file://), Rückfall Variante C.
+// Bilder, Sprites und Karte liegen in public/assets/ (tools/assets/gen_assets.py, Manifest assets/manifest.json).
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -22,11 +23,17 @@ function gitStand(): string {
 export default defineConfig(({ mode }) => {
   const offline = mode === "offline";
   const quelle = offline ? "./src/inhalte/quelle-eingebettet.ts" : "./src/inhalte/quelle-fetch.ts";
+  const assetquelle = offline ? "./src/assets/quelle-eingebettet.ts" : "./src/assets/quelle-netz.ts";
   return {
     base: "./",
     publicDir: offline ? false : "public",
     plugins: [preact(), ...(offline ? [viteSingleFile()] : [])],
-    resolve: { alias: { "@quelle": fileURLToPath(new URL(quelle, import.meta.url)) } },
+    resolve: {
+      alias: {
+        "@quelle": fileURLToPath(new URL(quelle, import.meta.url)),
+        "@assetquelle": fileURLToPath(new URL(assetquelle, import.meta.url)),
+      },
+    },
     define: {
       __ARGUS_VERSION__: JSON.stringify(process.env.npm_package_version ?? "0.0.0"),
       __ARGUS_STAND__: JSON.stringify(`${gitStand()} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`),
@@ -34,6 +41,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: offline ? "dist-offline" : "dist",
+      assetsDir: "app",               // Programmcode getrennt von public/assets (Bilder, Manifest)
       emptyOutDir: true,
       target: "es2022",
       chunkSizeWarningLimit: 1200,

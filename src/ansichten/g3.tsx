@@ -85,7 +85,7 @@ export function G3Ansicht(p: { s: Sitzung }) {
             </div>
           )}
         </Panel>
-        <Platzhalter titel="Lagekarte (wie G2)" text="folgt in Schritt 5/6" stil="flex:1;min-height:160px" />
+        <Platzhalter titel="Lagekarte (wie G2)" text="Kartenpaket liegt in assets/karte, Karte folgt in Schritt 6" stil="flex:1;min-height:160px" />
       </div>
 
       <div class="stapel">

@@ -5,7 +5,7 @@ bearbeiten Zielmeldungen des fiktiven KI-Systems ARGUS: G1 Aufklärung, G2 Zielp
 Die Spielleitung steuert Uhr und Ablauf. **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind
 frei erfunden.**
 
-Stand: Schritt 4 „Architektur & Grundgerüst“ (Ansichten funktional, Gestaltung, Karte und Bilder folgen).
+Stand: Schritt 5 „Assets“ (Ansichten funktional, Kartenpaket, Drohnenbilder, Sprites und Effekte liegen vor; Gestaltung und Karte folgen in Schritt 6).
 
 ## Spielen
 
@@ -67,6 +67,20 @@ Szenario, Karte, Kataloge und Regeln liegen in `public/daten/` und werden zur La
 (neue Daten brauchen keinen neuen Code). Die Python-Werkzeuge aus Schritt 2 (Drehbuch, Mappe,
 Simulation) arbeiten mit derselben Struktur im Projekt (`claude/daten/`); bei Änderungen beide
 Stände abgleichen.
+
+## Assets (Karte, Drohnenbilder, Sprites, Effekte)
+
+Alle Bilder erzeugt `tools/assets/gen_assets.py` aus `public/daten/` (prozedural, fiktiv, fester Seed)
+und legt sie mit `manifest.json` in `public/assets/` ab. Nach Änderungen an Szenario, Karte oder
+Fahrzeugkatalog neu erzeugen:
+
+```bash
+pip install -r tools/assets/requirements.txt   # numpy, scipy, Pillow
+npm run assets                                  # ca. 2,5 min, Gelände wird zwischengespeichert
+npm test                                        # prüft u. a.: jedes Ziel hat Bild und Sprite
+```
+
+Inhalt, Manifest und Einbindung: [`docs/ASSETS.md`](docs/ASSETS.md).
 
 ## Aufbau
 

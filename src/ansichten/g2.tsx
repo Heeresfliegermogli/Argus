@@ -60,7 +60,7 @@ export function G2Ansicht(p: { s: Sitzung }) {
         <Panel titel="Zielmeldung" klasse="flach">
           {!m || !gewaehlt ? <Leer>Warten auf Zielmeldungen von G1 …</Leer> : <ZielmeldungKarte zm={zielmeldung(inh, z, gewaehlt)} />}
         </Panel>
-        <Platzhalter titel="Lagekarte mit Planquadraten, NS-01, EZ-01 und Wirkradius-Vorschau" text="folgt in Schritt 5/6" stil="flex:1;min-height:180px" />
+        <Platzhalter titel="Lagekarte mit Planquadraten, NS-01, EZ-01 und Wirkradius-Vorschau" text="Kartenpaket liegt in assets/karte, Karte folgt in Schritt 6" stil="flex:1;min-height:180px" />
       </div>
 
       <div class="stapel">

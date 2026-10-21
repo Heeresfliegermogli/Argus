@@ -1,7 +1,7 @@
 {
   "name": "argus-planspiel",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Planspiel ARGUS – Auswirkungen von KI auf die Entscheidungsfindung (fiktiv)",
   "type": "module",
   "scripts": {
@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "pruefe-daten": "vite-node tools/pruefe_daten.ts"
+    "pruefe-daten": "vite-node tools/pruefe_daten.ts",
+    "assets": "python3 tools/assets/gen_assets.py --cache .assets-cache.pkl"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",

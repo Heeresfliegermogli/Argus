@@ -152,3 +152,25 @@ label.wahl.gewaehlt { border-color: var(--argus); background: #33302a; }
 .rollenwahl a { display: block; padding: 16px; border-radius: 8px; text-decoration: none; color: #10141a; font-weight: 700; text-align: center; }
 .rollenwahl a span { display: block; font-weight: 400; font-size: 12px; margin-top: 4px; }
 .formular { display: grid; grid-template-columns: 140px 1fr; gap: 10px 14px; align-items: center; }
+
+/* Drohnenbild (G1) – Bild aus assets/drohne, ARGUS-Markierung aus dem Manifest */
+.drohne { position: relative; width: min(100%, 528px); aspect-ratio: 16 / 10; margin: 0 auto; background: #0e1114;
+  border-radius: var(--radius); overflow: hidden; }
+.drohne img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+.drohne-leer { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-3); }
+.argus-rahmen { position: absolute; pointer-events: none;
+  background:
+    linear-gradient(var(--argus), var(--argus)) left top / 12px 2px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) left top / 2px 12px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) right top / 12px 2px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) right top / 2px 12px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) left bottom / 12px 2px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) left bottom / 2px 12px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) right bottom / 12px 2px no-repeat,
+    linear-gradient(var(--argus), var(--argus)) right bottom / 2px 12px no-repeat; }
+.argus-marke { position: absolute; left: 0; bottom: calc(100% + 3px); white-space: nowrap; background: var(--argus); color: #121410;
+  font: 600 11px/1.2 ui-monospace, Consolas, monospace; padding: 2px 5px; border-radius: 2px; }
+.argus-marke.unten { bottom: auto; top: calc(100% + 3px); }
+.drohne-kopf, .drohne-fuss { position: absolute; left: 0; right: 0; padding: 3px 8px; font-size: 11px; color: #e6e8e2; background: rgba(0, 0, 0, .45); }
+.drohne-kopf { top: 0; }
+.drohne-fuss { bottom: 0; }

@@ -8,8 +8,9 @@ import { uhrzeit } from "../kern/uhr";
 import { TEXT_MAX } from "../kern/ereignisse";
 import type { Sitzung } from "../sitzung/sitzung";
 import {
-  AktionsKnopf, Empfehlung, Konfidenz, Lagehinweise, Leer, MeldungsEintrag, Panel, Platzhalter,
+  AktionsKnopf, Empfehlung, Konfidenz, Lagehinweise, Leer, MeldungsEintrag, Panel,
 } from "./gemeinsam/bausteine";
+import { DrohnenbildAnzeige } from "./gemeinsam/drohnenbild";
 import { useAuswahl, useSpielzeit, useStand } from "./gemeinsam/hooks";
 
 const SICHT_TEXT: Record<string, string> = {
@@ -61,7 +62,8 @@ export function G1Ansicht(p: { s: Sitzung }) {
       <Panel titel={m ? `Meldung ${m.id} · ${uhrzeit(start, ms!.erschienen.t_s)} · ${feinlage(gemeldetePosition(inh, m), inh.karte)}` : "Meldung"}>
         {!m || !ms ? <Leer>Warten auf ARGUS-Meldungen …</Leer> : (
           <div class="stapel">
-            <Platzhalter titel="Drohnenbild UAV-2 „Milan“ (Bild folgt in Schritt 5)" text="" stil="aspect-ratio:16/9;max-height:330px;padding:16px" />
+            <DrohnenbildAnzeige meldung={m} uhr={uhrzeit(start, ms.erschienen.t_s)} bildalter={bildalter}
+              naechste={offen.filter((x) => x.id !== m.id).map((x) => x.id)} />
             <div class="klein leise" style="margin-top:-6px">
               {m.bild.beschreibung}
               {m.bild.sicht.length > 0 && <span> · Sicht: {m.bild.sicht.map((v) => `${SICHT_TEXT[v.art] ?? v.art} ${Math.round(v.anteil * 100)} % (${v.lage})`).join(", ")}</span>}

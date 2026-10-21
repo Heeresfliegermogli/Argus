@@ -21,6 +21,8 @@ export type PersonenArt = "zivil" | "soldat" | "besatzung_ergibt_sich";
 export interface Person {
   art: PersonenArt | string;
   anzahl: number;
+  /** davon Kinder (nur Darstellung im Drohnenbild) */
+  klein?: number;
   pos: Punkt;
   ab_s?: number;
   bis_s?: number;
@@ -55,8 +57,24 @@ export type ArgusEmpfehlung = "BEKÄMPFEN" | "PRÜFEN" | "UNKLAR" | "NICHT BEKÄ
 
 export interface Sichtstoerung {
   art: "wolke" | "rauch" | "dunst" | "baeume" | "tarnnetz" | "stoerung" | "unschaerfe" | string;
+  /** verdeckter Anteil: der Bildfläche (lage = Bildbereich) bzw. des Fahrzeugs (lage = "Ziel") */
   anteil: number;
   lage: string;
+  /** nur Asset-Generator: wie viel des Ziels eine Bereichsstörung verdecken soll (Ziel am Wolkenrand) */
+  ziel_anteil?: number;
+  /** nur Asset-Generator: welche Fahrzeugseite eine Zielstörung verdeckt (vorn, hinten, links, rechts) */
+  seite?: string;
+}
+
+/** Person nur für das Drohnenbild (zählt nicht für die Trefferregel), Lage relativ zum Fahrzeug. */
+export interface BildPerson {
+  bei: string;
+  art: string;
+  anzahl: number;
+  /** [vorwärts, rechts] in Metern ab Fahrzeugmitte */
+  versatz_m: Punkt;
+  /** auf dem Fahrzeug (z. B. im Turmluk) */
+  oben?: boolean;
 }
 
 export interface Meldung {
@@ -83,11 +101,17 @@ export interface Meldung {
     bildalter_s?: number;
   };
   bild: {
+    /** Drohnenbild relativ zu assets/ (Manifest assets/manifest.json → drohne[Meldung]) */
+    datei?: string;
     beschreibung: string;
     sicht: Sichtstoerung[];
-    datei?: string;
-    vorhanden?: boolean;
-    generator?: string;
+    /** Bildbreite in Metern (Standard 130 m, mehrere Ziele 150 m) */
+    ausschnitt_m?: number;
+    /** Verschiebung der Bildmitte in Metern [Ost, Süd] */
+    versatz_m?: Punkt;
+    /** Darstellung je Ziel: luk_offen, feuert, furt, kette_ab, kisten */
+    zustand?: Record<string, string>;
+    personen?: BildPerson[];
   };
   loesung: { G1: string; G2: string; G3: string };
   zweck: string;
@@ -226,11 +250,18 @@ export interface Karte {
   hinweis?: string;
   ausdehnung_m: { breite: number; hoehe: number };
   raster: { zelle_m: number; spalten: string; zeilen_ab: number; regel?: string };
-  bilder: { luftbild: string; lagekarte: string; aufloesung_m_pro_px: number };
-  linien: { id: string; name: string; art: string; breite_m: number; glatt?: boolean; punkte: Punkt[] }[];
+  /** Pfade relativ zu assets/ (alle Stufen im Asset-Manifest) */
+  bilder: { hinweis?: string; luftbild: string; lagekarte: string; aufloesung_m_pro_px: number };
+  linien: { id: string; name: string; art: string; breite_m: number; glatt?: boolean; allee?: boolean; punkte: Punkt[] }[];
   flaechen: { id: string; name: string; art: string; neu?: boolean; punkte: Punkt[] }[];
   gebaeude: { id: string; art: string; mitte: Punkt; laenge: number; breite: number; winkel: number }[];
-  bebauung?: { hinweis: string };
+  bebauung?: {
+    hinweis: string;
+    abschnitte?: { linie: string; x_von?: number; x_bis?: number; y_von?: number; y_bis?: number }[];
+    abstand_m?: [number, number];
+    schritt_m?: number;
+  };
+  einzelbaeume?: Punkt[];
   namen: { text: string; pos: Punkt; neu?: boolean }[];
   punkte: { id: string; name: string; pos: Punkt; art: string; neu?: boolean }[];
 }
@@ -255,7 +286,7 @@ export interface KatalogFahrzeuge {
   version: string;
   hinweis?: string;
   fahrzeuge: Fahrzeug[];
-  personen: { id: string; name: string; darstellung: string }[];
+  personen: { id: string; name: string; darstellung: string; sprite?: string; sprite_tuch?: string }[];
 }
 
 export interface Wirkmittel {
