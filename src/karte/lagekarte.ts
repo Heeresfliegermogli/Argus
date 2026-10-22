@@ -6,21 +6,36 @@
 // Zoom scharf und gleich groß bleiben. Inhalte kommen nur aus den Daten (Karte, Szenario, Katalog)
 // und aus dem Lagebild (src/kern/lagebild.ts).
 //
-// Gezeichnet wird nur bei Änderungen (kein Dauertakt). Schritt 7 kann für Bewegung und Effekte den
-// Takt einschalten (app.ticker) und die Lagezeit fortlaufend setzen.
+// Gezeichnet wird in zwei Ebenen: Raster, Zonen, Namen und Kräfte nur bei Änderungen der Ansicht
+// (Zoom, Verschieben, Größe, Vorschau); Objekte, Wirkungen und Effekte bei Änderungen des Lagebilds und –
+// seit Schritt 7 – in jedem Bild, solange die Uhr läuft oder ein Effekt spielt (Bewegung entlang der
+// Routen, Einschläge, LM im Flug, Leuchtspur, Rauch). Die Spielzeit kommt über setzeUhr().
 import ms from "milsymbol";
 import { Application, Container, Graphics, Sprite, Spritesheet, type SpritesheetData, Text, type TextStyleOptions, Texture } from "pixi.js";
 import { atlas, assetUrl, kachelnVerfuegbar, type AssetManifest } from "../assets/assets";
 import type { Inhalte, Punkt } from "../inhalte/typen";
+import type { Effekt } from "../kern/effekte";
 import type { KartenObjekt, Lagebild, PersonenMarke, WirkungsMarke } from "../kern/lagebild";
-import { LEER } from "../kern/lagebild";
+import { LEER, bahnLage } from "../kern/lagebild";
+import { bildrateMax } from "./bildrate";
+import { EffektEbene } from "./effektebene";
 import { zeichenKraft } from "./zeichen";
+
+/** Spielzeit für die Karte (Bewegung und Effekte). */
+export interface KartenUhr {
+  t: number;
+  tempo: number;
+  laeuft: boolean;
+}
 
 export type Hintergrund = "topo" | "luftbild";
 
 /** Wirkradius-Vorschau (G2) bzw. empfohlenes Wirkmittel (G3). */
 export interface Vorschau {
+  /** Einschlagort (vorausberechnet für eine Freigabe jetzt) */
   pos: Punkt;
+  /** wo das Ziel jetzt ist (gestrichelte Linie zum Einschlagort) */
+  von?: Punkt;
   radius_m: number;
   /** keine Warnung */
   ok: boolean;
@@ -92,12 +107,25 @@ interface ZeichenTextur {
   hoehe: number;
 }
 
+/** Sprite zur Spielzeit t: Wrack ab der Zerstörung, Zustand (z. B. Kette ab) ab dem Treffer, sonst intakt. */
+function spriteZur(sp: NonNullable<KartenObjekt["sprite"]>, t: number, atlas: Record<string, Texture> | null): string {
+  if (sp.wrack && sp.wrackAb !== undefined && t >= sp.wrackAb) return sp.wrack;
+  if (sp.zustand && sp.zustandAb !== undefined && t >= sp.zustandAb) {
+    const name = sp.name.replace(/\.png$/, `_${sp.zustand}.png`);
+    if (!atlas || atlas[name]) return name;
+  }
+  return sp.name;
+}
+
 export class Lagekarte {
   private app = new Application();
   private welt = new Container();
   private grund = new Sprite();
   private kachelEbene = new Container();
   private vektor = new Graphics();
+  /** Wirkungen und Vorschau (unter den Zeichen, aber dynamisch) */
+  private dynUnten = new Graphics();
+  private effekte: EffektEbene;
   private spriteEbene = new Container();
   private zeichenEbene = new Container();
   private ueber = new Graphics();
@@ -120,6 +148,14 @@ export class Lagekarte {
   private zentrum: Punkt;
 
   private texte = new Map<string, Text>();
+  private stilSchluessel = new Map<string, string>();
+  private uhr: (() => KartenUhr) | null = null;
+  /** Position je Objekt im zuletzt gezeichneten Bild (für Zeigen und Klicken) */
+  private posJetzt = new Map<string, Punkt>();
+  private statischUngueltig = true;
+  private benutztStatisch = new Set<string>();
+  private belegtStatisch: [number, number, number, number][] = [];
+  private effektTexturen: Record<string, Texture> | null = null;
   /** Flächen bereits gesetzter Beschriftungen (Bildschirm), damit Zeichen-Beschriftungen ausweichen */
   private belegt: [number, number, number, number][] = [];
   private benutzt = new Set<string>();
@@ -146,6 +182,21 @@ export class Lagekarte {
   ) {
     this.hintergrund = opt.hintergrund;
     this.zentrum = [inh.karte.ausdehnung_m.breite / 2, inh.karte.ausdehnung_m.hoehe / 2];
+    this.effekte = new EffektEbene(inh);
+    // Fehlersuche und Tests: die Karte am Element erreichbar (z. B. Bilder je Sekunde, Effekte)
+    (host as unknown as { argusKarte?: Lagekarte }).argusKarte = this;
+  }
+
+  /** Für Tests: Anzahl Effekte und ob die Atlanten geladen sind. */
+  get diagnose(): {
+    effekte: number; effektAtlas: boolean; spriteAtlas: boolean; renderer: string; fps: number; animationen: string[];
+    /** Zeichenzeit je Bild in ms (Mittel und Höchstwert der letzten Sekunde, mit Rendern) */
+    bildMs: { mittel: number; max: number };
+    } {
+    return {
+      effekte: this.effekte.anzahl, effektAtlas: !!this.effektTexturen, spriteAtlas: !!this.atlasTexturen, renderer: this.renderer,
+      fps: this.bilderProSekunde, animationen: this.effekte.geladen, bildMs: this.bildMs,
+    };
   }
 
   static async erzeugen(host: HTMLElement, inh: Inhalte, man: AssetManifest | null, opt: KartenOptionen): Promise<Lagekarte> {
@@ -174,7 +225,10 @@ export class Lagekarte {
     c.setAttribute("data-renderer", this.renderer);
     this.host.appendChild(c);
     this.welt.addChild(this.grund, this.kachelEbene);
-    this.app.stage.addChild(this.welt, this.vektor, this.schattenEbene, this.spriteEbene, this.zeichenEbene, this.ueber, this.textEbene);
+    // Krater unter den Fahrzeugen; Explosion, Feuer, Rauch und LM über Fahrzeugen und Zeichen (sonst verdeckt
+    // das taktische Zeichen den Einschlag), Beschriftungen ganz oben
+    this.app.stage.addChild(this.welt, this.vektor, this.dynUnten, this.effekte.unten, this.schattenEbene, this.spriteEbene,
+      this.zeichenEbene, this.effekte.oben, this.ueber, this.textEbene);
     this.groesse(w, h);
     this.ereignisse(c);
     this.beobachter = new ResizeObserver(() => {
@@ -185,12 +239,18 @@ export class Lagekarte {
     this.beobachter.observe(this.host);
     await document.fonts?.ready;
     void this.ladeGrund();
-    if (this.opt.sprites && this.man) void this.ladeAtlas();
+    if (this.man) void this.ladeAtlas();
+    // Takt für Bewegung und Effekte: zeichnet nur, solange sich etwas bewegt (höchstens 30 Bilder/s)
+    this.app.ticker.maxFPS = 30;
+    this.app.ticker.add(() => this.takt());
+    this.app.ticker.start();
     this.zeichnen();
   }
 
   zerstoeren(): void {
     this.zerstoert = true;
+    this.app.ticker.stop();
+    this.effekte.zerstoeren();
     this.beobachter?.disconnect();
     this.aufraeumen.forEach((f) => f());
     for (const z of this.zeichenCache.values()) z.tex.destroy(true);
@@ -201,7 +261,7 @@ export class Lagekarte {
 
   setzeLagebild(lb: Lagebild): void {
     this.lb = lb;
-    this.zeichnen();
+    this.zeichnen(true);
   }
 
   setzeVorschau(v: Vorschau | null): void {
@@ -211,7 +271,60 @@ export class Lagekarte {
 
   setzeGewaehlt(id: string | null): void {
     this.gewaehlt = id;
-    this.zeichnen();
+    this.zeichnen(true);
+  }
+
+  /** Spielzeit für Bewegung und Effekte (ohne: Standbild an den Positionen des Lagebilds). */
+  setzeUhr(uhr: (() => KartenUhr) | null): void {
+    this.uhr = uhr;
+    this.zeichnen(true);
+  }
+
+  setzeEffekte(liste: Effekt[]): void {
+    this.effekte.setze(liste);
+    this.zeichnen(true);
+  }
+
+  /** Bilder je Sekunde der letzten Sekunde (für Tests und die Fehlersuche). */
+  bilderProSekunde = 0;
+  /** Zeichenzeit je Bild (ms) der letzten Sekunde */
+  bildMs = { mittel: 0, max: 0 };
+  private bildZaehler = { n: 0, ab: 0, summe: 0, max: 0 };
+  private letztesBild = 0;
+
+  /**
+   * Takt (PixiJS-Ticker): so viele Bilder, wie die Lage braucht.
+   *  • Einschlag, Mündungsblitz, LM oder Leuchtspur unterwegs: 30 Bilder/s.
+   *  • Uhr läuft (Fahrzeuge fahren): 12–30 Bilder/s je nach Tempo und Zoom (bei ×1 in der Gesamtansicht
+   *    bewegt sich ein Fahrzeug nur wenige Bildpunkte je Sekunde).
+   *  • Uhr steht, nur Schleifen (Feuer, Rauch, Nebel): 12 Bilder/s; sonst nur bei Änderungen.
+   * Höchstens `fps` aus der Adresszeile (schwache Rechner, Variante C mit vielen Fenstern an einem PC).
+   */
+  private takt(): void {
+    if (this.zerstoert || !this.uhr || !this.breite) return;
+    const u = this.uhr();
+    const jetzt = performance.now();
+    let ziel: number;
+    if (this.effekte.aktiv(u.t, u.tempo, true)) ziel = 30;
+    else if (u.laeuft) ziel = Math.min(30, Math.max(12, 6 * u.tempo * Math.max(1, this.s)));
+    else if (this.effekte.aktiv(u.t, u.tempo)) ziel = 12;
+    else return;
+    ziel = Math.min(ziel, bildrateMax());
+    if (jetzt - this.letztesBild < 1000 / ziel - 6) return;
+    this.letztesBild = jetzt;
+    this.allesZeichnen();
+    this.app.render();
+    const dauer = performance.now() - jetzt;
+    const b = this.bildZaehler;
+    b.n += 1;
+    b.summe += dauer;
+    b.max = Math.max(b.max, dauer);
+    if (jetzt - b.ab >= 1000) {
+      this.bilderProSekunde = Math.round((b.n * 1000) / (jetzt - b.ab));
+      this.bildMs = { mittel: Math.round((b.summe / b.n) * 10) / 10, max: Math.round(b.max * 10) / 10 };
+      this.bildZaehler = { n: 0, ab: jetzt, summe: 0, max: 0 };
+      this.host.dataset.fps = String(this.bilderProSekunde);
+    }
   }
 
   setzeHintergrund(h: Hintergrund): void {
@@ -343,7 +456,9 @@ export class Lagekarte {
     let best: KartenObjekt | null = null;
     let d = 18;
     for (const o of this.lb.objekte) {
-      const dd = nahe(this.bs(o.pos), p);
+      const pos = this.posJetzt.get(o.id);
+      if (!pos) continue;
+      const dd = nahe(this.bs(pos), p);
       if (dd < d) {
         d = dd;
         best = o;
@@ -357,14 +472,14 @@ export class Lagekarte {
     const o = this.objektBei(p);
     if (o) {
       c.style.cursor = o.meldung && this.opt.onKlick ? "pointer" : "default";
-      const [sx, sy] = this.bs(o.pos);
+      const [sx, sy] = this.bs(this.posJetzt.get(o.id) ?? o.pos);
       this.opt.onInfo?.({ x: sx, y: sy, titel: o.titel, zeilen: o.zeilen });
       return;
     }
     c.style.cursor = this.zoomFaktor > 1 ? "grab" : "";
-    const pers = this.lb.personen.find((q) => nahe(this.bs(q.pos), p) < 10);
+    const pers = this.lb.personen.find((q) => nahe(this.bs(this.posJetzt.get(q.id) ?? q.pos), p) < 10);
     if (pers) {
-      const [sx, sy] = this.bs(pers.pos);
+      const [sx, sy] = this.bs(this.posJetzt.get(pers.id) ?? pers.pos);
       this.opt.onInfo?.({ x: sx, y: sy, titel: pers.titel, zeilen: pers.getroffen ? ["getroffen"] : [] });
       return;
     }
@@ -400,17 +515,21 @@ export class Lagekarte {
   }
 
   private async ladeAtlas(): Promise<void> {
-    try {
-      const a = await atlas(this.man!, "fahrzeuge");
+    const laden = async (welcher: "fahrzeuge" | "effekte") => {
+      const a = await atlas(this.man!, welcher);
       const tex = await bildTextur(a.bildUrl);
       const sheet = new Spritesheet(tex, a.json as SpritesheetData);
       await sheet.parse();
-      if (this.zerstoert) return;
-      this.atlasTexturen = sheet.textures as Record<string, Texture>;
-      this.zeichnen();
-    } catch (e) {
-      console.warn("Karte: Sprite-Atlas nicht geladen", e);
-    }
+      return sheet.textures as Record<string, Texture>;
+    };
+    const [fz, ef] = await Promise.allSettled([laden("fahrzeuge"), laden("effekte")]);
+    if (this.zerstoert) return;
+    if (fz.status === "fulfilled") this.atlasTexturen = fz.value;
+    else console.warn("Karte: Sprite-Atlas nicht geladen", fz.reason);
+    if (ef.status === "fulfilled") this.effektTexturen = ef.value;
+    else console.warn("Karte: Effekt-Atlas nicht geladen", ef.reason);
+    this.effekte.setzeTexturen(this.man!, this.effektTexturen);
+    this.zeichnen(true);
   }
 
   private kachelnPruefen(): void {
@@ -445,8 +564,9 @@ export class Lagekarte {
 
   // ---------------------------------------------------------------- Zeichnen
 
-  /** Neu zeichnen, höchstens einmal je Bild. */
-  zeichnen(): void {
+  /** Neu zeichnen, höchstens einmal je Bild. nurDynamisch: Ansicht unverändert (Lagebild, Auswahl, Effekte). */
+  zeichnen(nurDynamisch = false): void {
+    if (!nurDynamisch) this.statischUngueltig = true;
     if (this.zeichnenAngefordert || this.zerstoert) return;
     this.zeichnenAngefordert = true;
     requestAnimationFrame(() => {
@@ -463,13 +583,19 @@ export class Lagekarte {
 
   private text(schluessel: string, inhalt: string, stil: TextStyleOptions, x: number, y: number, ax = 0.5, ay = 0.5, rot = 0): Text {
     let t = this.texte.get(schluessel);
+    const stilSchl = `${stil.fontSize}|${stil.fontWeight}|${stil.fontStyle}|${String(stil.fill)}|${JSON.stringify(stil.stroke)}`;
     if (!t) {
       t = new Text({ text: inhalt, style: stil });
       this.texte.set(schluessel, t);
+      this.stilSchluessel.set(schluessel, stilSchl);
       this.textEbene.addChild(t);
     } else {
       if (t.text !== inhalt) t.text = inhalt;
-      Object.assign(t.style, stil);
+      // Stil nur setzen, wenn er sich ändert: sonst rendert PixiJS die Schrift in jedem Bild neu
+      if (this.stilSchluessel.get(schluessel) !== stilSchl) {
+        Object.assign(t.style, stil);
+        this.stilSchluessel.set(schluessel, stilSchl);
+      }
     }
     t.anchor.set(ax, ay);
     t.position.set(Math.round(x), Math.round(y));
@@ -520,24 +646,36 @@ export class Lagekarte {
   }
 
   private allesZeichnen(): void {
-    this.benutzt.clear();
-    this.belegt = [];
     this.welt.position.set(this.x, this.y);
     this.welt.scale.set(this.s);
-    this.kachelnPruefen();
-    const g = this.vektor;
+    if (this.statischUngueltig) {
+      this.kachelnPruefen();
+      this.benutzt = new Set();
+      this.belegt = [];
+      const g = this.vektor;
+      g.clear();
+      this.rahmenUndRaster(g);
+      this.zonen(g);
+      this.namen();
+      this.kraefte(g);
+      this.benutztStatisch = this.benutzt;
+      this.belegtStatisch = [...this.belegt];
+      this.statischUngueltig = false;
+    }
+    // dynamisch: Wirkungen, Vorschau, Objekte, Personen, Effekte zur aktuellen Spielzeit
+    this.benutzt = new Set();
+    this.belegt = [...this.belegtStatisch];
     const u = this.ueber;
-    g.clear();
+    const d = this.dynUnten;
+    d.clear();
     u.clear();
-    this.rahmenUndRaster(g);
-    this.zonen(g);
-    this.namen();
-    this.kraefte(g);
-    this.wirkungen(g, this.lb.wirkungen);
-    this.vorschauZeichnen(g);
-    this.objekte(u, this.lb.objekte);
-    this.personen(u, this.lb.personen);
-    for (const [k, t] of this.texte) if (!this.benutzt.has(k)) t.visible = false;
+    const uhr = this.uhr?.() ?? null;
+    this.wirkungen(d, this.lb.wirkungen);
+    this.vorschauZeichnen(d);
+    this.objekte(u, this.lb.objekte, uhr?.t ?? null);
+    this.personen(u, this.lb.personen, uhr?.t ?? null);
+    if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe);
+    for (const [k, t] of this.texte) if (!this.benutzt.has(k) && !this.benutztStatisch.has(k)) t.visible = false;
   }
 
   private rahmenUndRaster(g: Graphics): void {
@@ -718,6 +856,13 @@ export class Lagekarte {
     }
     const [x, y] = this.bs(v.pos);
     const r = v.radius_m * this.s;
+    if (v.von && Math.hypot(v.von[0] - v.pos[0], v.von[1] - v.pos[1]) > 2) {
+      // Weg des Ziels bis zum Einschlag
+      const [vx, vy] = this.bs(v.von);
+      this.strich(g, [[vx, vy], [x, y]], 6, 4);
+      g.stroke({ width: 2, color: farbe, alpha: 0.9 });
+      g.circle(vx, vy, 3).fill({ color: farbe });
+    }
     g.circle(x, y, Math.max(r, 3)).fill({ color: farbe, alpha: 0.22 }).stroke({ width: 2.5, color: farbe, alpha: 1 });
     if (r < 14) {
       // kleiner Wirkradius: Fadenkreuz, damit die Vorschau sichtbar bleibt
@@ -787,7 +932,7 @@ export class Lagekarte {
     return t;
   }
 
-  private objekte(u: Graphics, liste: KartenObjekt[]): void {
+  private objekte(u: Graphics, liste: KartenObjekt[], t: number | null): void {
     const groesse = this.opt.zeichenGroesse ?? 20;
     const spritesZeigen = !!this.opt.sprites && !!this.atlasTexturen && this.s >= SPRITES_AB;
     const k = this.inh.karte.ausdehnung_m;
@@ -795,14 +940,21 @@ export class Lagekarte {
     // gewählte zuletzt zeichnen (liegen oben), aber zuerst beschriften (bekommen den besten Platz)
     const sortiert = [...liste].sort((a, b) => Number(istGewaehlt(a)) - Number(istGewaehlt(b)));
     const marken: { o: KartenObjekt; x: number; y: number; links: number; rechts: number; oben: number; unten: number; gew: boolean; alpha: number }[] = [];
+    this.posJetzt.clear();
     for (const o of sortiert) {
-      if (o.pos[0] < -5 || o.pos[1] < -5 || o.pos[0] > k.breite + 5 || o.pos[1] > k.hoehe + 5) continue;
-      const [x, y] = this.bs(o.pos);
+      // Position zur laufenden Spielzeit aus der Bahn (Bewegung), sonst die des Lagebilds
+      const lage = o.bahn && t !== null ? bahnLage(o.bahn, t) : { pos: o.pos, hdg: o.sprite?.hdg ?? 0 };
+      if (!lage) continue;
+      const pos = lage.pos;
+      if (pos[0] < -5 || pos[1] < -5 || pos[0] > k.breite + 5 || pos[1] > k.hoehe + 5) continue;
+      this.posJetzt.set(o.id, pos);
+      const [x, y] = this.bs(pos);
       if (x < -40 || y < -40 || x > this.breite + 40 || y > this.hoehe + 40) continue;
       const gew = istGewaehlt(o);
       const alpha = o.zustand === "erledigt" ? 0.42 : 1;
-      if (spritesZeigen && o.sprite && this.atlasTexturen?.[o.sprite.name]) {
-        const tex = this.atlasTexturen[o.sprite.name];
+      const spriteName = o.sprite && t !== null ? spriteZur(o.sprite, t, this.atlasTexturen) : o.sprite?.name;
+      if (spritesZeigen && o.sprite && spriteName && this.atlasTexturen?.[spriteName]) {
+        const tex = this.atlasTexturen[spriteName];
         let sp = this.fahrzeugSprites.get(o.id);
         if (!sp) {
           sp = new Sprite(tex);
@@ -812,7 +964,7 @@ export class Lagekarte {
         }
         sp.texture = tex;
         sp.scale.set(this.s / (this.man?.fahrzeuge.px_pro_m ?? 12));
-        sp.rotation = (o.sprite.hdg * Math.PI) / 180;
+        sp.rotation = ((o.bahn && t !== null ? lage.hdg : o.sprite.hdg) * Math.PI) / 180;
         sp.position.set(x, y);
         sp.visible = true;
         sp.alpha = o.zustand === "erledigt" ? 0.75 : 1;
@@ -863,9 +1015,10 @@ export class Lagekarte {
       ]);
       t.alpha = m.alpha < 1 ? 0.7 : 1;
     }
-    for (const [schl, sp] of this.zeichenSprites) if (!this.benutzt.has(`zs:${schl}`)) sp.visible = false;
-    for (const [schl, sp] of this.fahrzeugSprites) if (!this.benutzt.has(`fs:${schl}`)) sp.visible = false;
-    for (const [schl, sp] of this.schattenSprites) if (!this.benutzt.has(`fs:${schl}`)) sp.visible = false;
+    const da = (k: string) => this.benutzt.has(k) || this.benutztStatisch.has(k);
+    for (const [schl, sp] of this.zeichenSprites) if (!da(`zs:${schl}`)) sp.visible = false;
+    for (const [schl, sp] of this.fahrzeugSprites) if (!da(`fs:${schl}`)) sp.visible = false;
+    for (const [schl, sp] of this.schattenSprites) if (!da(`fs:${schl}`)) sp.visible = false;
   }
 
   /** Schutzzeichen am taktischen Zeichen: Rotes Kreuz (Sanität) oder allgemein „geschützt“. */
@@ -880,10 +1033,13 @@ export class Lagekarte {
     }
   }
 
-  private personen(u: Graphics, liste: PersonenMarke[]): void {
+  private personen(u: Graphics, liste: PersonenMarke[], t: number | null): void {
     const farbe: Record<string, number> = { zivil: 0xffffff, soldat: 0xb3261e, besatzung_ergibt_sich: 0xffffff };
     for (const p of liste) {
-      const [x, y] = this.bs(p.pos);
+      const lage = p.bahn && t !== null ? bahnLage(p.bahn, t) : { pos: p.pos };
+      if (!lage) continue;
+      this.posJetzt.set(p.id, lage.pos);
+      const [x, y] = this.bs(lage.pos);
       const r = 4.5;
       u.circle(x, y, r + 1.5).fill({ color: 0x111111, alpha: 0.8 });
       u.circle(x, y, r).fill({ color: farbe[p.art] ?? 0xdddddd });

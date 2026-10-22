@@ -5,9 +5,10 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { type AssetManifest, assetUrl, kachelnVerfuegbar, ladeManifest } from "../../assets/assets";
 import type { Inhalte } from "../../inhalte/typen";
+import { type Effekt, effekteSchluessel } from "../../kern/effekte";
 import { type Lagebild, lagebildSchluessel } from "../../kern/lagebild";
 // Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt (G1 braucht sie nicht).
-import type { Hintergrund, KartenInfo, Lagekarte, Vorschau } from "../../karte/lagekarte";
+import type { Hintergrund, KartenInfo, KartenUhr, Lagekarte, Vorschau } from "../../karte/lagekarte";
 import { MODIFIKATOR_ATTRAPPE, sidc } from "../../karte/zeichen";
 
 export type Legende = "ziele" | "kontrolle" | "gelaende";
@@ -83,6 +84,9 @@ export function LagekarteAnsicht(p: {
   legende?: Legende | null;
   banner?: ComponentChildren;
   testid?: string;
+  /** Spielzeit für Bewegung und Effekte (fehlt: Standbild) */
+  uhr?: () => KartenUhr;
+  effekte?: Effekt[];
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -140,6 +144,16 @@ export function LagekarteAnsicht(p: {
   useEffect(() => {
     if (bereit) karte.current?.setzeHintergrund(grund);
   }, [bereit, grund]);
+  const uhrRef = useRef(p.uhr);
+  uhrRef.current = p.uhr;
+  const mitUhr = !!p.uhr;
+  useEffect(() => {
+    if (bereit) karte.current?.setzeUhr(mitUhr ? () => uhrRef.current!() : null);
+  }, [bereit, mitUhr]);
+  const eSchl = p.effekte ? effekteSchluessel(p.effekte) : "";
+  useEffect(() => {
+    if (bereit) karte.current?.setzeEffekte(p.effekte ?? []);
+  }, [bereit, eSchl]);
 
   const infoStil = (() => {
     if (!info || !host.current) return {};

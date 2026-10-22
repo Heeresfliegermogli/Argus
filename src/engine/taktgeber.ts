@@ -11,7 +11,8 @@ export class Taktgeber {
 
   anmelden(h: Host): void {
     this.hosts.add(h);
-    if (!this.timer) this.timer = setInterval(() => this.takt(), this.taktMs);
+    // taktMs 0: kein Zeitgeber, jemand anderes ruft takt() auf (Tests mit gesteuerter Uhr)
+    if (!this.timer && this.taktMs > 0) this.timer = setInterval(() => this.takt(), this.taktMs);
   }
 
   abmelden(h: Host): void {

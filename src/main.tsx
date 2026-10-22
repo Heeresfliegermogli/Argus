@@ -11,7 +11,8 @@ import { EinweisungDruck } from "./ansichten/einweisung";
 import { PlenumFenster, SLFenster } from "./ansichten/sl-fenster";
 import { Start } from "./ansichten/start";
 import { TTFenster } from "./ansichten/tt-fenster";
-import { type Einstellungen, leseEinstellungen, merken, sitzungsAdresse } from "./config";
+import { type Einstellungen, leseEinstellungen, merke, merken, sitzungsAdresse } from "./config";
+import { setzeBildrateMax } from "./karte/bildrate";
 import { ladeInhalte } from "./inhalte/laden";
 import type { Inhalte } from "./inhalte/typen";
 import { type Rolle, zufall } from "./kern/ereignisse";
@@ -108,6 +109,8 @@ function titel(e: Einstellungen): string {
 
 function App() {
   const e = leseEinstellungen();
+  setzeBildrateMax(e.fps);
+  if (new URLSearchParams(location.search).has("fps")) merke("fps", String(e.fps));
   if (new URLSearchParams(location.search).get("druck") === "einweisung") {
     document.title = "ARGUS · Einweisungskarten";
     return <Druck e={e} />;

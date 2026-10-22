@@ -2,7 +2,8 @@
 """Bildschirmfotos der Schlüsselfälle und Belastungsprobe der Ansichten in 1530 × 800.
 
 Ergänzt tools/ui_bilder.py (kurzer Ablauf bis S1). Hier:
-  • volle Warteschlangen (Spielzeit 20:50 gesetzt: 20 Meldungen und 7 Lagemeldungen auf einmal),
+  • volle Warteschlangen (Spielzeit erst 13:20, dann 20:50 gesetzt: viele Meldungen und Lagemeldungen auf einmal;
+    seit Schritt 7 entfallen Meldungen, deren Fahrzeuge zerstört oder abgezogen sind),
   • längste erlaubte Texte (Vermerk, Begründung, Bemerkung, Lagehinweis),
   • die Schlüsselfälle im Drohnenbild von G1 mit Vergrößerung auf das entscheidende Detail
     (S2 Rotes Kreuz M12, S4 Kinder M18, S3 drei Panzer M20, N2 weißes Tuch M21),
@@ -69,14 +70,10 @@ def main():
                 pg.get_by_test_id("einweisung-schliessen").click()
         sl, g1, g2, g3, pl = (s[r] for r in ROLLEN)
 
-        # Spielzeit 20:50 bei stehender Uhr: M01–M21 und die Injects bis I-06 kommen auf einmal
-        sl.fill("[data-testid=sl-zeit]", "20:50")
-        sl.get_by_text("Spielzeit setzen").click()
-        warte(lambda: g1.locator(".eintrag[data-meldung=M21]").count() > 0, 20, "M21 bei G1")
-        g1.wait_for_timeout(500)
+        def offen(stufe):
+            return g1.evaluate("(st) => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === st)", stufe)
 
-        # G1: Schlüsselfälle im Bild, jeweils mit Vergrößerung auf das Ziel
-        for mid, name in [("M12", "S2_rotes_kreuz"), ("M18", "S4_kinder"), ("M20", "S3_pt91"), ("M21", "N2_weisses_tuch")]:
+        def lupe(mid, name):
             g1.locator(f".eintrag[data-meldung={mid}]").first.click()
             g1.wait_for_timeout(700)
             foto(g1, f"g1_{mid}_{name}")
@@ -88,16 +85,21 @@ def main():
             foto(g1, f"g1_{mid}_lupe")
             g1.keyboard.press("Escape")
 
-        # G1 nimmt alles an; bei M12 der längste Vermerk
-        for i in range(1, 22):
-            mid = f"M{i:02d}"
+        # Seit Schritt 7 entfallen Meldungen, deren Fahrzeuge zerstört oder abgezogen sind. Deshalb zwei Sprünge:
+        # 1) Spielzeit 13:20 bei stehender Uhr: M01–M12 auf einmal, S2 (Sanitätsfahrzeug M12) steht noch
+        sl.fill("[data-testid=sl-zeit]", "13:20")
+        sl.get_by_text("Spielzeit setzen").click()
+        warte(lambda: g1.locator(".eintrag[data-meldung=M12]").count() > 0, 20, "M12 bei G1")
+        g1.wait_for_timeout(500)
+        lupe("M12", "S2_rotes_kreuz")
+        for mid in offen("g1"):
             daten = {"meldung": mid, "entscheid": "annehmen"}
             if mid == "M12":
                 daten["vermerk"] = LANG_120
             senden(g1, "g1_entscheid", daten)
         warte(lambda: g1.locator("[data-testid=g1-offen]").inner_text() == "0", 15, "G1 leer")
 
-        # G2: volle Liste, M12 mit Mörser (mehrere Warnungen) und längster Begründung
+        # G2: volle Liste, M12 mit Mörser (mehrere Warnungen, am vorausberechneten Einschlagort) und längster Begründung
         warte(lambda: g2.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "G2-Karte bereit")
         g2.locator(".eintrag[data-meldung=M12]").first.click()
         g2.locator("label[data-wm=MRS]").click()
@@ -106,27 +108,44 @@ def main():
         foto(g2, "g2_M12_moerser_warnungen")
         g2.get_by_test_id("g2-bekaempfen").click()
         warte(lambda: g2.locator(".eintrag:not(.gedimmt)[data-meldung=M12]").count() == 0, 10, "M12 empfohlen")
+
+        # G3: M12 mit Regelwarnung und „Freigabe jetzt: Einschlag …“, längster Lagehinweis, Freigabe (Fehltreffer)
+        warte(lambda: g3.locator(".eintrag[data-meldung=M12]").count() > 0, 15, "M12 bei G3")
+        g3.locator(".eintrag[data-meldung=M12]").first.click()
+        g3.fill("[data-testid=g3-lagehinweis]", LANG_240)
+        g3.wait_for_timeout(600)
+        foto(g3, "g3_M12_warnung")
+        g3.get_by_role("button", name="Senden").click()
+        g3.locator("input.feld").first.fill(LANG_120)
+        g3.get_by_test_id("g3-freigabe").click()
+        warte(lambda: g3.locator(".eintrag:not(.gedimmt)[data-meldung=M12]").count() == 0, 10, "M12 freigegeben")
+
+        # 2) Spielzeit 20:50: M13–M21 und die Injects bis I-06 kommen dazu (S4 Kinder M18, S3 PT-91 M20, N2 weißes Tuch M21)
+        sl.fill("[data-testid=sl-zeit]", "20:50")
+        sl.get_by_text("Spielzeit setzen").click()
+        warte(lambda: g1.locator(".eintrag[data-meldung=M21]").count() > 0, 20, "M21 bei G1")
+        g1.wait_for_timeout(500)
+        for mid, name in [("M18", "S4_kinder"), ("M20", "S3_pt91"), ("M21", "N2_weisses_tuch")]:
+            lupe(mid, name)
+        for mid in offen("g1"):
+            senden(g1, "g1_entscheid", {"meldung": mid, "entscheid": "annehmen"})
+        warte(lambda: g1.locator("[data-testid=g1-offen]").inner_text() == "0", 15, "G1 leer")
+        g2.wait_for_timeout(500)
+        foto(g2, "g2_liste_voll")
         senden(g2, "g2_empfehlung", {"meldung": "M18", "empfehlung": "beobachten", "begruendung": "Zivilpersonen am Mörser"})
         senden(g2, "g2_empfehlung", {"meldung": "M20", "empfehlung": "bekaempfen", "wirkmittel": "MRS"})
         senden(g2, "g2_empfehlung", {"meldung": "M21", "empfehlung": "bekaempfen", "wirkmittel": "LM"})
-        senden(g2, "g2_empfehlung", {"meldung": "M08", "empfehlung": "bekaempfen", "wirkmittel": "MRS"})
-        for mid in ["M01", "M02", "M05", "M11"]:
+        weitere = [m for m in offen("g2") if m not in ("M18", "M20", "M21")]
+        for mid in weitere:
             senden(g2, "g2_empfehlung", {"meldung": mid, "empfehlung": "bekaempfen", "wirkmittel": "LM"})
         warte(lambda: g3.locator(".eintrag[data-meldung=M21]").count() > 0, 15, "Empfehlungen bei G3")
         g2.locator(".eintrag[data-meldung=M18]").first.click()
         g2.wait_for_timeout(500)
         foto(g2, "g2_M18_zurueckgestellt")
 
-        # G3: sieben ungelesene Lagemeldungen, M12 mit Regelwarnung, längster Lagehinweis
-        g3.locator(".eintrag[data-meldung=M12]").first.click()
-        g3.fill("[data-testid=g3-lagehinweis]", LANG_240)
         g3.wait_for_timeout(600)
-        foto(g3, "g3_M12_warnung_postfach_voll")
-        g3.get_by_role("button", name="Senden").click()
-        g3.locator("input.feld").first.fill(LANG_120)
-        g3.get_by_test_id("g3-freigabe").click()
-        warte(lambda: g3.locator(".eintrag:not(.gedimmt)[data-meldung=M12]").count() == 0, 10, "M12 freigegeben")
-        for mid in ["M20", "M21", "M08", "M01"]:
+        foto(g3, "g3_postfach_voll")
+        for mid in ["M20", "M21"] + weitere[:2]:
             senden(g3, "g3_entscheid", {"meldung": mid, "entscheid": "freigabe"})
         for i in ["I-01", "I-02", "I-03"]:
             senden(g3, "inject_quittiert", {"inject": i})
@@ -138,7 +157,7 @@ def main():
         # Wirkungen abwarten (Mörser ca. 35 s, LM ca. 40 s) mit Tempo ×20, dann I-08a
         sl.get_by_role("button", name="×20").click()
         sl.get_by_role("button", name="▶ Start").click()
-        warte(lambda: sum(1 for e in protokoll(sl) if e["typ"] == "wirkung") >= 5, 40, "fünf Wirkungen")
+        warte(lambda: sum(1 for e in protokoll(sl) if e["typ"] == "wirkung") >= 4, 40, "vier Wirkungen")
         warte(lambda: any(e["typ"] == "inject" and e["daten"]["inject"] == "I-08a" for e in protokoll(sl)), 30, "I-08a")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
         sl.wait_for_timeout(900)

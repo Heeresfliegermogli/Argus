@@ -13,6 +13,8 @@
 //   transport  lp | auto           (Standard: lp = Long-Polling, weil WebSocket gesperrt ist)
 //   name       Anzeigename des Fensters, z. B. „SL 2“
 //   szenario   Szenario-Datei in daten/, Standard szenario_kraehe_01.json
+//   fps        höchste Bildrate der Lagekarte (1–30, Standard 30). Für schwache Rechner und Variante C mit vielen
+//              Fenstern an einem PC; wird im Browser gemerkt, fps=30 stellt zurück.
 import { STANDARD_SZENARIO } from "./inhalte/laden";
 import { RAUM_MUSTER, ROLLEN, type Rolle } from "./kern/ereignisse";
 import { SITZUNG_MUSTER } from "./kern/sitzungen";
@@ -32,6 +34,8 @@ export interface Einstellungen {
   transport: "lp" | "auto";
   name: string;
   szenario: string;
+  /** höchste Bildrate der Lagekarte */
+  fps: number;
 }
 
 function gemerkt(k: string): string | null {
@@ -76,6 +80,7 @@ export function leseEinstellungen(search: string = location.search): Einstellung
     transport: q.get("transport") === "auto" ? "auto" : "lp",
     name: (q.get("name") ?? "").slice(0, 40),
     szenario: q.get("szenario") ?? STANDARD_SZENARIO,
+    fps: Math.max(1, Math.min(30, Math.round(Number(q.get("fps") ?? gemerkt("fps") ?? 30)) || 30)),
   };
 }
 

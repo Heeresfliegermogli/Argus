@@ -41,9 +41,11 @@ def main():
     ap.add_argument("basis")
     ap.add_argument("--sync", default="lokal")
     ap.add_argument("--bilder", default="lobby-bilder")
+    ap.add_argument("--renderer", choices=["canvas", "webgl"], default="canvas")
+    ap.add_argument("--fps", type=int, default=2, help="höchste Bildrate der Karten (0 = ohne Grenze)")
     a = ap.parse_args()
     os.makedirs(a.bilder, exist_ok=True)
-    start = f"{a.basis}{'&' if '?' in a.basis else '?'}{urllib.parse.urlencode({'sync': a.sync})}"
+    start = f"{a.basis}{'&' if '?' in a.basis else '?'}{urllib.parse.urlencode({'sync': a.sync, **({'fps': a.fps} if a.fps else {})})}"
     ergebnis = []
     konsole = []
 
@@ -56,7 +58,11 @@ def main():
             ergebnis.append((name, False, time.time() - t0, str(e).splitlines()[0][:140]))
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-background-timer-throttling",
+        # Seit Schritt 7 bewegen sich die Karten; viele Fenster mit Software-WebGL an einem Rechner ohne Grafikkarte
+        # stehen dann (siehe tools/e2e_drehbuch.py) – deshalb Rückfall Canvas mit höchstens 2 Bildern/s.
+        grafik = (["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] if a.renderer == "webgl"
+                  else ["--disable-gpu", "--disable-software-rasterizer"])
+        browser = p.chromium.launch(args=[*grafik, "--disable-background-timer-throttling",
                                           "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows"])
         ctx = browser.new_context(viewport={"width": W, "height": H})
         ctx.on("page", lambda pg: (pg.on("pageerror", lambda e: konsole.append(f"pageerror: {e}")),

@@ -61,7 +61,7 @@ export function DrohnenbildAnzeige(p: { meldung: Meldung; uhr: string; bildalter
     <>
       <div class={`drohne ${zoom ? "" : "ohne-zoom"}`} data-testid="drohnenbild" onClick={() => zoom && setGross(true)}
         role={zoom ? "button" : undefined} aria-label={zoom ? "Drohnenbild vergrößern" : undefined}>
-        {b ? <img src={assetUrl(b.datei)} width={b.breite} height={b.hoehe} alt={m.bild.beschreibung} draggable={false} /> : <div class="drohne-leer">Bild wird geladen …</div>}
+        {b ? <img src={assetUrl(b.datei)} width={b.breite} height={b.hoehe} alt={m.bild.beschreibung} draggable={false} /> : <div class="drohne-leer">{man ? `Kein Drohnenbild – ${m.bild.beschreibung}` : "Bild wird geladen …"}</div>}
         {b && <Markierung m={m} b={b} />}
         <Leisten uhr={p.uhr} bildalter={p.bildalter} pq={b?.pq} />
         {zoom && <div class="drohne-lupe-hinweis">Klick: vergrößern mit Lupe</div>}

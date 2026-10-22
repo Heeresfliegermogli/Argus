@@ -188,7 +188,11 @@ export function Hinweise(p: { liste: Hinweis[] }) {
  * Kleines Auswahlmenü an einem Element (Spielleitung: Spieler verschieben). Schließt bei Klick
  * daneben oder Escape.
  */
-export function Menue(p: { offen: boolean; schliessen: () => void; children: ComponentChildren; rechts?: boolean; testid?: string }) {
+export function Menue(p: {
+  offen: boolean; schliessen: () => void; children: ComponentChildren; rechts?: boolean; testid?: string;
+  /** feste Lage im Fenster (position: fixed), z. B. wenn das umgebende Feld abschneidet */
+  fest?: { top: number; right: number; maxHoehe: number };
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!p.offen) return;
@@ -203,7 +207,8 @@ export function Menue(p: { offen: boolean; schliessen: () => void; children: Com
     };
   }, [p.offen]);
   if (!p.offen) return null;
-  return <div ref={ref} class={`menue ${p.rechts ? "rechts" : ""}`} data-testid={p.testid} onClick={(e) => e.stopPropagation()}>{p.children}</div>;
+  const stil = p.fest ? { position: "fixed", top: `${p.fest.top}px`, right: `${p.fest.right}px`, left: "auto", maxHeight: `${p.fest.maxHoehe}px` } : undefined;
+  return <div ref={ref} class={`menue ${p.rechts ? "rechts" : ""}`} style={stil} data-testid={p.testid} onClick={(e) => e.stopPropagation()}>{p.children}</div>;
 }
 
 /**

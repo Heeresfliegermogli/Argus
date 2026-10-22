@@ -32,6 +32,29 @@ export function useSpielzeit(s: Sicht, intervallMs = 250): number {
   return t;
 }
 
+/**
+ * „Meldung entfällt“ (Schritt 7): Fallen bei dieser Rolle Meldungen weg, weil jedes ihrer Fahrzeuge zerstört
+ * oder abgezogen ist, sagt ein kurzer Hinweis unten rechts, welche und warum – sonst verschwände die gerade
+ * geprüfte Meldung kommentarlos aus dem Eingang.
+ */
+export function useEntfallHinweis(s: Sicht, st: SichtStand, rolle: "g1" | "g2" | "g3"): void {
+  const z = st.zustand;
+  const ids = z.reihenfolge.filter((id) => z.meldungen[id].entfallen?.stufe === rolle);
+  const bekannt = useRef<Set<string> | null>(null);
+  const schl = ids.join(",");
+  useEffect(() => {
+    if (!st.geladen) return;
+    if (bekannt.current) {
+      for (const id of ids) {
+        if (bekannt.current.has(id)) continue;
+        const e = z.meldungen[id].entfallen!;
+        s.hinweis("info", `${id} entfällt – ${e.grund}`);
+      }
+    }
+    bekannt.current = new Set(ids);
+  }, [schl, st.geladen, st.lauf]);
+}
+
 /** Auswahl in einer Liste: bleibt stehen, solange der Eintrag existiert, sonst der erste. */
 export function useAuswahl(ids: string[]): [string | null, (id: string) => void] {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);

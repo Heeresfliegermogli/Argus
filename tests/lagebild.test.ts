@@ -96,6 +96,60 @@ describe("Lagebild G2/G3", () => {
   });
 });
 
+describe("Tracking (Schritt 7)", () => {
+  it("die Spur folgt dem ersten noch stehenden Fahrzeug, zeigt die ARGUS-Klasse und bleibt nach der Wirkung am Wrack", async () => {
+    const inh = await inhalte();
+    const vorher = zustandAus(protokoll([
+      ...START,
+      ["meldung", { meldung: "M01" }, 20],
+      ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60],
+    ]), inh);
+    const lb = lagebildZielmeldungen(inh, vorher, "g2", 100);
+    const o = lb.objekte.find((x) => x.meldung === "M01")!;
+    expect(o.bahn).toBeDefined();
+    expect(o.pos).toEqual([926, 322]); // Z-01 hält an der Hauptstraße
+    expect(o.sidc).toBe(lagebildZielmeldungen(inh, vorher, "g2").objekte.find((x) => x.meldung === "M01")!.sidc); // ARGUS-Klasse, nicht Ground Truth
+    expect(o.menge).toBe(2);
+    expect(lagebildZielmeldungen(inh, vorher, "g1", 100).objekte.map((x) => x.meldung)).toEqual(["M01"]); // auch G1 (Karte ab 6b)
+
+    // Mörser auf M01: trifft Z-01 um 175 am Einschlagort; Z-02 fährt weiter, die Spur bleibt am Wrack
+    const nachher = zustandAus(protokoll([
+      ...START,
+      ["meldung", { meldung: "M01" }, 20],
+      ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60],
+      ["g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "MRS" }, 110],
+      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "MRS", einschlag: { t: 175, pos: [926, 322], ziel: "Z-01" } }, 140],
+      ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [926, 322], t_freigabe: 140, t_einschlag: 175, ziel: "Z-01",
+        getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 175],
+    ]), inh);
+    const w = lagebildZielmeldungen(inh, nachher, "g2", 230).objekte.find((x) => x.meldung === "M01")!;
+    expect(w.zerstoert).toBe(true);
+    expect(w.sidc[3]).toBe("X");
+    expect(w.bahn?.halt).toBe(175);
+    expect(w.pos).toEqual([926, 322]);
+    // geplante Wirkung vor dem Einschlag: am vorausberechneten Ort
+    const geplant = zustandAus(protokoll([
+      ...START,
+      ["meldung", { meldung: "M01" }, 20],
+      ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60],
+      ["g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "LM" }, 110],
+      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "LM", einschlag: { t: 181.2, pos: [926, 322], ziel: "Z-01" } }, 140],
+    ]), inh);
+    const gw = lagebildZielmeldungen(inh, geplant, "g3", 150).wirkungen.find((x) => x.geplant)!;
+    expect(gw.pos).toEqual([926, 322]);
+    expect(gw.text).toMatch(/LM · 10:03:01/);
+  });
+
+  it("ein fahrendes Ziel: Bahn = Route, Position zur Lagezeit", async () => {
+    const inh = await inhalte();
+    const z = zustandAus(protokoll([...START, ["meldung", { meldung: "M03" }, 240], ["g1_entscheid", { meldung: "M03", entscheid: "annehmen" }, 250]]), inh);
+    const o = lagebildZielmeldungen(inh, z, "g2", 300).objekte.find((x) => x.meldung === "M03")!;
+    const id = inh.meldungen.M03.ziele[0];
+    expect(o.bahn?.route).toEqual(inh.ziele[id].bewegung?.route ?? [[0, ...inh.ziele[id].pos]]);
+    expect(o.zeilen[0]).toMatch(/gemeldet .* · jetzt /);
+  });
+});
+
 describe("Kontrollkarte", () => {
   it("zeigt ungemeldete Ziele, Personen und Ground Truth zur Lagezeit", async () => {
     const inh = await inhalte();
@@ -127,7 +181,8 @@ describe("Kontrollkarte", () => {
     const lb = lagebildKontrolle(inh, z, 1400);
     const mrs = lb.objekte.find((o) => o.id === "Z-19")!;
     expect(mrs.zustand).toBe("bekaempft");
-    expect(mrs.sprite?.name).toBe("moerser_trupp_wrack.png");
+    // Sprite wechselt zur Spielzeit der Zerstörung auf das Wrack (die Karte wählt je Bild)
+    expect(mrs.sprite).toMatchObject({ name: "moerser_trupp.png", wrack: "moerser_trupp_wrack.png", wrackAb: 1240 });
     expect(lb.personen.find((p) => p.art === "zivil")!.getroffen).toBe(true);
     expect(lb.wirkungen[0].fehl).toBe(true);
     expect(lb.wirkungen[0].zeilen[1]).toMatch(/4 Zivilpersonen/);

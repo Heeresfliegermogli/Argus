@@ -33,6 +33,15 @@ export interface TrefferDaten {
   anzahl?: number;
 }
 
+/** Vorausberechneter Einschlag einer Freigabe (Trefferregel seit Szenario 2.0). */
+export interface EinschlagDaten {
+  /** Spielzeit des Einschlags (auf 0,01 s) */
+  t: number;
+  pos: [number, number];
+  /** bekämpftes Fahrzeug */
+  ziel: string;
+}
+
 // ---------------------------------------------------------------- Ereignisse
 
 export interface EreignisDaten {
@@ -40,19 +49,36 @@ export interface EreignisDaten {
   spiel_neu: { lauf: string; szenario: string; version: string; titel: string };
   /** Neuer Uhrstand: ab ts gilt Spielzeit t_s, läuft mit tempo. */
   uhr: { befehl: UhrBefehl; laeuft: boolean; t_s: number; tempo: number };
-  /** ARGUS-Meldung erscheint. fast_track: geht ohne G1 direkt an G2. entfaellt: Ziel schon zerstört. */
+  /** ARGUS-Meldung erscheint. fast_track: geht ohne G1 direkt an G2. entfaellt: jedes Fahrzeug schon zerstört oder weg. */
   meldung: { meldung: string; fast_track?: boolean; manuell?: boolean; entfaellt?: boolean };
+  /** Meldung entfällt in der Kette (bei G1, G2 oder G3), weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist. */
+  meldung_entfaellt: { meldung: string; stufe: "g1" | "g2" | "g3"; grund: string };
   g1_entscheid: { meldung: string; entscheid: G1Entscheid; vermerk?: string };
   /** warnungen: Regelprüfung (R2, R3, Einsatzbereich) zur Zeit der Empfehlung, vom Host berechnet. */
   g2_empfehlung: {
     meldung: string; empfehlung: G2Empfehlung; wirkmittel?: string; begruendung?: string; warnungen?: string[];
   };
-  /** Bei Freigabe: wirkmittel aus der G2-Empfehlung, warnungen zur Zeit der Freigabe. */
+  /** Bei Freigabe: wirkmittel aus der G2-Empfehlung, warnungen und einschlag am vorausberechneten Einschlagort. */
   g3_entscheid: {
-    meldung: string; entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen?: string[];
+    meldung: string; entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen?: string[]; einschlag?: EinschlagDaten;
   };
-  /** Wirkung nach Ablauf der Vorlaufzeit; Treffer nach der Lage zum Zeitpunkt der Freigabe. */
-  wirkung: { meldung: string; wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen?: TrefferDaten[] };
+  /**
+   * Einschlag (Trefferregel seit 2.0): pos/ziel/t_einschlag wie bei der Freigabe vorausberechnet, getroffen nach der
+   * Lage beim Einschlag, verstoesse am Einschlagort. Liegt der Einschlag nach Spielende, wird er bei Spielende abgerechnet.
+   */
+  wirkung: {
+    meldung: string; wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen?: TrefferDaten[];
+    t_einschlag?: number; ziel?: string; verstoesse?: string[];
+  };
+  /** Verstärkung eingespielt (Spielleitung): Ziele und Meldungen der Gruppe mit Zeiten ab t0. */
+  verstaerkung: { gruppe: string; t0: number };
+  /**
+   * Hintergrundgefecht (szenario.hintergrund): Feindartillerie und Rauch sind Darstellung; eigene Panzerabwehr
+   * wirkt nur, wenn das Ziel dann noch steht (wirkt=false mit grund, sonst folge zerstoert/ausser_gefecht).
+   */
+  hintergrund: { id: string; art: string; ziel?: string; wirkt?: boolean; folge?: string; grund?: string };
+  /** Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. */
+  ereignis: { ereignis: string; nr?: number; von?: string; ziel?: string; wirkt?: boolean; entfaellt?: boolean; grund?: string };
   inject: { inject: string; manuell?: boolean };
   inject_quittiert: { inject: string };
   lagehinweis: { text: string; an: Rolle[] };
@@ -65,8 +91,8 @@ export interface EreignisDaten {
 export type EreignisTyp = keyof EreignisDaten;
 
 export const EREIGNIS_TYPEN: EreignisTyp[] = [
-  "spiel_neu", "uhr", "meldung", "g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "inject",
-  "inject_quittiert", "lagehinweis", "fast_track", "notiz", "spielende", "aktion_abgelehnt",
+  "spiel_neu", "uhr", "meldung", "meldung_entfaellt", "g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "inject",
+  "inject_quittiert", "lagehinweis", "fast_track", "notiz", "spielende", "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis",
 ];
 
 export type Ereignis = {
@@ -101,13 +127,14 @@ export interface AktionsDaten {
   uhr: { befehl: UhrBefehl; tempo?: number; t_s?: number };
   meldung_ausloesen: { meldung: string };
   inject_ausloesen: { inject: string };
+  verstaerkung_einspielen: { gruppe: string };
 }
 
 export type AktionsTyp = keyof AktionsDaten;
 
 export const AKTIONS_TYPEN: AktionsTyp[] = [
   "g1_entscheid", "g2_empfehlung", "g3_entscheid", "inject_quittiert", "lagehinweis", "fast_track", "notiz",
-  "uhr", "meldung_ausloesen", "inject_ausloesen",
+  "uhr", "meldung_ausloesen", "inject_ausloesen", "verstaerkung_einspielen",
 ];
 
 /** Wer welche Aktion senden darf. Der Host prüft das. */
@@ -122,6 +149,7 @@ export const RECHTE: Record<AktionsTyp, Rolle[]> = {
   uhr: ["sl"],
   meldung_ausloesen: ["sl"],
   inject_ausloesen: ["sl"],
+  verstaerkung_einspielen: ["sl"],
 };
 
 export type Aktion = {

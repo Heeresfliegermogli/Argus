@@ -70,6 +70,8 @@ def warte(bedingung, sek=15, text="Bedingung"):
 
 def startseite(basis, a):
     q = {"sync": a.sync}
+    if a.fps:
+        q["fps"] = a.fps
     if a.db:
         q["db"] = a.db
     if a.transport:
@@ -86,6 +88,8 @@ def main():
     ap.add_argument("--transport", default=None)
     ap.add_argument("--teams", type=int, default=5)
     ap.add_argument("--bilder", default="e2e-teams-bilder")
+    ap.add_argument("--renderer", choices=["canvas", "webgl"], default="canvas")
+    ap.add_argument("--fps", type=int, default=2, help="höchste Bildrate der Karten (0 = ohne Grenze)")
     a = ap.parse_args()
     os.makedirs(a.bilder, exist_ok=True)
     fehler = []
@@ -93,7 +97,12 @@ def main():
     t0 = time.time()
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(args=["--allow-file-access-from-files", "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
+        # Seit Schritt 7 bewegen sich die Karten, solange die Uhr läuft. Mit 16 Fenstern an einem Rechner ohne
+        # Grafikkarte warten WebGL-Fenster auf den überlasteten GPU-Prozess; deshalb wie tools/e2e_drehbuch.py
+        # Rückfall Canvas mit höchstens 2 Bildern/s (--renderer webgl für den alten Ablauf).
+        grafik = (["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] if a.renderer == "webgl"
+                  else ["--disable-gpu", "--disable-software-rasterizer"])
+        browser = p.chromium.launch(args=["--allow-file-access-from-files", *grafik,
                                           "--disable-background-timer-throttling", "--disable-renderer-backgrounding",
                                           "--disable-backgrounding-occluded-windows"])
         ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)

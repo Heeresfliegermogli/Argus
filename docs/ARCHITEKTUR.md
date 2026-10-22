@@ -83,11 +83,15 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 |---|---|---|
 | `spiel_neu` | lauf, szenario, version, titel | Host beim Laufbeginn (seq 1) |
 | `uhr` | befehl (start/pause/tempo/setzen), laeuft, t_s, tempo | SL, Spielende |
-| `meldung` | meldung, fast_track?, manuell?, entfaellt? | Zeitplan oder SL „jetzt“ |
+| `meldung` | meldung, fast_track?, manuell?, entfaellt? | Zeitplan oder SL „jetzt“; `entfaellt`, wenn jedes Fahrzeug schon zerstört oder weg ist |
+| `meldung_entfaellt` | meldung, stufe (g1/g2/g3), grund | Zeitplan (seit Schritt 7): jedes Fahrzeug der Meldung ist inzwischen zerstört oder abgezogen |
 | `g1_entscheid` | meldung, entscheid (annehmen/ablehnen), vermerk? | G1 |
 | `g2_empfehlung` | meldung, empfehlung (bekaempfen/beobachten/nicht_bekaempfen), wirkmittel?, begruendung?, warnungen? | G2; Warnungen (R2, R3, Einsatzbereich) berechnet der Host |
-| `g3_entscheid` | meldung, entscheid (freigabe/ablehnen/zurueck), bemerkung?, wirkmittel?, warnungen? | G3; bei Freigabe Warnungen zur Freigabezeit |
-| `wirkung` | meldung, wirkmittel, pos, t_freigabe, getroffen[] | Zeitplan nach Vorlaufzeit; Treffer nach der Lage zur Freigabe (Szenario 2.0 beschreibt die Lage beim Einschlag; Umsetzung in Schritt 6b/7) |
+| `g3_entscheid` | meldung, entscheid (freigabe/ablehnen/zurueck), bemerkung?, wirkmittel?, warnungen?, einschlag? {t, pos, ziel} | G3; bei Freigabe rechnet der Host den Einschlag voraus (Zeit, Ort, bekämpftes Fahrzeug), die Warnungen gelten am Einschlagort |
+| `wirkung` | meldung, wirkmittel, pos, t_freigabe, t_einschlag, ziel, getroffen[], verstoesse[] | Zeitplan zum Einschlag (seit Schritt 7): Treffer nach der Lage beim Einschlag; liegt der Einschlag nach Spielende, bei Spielende abgerechnet |
+| `hintergrund` | id, art, ziel?, wirkt?, folge?, grund? | Zeitplan (Hintergrundgefecht H-01–H-12): Feindartillerie und Rauch sind Darstellung; eigene PzAbw wirkt nur, wenn das Ziel dann noch steht und diesseits des Bachs ist |
+| `ereignis` | ereignis, nr?, von?, ziel?, wirkt?, entfaellt?, grund? | Zeitplan (E-01): je Wirkung ein Eintrag, oder `entfaellt` nach Freigabe auf Z-15–17 bis 10:23:30 |
+| `verstaerkung` | gruppe, t0 | SL (Verstärkung V-1–V-5, Ziele und Meldungen ab t0) |
 | `inject` | inject, manuell? | Zeitplan (fest und bedingt) oder SL |
 | `inject_quittiert` | inject | G3 („gelesen“) |
 | `lagehinweis` | text, an [g1, g2] | G3 |
@@ -99,7 +103,8 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 Unbekannte Typen (aus späteren Versionen) zählen für `seq`, ändern den Stand aber nicht.
 
 Eine **Aktion**: `{ id, typ, von, ts, daten }`. Typen: die Spielaktionen oben plus `uhr`,
-`meldung_ausloesen`, `inject_ausloesen` (nur SL). Rechte stehen in `RECHTE` (`ereignisse.ts`).
+`meldung_ausloesen`, `inject_ausloesen`, `verstaerkung_einspielen` (nur SL). Rechte stehen in `RECHTE`
+(`ereignisse.ts`).
 
 ## Ablauf einer Meldung
 
@@ -107,18 +112,21 @@ Eine **Aktion**: `{ id, typ, von, ts, daten }`. Typen: die Spielaktionen oben pl
 → BEKÄMPFEN: **g3** / BEOBACHTEN: bleibt bei g2 (zurückgestellt) / NICHT BEKÄMPFEN: erledigt
 → FREIGABE: **wirkung** (Bestand −1) / ZURÜCK: g2 / ABLEHNEN: erledigt → `wirkung` → erledigt.
 
-## Zeitplan (Umfang Schritt 4)
+## Zeitplan (seit Schritt 7)
 
-Meldungen nach `t_s` (mit Fast-Track-Weiche; „entfällt“, wenn ein Ziel schon zerstört ist), feste
-Injects, bedingte Injects (`freigabe`, `freigabe_mit_zivil`, `keine_freigabe_bis`), Wirkung nach
-Vorlaufzeit, Spielende. **Offen für Schritt 7:** Skriptereignis E-01 (polnischer Gegenangriff),
-„entfällt bei G3“, Bewegung und Animation.
+`src/engine/ablauf.ts`, reine Funktion von Inhalten (Welt des Teams mit Verstärkungen), Stand und Uhr:
+Hintergrundgefecht, Einschläge (Trefferregel beim Einschlag), Skriptereignis E-01, Meldungen, die in der
+Kette entfallen, neue Meldungen (Fast-Track-Weiche, „entfällt“), feste und bedingte Injects
+(`freigabe`, `freigabe_mit_zivil` – Zivilpersonen beim Einschlag –, `keine_freigabe_bis`), Spielende.
+Einzelheiten, Gleichzeitigkeit und Nachweis: `docs/ENGINE.md`.
 
 ## Sichten
 
 G1 sieht die volle Meldung (Bild, ARGUS, Sensordaten, Kleingedrucktes, Bildalter). G2 und G3 sehen nur
 die Zielmeldung (Meldung, Ziel-Nr., Feinlage, ARGUS-Klasse, Konfidenz, Empfehlung, Vermerk G1). Injects
 an G3 sieht nur G3. Die Trennung ist eine Frage der Anzeige: Alle Rechner laden dieselben Dateien.
-Auf der Lagekarte sehen G2 und G3 die Zielmeldungen an der gemeldeten Position mit dem Zeichen der
-ARGUS-Klasse; Ground Truth, Personen und ungemeldete Ziele zeigt nur die Kontrollkarte (Spielleitung,
-Plenum nach Spielende) – festgelegt in `src/kern/lagebild.ts`, geprüft in `tests/lagebild.test.ts`.
+Auf der Lagekarte sehen G2 und G3 die Zielmeldungen mit dem Zeichen der ARGUS-Klasse; seit Schritt 7
+folgt das Zeichen dem Ziel (Tracking). Ground Truth, Personen und ungemeldete Ziele zeigt nur die
+Kontrollkarte (Spielleitung, Plenum nach Spielende) – festgelegt in `src/kern/lagebild.ts`, geprüft in
+`tests/lagebild.test.ts`. Effekte (Einschlag, LM, Leuchtspur, Wracks …) sieht eine Rolle nur zu Zielen, die
+sie aus Meldungen kennt (`src/kern/effekte.ts`).

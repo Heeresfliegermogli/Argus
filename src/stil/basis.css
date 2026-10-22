@@ -482,3 +482,8 @@ label.wahl.klein input { margin-top: 0; }
 .beitritt-code { font-size: 20px; margin-top: 2px; }
 .beitritt-code b { font: 600 36px/1 var(--mono); letter-spacing: .06em; margin-left: 6px; }
 .beitritt-teams { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: flex-end; max-width: 62%; }
+
+/* Verstärkung reinrufen (Spielleitung, Schritt 7) */
+.menue[data-testid="verstaerkung-liste"] { width: 560px; max-height: 600px; overflow-y: auto; }
+.verstaerkung-zeile { display: flex; flex-direction: column; gap: 3px; padding: 6px 0; border-top: 1px solid var(--linie-1, #263038); }
+.verstaerkung-zeile .knopf.klein .team-marke { pointer-events: none; }

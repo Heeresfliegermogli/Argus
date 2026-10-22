@@ -105,10 +105,12 @@ def main():
         warte(lambda: g1.locator("[data-meldung=M08]").count() > 0, 30, "M08 bei G1")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
 
-        # G1: M01–M07 annehmen (M04 mit Vermerk), M08 bleibt offen
-        for mid in ["M01", "M02", "M03", "M04", "M05", "M06", "M07"]:
+        # G1: alle offenen Meldungen vor M08 annehmen (die erste mit Vermerk), M08 bleibt offen. Seit Szenario 2.0
+        # fahren die Spähtrupps wieder ab: deren Meldungen sind beim Sprung auf 08:25 schon entfallen.
+        offen_g1 = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1' && id !== 'M08')")
+        for k, mid in enumerate(offen_g1):
             g1.locator(f".eintrag[data-meldung={mid}]").first.click()
-            if mid == "M04":
+            if k == 0:
                 g1.fill("[data-testid=g1-vermerk]", "Wärme und Kettenspuren bestätigen")
             g1.get_by_test_id("g1-annehmen").click()
             warte(lambda: g1.locator(f"[data-testid=g1-offen]").count() == 1 and g1.locator(f".eintrag:not(.gedimmt)[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
@@ -122,34 +124,44 @@ def main():
         foto(g1, "g1_vergroesserung")
         g1.keyboard.press("Escape")
 
-        # G2: M01 mit LM, M02 mit Mrs empfehlen; M03 mit Mörser zeigen (Warnung R3)
+        # G2: die ersten beiden mit LM bzw. Mrs empfehlen; eine Meldung zeigen, bei der der Mörser warnt (R2/R3)
         warte(lambda: g2.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "G2-Karte bereit")
-        for mid, wm in [("M01", "LM"), ("M02", "MRS")]:
+        offen_g2 = g2.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g2')")
+        erste, zweite = offen_g2[0], offen_g2[1]
+        for mid, wm in [(erste, "LM"), (zweite, "MRS")]:
             g2.locator(f".eintrag[data-meldung={mid}]").first.click()
             g2.locator(f"label[data-wm={wm}]").click()
             g2.get_by_test_id("g2-bekaempfen").click()
             warte(lambda: g2.locator(f".eintrag:not(.gedimmt)[data-meldung={mid}]").count() == 0, 10, f"{mid} empfohlen")
-        g2.locator(".eintrag[data-meldung=M03]").first.click()
-        g2.locator("label[data-wm=MRS]").click()
-        g2.wait_for_timeout(500)
-        foto(g2, "g2_warnung_M03")
+        rest = [x for x in offen_g2 if x not in (erste, zweite)]
+        gezeigt = None
+        for mid in rest:
+            g2.locator(f".eintrag[data-meldung={mid}]").first.click()
+            g2.locator("label[data-wm=MRS]").click()
+            g2.wait_for_timeout(300)
+            if "verletzt" in g2.get_by_test_id("karte-banner").inner_text():
+                gezeigt = mid
+                break
+        if not gezeigt:
+            fehler.append(f"keine Meldung mit Mörser-Warnung unter {rest}")
+        foto(g2, f"g2_warnung_{gezeigt}")
         g2.locator("label[data-wm=LM]").click()
         g2.wait_for_timeout(400)
-        foto(g2, "g2_ok_M03")
+        foto(g2, f"g2_ok_{gezeigt}")
 
-        # G3: I-01 quittieren, M01 freigeben, M02 gewählt lassen
+        # G3: I-01 quittieren, die erste Empfehlung freigeben, die zweite gewählt lassen
         warte(lambda: g3.locator("[data-inject]").count() >= 3, 10, "Injects bei G3")
         g3.locator("[data-inject=I-01]").get_by_role("button", name="Gelesen").click()
-        warte(lambda: g3.locator(".eintrag[data-meldung=M01]").count() > 0, 10, "M01 bei G3")
-        g3.locator(".eintrag[data-meldung=M01]").first.click()
+        warte(lambda: g3.locator(f".eintrag[data-meldung={erste}]").count() > 0, 10, f"{erste} bei G3")
+        g3.locator(f".eintrag[data-meldung={erste}]").first.click()
         g3.get_by_test_id("g3-freigabe").click()
-        warte(lambda: g3.locator(".eintrag:not(.gedimmt)[data-meldung=M01]").count() == 0, 10, "M01 freigegeben")
+        warte(lambda: g3.locator(f".eintrag:not(.gedimmt)[data-meldung={erste}]").count() == 0, 10, f"{erste} freigegeben")
         g3.fill("[data-testid=g3-lagehinweis]", "Achtung Schule NS-01: dort sind Zivilpersonen")
         g3.get_by_role("button", name="Senden").click()
         g3.wait_for_timeout(700)
         foto(g3, "g3_entscheiden")
 
-        # Wirkung abwarten (LM 2:00 Vorlauf) mit Tempo ×20
+        # Wirkung abwarten (LM: Start und Flug vom Westrand, 30–50 s) mit Tempo ×20
         sl.get_by_role("button", name="×20").click()
         sl.get_by_role("button", name="▶ Start").click()
         warte(lambda: sl.evaluate("() => window.argus.stand.protokoll.some(e => e.typ === 'wirkung')"), 30, "Wirkung")

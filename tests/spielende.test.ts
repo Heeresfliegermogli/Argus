@@ -38,7 +38,8 @@ describe("Spielende", () => {
     expect(z.uhr.laeuft).toBe(false);
     expect(typen.filter((x) => x === "uhr")).toHaveLength(1);
     expect(typen.filter((x) => x === "spielende")).toHaveLength(1);
-    expect(typen.length).toBeLessThan(60);
+    // ohne Entscheidungen bis 10:24:57 nachgeholt: Meldungen, Injects, Hintergrundgefecht, E-01 – aber kein Strom
+    expect(typen.length).toBeLessThan(100);
     expect(faellig(inh, z, 1500)).toEqual([]);
   });
 
@@ -82,15 +83,18 @@ describe("Bedingte Injects für die Spielleitung", () => {
     expect(st["E-01"].status).toBe("entfaellt");
   });
 
-  it("I-09 entfällt, wenn die Freigabe auf den Mörser keine Zivilpersonen trifft", async () => {
+  it("I-09 wartet bis zum Einschlag und entfällt, wenn die Wirkung auf den Mörser keine Zivilpersonen trifft", async () => {
     const inh = await inhalte();
     const z = zustandAus(ereignisse([
-      ["spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "1.3", titel: "x" }, 0],
+      ["spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "2.0", titel: "x" }, 0],
       ["meldung", { meldung: "M23" }, 1320],
       ["g1_entscheid", { meldung: "M23", entscheid: "annehmen" }, 1325],
       ["g2_empfehlung", { meldung: "M23", empfehlung: "bekaempfen", wirkmittel: "LM" }, 1330],
       ["g3_entscheid", { meldung: "M23", entscheid: "freigabe", wirkmittel: "LM" }, 1335],
     ]), inh);
-    expect(bedingtStand(inh, z, 1340).find((b) => b.id === "I-09")!.status).toBe("entfaellt");
+    expect(bedingtStand(inh, z, 1340).find((b) => b.id === "I-09")!.status).toBe("wartet");
+    const { z: nach } = abspielen(inh, z, 1400);
+    expect(nach.meldungen.M23.wirkung?.getroffen.some((g) => g.kategorie === "zivil")).toBe(false);
+    expect(bedingtStand(inh, nach, 1400).find((b) => b.id === "I-09")!.status).toBe("entfaellt");
   });
 });

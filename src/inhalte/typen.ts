@@ -118,6 +118,8 @@ export interface Meldung {
   };
   loesung: { G1: string; G2: string; G3: string };
   zweck: string;
+  /** nur Meldungen einer Verstärkung: Gruppe (V-1 …), gesetzt beim Einspielen (src/kern/welt.ts) */
+  verstaerkung?: string;
 }
 
 export type Bedingung =
@@ -154,6 +156,60 @@ export interface Skriptereignis {
   wirkungen: { t_s: number; von: string; ziel: string }[];
   regel: string;
   papier?: string;
+}
+
+// ---------------------------------------------------------------- Hintergrundgefecht und Verstärkungen (seit Szenario 2.0)
+
+/** Feindartillerie: Einschläge [t_s, x, y] (Darstellung, trifft keine Spielobjekte). */
+export interface HgArtillerie {
+  id: string;
+  t_s: number;
+  art: "feindartillerie";
+  ziel?: string;
+  einschlaege: RoutenPunkt[];
+  text: string;
+}
+
+/** Eigene Panzerabwehr: wirkt nur, wenn das Ziel dann noch steht und diesseits der Einsatzgrenze liegt. */
+export interface HgPanzerabwehr {
+  id: string;
+  t_s: number;
+  art: "panzerabwehr";
+  /** schießende Kraft (kraefte[].id), Leuchtspur vom Westrand */
+  von: string;
+  ziel: string;
+  folge: "zerstoert" | "ausser_gefecht";
+  text: string;
+}
+
+/** Rauch (Darstellung). */
+export interface HgRauch {
+  id: string;
+  t_s: number;
+  art: "rauch";
+  von?: string;
+  pos: Punkt;
+  radius_m: number;
+  dauer_s: number;
+  text: string;
+}
+
+export type HintergrundEreignis = HgArtillerie | HgPanzerabwehr | HgRauch;
+
+/** Meldung einer Verstärkung: Zeit relativ zum Einspielen (dt_s). */
+export type VerstaerkungsMeldung = Omit<Meldung, "t_s" | "phase" | "verstaerkung"> & { dt_s: number; phase?: number };
+
+export interface Verstaerkung {
+  id: string;
+  name: string;
+  kurz: string;
+  dauer_s: number;
+  zweck: string;
+  /** Einspielzeiten [von, bis] in s, zu denen ein Fahrzeug einem geschützten Objekt zu nahe käme */
+  nicht_einspielen?: [number, number][];
+  /** Ziele mit Routen relativ zum Einspielen ([dt_s, x, y]) */
+  ziele: Ziel[];
+  meldungen: VerstaerkungsMeldung[];
 }
 
 export type Geometrie =
@@ -240,6 +296,8 @@ export interface Szenario {
   injects: Inject[];
   reserve_injects: ReserveInject[];
   ereignisse: Skriptereignis[];
+  hintergrund?: { hinweis?: string; ereignisse: HintergrundEreignis[] };
+  verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
   schluesselfaelle: Schluesselfall[];
   nebenfaelle: Nebenfall[];
   anforderungen_technik?: { schritt: string; text: string }[];
@@ -303,7 +361,11 @@ export interface Wirkmittel {
   name: string;
   kurz: string;
   wirkradius_m: number;
+  /** Zeit von der Freigabe bis zum Einschlag (ohne `flug`) */
   vorlauf_s: number;
+  vorlauf_text?: string;
+  /** Flugkörper (LM): Startpunkt westlich der Karte, Geschwindigkeit, Startvorbereitung; Einschlagzeit hängt vom Ziel ab */
+  flug?: { start: Punkt; geschwindigkeit_mps: number; vorbereitung_s?: number };
   /** null = unbegrenzt */
   bestand: number | null;
   einsatzbereich: { x_max?: number; text: string } | null;
@@ -348,4 +410,7 @@ export interface Inhalte {
   meldungen: Record<string, Meldung>;
   /** feste, bedingte und Reserve-Injects */
   injects: Record<string, Inject | ReserveInject>;
+  /** nur in der Welt eines Teams (src/kern/welt.ts): die Inhalte ohne Verstärkungen und was eingespielt ist */
+  basis?: Inhalte;
+  eingespielt?: { gruppe: string; t0: number }[];
 }

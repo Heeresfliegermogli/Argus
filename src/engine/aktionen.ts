@@ -4,9 +4,11 @@ import type { Inhalte } from "../inhalte/typen";
 import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
 } from "../kern/ereignisse";
-import { gemeldetePosition, pruefeWirkmittel } from "../kern/regeln";
+import { einschlag, vorhersage } from "../kern/regeln";
+import { uhrzeit } from "../kern/uhr";
+import { einspielSperre, verstaerkungen } from "../kern/welt";
 import type { Spielzustand } from "../kern/zustand";
-import { meldungEntwurf } from "./ablauf";
+import { meldungEntwurf, weltFuer } from "./ablauf";
 import { type Entwurf, entwurf } from "./entwurf";
 
 export type Verarbeitung = { ok: true; entwuerfe: Entwurf[] } | { ok: false; grund: string };
@@ -22,15 +24,21 @@ function text(wert: unknown, max: number, pflicht = false): string | undefined |
   return t.length <= max ? t || undefined : false;
 }
 
-/** Warnungen zu R2, R3 und Einsatzbereich für ein Wirkmittel an der gemeldeten Position. */
+/**
+ * Warnungen zu R2, R3 und Einsatzbereich für ein Wirkmittel, vorausgerechnet für eine Freigabe zur Zeit t:
+ * am Ort des Ziels zum Einschlagzeitpunkt (Trefferregel seit Szenario 2.0).
+ */
 export function warnungen(inh: Inhalte, z: Spielzustand, meldung: string, wm: string, t: number): string[] {
   const m = inh.meldungen[meldung];
-  const w = pruefeWirkmittel(inh, gemeldetePosition(inh, m), wm, t).verstoesse.map((v) => `${v.regel}: ${v.text}`);
+  const v = vorhersage(inh, m, wm, t, z.zerstoert);
+  const uhr = uhrzeit(inh.szenario.spieluhr.start, v.einschlag.t);
+  const w = v.pruefung.verstoesse.map((x) => `${x.regel}: ${x.text} – beim Einschlag ${uhr}`);
   if (z.bestand[wm] === 0) w.push(`Bestand ${inh.wirkmittel[wm].kurz} aufgebraucht`);
   return w;
 }
 
-export function verarbeiteAktion(inh: Inhalte, z: Spielzustand, a: Aktion, t: number): Verarbeitung {
+export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: number): Verarbeitung {
+  const inh = weltFuer(basis, z);
   if (!a || typeof a !== "object" || !(a.typ in RECHTE)) return nein("unbekannte Aktion");
   const rolle = a.von?.rolle as Rolle;
   if (!RECHTE[a.typ as AktionsTyp].includes(rolle)) return nein(`${rolle ?? "?"} darf ${a.typ} nicht`);
@@ -82,8 +90,10 @@ export function verarbeiteAktion(inh: Inhalte, z: Spielzustand, a: Aktion, t: nu
       const wm = z.meldungen[dd.meldung].g2?.wirkmittel;
       if (!wm) return nein("Empfehlung ohne Wirkmittel");
       if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – zurück an G2`);
+      const e = einschlag(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert);
       return ja(entwurf("g3_entscheid", {
         meldung: dd.meldung, entscheid: "freigabe", bemerkung, wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),
+        einschlag: { t: Math.round(e.t * 100) / 100, pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], ziel: e.ziel },
       }));
     }
     case "inject_quittiert": {
@@ -128,13 +138,24 @@ export function verarbeiteAktion(inh: Inhalte, z: Spielzustand, a: Aktion, t: nu
       const m = inh.meldungen[a.daten.meldung];
       if (!m) return nein(`Meldung ${a.daten.meldung} gibt es nicht`);
       if (z.meldungen[m.id]) return nein(`Meldung ${m.id} ist schon ausgelöst`);
-      return ja(meldungEntwurf(inh, z, m, true));
+      return ja(meldungEntwurf(inh, z, m, true, Math.max(t, m.t_s)));
     }
     case "inject_ausloesen": {
       const i = inh.injects[a.daten.inject];
       if (!i) return nein(`Inject ${a.daten.inject} gibt es nicht`);
       if (z.injects[i.id]) return nein(`Inject ${i.id} ist schon ausgelöst`);
       return ja(entwurf("inject", { inject: i.id, manuell: true }));
+    }
+    case "verstaerkung_einspielen": {
+      if (z.ende) return nein("Spiel ist beendet");
+      const g = verstaerkungen(inh).find((x) => x.id === a.daten.gruppe);
+      if (!g) return nein(`Verstärkung ${a.daten.gruppe} gibt es nicht`);
+      if (z.verstaerkungen.some((v) => v.gruppe === g.id)) return nein(`${g.id} ist in diesem Lauf schon eingespielt`);
+      const sperre = einspielSperre(inh, g.id, t);
+      if (sperre.gesperrt) {
+        return nein(`${g.id} jetzt nicht – käme einem geschützten Objekt zu nahe (wieder ab ${uhrzeit(inh.szenario.spieluhr.start, sperre.bis! + 1)})`);
+      }
+      return ja(entwurf("verstaerkung", { gruppe: g.id, t0: Math.round(t * 10) / 10 }));
     }
   }
 }

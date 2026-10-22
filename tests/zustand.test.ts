@@ -114,22 +114,29 @@ describe("Zeitplan und Aktionen", () => {
     expect(faellig(inh, mit, 1490).some((x) => x.typ === "inject" && x.daten.inject === "I-08b")).toBe(false);
   });
 
-  it("I-09 nur, wenn die Freigabe auf den Mörser im Hof RABE Zivilpersonen trifft", async () => {
+  it("I-09 nur, wenn die Wirkung auf den Mörser im Hof RABE beim Einschlag Zivilpersonen trifft", async () => {
     const inh = await inhalte();
     // M18 um 10:18:15: Zivilpersonen keine 10 m neben dem Mörser, auch LM trifft sie. Ab 10:21:40 fliehen sie nach
-    // Westen; Freigabe der Folgemeldung M23 um 10:22:00: gut 50 m weg, LM trifft sie nicht mehr, der Mörser (80 m) schon.
-    const faelle = [["M18", 1095, "LM", true], ["M18", 1095, "MRS", true], ["M23", 1305, "LM", false], ["M23", 1305, "MRS", true]] as const;
+    // Westen; Freigabe der Folgemeldung M23 um 10:22:00: beim Einschlag (10:22:35 bzw. 10:22:41) sind sie gut 81 m weg,
+    // weder LM noch Mörser (80 m) trifft sie (bis Szenario 1.3 zählte die Lage bei der Freigabe, da traf der Mörser noch).
+    const faelle = [["M18", 1095, "LM", true], ["M18", 1095, "MRS", true], ["M23", 1305, "LM", false], ["M23", 1305, "MRS", false]] as const;
     for (const [mid, t, wm, erwartet] of faelle) {
       seq = 0;
-      const z = zustandAus([
+      let z = zustandAus([
         e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
         e("meldung", { meldung: mid }, t),
         e("g1_entscheid", { meldung: mid, entscheid: "annehmen" }, t + 5),
         e("g2_empfehlung", { meldung: mid, empfehlung: "bekaempfen", wirkmittel: wm }, t + 10),
         e("g3_entscheid", { meldung: mid, entscheid: "freigabe", wirkmittel: wm }, t + 15),
       ], inh);
-      const i09 = faellig(inh, z, t + 76).some((x) => x.typ === "inject" && x.daten.inject === "I-09");
-      expect(i09, `${mid} ${wm}`).toBe(erwartet);
+      // Zeitplan bis 60 s nach der Freigabe abarbeiten wie der Host (Einschlag zuerst, dann der bedingte Inject)
+      for (let i = 0; i < 200; i++) {
+        const n = faellig(inh, z, t + 76).find((x) => x.typ === "wirkung" || x.typ === "inject");
+        if (!n) break;
+        z = anwenden(z, { seq: z.seq + 1, typ: n.typ, ts: 0, t_s: n.t_geplant ?? t + 76, von: SYS, daten: n.daten } as Ereignis, inh);
+      }
+      expect(z.meldungen[mid].wirkung, `${mid} ${wm} Einschlag`).toBeDefined();
+      expect(!!z.injects["I-09"], `${mid} ${wm}`).toBe(erwartet);
     }
   });
 

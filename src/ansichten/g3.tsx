@@ -3,15 +3,15 @@
 // gibt Lagehinweise an G1/G2 und schaltet Fast-Track.
 //   ① Empfehlung wählen  ② entscheiden  · jederzeit: Lagemeldungen lesen, Lagehinweis geben
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { bekannteZiele, effekte } from "../kern/effekte";
 import { TEXT_MAX } from "../kern/ereignisse";
 import { lagebildZielmeldungen } from "../kern/lagebild";
-import { gemeldetePosition } from "../kern/regeln";
 import { ENTSCHEID_TEXT, ERGEBNIS_TEXT, STUFE_TEXT, injectsFuer, verlauf, warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import type { InjectStand } from "../kern/zustand";
 import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, Konfidenz, Empfehlung, Leer, MeldungsEintrag, Panel } from "./gemeinsam/bausteine";
-import { useAuswahl, useSpielzeit, useStand } from "./gemeinsam/hooks";
+import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { vorschauFuer } from "./g2";
 
@@ -61,6 +61,7 @@ function Postfach(p: { s: Sicht; injects: InjectStand[] }) {
 export function G3Ansicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
+  useEntfallHinweis(s, st, "g3");
   const t = useSpielzeit(s, 1000);
   const inh = s.inh;
   const z = st.zustand;
@@ -75,11 +76,15 @@ export function G3Ansicht(p: { s: Sicht }) {
   const wartet = !!gewaehlt && s.wartetAuf("g3_entscheid", gewaehlt);
   const injects = injectsFuer(inh, z, "g3");
   const gesperrt = !ms || z.ende;
-  const lagebild = useMemo(() => lagebildZielmeldungen(inh, z, "g3"), [inh, z]);
+  const tLage = Math.floor(t);
+  const lagebild = useMemo(() => lagebildZielmeldungen(inh, z, "g3", tLage), [inh, z, tLage]);
+  const fx = useMemo(() => effekte(inh, z, bekannteZiele(inh, z, "g3")), [inh, z]);
   const historie = verlauf(z, "g3");
   const wm = ms?.g2?.wirkmittel;
   const bestandLeer = !!wm && z.bestand[wm] === 0;
-  const vorschau = m && wm ? vorschauFuer(inh, gemeldetePosition(inh, m), wm, t) : null;
+  // Warnung zum Einschlag bei Freigabe jetzt (live; G2 hat zu seiner Zeit gerechnet)
+  const vs = m && wm && ms?.stufe === "g3" ? vorschauFuer(inh, z, m, wm, t) : null;
+  const vorschau = vs?.vorschau ?? null;
 
   // Neue Lagemeldung: kurzer Hinweis unten rechts (zusätzlich zum Postfach)
   const bekannt = useRef<number | null>(null);
@@ -153,6 +158,12 @@ export function G3Ansicht(p: { s: Sicht }) {
                 {ms.g2?.warnungen.length
                   ? <div class="warnung" data-testid="g3-warnungen">{ms.g2.warnungen.map((w) => <div>⚠ {w}</div>)}<div class="klein" style="opacity:.8">Freigabe möglich, der Verstoß wird protokolliert.</div></div>
                   : <div class="wm-status ok">✓ keine Regelwarnung</div>}
+                {vs && (
+                  <div class={vs.v.pruefung.zulaessig ? "klein leise" : "warnung"} data-testid="g3-jetzt">
+                    Freigabe jetzt: Einschlag {uhrzeit(start, vs.v.einschlag.t)}{vs.v.pruefung.zulaessig ? " – keine Regelwarnung" : ""}
+                    {vs.v.pruefung.verstoesse.map((x) => <div>⚠ {x.regel}: {x.text}</div>)}
+                  </div>
+                )}
                 {bestandLeer && <div class="warnung">{inh.wirkmittel[wm!].kurz} aufgebraucht – ZURÜCK AN G2</div>}
               </div>
               <div class="entscheid-knoepfe">
@@ -171,7 +182,8 @@ export function G3Ansicht(p: { s: Sicht }) {
         </Panel>
         <Panel titel="Lagekarte" klasse="ohne-rand" rechts={<span class="klein sehr-leise">Zeichen = Ziele mit Empfehlung von G2 · Klick wählt</span>}>
           <LagekarteAnsicht inh={inh} lagebild={lagebild} vorschau={vorschau} gewaehlt={gewaehlt}
-            onWahl={(id) => offen.some((x) => x.id === id) && waehle(id)} hintergrund="topo" legende="ziele" />
+            onWahl={(id) => offen.some((x) => x.id === id) && waehle(id)} hintergrund="topo" legende="ziele"
+            uhr={() => s.kartenUhr()} effekte={fx} />
         </Panel>
       </div>
 

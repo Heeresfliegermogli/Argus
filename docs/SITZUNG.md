@@ -173,7 +173,8 @@ Bedientest am 03.11. (BEDIENTEST.md, Teil A).
 * Test mit der echten Datenbank (Long-Polling) mit 16 Fenstern bzw. Rechnern – aus der
   Entwicklungsumgebung ist firebaseio.com nicht erreichbar. Vorschlag: 16 Tabs über github.io an einem
   Rechner, dann im Hörsaal.
-* Verstärkung reinrufen (Konzept v2 §3) und „Druck halten“ kommen mit Szenario v2 und der Live-Lage
-  (Schritte 2b, 6b/7). Teamvergleich in Plenum und Auswertung: Schritt 8.
+* Verstärkung reinrufen (Konzept v2 §3) ist seit Schritt 7 da: Menü „Verstärkung ▾“ in der Übersicht (an alle
+  oder ein Team), „einspielen“ in der Teamansicht (siehe `ENGINE.md`). Offen: Automatik „Druck halten“ (Kann).
+  Teamvergleich in Plenum und Auswertung: Schritt 8.
 * Die Einweisungskarten sprechen die Gruppe an („ihr“) – passt zum Team, das zusammensitzt; der Text
   wird mit der neuen Oberfläche (6b/7) ohnehin überarbeitet.

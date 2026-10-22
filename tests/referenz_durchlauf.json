@@ -1,0 +1,4152 @@
+{
+ "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.0). Nicht von Hand ändern.",
+ "szenario": "2.0",
+ "zeiten": {
+  "G1": 40,
+  "G2": 50,
+  "G3": 30,
+  "ft_nach_angebot": 30
+ },
+ "reihenfolge_wirkmittel": [
+  "PZA",
+  "ART",
+  "MRS",
+  "PRZ",
+  "LM"
+ ],
+ "laeufe": [
+  {
+   "team": "naiv",
+   "einspielen": {},
+   "fast_track_ab": 870,
+   "meldungen": [
+    {
+     "meldung": "M01",
+     "t_meld": 20,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 60.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 110.0,
+     "g2": "MRS",
+     "t_g3": 140.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 175.0,
+     "ziel": "Z-01",
+     "pos": [
+      926.0,
+      322.0
+     ],
+     "getroffen": [
+      "Z-01|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M02",
+     "t_meld": 75,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 115.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 165.0,
+     "g2": "LM",
+     "t_g3": 195.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 233.907,
+     "ziel": "Z-03",
+     "pos": [
+      688.0,
+      138.0
+     ],
+     "getroffen": [
+      "Z-03|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M03",
+     "t_meld": 240,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 280.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 330.0,
+     "g2": "PZA",
+     "t_g3": 360.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 370.0,
+     "ziel": "Z-02",
+     "pos": [
+      482.0,
+      390.0
+     ],
+     "getroffen": [
+      "Z-02|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M04",
+     "t_meld": 285,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 325.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 380.0,
+     "g2": "LM",
+     "t_g3": 410.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 452.477,
+     "ziel": "Z-05",
+     "pos": [
+      812.0,
+      214.0
+     ],
+     "getroffen": [
+      "Z-05|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M05",
+     "t_meld": 330,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 370.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 430.0,
+     "g2": "MRS",
+     "t_g3": 460.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 495.0,
+     "ziel": "Z-06",
+     "pos": [
+      920.0,
+      105.0
+     ],
+     "getroffen": [
+      "Z-06|feind",
+      "Z-06|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M06",
+     "t_meld": 420,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 460.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 510.0,
+     "g2": "LM",
+     "t_g3": 540.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 572.717,
+     "ziel": "Z-08",
+     "pos": [
+      530.0,
+      330.0
+     ],
+     "getroffen": [
+      "Z-08|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M07",
+     "t_meld": 455,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 500.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 560.0,
+     "g2": "LM",
+     "t_g3": 590.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 628.133,
+     "ziel": "Z-09",
+     "pos": [
+      686.826,
+      260.69
+     ],
+     "getroffen": [
+      "Z-09|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M08",
+     "t_meld": 510,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 550.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 610.0,
+     "g2": "PZA",
+     "t_g3": 640.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 650.0,
+     "ziel": "Z-07",
+     "pos": [
+      268.0,
+      268.0
+     ],
+     "getroffen": [
+      "Z-07|attrappe"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M09",
+     "t_meld": 600,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 640.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 690.0,
+     "g2": "MRS",
+     "t_g3": 720.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 755.0,
+     "ziel": "Z-10",
+     "pos": [
+      890.0,
+      190.0
+     ],
+     "getroffen": [
+      "Z-10|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M10",
+     "t_meld": 675,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 715.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 765.0,
+     "g2": "MRS",
+     "t_g3": 795.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 830.0,
+     "ziel": "Z-29",
+     "pos": [
+      830.0,
+      455.0
+     ],
+     "getroffen": [
+      "Z-29|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M11",
+     "t_meld": 735,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 775.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 825.0,
+     "g2": "LM",
+     "t_g3": 855.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 891.401,
+     "ziel": "Z-13",
+     "pos": [
+      641.0,
+      336.0
+     ],
+     "getroffen": [
+      "Z-13|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M12",
+     "t_meld": 795,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 835.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 885.0,
+     "g2": "LM",
+     "t_g3": 915.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 948.267,
+     "ziel": "Z-12",
+     "pos": [
+      548.0,
+      383.0
+     ],
+     "getroffen": [
+      "Z-12|geschuetzt"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M13",
+     "t_meld": 870,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 935.0,
+     "g2": "MRS",
+     "t_g3": 965.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1000.0,
+     "ziel": "Z-30",
+     "pos": [
+      462.0,
+      250.0
+     ],
+     "getroffen": [
+      "Z-30|feind",
+      "Z-31|feind",
+      "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M14",
+     "t_meld": 915,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1005.0,
+     "g2": "LM",
+     "t_g3": 1035.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1067.682,
+     "ziel": "Z-14",
+     "pos": [
+      530.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-14|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M15",
+     "t_meld": 960,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1000.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1055.0,
+     "g2": "PZA",
+     "t_g3": 1085.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1095.0,
+     "ziel": "Z-33",
+     "pos": [
+      402.0,
+      291.0
+     ],
+     "getroffen": [
+      "Z-33|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M16",
+     "t_meld": 1005,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1045.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1105.0,
+     "g2": "PZA",
+     "t_g3": 1135.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1145.0,
+     "ziel": "Z-18",
+     "pos": [
+      462.0,
+      393.0
+     ],
+     "getroffen": [
+      "Z-18|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M17",
+     "t_meld": 1055,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1095.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1155.0,
+     "g2": "LM",
+     "t_g3": 1185.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1220.221,
+     "ziel": "Z-36",
+     "pos": [
+      604.661,
+      439.598
+     ],
+     "getroffen": [
+      "Z-36|feind"
+     ],
+     "verstoesse": [
+      "NS-01"
+     ]
+    },
+    {
+     "meldung": "M18",
+     "t_meld": 1095,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1135.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1205.0,
+     "g2": "LM",
+     "t_g3": 1235.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1275.688,
+     "ziel": "Z-19",
+     "pos": [
+      768.0,
+      305.0
+     ],
+     "getroffen": [
+      "Z-19|feind",
+      "Z-19|soldat",
+      "Z-19|zivil"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M19",
+     "t_meld": 1140,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1180.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1255.0,
+     "g2": "LM",
+     "t_g3": 1285.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1317.088,
+     "ziel": "Z-20",
+     "pos": [
+      512.0,
+      412.0
+     ],
+     "getroffen": [
+      "Z-20|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1305.0,
+     "g2": "PZA",
+     "t_g3": 1335.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1345.0,
+     "ziel": "Z-15",
+     "pos": [
+      468.0,
+      474.205
+     ],
+     "getroffen": [
+      "Z-15|verbuendet"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1355.0,
+     "g2": "PZA",
+     "t_g3": 1385.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1395.0,
+     "ziel": "Z-24",
+     "pos": [
+      492.0,
+      330.0
+     ],
+     "getroffen": [
+      "Z-24|ausser_gefecht",
+      "Z-24|besatzung_ergibt_sich"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1280,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1405.0,
+     "g2": "LM",
+     "t_g3": 1435.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1476.825,
+     "ziel": "Z-21",
+     "pos": [
+      790.0,
+      560.0
+     ],
+     "getroffen": [
+      "Z-21|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M23",
+     "t_meld": 1320,
+     "ft": false,
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M24",
+     "t_meld": 1350,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1390.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 1390,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1430.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1480.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M26",
+     "t_meld": 1425,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1470.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1530.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M27",
+     "t_meld": 1460,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1510.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1580.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    }
+   ],
+   "injects": [
+    {
+     "inject": "I-01",
+     "t": 30.0
+    },
+    {
+     "inject": "I-02",
+     "t": 180.0
+    },
+    {
+     "inject": "I-03",
+     "t": 420.0
+    },
+    {
+     "inject": "I-11",
+     "t": 560.0
+    },
+    {
+     "inject": "I-05",
+     "t": 840.0
+    },
+    {
+     "inject": "I-12",
+     "t": 880.0
+    },
+    {
+     "inject": "I-04",
+     "t": 1020.0
+    },
+    {
+     "inject": "I-07",
+     "t": 1095.0
+    },
+    {
+     "inject": "I-06",
+     "t": 1200.0
+    },
+    {
+     "inject": "I-09",
+     "t": 1295.0
+    },
+    {
+     "inject": "I-08a",
+     "t": 1395.0
+    },
+    {
+     "inject": "I-10",
+     "t": 1440.0
+    }
+   ],
+   "hintergrund": [
+    {
+     "id": "H-01",
+     "t": 300,
+     "wirkt": null
+    },
+    {
+     "id": "H-02",
+     "t": 556,
+     "wirkt": true
+    },
+    {
+     "id": "H-03",
+     "t": 582,
+     "wirkt": null
+    },
+    {
+     "id": "H-04",
+     "t": 815,
+     "wirkt": null
+    },
+    {
+     "id": "H-05",
+     "t": 1010,
+     "wirkt": false
+    },
+    {
+     "id": "H-06",
+     "t": 1030,
+     "wirkt": false
+    },
+    {
+     "id": "H-07",
+     "t": 1075,
+     "wirkt": false
+    },
+    {
+     "id": "H-08",
+     "t": 1110,
+     "wirkt": false
+    },
+    {
+     "id": "H-09",
+     "t": 1135,
+     "wirkt": true
+    },
+    {
+     "id": "H-10",
+     "t": 1150,
+     "wirkt": true
+    },
+    {
+     "id": "H-11",
+     "t": 1170,
+     "wirkt": true
+    },
+    {
+     "id": "H-12",
+     "t": 1190,
+     "wirkt": null
+    }
+   ],
+   "e01": [
+    {
+     "entfaellt": true
+    }
+   ],
+   "rest": {
+    "MRS": 7,
+    "LM": 0,
+    "PZA": "∞"
+   },
+   "treffer_schutz": [
+    "Z-07 Attrappe",
+    "Z-12 geschützt",
+    "Z-19 4 Zivilpersonen",
+    "Z-15 verbündet",
+    "Z-24 außer Gefecht",
+    "Z-24 3 Besatzung (ergibt sich)"
+   ],
+   "faelle": {
+    "S3": true,
+    "S2": true,
+    "S1": true,
+    "S4": true,
+    "N1": true,
+    "N2": true,
+    "N3": true,
+    "N4": true
+   },
+   "letzte_freigabe": 1435,
+   "log": [
+    "M01: Freigabe 02:20 mit MRS, Einschlag 02:55",
+    "M02: Freigabe 03:15 mit LM, Einschlag 03:54",
+    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
+    "M04: Freigabe 06:50 mit LM, Einschlag 07:32",
+    "M05: Freigabe 07:40 mit MRS, Einschlag 08:15",
+    "M06: Freigabe 09:00 mit LM, Einschlag 09:33",
+    "M07: Freigabe 09:50 mit LM, Einschlag 10:28",
+    "M08: Freigabe 10:40 mit PZA, Einschlag 10:50",
+    "M09: Freigabe 12:00 mit MRS, Einschlag 12:35",
+    "M10: Freigabe 13:15 mit MRS, Einschlag 13:50",
+    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
+    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
+    "M13: Freigabe 16:05 mit MRS FT, Einschlag 16:40",
+    "M14: Freigabe 17:15 mit LM, Einschlag 17:48",
+    "M15: Freigabe 18:05 mit PZA, Einschlag 18:15",
+    "M16: Freigabe 18:55 mit PZA, Einschlag 19:05",
+    "M17: Freigabe 19:45 mit LM, Einschlag 20:20 – RoE: NS-01 im Wirkradius (0 m)",
+    "M18: Freigabe 20:35 mit LM, Einschlag 21:16",
+    "M19: Freigabe 21:25 mit LM, Einschlag 21:57",
+    "M20: Freigabe 22:15 mit PZA FT, Einschlag 22:25",
+    "M21: Freigabe 23:05 mit PZA FT, Einschlag 23:15",
+    "M22: Freigabe 23:55 mit LM, Einschlag 24:37",
+    "M23: entfällt (Ziel schon zerstört oder weg)",
+    "M24: G1 lehnt ab 23:10",
+    "M25: bei Spielende noch offen",
+    "M26: bei Spielende noch offen",
+    "M27: bei Spielende noch offen",
+    "E-01: entfällt (Gegenangriff abgebrochen)"
+   ]
+  },
+  {
+   "team": "ideal",
+   "einspielen": {},
+   "fast_track_ab": null,
+   "meldungen": [
+    {
+     "meldung": "M01",
+     "t_meld": 20,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 60.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 110.0,
+     "g2": "MRS",
+     "t_g3": 140.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 175.0,
+     "ziel": "Z-01",
+     "pos": [
+      926.0,
+      322.0
+     ],
+     "getroffen": [
+      "Z-01|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M02",
+     "t_meld": 75,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 115.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 165.0,
+     "g2": "LM",
+     "t_g3": 195.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 233.907,
+     "ziel": "Z-03",
+     "pos": [
+      688.0,
+      138.0
+     ],
+     "getroffen": [
+      "Z-03|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M03",
+     "t_meld": 240,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 280.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 330.0,
+     "g2": "PZA",
+     "t_g3": 360.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 370.0,
+     "ziel": "Z-02",
+     "pos": [
+      482.0,
+      390.0
+     ],
+     "getroffen": [
+      "Z-02|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M04",
+     "t_meld": 285,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 325.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 380.0,
+     "g2": "LM",
+     "t_g3": 410.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 452.477,
+     "ziel": "Z-05",
+     "pos": [
+      812.0,
+      214.0
+     ],
+     "getroffen": [
+      "Z-05|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M05",
+     "t_meld": 330,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 370.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 430.0,
+     "g2": "MRS",
+     "t_g3": 460.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 495.0,
+     "ziel": "Z-06",
+     "pos": [
+      920.0,
+      105.0
+     ],
+     "getroffen": [
+      "Z-06|feind",
+      "Z-06|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M06",
+     "t_meld": 420,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 460.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 510.0,
+     "g2": "LM",
+     "t_g3": 540.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 572.717,
+     "ziel": "Z-08",
+     "pos": [
+      530.0,
+      330.0
+     ],
+     "getroffen": [
+      "Z-08|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M07",
+     "t_meld": 455,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 500.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 560.0,
+     "g2": "LM",
+     "t_g3": 590.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 628.133,
+     "ziel": "Z-09",
+     "pos": [
+      686.826,
+      260.69
+     ],
+     "getroffen": [
+      "Z-09|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M08",
+     "t_meld": 510,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 550.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M09",
+     "t_meld": 600,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 640.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 690.0,
+     "g2": "MRS",
+     "t_g3": 720.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 755.0,
+     "ziel": "Z-10",
+     "pos": [
+      890.0,
+      190.0
+     ],
+     "getroffen": [
+      "Z-10|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M10",
+     "t_meld": 675,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 715.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 765.0,
+     "g2": "MRS",
+     "t_g3": 795.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 830.0,
+     "ziel": "Z-29",
+     "pos": [
+      830.0,
+      455.0
+     ],
+     "getroffen": [
+      "Z-29|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M11",
+     "t_meld": 735,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 775.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 825.0,
+     "g2": "LM",
+     "t_g3": 855.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 891.401,
+     "ziel": "Z-13",
+     "pos": [
+      641.0,
+      336.0
+     ],
+     "getroffen": [
+      "Z-13|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M12",
+     "t_meld": 795,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 835.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M13",
+     "t_meld": 870,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 910.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 960.0,
+     "g2": "PZA",
+     "t_g3": 990.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1000.0,
+     "ziel": "Z-30",
+     "pos": [
+      462.0,
+      250.0
+     ],
+     "getroffen": [
+      "Z-30|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M14",
+     "t_meld": 915,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1010.0,
+     "g2": "LM",
+     "t_g3": 1040.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1072.682,
+     "ziel": "Z-14",
+     "pos": [
+      530.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-14|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M15",
+     "t_meld": 960,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1000.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1060.0,
+     "g2": "PZA",
+     "t_g3": 1090.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1100.0,
+     "ziel": "Z-33",
+     "pos": [
+      402.0,
+      291.0
+     ],
+     "getroffen": [
+      "Z-33|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M16",
+     "t_meld": 1005,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1045.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1110.0,
+     "g2": "PZA",
+     "t_g3": 1140.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1150.0,
+     "ziel": "Z-18",
+     "pos": [
+      462.0,
+      393.0
+     ],
+     "getroffen": [
+      "Z-18|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M17",
+     "t_meld": 1055,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1095.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1160.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M18",
+     "t_meld": 1095,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1135.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1210.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M19",
+     "t_meld": 1140,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1180.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1260.0,
+     "g2": "LM",
+     "t_g3": 1290.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1322.088,
+     "ziel": "Z-20",
+     "pos": [
+      512.0,
+      412.0
+     ],
+     "getroffen": [
+      "Z-20|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": false,
+     "ende": "G3 lehnt ab",
+     "t_g1": 1255.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1310.0,
+     "g2": "PZA",
+     "t_g3": 1340.0,
+     "g3": "ABLEHNEN",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1295.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1280,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1335.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1385.0,
+     "g2": "LM",
+     "t_g3": 1415.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1456.825,
+     "ziel": "Z-21",
+     "pos": [
+      790.0,
+      560.0
+     ],
+     "getroffen": [
+      "Z-21|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M23",
+     "t_meld": 1320,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1375.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1435.0,
+     "g2": "LM",
+     "t_g3": 1465.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1505.688,
+     "ziel": "Z-19",
+     "pos": [
+      768.0,
+      305.0
+     ],
+     "getroffen": [
+      "Z-19|feind",
+      "Z-19|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M24",
+     "t_meld": 1350,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1415.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 1390,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1455.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1505.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M26",
+     "t_meld": 1425,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1495.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1555.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M27",
+     "t_meld": 1460,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1535.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1605.0,
+     "g2": "LM",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    }
+   ],
+   "injects": [
+    {
+     "inject": "I-01",
+     "t": 30.0
+    },
+    {
+     "inject": "I-02",
+     "t": 180.0
+    },
+    {
+     "inject": "I-03",
+     "t": 420.0
+    },
+    {
+     "inject": "I-11",
+     "t": 560.0
+    },
+    {
+     "inject": "I-05",
+     "t": 840.0
+    },
+    {
+     "inject": "I-12",
+     "t": 880.0
+    },
+    {
+     "inject": "I-04",
+     "t": 1020.0
+    },
+    {
+     "inject": "I-07",
+     "t": 1095.0
+    },
+    {
+     "inject": "I-06",
+     "t": 1200.0
+    },
+    {
+     "inject": "I-10",
+     "t": 1440.0
+    },
+    {
+     "inject": "I-08b",
+     "t": 1480.0
+    }
+   ],
+   "hintergrund": [
+    {
+     "id": "H-01",
+     "t": 300,
+     "wirkt": null
+    },
+    {
+     "id": "H-02",
+     "t": 556,
+     "wirkt": true
+    },
+    {
+     "id": "H-03",
+     "t": 582,
+     "wirkt": null
+    },
+    {
+     "id": "H-04",
+     "t": 815,
+     "wirkt": null
+    },
+    {
+     "id": "H-05",
+     "t": 1010,
+     "wirkt": true
+    },
+    {
+     "id": "H-06",
+     "t": 1030,
+     "wirkt": true
+    },
+    {
+     "id": "H-07",
+     "t": 1075,
+     "wirkt": false
+    },
+    {
+     "id": "H-08",
+     "t": 1110,
+     "wirkt": false
+    },
+    {
+     "id": "H-09",
+     "t": 1135,
+     "wirkt": true
+    },
+    {
+     "id": "H-10",
+     "t": 1150,
+     "wirkt": true
+    },
+    {
+     "id": "H-11",
+     "t": 1170,
+     "wirkt": true
+    },
+    {
+     "id": "H-12",
+     "t": 1190,
+     "wirkt": null
+    }
+   ],
+   "e01": [
+    {
+     "t": 1410,
+     "von": "Z-15",
+     "ziel": "Z-27"
+    },
+    {
+     "t": 1425,
+     "von": "Z-16",
+     "ziel": "Z-28"
+    },
+    {
+     "t": 1465,
+     "von": "Z-16",
+     "ziel": "Z-36"
+    }
+   ],
+   "rest": {
+    "MRS": 8,
+    "LM": 2,
+    "PZA": "∞"
+   },
+   "treffer_schutz": [],
+   "faelle": {
+    "S3": true,
+    "S2": true,
+    "S1": true,
+    "S4": true,
+    "N1": true,
+    "N2": true,
+    "N3": true,
+    "N4": true
+   },
+   "letzte_freigabe": 1465,
+   "log": [
+    "M01: Freigabe 02:20 mit MRS, Einschlag 02:55",
+    "M02: Freigabe 03:15 mit LM, Einschlag 03:54",
+    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
+    "M04: Freigabe 06:50 mit LM, Einschlag 07:32",
+    "M05: Freigabe 07:40 mit MRS, Einschlag 08:15",
+    "M06: Freigabe 09:00 mit LM, Einschlag 09:33",
+    "M07: Freigabe 09:50 mit LM, Einschlag 10:28",
+    "M08: G1 lehnt ab 09:10",
+    "M09: Freigabe 12:00 mit MRS, Einschlag 12:35",
+    "M10: Freigabe 13:15 mit MRS, Einschlag 13:50",
+    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
+    "M12: G1 lehnt ab 13:55",
+    "M13: Freigabe 16:30 mit PZA, Einschlag 16:40",
+    "M14: Freigabe 17:20 mit LM, Einschlag 17:53",
+    "M15: Freigabe 18:10 mit PZA, Einschlag 18:20",
+    "M16: Freigabe 19:00 mit PZA, Einschlag 19:10",
+    "M17: G2 BEOBACHTEN 19:20",
+    "M18: G2 BEOBACHTEN 20:10",
+    "M19: Freigabe 21:30 mit LM, Einschlag 22:02",
+    "M20: G3 lehnt ab 22:20",
+    "M21: G1 lehnt ab 21:35",
+    "M22: Freigabe 23:35 mit LM, Einschlag 24:17",
+    "M23: Freigabe 24:25 mit LM, Einschlag 25:06",
+    "M24: G1 lehnt ab 23:35",
+    "M25: bei Spielende noch offen",
+    "M26: bei Spielende noch offen",
+    "M27: bei Spielende noch offen",
+    "E-01: Z-15 trifft Z-27 um 23:30",
+    "E-01: Z-16 trifft Z-28 um 23:45",
+    "E-01: Z-16 trifft Z-36 um 24:25"
+   ]
+  },
+  {
+   "team": "naiv",
+   "einspielen": {
+    "V-1": 240,
+    "V-2": 540,
+    "V-3": 720,
+    "V-4": 960
+   },
+   "fast_track_ab": 870,
+   "meldungen": [
+    {
+     "meldung": "M01",
+     "t_meld": 20,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 60.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 110.0,
+     "g2": "MRS",
+     "t_g3": 140.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 175.0,
+     "ziel": "Z-01",
+     "pos": [
+      926.0,
+      322.0
+     ],
+     "getroffen": [
+      "Z-01|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M02",
+     "t_meld": 75,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 115.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 165.0,
+     "g2": "LM",
+     "t_g3": 195.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 233.907,
+     "ziel": "Z-03",
+     "pos": [
+      688.0,
+      138.0
+     ],
+     "getroffen": [
+      "Z-03|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M03",
+     "t_meld": 240,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 280.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 330.0,
+     "g2": "PZA",
+     "t_g3": 360.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 370.0,
+     "ziel": "Z-02",
+     "pos": [
+      482.0,
+      390.0
+     ],
+     "getroffen": [
+      "Z-02|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V1-M1",
+     "t_meld": 250,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 380.0,
+     "g2": "LM",
+     "t_g3": 410.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 451.463,
+     "ziel": "V1-1",
+     "pos": [
+      722.0,
+      -10.0
+     ],
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M04",
+     "t_meld": 285,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 360.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 430.0,
+     "g2": "LM",
+     "t_g3": 460.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 502.477,
+     "ziel": "Z-05",
+     "pos": [
+      812.0,
+      214.0
+     ],
+     "getroffen": [
+      "Z-05|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M05",
+     "t_meld": 330,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 400.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 480.0,
+     "g2": "MRS",
+     "t_g3": 510.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 545.0,
+     "ziel": "Z-06",
+     "pos": [
+      920.0,
+      105.0
+     ],
+     "getroffen": [
+      "Z-06|feind",
+      "Z-06|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M06",
+     "t_meld": 420,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 460.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 530.0,
+     "g2": "LM",
+     "t_g3": 560.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 592.816,
+     "ziel": "Z-08",
+     "pos": [
+      532.854,
+      328.165
+     ],
+     "getroffen": [
+      "Z-08|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M07",
+     "t_meld": 455,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 500.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 580.0,
+     "g2": "LM",
+     "t_g3": 610.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 651.213,
+     "ziel": "Z-09",
+     "pos": [
+      775.09,
+      223.366
+     ],
+     "getroffen": [
+      "Z-09|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M08",
+     "t_meld": 510,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 550.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 630.0,
+     "g2": "PZA",
+     "t_g3": 660.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 670.0,
+     "ziel": "Z-07",
+     "pos": [
+      268.0,
+      268.0
+     ],
+     "getroffen": [
+      "Z-07|attrappe"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V2-M1",
+     "t_meld": 570,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 610.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 680.0,
+     "g2": "MRS",
+     "t_g3": 710.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 745.0,
+     "ziel": "V2-1",
+     "pos": [
+      880.0,
+      445.0
+     ],
+     "getroffen": [
+      "V2-1|feind",
+      "V2-2|feind",
+      "V2-3|feind",
+      "Z-29|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M09",
+     "t_meld": 600,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 650.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 730.0,
+     "g2": "MRS",
+     "t_g3": 760.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 795.0,
+     "ziel": "Z-10",
+     "pos": [
+      890.0,
+      190.0
+     ],
+     "getroffen": [
+      "Z-10|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M10",
+     "t_meld": 675,
+     "ft": false,
+     "ende": "entfällt (G3)",
+     "t_g1": 715.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 780.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": "ENTFÄLLT",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M11",
+     "t_meld": 735,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 775.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 830.0,
+     "g2": "LM",
+     "t_g3": 860.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 896.401,
+     "ziel": "Z-13",
+     "pos": [
+      641.0,
+      336.0
+     ],
+     "getroffen": [
+      "Z-13|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M12",
+     "t_meld": 795,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 835.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 885.0,
+     "g2": "LM",
+     "t_g3": 915.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 948.267,
+     "ziel": "Z-12",
+     "pos": [
+      548.0,
+      383.0
+     ],
+     "getroffen": [
+      "Z-12|geschuetzt"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V3-M1",
+     "t_meld": 850,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 890.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 940.0,
+     "g2": "LM",
+     "t_g3": 970.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1005.806,
+     "ziel": "V3-1",
+     "pos": [
+      600.0,
+      170.0
+     ],
+     "getroffen": [
+      "V3-1|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M13",
+     "t_meld": 870,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 990.0,
+     "g2": "PZA",
+     "t_g3": 1020.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1030.0,
+     "ziel": "Z-30",
+     "pos": [
+      462.0,
+      250.0
+     ],
+     "getroffen": [
+      "Z-30|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M14",
+     "t_meld": 915,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1040.0,
+     "g2": "LM",
+     "t_g3": 1070.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1102.682,
+     "ziel": "Z-14",
+     "pos": [
+      530.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-14|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M15",
+     "t_meld": 960,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1000.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1090.0,
+     "g2": "PZA",
+     "t_g3": 1120.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1130.0,
+     "ziel": "Z-34",
+     "pos": [
+      488.0,
+      240.0
+     ],
+     "getroffen": [
+      "Z-34|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V4-M1",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1040.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1140.0,
+     "g2": "MRS",
+     "t_g3": 1170.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1205.0,
+     "ziel": "V4-1",
+     "pos": [
+      862.0,
+      45.0
+     ],
+     "getroffen": [
+      "V4-1|feind",
+      "V4-1|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M16",
+     "t_meld": 1005,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1080.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1190.0,
+     "g2": "PZA",
+     "t_g3": 1220.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1230.0,
+     "ziel": "Z-18",
+     "pos": [
+      462.0,
+      393.0
+     ],
+     "getroffen": [
+      "Z-18|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M17",
+     "t_meld": 1055,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1120.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1240.0,
+     "g2": "LM",
+     "t_g3": 1270.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1304.681,
+     "ziel": "Z-36",
+     "pos": [
+      590.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-36|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M18",
+     "t_meld": 1095,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1160.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1290.0,
+     "g2": "LM",
+     "t_g3": 1320.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1360.688,
+     "ziel": "Z-19",
+     "pos": [
+      768.0,
+      305.0
+     ],
+     "getroffen": [
+      "Z-19|feind",
+      "Z-19|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M19",
+     "t_meld": 1140,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1200.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1340.0,
+     "g2": "MRS",
+     "t_g3": 1370.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1405.0,
+     "ziel": "Z-20",
+     "pos": [
+      512.0,
+      412.0
+     ],
+     "getroffen": [
+      "Z-15|verbuendet",
+      "Z-16|verbuendet",
+      "Z-20|feind",
+      "Z-27|feind",
+      "Z-28|feind"
+     ],
+     "verstoesse": [
+      "NS-01",
+      "EZ-01"
+     ]
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1390.0,
+     "g2": "PZA",
+     "t_g3": 1420.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1430.0,
+     "ziel": "Z-17",
+     "pos": [
+      468.0,
+      495.0
+     ],
+     "getroffen": [
+      "Z-17|verbuendet"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1440.0,
+     "g2": "PZA",
+     "t_g3": 1470.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1480.0,
+     "ziel": "Z-24",
+     "pos": [
+      492.0,
+      330.0
+     ],
+     "getroffen": [
+      "Z-24|ausser_gefecht",
+      "Z-24|besatzung_ergibt_sich"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1280,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1490.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M23",
+     "t_meld": 1320,
+     "ft": true,
+     "ende": "entfällt (G2)",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M24",
+     "t_meld": 1350,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1390.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 1390,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1430.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1540.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M26",
+     "t_meld": 1425,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1470.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1590.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M27",
+     "t_meld": 1460,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1510.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1640.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    }
+   ],
+   "injects": [
+    {
+     "inject": "I-01",
+     "t": 30.0
+    },
+    {
+     "inject": "I-02",
+     "t": 180.0
+    },
+    {
+     "inject": "I-03",
+     "t": 420.0
+    },
+    {
+     "inject": "I-11",
+     "t": 560.0
+    },
+    {
+     "inject": "I-05",
+     "t": 840.0
+    },
+    {
+     "inject": "I-12",
+     "t": 880.0
+    },
+    {
+     "inject": "I-04",
+     "t": 1020.0
+    },
+    {
+     "inject": "I-07",
+     "t": 1095.0
+    },
+    {
+     "inject": "I-06",
+     "t": 1200.0
+    },
+    {
+     "inject": "I-10",
+     "t": 1440.0
+    },
+    {
+     "inject": "I-08a",
+     "t": 1480.0
+    }
+   ],
+   "hintergrund": [
+    {
+     "id": "H-01",
+     "t": 300,
+     "wirkt": null
+    },
+    {
+     "id": "H-02",
+     "t": 556,
+     "wirkt": true
+    },
+    {
+     "id": "H-03",
+     "t": 582,
+     "wirkt": null
+    },
+    {
+     "id": "H-04",
+     "t": 815,
+     "wirkt": null
+    },
+    {
+     "id": "H-05",
+     "t": 1010,
+     "wirkt": true
+    },
+    {
+     "id": "H-06",
+     "t": 1030,
+     "wirkt": true
+    },
+    {
+     "id": "H-07",
+     "t": 1075,
+     "wirkt": false
+    },
+    {
+     "id": "H-08",
+     "t": 1110,
+     "wirkt": true
+    },
+    {
+     "id": "H-09",
+     "t": 1135,
+     "wirkt": false
+    },
+    {
+     "id": "H-10",
+     "t": 1150,
+     "wirkt": true
+    },
+    {
+     "id": "H-11",
+     "t": 1170,
+     "wirkt": true
+    },
+    {
+     "id": "H-12",
+     "t": 1190,
+     "wirkt": null
+    }
+   ],
+   "e01": [],
+   "rest": {
+    "MRS": 6,
+    "LM": 0,
+    "PZA": "∞"
+   },
+   "treffer_schutz": [
+    "Z-07 Attrappe",
+    "Z-12 geschützt",
+    "Z-15 verbündet",
+    "Z-16 verbündet",
+    "Z-17 verbündet",
+    "Z-24 außer Gefecht",
+    "Z-24 3 Besatzung (ergibt sich)"
+   ],
+   "faelle": {
+    "S3": true,
+    "S2": true,
+    "S1": true,
+    "S4": true,
+    "N1": true,
+    "N2": true,
+    "N3": true,
+    "N4": true
+   },
+   "letzte_freigabe": 1470,
+   "log": [
+    "M01: Freigabe 02:20 mit MRS, Einschlag 02:55",
+    "M02: Freigabe 03:15 mit LM, Einschlag 03:54",
+    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
+    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
+    "M04: Freigabe 07:40 mit LM, Einschlag 08:22",
+    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
+    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
+    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
+    "M08: Freigabe 11:00 mit PZA, Einschlag 11:10",
+    "V2-M1: Freigabe 11:50 mit MRS, Einschlag 12:25",
+    "M09: Freigabe 12:40 mit MRS, Einschlag 13:15",
+    "M10: entfällt vor G3 13:00 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:20 mit LM, Einschlag 14:56",
+    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
+    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
+    "M13: Freigabe 17:00 mit PZA FT, Einschlag 17:10",
+    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
+    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
+    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
+    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
+    "M17: Freigabe 21:10 mit LM, Einschlag 21:45",
+    "M18: Freigabe 22:00 mit LM, Einschlag 22:41",
+    "M19: Freigabe 22:50 mit MRS, Einschlag 23:25 – RoE: NS-01 im Wirkradius (71 m); EZ-01: Wirkradius > 50 m (0 m)",
+    "M20: Freigabe 23:40 mit PZA FT, Einschlag 23:50",
+    "M21: Freigabe 24:30 mit PZA FT, Einschlag 24:40",
+    "M22: bei Spielende noch offen",
+    "M23: entfällt vor G2 24:50 (Ziel inzwischen zerstört oder weg)",
+    "M24: G1 lehnt ab 23:10",
+    "M25: bei Spielende noch offen",
+    "M26: bei Spielende noch offen",
+    "M27: bei Spielende noch offen"
+   ]
+  },
+  {
+   "team": "ideal",
+   "einspielen": {
+    "V-1": 240,
+    "V-2": 540,
+    "V-3": 720,
+    "V-4": 960
+   },
+   "fast_track_ab": null,
+   "meldungen": [
+    {
+     "meldung": "M01",
+     "t_meld": 20,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 60.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 110.0,
+     "g2": "MRS",
+     "t_g3": 140.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 175.0,
+     "ziel": "Z-01",
+     "pos": [
+      926.0,
+      322.0
+     ],
+     "getroffen": [
+      "Z-01|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M02",
+     "t_meld": 75,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 115.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 165.0,
+     "g2": "LM",
+     "t_g3": 195.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 233.907,
+     "ziel": "Z-03",
+     "pos": [
+      688.0,
+      138.0
+     ],
+     "getroffen": [
+      "Z-03|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M03",
+     "t_meld": 240,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 280.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 330.0,
+     "g2": "PZA",
+     "t_g3": 360.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 370.0,
+     "ziel": "Z-02",
+     "pos": [
+      482.0,
+      390.0
+     ],
+     "getroffen": [
+      "Z-02|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V1-M1",
+     "t_meld": 250,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 380.0,
+     "g2": "LM",
+     "t_g3": 410.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 451.463,
+     "ziel": "V1-1",
+     "pos": [
+      722.0,
+      -10.0
+     ],
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M04",
+     "t_meld": 285,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 360.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 430.0,
+     "g2": "LM",
+     "t_g3": 460.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 502.477,
+     "ziel": "Z-05",
+     "pos": [
+      812.0,
+      214.0
+     ],
+     "getroffen": [
+      "Z-05|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M05",
+     "t_meld": 330,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 400.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 480.0,
+     "g2": "MRS",
+     "t_g3": 510.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 545.0,
+     "ziel": "Z-06",
+     "pos": [
+      920.0,
+      105.0
+     ],
+     "getroffen": [
+      "Z-06|feind",
+      "Z-06|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M06",
+     "t_meld": 420,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 460.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 530.0,
+     "g2": "LM",
+     "t_g3": 560.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 592.816,
+     "ziel": "Z-08",
+     "pos": [
+      532.854,
+      328.165
+     ],
+     "getroffen": [
+      "Z-08|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M07",
+     "t_meld": 455,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 500.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 580.0,
+     "g2": "LM",
+     "t_g3": 610.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 651.213,
+     "ziel": "Z-09",
+     "pos": [
+      775.09,
+      223.366
+     ],
+     "getroffen": [
+      "Z-09|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M08",
+     "t_meld": 510,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 550.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V2-M1",
+     "t_meld": 570,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 610.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 660.0,
+     "g2": "MRS",
+     "t_g3": 690.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 725.0,
+     "ziel": "V2-1",
+     "pos": [
+      880.0,
+      445.0
+     ],
+     "getroffen": [
+      "V2-1|feind",
+      "V2-2|feind",
+      "V2-3|feind",
+      "Z-29|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M09",
+     "t_meld": 600,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 650.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 710.0,
+     "g2": "MRS",
+     "t_g3": 740.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 775.0,
+     "ziel": "Z-10",
+     "pos": [
+      890.0,
+      190.0
+     ],
+     "getroffen": [
+      "V3-3|feind",
+      "Z-10|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M10",
+     "t_meld": 675,
+     "ft": false,
+     "ende": "entfällt (G3)",
+     "t_g1": 715.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 765.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": "ENTFÄLLT",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M11",
+     "t_meld": 735,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 775.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 825.0,
+     "g2": "LM",
+     "t_g3": 855.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 891.401,
+     "ziel": "Z-13",
+     "pos": [
+      641.0,
+      336.0
+     ],
+     "getroffen": [
+      "Z-13|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M12",
+     "t_meld": 795,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 835.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V3-M1",
+     "t_meld": 850,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 890.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 940.0,
+     "g2": "LM",
+     "t_g3": 970.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1005.806,
+     "ziel": "V3-1",
+     "pos": [
+      600.0,
+      170.0
+     ],
+     "getroffen": [
+      "V3-1|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M13",
+     "t_meld": 870,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 930.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 990.0,
+     "g2": "PZA",
+     "t_g3": 1020.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1030.0,
+     "ziel": "Z-30",
+     "pos": [
+      462.0,
+      250.0
+     ],
+     "getroffen": [
+      "Z-30|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M14",
+     "t_meld": 915,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 970.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1040.0,
+     "g2": "LM",
+     "t_g3": 1070.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1102.682,
+     "ziel": "Z-14",
+     "pos": [
+      530.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-14|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M15",
+     "t_meld": 960,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1010.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1090.0,
+     "g2": "PZA",
+     "t_g3": 1120.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1130.0,
+     "ziel": "Z-34",
+     "pos": [
+      488.0,
+      240.0
+     ],
+     "getroffen": [
+      "Z-34|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V4-M1",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1050.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1140.0,
+     "g2": "MRS",
+     "t_g3": 1170.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1205.0,
+     "ziel": "V4-1",
+     "pos": [
+      862.0,
+      45.0
+     ],
+     "getroffen": [
+      "V4-1|feind",
+      "V4-1|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M16",
+     "t_meld": 1005,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1090.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1190.0,
+     "g2": "PZA",
+     "t_g3": 1220.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1230.0,
+     "ziel": "Z-18",
+     "pos": [
+      462.0,
+      393.0
+     ],
+     "getroffen": [
+      "Z-18|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M17",
+     "t_meld": 1055,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1130.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1240.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M18",
+     "t_meld": 1095,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1170.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1290.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M19",
+     "t_meld": 1140,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1210.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1340.0,
+     "g2": "LM",
+     "t_g3": 1370.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1402.088,
+     "ziel": "Z-20",
+     "pos": [
+      512.0,
+      412.0
+     ],
+     "getroffen": [
+      "Z-20|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": false,
+     "ende": "G3 lehnt ab",
+     "t_g1": 1255.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1390.0,
+     "g2": "PZA",
+     "t_g3": 1420.0,
+     "g3": "ABLEHNEN",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1295.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1280,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1335.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1440.0,
+     "g2": "LM",
+     "t_g3": 1470.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1511.825,
+     "ziel": "Z-21",
+     "pos": [
+      790.0,
+      560.0
+     ],
+     "getroffen": [
+      "Z-21|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M23",
+     "t_meld": 1320,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1375.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1490.0,
+     "g2": "LM",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M24",
+     "t_meld": 1350,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1415.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 1390,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1455.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1540.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M26",
+     "t_meld": 1425,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1495.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1590.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M27",
+     "t_meld": 1460,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1535.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1640.0,
+     "g2": "LM",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    }
+   ],
+   "injects": [
+    {
+     "inject": "I-01",
+     "t": 30.0
+    },
+    {
+     "inject": "I-02",
+     "t": 180.0
+    },
+    {
+     "inject": "I-03",
+     "t": 420.0
+    },
+    {
+     "inject": "I-11",
+     "t": 560.0
+    },
+    {
+     "inject": "I-05",
+     "t": 840.0
+    },
+    {
+     "inject": "I-12",
+     "t": 880.0
+    },
+    {
+     "inject": "I-04",
+     "t": 1020.0
+    },
+    {
+     "inject": "I-07",
+     "t": 1095.0
+    },
+    {
+     "inject": "I-06",
+     "t": 1200.0
+    },
+    {
+     "inject": "I-10",
+     "t": 1440.0
+    },
+    {
+     "inject": "I-08b",
+     "t": 1480.0
+    }
+   ],
+   "hintergrund": [
+    {
+     "id": "H-01",
+     "t": 300,
+     "wirkt": null
+    },
+    {
+     "id": "H-02",
+     "t": 556,
+     "wirkt": true
+    },
+    {
+     "id": "H-03",
+     "t": 582,
+     "wirkt": null
+    },
+    {
+     "id": "H-04",
+     "t": 815,
+     "wirkt": null
+    },
+    {
+     "id": "H-05",
+     "t": 1010,
+     "wirkt": true
+    },
+    {
+     "id": "H-06",
+     "t": 1030,
+     "wirkt": true
+    },
+    {
+     "id": "H-07",
+     "t": 1075,
+     "wirkt": false
+    },
+    {
+     "id": "H-08",
+     "t": 1110,
+     "wirkt": true
+    },
+    {
+     "id": "H-09",
+     "t": 1135,
+     "wirkt": false
+    },
+    {
+     "id": "H-10",
+     "t": 1150,
+     "wirkt": true
+    },
+    {
+     "id": "H-11",
+     "t": 1170,
+     "wirkt": true
+    },
+    {
+     "id": "H-12",
+     "t": 1190,
+     "wirkt": null
+    }
+   ],
+   "e01": [
+    {
+     "t": 1410,
+     "von": "Z-15",
+     "ziel": "Z-27"
+    },
+    {
+     "t": 1425,
+     "von": "Z-16",
+     "ziel": "Z-28"
+    },
+    {
+     "t": 1465,
+     "von": "Z-16",
+     "ziel": "Z-36"
+    }
+   ],
+   "rest": {
+    "MRS": 7,
+    "LM": 1,
+    "PZA": "∞"
+   },
+   "treffer_schutz": [],
+   "faelle": {
+    "S3": true,
+    "S2": true,
+    "S1": true,
+    "S4": true,
+    "N1": true,
+    "N2": true,
+    "N3": true,
+    "N4": true
+   },
+   "letzte_freigabe": 1470,
+   "log": [
+    "M01: Freigabe 02:20 mit MRS, Einschlag 02:55",
+    "M02: Freigabe 03:15 mit LM, Einschlag 03:54",
+    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
+    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
+    "M04: Freigabe 07:40 mit LM, Einschlag 08:22",
+    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
+    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
+    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
+    "M08: G1 lehnt ab 09:10",
+    "V2-M1: Freigabe 11:30 mit MRS, Einschlag 12:05",
+    "M09: Freigabe 12:20 mit MRS, Einschlag 12:55",
+    "M10: entfällt vor G3 12:45 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
+    "M12: G1 lehnt ab 13:55",
+    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
+    "M13: Freigabe 17:00 mit PZA, Einschlag 17:10",
+    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
+    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
+    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
+    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
+    "M17: G2 BEOBACHTEN 20:40",
+    "M18: G2 BEOBACHTEN 21:30",
+    "M19: Freigabe 22:50 mit LM, Einschlag 23:22",
+    "M20: G3 lehnt ab 23:40",
+    "M21: G1 lehnt ab 21:35",
+    "M22: Freigabe 24:30 mit LM, Einschlag 25:12",
+    "M23: bei Spielende noch offen",
+    "M24: G1 lehnt ab 23:35",
+    "M25: bei Spielende noch offen",
+    "M26: bei Spielende noch offen",
+    "M27: bei Spielende noch offen",
+    "E-01: Z-15 trifft Z-27 um 23:30",
+    "E-01: Z-16 trifft Z-28 um 23:45",
+    "E-01: Z-16 trifft Z-36 um 24:25"
+   ]
+  },
+  {
+   "team": "naiv",
+   "einspielen": {
+    "V-1": 240,
+    "V-2": 540,
+    "V-3": 720,
+    "V-4": 960,
+    "V-5": 1200
+   },
+   "fast_track_ab": 870,
+   "meldungen": [
+    {
+     "meldung": "M01",
+     "t_meld": 20,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 60.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 110.0,
+     "g2": "MRS",
+     "t_g3": 140.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 175.0,
+     "ziel": "Z-01",
+     "pos": [
+      926.0,
+      322.0
+     ],
+     "getroffen": [
+      "Z-01|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M02",
+     "t_meld": 75,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 115.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 165.0,
+     "g2": "LM",
+     "t_g3": 195.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 233.907,
+     "ziel": "Z-03",
+     "pos": [
+      688.0,
+      138.0
+     ],
+     "getroffen": [
+      "Z-03|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M03",
+     "t_meld": 240,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 280.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 330.0,
+     "g2": "PZA",
+     "t_g3": 360.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 370.0,
+     "ziel": "Z-02",
+     "pos": [
+      482.0,
+      390.0
+     ],
+     "getroffen": [
+      "Z-02|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V1-M1",
+     "t_meld": 250,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 380.0,
+     "g2": "LM",
+     "t_g3": 410.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 451.463,
+     "ziel": "V1-1",
+     "pos": [
+      722.0,
+      -10.0
+     ],
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M04",
+     "t_meld": 285,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 360.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 430.0,
+     "g2": "LM",
+     "t_g3": 460.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 502.477,
+     "ziel": "Z-05",
+     "pos": [
+      812.0,
+      214.0
+     ],
+     "getroffen": [
+      "Z-05|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M05",
+     "t_meld": 330,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 400.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 480.0,
+     "g2": "MRS",
+     "t_g3": 510.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 545.0,
+     "ziel": "Z-06",
+     "pos": [
+      920.0,
+      105.0
+     ],
+     "getroffen": [
+      "Z-06|feind",
+      "Z-06|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M06",
+     "t_meld": 420,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 460.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 530.0,
+     "g2": "LM",
+     "t_g3": 560.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 592.816,
+     "ziel": "Z-08",
+     "pos": [
+      532.854,
+      328.165
+     ],
+     "getroffen": [
+      "Z-08|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M07",
+     "t_meld": 455,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 500.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 580.0,
+     "g2": "LM",
+     "t_g3": 610.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 651.213,
+     "ziel": "Z-09",
+     "pos": [
+      775.09,
+      223.366
+     ],
+     "getroffen": [
+      "Z-09|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M08",
+     "t_meld": 510,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 550.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 630.0,
+     "g2": "PZA",
+     "t_g3": 660.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 670.0,
+     "ziel": "Z-07",
+     "pos": [
+      268.0,
+      268.0
+     ],
+     "getroffen": [
+      "Z-07|attrappe"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V2-M1",
+     "t_meld": 570,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 610.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 680.0,
+     "g2": "MRS",
+     "t_g3": 710.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 745.0,
+     "ziel": "V2-1",
+     "pos": [
+      880.0,
+      445.0
+     ],
+     "getroffen": [
+      "V2-1|feind",
+      "V2-2|feind",
+      "V2-3|feind",
+      "Z-29|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M09",
+     "t_meld": 600,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 650.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 730.0,
+     "g2": "MRS",
+     "t_g3": 760.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 795.0,
+     "ziel": "Z-10",
+     "pos": [
+      890.0,
+      190.0
+     ],
+     "getroffen": [
+      "Z-10|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M10",
+     "t_meld": 675,
+     "ft": false,
+     "ende": "entfällt (G3)",
+     "t_g1": 715.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 780.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": "ENTFÄLLT",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M11",
+     "t_meld": 735,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 775.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 830.0,
+     "g2": "LM",
+     "t_g3": 860.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 896.401,
+     "ziel": "Z-13",
+     "pos": [
+      641.0,
+      336.0
+     ],
+     "getroffen": [
+      "Z-13|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M12",
+     "t_meld": 795,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 835.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 885.0,
+     "g2": "LM",
+     "t_g3": 915.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 948.267,
+     "ziel": "Z-12",
+     "pos": [
+      548.0,
+      383.0
+     ],
+     "getroffen": [
+      "Z-12|geschuetzt"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V3-M1",
+     "t_meld": 850,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 890.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 940.0,
+     "g2": "LM",
+     "t_g3": 970.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1005.806,
+     "ziel": "V3-1",
+     "pos": [
+      600.0,
+      170.0
+     ],
+     "getroffen": [
+      "V3-1|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M13",
+     "t_meld": 870,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 990.0,
+     "g2": "PZA",
+     "t_g3": 1020.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1030.0,
+     "ziel": "Z-30",
+     "pos": [
+      462.0,
+      250.0
+     ],
+     "getroffen": [
+      "Z-30|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M14",
+     "t_meld": 915,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1040.0,
+     "g2": "LM",
+     "t_g3": 1070.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1102.682,
+     "ziel": "Z-14",
+     "pos": [
+      530.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-14|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M15",
+     "t_meld": 960,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1000.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1090.0,
+     "g2": "PZA",
+     "t_g3": 1120.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1130.0,
+     "ziel": "Z-34",
+     "pos": [
+      488.0,
+      240.0
+     ],
+     "getroffen": [
+      "Z-34|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V4-M1",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1040.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1140.0,
+     "g2": "MRS",
+     "t_g3": 1170.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1205.0,
+     "ziel": "V4-1",
+     "pos": [
+      862.0,
+      45.0
+     ],
+     "getroffen": [
+      "V4-1|feind",
+      "V4-1|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M16",
+     "t_meld": 1005,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1080.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1190.0,
+     "g2": "PZA",
+     "t_g3": 1220.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1230.0,
+     "ziel": "Z-18",
+     "pos": [
+      462.0,
+      393.0
+     ],
+     "getroffen": [
+      "Z-18|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M17",
+     "t_meld": 1055,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1120.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1240.0,
+     "g2": "LM",
+     "t_g3": 1270.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1304.681,
+     "ziel": "Z-36",
+     "pos": [
+      590.0,
+      352.0
+     ],
+     "getroffen": [
+      "Z-36|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M18",
+     "t_meld": 1095,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1160.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1290.0,
+     "g2": "LM",
+     "t_g3": 1320.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1360.688,
+     "ziel": "Z-19",
+     "pos": [
+      768.0,
+      305.0
+     ],
+     "getroffen": [
+      "Z-19|feind",
+      "Z-19|soldat"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M19",
+     "t_meld": 1140,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1200.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1340.0,
+     "g2": "MRS",
+     "t_g3": 1370.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1405.0,
+     "ziel": "Z-20",
+     "pos": [
+      512.0,
+      412.0
+     ],
+     "getroffen": [
+      "Z-15|verbuendet",
+      "Z-16|verbuendet",
+      "Z-20|feind",
+      "Z-27|feind",
+      "Z-28|feind"
+     ],
+     "verstoesse": [
+      "NS-01",
+      "EZ-01"
+     ]
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1390.0,
+     "g2": "PZA",
+     "t_g3": 1420.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1430.0,
+     "ziel": "Z-17",
+     "pos": [
+      468.0,
+      495.0
+     ],
+     "getroffen": [
+      "Z-17|verbuendet"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "V5-M1",
+     "t_meld": 1235,
+     "ft": false,
+     "ende": "entfällt (G3)",
+     "t_g1": 1275.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1440.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": "ENTFÄLLT",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": true,
+     "ende": "Spielende",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1490.0,
+     "g2": "PZA",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1280,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1320.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1540.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M23",
+     "t_meld": 1320,
+     "ft": true,
+     "ende": "entfällt (G2)",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M24",
+     "t_meld": 1350,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1390.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 1390,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1430.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1590.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M26",
+     "t_meld": 1425,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1470.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1640.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M27",
+     "t_meld": 1460,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1510.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1690.0,
+     "g2": "MRS",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    }
+   ],
+   "injects": [
+    {
+     "inject": "I-01",
+     "t": 30.0
+    },
+    {
+     "inject": "I-02",
+     "t": 180.0
+    },
+    {
+     "inject": "I-03",
+     "t": 420.0
+    },
+    {
+     "inject": "I-11",
+     "t": 560.0
+    },
+    {
+     "inject": "I-05",
+     "t": 840.0
+    },
+    {
+     "inject": "I-12",
+     "t": 880.0
+    },
+    {
+     "inject": "I-04",
+     "t": 1020.0
+    },
+    {
+     "inject": "I-07",
+     "t": 1095.0
+    },
+    {
+     "inject": "I-06",
+     "t": 1200.0
+    },
+    {
+     "inject": "I-10",
+     "t": 1440.0
+    },
+    {
+     "inject": "I-08a",
+     "t": 1480.0
+    }
+   ],
+   "hintergrund": [
+    {
+     "id": "H-01",
+     "t": 300,
+     "wirkt": null
+    },
+    {
+     "id": "H-02",
+     "t": 556,
+     "wirkt": true
+    },
+    {
+     "id": "H-03",
+     "t": 582,
+     "wirkt": null
+    },
+    {
+     "id": "H-04",
+     "t": 815,
+     "wirkt": null
+    },
+    {
+     "id": "H-05",
+     "t": 1010,
+     "wirkt": true
+    },
+    {
+     "id": "H-06",
+     "t": 1030,
+     "wirkt": true
+    },
+    {
+     "id": "H-07",
+     "t": 1075,
+     "wirkt": false
+    },
+    {
+     "id": "H-08",
+     "t": 1110,
+     "wirkt": true
+    },
+    {
+     "id": "H-09",
+     "t": 1135,
+     "wirkt": false
+    },
+    {
+     "id": "H-10",
+     "t": 1150,
+     "wirkt": true
+    },
+    {
+     "id": "H-11",
+     "t": 1170,
+     "wirkt": true
+    },
+    {
+     "id": "H-12",
+     "t": 1190,
+     "wirkt": null
+    }
+   ],
+   "e01": [],
+   "rest": {
+    "MRS": 6,
+    "LM": 0,
+    "PZA": "∞"
+   },
+   "treffer_schutz": [
+    "Z-07 Attrappe",
+    "Z-12 geschützt",
+    "Z-15 verbündet",
+    "Z-16 verbündet",
+    "Z-17 verbündet"
+   ],
+   "faelle": {
+    "S3": true,
+    "S2": true,
+    "S1": true,
+    "S4": true,
+    "N1": true,
+    "N2": false,
+    "N3": true,
+    "N4": true
+   },
+   "letzte_freigabe": 1420,
+   "log": [
+    "M01: Freigabe 02:20 mit MRS, Einschlag 02:55",
+    "M02: Freigabe 03:15 mit LM, Einschlag 03:54",
+    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
+    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
+    "M04: Freigabe 07:40 mit LM, Einschlag 08:22",
+    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
+    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
+    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
+    "M08: Freigabe 11:00 mit PZA, Einschlag 11:10",
+    "V2-M1: Freigabe 11:50 mit MRS, Einschlag 12:25",
+    "M09: Freigabe 12:40 mit MRS, Einschlag 13:15",
+    "M10: entfällt vor G3 13:00 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:20 mit LM, Einschlag 14:56",
+    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
+    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
+    "M13: Freigabe 17:00 mit PZA FT, Einschlag 17:10",
+    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
+    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
+    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
+    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
+    "M17: Freigabe 21:10 mit LM, Einschlag 21:45",
+    "M18: Freigabe 22:00 mit LM, Einschlag 22:41",
+    "M19: Freigabe 22:50 mit MRS, Einschlag 23:25 – RoE: NS-01 im Wirkradius (71 m); EZ-01: Wirkradius > 50 m (0 m)",
+    "M20: Freigabe 23:40 mit PZA FT, Einschlag 23:50",
+    "V5-M1: entfällt vor G3 24:00 (Ziel inzwischen zerstört oder weg)",
+    "M21: bei Spielende noch offen",
+    "M22: bei Spielende noch offen",
+    "M23: entfällt vor G2 25:40 (Ziel inzwischen zerstört oder weg)",
+    "M24: G1 lehnt ab 23:10",
+    "M25: bei Spielende noch offen",
+    "M26: bei Spielende noch offen",
+    "M27: bei Spielende noch offen"
+   ]
+  }
+ ]
+}

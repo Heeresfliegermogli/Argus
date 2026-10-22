@@ -110,3 +110,54 @@ export function abS(obj: Zeitlich, eltern?: Zeitlich): number {
 export function vorhanden(obj: Zeitlich, t: number, eltern?: Zeitlich): boolean {
   return abS(obj, eltern) <= t && t < (obj.bis_s ?? 1e9);
 }
+
+/** Routenabschnitt, in dem t liegt (wie argus_lib.abschnitt); null ohne Route oder außerhalb. */
+function abschnitt(obj: Beweglich, t: number): [RoutenPunktT, RoutenPunktT] | null {
+  const r = obj.bewegung?.route;
+  if (!r || r.length < 2 || t < r[0][0] || t >= r[r.length - 1][0]) return null;
+  for (let i = 0; i < r.length - 1; i++) if (r[i][0] <= t && t < r[i + 1][0]) return [r[i], r[i + 1]];
+  return null;
+}
+type RoutenPunktT = [number, number, number];
+
+/** Geschwindigkeit in m/s zur Zeit t (0, wenn das Objekt steht). */
+export function geschwindigkeit(obj: Beweglich, t: number): number {
+  const s = abschnitt(obj, t);
+  if (!s) return 0;
+  const [[t0, x0, y0], [t1, x1, y1]] = s;
+  return t1 > t0 ? Math.hypot(x1 - x0, y1 - y0) / (t1 - t0) : 0;
+}
+
+/** Fahrtrichtung in Grad (0 = Osten, 90 = Süden, wie hdg); null, wenn das Objekt steht. */
+export function richtung(obj: Beweglich, t: number): number | null {
+  const s = abschnitt(obj, t);
+  if (!s) return null;
+  const [[, x0, y0], [, x1, y1]] = s;
+  if (Math.abs(x1 - x0) + Math.abs(y1 - y0) < 1e-6) return null;
+  return (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
+}
+
+/**
+ * Ausrichtung zur Zeit t für Sprite und Pfeil: Fahrtrichtung, beim Halt die letzte Fahrtrichtung vor t,
+ * sonst hdg aus den Daten.
+ */
+export function ausrichtung(obj: Beweglich & { hdg?: number }, t: number): number {
+  const jetzt = richtung(obj, t);
+  if (jetzt !== null) return jetzt;
+  const r = obj.bewegung?.route;
+  if (r) {
+    for (let i = r.length - 1; i > 0; i--) {
+      if (r[i][0] > t) continue;
+      const [, x0, y0] = r[i - 1];
+      const [, x1, y1] = r[i];
+      if (Math.abs(x1 - x0) + Math.abs(y1 - y0) > 1e-6) return (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
+    }
+  }
+  return obj.hdg ?? 0;
+}
+
+/** Ist ein Objekt zur Zeit t weg: zerstört (bis einschließlich t) oder nicht (mehr) im Raum? */
+export function weg(obj: Zeitlich & { id: string }, t: number, zerstoert: Record<string, number>): boolean {
+  const tz = zerstoert[obj.id];
+  return (tz !== undefined && tz <= t) || !vorhanden(obj, t);
+}

@@ -5,16 +5,17 @@ drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen
 ARGUS: G1 Aufklärung, G2 Zielprüfung, G3 Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Schritt 4b „Sitzung, Lobby und Teams“ – Sitzung mit Code, Lobby (Team mit eigenem Namen
-erstellen, beitreten, Rolle wählen, Doppelrolle), Host für alle Teams im Fenster der Spielleitung,
-Übersicht aller Teams mit Zuschauen und Start für alle. Überblick: [`docs/SITZUNG.md`](docs/SITZUNG.md),
-Ansichten: [`docs/UI.md`](docs/UI.md).
+Stand: Schritt 7 „Engine und Live-Lage“ – Trefferregel nach der Lage beim Einschlag mit Vorausrechnung
+der Warnungen, Bewegung entlang der Routen, Tracking gemeldeter Ziele, Hintergrundgefecht H-01–H-12,
+Zustandswechsel, „Meldung entfällt“, E-01 automatisch, Verstärkung V-1–V-5 im Menü der Spielleitung,
+Effekte auf der Karte (Einschlag, LM-Flug, Leuchtspur, Feindartillerie, Wrack, Rauch). Überblick:
+[`docs/ENGINE.md`](docs/ENGINE.md). Davor Schritt 4b „Sitzung, Lobby und Teams“
+([`docs/SITZUNG.md`](docs/SITZUNG.md)), Ansichten: [`docs/UI.md`](docs/UI.md).
 
 Inhalte: Szenario KRÄHE-01 **v2.0** (Schritt 2b, Konzept v2): russischer Angriff in fünf Phasen,
 27 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
-neue Wirkmittel-Spielwerte. Die Engine rechnet Treffer noch nach der Lage bei der Freigabe; die
-Trefferregel nach der Lage beim Einschlag, Bewegung, Hintergrundgefecht und Verstärkungen setzt
-Schritt 6b/7 um (Referenz: `tools/referenz/argus_lib.py`, Funktionen `wirkung`, `einschlag`, `gt_bei`).
+Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`)
+und `tools/referenz/simuliere_durchlauf.py`.
 
 ## Spielen
 
@@ -84,7 +85,18 @@ Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ans
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
 python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, volle Listen, lange Texte
 python3 tools/bedientest_probe.py http://localhost:4173/                  # Aufgaben des Bedientests lösbar?
+python3 tools/livelage_probe.py http://localhost:4173/ --bilder live      # Effekte, Tracking, Verstärkung, Bildrate
 ```
+
+Das ganze Drehbuch mit fünf Teams (Schritt 7): `tests/durchlauf.test.ts` spielt die fünf Läufe von
+`simuliere_durchlauf.py` (naiv, ideal, mit Verstärkungen) mit der echten Engine und vergleicht je Meldung;
+im Browser mit 18 Fenstern (5 × 3, zwei Spielleiter, Plenum):
+
+```bash
+python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --bilder e2e-drehbuch   # ca. 12 min
+```
+
+Nach Änderungen an Szenario oder Simulation: `python3 tools/referenz/erzeuge_durchlauf.py`.
 
 Die Regelprüfung (R2, R3, Einsatzbereich, Trefferregel) ist aus `argus_lib.py` portiert;
 `tests/regeln.test.ts` vergleicht mit Referenzwerten aus `tools/referenz/erzeuge_referenz.py`.

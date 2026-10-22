@@ -3,7 +3,7 @@
 // Ereignisse haben. Keine Zufälle, keine Uhrzeit-Abfragen hier drin.
 import type { Inhalte } from "../inhalte/typen";
 import type {
-  Absender, Ereignis, G1Entscheid, G2Empfehlung, G3Entscheid, Rolle, TrefferDaten,
+  Absender, EinschlagDaten, Ereignis, G1Entscheid, G2Empfehlung, G3Entscheid, Rolle, TrefferDaten,
 } from "./ereignisse";
 import { UHR_START, type UhrStand } from "./uhr";
 
@@ -29,8 +29,14 @@ export interface MeldungsStand {
   beobachten: boolean;
   g1?: Schritt & { entscheid: G1Entscheid; vermerk?: string };
   g2?: Schritt & { empfehlung: G2Empfehlung; wirkmittel?: string; begruendung?: string; warnungen: string[] };
-  g3?: Schritt & { entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen: string[] };
-  wirkung?: Schritt & { wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen: TrefferDaten[] };
+  g3?: Schritt & { entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen: string[]; einschlag?: EinschlagDaten };
+  wirkung?: Schritt & {
+    wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen: TrefferDaten[];
+    /** Einschlagzeit (bei Abrechnung zum Spielende nach t_s) */
+    t_einschlag: number; ziel?: string; verstoesse: string[];
+  };
+  /** in der Kette entfallen (jedes Fahrzeug zerstört oder weg): bei welcher Stufe */
+  entfallen?: Schritt & { stufe: "g1" | "g2" | "g3"; grund: string };
   /** seq aller Ereignisse zu dieser Meldung (für Verlauf und Replay) */
   verlauf: number[];
 }
@@ -59,8 +65,16 @@ export interface Spielzustand {
   notizen: (Schritt & { text: string })[];
   /** Restbestand je Wirkmittel, null = unbegrenzt */
   bestand: Record<string, number | null>;
-  /** Fahrzeuge, die durch Wirkung ausgefallen sind: Ziel → Spielzeit */
+  /** Fahrzeuge, die ausgefallen sind (Wirkung, Hintergrundgefecht, Skriptereignis): Ziel → Spielzeit */
   zerstoert: Record<string, number>;
+  /** wodurch: Meldung (M07), Hintergrundgefecht (H-02) oder Skriptereignis (E-01) */
+  zerstoertDurch: Record<string, string>;
+  /** eingespielte Verstärkungen in Protokollreihenfolge */
+  verstaerkungen: { gruppe: string; t0: number; seq: number }[];
+  /** Hintergrundgefecht: abgearbeitete Ereignisse */
+  hintergrund: Record<string, Schritt & { wirkt?: boolean; grund?: string }>;
+  /** Skriptereignisse: entfallen oder je Wirkung (nr) abgearbeitet */
+  ereignisse: Record<string, { entfaellt?: Schritt & { grund?: string }; wirkungen: Record<number, Schritt & { wirkt: boolean; grund?: string }> }>;
   abgelehnt: (Schritt & { aktionstyp: string; grund: string; aktion?: string })[];
   /** Aktion → seq des Ereignisses, das sie erledigt hat */
   aktionen: Record<string, number>;
@@ -83,6 +97,10 @@ export function anfangsZustand(inh: Inhalte): Spielzustand {
     notizen: [],
     bestand: Object.fromEntries(Object.values(inh.wirkmittel).map((w) => [w.id, w.bestand])),
     zerstoert: {},
+    zerstoertDurch: {},
+    verstaerkungen: [],
+    hintergrund: {},
+    ereignisse: {},
     abgelehnt: [],
     aktionen: {},
   };
@@ -109,6 +127,11 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     const m = n.meldungen[id];
     if (!m) return; // unbekannt: der Host lässt das nicht zu, ein fremdes Protokoll schon
     n = { ...n, meldungen: { ...n.meldungen, [id]: { ...m, ...f(m), verlauf: [...m.verlauf, e.seq] } } };
+  };
+  const zerstoeren = (ziel: string, durch: string, t = e.t_s) => {
+    if (n.zerstoert[ziel] !== undefined) return;
+    n.zerstoert = { ...n.zerstoert, [ziel]: t };
+    n.zerstoertDurch = { ...n.zerstoertDurch, [ziel]: durch };
   };
 
   switch (e.typ) {
@@ -158,7 +181,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     case "g3_entscheid": {
       const d = e.daten;
       meldungAendern(d.meldung, () => ({
-        g3: { ...s, entscheid: d.entscheid, bemerkung: d.bemerkung, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [] },
+        g3: { ...s, entscheid: d.entscheid, bemerkung: d.bemerkung, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [], einschlag: d.einschlag },
         stufe: d.entscheid === "freigabe" ? "wirkung" : d.entscheid === "zurueck" ? "g2" : "erledigt",
         beobachten: false,
         ergebnis: d.entscheid === "ablehnen" ? "abgelehnt_g3" : undefined,
@@ -173,15 +196,48 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       const d = e.daten;
       const getroffen = d.getroffen ?? [];
       meldungAendern(d.meldung, () => ({
-        wirkung: { ...s, wirkmittel: d.wirkmittel, pos: d.pos, t_freigabe: d.t_freigabe, getroffen },
+        wirkung: {
+          ...s, wirkmittel: d.wirkmittel, pos: d.pos, t_freigabe: d.t_freigabe, getroffen,
+          t_einschlag: d.t_einschlag ?? e.t_s, ziel: d.ziel, verstoesse: d.verstoesse ?? [],
+        },
         stufe: "erledigt",
         ergebnis: "bekaempft",
       }));
-      const zerstoert = { ...n.zerstoert };
-      for (const g of getroffen) {
-        if (g.was !== "personen" && zerstoert[g.ziel] === undefined) zerstoert[g.ziel] = e.t_s;
+      for (const g of getroffen) if (g.was !== "personen") zerstoeren(g.ziel, d.meldung, d.t_einschlag ?? e.t_s);
+      break;
+    }
+    case "meldung_entfaellt": {
+      const d = e.daten;
+      const m = n.meldungen[d.meldung];
+      if (!m || (m.stufe !== "g1" && m.stufe !== "g2" && m.stufe !== "g3")) break;
+      meldungAendern(d.meldung, () => ({ stufe: "entfallen", entfallen: { ...s, stufe: d.stufe, grund: d.grund } }));
+      break;
+    }
+    case "verstaerkung": {
+      if (n.verstaerkungen.some((v) => v.gruppe === e.daten.gruppe)) break;
+      n.verstaerkungen = [...n.verstaerkungen, { gruppe: e.daten.gruppe, t0: e.daten.t0, seq: e.seq }];
+      break;
+    }
+    case "hintergrund": {
+      const d = e.daten;
+      if (n.hintergrund[d.id]) break;
+      n.hintergrund = { ...n.hintergrund, [d.id]: { ...s, wirkt: d.wirkt, grund: d.grund } };
+      // Zeit nach Drehbuch (der Host kann ein Ereignis nach einem Ausfall später schreiben)
+      const plan = inh.szenario.hintergrund?.ereignisse.find((h) => h.id === d.id)?.t_s;
+      if (d.wirkt && d.folge === "zerstoert" && d.ziel) zerstoeren(d.ziel, d.id, plan ?? e.t_s);
+      break;
+    }
+    case "ereignis": {
+      const d = e.daten;
+      const alt = n.ereignisse[d.ereignis] ?? { wirkungen: {} };
+      if (d.entfaellt) {
+        if (!alt.entfaellt) n.ereignisse = { ...n.ereignisse, [d.ereignis]: { ...alt, entfaellt: { ...s, grund: d.grund } } };
+        break;
       }
-      n.zerstoert = zerstoert;
+      if (d.nr === undefined || alt.wirkungen[d.nr]) break;
+      n.ereignisse = { ...n.ereignisse, [d.ereignis]: { ...alt, wirkungen: { ...alt.wirkungen, [d.nr]: { ...s, wirkt: !!d.wirkt, grund: d.grund } } } };
+      const plan = inh.szenario.ereignisse?.find((x) => x.id === d.ereignis)?.wirkungen[d.nr]?.t_s;
+      if (d.wirkt && d.ziel) zerstoeren(d.ziel, d.ereignis, plan ?? e.t_s);
       break;
     }
     case "inject": {
@@ -230,6 +286,7 @@ export function fingerabdruck(z: Spielzustand): string {
     z.injectReihenfolge.map((id) => `${id}${z.injects[id].quittiert ? "q" : ""}`).join(","),
     Object.entries(z.bestand).map(([k, v]) => `${k}${v ?? "∞"}`).join(","),
     z.lagehinweise.length, z.notizen.length, z.abgelehnt.length,
+    Object.keys(z.zerstoert).sort().join(","), z.verstaerkungen.map((v) => v.gruppe).join(","),
   ];
   let h = 2166136261;
   for (const c of teile.join("|")) h = Math.imul(h ^ c.charCodeAt(0), 16777619);

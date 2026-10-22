@@ -12,7 +12,7 @@ import {
   AktionsKnopf, Empfehlung, Konfidenz, Lagehinweise, Leer, MeldungsEintrag, Panel,
 } from "./gemeinsam/bausteine";
 import { DrohnenbildAnzeige } from "./gemeinsam/drohnenbild";
-import { useAuswahl, useSpielzeit, useStand } from "./gemeinsam/hooks";
+import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
 
 const SICHT_TEXT: Record<string, string> = {
   wolke: "Wolke", rauch: "Rauch", dunst: "Dunst", baeume: "Bäume", tarnnetz: "Tarnnetz", stoerung: "Bildstörung", unschaerfe: "Unschärfe",
@@ -21,6 +21,7 @@ const SICHT_TEXT: Record<string, string> = {
 export function G1Ansicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
+  useEntfallHinweis(s, st, "g1");
   const t = useSpielzeit(s, 1000);
   const inh = s.inh;
   const z = st.zustand;

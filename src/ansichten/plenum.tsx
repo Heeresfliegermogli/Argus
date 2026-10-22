@@ -5,7 +5,8 @@
 //   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen (nach Spielende)
 // Die Auswertung mit Kennzahlen und Replay je Schlüsselfall folgt in Schritt 8.
 import { useMemo, useState } from "preact/hooks";
-import { LAGE_TAKT_S, LEER, lagebildKontrolle } from "../kern/lagebild";
+import { effekte } from "../kern/effekte";
+import { LEER, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { phaseZu, uhrzeit } from "../kern/uhr";
 import type { Sicht } from "../sitzung/sicht";
@@ -41,6 +42,8 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt }) {
   const [wahl, setWahl] = useState<{ modus: Modus; bei: Modus } | null>(null);
   const modus = wahl && wahl.bei === auto ? wahl.modus : auto;
   const tAnzeige = Math.min(t, sz.spieluhr.dauer_s);
+  // Lage im Raum: nur das Gefecht ringsum (Feindartillerie, Rauch), nichts Geheimes
+  const umgebung = useMemo(() => effekte(inh, z, "umgebung"), [inh, z]);
 
   return (
     <main class="plenum" data-modus={modus}>
@@ -56,7 +59,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt }) {
       {modus === "lage" && (
         <div class="plenum-raster plenum-lage">
           <Panel titel="Lagekarte" klasse="ohne-rand">
-            <LagekarteAnsicht inh={inh} lagebild={LEER} hintergrund="topo" legende="gelaende" />
+            <LagekarteAnsicht inh={inh} lagebild={LEER} hintergrund="topo" legende="gelaende" uhr={() => p.s.kartenUhr()} effekte={umgebung} />
           </Panel>
           <div class="stapel">
             <Panel titel="Spieluhr" klasse="flach">
@@ -120,8 +123,9 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   const inh = p.s.inh;
   const z = p.s.stand.zustand;
   const start = inh.szenario.spieluhr.start;
-  const tLage = Math.floor(p.t / LAGE_TAKT_S) * LAGE_TAKT_S;
+  const tLage = Math.floor(Math.min(p.t, inh.szenario.spieluhr.dauer_s));
   const lb = useMemo(() => lagebildKontrolle(inh, z, tLage), [inh, z, tLage]);
+  const fx = useMemo(() => effekte(inh, z, "alle"), [inh, z]);
   const wirkungen = lb.wirkungen.filter((w) => !w.geplant);
   const bearbeitet = z.reihenfolge.filter((id) => z.meldungen[id].ergebnis).length;
   const trotzWarnung = z.reihenfolge.filter((id) => z.meldungen[id].g3?.entscheid === "freigabe" && (z.meldungen[id].g3?.warnungen.length ?? 0) > 0).length;
@@ -129,7 +133,8 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   return (
     <div class="plenum-raster plenum-aufloesung">
       <Panel titel="Kontrollkarte" klasse="ohne-rand" rechts={<span class="klein sehr-leise">Lage {uhrzeit(start, tLage)}</span>}>
-        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte" />
+        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte"
+          uhr={() => p.s.kartenUhr()} effekte={fx} />
       </Panel>
       <div class="stapel">
         <Panel titel="Auf einen Blick" klasse="flach">

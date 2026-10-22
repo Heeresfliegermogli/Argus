@@ -9,8 +9,9 @@
 //   falsch  – eine Freigabe trifft (oder wird treffen) etwas, das nicht bekämpft werden durfte
 // Das ist die Live-Anzeige für die Spielleitung, nicht die Auswertung (Schritt 8).
 import type { Inhalte } from "../inhalte/typen";
+import { einschlagVon, weltFuer } from "./lage";
 import { FEHL } from "./lagebild";
-import { berechneWirkung } from "./regeln";
+import { wirkungBeimEinschlag } from "./regeln";
 import { ERGEBNIS_TEXT, STUFE_TEXT, warteschlange } from "./sichten";
 import type { MeldungsStand, Spielzustand } from "./zustand";
 
@@ -35,27 +36,29 @@ export interface TeamUebersicht {
   faelle: FallStand[];
 }
 
-/** Treffer einer Freigabe: nach der Wirkung, sonst wie sie zum Freigabezeitpunkt ausfallen wird. */
-function trefferDerFreigabe(inh: Inhalte, st: MeldungsStand) {
+/** Treffer einer Freigabe: nach der Wirkung, sonst wie sie beim vorausberechneten Einschlag ausfallen wird. */
+function trefferDerFreigabe(inh: Inhalte, z: Spielzustand, st: MeldungsStand) {
   if (st.wirkung) return st.wirkung.getroffen;
   if (st.g3?.entscheid !== "freigabe" || !st.g3.wirkmittel) return [];
-  return berechneWirkung(inh, inh.meldungen[st.id], st.g3.wirkmittel, st.g3.t_s).getroffen;
+  const e = einschlagVon(inh, z, st.id);
+  return e ? wirkungBeimEinschlag(inh, e, st.g3.wirkmittel, z.zerstoert).getroffen : [];
 }
 
-function istFehl(inh: Inhalte, st: MeldungsStand): boolean {
-  return trefferDerFreigabe(inh, st).some((g) => FEHL.has(g.kategorie));
+function istFehl(inh: Inhalte, z: Spielzustand, st: MeldungsStand): boolean {
+  return trefferDerFreigabe(inh, z, st).some((g) => FEHL.has(g.kategorie));
 }
 
 const ABGESCHLOSSEN = new Set(["erledigt", "entfallen", "wirkung"]);
 
-export function teamUebersicht(inh: Inhalte, z: Spielzustand): TeamUebersicht {
+export function teamUebersicht(basis: Inhalte, z: Spielzustand): TeamUebersicht {
+  const inh = weltFuer(basis, z);
   const sz = inh.szenario;
   const liste = z.reihenfolge.map((id) => z.meldungen[id]);
   const faelle = [...sz.schluesselfaelle].sort((a, b) => a.id.localeCompare(b.id)).map((f): FallStand => {
     const ids = [...new Set([f.meldung, ...sz.meldungen.filter((m) => m.fall === f.id).map((m) => m.id)])];
     const staende = ids.map((id) => z.meldungen[id]).filter((x): x is MeldungsStand => !!x);
     const haupt = z.meldungen[f.meldung];
-    const fehl = staende.find((st) => istFehl(inh, st));
+    const fehl = staende.find((st) => istFehl(inh, z, st));
     if (fehl) return { id: f.id, titel: f.titel, status: "falsch", text: `${fehl.id} freigegeben – trifft, was nicht bekämpft werden durfte` };
     if (!haupt) return { id: f.id, titel: f.titel, status: "wartet", text: `${f.meldung} noch nicht gekommen` };
     const textVon = (st: MeldungsStand) => `${st.id}: ${st.ergebnis ? ERGEBNIS_TEXT[st.ergebnis] : st.beobachten ? "zurückgestellt" : STUFE_TEXT[st.stufe]}`;
@@ -69,7 +72,7 @@ export function teamUebersicht(inh: Inhalte, z: Spielzustand): TeamUebersicht {
     zurueckgestellt: liste.filter((m) => m.beobachten && m.stufe === "g2").length,
     meldungen: liste.length,
     wirkungen: liste.filter((m) => m.wirkung).length,
-    fehltreffer: liste.filter((m) => istFehl(inh, m)).length,
+    fehltreffer: liste.filter((m) => istFehl(inh, z, m)).length,
     faelle,
   };
 }

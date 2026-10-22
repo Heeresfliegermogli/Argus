@@ -6,9 +6,11 @@ import { bedingtStand } from "../engine/ablauf";
 import { pruefeInhalte } from "../inhalte/pruefen";
 import { absenderText, beschreibe } from "../kern/beschreibung";
 import { TEXT_MAX } from "../kern/ereignisse";
-import { GT_NAME, LAGE_TAKT_S, lagebildKontrolle } from "../kern/lagebild";
+import { effekte } from "../kern/effekte";
+import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
+import { verstaerkungStand } from "../kern/welt";
 import { istVeraltet } from "../sync/adapter";
 import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
 import { rollenAnzeige } from "../kern/sitzungen";
@@ -19,7 +21,7 @@ import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 const TEMPI = [1, 2, 5, 10, 20];
 
 interface Plan {
-  art: "meldung" | "inject";
+  art: "meldung" | "inject" | "hintergrund";
   id: string;
   t: number;
   text: string;
@@ -78,8 +80,9 @@ export function SLAnsicht(p: { s: Sicht }) {
   const [reiter, setReiter] = useState<"zeitplan" | "protokoll">("zeitplan");
   const jetzt = s.adapter.serverJetzt();
   const darfSteuern = st.istHost || (!!st.host && !istVeraltet(st.host.puls, jetzt));
-  const tLage = Math.floor(Math.min(t, sz.spieluhr.dauer_s) / LAGE_TAKT_S) * LAGE_TAKT_S;
+  const tLage = Math.floor(Math.min(t, sz.spieluhr.dauer_s));
   const lagebild = useMemo(() => lagebildKontrolle(inh, z, tLage), [inh, z, tLage]);
+  const fx = useMemo(() => effekte(inh, z, "alle"), [inh, z]);
   const bedingt = bedingtStand(inh, z, t);
 
   const plan = useMemo<Plan[]>(() => {
@@ -90,6 +93,10 @@ export function SLAnsicht(p: { s: Sicht }) {
     for (const i of sz.injects) {
       if (i.t_s === undefined) continue;
       liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
+    }
+    for (const h of sz.hintergrund?.ereignisse ?? []) {
+      const art = h.art === "panzerabwehr" ? `eigene PzAbw → ${h.ziel}` : h.art === "feindartillerie" ? "Feindartillerie" : "Rauch";
+      liste.push({ art: "hintergrund", id: h.id, t: h.t_s, text: `Hintergrund: ${art}`, zusatz: h.text.length > 70 ? `${h.text.slice(0, 68)} …` : h.text });
     }
     return liste.sort((a, b) => a.t - b.t);
   }, [inh]);
@@ -102,7 +109,8 @@ export function SLAnsicht(p: { s: Sicht }) {
   };
 
   // Zeitplan: nächsten Eintrag sichtbar halten
-  const naechster = plan.find((x) => !(x.art === "meldung" ? z.meldungen[x.id] : z.injects[x.id]))?.id;
+  const erschienenVon = (x: Plan) => x.art === "meldung" ? z.meldungen[x.id]?.erschienen : x.art === "inject" ? z.injects[x.id]?.erschienen : z.hintergrund[x.id];
+  const naechster = plan.find((x) => !erschienenVon(x))?.id;
   const zeitplanRef = useRef<HTMLTableElement>(null);
   useEffect(() => {
     if (reiter !== "zeitplan" || !naechster) return;
@@ -154,7 +162,7 @@ export function SLAnsicht(p: { s: Sicht }) {
             )}
           </div>
         </Panel>
-        <Panel titel="Bedingte Injects, Ereignis und Reserve" liste>
+        <Panel titel="Bedingte Injects, E-01, Reserve, Verstärkung" liste>
           <div class="bedingt-liste" data-testid="bedingt">
             {bedingt.map((b) => {
               const inj = inh.injects[b.id];
@@ -163,7 +171,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                 <div class={`bedingt ${b.status}`} key={b.id} data-bedingt={b.id} title={ereignis?.name ?? `${inj?.von}: „${inj?.text}“`}>
                   <div>
                     <div><b>{b.id}</b> <span class="status">· {STATUS_TEXT[b.status]}{b.t !== undefined && b.status !== "ausgeloest" ? ` ${uhrzeit(start, b.t)}` : ""}</span></div>
-                    <div class="status">{b.text}{ereignis ? " · ab Schritt 7 automatisch, bis dahin nach Kontrollkarte" : ""}</div>
+                    <div class="status">{b.text}</div>
                   </div>
                   {b.art === "inject" && b.status !== "ausgeloest" && (
                     <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={() => s.senden("inject_ausloesen", { inject: b.id })}>jetzt</button>
@@ -183,6 +191,19 @@ export function SLAnsicht(p: { s: Sicht }) {
                 </div>
               );
             })}
+            {verstaerkungStand(inh, z.verstaerkungen, Math.min(t, sz.spieluhr.dauer_s)).map((v) => (
+              <div class={`bedingt ${v.eingespielt !== undefined ? "ausgeloest" : v.gesperrtBis !== undefined ? "entfaellt" : ""}`} key={v.id} data-verstaerkung-sl={v.id}
+                title={`${v.name} (${v.kurz}): ${v.zweck}`}>
+                <div>
+                  <div><b>{v.id}</b> <span class="status">· {v.name} · {v.kurz}{v.eingespielt !== undefined ? ` · eingespielt ${uhrzeit(start, v.eingespielt)}` : ""}</span></div>
+                  <div class="status">{v.gesperrtBis !== undefined ? `jetzt gesperrt (käme Schule oder Sanität zu nahe), wieder ab ${uhrzeit(start, v.gesperrtBis)}` : v.zweck}</div>
+                </div>
+                {v.eingespielt === undefined && (
+                  <button type="button" class="knopf klein" disabled={!darfSteuern || v.gesperrtBis !== undefined || z.ende}
+                    onClick={() => s.senden("verstaerkung_einspielen", { gruppe: v.id })}>einspielen</button>
+                )}
+              </div>
+            ))}
           </div>
         </Panel>
         <Panel titel={`Fenster · ${st.teamName}`} klasse="flach" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
@@ -213,7 +234,8 @@ export function SLAnsicht(p: { s: Sicht }) {
 
       <Panel titel="Kontrollkarte" klasse="ohne-rand"
         rechts={<span class="klein sehr-leise">Ground Truth, Lage {uhrzeit(start, tLage)} · Ziele mit Maus zeigen · Mausrad zoomt (Fahrzeuge ab Zoom)</span>}>
-        <LagekarteAnsicht inh={inh} lagebild={lagebild} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={17} testid="kontrollkarte" />
+        <LagekarteAnsicht inh={inh} lagebild={lagebild} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={17} testid="kontrollkarte"
+          uhr={() => s.kartenUhr()} effekte={fx} />
       </Panel>
       <Panel liste titel={
         <div class="reiter">
@@ -227,9 +249,10 @@ export function SLAnsicht(p: { s: Sicht }) {
               {plan.map((x) => {
                 const ms = x.art === "meldung" ? z.meldungen[x.id] : undefined;
                 const is = x.art === "inject" ? z.injects[x.id] : undefined;
-                const erschienen = ms?.erschienen ?? is?.erschienen;
+                const hs = x.art === "hintergrund" ? z.hintergrund[x.id] : undefined;
+                const erschienen = erschienenVon(x);
                 const status = ms ? STUFE_TEXT[ms.stufe] + (ms.fastTrack ? " · FT" : "")
-                  : is ? (is.quittiert ? "quittiert" : "ausgelöst") : "";
+                  : is ? (is.quittiert ? "quittiert" : "ausgelöst") : hs ? (hs.wirkt === false ? `entfällt` : "") : "";
                 return (
                   <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
                     <td class="zahl klein">{uhrzeit(start, x.t)}</td>
@@ -237,7 +260,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                     <td class="klein">{x.text}<div class="sehr-leise">{x.zusatz}</div></td>
                     <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
                     <td style="text-align:right">
-                      {!erschienen && (
+                      {!erschienen && x.art !== "hintergrund" && (
                         <button type="button" class="knopf klein" disabled={!darfSteuern}
                           onClick={() => x.art === "meldung" ? s.senden("meldung_ausloesen", { meldung: x.id }) : s.senden("inject_ausloesen", { inject: x.id })}>
                           jetzt

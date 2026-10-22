@@ -4,6 +4,7 @@
 //   • Spielleitung: Sicht „sl“ je Team; Zuschauen = Sicht g1/g2/g3 mit nurLesen.
 //   • Aktionen gehen mit der Rolle dieser Sicht als Absender an den Host des Teams.
 import type { Inhalte } from "../inhalte/typen";
+import { weltFuer } from "../kern/lage";
 import type { AktionsDaten, AktionsTyp, Ereignis, Rolle } from "../kern/ereignisse";
 import type { GruppenRolle } from "../kern/sitzungen";
 import type { Spielzustand } from "../kern/zustand";
@@ -57,8 +58,16 @@ export class Sicht {
     readonly opt: { nurLesen?: boolean } = {},
   ) {}
 
+  /** Welt des Teams: Inhalte plus eingespielte Verstärkungen (gleiches Objekt, solange nichts dazukommt). */
   get inh(): Inhalte {
-    return this.spiel.inh;
+    return weltFuer(this.spiel.inh, this.spiel.stand.zustand);
+  }
+
+  /** Spielzeit, Tempo und ob die Uhr läuft – für die Bewegung auf der Karte (liest immer den neuesten Stand). */
+  kartenUhr(): { t: number; tempo: number; laeuft: boolean } {
+    const z = this.spiel.stand.zustand;
+    const dauer = this.spiel.inh.szenario.spieluhr.dauer_s;
+    return { t: Math.min(this.spiel.spielzeit(), dauer), tempo: z.uhr.tempo, laeuft: z.uhr.laeuft && !z.ende };
   }
 
   get adapter(): SyncAdapter {

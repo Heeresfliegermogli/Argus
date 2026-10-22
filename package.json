@@ -1,7 +1,7 @@
 {
   "name": "argus-planspiel",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Planspiel ARGUS – Auswirkungen von KI auf die Entscheidungsfindung (fiktiv)",
   "type": "module",
   "scripts": {

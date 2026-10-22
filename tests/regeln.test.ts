@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { abstandZone, feinlage, gtBei, position, pq, vorhanden } from "../src/kern/geometrie";
-import { argusEmpfehlung, berechneWirkung, pruefeWirkmittel } from "../src/kern/regeln";
+import { argusEmpfehlung, einschlag, flugzeit, pruefeWirkmittel, vorhersage } from "../src/kern/regeln";
 import type { Punkt } from "../src/inhalte/typen";
 import { inhalte } from "./hilfen";
 
@@ -11,6 +11,11 @@ interface Referenz {
   positionen: { ziel: string; t: number; pos: Punkt; vorhanden: boolean }[];
   raster: { p: Punkt; pq: string }[];
   zonen: { p: Punkt; zone: string; abstand: number }[];
+  einschlaege: {
+    meldung: string; t_freigabe: number; wm: string; t: number; pos: Punkt; ziel: string; zulaessig: boolean;
+    verstoesse: [string, string | null, number | null][]; getroffen: string[];
+  }[];
+  zerstoert_hintergrund: Record<string, number>;
 }
 
 const ref = JSON.parse(readFileSync(new URL("./referenz_regeln.json", import.meta.url), "utf-8")) as Referenz;
@@ -67,11 +72,11 @@ describe("Einsatzregeln wie argus_lib.py", () => {
   it("Trefferregel: S4 Mörser im Hof RABE – vor 10:21:40 trifft jede Wirkung die Zivilpersonen", async () => {
     const inh = await inhalte();
     const m18 = inh.meldungen.M18;
-    const lm = berechneWirkung(inh, m18, "LM", 1100).getroffen.map((g) => g.kategorie);
-    const mrs = berechneWirkung(inh, m18, "MRS", 1100).getroffen.map((g) => g.kategorie);
+    const lm = vorhersage(inh, m18, "LM", 1100).getroffen.map((g) => g.kategorie);
+    const mrs = vorhersage(inh, m18, "MRS", 1100).getroffen.map((g) => g.kategorie);
     expect(lm).toEqual(expect.arrayContaining(["feind", "zivil"]));
     expect(mrs).toContain("zivil");
-    expect(berechneWirkung(inh, inh.meldungen.M23, "LM", 1325).getroffen.map((g) => g.kategorie)).not.toContain("zivil");
+    expect(vorhersage(inh, inh.meldungen.M23, "LM", 1325).getroffen.map((g) => g.kategorie)).not.toContain("zivil");
   });
 
   it("Ground Truth wechselt im Gefecht: Z-24 ist bis 10:19:30 Feind, danach außer Gefecht", async () => {
@@ -88,7 +93,38 @@ describe("Einsatzregeln wie argus_lib.py", () => {
 
   it("Trefferregel: gemeldetes Ziel ist getroffen, solange es im Raum ist (M20 → Z-15)", async () => {
     const inh = await inhalte();
-    const w = berechneWirkung(inh, inh.meldungen.M20, "PZA", 1300);
+    const w = vorhersage(inh, inh.meldungen.M20, "PZA", 1300);
     expect(w.getroffen.some((g) => g.ziel === "Z-15" && g.was === "fahrzeug")).toBe(true);
+  });
+});
+
+describe("Trefferregel beim Einschlag wie argus_lib.py (einschlag, wirkung)", () => {
+  it(`alle ${ref.einschlaege.length} Fälle (Meldung × Freigabe +30/+90/+150 s × Wirkmittel)`, async () => {
+    const inh = await inhalte();
+    const zerstoert = ref.zerstoert_hintergrund;
+    for (const f of ref.einschlaege) {
+      const ort = `${f.meldung} ${f.wm} frei ${f.t_freigabe}`;
+      const v = vorhersage(inh, inh.meldungen[f.meldung], f.wm, f.t_freigabe, zerstoert);
+      expect(v.einschlag.t, ort).toBeCloseTo(f.t, 6);
+      expect(v.einschlag.pos[0], ort).toBeCloseTo(f.pos[0], 6);
+      expect(v.einschlag.pos[1], ort).toBeCloseTo(f.pos[1], 6);
+      expect(v.einschlag.ziel, ort).toBe(f.ziel);
+      expect(v.pruefung.zulaessig, ort).toBe(f.zulaessig);
+      expect(v.pruefung.verstoesse.map((x) => x.regel), ort).toEqual(f.verstoesse.map((x) => x[0]));
+      expect(v.getroffen.map((g) => `${g.ziel}|${g.kategorie}`).sort(), ort).toEqual(f.getroffen);
+    }
+  });
+
+  it("LM: Flugzeit hängt vom Ziel ab (5 s Start, 30 m/s ab Startpunkt westlich der Karte), Mörser 35 s, PzAbw 10 s", async () => {
+    const inh = await inhalte();
+    const lm = inh.wirkmittel.LM;
+    expect(flugzeit(lm, [lm.flug!.start[0] + 300, lm.flug!.start[1]])).toBeCloseTo(15, 6);
+    expect(flugzeit(inh.wirkmittel.MRS, [900, 300])).toBe(35);
+    expect(flugzeit(inh.wirkmittel.PZA, [400, 300])).toBe(10);
+    // N4: BMP-2 fährt während des LM-Anflugs zur Schule – Einschlag am Schulgebäude, Warnung R2 erst beim Einschlag
+    const m17 = inh.meldungen.M17;
+    const e = einschlag(inh, m17.ziele, "LM", m17.t_s + 60);
+    expect(e.t - (m17.t_s + 60)).toBeGreaterThan(30);
+    expect(pruefeWirkmittel(inh, e.pos, "LM", e.t).verstoesse.some((x) => x.regel === "R2")).toBe(true);
   });
 });

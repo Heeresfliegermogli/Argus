@@ -1,0 +1,194 @@
+// Effekte auf der Karte: Einschläge, LM im Flug, Leuchtspur, Mündungsblitz, Feindartillerie, Rauch/Nebel,
+// brennende Wracks und Krater.
+//
+// Reine Funktion von Welt und Spielstand: Die Liste sagt nur, WAS wann und wo geschieht (Wirkung welches
+// Wirkmittels, welches Ereignis des Hintergrundgefechts, welches Fahrzeug feuert, welches Wrack mit welcher
+// Folge). WIE es aussieht, entscheidet die Karte (src/karte/effektebene.ts) nach der Zuordnung im
+// Asset-Manifest (effekte.zuordnung: Wirkmittel → Flug/Einschlag/danach, Hintergrund → Einschlag/Fläche,
+// Wrack → Feuer/Rauch, feuert → Mündungsblitz). Neue Wirkmittel oder Effekte sind damit Daten, kein Code.
+//
+// Was eine Rolle sehen darf, entscheidet `sichtbar`:
+//  • Spielleitung und Auflösung: alles.
+//  • G1, G2, G3: eigene Wirkungen, Feindartillerie und Rauch; Wirkungen des Hintergrundgefechts und von
+//    E-01 nur auf Ziele, die diese Rolle aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes
+//    Ziel); der Mündungsblitz eines Schützen nur, wenn die Rolle auch den Schützen kennt.
+//  • Plenum während des Spiels („umgebung“): nur Feindartillerie und Rauch.
+import type { Inhalte, Punkt } from "../inhalte/typen";
+import { position, weg } from "./geometrie";
+import { einschlagVon } from "./lage";
+import type { Spielzustand } from "./zustand";
+
+export type EffektArt = "einschlag" | "flug" | "muendung" | "nebel" | "wrack";
+
+/** Woher ein Effekt kommt; daraus wählt die Karte die Animation (Asset-Manifest, effekte.zuordnung). */
+export interface EffektQuelle {
+  /** eigene Wirkung: Wirkmittel-ID (MRS, LM, PZA) */
+  wirkmittel?: string;
+  /** Hintergrundgefecht: Art (feindartillerie, panzerabwehr, rauch) */
+  hintergrund?: string;
+  /** Mündungsblitz: was feuert (kanone, moerser) */
+  feuert?: string;
+  /** Wrack: Folge (zerstoert, ausser_gefecht) */
+  folge?: string;
+}
+
+export interface Effekt {
+  id: string;
+  art: EffektArt;
+  quelle: EffektQuelle;
+  /**
+   * Spielzeit: Beginn (einschlag, muendung, nebel, wrack). flug: Ankunft am Ziel = Einschlag; mit
+   * `echtzeit_s` fliegt der Effekt so viele Sekunden Echtzeit vorher los (Leuchtspur), sonst ab `ab`.
+   */
+  t: number;
+  /** flug in Spielzeit: Abflug */
+  ab?: number;
+  /** nebel: Ende */
+  bis?: number;
+  pos: Punkt;
+  /** Ausgangspunkt (flug) */
+  von?: Punkt;
+  /** flug: Dauer in Echtzeit (s) vor t – Leuchtspur, unabhängig vom Tempo */
+  echtzeit_s?: number;
+  /** nebel: Halbmesser der Fläche */
+  radius_m?: number;
+  /** Richtung in Grad (0 = Osten, 90 = Süden): Mündungsblitz */
+  richtung?: number;
+  /** Variante (z. B. Krater 0–2), fest je Effekt */
+  nr?: number;
+}
+
+export type Sichtbarkeit = "alle" | "umgebung" | Set<string>;
+
+/** Leuchtspur: Flugdauer in Echtzeit (s) bis zum Treffer. */
+export const LEUCHTSPUR_S = 0.6;
+
+/** Eigene Panzerabwehr schießt aus Stellungen westlich des Kartenrands (Pfeil der Kompanie). */
+const WESTRAND_X = -40;
+
+/** Startpunkt der eigenen Panzerabwehr: Westrand auf Höhe der schießenden Kompanie, sonst der nächsten. */
+export function westrand(inh: Inhalte, kraft: string | undefined, y: number): Punkt {
+  const eigene = inh.szenario.kraefte.filter((x) => x.zugehoerigkeit === "eigen");
+  const k = eigene.find((x) => x.id === kraft)
+    ?? [...eigene].sort((a, b) => Math.abs((a.pfeil_y ?? a.pos[1]) - y) - Math.abs((b.pfeil_y ?? b.pos[1]) - y))[0];
+  return [WESTRAND_X, k ? k.pfeil_y ?? k.pos[1] : y];
+}
+
+/** feste Variante je Kennung (gleich in allen Fenstern) */
+export function variante(id: string, n: number): number {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % n;
+}
+
+function grad(von: Punkt, nach: Punkt): number {
+  return (Math.atan2(nach[1] - von[1], nach[0] - von[0]) * 180) / Math.PI;
+}
+
+/** Mündung vor dem Fahrzeug (halbe Länge plus Rohr, ca. 5 m) in Richtung des Ziels. */
+function muendung(von: Punkt, nach: Punkt, m = 5): Punkt {
+  const d = Math.hypot(nach[0] - von[0], nach[1] - von[1]) || 1;
+  return [von[0] + ((nach[0] - von[0]) * m) / d, von[1] + ((nach[1] - von[1]) * m) / d];
+}
+
+/**
+ * Alle Effekte des Spiels bis jetzt, dazu vorausberechnete (LM im Flug, Einschlag einer Freigabe), damit sie
+ * in jedem Fenster pünktlich kommen. sichtbar: „alle“, „umgebung“ oder die Ziel-IDs, die eine Rolle kennt.
+ */
+export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = "alle"): Effekt[] {
+  const out: Effekt[] = [];
+  const kennt = (ziel: string | undefined) => sichtbar === "alle" || (sichtbar !== "umgebung" && !!ziel && sichtbar.has(ziel));
+
+  // Hintergrundgefecht: Feindartillerie und Rauch (für alle), eigene Panzerabwehr (wenn sie wirkt)
+  for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
+    if (h.art === "feindartillerie") {
+      h.einschlaege.forEach(([t, x, y], i) => {
+        out.push({ id: `${h.id}-${i}`, art: "einschlag", quelle: { hintergrund: h.art }, t, pos: [x, y], nr: variante(`${h.id}${i}`, 3) });
+      });
+    } else if (h.art === "rauch") {
+      out.push({ id: h.id, art: "nebel", quelle: { hintergrund: h.art }, t: h.t_s, bis: h.t_s + h.dauer_s, pos: h.pos, radius_m: h.radius_m });
+    } else if (h.art === "panzerabwehr" && kennt(h.ziel)) {
+      const ziel = inh.ziele[h.ziel];
+      if (!ziel) continue;
+      const stand = z.hintergrund[h.id];
+      // erst mit dem Ereignis im Protokoll sicher; davor nur, solange das Ziel noch steht (Vorschau für den Takt)
+      const wirkt = stand ? !!stand.wirkt : !weg(ziel, h.t_s, z.zerstoert);
+      if (!wirkt) continue;
+      const pos = position(ziel, h.t_s);
+      out.push({ id: `${h.id}-s`, art: "flug", quelle: { hintergrund: h.art }, t: h.t_s, pos, von: westrand(inh, h.von, pos[1]), echtzeit_s: LEUCHTSPUR_S });
+      out.push({ id: `${h.id}-x`, art: "einschlag", quelle: { hintergrund: h.art }, t: h.t_s, pos, nr: variante(h.id, 3) });
+    }
+  }
+
+  if (sichtbar === "umgebung") return out;
+
+  // eigene Wirkungen: Flug (LM in Spielzeit, PzAbw als Leuchtspur) und Einschlag am vorausberechneten Ort
+  for (const id of z.reihenfolge) {
+    const st = z.meldungen[id];
+    const wmId = st.g3?.entscheid === "freigabe" ? st.g3.wirkmittel : undefined;
+    if (!wmId) continue;
+    const wm = inh.wirkmittel[wmId];
+    const e = st.wirkung ? { t: st.wirkung.t_einschlag, pos: st.wirkung.pos } : einschlagVon(inh, z, id);
+    if (!wm || !e) continue;
+    const q = { wirkmittel: wmId };
+    if (wm.flug) {
+      out.push({ id: `${id}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
+    } else if (wm.einsatzbereich) {
+      // direktes Feuer aus Stellungen westlich des Kartenrands
+      out.push({ id: `${id}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: westrand(inh, undefined, e.pos[1]), echtzeit_s: LEUCHTSPUR_S });
+    }
+    out.push({ id: `${id}-x`, art: "einschlag", quelle: q, t: e.t, pos: e.pos, nr: variante(id, 3) });
+  }
+
+  // Skriptereignisse (E-01): polnische Panzer schießen auf die letzten Feindkräfte (Kanone, direktes Feuer)
+  for (const e of inh.szenario.ereignisse ?? []) {
+    const stand = z.ereignisse[e.id];
+    if (!stand) continue;
+    e.wirkungen.forEach((w, nr) => {
+      if (!stand.wirkungen[nr]?.wirkt) return;
+      const von = inh.ziele[w.von];
+      const ziel = inh.ziele[w.ziel];
+      if (!von || !ziel) return;
+      const pv = position(von, w.t_s);
+      const pz = position(ziel, w.t_s);
+      const q = { feuert: "kanone" };
+      if (kennt(w.von)) out.push({ id: `${e.id}-${nr}-m`, art: "muendung", quelle: q, t: w.t_s - LEUCHTSPUR_S / 2, pos: muendung(pv, pz), richtung: grad(pv, pz) });
+      if (!kennt(w.ziel)) return;
+      if (kennt(w.von)) out.push({ id: `${e.id}-${nr}-s`, art: "flug", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz, von: muendung(pv, pz), echtzeit_s: LEUCHTSPUR_S / 2 });
+      out.push({ id: `${e.id}-${nr}-x`, art: "einschlag", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz });
+    });
+  }
+
+  // Wracks: zerstört (brennt) oder außer Gefecht (Hintergrundgefecht, kein Brand) – am Ort des Treffers
+  for (const [id, tz] of Object.entries(z.zerstoert)) {
+    const ziel = inh.ziele[id];
+    if (!ziel || !kennt(id)) continue;
+    out.push({ id: `${id}-w`, art: "wrack", quelle: { folge: "zerstoert" }, t: tz, pos: position(ziel, tz), nr: variante(id, 4) });
+  }
+  for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
+    if (h.art !== "panzerabwehr" || h.folge === "zerstoert" || !z.hintergrund[h.id]?.wirkt || !kennt(h.ziel)) continue;
+    const ziel = inh.ziele[h.ziel];
+    if (ziel && z.zerstoert[h.ziel] === undefined) out.push({ id: `${h.ziel}-w`, art: "wrack", quelle: { folge: h.folge }, t: h.t_s, pos: position(ziel, h.t_s) });
+  }
+  return out;
+}
+
+/** Ziel-IDs, die eine Rolle aus ihren Meldungen kennt (für die Sichtbarkeit der Effekte). */
+export function bekannteZiele(inh: Inhalte, z: Spielzustand, rolle: "g1" | "g2" | "g3"): Set<string> {
+  const s = new Set<string>();
+  for (const id of z.reihenfolge) {
+    const st = z.meldungen[id];
+    const m = inh.meldungen[id];
+    if (!m) continue;
+    const ja = rolle === "g1" ? !!st.entfallen || st.stufe !== "entfallen"
+      : rolle === "g2" ? st.fastTrack || st.g1?.entscheid === "annehmen"
+        : st.stufe === "g3" || !!st.g3 || !!st.wirkung;
+    if (ja) m.ziele.forEach((x) => s.add(x));
+  }
+  return s;
+}
+
+/** Kurzer Schlüssel, damit die Karte nur bei Änderungen die Liste neu übernimmt. */
+export function effekteSchluessel(liste: Effekt[]): string {
+  return liste.map((e) => `${e.id}@${Math.round(e.t * 10)}${e.ab !== undefined ? `/${Math.round(e.ab * 10)}` : ""}`).join(";");
+}

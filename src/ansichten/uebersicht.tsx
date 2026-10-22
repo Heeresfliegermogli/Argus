@@ -15,6 +15,7 @@ import { istVeraltet } from "../sync/adapter";
 import { BestaetigenKnopf, Leer, Menue, Panel } from "./gemeinsam/bausteine";
 import { useSitzung, useTakt } from "./gemeinsam/hooks";
 import { TeamMarke } from "./gemeinsam/rahmen";
+import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
 import { plenumOeffnen } from "./sl";
 
 const TEMPI = [1, 2, 5, 10, 20];
@@ -204,6 +205,14 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void }) {
             })}
           </span>
           <span class="trenner" />
+          <VerstaerkungMenue inh={inh} jetzt={jetzt} gesperrt={!darfSteuern || !ids.length}
+            teams={mitLauf.map((t) => {
+              const z = zustand(t)!;
+              const e = teamUebersicht(inh, z).eingang;
+              return { id: t.id, name: t.name, farbe: t.farbe, z, eingang: e.g1 + e.g2 + e.g3 };
+            })}
+            einspielen={(gruppe, teams) => allen("verstaerkung_einspielen", { gruppe }, teams)} />
+          <span class="trenner" />
           <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
           {ids.length > 0 && <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost} onClick={() => void s.spielOeffnen(ids)}
             frage="Wirklich? Klick = neues Spiel für alle" titel="Neuer Lauf für alle Teams. Die jetzigen Läufe bleiben gespeichert.">
@@ -244,7 +253,9 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void }) {
                   <tr key={t.id} data-team-zeile={t.name} data-team={t.id} class={offen && z!.uhr.laeuft ? "laeuft" : ""}>
                     <td><TeamName s={s} t={t} /></td>
                     {GRUPPEN_ROLLEN.map((r) => <RollenZelle key={r} s={s} t={t} rolle={r} />)}
-                    <td class="zahl"><b data-testid="team-uhr">{offen ? uhrzeit(start, tt) : "–"}</b><div class="klein sehr-leise">{status}</div></td>
+                    <td class="zahl"><b data-testid="team-uhr">{offen ? uhrzeit(start, tt) : "–"}</b><div class="klein sehr-leise">{status}
+                      {offen && z!.verstaerkungen.length > 0 && <span data-verstaerkungen={z!.verstaerkungen.map((v) => v.gruppe).join(",")}
+                        title={`Verstärkung eingespielt: ${z!.verstaerkungen.map((v) => `${v.gruppe} ${uhrzeit(start, v.t0)}`).join(", ")}`}> · +{z!.verstaerkungen.length} V</span>}</div></td>
                     <td class="zahl">{u ? <span class="eingang">{u.eingang.g1} · {u.eingang.g2}{u.zurueckgestellt ? ` (${u.zurueckgestellt})` : ""} · {u.eingang.g3}</span> : "–"}</td>
                     <td>{u ? (
                       <span class="faelle">{u.faelle.map((f) => (
