@@ -39,6 +39,7 @@ tools/livelage_probe.py.
 """
 import argparse
 import json
+import math
 import os
 import re
 import subprocess
@@ -203,6 +204,10 @@ def schluessel(protokoll):
     return aus
 
 
+# schnellstes Fahrzeug im Szenario (Straße bis 30 km/h) in m/s – für den Vergleich der Einschlagorte
+V_MAX = 8.5
+
+
 def nah(a, b, tol):
     return a is not None and b is not None and abs(a - b) <= tol
 
@@ -243,8 +248,10 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
                 f.append(f"{name}: {k} bekämpftes Fahrzeug {da.get('ziel')} / {db.get('ziel')}")
             if not nah(da.get("t_einschlag"), db.get("t_einschlag"), tol_klick):
                 f.append(f"{name}: {k} Einschlag {da.get('t_einschlag')} / {db.get('t_einschlag')}")
-            if abs(da["pos"][0] - db["pos"][0]) + abs(da["pos"][1] - db["pos"][1]) > 3:
-                f.append(f"{name}: {k} Einschlagort {da['pos']} / {db['pos']}")
+            # Ort: ein späterer Klick verschiebt den Einschlag auf einem fahrenden Ziel (bis ca. 30 km/h = 8,5 m/s)
+            spaeter = max(abs(da["t_freigabe"] - db["t_freigabe"]), abs((da.get("t_einschlag") or 0) - (db.get("t_einschlag") or 0)))
+            if math.dist(da["pos"], db["pos"]) > 1.0 + V_MAX * spaeter:
+                f.append(f"{name}: {k} Einschlagort {da['pos']} / {db['pos']} (Klick {spaeter:.2f} s später)")
             ta = sorted((g["ziel"], g["was"], g["kategorie"], g.get("anzahl")) for g in da.get("getroffen", []))
             tb = sorted((g["ziel"], g["was"], g["kategorie"], g.get("anzahl")) for g in db.get("getroffen", []))
             if ta != tb:
@@ -261,7 +268,8 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
             if (ea is None) != (eb is None) or (ea and (ea["ziel"] != eb["ziel"] or not nah(ea["t"], eb["t"], tol_klick))):
                 f.append(f"{name}: {k} Einschlag {ea} / {eb}")
         elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "g1_entscheid", "verstaerkung"):
-            ohne = lambda d: {x: y for x, y in d.items() if x not in ("t0", "grund", "manuell")}  # noqa: E731
+            # t_ab der Verstärkung ist die Klickzeit der Spielleitung (geprüft über t_s mit tol_klick)
+            ohne = lambda d: {x: y for x, y in d.items() if x not in ("t_ab", "grund", "manuell")}  # noqa: E731
             if ohne(da) != ohne(db):
                 f.append(f"{name}: {k} Daten {da} / {db}")
     return f, (max(dt) if dt else 0.0)
@@ -503,7 +511,7 @@ def main():
                 t["verzug_" + r] = max(verz) if verz else 0
         maxdt = {}
         for k, t in enumerate(teams):
-            ist = sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll.map((e) => ({ seq: e.seq, typ: e.typ, t_s: e.t_s, rolle: e.von.rolle, daten: e.daten }))", t["id"])
+            ist = sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll.map((e) => ({ seq: e.seq, typ: e.typ, t_s: e.t_s, ts: e.ts, ts_aktion: e.ts_aktion, rolle: e.von.rolle, daten: e.daten }))", t["id"])
             with open(os.path.join(a.bilder, f"protokoll_team{k + 1}.json"), "w", encoding="utf-8") as f:
                 json.dump(ist, f, ensure_ascii=False, indent=0)
             unterschiede, maxdt[k] = vergleiche(f"Team {k + 1}", t["plan"]["protokoll"], ist, tol_t, tol_klick)
@@ -519,11 +527,16 @@ def main():
                     fehler.append(f"Team {k + 1}: {zid} zerstört um {tz} / {soll}")
             if z["abgelehnt"]:
                 fehler.append(f"Team {k + 1}: {len(z['abgelehnt'])} Aktionen abgelehnt: {[x['grund'] for x in z['abgelehnt']][:3]}")
+            # Weg einer Aktion: Klick (Serverzeit) → Ereignis im Protokoll (Serverzeit beim Schreiben durch den Host)
+            weg = sorted(e["ts"] - e["ts_aktion"] for e in ist if e.get("ts_aktion"))
+            weg_spaet = [e["ts"] - e["ts_aktion"] for e in ist if e.get("ts_aktion") and e["t_s"] >= 1080]
+            t["weg"] = (weg[len(weg) // 2] if weg else 0, weg[-1] if weg else 0, max(weg_spaet) if weg_spaet else 0)
             nm = sum(1 for e in ist if e["typ"] == "meldung")
             nw = sum(1 for e in ist if e["typ"] == "wirkung")
             print(f"  Team {k + 1} {t['plan']['modell']:<5} seq {nach_id[t['id']]['seq']:>3}  {nm} Meldungen, {nw} Einschläge, "
                   f"zerstört {len(z['zerstoert'])}, Bestand {z['bestand']}, größte Zeitabweichung {maxdt[k]:.2f} s, "
-                  f"Verzug G1/G2/G3 {t['verzug_g1']:.2f}/{t['verzug_g2']:.2f}/{t['verzug_g3']:.2f} s")
+                  f"Verzug G1/G2/G3 {t['verzug_g1']:.2f}/{t['verzug_g2']:.2f}/{t['verzug_g3']:.2f} s, "
+                  f"Klick → Protokoll Median {t['weg'][0]:.0f} ms, max {t['weg'][1]:.0f} ms (ab 10:18 max {t['weg'][2]:.0f} ms)")
 
         for n, s in [("SL", sl), ("SL 2", sl2), ("Plenum", pl)] + [(f"T{k + 1}/{r}", f) for k, t in enumerate(teams) for r, f in zip(ROLLEN, t["fenster"])]:
             lay = s.evaluate(LAYOUT_JS)
