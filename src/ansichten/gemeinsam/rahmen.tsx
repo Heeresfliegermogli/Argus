@@ -11,7 +11,7 @@ import { mmss, phaseZu, uhrzeit } from "../../kern/uhr";
 import { type Spielzustand, fingerabdruck } from "../../kern/zustand";
 import type { Sicht } from "../../sitzung/sicht";
 import { istVeraltet } from "../../sync/adapter";
-import { EinweisungFenster } from "../einweisung";
+import { EinweisungFenster, type KartenTeam } from "../einweisung";
 import { Hinweise } from "./bausteine";
 import { useSpielzeit, useStand } from "./hooks";
 
@@ -92,6 +92,11 @@ export function Rahmen(p: {
 
   const hostDa = !!st.host && !istVeraltet(st.host.puls, p.s.adapter.serverJetzt());
   const zeigeTeam = st.team !== DIREKT_TEAM && rolle !== "sl" && rolle !== "plenum" && !p.teamImBand;
+  // Team auf der Einweisungskarte: Name, Farbe und wer welche Rolle hat (nur mit Lobby)
+  const kartenTeam: KartenTeam | undefined = st.team === DIREKT_TEAM ? undefined : {
+    name: st.teamName, farbe: st.teamFarbe, ich: st.name,
+    spieler: Object.fromEntries((["g1", "g2", "g3"] as const).map((r) => [r, st.teilnehmer.filter((x) => x.art === "tt" && x.rollen.includes(r)).map((x) => x.name)])),
+  };
   return (
     <div class="rahmen" data-rolle={rolle} data-seq={z.seq} data-fp={fingerabdruck(z)} data-lauf={st.lauf ?? ""} data-host={st.istHost ? "1" : "0"} data-team={st.team}>
       <header class="kopf">
@@ -111,7 +116,7 @@ export function Rahmen(p: {
             <span class="punkt" />{st.verbindung.verbunden ? `verbunden · ${st.teilnehmer.length}` : "keine Verbindung"}
           </span>
           {rolle !== "plenum" && (
-            <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Einweisungskarte dieser Gruppe">
+            <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Einweisungskarte deiner Rolle">
               Einweisung
             </button>
           )}
@@ -127,7 +132,7 @@ export function Rahmen(p: {
           </div>
         </div>
       )}
-      {einweisung && rolle !== "plenum" && <EinweisungFenster inh={p.s.inh} rolle={rolle} schliessen={schliessen} />}
+      {einweisung && rolle !== "plenum" && <EinweisungFenster inh={p.s.inh} rolle={rolle} schliessen={schliessen} team={gruppe ? kartenTeam : undefined} />}
       <Hinweise liste={st.hinweise} />
     </div>
   );

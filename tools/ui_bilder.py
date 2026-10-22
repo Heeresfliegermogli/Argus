@@ -109,12 +109,13 @@ def main():
         # fahren die Spähtrupps wieder ab: deren Meldungen sind beim Sprung auf 08:25 schon entfallen.
         offen_g1 = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1' && id !== 'M08')")
         for k, mid in enumerate(offen_g1):
-            g1.locator(f".eintrag[data-meldung={mid}]").first.click()
+            g1.locator(f".kmarke[data-meldung={mid}]").first.click()
             if k == 0:
                 g1.fill("[data-testid=g1-vermerk]", "Wärme und Kettenspuren bestätigen")
             g1.get_by_test_id("g1-annehmen").click()
-            warte(lambda: g1.locator(f"[data-testid=g1-offen]").count() == 1 and g1.locator(f".eintrag:not(.gedimmt)[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
-        g1.locator(".eintrag[data-meldung=M08]").first.click()
+            warte(lambda: g1.locator(f".kmarke[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
+        g1.locator(".kmarke[data-meldung=M08]").first.click()
+        warte(lambda: g1.locator("[data-testid=live-fenster][data-meldung=M08]").count() == 1, 15, "Live-Bild M08")
         g1.wait_for_timeout(600)
         foto(g1, "g1_meldung_M08")
         g1.locator("[data-testid=drohnenbild]").click()
@@ -129,14 +130,14 @@ def main():
         offen_g2 = g2.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g2')")
         erste, zweite = offen_g2[0], offen_g2[1]
         for mid, wm in [(erste, "LM"), (zweite, "MRS")]:
-            g2.locator(f".eintrag[data-meldung={mid}]").first.click()
+            g2.locator(f".kmarke[data-meldung={mid}]").first.click()
             g2.locator(f"label[data-wm={wm}]").click()
             g2.get_by_test_id("g2-bekaempfen").click()
-            warte(lambda: g2.locator(f".eintrag:not(.gedimmt)[data-meldung={mid}]").count() == 0, 10, f"{mid} empfohlen")
+            warte(lambda: g2.locator(f".kmarke[data-meldung={mid}]").count() == 0, 10, f"{mid} empfohlen")
         rest = [x for x in offen_g2 if x not in (erste, zweite)]
         gezeigt = None
         for mid in rest:
-            g2.locator(f".eintrag[data-meldung={mid}]").first.click()
+            g2.locator(f".kmarke[data-meldung={mid}]").first.click()
             g2.locator("label[data-wm=MRS]").click()
             g2.wait_for_timeout(300)
             if "verletzt" in g2.get_by_test_id("karte-banner").inner_text():
@@ -152,10 +153,10 @@ def main():
         # G3: I-01 quittieren, die erste Empfehlung freigeben, die zweite gewählt lassen
         warte(lambda: g3.locator("[data-inject]").count() >= 3, 10, "Injects bei G3")
         g3.locator("[data-inject=I-01]").get_by_role("button", name="Gelesen").click()
-        warte(lambda: g3.locator(f".eintrag[data-meldung={erste}]").count() > 0, 10, f"{erste} bei G3")
-        g3.locator(f".eintrag[data-meldung={erste}]").first.click()
+        warte(lambda: g3.locator(f".kmarke[data-meldung={erste}]").count() > 0, 10, f"{erste} bei G3")
+        g3.locator(f".kmarke[data-meldung={erste}]").first.click()
         g3.get_by_test_id("g3-freigabe").click()
-        warte(lambda: g3.locator(f".eintrag:not(.gedimmt)[data-meldung={erste}]").count() == 0, 10, f"{erste} freigegeben")
+        warte(lambda: g3.locator(f".kmarke[data-meldung={erste}]").count() == 0, 10, f"{erste} freigegeben")
         g3.fill("[data-testid=g3-lagehinweis]", "Achtung Schule NS-01: dort sind Zivilpersonen")
         g3.get_by_role("button", name="Senden").click()
         g3.wait_for_timeout(700)

@@ -28,7 +28,8 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host des Teams 
 | `src/engine/taktgeber.ts` | gemeinsamer Takt aller Team-Hosts im Fenster der Spielleitung |
 | `src/kern/lagebild.ts` | was eine Rolle auf der Lagekarte sieht: Zielmeldungen (G2/G3) oder Kontrollkarte (SL/Plenum), reine Funktion von Inhalten, Spielstand und Lagezeit |
 | `src/karte/` | Lagekarte mit PixiJS (`lagekarte.ts`, wird bei Bedarf nachgeladen), taktische Zeichen nach APP-6/MIL-STD-2525C mit milsymbol (`zeichen.ts`) |
-| `src/ansichten/` | Preact-Ansichten je Rolle (G1, G2, G3, SL, Plenum), Eintrag in `register.tsx`; Einweisungskarten (`einweisung.tsx`); Startseite, Lobby, Teilnehmer-Fenster mit Doppelrolle, Übersicht und Fenster der Spielleitung (`start.tsx`, `lobby.tsx`, `tt-fenster.tsx`, `uebersicht.tsx`, `sl-fenster.tsx`); gemeinsam: Drohnenbild mit Lupe, Lagekarte als Baustein, Bausteine, Rahmen. Überblick: [`UI.md`](UI.md) |
+| `src/drohne/` | Live-Drohnenbild (Schritt 6b): Ebenen, Sprites und Effekte zur Spielzeit auf Canvas 2D (`livebild.ts`); Aufnahme zur Meldezeit, wenn das Ziel den Ausschnitt verlassen hat |
+| `src/ansichten/` | Preact-Ansichten je Rolle (G1, G2, G3, SL, Plenum), Eintrag in `register.tsx`; Einweisungskarten (`einweisung.tsx`); Startseite, Lobby, Teilnehmer-Fenster mit Doppelrolle, Übersicht und Fenster der Spielleitung (`start.tsx`, `lobby.tsx`, `tt-fenster.tsx`, `uebersicht.tsx`, `sl-fenster.tsx`); gemeinsam: Lagekarte als Arbeitsfläche mit Marken und Fenster am Ort (`lagekarte.tsx`), Live-Drohnenbild mit Lupe (`livedrohne.tsx`), Bausteine, Rahmen. Überblick: [`UI.md`](UI.md) |
 | `src/assets/` | Asset-Manifest (`typen.ts`), Zugriff (`assets.ts`: Manifest, Bildadresse, Atlas, Vorladen), Quelle Netz oder eingebettet (Alias `@assetquelle`) |
 | `public/assets/` | Bilder und Manifest aus `tools/assets/gen_assets.py` (Karte, Drohnenbilder, Sprites, Effekte), siehe [`ASSETS.md`](ASSETS.md) |
 

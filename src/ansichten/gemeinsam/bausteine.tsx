@@ -3,9 +3,9 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../../inhalte/typen";
 import type { Rolle } from "../../kern/ereignisse";
-import { STUFE_TEXT, type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
+import { type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
 import { uhrzeit } from "../../kern/uhr";
-import type { MeldungsStand, Spielzustand } from "../../kern/zustand";
+import type { Spielzustand } from "../../kern/zustand";
 import type { Hinweis } from "../../sitzung/hinweise";
 import type { Sicht } from "../../sitzung/sicht";
 
@@ -21,9 +21,11 @@ export function Schritt(p: { nr: number }) {
 export function Panel(p: {
   titel: ComponentChildren; rechts?: ComponentChildren; children?: ComponentChildren; klasse?: string; stil?: string;
   schritt?: number; liste?: boolean; testid?: string;
+  /** geöffnete Meldung (data-meldung, für Tests und Fehlersuche) */
+  meldung?: string;
 }) {
   return (
-    <section class={`panel ${p.klasse ?? ""}`} style={p.stil} data-testid={p.testid}>
+    <section class={`panel ${p.klasse ?? ""}`} style={p.stil} data-testid={p.testid} data-meldung={p.meldung}>
       <header>
         <h2>{p.schritt !== undefined && <Schritt nr={p.schritt} />}<span>{p.titel}</span></h2>
         {p.rechts}
@@ -74,84 +76,74 @@ export function Konfidenz(p: { wert: number }) {
   );
 }
 
-/** Eintrag in einer Meldungsliste (Warteschlange oder Verlauf). */
-export function MeldungsEintrag(p: {
-  inh: Inhalte; st: MeldungsStand; aktiv?: boolean; gedimmt?: boolean; onWahl?: () => void; unter?: ComponentChildren;
-}) {
-  const m = p.inh.meldungen[p.st.id];
+/**
+ * Kopf des Meldungsfelds (Schritt 6b): Eingang nur als Zahl – keine Liste, kein Verlauf. Die Meldungen selbst
+ * stehen als Marken auf der Karte.
+ */
+export function EingangLeiste(p: { anzahl: number; zurueck?: number; testid: string; titel?: string; children?: ComponentChildren }) {
   return (
-    <li>
-      <button type="button" class={`eintrag ${p.aktiv ? "aktiv" : ""} ${p.gedimmt ? "gedimmt" : ""}`} onClick={p.onWahl} data-meldung={p.st.id}
-        tabIndex={p.gedimmt ? -1 : 0}>
-        <span class="nr">{p.st.id}</span>
-        <span class="klasse">{m.argus.klasse}</span>
-        <span class="mono klein">{m.argus.konfidenz} %</span>
-        <span class="unter">
-          {p.unter ?? <>{uhrzeit(p.inh.szenario.spieluhr.start, p.st.erschienen.t_s)} · {STUFE_TEXT[p.st.stufe]}</>}
-          {p.st.fastTrack && <span class="badge warn">FT</span>}
-          {p.st.beobachten && <span class="badge info">zurückgestellt</span>}
-        </span>
-      </button>
-    </li>
+    <div class="eingang-leiste">
+      <Schritt nr={1} />
+      <span class="eingang-titel">{p.titel ?? "Eingang"}</span>
+      <span class={`eingang-zahl ${p.anzahl ? "neu" : ""}`} data-testid={p.testid} title="offene Meldungen bei dir">{p.anzahl}</span>
+      {!!p.zurueck && <span class="klein leise" data-testid="zurueck-zahl">+ {p.zurueck} zurückgestellt</span>}
+      <span class="eingang-rechts">{p.children}</span>
+    </div>
   );
 }
 
-/** Die Zielmeldung, wie G2 und G3 sie sehen – als Tabelle. */
-export function ZielmeldungKarte(p: { zm: Zielmeldung }) {
+/** Die Zielmeldung, wie G2 und G3 sie sehen (kein Bild, keine Sensordaten) – kompakt im Meldungsfeld. */
+export function ZielmeldungKompakt(p: { zm: Zielmeldung }) {
   const zm = p.zm;
   return (
-    <table class="tabelle">
-      <tbody>
-        <tr><th>Meldung</th><td><b>{zm.meldung}</b> · {zm.uhrzeit}{zm.folgeVon && <span class="leise"> · Folgemeldung zu {zm.folgeVon}</span>}</td></tr>
-        <tr><th>Ziel-Nr.</th><td>{zm.zielNr}</td></tr>
-        <tr><th>Lage</th><td class="zahl">{zm.lage}</td></tr>
-        <tr><th>ARGUS-Klasse</th><td>{zm.klasse}</td></tr>
-        <tr><th>Konfidenz</th><td style="max-width:200px"><Konfidenz wert={zm.konfidenz} /></td></tr>
-        <tr><th>ARGUS</th><td><Empfehlung wert={zm.argusEmpfehlung} /></td></tr>
-        <tr><th>Vermerk G1</th><td>{zm.fastTrack ? <span class="badge warn">Fast-Track – ohne Prüfung durch G1</span> : zm.vermerkG1 ?? <span class="sehr-leise">kein Vermerk</span>}</td></tr>
-      </tbody>
-    </table>
-  );
-}
-
-/** Die Zielmeldung als Leiste über der Karte (G2). */
-export function ZielmeldungLeiste(p: { zm: Zielmeldung }) {
-  const zm = p.zm;
-  return (
-    <div class="zielleiste" data-testid="zielmeldung">
-      <div><div class="feldname">Meldung</div><div class="wert">{zm.meldung} · {zm.uhrzeit}</div></div>
-      <div><div class="feldname">Ziel-Nr. · Lage</div><div class="wert">{zm.zielNr} · {zm.lage}</div></div>
-      <div><div class="feldname">ARGUS-Klasse</div><div class="wert">{zm.klasse}</div></div>
-      <div style="min-width:150px"><div class="feldname">Konfidenz · ARGUS</div><div class="wert"><Konfidenz wert={zm.konfidenz} /></div><Empfehlung wert={zm.argusEmpfehlung} /></div>
-      <div>
-        <div class="feldname">Vermerk G1{zm.folgeVon ? ` · Folgemeldung zu ${zm.folgeVon}` : ""}</div>
-        <div class="wert lang">{zm.fastTrack ? <span class="badge warn">Fast-Track – ohne Prüfung durch G1</span> : zm.vermerkG1 ? <span class="zwei-zeilen" title={zm.vermerkG1}>{zm.vermerkG1}</span> : <span class="sehr-leise">kein Vermerk</span>}</div>
-      </div>
+    <div class="zielkompakt" data-testid="zielmeldung">
+      <span class="feldname">Ziel · Lage</span><span class="wert"><b>{zm.zielNr}</b> · {zm.lage}</span>
+      <span class="feldname">Klasse</span><span class="wert"><b>{zm.klasse}</b></span>
+      <span class="feldname">Konfidenz</span><span class="wert"><Konfidenz wert={zm.konfidenz} /></span>
+      <span class="feldname">ARGUS</span><span class="wert"><Empfehlung wert={zm.argusEmpfehlung} /></span>
+      <span class="feldname">Vermerk G1</span>
+      <span class="wert breit">{zm.fastTrack ? <span class="badge warn">Fast-Track – ohne Prüfung durch G1</span> : zm.vermerkG1 ? <span class="zwei-zeilen" title={zm.vermerkG1}>{zm.vermerkG1}</span> : <span class="sehr-leise">kein Vermerk</span>}</span>
     </div>
   );
 }
 
 /** Lagehinweise von G3 an G1/G2 und Meldungen „an alle“ (z. B. Reserve-Inject R-01 des ARGUS-Systems). */
-export function Lagehinweise(p: { inh: Inhalte; z: Spielzustand; rolle: Rolle; schritt?: number }) {
-  const start = p.inh.szenario.spieluhr.start;
-  const eintraege = [
-    ...lagehinweiseFuer(p.z, p.rolle).map((l) => ({ schl: `l${l.seq}`, seq: l.seq, t: l.t_s, von: "G3", an: `an ${l.an.map((r) => r.toUpperCase()).join(", ")}`, text: l.text })),
-    ...injectsFuer(p.inh, p.z, p.rolle).filter((i) => p.inh.injects[i.id]?.an === "alle")
-      .map((i) => ({ schl: `i${i.id}`, seq: i.erschienen.seq, t: i.erschienen.t_s, von: p.inh.injects[i.id].von, an: "an alle", text: p.inh.injects[i.id].text })),
+function lagehinweisEintraege(inh: Inhalte, z: Spielzustand, rolle: Rolle) {
+  return [
+    ...lagehinweiseFuer(z, rolle).map((l) => ({ schl: `l${l.seq}`, seq: l.seq, t: l.t_s, von: "G3", an: `an ${l.an.map((r) => r.toUpperCase()).join(", ")}`, text: l.text })),
+    ...injectsFuer(inh, z, rolle).filter((i) => inh.injects[i.id]?.an === "alle")
+      .map((i) => ({ schl: `i${i.id}`, seq: i.erschienen.seq, t: i.erschienen.t_s, von: inh.injects[i.id].von, an: "an alle", text: inh.injects[i.id].text })),
   ].sort((a, b) => b.seq - a.seq);
+}
+
+/**
+ * Lagehinweise auf der Karte (G1, G2; Schritt 6b): Kasten oben links. Der neueste Hinweis steht ganz da, ältere
+ * einzeilig (Klick zeigt sie ganz); ohne Hinweis nur eine Zeile.
+ */
+export function KartenLagehinweise(p: { inh: Inhalte; z: Spielzustand; rolle: Rolle }) {
+  const start = p.inh.szenario.spieluhr.start;
+  const eintraege = lagehinweisEintraege(p.inh, p.z, p.rolle);
+  const [offen, setOffen] = useState<string | null>(null);
   return (
-    <Panel titel="Lagehinweise" liste klasse="lagehinweise" rechts={eintraege.length ? <span class="badge info" data-testid="lagehinweise-zahl">{eintraege.length}</span> : null}>
-      {eintraege.length === 0 ? <div class="hinweistext">Hier erscheinen Hinweise der Führung (G3).</div> : (
-        <div class="stapel" style="gap:6px">
-          {eintraege.map((l) => (
-            <div class="inject" key={l.schl}>
-              <div class="kopfzeile"><span>{uhrzeit(start, l.t)} · {l.von}</span><span>{l.an}</span></div>
-              <div class="text">{l.text}</div>
-            </div>
-          ))}
+    <section class={`karten-hinweise ${eintraege.length ? "voll" : "leer"}`} data-testid="lagehinweise">
+      <h2>Lagehinweise <span class="leise" style="font-weight:500">von G3</span>
+        {eintraege.length > 0 ? <span class="badge info" data-testid="lagehinweise-zahl">{eintraege.length}</span>
+          : <span class="klein sehr-leise" style="font-weight:500">· noch keine</span>}
+      </h2>
+      {eintraege.length > 0 && (
+        <div class="karten-hinweise-liste rolle-liste">
+          {eintraege.map((l, i) => {
+            const ganz = i === 0 || offen === l.schl;
+            return (
+              <div class={`inject ${ganz ? "" : "zu"}`} key={l.schl} onClick={() => setOffen(offen === l.schl ? null : l.schl)} title={ganz ? undefined : "Klick: ganzen Text zeigen"}>
+                <div class="kopfzeile"><span>{uhrzeit(start, l.t)} · {l.von}</span><span>{l.an}</span></div>
+                <div class={ganz ? "text" : "einzeilig"}>{l.text}</div>
+              </div>
+            );
+          })}
         </div>
       )}
-    </Panel>
+    </section>
   );
 }
 

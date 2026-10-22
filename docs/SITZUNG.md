@@ -176,5 +176,5 @@ Bedientest am 03.11. (BEDIENTEST.md, Teil A).
 * Verstärkung reinrufen (Konzept v2 §3) ist seit Schritt 7 da: Menü „Verstärkung ▾“ in der Übersicht (an alle
   oder ein Team), „einspielen“ in der Teamansicht (siehe `ENGINE.md`). Offen: Automatik „Druck halten“ (Kann).
   Teamvergleich in Plenum und Auswertung: Schritt 8.
-* Die Einweisungskarten sprechen die Gruppe an („ihr“) – passt zum Team, das zusammensitzt; der Text
-  wird mit der neuen Oberfläche (6b/7) ohnehin überarbeitet.
+* Die Einweisungskarten sind seit 6b für Teams neu: Du-Form je Rolle, Teamleiste „Euer Team“ mit Namen aus der
+  Lobby (siehe `UI.md`).

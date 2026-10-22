@@ -79,13 +79,14 @@ python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport au
 python3 tools/lobby_probe.py http://localhost:4173/                              # 19 Aufgaben der Lobby
 ```
 
-Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
+Oberfläche in 1530 × 800 (seit 6b Karte als Arbeitsfläche; kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
 
 ```bash
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
-python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, volle Listen, lange Texte
-python3 tools/bedientest_probe.py http://localhost:4173/                  # Aufgaben des Bedientests lösbar?
+python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, viele Marken, lange Texte
+python3 tools/bedientest_probe.py http://localhost:4173/                  # 15 Aufgaben des Bedientests lösbar?
 python3 tools/livelage_probe.py http://localhost:4173/ --bilder live      # Effekte, Tracking, Verstärkung, Bildrate
+python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne      # Live-Drohnenbild (G1): Ebenen, Schlüsselfälle, Bildrate
 ```
 
 Das ganze Drehbuch mit fünf Teams (Schritt 7): `tests/durchlauf.test.ts` spielt die fünf Läufe von

@@ -184,7 +184,7 @@ Ausschnitt stehen, sind mit im Bild und im Manifest unter `objekte` und `ebenen.
 | `sicht.py` | Sichtstörungen: Wolke, Rauch, Dunst, Bäume, Tarnnetz, Rauch am Ziel, Bildstörung (auch als Ebene), Unschärfe |
 | `karte.py` | Kartenpaket (Stufen, Kacheln, Topo, beschriftete Vorschau, Häuser) |
 | `sprites.py`, `effekte.py` | Atlanten im PixiJS-Spritesheet-Format, Effekte mit Form, Anker und Zuordnung |
-| `live.py` | Live-Drohnenbild aus den Ebenen zusammensetzen (Referenz für Schritt 6b, Prüfung gegen das Standbild) |
+| `live.py` | Live-Drohnenbild aus den Ebenen zusammensetzen (Referenz für `src/drohne/livebild.ts`, Prüfung gegen das Standbild) |
 | `vorschau.py` | Kontaktbogen, Sprite-Bogen, Ebenen-Bögen, Live-Vorschau (nicht im Spiel) |
 
 ```bash
@@ -215,14 +215,16 @@ erzeugen und `npm test` laufen lassen.
   (`abschnitte`, `abstand_m`, `schritt_m`), `einzelbaeume`, Flächen `schulhof` und `parkplatz_schule`.
 - **Fahrzeugkatalog:** `generator` für alle Typen = Zeichenfunktion in `fahrzeuge.py`; Personen mit `sprite`.
 
-## Einbinden (Schritt 6b/7)
+## Einbinden (Schritt 6b/7, umgesetzt)
 
 - **Manifest laden:** `ladeManifest()` aus `src/assets/assets.ts`, Bildadresse mit `assetUrl(pfad)`
   (Webseite: `assets/…`; Offline-Datei: eingebettete data:-Adresse). Atlas für PixiJS:
   `atlas(man, "fahrzeuge" | "effekte")` liefert JSON (mit Anker je Rahmen) und Bildadresse.
-- **Drohnenbild-Popup (G1):** Standbild `drohne[M].datei` mit Eckrahmen (`ziele[].box`); Lupe weiter auf
-  dem Standbild (scharf, alle Schlüsselfälle geprüft). **Live-Drohnenbild:** Ebenen wie oben, mit
-  `drohnenEbenen(man, id)` vorladen; Verstärkungen über ihre Meldungs-ID (`V2-M1`).
+- **Drohnenbild am Ort (G1, umgesetzt in 6b):** live aus den Ebenen mit `src/drohne/livebild.ts`
+  (Umsetzung von `live.py` mit Canvas 2D; zur Meldezeit 2,4–4,2 Graustufen vom Standbild, geprüft mit
+  `tools/drohne_probe.py`), Lupe auf derselben Szene; hat das Ziel den Ausschnitt verlassen, das Standbild
+  `drohne[M].datei` als „Aufnahme“ mit Eckrahmen (`ziele[].box`). Vorladen mit `drohnenEbenen(man, id)`;
+  Verstärkungen über ihre Meldungs-ID (`V2-M1`).
 - **Fahrzeuge auf der Karte:** Sprite um `hdg` drehen (0 = Osten, im Uhrzeigersinn), Anker Mitte,
   Maßstab `px_pro_m` (Fahrzeuge 12, Personen 24); taktische Zeichen bei kleinem Maßstab (Schritt 6).
   Nach einem Treffer `sprite_wrack` bzw. der Zustands-Sprite (`*_kette_ab.png`).

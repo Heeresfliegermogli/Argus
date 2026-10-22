@@ -1,15 +1,133 @@
 // Lagekarte als Preact-Baustein: verbindet die PixiJS-Karte (src/karte/lagekarte.ts) mit der Ansicht.
 // Knöpfe (Zoom, Hintergrund), Legende und Tooltip sind normales HTML über der Leinwand.
+//
+// Seit Schritt 6b ist die Karte die Arbeitsfläche von G1, G2 und G3:
+//  • Marken: Meldungen, die bei der Rolle offen oder zurückgestellt sind, stehen als Knöpfe am Zeichen
+//    (Klick öffnet), freigegebene Wirkungen mit der Uhrzeit des Einschlags. Die Karte hält ihnen den Platz
+//    frei (unsichtbare Beschriftung, siehe Lagekarte.setzeMarken) und meldet nach jedem Bild, wo sie stehen;
+//    die Knöpfe werden direkt verschoben, ohne die Ansicht neu zu zeichnen.
+//  • Fenster am Ort (G1): ein Fenster (Drohnenbild) neben dem Ziel mit einer Linie zum Zeichen. Es bleibt stehen,
+//    solange das Ziel frei daneben liegt; fährt das Ziel darunter oder ändert sich der Ausschnitt, rückt es weiter.
 import ms from "milsymbol";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { type AssetManifest, assetUrl, kachelnVerfuegbar, ladeManifest } from "../../assets/assets";
-import type { Inhalte } from "../../inhalte/typen";
+import type { Inhalte, Punkt } from "../../inhalte/typen";
 import { type Effekt, effekteSchluessel } from "../../kern/effekte";
 import { type Lagebild, lagebildSchluessel } from "../../kern/lagebild";
-// Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt (G1 braucht sie nicht).
-import type { Hintergrund, KartenInfo, KartenUhr, Lagekarte, Vorschau } from "../../karte/lagekarte";
+import type { MeldungsStand } from "../../kern/zustand";
+// Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt.
+import type { Hintergrund, KartenBild, KartenInfo, KartenUhr, Lagekarte, Rechteck, Vorschau } from "../../karte/lagekarte";
 import { MODIFIKATOR_ATTRAPPE, sidc } from "../../karte/zeichen";
+
+/** Marke über der Karte: Meldung (Knopf) oder geplante Wirkung (Uhrzeit des Einschlags). */
+export interface KartenMarke {
+  /** Meldung (z. B. „M05“) bzw. geplante Wirkung „W-M05“ */
+  id: string;
+  text: ComponentChildren;
+  /** Text, den die Karte für den Platz der Marke misst (so lang wie der sichtbare Text) */
+  mass: string;
+  art: "offen" | "gewaehlt" | "zurueck" | "wirkung";
+  titel?: string;
+  onClick?: () => void;
+}
+
+/** Fenster am Ort eines Ziels (G1: Drohnenbild) mit Linie zum Zeichen. */
+export interface KartenFenster {
+  /** Meldung, an deren Zeichen das Fenster hängt */
+  id: string;
+  breite: number;
+  hoehe: number;
+  inhalt: ComponentChildren;
+}
+
+/** Abstand Fenster–Ziel und Ränder (px) */
+const FENSTER = { abstand: 46, rand: 8, unten: 40, frei: 26 };
+
+function innen(p: Punkt, r: Rechteck, rand = 0): boolean {
+  return p[0] > r[0] - rand && p[0] < r[2] + rand && p[1] > r[1] - rand && p[1] < r[3] + rand;
+}
+
+/** Hindernis für das Fenster am Ort; `gewicht` > 1: lieber eine Marke streifen als dieses Feld (z. B. Lagehinweise). */
+export type Hindernis = Rechteck | { r: Rechteck; gewicht: number };
+
+function ueberdeckt(r: Rechteck, liste: Hindernis[]): number {
+  let f = 0;
+  for (const h of liste) {
+    const [o, g] = Array.isArray(h) ? [h, 1] : [h.r, h.gewicht];
+    f += g * Math.max(0, Math.min(r[2], o[2]) - Math.max(r[0], o[0])) * Math.max(0, Math.min(r[3], o[3]) - Math.max(r[1], o[1]));
+  }
+  return f;
+}
+
+/**
+ * Lage des Fensters neben dem Ziel p: eine Ecke, in der es ganz in die Karte passt, ohne das Ziel zu verdecken –
+ * von diesen die, die am wenigsten andere Marken verdeckt (hindernisse).
+ */
+export function fensterLage(p: Punkt, w: number, h: number, bw: number, bh: number, hindernisse: Hindernis[] = []): Rechteck {
+  const a = FENSTER.abstand;
+  const basis: Punkt[] = [
+    [p[0] + a, p[1] - h - a / 2], [p[0] - a - w, p[1] - h - a / 2], [p[0] + a, p[1] + a / 2], [p[0] - a - w, p[1] + a / 2],
+    [p[0] + a, p[1] - h / 2], [p[0] - a - w, p[1] - h / 2], [p[0] - w / 2, p[1] - h - a], [p[0] - w / 2, p[1] + a],
+  ];
+  // dazu je Ecke etwas verschoben (Viertel der Fenstergröße), damit das Fenster Marken ganz ausweichen kann
+  const kand: Punkt[] = [...basis];
+  for (const [dx, dy] of [[0, h / 4], [0, -h / 4], [w / 4, 0], [-w / 4, 0], [0, h / 2], [0, -h / 2]]) {
+    for (const [x, y] of basis) kand.push([x + dx, y + dy]);
+  }
+  const xmax = bw - w - FENSTER.rand;
+  const ymax = bh - h - FENSTER.unten;
+  const klemmen = ([x, y]: Punkt): Rechteck => {
+    const kx = Math.max(FENSTER.rand, Math.min(xmax, x));
+    const ky = Math.max(FENSTER.rand, Math.min(ymax, y));
+    return [kx, ky, kx + w, ky + h];
+  };
+  // Alle Ecken an den Kartenrand geklemmt, soweit sie das Ziel frei lassen; davon die, die am wenigsten andere
+  // Marken verdeckt (bei Gleichstand die frühere: rechts oben vor links oben …).
+  const liste = kand.map(klemmen).filter((r) => !innen(p, r, FENSTER.frei));
+  if (!liste.length) return klemmen(kand[0]);
+  let best = liste[0];
+  let wert = ueberdeckt(best, hindernisse);
+  for (const r of liste.slice(1)) {
+    const v = ueberdeckt(r, hindernisse);
+    if (v < wert - 1) {
+      best = r;
+      wert = v;
+    }
+  }
+  return best;
+}
+
+/**
+ * Marken der offenen Meldungen einer Rolle: ein Knopf je Meldung am Zeichen, Klick öffnet. Zurückgestellte
+ * bleiben als Marke stehen („· zurückgestellt“); `zusatz` hängt einen kurzen Hinweis an (z. B. „⚠“ bei G3).
+ */
+export function meldungsMarken(offen: MeldungsStand[], gewaehlt: string | null, waehle: (id: string) => void,
+  zusatz?: (st: MeldungsStand) => string | undefined): KartenMarke[] {
+  return offen.map((st) => {
+    const z = st.beobachten ? "zurückgestellt" : zusatz?.(st);
+    const text = z ? `${st.id} · ${z}` : st.id;
+    return {
+      id: st.id, text, mass: text,
+      art: st.id === gewaehlt ? "gewaehlt" : st.beobachten ? "zurueck" : "offen",
+      titel: st.id === gewaehlt ? `${st.id} ist geöffnet` : `${st.id} öffnen`,
+      onClick: () => waehle(st.id),
+    };
+  });
+}
+
+/** Marken der freigegebenen Wirkungen: Uhrzeit des Einschlags am gestrichelten Kreis. */
+export function wirkungsMarken(lb: Lagebild): KartenMarke[] {
+  return lb.wirkungen.filter((w) => w.geplant).map((w) => {
+    const text = `Einschlag ${w.text.split(" · ").pop()}`;
+    return { id: w.id, text, mass: text, art: "wirkung" as const, titel: w.zeilen.join(" · ") };
+  });
+}
+
+/** Nächster Punkt des Rechtecks zu p (Ansatz der Linie am Fenster). */
+function randPunkt(r: Rechteck, p: Punkt): Punkt {
+  return [Math.max(r[0], Math.min(r[2], p[0])), Math.max(r[1], Math.min(r[3], p[1]))];
+}
 
 export type Legende = "ziele" | "kontrolle" | "gelaende";
 
@@ -87,6 +205,12 @@ export function LagekarteAnsicht(p: {
   /** Spielzeit für Bewegung und Effekte (fehlt: Standbild) */
   uhr?: () => KartenUhr;
   effekte?: Effekt[];
+  /** Marken als Knöpfe über der Karte (Schritt 6b) */
+  marken?: KartenMarke[];
+  /** Fenster am Ort eines Ziels mit Linie (G1: Drohnenbild) */
+  fenster?: KartenFenster | null;
+  /** Kasten oben links auf der Karte (G1, G2: Lagehinweise von G3) */
+  ecke?: ComponentChildren;
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -99,6 +223,74 @@ export function LagekarteAnsicht(p: {
   const wahlRef = useRef(p.onWahl);
   wahlRef.current = p.onWahl;
 
+  // Marken und Fenster: nach jedem Bild der Karte direkt verschieben (kein Neuzeichnen der Ansicht)
+  const markenEl = useRef(new Map<string, HTMLElement>());
+  const fensterEl = useRef<HTMLDivElement>(null);
+  const eckeEl = useRef<HTMLDivElement>(null);
+  const linieEl = useRef<SVGLineElement>(null);
+  const punktEl = useRef<SVGCircleElement>(null);
+  const fensterLageRef = useRef<{ id: string; r: Rechteck; bw: number; bh: number; zoom: number } | null>(null);
+  const fensterRef = useRef(p.fenster);
+  fensterRef.current = p.fenster;
+  const letztesBild = useRef<KartenBild | null>(null);
+  const zoomRef = useRef(1);
+  const aufBild = (b: KartenBild) => {
+    letztesBild.current = b;
+    for (const [id, el] of markenEl.current) {
+      const r = b.rechtecke.get(id);
+      const stil = r ? `translate(${Math.round((r[0] + r[2]) / 2)}px, ${Math.round((r[1] + r[3]) / 2)}px) translate(-50%, -50%)` : "";
+      if (el.dataset.lage !== stil) {
+        el.dataset.lage = stil;
+        el.style.transform = stil;
+        el.style.visibility = r ? "visible" : "hidden";
+      }
+    }
+    const f = fensterRef.current;
+    const fe = fensterEl.current;
+    if (!f || !fe) return;
+    const p0 = b.punkte.get(f.id) ?? null;
+    let lage = fensterLageRef.current;
+    const neu = !lage || lage.id !== f.id || lage.bw !== b.breite || lage.bh !== b.hoehe || lage.zoom !== zoomRef.current
+      || (p0 !== null && innen(p0, lage.r, FENSTER.frei));
+    if (neu && p0) {
+      // andere Marken und Zeichen möglichst frei lassen
+      const hindernisse: Hindernis[] = [];
+      for (const [id, r] of b.rechtecke) if (id !== f.id) hindernisse.push(r);
+      for (const [id, q] of b.punkte) if (id !== f.id) hindernisse.push([q[0] - 16, q[1] - 16, q[0] + 16, q[1] + 16]);
+      hindernisse.push([b.breite - 210, 0, b.breite, 44]); // Knöpfe der Karte
+      const ec = eckeEl.current; // Lagehinweise oben links
+      if (ec) hindernisse.push({ r: [ec.offsetLeft, ec.offsetTop, ec.offsetLeft + ec.offsetWidth, ec.offsetTop + ec.offsetHeight], gewicht: 4 });
+      lage = { id: f.id, r: fensterLage(p0, f.breite, f.hoehe, b.breite, b.hoehe, hindernisse), bw: b.breite, bh: b.hoehe, zoom: zoomRef.current };
+      fensterLageRef.current = lage;
+      fe.style.transform = `translate(${Math.round(lage.r[0])}px, ${Math.round(lage.r[1])}px)`;
+      fe.style.visibility = "visible";
+    } else if (!lage) {
+      // Ziel (noch) nicht auf der Karte: Fenster oben links
+      lage = { id: f.id, r: [FENSTER.rand, FENSTER.rand, FENSTER.rand + f.breite, FENSTER.rand + f.hoehe], bw: b.breite, bh: b.hoehe, zoom: zoomRef.current };
+      fensterLageRef.current = lage;
+      fe.style.transform = `translate(${FENSTER.rand}px, ${FENSTER.rand}px)`;
+      fe.style.visibility = "visible";
+    }
+    const li = linieEl.current;
+    const pu = punktEl.current;
+    if (li && pu) {
+      if (p0 && lage) {
+        const a = randPunkt(lage.r, p0);
+        li.setAttribute("x1", String(a[0]));
+        li.setAttribute("y1", String(a[1]));
+        li.setAttribute("x2", String(p0[0]));
+        li.setAttribute("y2", String(p0[1]));
+        pu.setAttribute("cx", String(p0[0]));
+        pu.setAttribute("cy", String(p0[1]));
+        li.style.visibility = pu.style.visibility = "visible";
+      } else {
+        li.style.visibility = pu.style.visibility = "hidden";
+      }
+    }
+  };
+  const aufBildRef = useRef(aufBild);
+  aufBildRef.current = aufBild;
+
   useEffect(() => {
     if (!fertig || !host.current) return;
     let aus = false;
@@ -110,7 +302,11 @@ export function LagekarteAnsicht(p: {
       zeichenGroesse: p.zeichenGroesse,
       onKlick: (o) => o.meldung && wahlRef.current?.(o.meldung),
       onInfo: setInfo,
-      onZoom: setZoom,
+      onZoom: (z) => {
+        zoomRef.current = z;
+        setZoom(z);
+      },
+      onBild: (b) => aufBildRef.current(b),
     })).then((neu) => {
       if (aus) {
         neu.zerstoeren();
@@ -154,6 +350,15 @@ export function LagekarteAnsicht(p: {
   useEffect(() => {
     if (bereit) karte.current?.setzeEffekte(p.effekte ?? []);
   }, [bereit, eSchl]);
+  const mSchl = (p.marken ?? []).map((m) => `${m.id}=${m.mass}`).join("|");
+  useEffect(() => {
+    if (bereit) karte.current?.setzeMarken(new Map((p.marken ?? []).map((m) => [m.id, m.mass])));
+  }, [bereit, mSchl]);
+  const fId = p.fenster?.id ?? "";
+  useEffect(() => {
+    if (!fId) fensterLageRef.current = null;
+    else if (bereit) karte.current?.zeichnen(true);
+  }, [bereit, fId]);
 
   const infoStil = (() => {
     if (!info || !host.current) return {};
@@ -176,6 +381,47 @@ export function LagekarteAnsicht(p: {
           </div>
         </div>
       )}
+      {p.fenster && (
+        <svg class="karte-linie" aria-hidden="true">
+          <line ref={linieEl} style="visibility:hidden" />
+          <circle ref={punktEl} r="5" style="visibility:hidden" />
+        </svg>
+      )}
+      {(p.marken?.length ?? 0) > 0 && (
+        <div class="karte-marken" data-testid="karten-marken">
+          {p.marken!.map((m) => {
+            const reg = (el: HTMLElement | null) => {
+              if (!el) {
+                markenEl.current.delete(m.id);
+                return;
+              }
+              if (markenEl.current.get(m.id) === el) return;
+              markenEl.current.set(m.id, el);
+              // neu montiert: gleich an die zuletzt gemeldete Stelle (sonst unsichtbar bis zum nächsten Bild)
+              const r = letztesBild.current?.rechtecke.get(m.id);
+              if (r) {
+                const lage = `translate(${Math.round((r[0] + r[2]) / 2)}px, ${Math.round((r[1] + r[3]) / 2)}px) translate(-50%, -50%)`;
+                el.dataset.lage = lage;
+                el.style.transform = lage;
+                el.style.visibility = "visible";
+              }
+            };
+            // Lage setzt aufBild direkt; das style-Attribut bleibt gleich, damit Preact sie nicht zurücksetzt
+            const stil = "visibility:hidden";
+            return m.onClick
+              ? <button type="button" key={m.id} ref={reg} class={`kmarke ${m.art}`} style={stil} data-meldung={m.id} title={m.titel}
+                aria-pressed={m.art === "gewaehlt"} onClick={m.onClick}>{m.text}</button>
+              : <span key={m.id} ref={reg} class={`kmarke ${m.art}`} style={stil} data-marke={m.id} title={m.titel}>{m.text}</span>;
+          })}
+        </div>
+      )}
+      {p.fenster && (
+        <div class="karte-fenster" ref={fensterEl} key={p.fenster.id} data-fenster={p.fenster.id}
+          style={{ width: `${p.fenster.breite}px`, height: `${p.fenster.hoehe}px`, visibility: "hidden" }}>
+          {p.fenster.inhalt}
+        </div>
+      )}
+      {p.ecke && <div class="karte-ecke" ref={eckeEl}>{p.ecke}</div>}
       {p.banner}
       <div class="karte-knoepfe">
         <button type="button" class="knopf" title="Hineinzoomen (auch Mausrad)" aria-label="Hineinzoomen" onClick={() => karte.current?.zoom(1.5)}>+</button>

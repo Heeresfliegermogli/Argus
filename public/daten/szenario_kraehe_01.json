@@ -94,25 +94,25 @@
     "G1": {
       "titel": "G1 Aufklärung",
       "absaetze": [
-        "Ihr seht jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung, Klasse, Konfidenz, Empfehlung und die Sensordaten der Drohne. Wolken, Rauch und Bewuchs verdecken oft Teile des Bildes. Zugweise Meldungen fassen mehrere Fahrzeuge zusammen (z. B. 3× T-72).",
-        "Ihr entscheidet ANNEHMEN (die Meldung geht als Ziel an G2) oder ABLEHNEN. Ihr könnt einen Vermerk von einer Zeile mitgeben.",
-        "G2 und G3 sehen nur eure Zielmeldung, nicht das Bild und nicht die Sensordaten."
+        "Du siehst jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung, Klasse, Konfidenz, Empfehlung und die Sensordaten der Drohne. Wolken, Rauch und Bewuchs verdecken oft Teile des Bildes. Zugweise Meldungen fassen mehrere Fahrzeuge zusammen (z. B. 3× T-72).",
+        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an G2) oder ABLEHNEN. Du kannst einen Vermerk von einer Zeile mitgeben.",
+        "G2 und G3 sehen nur deine Zielmeldung, nicht das Bild und nicht die Sensordaten."
       ]
     },
     "G2": {
       "titel": "G2 Zielprüfung",
       "absaetze": [
-        "Ihr bekommt die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse, Konfidenz und Vermerk von G1. Auf der Lagekarte seht ihr No-Strike-Zone NS-01 und Einschränkungsgebiet EZ-01. Die eigenen Kompanien liegen westlich außerhalb der Karte.",
-        "Ihr prüft die Einsatzregeln R2 und R3, wählt ein Wirkmittel (Mörser, Loitering Munition oder Panzerabwehr) und gebt G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
+        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse, Konfidenz und Vermerk von G1. Auf der Karte siehst du No-Strike-Zone NS-01 und Einschränkungsgebiet EZ-01. Die eigenen Kompanien liegen westlich außerhalb der Karte.",
+        "Du prüfst die Einsatzregeln R2 und R3, wählst ein Wirkmittel (Mörser, Loitering Munition oder Panzerabwehr) und gibst G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
         "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt."
       ]
     },
     "G3": {
       "titel": "G3 Führung",
       "absaetze": [
-        "Ihr führt das Gefecht des Bataillons. Ihr bekommt die Empfehlungen von G2 und gebt FREIGABE, lehnt ab oder gebt ZURÜCK AN G2.",
-        "Nur ihr bekommt Lagemeldungen von Brigade, Nachbarn und Kompanien. Ihr könnt jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
-        "Ihr verantwortet jede Wirkung."
+        "Du führst das Gefecht des Bataillons. Du bekommst die Empfehlungen von G2 und gibst FREIGABE, lehnst ab oder gibst ZURÜCK AN G2.",
+        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und Kompanien. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
+        "Du verantwortest jede Wirkung."
       ]
     },
     "spielleitung": {

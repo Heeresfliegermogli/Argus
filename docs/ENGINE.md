@@ -12,7 +12,7 @@ gleiches Protokoll ⇒ gleicher Stand, gleiche Karte, gleiche Effekte in jedem F
 | Trefferregel beim Einschlag | Einschlag = Freigabe + Flugzeit (Mörser 35 s, LM 5 s Start + Flug mit 30 m/s ab `flug.start`, PzAbw 10 s), Ort = Position des ersten bei der Freigabe noch stehenden Fahrzeugs der Meldung zum Einschlagzeitpunkt (Fixpunkt-Iteration beim LM). Getroffen ist alles im Wirkradius nach der Lage beim Einschlag, dazu das bekämpfte Fahrzeug; R2, R3 und Einsatzbereich gelten am Einschlagort. | `src/kern/regeln.ts` (`flugzeit`, `einschlag`, `wirkungBeimEinschlag`, `vorhersage`) |
 | Vorausrechnung der Warnungen | G2: je Wirkmittel „Einschlag in n s (Uhrzeit)“, Warnungen, Vorschau am Einschlagort mit gestrichelter Linie vom Ziel jetzt dorthin, Abstände am Einschlagort. G3: „Freigabe jetzt: Einschlag …“ live, dazu die Warnungen von G2. Der Host rechnet bei der Freigabe den Einschlag (Zeit, Ort, bekämpftes Fahrzeug) und schreibt ihn ins Protokoll. | `src/engine/aktionen.ts`, `src/ansichten/g2.tsx`, `g3.tsx` |
 | Bewegung | Routen `[t_s, x, y]` mit Halten; Objekte nur zwischen `ab_s` und `bis_s`; zerstörte Fahrzeuge bleiben als Wrack an der Trefferstelle. Die Karte rechnet die Position in jedem Bild aus der Bahn (`bahnLage`), das Lagebild nur bei neuen Ereignissen und im Sekundentakt. | `src/kern/geometrie.ts`, `src/kern/lagebild.ts`, `src/karte/lagekarte.ts` |
-| Tracking | Gemeldete Ziele bleiben bei G1, G2, G3 als Zeichen der ARGUS-Klasse (nie Ground Truth) und fahren mit – am ersten noch stehenden Fahrzeug der Meldung, Zahl = noch stehende Fahrzeuge. Nach der eigenen Wirkung bleibt das Zeichen durchgestrichen beim bekämpften Fahrzeug am Einschlagort (den Rest eines Zuges meldet ARGUS neu). Abgezogene Ziele verschwinden, sobald die Meldung erledigt ist. G1 bekommt die Karte in 6b (`lagebildZielmeldungen(inh, z, "g1", t)` liefert sie schon). | `src/kern/lagebild.ts` |
+| Tracking | Gemeldete Ziele bleiben bei G1, G2, G3 als Zeichen der ARGUS-Klasse (nie Ground Truth) und fahren mit – am ersten noch stehenden Fahrzeug der Meldung, Zahl = noch stehende Fahrzeuge. Nach der eigenen Wirkung bleibt das Zeichen durchgestrichen beim bekämpften Fahrzeug am Einschlagort (den Rest eines Zuges meldet ARGUS neu). Abgezogene Ziele verschwinden, sobald die Meldung erledigt ist. Seit 6b hat auch G1 die Karte. | `src/kern/lagebild.ts` |
 | Hintergrundgefecht H-01–H-12 | Feindartillerie (H-01, H-04, H-12) und Rauch (H-03) sind Darstellung. Eigene PzAbw (H-02, H-05–H-11) wirkt nur, wenn das Ziel dann noch steht und diesseits des Bachs ist, sonst `wirkt: false` mit Grund. Folge `zerstoert` (Wrack brennt) oder `ausser_gefecht` (Z-24: Kette ab, kein Brand). | `src/engine/ablauf.ts` |
 | Zustandswechsel | Ground Truth zur Zeit t (`gtBei`): Z-24 ist bis 10:19:30 legitimer T-72 (`gt.vorher`), danach außer Gefecht (`gt.ab_s`). Trefferwertung, Kontrollkarte und Übersicht nehmen die Lage beim Einschlag. | `src/kern/geometrie.ts` |
 | Meldung entfällt | beim Erscheinen (`meldung.entfaellt`) oder später in der Kette bei G1, G2 oder G3 (`meldung_entfaellt` mit Stufe und Grund), sobald jedes Fahrzeug der Meldung zerstört oder abgezogen ist. Die Rolle bekommt einen kurzen Hinweis („M13 entfällt – alle Fahrzeuge zerstört“). | `src/engine/ablauf.ts`, `src/ansichten/gemeinsam/hooks.ts` |
@@ -99,12 +99,14 @@ jeden Zuhörer (bis 35 KB je Team, 2 Prozessorkerne für 18 Fenster). Die echte 
 neue Ereignis; die Zuhörer der App sind darauf ausgelegt (`startAfter` beim Protokoll). Nachweis mit der
 echten Datenbank und 16 Rechnern steht aus.
 
-## Hinweise für 6b (Oberfläche)
+## Oberfläche (Schritt 6b, umgesetzt)
 
-* Karte für G1: `lagebildZielmeldungen(inh, z, "g1", tLage)` und `effekte(inh, z, bekannteZiele(inh, z, "g1"))`,
-  Uhr über `sicht.kartenUhr()` – wie in `g2.tsx`.
-* Marker und Popups am Ort des Ziels: Die Karte kennt die aktuelle Position jedes Zeichens
-  (`posJetzt`), `zeigeAuf(pos, faktor)` zoomt auf einen Punkt.
-* Live-Drohnenbild: Positionen der Fahrzeuge zur Spielzeit aus denselben Bahnen (`zielBahn`, `bahnLage`),
-  Wrack/Zustand wie auf der Kontrollkarte (`sprite.wrackAb`, `sprite.zustandAb`).
-* Die Bildrate der Karte steht an ihrem Element (`argusKarte.diagnose`: Bilder/s, Zeichenzeit je Bild).
+* Karte für G1 wie für G2/G3: `lagebildZielmeldungen(inh, z, "g1", tLage)` und
+  `effekte(inh, z, bekannteZiele(inh, z, "g1"))`, Uhr über `sicht.kartenUhr()`.
+* Marken und das Drohnenbild am Ort hängen an den Zeichen, deren Bildschirmlage die Karte nach jedem Bild
+  meldet (`onBild`, `KartenBild`); siehe [`UI.md`](UI.md).
+* Live-Drohnenbild (`src/drohne/livebild.ts`): Positionen aus denselben Bahnen (`position`, `vorhanden`),
+  angehalten bei Zerstörung (`z.zerstoert`) bzw. außer Gefecht (`ausserGefechtAb`), Wrack/Zustand wie auf der
+  Kontrollkarte. Hat das Ziel den Ausschnitt verlassen, zeigt G1 die Aufnahme zur Meldezeit.
+* Die Bildrate der Karte steht an ihrem Element (`argusKarte.diagnose`), die des Live-Drohnenbilds an seiner
+  Leinwand (`data-fps`, `argusLive`).

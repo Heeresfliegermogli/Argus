@@ -11,7 +11,7 @@
 // seit Schritt 7 – in jedem Bild, solange die Uhr läuft oder ein Effekt spielt (Bewegung entlang der
 // Routen, Einschläge, LM im Flug, Leuchtspur, Rauch). Die Spielzeit kommt über setzeUhr().
 import ms from "milsymbol";
-import { Application, Container, Graphics, Sprite, Spritesheet, type SpritesheetData, Text, type TextStyleOptions, Texture } from "pixi.js";
+import { Application, CanvasTextMetrics, Container, Graphics, Sprite, Spritesheet, type SpritesheetData, Text, TextStyle, type TextStyleOptions, Texture } from "pixi.js";
 import { atlas, assetUrl, kachelnVerfuegbar, type AssetManifest } from "../assets/assets";
 import type { Inhalte, Punkt } from "../inhalte/typen";
 import type { Effekt } from "../kern/effekte";
@@ -56,6 +56,22 @@ export interface KartenInfo {
   zeilen: string[];
 }
 
+/** Bildschirm-Rechteck [x0, y0, x1, y1] */
+export type Rechteck = [number, number, number, number];
+
+/**
+ * Nach jedem Bild (Schritt 6b): wo die Marken stehen. Die Ansicht legt dort Knöpfe aus HTML über die Leinwand
+ * (Meldungsmarker, Uhrzeit des Einschlags) und führt die Linie vom Drohnenbild zum Ziel.
+ */
+export interface KartenBild {
+  /** Rechteck der Beschriftung je Marke (Meldung oder geplante Wirkung „W-M01“) – frei von anderen Beschriftungen */
+  rechtecke: Map<string, Rechteck>;
+  /** Bildschirmpunkt des Zeichens je Marke und der gewählten Meldung */
+  punkte: Map<string, Punkt>;
+  breite: number;
+  hoehe: number;
+}
+
 export interface KartenOptionen {
   hintergrund: Hintergrund;
   /** Fahrzeug-Sprites beim Hineinzoomen (nur Kontrollkarte: zeigen den echten Typ) */
@@ -65,6 +81,8 @@ export interface KartenOptionen {
   onKlick?: (o: KartenObjekt) => void;
   onInfo?: (i: KartenInfo | null) => void;
   onZoom?: (faktor: number) => void;
+  /** nach jedem gezeichneten Bild: Lage der Marken (siehe setzeMarken) */
+  onBild?: (b: KartenBild) => void;
 }
 
 const FARBE = {
@@ -85,6 +103,8 @@ const KACHELN_AB = 2;
 /** ab diesem Maßstab Fahrzeug-Sprites statt Zeichen (Kontrollkarte) */
 const SPRITES_AB = 2.6;
 const ZOOM_MAX = 8;
+/** Abstand zwischen zwei Marken am selben Zeichen (Text, den die Karte als Lücke misst) */
+const MARKEN_ABSTAND = "  ";
 
 async function bildTextur(url: string): Promise<Texture> {
   const img = new Image();
@@ -134,6 +154,10 @@ export class Lagekarte {
   private lb: Lagebild = LEER;
   private vorschau: Vorschau | null = null;
   private gewaehlt: string | null = null;
+  /** Marken (Meldung bzw. „W-M01“ → Text): die Karte hält ihnen den Platz frei, die Ansicht zeichnet sie als HTML */
+  private marken = new Map<string, string>();
+  private bildRechtecke = new Map<string, Rechteck>();
+  private bildPunkte = new Map<string, Punkt>();
   private hintergrund: Hintergrund;
   private grundStufe = -1;
 
@@ -272,6 +296,23 @@ export class Lagekarte {
   setzeGewaehlt(id: string | null): void {
     this.gewaehlt = id;
     this.zeichnen(true);
+  }
+
+  /**
+   * Marken als HTML über der Karte (Schritt 6b): Für jede Meldung (bzw. geplante Wirkung „W-M01“) in der Liste
+   * setzt die Karte ihre Beschriftung unsichtbar mit diesem Text – so weichen sich Marken und Beschriftungen aus –
+   * und meldet nach jedem Bild Rechteck und Zeichenpunkt (onBild).
+   */
+  setzeMarken(m: Map<string, string>): void {
+    this.marken = m;
+    this.zeichnen(true);
+  }
+
+  /** Bildschirmpunkt des Zeichens einer Meldung im zuletzt gezeichneten Bild (Tests, Fehlersuche). */
+  punktVon(meldung: string): Punkt | null {
+    const o = this.lb.objekte.find((x) => x.id === meldung || x.meldungen?.includes(meldung));
+    const p = o && this.posJetzt.get(o.id);
+    return p ? this.bs(p) : null;
   }
 
   /** Spielzeit für Bewegung und Effekte (ohne: Standbild an den Positionen des Lagebilds). */
@@ -670,12 +711,20 @@ export class Lagekarte {
     d.clear();
     u.clear();
     const uhr = this.uhr?.() ?? null;
+    this.bildRechtecke = new Map();
+    this.bildPunkte = new Map();
     this.wirkungen(d, this.lb.wirkungen);
     this.vorschauZeichnen(d);
     this.objekte(u, this.lb.objekte, uhr?.t ?? null);
     this.personen(u, this.lb.personen, uhr?.t ?? null);
     if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe);
     for (const [k, t] of this.texte) if (!this.benutzt.has(k) && !this.benutztStatisch.has(k)) t.visible = false;
+    this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, breite: this.breite, hoehe: this.hoehe });
+  }
+
+  /** Stil einer Marke (Platzhalter in der Größe des HTML-Knopfs, unsichtbar). */
+  private markenStil(): TextStyleOptions {
+    return { ...this.stil(13, "700"), stroke: { color: 0x000000, width: 10, join: "round" } };
   }
 
   private rahmenUndRaster(g: Graphics): void {
@@ -823,9 +872,16 @@ export class Lagekarte {
         const rr = Math.max(r, 9);
         this.strich(g, this.kreisPunkte(x, y, rr), 7, 4, true);
         g.stroke({ width: 2.2, color: FARBE.geplant, alpha: 0.95 });
-        this.beschriften(`geplant-${w.id}`, `Einschlag ${w.text.split(" · ").pop()}`, { ...this.stil(11.5, "700", 0xb5281f), stroke: { color: 0xfffbf2, width: 3.5, join: "round" } }, [
-          [x, y - rr - 3, 0.5, 1], [x, y + rr + 3, 0.5, 0], [x + rr + 4, y, 0, 0.5], [x - rr - 4, y, 1, 0.5],
-        ]);
+        const marke = this.marken.get(w.id);
+        const t = this.beschriften(`geplant-${w.id}`, marke ?? `Einschlag ${w.text.split(" · ").pop()}`,
+          marke ? this.markenStil() : { ...this.stil(11.5, "700", 0xb5281f), stroke: { color: 0xfffbf2, width: 3.5, join: "round" } }, [
+            [x, y - rr - 3, 0.5, 1], [x, y + rr + 3, 0.5, 0], [x + rr + 4, y, 0, 0.5], [x - rr - 4, y, 1, 0.5],
+          ]);
+        t.alpha = marke ? 0 : 1;
+        if (marke) {
+          this.bildRechtecke.set(w.id, this.rechteck(t));
+          this.bildPunkte.set(w.id, [x, y]);
+        }
         continue;
       }
       const farbe = w.fehl ? FARBE.wirkungFehl : FARBE.wirkung;
@@ -1004,8 +1060,12 @@ export class Lagekarte {
       this.belegt.push([x - m.links, y - m.oben, x + m.rechts, y + m.unten]);
     }
     for (const m of [...marken].reverse()) {
-      const st = m.gew ? { ...this.stil(12.5, "700", 0x5a3a00), stroke: { color: 0xffe2a0, width: 4, join: "round" as const } } : this.stil(11.5, m.o.zustand === "erledigt" ? "500" : "700");
-      const t = this.beschriften(`obj-${m.o.id}`, m.o.text, st, [
+      // Marken als HTML (Schritt 6b): Platz freihalten, Beschriftung unsichtbar. Mehrere offene Meldungen zum selben
+      // Ziel (Folgemeldung) stehen nebeneinander.
+      const ids = (m.o.meldungen ?? [m.o.id]).filter((id) => this.marken.has(id));
+      const st = ids.length ? this.markenStil()
+        : m.gew ? { ...this.stil(12.5, "700", 0x5a3a00), stroke: { color: 0xffe2a0, width: 4, join: "round" as const } } : this.stil(11.5, m.o.zustand === "erledigt" ? "500" : "700");
+      const t = this.beschriften(`obj-${m.o.id}`, ids.length ? ids.map((id) => this.marken.get(id)!).join(MARKEN_ABSTAND) : m.o.text, st, [
         [m.x, m.y + m.unten + 1, 0.5, 0],
         [m.x, m.y - m.oben - 1, 0.5, 1],
         [m.x + m.rechts + 3, m.y, 0, 0.5],
@@ -1013,7 +1073,25 @@ export class Lagekarte {
         [m.x + m.rechts + 2, m.y + m.unten, 0, 0],
         [m.x - m.links - 2, m.y - m.oben, 1, 1],
       ]);
-      t.alpha = m.alpha < 1 ? 0.7 : 1;
+      t.alpha = ids.length ? 0 : m.alpha < 1 ? 0.7 : 1;
+      if (ids.length) {
+        const r = this.rechteck(t);
+        if (ids.length === 1) this.bildRechtecke.set(ids[0], r);
+        else {
+          // Rechteck nach der Breite der einzelnen Texte aufteilen
+          const breiten = ids.map((id) => CanvasTextMetrics.measureText(this.marken.get(id)!, new TextStyle(st)).width);
+          const luecke = CanvasTextMetrics.measureText(MARKEN_ABSTAND, new TextStyle(st)).width;
+          const f = (r[2] - r[0]) / (breiten.reduce((a, b) => a + b, 0) + luecke * (ids.length - 1) || 1);
+          let x0 = r[0];
+          ids.forEach((id, i) => {
+            const w = breiten[i] * f;
+            this.bildRechtecke.set(id, [x0, r[1], x0 + w, r[3]]);
+            x0 += w + luecke * f;
+          });
+        }
+        for (const id of ids) this.bildPunkte.set(id, [m.x, m.y]);
+      }
+      if (m.gew && this.gewaehlt) this.bildPunkte.set(this.gewaehlt, [m.x, m.y]);
     }
     const da = (k: string) => this.benutzt.has(k) || this.benutztStatisch.has(k);
     for (const [schl, sp] of this.zeichenSprites) if (!da(`zs:${schl}`)) sp.visible = false;

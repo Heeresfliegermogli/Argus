@@ -1,22 +1,30 @@
-// G1 Aufklärung: sieht jede ARGUS-Meldung zuerst – großes Drohnenbild mit ARGUS-Markierung,
-// ARGUS-Daten, Sensordaten, Kleingedrucktes – und entscheidet ANNEHMEN oder ABLEHNEN mit Vermerk.
-//   ① Meldung wählen (Eingang)  ② Bild und Daten prüfen  ③ entscheiden
-import { useState } from "preact/hooks";
-import { feinlage } from "../kern/geometrie";
-import { gemeldetePosition } from "../kern/regeln";
-import { ERGEBNIS_TEXT, STUFE_TEXT, verlauf, warteschlange } from "../kern/sichten";
-import { uhrzeit } from "../kern/uhr";
+// G1 Aufklärung (Schritt 6b): Die Karte ist die Arbeitsfläche. Jede ARGUS-Meldung erscheint als Marke am Ziel;
+// die geöffnete zeigt ihr Drohnenbild live in einem Fenster am Ort (Linie zum Ziel), Klick = groß mit Lupe.
+// Rechts: Eingang als Zahl, ARGUS-Daten, Sensordaten, Entscheidung ANNEHMEN oder ABLEHNEN mit Vermerk.
+//   ① Meldung öffnen (Marke; die älteste öffnet sich von selbst)  ② Drohnenbild und Daten prüfen  ③ entscheiden
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { drohnenbild, drohnenEbenen, vorladen } from "../assets/assets";
+import type { LiveLage } from "../drohne/livebild";
+import { bekannteZiele, effekte } from "../kern/effekte";
 import { TEXT_MAX } from "../kern/ereignisse";
+import { feinlage } from "../kern/geometrie";
+import { lagebildZielmeldungen } from "../kern/lagebild";
+import { gemeldetePosition } from "../kern/regeln";
+import { warteschlange } from "../kern/sichten";
+import { uhrzeit } from "../kern/uhr";
 import type { Sicht } from "../sitzung/sicht";
-import {
-  AktionsKnopf, Empfehlung, Konfidenz, Lagehinweise, Leer, MeldungsEintrag, Panel,
-} from "./gemeinsam/bausteine";
-import { DrohnenbildAnzeige } from "./gemeinsam/drohnenbild";
+import { AktionsKnopf, Empfehlung, EingangLeiste, KartenLagehinweise, Konfidenz, Panel } from "./gemeinsam/bausteine";
 import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
+import { LagekarteAnsicht, meldungsMarken } from "./gemeinsam/lagekarte";
+import { LiveDrohnenFenster } from "./gemeinsam/livedrohne";
+import { useManifest } from "./gemeinsam/drohnenbild";
 
 const SICHT_TEXT: Record<string, string> = {
   wolke: "Wolke", rauch: "Rauch", dunst: "Dunst", baeume: "Bäume", tarnnetz: "Tarnnetz", stoerung: "Bildstörung", unschaerfe: "Unschärfe",
 };
+
+/** Fenster des Drohnenbilds am Ort (16 : 10) */
+export const DROHNEN_FENSTER = { breite: 416, hoehe: 260 };
 
 export function G1Ansicht(p: { s: Sicht }) {
   const { s } = p;
@@ -33,88 +41,93 @@ export function G1Ansicht(p: { s: Sicht }) {
   const wartet = !!gewaehlt && s.wartetAuf("g1_entscheid", gewaehlt);
   const start = inh.szenario.spieluhr.start;
   const gesperrt = !m || z.ende;
+  const tLage = Math.floor(t);
+  const lagebild = useMemo(() => lagebildZielmeldungen(inh, z, "g1", tLage), [inh, z, tLage]);
+  const fx = useMemo(() => effekte(inh, z, bekannteZiele(inh, z, "g1")), [inh, z]);
+  // Lage für das Live-Drohnenbild: immer der neueste Stand (der Takt des Bildes liest sie selbst)
+  const lage = useRef<LiveLage>({ inh, z, effekte: fx });
+  lage.current = { inh, z, effekte: fx };
+  // Bilder der nächsten zwei Meldungen vorladen (Ebenen und Aufnahme), damit das Fenster sofort steht
+  const man = useManifest();
+  const naechste = offen.map((x) => x.id).filter((id) => id !== gewaehlt).slice(0, 2);
+  useEffect(() => {
+    if (!man) return;
+    vorladen(naechste.flatMap((id) => [...(drohnenEbenen(man, id)?.dateien ?? []), drohnenbild(man, id)?.datei ?? ""]).filter(Boolean));
+  }, [man, naechste.join(",")]);
 
+  const oeffnen = (id: string | null) => {
+    if (id === gewaehlt) return;
+    waehle(id);
+    setVermerk("");
+  };
   const entscheiden = (entscheid: "annehmen" | "ablehnen") => {
     if (!gewaehlt) return;
     s.senden("g1_entscheid", { meldung: gewaehlt, entscheid, vermerk: vermerk.trim() || undefined });
     setVermerk("");
+    waehle(null);
   };
 
-  const bildalter = m && ms ? Math.max(0, Math.round(t - ms.erschienen.t_s)) + (m.sensor.bildalter_s ?? 0) : 0;
-  const historie = verlauf(z, "g1");
+  const alter = m && ms ? Math.max(0, Math.round(t - ms.erschienen.t_s)) + (m.sensor.bildalter_s ?? 0) : 0;
+  const marken = meldungsMarken(offen, gewaehlt, oeffnen);
+  const fenster = m ? {
+    id: m.id, ...DROHNEN_FENSTER,
+    inhalt: <LiveDrohnenFenster meldung={m} lage={() => lage.current} uhr={() => s.kartenUhr()} start={start} />,
+  } : null;
 
   return (
-    <main class="inhalt ansicht-g1">
-      <div class="stapel">
-        <Panel schritt={1} titel="Eingang ARGUS" rechts={<span class={`badge ${offen.length ? "neu" : ""}`} data-testid="g1-offen">{offen.length}</span>} liste stil="flex:1.2 1 0">
-          {offen.length === 0 ? <Leer>Keine offene Meldung. Neue ARGUS-Meldungen erscheinen hier.</Leer> : (
-            <ul class="liste">
-              {offen.map((x) => <MeldungsEintrag key={x.id} inh={inh} st={x} aktiv={x.id === gewaehlt} onWahl={() => waehle(x.id)} />)}
-            </ul>
-          )}
-        </Panel>
-        <Lagehinweise inh={inh} z={z} rolle="g1" />
-        <Panel titel="Verlauf" liste rechts={historie.length ? <span class="badge">{historie.length}</span> : null}>
-          {historie.length === 0 ? <div class="hinweistext">Bearbeitete Meldungen</div> : (
-            <ul class="liste">
-              {historie.map((x) => (
-                <MeldungsEintrag key={x.id} inh={inh} st={x} gedimmt
-                  unter={<>{uhrzeit(start, x.erschienen.t_s)} · {x.ergebnis ? ERGEBNIS_TEXT[x.ergebnis] : x.fastTrack && !x.g1 ? "Fast-Track, an G1 vorbei" : STUFE_TEXT[x.stufe]}</>} />
-              ))}
-            </ul>
-          )}
-        </Panel>
-      </div>
+    <main class="inhalt ansicht-karte ansicht-g1">
+      <section class="panel ohne-rand karten-feld" data-testid="g1-karte">
+        <LagekarteAnsicht inh={inh} lagebild={lagebild} gewaehlt={gewaehlt}
+          onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele"
+          uhr={() => s.kartenUhr()} effekte={fx} marken={marken} fenster={fenster}
+          ecke={<KartenLagehinweise inh={inh} z={z} rolle="g1" />} />
+      </section>
 
-      <Panel schritt={2} testid="g1-bildfeld"
-        titel={m && ms ? <>Meldung {m.id} prüfen <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)} · Lage {feinlage(gemeldetePosition(inh, m), inh.karte)}</span></> : "Meldung prüfen"}
-        rechts={ms?.fastTrack ? <span class="badge warn">Fast-Track</span> : null}>
+      <aside class="stapel meldungsfeld">
+        <EingangLeiste anzahl={offen.length} testid="g1-offen" />
         {!m || !ms ? (
-          <div class="stapel" style="height:100%;justify-content:center">
-            <Leer>Warten auf ARGUS-Meldungen … Das Drohnenbild erscheint hier, sobald links unter ① eine Meldung steht.</Leer>
-          </div>
-        ) : (
-          <div>
-            <DrohnenbildAnzeige meldung={m} uhr={uhrzeit(start, ms.erschienen.t_s)} bildalter={bildalter}
-              naechste={offen.filter((x) => x.id !== m.id).map((x) => x.id)} />
-            <div class="sichtleiste">
-              {m.bild.sicht.length === 0 ? <span>Sicht frei</span> : <>
-                <span>Sicht gestört:</span>
-                {m.bild.sicht.map((v) => <span class="badge">{SICHT_TEXT[v.art] ?? v.art} {v.lage === "Ziel" ? "am Ziel" : v.lage} {Math.round(v.anteil * 100)} %</span>)}
-              </>}
+          <Panel titel="Meldung" klasse="flach">
+            <div class="hinweistext" style="padding:6px 0" data-testid="g1-warten">
+              {offen.length ? "Marke auf der Karte anklicken, um die Meldung zu öffnen." : "Warten auf ARGUS-Meldungen … Neue Meldungen erscheinen als Marke auf der Karte und öffnen sich hier mit dem Drohnenbild am Ort."}
             </div>
-          </div>
+          </Panel>
+        ) : (
+          <>
+            <section class="argus-box" data-testid="argus-box">
+              <h3>
+                <span>{inh.szenario.argus_system.name}</span>
+                <span class="argus-meldung" data-testid="offene-meldung" data-meldung={m.id}>
+                  <b>{m.id}</b> · {uhrzeit(start, ms.erschienen.t_s)} · Lage {feinlage(gemeldetePosition(inh, m), inh.karte)}
+                  {ms.fastTrack && <span class="badge warn">Fast-Track</span>}
+                </span>
+              </h3>
+              <table class="tabelle">
+                <tbody>
+                  <tr><th>Klasse</th><td><b>{m.argus.klasse}</b>{m.argus.einzeln && <span class="klein"> · {m.ziele.length} Fahrzeuge</span>}</td></tr>
+                  <tr><th>Konfidenz</th><td><Konfidenz wert={m.argus.konfidenz} />{m.argus.einzeln && <div class="klein">einzeln {m.argus.einzeln.join(" / ")} %</div>}</td></tr>
+                  <tr><th>Empfehlung</th><td><Empfehlung wert={m.argus.empfehlung} /></td></tr>
+                  {m.argus.hinweis && <tr><th>Hinweis</th><td>{m.argus.hinweis}</td></tr>}
+                </tbody>
+              </table>
+            </section>
+            <Panel schritt={2} titel="Sensordaten Drohne" klasse="flach">
+              <table class="tabelle" data-testid="sensordaten">
+                <tbody>
+                  <tr><th>Wärmebild</th><td>{m.sensor.waerme}</td></tr>
+                  <tr><th>Bewegung</th><td>{m.sensor.bewegung}</td></tr>
+                  <tr><th>Spuren</th><td>{m.sensor.spuren}</td></tr>
+                  <tr><th>Kennzeichnung</th><td>{m.sensor.kennzeichnung}</td></tr>
+                  <tr><th>Personen</th><td>{m.sensor.personen}</td></tr>
+                  <tr><th>Meldung vor</th><td class="zahl">{alter} s</td></tr>
+                  <tr><th>Sicht</th><td class="sichtleiste">
+                    {m.bild.sicht.length === 0 ? <span>frei</span>
+                      : m.bild.sicht.map((v) => <span class="badge">{SICHT_TEXT[v.art] ?? v.art} {v.lage === "Ziel" ? "am Ziel" : v.lage} {Math.round(v.anteil * 100)} %</span>)}
+                  </td></tr>
+                </tbody>
+              </table>
+            </Panel>
+          </>
         )}
-      </Panel>
-
-      <div class="stapel">
-        <section class="argus-box" data-testid="argus-box">
-          <h3><span>{inh.szenario.argus_system.name}</span><span class="mono" style="font-weight:500">{m?.id ?? ""}</span></h3>
-          {!m ? <div class="klein sehr-leise">keine Meldung gewählt</div> : (
-            <table class="tabelle">
-              <tbody>
-                <tr><th>Klasse</th><td><b>{m.argus.klasse}</b>{m.argus.einzeln && <span class="klein"> · {m.ziele.length} Fahrzeuge</span>}</td></tr>
-                <tr><th>Konfidenz</th><td><Konfidenz wert={m.argus.konfidenz} />{m.argus.einzeln && <div class="klein">einzeln {m.argus.einzeln.join(" / ")} %</div>}</td></tr>
-                <tr><th>Empfehlung</th><td><Empfehlung wert={m.argus.empfehlung} /></td></tr>
-                {m.argus.hinweis && <tr><th>Hinweis</th><td>{m.argus.hinweis}</td></tr>}
-              </tbody>
-            </table>
-          )}
-        </section>
-        <Panel titel="Sensordaten Drohne" klasse="flach">
-          {!m ? <div class="klein sehr-leise">–</div> : (
-            <table class="tabelle" data-testid="sensordaten">
-              <tbody>
-                <tr><th>Wärmebild</th><td>{m.sensor.waerme}</td></tr>
-                <tr><th>Bewegung</th><td>{m.sensor.bewegung}</td></tr>
-                <tr><th>Spuren</th><td>{m.sensor.spuren}</td></tr>
-                <tr><th>Kennzeichnung</th><td>{m.sensor.kennzeichnung}</td></tr>
-                <tr><th>Personen</th><td>{m.sensor.personen}</td></tr>
-                <tr><th>Bildalter</th><td class="zahl">{bildalter} s</td></tr>
-              </tbody>
-            </table>
-          )}
-        </Panel>
         <Panel schritt={3} titel="Entscheidung G1" klasse="flach">
           <div class="stapel" style="gap:8px">
             <input class="feld" placeholder="Vermerk an G2 (eine Zeile, freiwillig)" maxLength={TEXT_MAX.vermerk} value={vermerk}
@@ -134,7 +147,7 @@ export function G1Ansicht(p: { s: Sicht }) {
           <div style="margin-bottom:3px">{inh.szenario.argus_system.herstellerangabe}</div>
           <div>{inh.szenario.argus_system.kleingedrucktes}</div>
         </div>
-      </div>
+      </aside>
     </main>
   );
 }

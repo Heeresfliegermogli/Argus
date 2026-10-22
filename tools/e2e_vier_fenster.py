@@ -95,7 +95,7 @@ def main():
         sl.get_by_role("button", name="×10").click()
         sl.get_by_role("button", name="▶ Start").click()
         warte(lambda: g1.locator("[data-testid=g1-offen]").inner_text() != "0", 20, "Meldung bei G1")
-        print("G1 hat Meldung:", g1.locator(".eintrag.aktiv .nr").inner_text())
+        print("G1 hat Meldung:", g1.get_by_test_id("offene-meldung").get_attribute("data-meldung"))
 
         # G1 nimmt die erste Meldung an
         g1.fill("[data-testid=g1-vermerk]", "heiß, fährt – passt")

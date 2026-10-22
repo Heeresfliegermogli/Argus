@@ -55,10 +55,14 @@ export function useEntfallHinweis(s: Sicht, st: SichtStand, rolle: "g1" | "g2" |
   }, [schl, st.geladen, st.lauf]);
 }
 
-/** Auswahl in einer Liste: bleibt stehen, solange der Eintrag existiert, sonst der erste. */
-export function useAuswahl(ids: string[]): [string | null, (id: string) => void] {
+/**
+ * Offene Meldung einer Rolle (Schritt 6b): Eine gewählte Meldung bleibt offen, solange sie bei der Rolle liegt
+ * (`alle`, auch zurückgestellte); sonst öffnet sich von selbst die älteste neue (`auto`, ohne zurückgestellte).
+ * wahl(null) gibt die Auswahl frei – nach einer Entscheidung oder BEOBACHTEN kommt dann die nächste neue.
+ */
+export function useAuswahl(auto: string[], alle: string[] = auto): [string | null, (id: string | null) => void] {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
-  const aktuell = gewaehlt && ids.includes(gewaehlt) ? gewaehlt : ids[0] ?? null;
+  const aktuell = gewaehlt && alle.includes(gewaehlt) ? gewaehlt : auto[0] ?? null;
   return [aktuell, setGewaehlt];
 }
 
