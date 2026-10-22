@@ -91,7 +91,7 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 | `wirkung` | meldung, wirkmittel, pos, t_freigabe, t_einschlag, ziel, getroffen[], verstoesse[] | Zeitplan zum Einschlag (seit Schritt 7): Treffer nach der Lage beim Einschlag; liegt der Einschlag nach Spielende, bei Spielende abgerechnet |
 | `hintergrund` | id, art, ziel?, wirkt?, folge?, grund? | Zeitplan (Hintergrundgefecht H-01–H-12): Feindartillerie und Rauch sind Darstellung; eigene PzAbw wirkt nur, wenn das Ziel dann noch steht und diesseits des Bachs ist |
 | `ereignis` | ereignis, nr?, von?, ziel?, wirkt?, entfaellt?, grund? | Zeitplan (E-01): je Wirkung ein Eintrag, oder `entfaellt` nach Freigabe auf Z-15–17 bis 10:23:30 |
-| `verstaerkung` | gruppe, t0 | SL (Verstärkung V-1–V-5, Ziele und Meldungen ab t0) |
+| `verstaerkung` | gruppe, t_ab | SL (Verstärkung V-1–V-5, Ziele und Meldungen ab t_ab) |
 | `inject` | inject, manuell? | Zeitplan (fest und bedingt) oder SL |
 | `inject_quittiert` | inject | G3 („gelesen“) |
 | `lagehinweis` | text, an [g1, g2] | G3 |
@@ -101,6 +101,8 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 | `aktion_abgelehnt` | aktionstyp, grund | Host, wenn eine Aktion nicht passt |
 
 Unbekannte Typen (aus späteren Versionen) zählen für `seq`, ändern den Stand aber nicht.
+Feldnamen in `daten` nur aus Kleinbuchstaben und `_` (keine Ziffern), höchstens drei Ebenen tief – so
+prüfen es die Firebase-Regeln; ein abgewiesenes Ereignis beendet die Steuerung des Hosts.
 
 Eine **Aktion**: `{ id, typ, von, ts, daten }`. Typen: die Spielaktionen oben plus `uhr`,
 `meldung_ausloesen`, `inject_ausloesen`, `verstaerkung_einspielen` (nur SL). Rechte stehen in `RECHTE`

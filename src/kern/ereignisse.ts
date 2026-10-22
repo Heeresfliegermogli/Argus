@@ -70,8 +70,11 @@ export interface EreignisDaten {
     meldung: string; wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen?: TrefferDaten[];
     t_einschlag?: number; ziel?: string; verstoesse?: string[];
   };
-  /** Verstärkung eingespielt (Spielleitung): Ziele und Meldungen der Gruppe mit Zeiten ab t0. */
-  verstaerkung: { gruppe: string; t0: number };
+  /**
+   * Verstärkung eingespielt (Spielleitung): Ziele und Meldungen der Gruppe mit Zeiten ab t_ab. Feldnamen in daten nur
+   * aus Kleinbuchstaben und „_“ (Firebase-Regeln), daher nicht „t0“.
+   */
+  verstaerkung: { gruppe: string; t_ab: number };
   /**
    * Hintergrundgefecht (szenario.hintergrund): Feindartillerie und Rauch sind Darstellung; eigene Panzerabwehr
    * wirkt nur, wenn das Ziel dann noch steht (wirkt=false mit grund, sonst folge zerstoert/ausser_gefecht).

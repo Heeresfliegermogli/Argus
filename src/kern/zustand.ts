@@ -215,7 +215,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     }
     case "verstaerkung": {
       if (n.verstaerkungen.some((v) => v.gruppe === e.daten.gruppe)) break;
-      n.verstaerkungen = [...n.verstaerkungen, { gruppe: e.daten.gruppe, t0: e.daten.t0, seq: e.seq }];
+      n.verstaerkungen = [...n.verstaerkungen, { gruppe: e.daten.gruppe, t0: e.daten.t_ab, seq: e.seq }];
       break;
     }
     case "hintergrund": {

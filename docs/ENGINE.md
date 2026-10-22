@@ -17,7 +17,7 @@ gleiches Protokoll ⇒ gleicher Stand, gleiche Karte, gleiche Effekte in jedem F
 | Zustandswechsel | Ground Truth zur Zeit t (`gtBei`): Z-24 ist bis 10:19:30 legitimer T-72 (`gt.vorher`), danach außer Gefecht (`gt.ab_s`). Trefferwertung, Kontrollkarte und Übersicht nehmen die Lage beim Einschlag. | `src/kern/geometrie.ts` |
 | Meldung entfällt | beim Erscheinen (`meldung.entfaellt`) oder später in der Kette bei G1, G2 oder G3 (`meldung_entfaellt` mit Stufe und Grund), sobald jedes Fahrzeug der Meldung zerstört oder abgezogen ist. Die Rolle bekommt einen kurzen Hinweis („M13 entfällt – alle Fahrzeuge zerstört“). | `src/engine/ablauf.ts`, `src/ansichten/gemeinsam/hooks.ts` |
 | E-01 automatisch | Ist bis 10:23:30 keine Wirkung auf Z-15–17 freigegeben, schießen die PT-91 nacheinander (Wirkung nur, wenn Schütze und Ziel dann noch stehen und das Ziel legitim ist); eine Freigabe vorher lässt E-01 entfallen. I-08a/I-08b wie bisher. Die SL sieht den Stand („wartet“, „läuft – getroffen …“, „entfällt“). | `src/engine/ablauf.ts` (`faellig`, `bedingtStand`) |
-| Verstärkung V-1–V-5 | Übersicht der SL: Menü „Verstärkung ▾“ mit „an alle“ (Standard) und je Team ein Knopf; Teamansicht: „einspielen“ je Gruppe. Jede Gruppe höchstens einmal je Lauf, in den Fenstern `nicht_einspielen` gesperrt (Grund und „wieder ab …“ im Knopf), nach 10:18 Hinweis, wenn ein Team noch Meldungen im Eingang hat. Im Protokoll als `verstaerkung {gruppe, t0}`; die Welt des Teams (`welt()`) enthält dann Ziele und Meldungen mit Zeiten ab t0. Die Übersicht zeigt „+n V“ je Team. | `src/kern/welt.ts`, `src/ansichten/gemeinsam/verstaerkung.tsx`, `uebersicht.tsx`, `sl.tsx` |
+| Verstärkung V-1–V-5 | Übersicht der SL: Menü „Verstärkung ▾“ mit „an alle“ (Standard) und je Team ein Knopf; Teamansicht: „einspielen“ je Gruppe. Jede Gruppe höchstens einmal je Lauf, in den Fenstern `nicht_einspielen` gesperrt (Grund und „wieder ab …“ im Knopf), nach 10:18 Hinweis, wenn ein Team noch Meldungen im Eingang hat. Im Protokoll als `verstaerkung {gruppe, t_ab}`; die Welt des Teams (`welt()`) enthält dann Ziele und Meldungen mit Zeiten ab t_ab. Die Übersicht zeigt „+n V“ je Team. | `src/kern/welt.ts`, `src/ansichten/gemeinsam/verstaerkung.tsx`, `uebersicht.tsx`, `sl.tsx` |
 | Effekte auf der Karte | Einschlag, LM im Flug (mit Schatten und Kondensstreifen), Leuchtspur der PzAbw vom Westrand, Mündungsblitz (E-01), Feindartillerie mit Kratern, Nebelwand H-03, brennende Wracks mit Rauchfahne – mit den Assets aus 5b nach `manifest.effekte.zuordnung`. | `src/kern/effekte.ts` (was, wann, wo), `src/karte/effektebene.ts` (wie) |
 
 ## Effekte
@@ -64,10 +64,13 @@ Spielzeit (er ist Teil der Regel). Schleifen laufen auch bei stehender Uhr weite
 | `meldung_entfaellt` | meldung, stufe, grund |
 | `hintergrund` | id, art, ziel?, wirkt?, folge?, grund? |
 | `ereignis` | ereignis, nr?, von?, ziel?, wirkt?, entfaellt?, grund? |
-| `verstaerkung` | gruppe, t0 (Aktion `verstaerkung_einspielen`, nur SL) |
+| `verstaerkung` | gruppe, t_ab (Aktion `verstaerkung_einspielen`, nur SL) |
 
-Die Firebase-Regeln prüfen Typen nur nach Form; neue Typen gehen ohne Regeländerung durch
-(`tests/firebase_regeln.test.ts` schreibt alle Ereignisse zweier echter Läufe).
+Die Firebase-Regeln prüfen Typen nur nach Form; neue Typen gehen ohne Regeländerung durch. Dabei gilt:
+Feldnamen in `daten` nur aus Kleinbuchstaben und `_` (keine Ziffern, daher `t_ab` statt `t0`), höchstens drei
+Ebenen unter `daten`. Sonst weist Firebase das Ereignis ab und der Host gibt die Steuerung ab.
+`tests/firebase_regeln.test.ts` schreibt alle Ereignisse zweier echter Läufe und das ganze Drehbuch mit fünf
+Teams (jedes Ereignis, jede Aktion) durch die Regeln.
 
 ## Nachweis „Fertig, wenn“
 

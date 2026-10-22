@@ -1,16 +1,19 @@
 // Prüft firebase/database.rules.json mit targaryen (Nachbildung der Firebase-Regelauswertung).
 // Wichtigster Fall: Ein echter Testlauf mit zwei Teams (Lobby, alle Ereignistypen, alle Aktionen)
-// wird angenommen; Überschreiben, Löschen, fremde Pfade und eine Sitzungsliste werden abgewiesen.
+// wird angenommen; Überschreiben, Löschen, fremde Pfade und eine Sitzungsliste werden abgewiesen. Dazu das ganze
+// Drehbuch mit fünf Teams (Engine seit Schritt 7): jedes Ereignis und jede Aktion muss durch die Regeln gehen.
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Aktion, Ereignis } from "../src/kern/ereignisse";
-import { protokollSchluessel } from "../src/kern/ereignisse";
+import { bereinigt, EREIGNIS_TYPEN, protokollSchluessel } from "../src/kern/ereignisse";
 import { neuerCode } from "../src/kern/sitzungen";
 import { Sicht } from "../src/sitzung/sicht";
 import { Sitzung } from "../src/sitzung/sitzung";
 import type { SitzungsInfo, TeamDaten } from "../src/sync/adapter";
 import { LokalAdapter } from "../src/sync/lokal";
 import { bis, inhalte } from "./hilfen";
+import { type Modellteam, START_MS, spieleDurch } from "./modellteam";
 
 const require = createRequire(import.meta.url);
 const targaryen = require("targaryen") as {
@@ -283,5 +286,53 @@ describe("Firebase-Regeln: echter Testlauf mit zwei Teams", () => {
     }
     expect(n).toBeGreaterThanOrEqual(16);
     expect(leer().write(`${A}/-OdQ0000xyzABCDEFGH`, { ...aktionen.values().next().value![0], id: "anders123456" }).allowed).toBe(false);
+  });
+});
+
+describe("Firebase-Regeln: Drehbuch mit fünf Teams (Engine seit Schritt 7)", () => {
+  const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
+    zeiten: { G1: number; G2: number; G3: number; ft_nach_angebot: number }; reihenfolge_wirkmittel: string[];
+    laeufe: { team: "naiv" | "ideal"; einspielen: Record<string, number> }[];
+  };
+  let teams: Modellteam[] = [];
+  beforeAll(async () => {
+    const inh = await inhalte();
+    teams = spieleDurch(inh, ref.laeufe.map((l, i) => ({
+      name: `team${i + 1}`,
+      opt: { team: l.team, einspielen: l.einspielen, zeiten: ref.zeiten, ftNachAngebot: ref.zeiten.ft_nach_angebot, reihenfolge: ref.reihenfolge_wirkmittel },
+    })));
+  }, 30000);
+
+  it("jedes Ereignis aller fünf Protokolle wird angenommen (alle Ereignistypen)", () => {
+    const typen = new Set(teams.flatMap((m) => m.kanal.protokoll.map((e) => e.typ)));
+    // aktion_abgelehnt, inject_quittiert, lagehinweis und notiz kommen im Drehbuch nicht vor (siehe Testlauf oben)
+    const ohne = ["aktion_abgelehnt", "inject_quittiert", "lagehinweis", "notiz"];
+    expect(EREIGNIS_TYPEN.filter((t) => !ohne.includes(t) && !typen.has(t))).toEqual([]);
+    // Serverzeit der Modellläufe (START_MS) auf jetzt verschoben: die Regeln prüfen ts gegen now
+    const jetzt = Date.now() - 3_600_000;
+    teams.forEach((m, nr) => {
+      let db = leer();
+      const team = `tdreh${nr + 1}`;
+      for (const e of m.kanal.protokoll) {
+        const erg = db.write(`${S}/laeufe/${team}/${LAUF}/protokoll/${protokollSchluessel(e.seq)}`, bereinigt({ ...e, ts: e.ts - START_MS + jetzt }));
+        expect(erg.allowed, `${m.name} ${e.seq} ${e.typ} ${JSON.stringify(e.daten)}: ${erg.info.slice(-400)}`).toBe(true);
+        db = erg.newDatabase;
+      }
+    });
+  });
+
+  it("jede Aktion aller fünf Teams wird angenommen (auch Verstärkung)", () => {
+    const typen = new Set(teams.flatMap((m) => m.kanal.gesendet.map((a) => a.typ)));
+    expect(typen.has("verstaerkung_einspielen")).toBe(true);
+    let n = 0;
+    teams.forEach((m, nr) => {
+      let db = leer();
+      for (const a of m.kanal.gesendet) {
+        const key = `-OdQ${String(n++).padStart(4, "0")}xyzABCDEFGH`;
+        const erg = db.write(`${S}/laeufe/tdreh${nr + 1}/${LAUF}/aktionen/${key}`, bereinigt({ ...a, id: key, von: { ...a.von, client: "abc123" } }));
+        expect(erg.allowed, `${m.name} ${a.typ} ${JSON.stringify(a.daten)}: ${erg.info.slice(-400)}`).toBe(true);
+        db = erg.newDatabase;
+      }
+    });
   });
 });

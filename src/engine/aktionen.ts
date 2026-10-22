@@ -155,7 +155,7 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       if (sperre.gesperrt) {
         return nein(`${g.id} jetzt nicht – käme einem geschützten Objekt zu nahe (wieder ab ${uhrzeit(inh.szenario.spieluhr.start, sperre.bis! + 1)})`);
       }
-      return ja(entwurf("verstaerkung", { gruppe: g.id, t0: Math.round(t * 10) / 10 }));
+      return ja(entwurf("verstaerkung", { gruppe: g.id, t_ab: Math.round(t * 10) / 10 }));
     }
   }
 }
