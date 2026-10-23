@@ -115,7 +115,11 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
     case "notiz": {
       const t2 = text(a.daten.text, TEXT_MAX.notiz, true);
       if (!t2) return nein("Notiz leer oder zu lang");
-      return ja(entwurf("notiz", { text: t2 }));
+      const fall = a.daten.fall;
+      if (fall === undefined || fall === null || fall === "") return ja(entwurf("notiz", { text: t2 }));
+      const bekannt = [...inh.szenario.schluesselfaelle, ...inh.szenario.nebenfaelle].some((f) => f.id === fall);
+      if (!bekannt) return nein(`Fall ${String(fall)} gibt es nicht`);
+      return ja(entwurf("notiz", { text: t2, fall }));
     }
     case "uhr": {
       const { befehl } = a.daten;

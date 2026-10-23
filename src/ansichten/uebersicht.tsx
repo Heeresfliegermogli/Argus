@@ -130,7 +130,7 @@ function TeamName(p: { s: Sitzung; t: TeamStand }) {
   );
 }
 
-export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void }) {
+export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; auswertung?: () => void }) {
   const { s } = p;
   const st = useSitzung(s);
   useTakt(500);
@@ -214,6 +214,8 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void }) {
             einspielen={(gruppe, teams) => allen("verstaerkung_einspielen", { gruppe }, teams)} />
           <span class="trenner" />
           <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
+          {p.auswertung && ids.length > 0 && <button type="button" class="knopf klein weiter" onClick={p.auswertung} data-testid="auswertung-knopf"
+            title="Teamvergleich, Kennzahlen, Replay je Schlüsselfall, Export – dieselbe Ansicht wie im Plenum">Auswertung ›</button>}
           {ids.length > 0 && <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost} onClick={() => void s.spielOeffnen(ids)}
             frage="Wirklich? Klick = neues Spiel für alle" titel="Neuer Lauf für alle Teams. Die jetzigen Läufe bleiben gespeichert.">
             Neues Spiel – alle

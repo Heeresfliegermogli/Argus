@@ -57,8 +57,9 @@ fragen im Knopf nach („Wirklich? …“) statt mit einem Browser-Dialog: `conf
 Host-Fenster die Engine aller Teams an.
 
 **Plenum:** vor dem ersten Spiel Einweisung mit Seite, Code und den Teams (mit Zahl der Spieler),
-danach Einweisung/Lage/Auflösung eines Teams, Teamwahl oben links. Der Teamvergleich kommt mit der
-Auswertung (Schritt 8).
+danach Einweisung/Lage/Auflösung eines Teams, Teamwahl oben links. Haben alle Teams das Spielende erreicht, zeigt
+es die **Auswertung über alle Teams** (Schritt 8, [`AUSWERTUNG.md`](AUSWERTUNG.md)); die Spielleitung öffnet sie in
+der Übersicht über **Auswertung ›**. SL 2 notiert in der Teamansicht mit **✎ Notiz** Beobachtungen je Fall.
 
 ## Teilnehmer
 
@@ -175,6 +176,6 @@ Bedientest am 03.11. (BEDIENTEST.md, Teil A).
   Rechner, dann im Hörsaal.
 * Verstärkung reinrufen (Konzept v2 §3) ist seit Schritt 7 da: Menü „Verstärkung ▾“ in der Übersicht (an alle
   oder ein Team), „einspielen“ in der Teamansicht (siehe `ENGINE.md`). Offen: Automatik „Druck halten“ (Kann).
-  Teamvergleich in Plenum und Auswertung: Schritt 8.
+  Teamvergleich in Plenum und Auswertung: seit Schritt 8 ([`AUSWERTUNG.md`](AUSWERTUNG.md)).
 * Die Einweisungskarten sind seit 6b für Teams neu: Du-Form je Rolle, Teamleiste „Euer Team“ mit Namen aus der
   Lobby (siehe `UI.md`).

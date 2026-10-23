@@ -570,3 +570,232 @@ label.wahl.klein input { margin-top: 0; }
 .drohne.live.aufnahme .drohne-fuss .nur-aufnahme { display: inline; }
 .g2-warnung { font-size: 13.5px; color: #ffb4ad; line-height: 1.35; }
 canvas.lupe-glas { background: #0b0e10; z-index: 2; }
+
+/* ---------------------------------------------------------------- Auswertung (Schritt 8)
+   Smartboard: 1530 × 800 wie die Dienstrechner, aus 4–8 m lesbar. Hauptwerte ≥ 20 px, Nebentexte ≥ 14 px.
+   Farben wie im Spiel: Bernstein = ARGUS, Rot = Wirkung/Fehltreffer, Gruppenfarben G1/G2/G3 für die Stufen. */
+.gruen { color: #8fe0ae; }
+.bernstein { color: var(--argus); }
+.chip { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 99px; background: var(--flaeche-3); color: var(--text-2); font-size: 14px; white-space: nowrap; }
+.chip.fehl { background: #5a2522; color: #ffd9d6; }
+
+.auswertung-rahmen .kopf { grid-template-columns: auto 1fr auto; gap: 12px; }
+.kapitel-leiste { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; }
+.kapitel-chip { border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text-2); border-radius: 6px; padding: 5px 11px; font-size: 16px;
+  font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.kapitel-chip .kapitel-nr { font-size: 13px; color: var(--text-3); }
+.kapitel-chip.fall { min-width: 46px; justify-content: center; }
+.kapitel-chip.an { background: var(--plenum); border-color: var(--plenum); color: #14100a; }
+.kapitel-chip.an .kapitel-nr { color: #3b3220; }
+.kapitel-pfeil { font-size: 18px; padding: 3px 13px; }
+.zeitbudget { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0; line-height: 1.1; background: none; border: 0; cursor: pointer;
+  font: 600 14px/1.15 var(--mono); color: var(--text-2); padding: 0 4px; }
+.zeitbudget .sehr-leise { font-size: 12px; font-weight: 500; }
+.zeitbudget.ueber > span:first-child { color: var(--argus); }
+.zeitbudget.ueber-gesamt .sehr-leise { color: #ff8f86; }
+
+.auswertung { min-height: 0; padding: 12px 14px; display: flex; flex-direction: column; }
+.auswertung > * { flex: 1; min-height: 0; }
+.tafel { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.tafel-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.tafel h1, .replay h1, .konfidenz-diagramm h1 { font-size: 24px; font-weight: 700; letter-spacing: .01em; }
+.tafel-fuss { font-size: 14px; }
+.legende-zeile { display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--text-2); flex-wrap: wrap; }
+.legende-zeile > span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* Ausgang eines Falls */
+.ausgang { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.ausgang b { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; font-size: 17px; background: #2a3139; color: var(--text-2); }
+.ausgang.richtig b { background: #1f4a30; color: #c9f1d5; }
+.ausgang.falsch b { background: #8a2b25; color: #fff1ef; }
+.ausgang.verpasst b { background: #5b4518; color: #ffe2a6; }
+.ausgang.gross b { width: 30px; height: 30px; font-size: 19px; }
+.ausgang.gross span { font-size: 17px; }
+
+/* Kette G1 → G2 → G3 → Einschlag */
+.kette { display: inline-flex; align-items: stretch; gap: 3px; }
+.glied { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 35px; padding: 1px 4px; border-radius: 5px;
+  background: var(--flaeche-3); border: 2px solid transparent; line-height: 1.05; }
+.glied i { font-style: normal; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+.glied b { font-size: 16px; white-space: nowrap; }
+.glied.g-g1 i { color: var(--g1); } .glied.g-g2 i { color: var(--g2); } .glied.g-g3 i { color: var(--g3); }
+.glied.halt b { color: #8fd0ff; }
+.glied.warten b { color: var(--argus); }
+.glied.weiter.g-g3 b { color: #ff9a90; }
+.glied.ft { background: repeating-linear-gradient(135deg, #3a3020 0 5px, #2a2416 5px 10px); }
+.glied.ft b { color: var(--argus); font-size: 14px; }
+.glied.leer b, .glied.offen b { color: var(--text-3); }
+.glied.entscheidend { border-color: #f4f1e6; box-shadow: 0 0 0 1px #0008; }
+.glied.einschlag { min-width: 26px; background: transparent; }
+.glied.einschlag b { font-size: 20px; color: var(--text-2); }
+.glied.einschlag.fehl b { color: #ff6b5e; }
+.glied.mini { min-width: 22px; height: 22px; padding: 0 3px; }
+.glied.mini b { font-size: 14px; }
+.glied.halt.mini b { color: #8fd0ff; }
+
+/* Kapitel 1: Teamvergleich */
+.vergleich { width: 100%; border-collapse: separate; border-spacing: 0 6px; table-layout: fixed; }
+.vergleich th, .vergleich td { text-align: left; vertical-align: top; }
+.vergleich thead tr.gruppe th { font-size: 14px; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; padding: 0 8px; border-bottom: 1px solid var(--linie); }
+.vergleich thead tr.gruppe th.neben { border-left: 8px solid transparent; }
+.vergleich thead th { padding: 4px 8px 2px; font-weight: 500; }
+.vergleich .fall-id { display: block; font-size: 20px; font-weight: 700; color: var(--text); }
+.vergleich .fall-titel { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13.5px; color: var(--text-2); line-height: 1.2; }
+.vergleich .team-spalte { padding: 10px 10px 10px 4px; }
+.vergleich col.c-team { width: 172px; }
+.vergleich col.c-fall { width: 188px; }
+.vergleich col.c-neben { width: 135px; }
+.vergleich-zelle { background: var(--flaeche); border: 1px solid var(--linie); padding: 8px 8px 7px; cursor: pointer; height: 98px; }
+.vergleich-zelle + .vergleich-zelle { border-left: 0; }
+.vergleich-zelle.neben { cursor: default; }
+.vergleich-zelle.falsch { background: linear-gradient(0deg, #3a1a18, #2c1817); }
+.vergleich-zelle.richtig { background: #16241c; }
+.vergleich-zelle:hover:not(.neben) { filter: brightness(1.15); }
+.zelle-oben { display: flex; align-items: center; gap: 7px; }
+.zelle-text { margin-top: 6px; font-size: 15px; line-height: 1.22; color: var(--text); }
+.zelle-text > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zelle-text > div + div { color: var(--text-2); }
+.zelle-text.klein { font-size: 14px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kette.kompakt { gap: 2px; }
+.kette.kompakt .glied { min-width: 25px; padding: 0 2px; border-width: 1.5px; }
+.kette.kompakt .glied i { font-size: 13px; letter-spacing: 0; }
+.kette.kompakt .glied b { font-size: 14px; }
+.kette.kompakt .glied.einschlag { min-width: 12px; padding: 0; }
+.kette.kompakt .glied.einschlag b { font-size: 16px; }
+.vergleich tfoot td, .vergleich tfoot th { padding: 2px 8px; font-size: 16px; font-weight: 600; }
+.vergleich .summe { display: inline-flex; gap: 8px; }
+
+/* Kapitel 2: Kennzahlen */
+.kennzahlen { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.kennzahlen th, .kennzahlen td { text-align: left; vertical-align: top; padding: 13px 10px; border-bottom: 1px solid var(--linie); }
+.kennzahlen thead th { font-size: 15px; color: var(--text-2); font-weight: 600; border-bottom: 2px solid var(--linie-2); line-height: 1.2; }
+.kennzahlen .th-zusatz { font-weight: 500; color: var(--text-3); }
+.kennzahlen .team-spalte { width: 210px; }
+.kennzahlen td { font-size: 16px; }
+.kennzahlen .wert { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.kennzahlen .unter { font-size: 14.5px; color: var(--text-2); margin-top: 3px; line-height: 1.25; }
+.kennzahlen .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.kennzahlen tbody tr:nth-child(odd) { background: #171e24; }
+.stufen-zeit { display: flex; gap: 10px; align-items: baseline; }
+.stufen-zeit .sz { font-size: 15px; color: var(--text-2); white-space: nowrap; }
+.stufen-zeit .sz i { font-style: normal; font-weight: 700; font-size: 13px; margin-right: 4px; }
+.stufen-zeit .sz b { font-size: 24px; color: var(--text); font-variant-numeric: tabular-nums; }
+.stufen-zeit .g-g1 i { color: var(--g1); } .stufen-zeit .g-g2 i { color: var(--g2); } .stufen-zeit .g-g3 i { color: var(--g3); }
+
+/* Kapitel 3: Konfidenz */
+.tafel-konfidenz { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 18px; }
+.konfidenz-diagramm { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.konfidenz-diagramm svg { flex: 1; min-height: 0; width: 100%; }
+.kd-ft { fill: rgba(233, 170, 59, .07); }
+.kd-bereich { fill: var(--text-3); font-size: 15px; font-weight: 600; letter-spacing: .04em; }
+.kd-bereich.bernstein { fill: var(--argus); }
+.kd-schwelle { stroke: var(--linie-2); stroke-width: 1; stroke-dasharray: 2 4; }
+.kd-achse { stroke: var(--text-3); }
+.kd-gitter { stroke: var(--linie); stroke-width: 1; }
+.kd-tick { fill: var(--text-2); font-size: 15px; font-variant-numeric: tabular-nums; }
+.kd-achsentitel { fill: var(--text-2); font-size: 15px; text-anchor: middle; }
+.mitte { text-anchor: middle; }
+.rechts { text-anchor: end; }
+.kd-mittel { stroke-width: 2; stroke-dasharray: 6 5; }
+.kd-mittel.richtig { stroke: #9aa8b5; }
+.kd-mittel.falsch { stroke: #ff6b5e; }
+.kd-mittel-text { fill: #c8d1d9; font-size: 15px; font-weight: 600; }
+.kd-mittel-text.falsch { fill: #ff8f86; }
+.kd-punkt.richtig { fill: #1c232a; stroke: #9aa8b5; stroke-width: 2.5; }
+.kd-punkt.richtig.warnt { stroke: var(--argus); }
+.kd-punkt.falsch { fill: #ff6b5e; stroke: #1c232a; stroke-width: 2; }
+.kd-leitlinie { stroke: #ff6b5e; stroke-width: 1.2; opacity: .7; }
+.kd-label { fill: var(--text); font-size: 19px; font-weight: 700; }
+.kd-label-unter { fill: var(--text-2); font-size: 16px; }
+.kd-label-kopf { fill: var(--text-2); font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.kd-legende { display: flex; gap: 18px; font-size: 14px; color: var(--text-2); align-items: center; }
+.kd-legende span { display: inline-flex; align-items: center; gap: 6px; }
+.konfidenz-aussage { display: flex; flex-direction: column; gap: 16px; min-height: 0; padding-top: 4px; }
+.aussage-zahlen { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.aussage-zahlen > div { display: flex; align-items: baseline; gap: 12px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 6px; padding: 8px 12px; }
+.aussage-zahlen b { font-size: 28px; font-variant-numeric: tabular-nums; min-width: 150px; }
+.aussage-zahlen span { font-size: 16px; color: var(--text-2); }
+.aussage-punkte { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; line-height: 1.3; }
+.kernaussage { margin: 0; font-size: 21px; line-height: 1.38; border-left: 4px solid var(--plenum); padding: 4px 0 4px 14px; color: #f2eee2; }
+
+/* Kapitel S3, S2, S1, S4: Replay */
+.replay { --zl-name: 196px; display: grid; grid-template-columns: minmax(0, 1fr) 560px; gap: 12px; min-height: 0; }
+.replay-links { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.replay-karte { flex: 1; min-height: 0; }
+.replay-karte > header h2 { font-size: 16px; }
+.fall-marke { display: inline-grid; place-items: center; min-width: 34px; height: 24px; padding: 0 6px; border-radius: 5px; background: var(--plenum); color: #14100a; font-weight: 700; font-size: 15px; }
+.fall-marke.gross { min-width: 46px; height: 32px; font-size: 20px; margin-right: 10px; vertical-align: 2px; }
+.replay-uhr { font-size: 20px; font-weight: 600; color: var(--text); }
+.replay-rechts { display: flex; flex-direction: column; gap: 9px; min-height: 0; }
+.fall-kopf h1 { font-size: 23px; line-height: 1.15; }
+.fall-info { font-size: 14.5px; margin-top: 3px; line-height: 1.22; }
+.fall-ausgang { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 15px; flex-wrap: wrap; }
+.g1-bild h2, .leitfragen h2, .notizen-sl h2 { font-size: 15px; color: var(--text-2); font-weight: 600; margin-bottom: 4px; }
+.g1-bild-rahmen { position: relative; width: 384px; height: 240px; border: 2px solid var(--g1); border-radius: 6px; overflow: hidden; }
+.g1-bild-hinweis { position: absolute; left: 0; right: 0; top: 24px; background: rgba(16, 20, 24, .88); color: var(--argus);
+  text-align: center; font-weight: 700; font-size: 17px; padding: 6px 10px; pointer-events: none; }
+.leitfragen ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 3px; font-size: 16px; line-height: 1.26; }
+.leitfragen .bezuege { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.leitfragen .bezuege .chip { font-size: 13.5px; white-space: normal; }
+.notizen-sl { min-height: 62px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.roll-notizen { min-height: 0; flex: 1; }
+.notizen-sl ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 15px; line-height: 1.28; }
+.notizen-sl li:not(.gewaehlt) { color: var(--text-2); }
+.notiz-feld { margin-top: 5px; }
+
+/* Zeitleiste aller Teams */
+.zeitleiste { flex: 0 0 auto; padding: 6px 10px 8px; }
+.zl-steuer { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
+.zl-legende { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-2); }
+.zl-legende > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.zl-marke.muster { position: static; transform: none; display: inline-grid; cursor: default; font-style: normal; margin-right: 2px; box-shadow: none; }
+.replay-play { min-width: 74px; font-size: 17px; padding: 4px 12px; }
+.zl-gitter { position: relative; display: flex; flex-direction: column; }
+.zl-achse, .zl-zeile { display: grid; grid-template-columns: var(--zl-name) 1fr; align-items: center; }
+.zl-achse { height: 40px; }
+.zl-zeile { height: 36px; border-top: 1px solid var(--linie); }
+.zl-zeile.an { background: #253039; }
+.zl-zeile.an .zl-name { box-shadow: inset 4px 0 0 var(--plenum); }
+.zl-name { display: flex; align-items: center; gap: 7px; height: 100%; padding: 0 8px 0 8px; background: none; border: 0; cursor: pointer; text-align: left; min-width: 0; }
+.zl-name .ausgang b { width: 22px; height: 22px; font-size: 14px; }
+.zl-spur { position: relative; height: 100%; cursor: crosshair; touch-action: none; margin-right: 14px; }
+.zl-spur.achse { cursor: default; }
+.zl-tick { position: absolute; top: 1px; transform: translateX(-50%); font: 500 13px var(--mono); color: var(--text-3); }
+.zl-global-kopf { position: absolute; bottom: 2px; transform: translateX(-50%); font-size: 13px; font-weight: 700; padding: 0 4px; border-radius: 3px; z-index: 2; }
+.zl-global-kopf.inject { background: var(--g3); color: #0e1317; }
+.zl-global-kopf.meldung { background: var(--argus); color: #1d1606; }
+.zl-global { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed; }
+.zl-global.inject { border-color: var(--g3); }
+.zl-global.meldung { border-color: var(--argus-rand); }
+.zl-marke { position: absolute; top: 50%; transform: translate(-50%, -50%); display: inline-grid; place-items: center; min-width: 22px; height: 21px; padding: 0 3px;
+  border-radius: 4px; font-size: 13.5px; font-weight: 700; white-space: nowrap; cursor: pointer; z-index: 3; color: #0e1317; box-shadow: 0 0 0 2px var(--flaeche); }
+.zl-marke.bahn-1 { top: 22%; }
+.zl-marke.bahn-0 { top: 64%; }
+.zl-marke.meldung { background: var(--argus); }
+.zl-marke.meldung.ft { background: repeating-linear-gradient(135deg, var(--argus) 0 4px, #8a6420 4px 8px); }
+.zl-marke.g1 { background: var(--g1); } .zl-marke.g2 { background: var(--g2); } .zl-marke.g3 { background: var(--g3); }
+.zl-marke.g3.freigabe { background: #e0453b; color: #fff; }
+.zl-marke.einschlag { background: transparent; color: #c8d1d9; font-size: 19px; box-shadow: none; }
+.zl-marke.einschlag.fehl { color: #ff6b5e; }
+.zl-marke.gelesen { background: #e8ecef; }
+.zl-marke.hinweis { background: #e8ecef; color: #0e1317; }
+.zl-marke.ft { background: #3a3020; color: var(--argus); font-size: 13px; }
+.zl-marke.notiz { background: var(--plenum); }
+.zl-kopf-linie { position: absolute; top: 20px; bottom: 0; width: 0; border-left: 2px solid #f4f1e6; pointer-events: none; z-index: 4; }
+
+/* Schlussfrage */
+.tafel-schluss { align-items: center; justify-content: center; gap: 46px; }
+.schlussfrage { margin: 0; font-size: 52px; font-weight: 700; text-align: center; line-height: 1.15; max-width: 1150px; color: #f6f2e6; }
+.schluss-zahlen { display: flex; gap: 18px; }
+.schluss-zahl { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 220px; padding: 14px 16px; border: 1px solid var(--linie); border-radius: 8px; background: var(--flaeche); }
+.schluss-zahl b { font-size: 40px; font-variant-numeric: tabular-nums; }
+.schluss-zahl span { font-size: 16px; color: var(--text-2); text-align: center; }
+.reiter button.weiter { margin-left: 8px; background: #26476a; color: #dcebff; }
+.kd-bahn { fill: rgba(255, 255, 255, .025); stroke: var(--linie); stroke-width: 1; }
+.kd-leitlinie { fill: none; }
+.zl-marke.entfallen { background: #39434d; color: var(--text-2); }
+.zl-tick.halb { top: 6px; width: 0; height: 7px; border-left: 1px solid var(--text-3); }
+.g1-sensor { margin-top: 4px; font-size: 14px; line-height: 1.26; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 560px; }
+.g1-sensor b { color: #ffd2cc; font-weight: 600; }
+.g1-bild .drohne-fenster .drohne-lupe-hinweis { font-size: 13px; }
+.g1-bild .drohne-fenster .drohne-kopf, .g1-bild .drohne-fenster .drohne-fuss { font-size: 12px; }

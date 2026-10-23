@@ -170,7 +170,11 @@ export function Start(p: { e: Einstellungen }) {
         </details>
 
         <div class="zeile zwischen klein sehr-leise">
-          <a style="color:var(--info)" href={`${location.pathname}?druck=einweisung`} target="_blank" rel="noopener">Einweisungskarten drucken (A5)</a>
+          <span class="zeile" style="gap:14px">
+            <a style="color:var(--info)" href={`${location.pathname}?druck=einweisung`} target="_blank" rel="noopener">Einweisungskarten drucken (A5)</a>
+            {!__ARGUS_OFFLINE__ && <a style="color:var(--info)" href={`${location.pathname}?auswertung=demo`} target="_blank" rel="noopener" data-testid="auswertung-demo"
+              title="Auswertung mit fünf Beispielteams (Modellteams des Drehbuchs) – zum Üben der Auflösung ohne Spiel">Auswertung üben (Beispiel, 5 Teams)</a>}
+          </span>
           <span>Version {__ARGUS_VERSION__} · {__ARGUS_STAND__}{__ARGUS_OFFLINE__ ? " · Offline-Datei" : ""}</span>
         </div>
       </div>

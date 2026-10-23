@@ -2,8 +2,9 @@
 // gewählt werden können.
 //   Einweisung – Lage für alle, Lagekarte, die drei Gruppen (vor dem Start)
 //   Lage       – Uhr und Lagekarte ohne Ziele (während des Spiels; der Raum sieht nichts Geheimes)
-//   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen (nach Spielende)
-// Die Auswertung mit Kennzahlen und Replay je Schlüsselfall folgt in Schritt 8.
+//   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen dieses Teams (nach Spielende)
+// Die Auswertung über alle Teams (Schritt 8, auswertung.tsx) zeigt das Plenum-Fenster von selbst, sobald alle Teams
+// das Spielende erreicht haben; „Auswertung – alle Teams ›“ führt von Hand hin.
 import { useMemo, useState } from "preact/hooks";
 import { effekte } from "../kern/effekte";
 import { LEER, lagebildKontrolle } from "../kern/lagebild";
@@ -31,7 +32,7 @@ function raumName(inh: Sicht["inh"]): string {
 }
 const MODUS_TEXT: Record<Modus, string> = { einweisung: "Einweisung", lage: "Lage", aufloesung: "Auflösung" };
 
-export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt }) {
+export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?: () => void }) {
   const { s } = p;
   const st = useStand(s);
   const t = useSpielzeit(s, 1000);
@@ -53,6 +54,8 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt }) {
           {(Object.keys(MODUS_TEXT) as Modus[]).map((m) => (
             <button type="button" class={modus === m ? "an" : ""} onClick={() => setWahl({ modus: m, bei: auto })} data-modus-knopf={m}>{MODUS_TEXT[m]}</button>
           ))}
+          {p.zurAuswertung && <button type="button" class="weiter" onClick={p.zurAuswertung} data-modus-knopf="auswertung"
+            title="Auswertung über alle Teams: Teamvergleich, Kennzahlen, Replay je Schlüsselfall">Auswertung – alle Teams ›</button>}
         </div>
       </div>
       {modus === "einweisung" && <PlenumEinweisung inh={inh} beitritt={p.beitritt} />}

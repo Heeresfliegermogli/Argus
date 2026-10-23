@@ -26,6 +26,7 @@ Ansicht G1/G2/G3/SL ──Aktion──▶ Sync-Adapter ──▶ Host des Teams 
 | `src/sitzung/` | `sitzung.ts`: ein Fenster in einer Sitzung (Lobby, Teams, Host-Bewerbung); `spiel.ts`: Spielstand eines Teams (Protokoll, Aktionen, im Host-Fenster mit Host); `sicht.ts`: ein Team aus Sicht einer Rolle für die Ansichten (auch nur lesen) |
 | `src/kern/sitzungen.ts`, `src/kern/uebersicht.ts` | Codes, Teamnamen und -farben, Rollen im Team; Übersicht der Spielleitung je Team (Eingang, Schlüsselfälle live) |
 | `src/engine/taktgeber.ts` | gemeinsamer Takt aller Team-Hosts im Fenster der Spielleitung |
+| `src/kern/auswertung.ts` | Auswertung (Schritt 8): Ausgang je Fall und Team, Kennzahlen, Konfidenz, Zeitleiste, Stand zur Zeit t, Export – reine Funktion der Protokolle; Ansicht `src/ansichten/auswertung.tsx`, siehe [`AUSWERTUNG.md`](AUSWERTUNG.md) |
 | `src/kern/lagebild.ts` | was eine Rolle auf der Lagekarte sieht: Zielmeldungen (G2/G3) oder Kontrollkarte (SL/Plenum), reine Funktion von Inhalten, Spielstand und Lagezeit |
 | `src/karte/` | Lagekarte mit PixiJS (`lagekarte.ts`, wird bei Bedarf nachgeladen), taktische Zeichen nach APP-6/MIL-STD-2525C mit milsymbol (`zeichen.ts`) |
 | `src/drohne/` | Live-Drohnenbild (Schritt 6b): Ebenen, Sprites und Effekte zur Spielzeit auf Canvas 2D (`livebild.ts`); Aufnahme zur Meldezeit, wenn das Ziel den Ausschnitt verlassen hat |
@@ -97,7 +98,7 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 | `inject_quittiert` | inject | G3 („gelesen“) |
 | `lagehinweis` | text, an [g1, g2] | G3 |
 | `fast_track` | an | G3 oder SL |
-| `notiz` | text | SL (Beobachtung) |
+| `notiz` | text, fall? | SL (Beobachtung; seit Schritt 8 optional zu einem Fall S1–S4/N1–N4, erscheint in der Auswertung) |
 | `spielende` | grund | Zeitplan (Spielzeit abgelaufen) |
 | `aktion_abgelehnt` | aktionstyp, grund | Host, wenn eine Aktion nicht passt |
 

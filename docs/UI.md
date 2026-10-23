@@ -4,8 +4,9 @@ Fünf Ansichten in 1530 × 800 ohne Rollbalken: G1 Aufklärung, G2 Zielprüfung,
 Spielleitung und Plenum. Jede Rolle hat eine Einweisungskarte (im Spiel und als Druck, A5 quer).
 Seit Schritt 7 bewegt sich die Lage (Routen, Tracking, Effekte; siehe [`ENGINE.md`](ENGINE.md)). Seit
 Schritt 6b ist die **Karte die Arbeitsfläche für G1, G2 und G3** (Konzept v2, Abschnitt 6): Meldungen als
-Marken am Ziel, kein Verlauf, der Eingang nur als Zahl, bei G1 das Drohnenbild live am Ort. Kennzahlen
-und Replay folgen in Schritt 8.
+Marken am Ziel, kein Verlauf, der Eingang nur als Zahl, bei G1 das Drohnenbild live am Ort. Seit Schritt 8 die
+**Auswertung** über alle Teams im Plenum und bei der Spielleitung (Teamvergleich, Kennzahlen, Konfidenz, Replay je
+Schlüsselfall, Export) – siehe [`AUSWERTUNG.md`](AUSWERTUNG.md).
 
 Seit Schritt 4b davor: **Startseite** (Code eingeben bzw. Sitzung anlegen), **Lobby** (Teams bilden),
 **Übersicht der Spielleitung** über alle Teams mit Teamansicht und Zuschauen – siehe
@@ -39,7 +40,7 @@ Meldungsfeld** (440 px, G3 470 px). Die Nummern ①②③ stehen gleich auf der 
 | **G2 Zielprüfung** | ① Eingang (+ zurückgestellt) · Zielmeldung kompakt (Ziel, Lage, Klasse, Konfidenz, ARGUS, Vermerk G1) · ② Wirkmittel mit Bestand, „Einschlag in n s (Uhrzeit)“, Warnungen je Wirkmittel und Abstände am **vorausberechneten Einschlagort**; Vorschau des Wirkradius auf der Karte dort (grün/rot, Zonen mit Verstoß hervorgehoben, Einsatzgrenze, Linie vom Ziel jetzt zum Einschlagort), auch beim Zeigen auf ein Wirkmittel, Banner „… bei Freigabe jetzt: Einschlag …“ | ③ BEKÄMPFEN mit … (erst nach Wirkmittelwahl) / BEOBACHTEN / NICHT BEKÄMPFEN, Begründung |
 | **G3 Führung** | ① Eingang, Fast-Track (EIN/AUS, Knopf) · ② Zielmeldung kompakt, „G2 empfiehlt …“ mit Begründung, live „Freigabe jetzt: Einschlag … – keine Regelwarnung“ bzw. die Verstöße dort („G2 hat dazu gewarnt“); Warnungen von G2, die jetzt nicht mehr gelten, als „⚠ bei G2: …“ · Postfach „Lagemeldungen“ (neue aufgeklappt, „Gelesen“, Hinweis unten rechts bei neuer Meldung) · Lagehinweis an G1/G2 | FREIGABE / ABLEHNEN / ZURÜCK AN G2, Bemerkung |
 | **Spielleitung** | Steuerung (Start/Anhalten, Tempo, Spielzeit, Fast-Track, Plenum, neues Spiel) · bedingte Injects (wartet / kommt um … / ausgelöst / entfällt) mit „jetzt“, E-01 (automatisch, Stand live), Reserve R-01–R-04, Verstärkung V-1–V-5 („einspielen“, gesperrt mit Grund) · Fenster im Raum · Notiz · **Kontrollkarte** (Ground Truth, ungemeldete Ziele, Personen, Wirkungen mit Fehltreffern, Zoom bis zu Sprites mit Schatten und Wracks) · Zeitplan mit „jetzt“, Protokoll mit Export | – |
-| **Plenum** | schaltet selbst um: **Einweisung** (Lage für alle, die drei Rollen, Karte) vor dem Start → **Lage** (Uhr, Karte ohne Ziele, Stand) während des Spiels → **Auflösung** (Kontrollkarte, Kennzahlen auf einen Blick, alle Wirkungen) nach Spielende; von Hand umschaltbar | – |
+| **Plenum** | schaltet selbst um: **Einweisung** (Lage für alle, die drei Rollen, Karte) vor dem Start → **Lage** (Uhr, Karte ohne Ziele, Stand) während des Spiels → **Auswertung über alle Teams** (Schritt 8, [`AUSWERTUNG.md`](AUSWERTUNG.md)), sobald alle Teams das Spielende erreicht haben; „◂ Spiel“ zeigt je Team die **Auflösung** (Kontrollkarte, Kennzahlen auf einen Blick, alle Wirkungen); von Hand umschaltbar | – |
 
 Bei Spielende sperrt eine Tafel die Gruppenansichten („Ansicht ansehen“ blendet sie aus, Eingaben
 bleiben gesperrt). Beim Zuschauen (Spielleitung, „nur lesen“) sind es dieselben Ansichten ohne Eingaben.
@@ -97,8 +98,8 @@ Jede Person hat eine Rolle; ihre Karte spricht sie mit „du“ an (auch der Auf
 |---|---|
 | **Startseite** | links „Mitspielen“: ein großes Codefeld und **Beitreten** (falscher Code: „Die Sitzung … gibt es nicht“); rechts „Spielleitung“: Name, **Neue Sitzung anlegen**, bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; darunter eingeklappt der Test ohne Lobby |
 | **Lobby** | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links Name, „Neues Team“ (Name, 🎲, drei Rollenknöpfe in Rollenfarbe) bzw. „Du bist im Team“, die drei Rollen in je einem Satz; rechts alle Teams als Karten (bis 8 ohne Rollen), je Rolle eine Zeile mit Name oder **beitreten** / **wechseln** / **+ dazu**, eigene Rolle **abgeben** |
-| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (seit Schritt 7 mit **Verstärkung ▾**: je Gruppe „an alle“ und je Team ein Knopf, gesperrt mit Grund); Tabelle je Team (Spieler als Chips mit Menü, Spielzeit mit „+n V“ für eingespielte Verstärkungen, Eingang, S1–S4, Fehl, FT, da, ▶/❚❚, ansehen ›); Fuß mit Teilnehmern ohne Team |
-| **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, Steuerung · G1 · G2 · G3; G1–G3 nur lesen („Zuschauen – nur lesen“) |
+| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (seit Schritt 7 mit **Verstärkung ▾**: je Gruppe „an alle“ und je Team ein Knopf, gesperrt mit Grund; seit Schritt 8 **Auswertung ›**); Tabelle je Team (Spieler als Chips mit Menü, Spielzeit mit „+n V“ für eingespielte Verstärkungen, Eingang, S1–S4, Fehl, FT, da, ▶/❚❚, ansehen ›); Fuß mit Teilnehmern ohne Team |
+| **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, Steuerung · G1 · G2 · G3; G1–G3 nur lesen („Zuschauen – nur lesen“); seit Schritt 8 **✎ Notiz** (Beobachtung der SL 2 zu einem Fall, der laufende Fall ist vorgewählt) |
 | **Plenum** | vor dem ersten Spiel Einweisung mit Code und Teams; danach ein Team (Wahl oben links) |
 
 Gestaltung: Teamfarben (Rosa, Gelb, Grün, Cyan, Indigo, Magenta, Hellgrau, Braun) sind weder Rollen-
@@ -182,4 +183,4 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 * Bedientest mit Menschen (Teil A Lobby, Teil B Ansichten); dabei „AUFNAHME“ und die Kinder in M18 beobachten.
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
-* Schritt 8: Auflösung im Plenum mit Kennzahlen aus dem Protokoll, Teamvergleich, Replay je Schlüsselfall (S3, S2, S1, S4).
+* Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).

@@ -16,7 +16,12 @@ Hier laufen dieselben Aktionen durch die echten Browserfenster:
      Host im SL-Fenster → Protokoll. Sie wartet, bis die Meldung bei ihr ist und ihre vorige Aktion bestätigt.
      Die Spielleitung spielt die Verstärkungen über die Sitzung ein (an einzelne Teams).
   4. Bis zum Spielende; unterwegs Bildschirmfotos (Feindartillerie, Nebel, LM im Flug, Achse NORD, E-01) und
-     Messung der Bildrate der Karten (Kontrollkarte SL 2, G2, G3, Plenum).
+     Messung der Bildrate der Karten (Kontrollkarte SL 2, G2, G3, Plenum). SL 2 notiert über „✎ Notiz“ eine
+     Beobachtung zu S3 (der Fall ist vorgewählt).
+  5. Auswertung (Schritt 8): Das Plenum schaltet nach Spielende in allen Teams selbst auf die Auswertung; sie wird wie
+     am Smartboard Kapitel für Kapitel durchgegangen (tools/auswertung_probe.py): Ausgang je Team und Fall und
+     Kennzahlen wie die Auswertung der Protokolle im Prozess, Replay je Schlüsselfall, Notiz der SL 2 bei S3, Export
+     ohne Namen, alles in 1530 × 800. Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
 Geprüft wird:
   • alle fünf Teams erreichen das Spielende, keine Aktion abgelehnt, je Team gleicher Stand (seq, Fingerabdruck)
     in den vier Fenstern des Teams;
@@ -49,6 +54,9 @@ import time
 import urllib.parse
 
 from playwright.sync_api import sync_playwright
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from auswertung_probe import bericht as auswertung_bericht, pruefe_auswertung  # noqa: E402
 
 W, H = 1530, 800
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch"]
@@ -92,6 +100,7 @@ MODELL_JS = """
     while (i < plan.length && t >= plan[i].t) {
       const a = plan[i];
       const m = a.daten.meldung;
+      if (a.typ === 'inject_quittiert' && !st.zustand.injects[a.daten.inject]) break;   // Lagemeldung noch nicht da
       if (soll[a.typ]) {
         const ms = st.zustand.meldungen[m];
         if (!ms || ms.stufe !== soll[a.typ]) {
@@ -127,8 +136,8 @@ SL_JS = """
       const t = sp.spielzeit();
       while (p.i < p.aktionen.length && t >= p.aktionen[p.i].t) {
         const a = p.aktionen[p.i++];
-        S.sendenAn([p.team], 'verstaerkung_einspielen', a.daten);
-        log.push({ team: p.team, plan: a.t, ist: Math.round(t * 1000) / 1000, gruppe: a.daten.gruppe });
+        S.sendenAn([p.team], a.typ, a.daten);
+        log.push({ team: p.team, plan: a.t, ist: Math.round(t * 1000) / 1000, typ: a.typ, gruppe: a.daten.gruppe });
       }
     }
   }, 8);
@@ -186,8 +195,10 @@ def schluessel(protokoll):
             k = (typ, d["meldung"])
         elif typ == "meldung_entfaellt":
             k = (typ, d["meldung"])
-        elif typ == "inject":
+        elif typ in ("inject", "inject_quittiert"):
             k = (typ, d["inject"])
+        elif typ == "lagehinweis":
+            k = (typ, len([x for x in aus if x[0] == typ]))
         elif typ == "hintergrund":
             k = (typ, d["id"])
         elif typ == "ereignis":
@@ -214,7 +225,8 @@ def nah(a, b, tol):
 
 # Ereignisse, deren Zeit von einem Klick abhängt (direkt oder über einen Einschlag): Entscheidungen, Einschläge,
 # Verstärkungen, bedingte Injects (I-08a, I-09) und Meldungen, die entfallen, weil eine Wirkung das letzte Fahrzeug traf
-AUS_AKTION = ("g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "fast_track", "verstaerkung", "inject", "meldung_entfaellt")
+AUS_AKTION = ("g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "fast_track", "verstaerkung", "inject", "meldung_entfaellt",
+              "inject_quittiert", "lagehinweis")
 
 
 def vergleiche(name, soll, ist, tol_t, tol_klick):
@@ -267,7 +279,7 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
             ea, eb = da.get("einschlag"), db.get("einschlag")
             if (ea is None) != (eb is None) or (ea and (ea["ziel"] != eb["ziel"] or not nah(ea["t"], eb["t"], tol_klick))):
                 f.append(f"{name}: {k} Einschlag {ea} / {eb}")
-        elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "g1_entscheid", "verstaerkung"):
+        elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "g1_entscheid", "verstaerkung", "inject_quittiert", "lagehinweis"):
             # t_ab der Verstärkung ist die Klickzeit der Spielleitung (geprüft über t_s mit tol_klick)
             ohne = lambda d: {x: y for x, y in d.items() if x not in ("t_ab", "grund", "manuell")}  # noqa: E731
             if ohne(da) != ohne(db):
@@ -446,6 +458,8 @@ def main():
             fotos.append((lm1 + 20, "lm_im_flug", [("sl2", sl2), ("g2", g2a), ("g3", g3a)]))
         fotos.sort()
         team2_ansicht = False
+        notiz_sl2 = False
+        NOTIZ_TEXT = "SL 2: G3 hat I-04 gelesen, aber nicht weitergegeben (e2e)"
         naechste_messung = time.time() + 8
         naechste_debug = time.time()
         layout_mitte = False
@@ -459,6 +473,18 @@ def main():
                 for rn, s in ziele:
                     foto(s, f"{name}_{rn}")
                 print(f"  Foto {name} bei {t_spiel:.0f} s")
+            if not notiz_sl2 and t_spiel >= 1290:
+                # SL 2 notiert zu Team 1 (Zuschauen in der Teamansicht): „✎ Notiz“, der laufende Fall S3 ist vorgewählt
+                sl2.get_by_test_id("notiz-knopf").click()
+                warte(lambda: sl2.get_by_test_id("notiz-menue").count() == 1, 10, "Notizfeld SL 2")
+                gewaehlt = sl2.locator("[data-notiz-fall].an").get_attribute("data-notiz-fall")
+                if gewaehlt != "S3":
+                    fehler.append(f"Notiz SL 2: vorgewählter Fall {gewaehlt}, erwartet S3")
+                    sl2.locator("[data-notiz-fall='S3']").click()
+                sl2.get_by_test_id("notiz-text").fill(NOTIZ_TEXT)
+                sl2.get_by_test_id("notiz-text").press("Enter")
+                notiz_sl2 = True
+                print(f"  Notiz SL 2 zu S3 bei {t_spiel:.0f} s")
             if not team2_ansicht and t_spiel >= 1380 and len(teams) > 1:
                 sl2.get_by_test_id("sl-teamwahl").select_option(teams[1]["id"])
                 team2_ansicht = True
@@ -553,7 +579,46 @@ def main():
                     print(f"  Bildrate {n:<7} {min(x['fps'] for x in werte)}–{max(x['fps'] for x in werte)} Bilder/s, "
                           f"Zeichenzeit Ø {sum(x['bildMs']['mittel'] for x in werte) / len(werte):.1f} ms, max {max(x['bildMs']['max'] for x in werte):.0f} ms "
                           f"({werte[0]['renderer']}, {len(werte)} Messungen)")
+        # ---------------------------------------------------------------- Auswertung (Schritt 8)
+        # Notiz der SL 2 im Protokoll von Team 1, mit Fall
+        notizen = sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll.filter((e) => e.typ === 'notiz').map((e) => e.daten)", teams[0]["id"])
+        if not any(n.get("fall") == "S3" and n.get("text") == NOTIZ_TEXT for n in notizen):
+            fehler.append(f"Notiz SL 2 nicht im Protokoll von Team 1: {notizen}")
+        try:
+            warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Plenum schaltet auf die Auswertung")
+            pl.wait_for_timeout(1000)
+            plan_teams = {"teams": plan["teams"]} if all("auswertung" in t for t in plan["teams"]) else None
+            if not plan_teams:
+                fehler.append("Plan ohne Auswertung (tools/drehbuch_plan.ts neu erzeugen)")
+            ab = os.path.join(a.bilder, "auswertung")
+            os.makedirs(ab, exist_ok=True)
+            t_aw = time.time()
+            f_aw, prot_aw, schritte_aw = pruefe_auswertung(pl, plan_teams, ab, False)
+            fehler += [f"Auswertung: {f}" for f in f_aw]
+            # Notiz der SL 2 erscheint bei S3
+            pl.keyboard.press("Home")
+            for _ in range(3):
+                pl.keyboard.press("PageDown")
+            warte(lambda: pl.locator("section.replay[data-fall='S3']").count() == 1, 10, "Replay S3")
+            if NOTIZ_TEXT not in pl.get_by_test_id("notizen-sl").inner_text():
+                fehler.append("Auswertung S3: Notiz der SL 2 fehlt")
+            auswertung_bericht(prot_aw, schritte_aw)
+            print(f"  Auswertung im Plenum durchgegangen in {time.time() - t_aw:.0f} s (mit Prüfungen)")
+            # Spielleitung: dieselbe Auswertung über „Auswertung ›“ und zurück
+            sl.get_by_test_id("auswertung-knopf").click()
+            warte(lambda: sl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 20, "Auswertung bei der Spielleitung")
+            n_sl = sl.locator("[data-testid=teamvergleich] td[data-fall]").count()
+            if n_sl != len(teams) * 8:
+                fehler.append(f"Auswertung SL: {n_sl} Zellen, erwartet {len(teams) * 8}")
+            foto(sl, "sl_auswertung")
+            sl.get_by_test_id("auswertung-zurueck").click()
+            warte(lambda: sl.locator("[data-testid=uebersicht]").count() == 1, 10, "zurück zur Übersicht")
+        except AssertionError as e:
+            fehler.append(f"Auswertung: {e}")
+            foto(pl, "auswertung_fehler")
+
         # Fotos zum Schluss (nach den Prüfungen)
+        pl.get_by_test_id("auswertung-zurueck").click()
         pl.wait_for_timeout(1500)
         foto(pl, "plenum_aufloesung")
         if len(teams) > 1:

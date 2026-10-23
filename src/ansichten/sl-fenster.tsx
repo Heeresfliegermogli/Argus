@@ -7,9 +7,14 @@
 // brauchen (alles bleibt in 1530 × 800). Das steuernde Fenster führt die Hosts aller Teams – egal,
 // welche Ansicht es gerade zeigt.
 //
-// Plenum: zeigt ein Team (Wahl oben links); vor dem ersten Spiel Einweisung mit Code und Teams.
+// Plenum: zeigt ein Team (Wahl oben links); vor dem ersten Spiel Einweisung mit Code und Teams. Haben alle Teams das
+// Spielende erreicht, schaltet es von selbst auf die Auswertung über alle Teams (Schritt 8, auswertung.tsx).
+//
+// Auswertung: dieselbe Ansicht im Plenum (Smartboard) und bei der Spielleitung („Auswertung ›“ in der Übersicht);
+// bei der Spielleitung mit Notizfeld je Fall. Während des Spiels notiert SL 2 über „✎ Notiz“ in der Teamansicht.
 import { useMemo, useState } from "preact/hooks";
-import type { Rolle } from "../kern/ereignisse";
+import { type FallDef, type TeamLauf, faelle } from "../kern/auswertung";
+import { TEXT_MAX, type Rolle } from "../kern/ereignisse";
 import { DIREKT_TEAM, GRUPPEN_ROLLEN } from "../kern/sitzungen";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { seitenAdresse } from "../config";
@@ -17,7 +22,8 @@ import { Sicht } from "../sitzung/sicht";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import type { Spiel } from "../sitzung/spiel";
 import { EinweisungFenster } from "./einweisung";
-import { Hinweise } from "./gemeinsam/bausteine";
+import { AuswertungAnsicht } from "./auswertung";
+import { Hinweise, Menue } from "./gemeinsam/bausteine";
 import { useMeldeSicht, useSitzung, useSitzungWert } from "./gemeinsam/hooks";
 import { Rahmen } from "./gemeinsam/rahmen";
 import { type Beitritt, PlenumAnsicht, PlenumEinweisung } from "./plenum";
@@ -44,6 +50,56 @@ function TeamWahl(p: { teams: TeamStand[]; team: string; setze: (team: string) =
   );
 }
 
+/**
+ * Fall, der für ein Team gerade „dran“ ist: der zuletzt erschienene Schlüsselfall, dessen Meldung noch in der Kette liegt,
+ * sonst ein solcher Nebenfall, sonst der zuletzt erschienene Fall (SL 2 notiert vor allem zu den Schlüsselfällen).
+ */
+function aktuellerFall(s: Sitzung, team: string): FallDef | null {
+  const z = s.spiel(team)?.stand.zustand;
+  const fs = faelle(s.inh);
+  if (!z) return fs[0] ?? null;
+  const erschienen = fs.filter((f) => z.meldungen[f.meldung]).sort((a, b) => z.meldungen[b.meldung].erschienen.seq - z.meldungen[a.meldung].erschienen.seq);
+  const offen = erschienen.filter((f) => ["g1", "g2", "g3", "wirkung"].includes(z.meldungen[f.meldung].stufe));
+  return offen.find((f) => f.art === "schluessel") ?? offen[0] ?? erschienen[0] ?? fs[0] ?? null;
+}
+
+/**
+ * SL 2 notiert je Schlüsselfall, was sie beobachtet (Drehbuch: wer hat was wann gesehen und entschieden, was wurde
+ * gesagt). Die Notiz steht im Protokoll des Teams und erscheint in der Auswertung beim Fall.
+ */
+function NotizKnopf(p: { s: Sitzung; team: string }) {
+  const [offen, setOffen] = useState(false);
+  const [fall, setFall] = useState<string>("");
+  const [text, setText] = useState("");
+  const fs = faelle(p.s.inh);
+  const oeffnen = () => {
+    setFall(aktuellerFall(p.s, p.team)?.id ?? "");
+    setOffen(!offen);
+  };
+  const speichern = () => {
+    if (!text.trim()) return;
+    p.s.sendenAn([p.team], "notiz", { text: text.trim(), ...(fall ? { fall } : {}) });
+    setText("");
+    setOffen(false);
+  };
+  return (
+    <span class="menue-anker">
+      <button type="button" class="knopf klein" onClick={oeffnen} data-testid="notiz-knopf" title="Beobachtung zu einem Fall notieren (erscheint in der Auswertung)">✎ Notiz</button>
+      <Menue offen={offen} schliessen={() => setOffen(false)} testid="notiz-menue">
+        <div class="menue-kopf"><b>Notiz für {p.s.team(p.team)?.name ?? "Team"}</b> <span class="sehr-leise">erscheint im Plenum – Rollen statt Namen</span></div>
+        <div class="zeile" style="gap:4px">
+          {fs.map((f) => <button type="button" key={f.id} class={`knopf klein ${fall === f.id ? "an" : ""}`} onClick={() => setFall(f.id)} title={f.titel} data-notiz-fall={f.id}>{f.id}</button>)}
+          <button type="button" class={`knopf klein ${fall === "" ? "an" : ""}`} onClick={() => setFall("")}>allgemein</button>
+        </div>
+        <textarea class="feld" rows={3} maxLength={TEXT_MAX.notiz} value={text} style="width:380px;resize:none" ref={(el) => el?.focus()}
+          placeholder="Welche Rolle hat was gesehen und entschieden? Was wurde gesagt?" onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); speichern(); } }} data-testid="notiz-text" />
+        <button type="button" class="knopf klein gut" disabled={!text.trim()} onClick={speichern}>Speichern (Enter)</button>
+      </Menue>
+    </span>
+  );
+}
+
 /** Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder Zuschauen. */
 function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void }) {
   const st = useSitzung(p.s);
@@ -61,6 +117,7 @@ function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void }
           </button>
         ))}
       </div>
+      <NotizKnopf s={p.s} team={p.wahl.team} />
     </div>
   );
 }
@@ -77,7 +134,7 @@ function TeamAnsicht(p: { s: Sitzung; spiel: Spiel; wahl: Wahl; setze: (w: Wahl 
   );
 }
 
-function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void }) {
+function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void; auswertung: () => void }) {
   const st = useSitzung(p.s);
   const [einweisung, setEinweisung] = useState(false);
   return (
@@ -98,7 +155,7 @@ function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void }) {
           <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Einweisungskarte der Spielleitung">Einweisung</button>
         </div>
       </header>
-      <Uebersicht s={p.s} ansehen={p.ansehen} />
+      <Uebersicht s={p.s} ansehen={p.ansehen} auswertung={p.auswertung} />
       {einweisung && <EinweisungFenster inh={p.s.inh} rolle="sl" schliessen={() => setEinweisung(false)} />}
       <Hinweise liste={p.s.hinweise.liste} />
     </div>
@@ -111,11 +168,35 @@ export function SLFenster(p: { s: Sitzung }) {
   const st = useSitzungWert(s, (x) => [x.direkt, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${s.spiel(t.id) ? 1 : 0}`)].join("|"));
   // Direktaufruf (ein Team ohne Lobby): gleich die Steuerung des Teams, wie bis Schritt 6
   const [wahl, setWahl] = useState<Wahl | null>(st.direkt ? { team: DIREKT_TEAM, rolle: "sl" } : null);
+  const [auswertung, setAuswertung] = useState(false);
   const team = wahl ? s.team(wahl.team) : undefined;
   const spiel = wahl ? s.spiel(wahl.team) : null;
+  if (auswertung) return <AuswertungFenster s={s} art="sl" zurueck={{ text: "◂ Übersicht", aktion: () => setAuswertung(false) }} />;
   if (wahl && team?.lauf && spiel) return <TeamAnsicht key={team.id} s={s} spiel={spiel} wahl={wahl} setze={setWahl} />;
   if (wahl && st.direkt && !team?.lauf) return <div class="start"><div class="leise">Spiel wird angelegt …</div></div>;
-  return <UebersichtRahmen s={s} ansehen={(t) => setWahl({ team: t, rolle: "sl" })} />;
+  return <UebersichtRahmen s={s} ansehen={(t) => setWahl({ team: t, rolle: "sl" })} auswertung={() => setAuswertung(true)} />;
+}
+
+// ---------------------------------------------------------------- Auswertung (Schritt 8)
+
+/** Teams mit Lauf und geladenem Protokoll, wie die Auswertung sie braucht (nur neu, wenn sich ein Protokoll ändert). */
+function useTeamLaeufe(s: Sitzung): TeamLauf[] {
+  const st = useSitzung(s);
+  const liste = st.teams.map((t) => ({ t, sp: s.spiel(t.id) })).filter((x) => x.t.lauf && x.sp?.stand.geladen && x.sp.stand.zustand.seq > 0);
+  const schl = liste.map((x) => `${x.t.id}:${x.sp!.stand.lauf}:${x.sp!.stand.zustand.seq}:${x.t.name}:${x.t.farbe}`).join("|");
+  return useMemo(() => liste.map((x) => ({ id: x.t.id, name: x.t.name, farbe: x.t.farbe, zustand: x.sp!.stand.zustand, protokoll: x.sp!.stand.protokoll })), [schl]);
+}
+
+/** Auswertung über alle Teams der Sitzung (Plenum und Spielleitung). */
+export function AuswertungFenster(p: { s: Sitzung; art: "plenum" | "sl"; zurueck?: { text: string; aktion: () => void } }) {
+  const teams = useTeamLaeufe(p.s);
+  const notiz = p.art === "sl" ? (team: string, fall: string, text: string) => { p.s.sendenAn([team], "notiz", { text, fall }); } : undefined;
+  return (
+    <>
+      <AuswertungAnsicht inh={p.s.inh} teams={teams} art={p.art} zurueck={p.zurueck} notiz={notiz} kennung={p.s.stand.direkt ? undefined : `Code ${p.s.stand.code}`} />
+      <Hinweise liste={p.s.hinweise.liste} />
+    </>
+  );
 }
 
 // ---------------------------------------------------------------- Plenum
@@ -130,26 +211,31 @@ function beitritt(s: Sitzung): Beitritt | undefined {
   };
 }
 
-function PlenumTeam(p: { s: Sitzung; spiel: Spiel; teams: TeamStand[]; setze: (team: string) => void }) {
+function PlenumTeam(p: { s: Sitzung; spiel: Spiel; teams: TeamStand[]; setze: (team: string) => void; zurAuswertung: () => void }) {
   const sicht = useMemo(() => new Sicht(p.s, p.spiel, "plenum"), [p.s, p.spiel]);
   useMeldeSicht(sicht);
   useSitzung(p.s);
   const links = p.teams.length > 1 || !p.s.stand.direkt ? <TeamWahl teams={p.teams} team={p.spiel.team} setze={p.setze} testid="plenum-teamwahl" /> : undefined;
   return (
     <Rahmen s={sicht} links={links} teamImBand>
-      <PlenumAnsicht s={sicht} beitritt={beitritt(p.s)} />
+      <PlenumAnsicht s={sicht} beitritt={beitritt(p.s)} zurAuswertung={p.zurAuswertung} />
     </Rahmen>
   );
 }
 
 export function PlenumFenster(p: { s: Sitzung }) {
   const { s } = p;
-  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.spieler.filter((y) => y.online).length}:${s.spiel(t.id) ? 1 : 0}`)].join("|"));
+  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.spieler.filter((y) => y.online).length}:${s.spiel(t.id) ? 1 : 0}:${s.spiel(t.id)?.stand.zustand.ende ? "E" : ""}`)].join("|"));
   const [wahl, setWahl] = useState<string | null>(null);
   const mitLauf = st.teams.filter((t) => t.lauf && s.spiel(t.id));
   const team = mitLauf.find((t) => t.id === wahl) ?? mitLauf[0];
   const spiel = team ? s.spiel(team.id) : null;
-  if (team && spiel) return <PlenumTeam key={team.id} s={s} spiel={spiel} teams={mitLauf} setze={setWahl} />;
+  // Spielende in allen Teams: Auswertung über alle Teams (von Hand zurück zum Spiel und wieder hin)
+  const alleEnde = mitLauf.length > 0 && mitLauf.every((t) => s.spiel(t.id)?.stand.zustand.ende);
+  const [ansicht, setAnsicht] = useState<{ auswertung: boolean; bei: boolean } | null>(null);
+  const auswertung = ansicht && ansicht.bei === alleEnde ? ansicht.auswertung : alleEnde;
+  if (team && spiel && auswertung) return <AuswertungFenster s={s} art="plenum" zurueck={{ text: "◂ Spiel", aktion: () => setAnsicht({ auswertung: false, bei: alleEnde }) }} />;
+  if (team && spiel) return <PlenumTeam key={team.id} s={s} spiel={spiel} teams={mitLauf} setze={setWahl} zurAuswertung={() => setAnsicht({ auswertung: true, bei: alleEnde })} />;
   // Noch kein Spiel geöffnet: Einweisung mit Code, damit die Teilnehmer beitreten können
   return (
     <div class="rahmen" data-rolle="plenum" data-ansicht="warten">

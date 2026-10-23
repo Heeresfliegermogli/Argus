@@ -398,8 +398,16 @@ export class Lagekarte {
     this.zeichnen();
   }
 
-  /** Auf einen Punkt zoomen (z. B. gewählte Meldung). */
+  /** Fokus, der wartet, bis die Leinwand ihre Größe hat (Replay der Auswertung öffnet die Karte mit Ausschnitt). */
+  private fokusAusstehend: { pos: Punkt; faktor: number } | null = null;
+
+  /** Auf einen Punkt zoomen (z. B. gewählte Meldung). Hat die Leinwand noch keine Größe, gilt der Fokus ab der ersten. */
   zeigeAuf(pos: Punkt, faktor = 3): void {
+    if (!this.breite || !this.hoehe) {
+      this.fokusAusstehend = { pos, faktor };
+      return;
+    }
+    this.fokusAusstehend = null;
     this.zoomFaktor = Math.max(1, Math.min(ZOOM_MAX, faktor));
     this.s = this.fit * this.zoomFaktor;
     this.x = this.breite / 2 - pos[0] * this.s;
@@ -423,6 +431,7 @@ export class Lagekarte {
     this.y = h / 2 - welt[1] * this.s;
     this.begrenzen();
     this.zeichnen();
+    if (this.fokusAusstehend && w && h) this.zeigeAuf(this.fokusAusstehend.pos, this.fokusAusstehend.faktor);
   }
 
   private begrenzen(): void {

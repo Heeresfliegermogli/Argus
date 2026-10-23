@@ -76,7 +76,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte): string {
     case "fast_track":
       return `Fast-Track ${e.daten.an ? "EIN" : "AUS"}`;
     case "notiz":
-      return `Notiz: ${e.daten.text}`;
+      return `Notiz${e.daten.fall ? ` zu ${e.daten.fall}` : ""}: ${e.daten.text}`;
     case "spielende":
       return `Spielende (${e.daten.grund})`;
     case "aktion_abgelehnt":

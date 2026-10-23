@@ -179,10 +179,14 @@ def main():
         foto(sl, "sl_kontrollkarte_zoom")
         foto(g2, "g2_karte_bekaempft")
 
-        # Spielende → Auflösung im Plenum
+        # Spielende → Auswertung im Plenum (Schritt 8), dann von Hand zur Auflösung des Teams
         sl.fill("[data-testid=sl-zeit]", "24:59")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
+        warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Auswertung im Plenum")
+        pl.wait_for_timeout(1200)
+        foto(pl, "plenum_auswertung_teamvergleich")
+        pl.get_by_test_id("auswertung-zurueck").click()
         warte(lambda: pl.locator("main[data-modus=aufloesung]").count() == 1, 30, "Auflösung im Plenum")
         pl.wait_for_timeout(1800)
         foto(pl, "plenum_aufloesung_fehltreffer")

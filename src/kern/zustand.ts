@@ -62,7 +62,8 @@ export interface Spielzustand {
   injects: Record<string, InjectStand>;
   injectReihenfolge: string[];
   lagehinweise: (Schritt & { text: string; an: Rolle[] })[];
-  notizen: (Schritt & { text: string })[];
+  /** Beobachtungen der Spielleitung, optional zu einem Fall (Auswertung, Schritt 8) */
+  notizen: (Schritt & { text: string; fall?: string })[];
   /** Restbestand je Wirkmittel, null = unbegrenzt */
   bestand: Record<string, number | null>;
   /** Fahrzeuge, die ausgefallen sind (Wirkung, Hintergrundgefecht, Skriptereignis): Ziel → Spielzeit */
@@ -256,7 +257,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       n.lagehinweise = [...n.lagehinweise, { ...s, text: e.daten.text, an: e.daten.an }];
       break;
     case "notiz":
-      n.notizen = [...n.notizen, { ...s, text: e.daten.text }];
+      n.notizen = [...n.notizen, { ...s, text: e.daten.text, ...(e.daten.fall ? { fall: e.daten.fall } : {}) }];
       break;
     case "fast_track":
       n.fastTrack = e.daten.an;

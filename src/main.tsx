@@ -5,8 +5,10 @@
 //   ?sitzung=CODE&rolle=plenum   Smartboard
 //   ?rolle=g1&raum=kraehe        Direktaufruf ohne Lobby (ein Team, für Tests und Probeläufe)
 //   ?druck=einweisung            Einweisungskarten zum Drucken
+//   ?auswertung=demo             Auswertung mit fünf Beispielteams (Üben der Auflösung, ohne Sitzung; nur Webseite)
 import { render } from "preact";
 import { useEffect, useState } from "preact/hooks";
+import { AuswertungAnsicht } from "./ansichten/auswertung";
 import { EinweisungDruck } from "./ansichten/einweisung";
 import { PlenumFenster, SLFenster } from "./ansichten/sl-fenster";
 import { Start } from "./ansichten/start";
@@ -15,7 +17,9 @@ import { type Einstellungen, leseEinstellungen, merke, merken, sitzungsAdresse }
 import { setzeBildrateMax } from "./karte/bildrate";
 import { ladeInhalte } from "./inhalte/laden";
 import type { Inhalte } from "./inhalte/typen";
-import { type Rolle, zufall } from "./kern/ereignisse";
+import type { TeamLauf } from "./kern/auswertung";
+import { type Ereignis, type Rolle, zufall } from "./kern/ereignisse";
+import { zustandAus } from "./kern/zustand";
 import { meldeSitzung } from "./sitzung/fehlersuche";
 import { Sitzung } from "./sitzung/sitzung";
 import type { FensterArt } from "./sync/adapter";
@@ -102,6 +106,27 @@ function Druck(p: { e: Einstellungen }) {
   return inh ? <EinweisungDruck inh={inh} /> : <div class="start"><div class="leise">Einweisungskarten werden geladen …</div></div>;
 }
 
+/**
+ * Auswertung mit Beispielteams (…/?auswertung=demo): die fünf Modellteams des Drehbuchs (naiv, ideal, mit
+ * Verstärkungen) aus public/demo/auswertung_demo.json, erzeugt mit tools/auswertung_demo.ts. Zum Üben der Auflösung.
+ */
+function AuswertungDemo(p: { e: Einstellungen }) {
+  const [daten, setDaten] = useState<{ inh: Inhalte; teams: TeamLauf[] } | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const inh = await ladeInhalte(p.e.szenario);
+      const antwort = await fetch(new URL("demo/auswertung_demo.json", document.baseURI), { cache: "no-cache" });
+      if (!antwort.ok) throw new Error(`Beispieldaten: HTTP ${antwort.status}`);
+      const d = (await antwort.json()) as { teams: { id: string; name: string; farbe: string; protokoll: Ereignis[] }[] };
+      setDaten({ inh, teams: d.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, protokoll: t.protokoll, zustand: zustandAus(t.protokoll, inh) })) });
+    })().catch((err: Error) => setFehler(err.message));
+  }, []);
+  if (fehler) return <div class="start"><div class="start-karte warnung">Beispiel nicht verfügbar ({fehler}). Die Beispieldaten gibt es nur auf der Webseite.</div></div>;
+  if (!daten) return <div class="start"><div class="leise">Beispiel wird geladen …</div></div>;
+  return <AuswertungAnsicht inh={daten.inh} teams={daten.teams} art="demo" kennung="Beispiel · Modellteams" />;
+}
+
 function titel(e: Einstellungen): string {
   if (e.sitzung) return e.rolle === "sl" ? "ARGUS · Spielleitung" : e.rolle === "plenum" ? "ARGUS · Plenum" : "ARGUS";
   return e.rolle ? `ARGUS · ${e.rolle.toUpperCase()}` : "ARGUS";
@@ -114,6 +139,10 @@ function App() {
   if (new URLSearchParams(location.search).get("druck") === "einweisung") {
     document.title = "ARGUS · Einweisungskarten";
     return <Druck e={e} />;
+  }
+  if (new URLSearchParams(location.search).get("auswertung") === "demo") {
+    document.title = "ARGUS · Auswertung (Beispiel)";
+    return <AuswertungDemo e={e} />;
   }
   document.title = titel(e);
   return e.sitzung || e.rolle ? <Fenster e={e} /> : <Start e={e} />;

@@ -5,7 +5,11 @@ drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen
 ARGUS: G1 Aufklärung, G2 Zielprüfung, G3 Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Schritt 7 „Engine und Live-Lage“ – Trefferregel nach der Lage beim Einschlag mit Vorausrechnung
+Stand: Schritt 8 „Auswertung mit Teamvergleich“ – Auflösung im Plenum über alle Teams: Teamvergleich der
+Schlüssel- und Nebenfälle (wer an welcher Stufe entschieden hat), Kennzahlen je Team, Kernaussage zur Konfidenz,
+Replay je Schlüsselfall mit Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben und Drohnenbild wie G1 es sah,
+Notizen der SL 2, Export ohne Namen; Üben mit `?auswertung=demo`. Überblick: [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
+Davor Schritt 6b „Oberfläche neu“ ([`docs/UI.md`](docs/UI.md)) und Schritt 7 „Engine und Live-Lage“ – Trefferregel nach der Lage beim Einschlag mit Vorausrechnung
 der Warnungen, Bewegung entlang der Routen, Tracking gemeldeter Ziele, Hintergrundgefecht H-01–H-12,
 Zustandswechsel, „Meldung entfällt“, E-01 automatisch, Verstärkung V-1–V-5 im Menü der Spielleitung,
 Effekte auf der Karte (Einschlag, LM-Flug, Leuchtspur, Feindartillerie, Wrack, Rauch). Überblick:
@@ -29,7 +33,10 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
 3. **Spielleitung:** **Spiel öffnen – alle Teams** (Ansichten mit Einweisung erscheinen), dann
    **▶ Uhr starten – alle**. „ansehen ›“ öffnet ein Team: Steuerung oder Zuschauen bei G1–G3.
 4. **Zweite Spielleitung:** Startseite → Code → **als Spielleitung**; beobachtet und kann
-   „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst).
+   „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst). In der Teamansicht **✎ Notiz** je Fall.
+5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum die Auswertung (Bild ↓ / Presenter: Teamvergleich,
+   Kennzahlen, Konfidenz, S3, S2, S1, S4, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
+   Übersicht. Üben ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
 
 | Fenster | Adresse |
 |---|---|
@@ -55,6 +62,13 @@ npm install
 npm run dev            # http://localhost:5173/?sync=lokal (Startseite) oder ?rolle=sl&raum=test&sync=lokal
 npm test               # Unit-, Sync- und Regeltests (Vitest)
 npm run build          # dist/ (Webseite) und dist/argus-offline.html (eine Datei)
+```
+
+Auswertung (Schritt 8) wie am Smartboard durchgehen – mit dem Beispiel oder dem Plenum einer Sitzung:
+
+```bash
+python3 tools/auswertung_probe.py http://localhost:4173/ --bilder auswertung-probe       # Beispiel (?auswertung=demo)
+npx vite-node tools/auswertung_demo.ts                                                   # Beispieldaten neu erzeugen
 ```
 
 Ende-zu-Ende-Test mit vier echten Browserfenstern im Direktaufruf (Python + Playwright):

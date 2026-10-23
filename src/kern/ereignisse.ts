@@ -86,7 +86,8 @@ export interface EreignisDaten {
   inject_quittiert: { inject: string };
   lagehinweis: { text: string; an: Rolle[] };
   fast_track: { an: boolean };
-  notiz: { text: string };
+  /** Beobachtung der Spielleitung (SL 2), optional zu einem Schlüssel- oder Nebenfall (S1–S4, N1–N4) für die Auswertung. */
+  notiz: { text: string; fall?: string };
   spielende: { grund: string };
   aktion_abgelehnt: { aktionstyp: string; grund: string };
 }

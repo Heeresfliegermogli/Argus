@@ -6,6 +6,11 @@
 //          Freigabe nach T_G3), sonst LM, sonst Mörser; G3 gibt immer frei; Fast-Track 30 s nach dem Angebot.
 //  ideal – handelt nach der Lösung im Szenario; G3 gibt nur frei, wenn die Warnung zum Einschlag frei ist.
 //
+// Lagemeldungen (seit Schritt 8, für Kennzahlen und Replay der Auswertung): G3 quittiert jede Lagemeldung
+// („gelesen“) eine feste Zeit nach Eingang. ideal: nach 20 s, und 35 s nach der Lagemeldung zum polnischen
+// Gegenangriff (I-04, Fall S3) ein Lagehinweis an G1 und G2. naiv: nach 40 s, I-04 erst nach 270 s (10:21:30),
+// kein Lagehinweis. Quittieren und Lagehinweis ändern den Ablauf der Meldungen nicht (Vergleich mit der Simulation).
+//
 // Wie in der Simulation arbeitet jede Person die Meldungen in der Reihenfolge ihres Erscheinens ab (G1 40 s,
 // G2 50 s, G3 30 s je Meldung) und wartet dabei auf eine frühere Meldung, die noch zu ihr kommt. Unterschiede
 // zur Simulation, die das Ergebnis nicht ändern: Die Engine lässt eine Meldung entfallen, sobald ihr letztes
@@ -25,8 +30,31 @@ import type { Abmelden, TeamKanal } from "../src/sync/adapter";
 
 export type Team = "naiv" | "ideal";
 
+/** Wie G3 mit Lagemeldungen umgeht (null: liest nichts, wie bis Schritt 7). */
+export interface LageVerhalten {
+  /** quittiert jede Lagemeldung so viele s nach Eingang */
+  quittieren_s: number;
+  /** Lagemeldung zu Fall S3 (I-04): eigene Zeit in s nach Eingang */
+  i04_s?: number;
+  /** Lagehinweis an G1 und G2 so viele s nach Eingang von I-04 (fehlt: keiner) */
+  hinweis_s?: number;
+  hinweis?: string;
+}
+
+/** So viele Sekunden vor Spielende quittiert und meldet G3 der Modellteams nichts mehr. */
+export const LAGE_VOR_ENDE_S = 10;
+
+export const LAGE_STANDARD: Record<Team, LageVerhalten> = {
+  ideal: { quittieren_s: 20, hinweis_s: 35, hinweis: "Polnischer Gegenangriff ab 10:19 entlang Feldweg Süd (PT-91, sehen aus wie T-72) – dort kein Feuer!" },
+  naiv: { quittieren_s: 40, i04_s: 270 },
+};
+
 export interface ModellOptionen {
   team: Team;
+  /** G3 und Lagemeldungen (Standard nach Team, siehe LAGE_STANDARD; null = keine) */
+  lage?: LageVerhalten | null;
+  /** Notizen der Spielleitung (Demo der Auswertung): Spielzeit, Fall, Text */
+  notizen?: { t: number; fall?: string; text: string }[];
   /** Verstärkung → Einspielzeit t0 (s) */
   einspielen?: Record<string, number>;
   zeiten?: { G1: number; G2: number; G3: number };
@@ -108,6 +136,10 @@ export class Modellteam {
   private ftGesendet = false;
   private gestartet = false;
   private eingespielt = new Set<string>();
+  private lageG3: LageVerhalten | null;
+  private quittiert = new Set<string>();
+  private hinweisGesendet = false;
+  private notizNr = 0;
 
   constructor(readonly inh: Inhalte, readonly opt: ModellOptionen, readonly name: string, private uhr: Uhr, tg: Taktgeber) {
     this.kanal = new SpeicherKanal(name, uhr);
@@ -115,6 +147,7 @@ export class Modellteam {
     this.reihenfolge = opt.reihenfolge ?? ["PZA", "ART", "MRS", "PRZ", "LM"];
     const i05 = inh.szenario.injects.find((i) => i.aktion === "fast_track_angebot")?.t_s;
     this.ftAb = opt.team === "naiv" && i05 !== undefined ? i05 + (opt.ftNachAngebot ?? 30) : null;
+    this.lageG3 = opt.lage === undefined ? LAGE_STANDARD[opt.team] : opt.lage;
     this.personen = {
       G1: { stufe: "G1", zeiger: 0, aktuell: null },
       G2: { stufe: "G2", zeiger: 0, aktuell: null },
@@ -157,6 +190,39 @@ export class Modellteam {
       this.senden("fast_track", { an: true }, "g3");
       this.ftGesendet = true;
     }
+    for (const [id, tq] of this.lageTermine()) {
+      if (t < tq - 1e-9) continue;
+      if (id === "hinweis") {
+        this.senden("lagehinweis", { text: this.lageG3!.hinweis!, an: ["g1", "g2"] }, "g3");
+        this.hinweisGesendet = true;
+      } else {
+        this.senden("inject_quittiert", { inject: id }, "g3");
+        this.quittiert.add(id);
+      }
+    }
+    const notizen = this.opt.notizen ?? [];
+    while (this.notizNr < notizen.length && t >= notizen[this.notizNr].t - 1e-9) {
+      const n = notizen[this.notizNr++];
+      this.senden("notiz", { text: n.text, ...(n.fall ? { fall: n.fall } : {}) }, "sl");
+    }
+  }
+
+  /** Fällige Lagemeldungen zum Quittieren und der Lagehinweis nach I-04: Kennung → Zeitpunkt. */
+  private lageTermine(): [string, number][] {
+    const l = this.lageG3;
+    if (!l || this.z.ende) return [];
+    const i04 = this.inh.szenario.injects.find((i) => i.fall === "S3" && i.t_s !== undefined)?.id;
+    const out: [string, number][] = [];
+    for (const id of this.z.injectReihenfolge) {
+      if (this.quittiert.has(id) || this.z.injects[id].quittiert) continue;
+      out.push([id, this.z.injects[id].erschienen.t_s + (id === i04 && l.i04_s !== undefined ? l.i04_s : l.quittieren_s)]);
+    }
+    if (i04 && l.hinweis && l.hinweis_s !== undefined && !this.hinweisGesendet && this.z.injects[i04]) {
+      out.push(["hinweis", this.z.injects[i04].erschienen.t_s + l.hinweis_s]);
+    }
+    // nichts mehr kurz vor Spielende: im Browser käme der Klick erst nach dem Ende an (z. B. I-08b um 10:24:40)
+    const schluss = this.inh.szenario.spieluhr.dauer_s - LAGE_VOR_ENDE_S;
+    return out.filter(([, tq]) => tq < schluss);
   }
 
   /** Zeitpunkte, zu denen dieses Team wieder etwas tun muss. */
@@ -165,6 +231,9 @@ export class Modellteam {
     for (const p of Object.values(this.personen)) if (p.aktuell) k.push(p.aktuell.ende);
     for (const t0 of Object.values(this.opt.einspielen ?? {})) if (t0 > t) k.push(t0);
     if (this.ftAb !== null && !this.ftGesendet) k.push(this.ftAb - 0.05);
+    for (const [, tq] of this.lageTermine()) k.push(tq);
+    const n = this.opt.notizen?.[this.notizNr];
+    if (n) k.push(n.t);
     if (!this.z.ende) k.push(naechsteFaelligkeit(this.inh, this.z, t));
     return k.filter((x) => x > t + 1e-9 && Number.isFinite(x));
   }
@@ -339,6 +408,30 @@ export class Modellteam {
     if (st.stufe === "g1" || (st.stufe === "g2" && !e?.g2)) return "warten";
     return "ueberspringen";
   }
+}
+
+/** Referenz der Simulation (tests/referenz_durchlauf.json), soweit die Modellteams sie brauchen. */
+export interface DrehbuchReferenz {
+  zeiten: { G1: number; G2: number; G3: number; ft_nach_angebot: number };
+  reihenfolge_wirkmittel: string[];
+  laeufe: { team: Team; einspielen: Record<string, number> }[];
+}
+
+/**
+ * Die fünf Teams des Drehbuchs (tools/drehbuch_plan.ts für tools/e2e_drehbuch.py, Demo der Auswertung): die Läufe
+ * der Simulation, G3 mit Lagemeldungen nach LAGE_STANDARD. Team 3 (naiv + 4 Verstärkungen) liest I-04 nach einer
+ * Minute und warnt G1 und G2 – gibt die PT-91 aber trotzdem frei (Fast-Track, G2 folgt ARGUS): Die Information kam
+ * an, entschieden hat sie nicht. Am Ausgang der Meldungen ändert das nichts.
+ */
+export function drehbuchTeams(ref: DrehbuchReferenz, notizen: Record<number, ModellOptionen["notizen"]> = {}): { name: string; opt: ModellOptionen }[] {
+  return ref.laeufe.map((l, i) => ({
+    name: `team${i + 1}`,
+    opt: {
+      team: l.team, einspielen: l.einspielen, zeiten: ref.zeiten, ftNachAngebot: ref.zeiten.ft_nach_angebot, reihenfolge: ref.reihenfolge_wirkmittel,
+      ...(i === 2 ? { lage: { quittieren_s: 30, i04_s: 60, hinweis_s: 110, hinweis: "Achtung: im Süden polnische Panzer möglich (PT-91)" } } : {}),
+      ...(notizen[i] ? { notizen: notizen[i] } : {}),
+    },
+  }));
 }
 
 /** Spielt mehrere Teams parallel mit gesteuerter Uhr bis zum Spielende durch. */

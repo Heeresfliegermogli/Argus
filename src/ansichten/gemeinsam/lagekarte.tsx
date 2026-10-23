@@ -211,6 +211,8 @@ export function LagekarteAnsicht(p: {
   fenster?: KartenFenster | null;
   /** Kasten oben links auf der Karte (G1, G2: Lagehinweise von G3) */
   ecke?: ComponentChildren;
+  /** auf einen Punkt zoomen, sobald die Karte steht und wenn sich `schluessel` ändert (Replay der Auswertung) */
+  fokus?: { pos: Punkt; faktor: number; schluessel: string };
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -354,6 +356,12 @@ export function LagekarteAnsicht(p: {
   useEffect(() => {
     if (bereit) karte.current?.setzeMarken(new Map((p.marken ?? []).map((m) => [m.id, m.mass])));
   }, [bereit, mSchl]);
+  const fokusRef = useRef(p.fokus);
+  fokusRef.current = p.fokus;
+  useEffect(() => {
+    const f = fokusRef.current;
+    if (bereit && f) karte.current?.zeigeAuf(f.pos, f.faktor);
+  }, [bereit, p.fokus?.schluessel ?? ""]);
   const fId = p.fenster?.id ?? "";
   useEffect(() => {
     if (!fId) fensterLageRef.current = null;

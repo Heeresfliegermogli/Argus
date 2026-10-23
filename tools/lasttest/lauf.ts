@@ -500,6 +500,8 @@ export class Lasttest {
     while (b.i < b.plan.length && t >= b.plan[b.i].t) {
       const a = b.plan[b.i];
       const m = (a.daten as { meldung?: string }).meldung;
+      const inj = (a.daten as { inject?: string }).inject;
+      if (a.typ === "inject_quittiert" && inj && !st.zustand.injects[inj]) return; // Lagemeldung noch nicht da
       const soll = SOLL[a.typ];
       if (soll && m) {
         const ms = st.zustand.meldungen[m];
