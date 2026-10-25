@@ -913,7 +913,8 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .ekarte.sl .druck-folien { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* Verstärkung: Vorschau der Fahrwege (B10) */
-.v-vorschau { display: flex; flex-direction: column; gap: 3px; padding: 6px; margin-bottom: 6px; background: var(--flaeche-2); border-radius: 6px; }
+/* Vorschau neben dem Menü (links davon), damit die Zeilen beim Zeigen nicht springen */
+.v-vorschau { position: absolute; top: 0; right: calc(100% + 8px); display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #10161b; border: 1px solid var(--linie-2); border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.5); pointer-events: none; }
 .v-vorschau svg { border-radius: 4px; display: block; }
 .verstaerkung-zeile.vorschau, .bedingt.vorschau { outline: 2px dashed #7d838b; outline-offset: -2px; }
 .kd-intern { font-size: 13px; fill: var(--text-3); font-weight: 500; }
