@@ -63,6 +63,7 @@ def main():
     ap.add_argument("--raum", default=f"drohne-{int(time.time()) % 100000}")
     ap.add_argument("--max-abweichung", type=float, default=6.0)
     ap.add_argument("--ohne-ebenen", action="store_true", help="Vergleich mit den Standbildern überspringen (schneller)")
+    ap.add_argument("--nur-bildrate", action="store_true", help="nur Teil 5 (Bildrate)")
     a = ap.parse_args()
     os.makedirs(a.bilder, exist_ok=True)
     man = json.load(open(MANIFEST, encoding="utf-8"))
@@ -111,158 +112,159 @@ def main():
         def live(g1, sel=LIVE):
             return g1.evaluate(f"() => {{ const x = {sel}?.argusLive; return x && {{ ...x, vergleich: undefined }}; }}")
 
-        # ---------------------------------------------------------------- 1. Zusammensetzen je Meldung
-        ctx, sl, g1, g2, g3 = raum("ebenen")
-        meldungen = [] if a.ohne_ebenen else sorted([k for k, d in man["drohne"].items() if not d.get("relativ") and d.get("ebenen")], key=lambda k: man["drohne"][k]["t_s"])
-        werte = {}
-        for mid in meldungen:
-            zeit(sl, man["drohne"][mid]["t_s"])
-            oeffne(g1, mid)
-            v = g1.evaluate(f"() => {LIVE}.argusLive.vergleich()")
-            lage = max([0.0] + [abs(f["soll"][0] - f["ist"][0]) + abs(f["soll"][1] - f["ist"][1]) for f in v["fahrzeuge"] + v["figuren"]])
-            soll_n = len(man["drohne"][mid]["ebenen"]["figuren"])
-            werte[mid] = v["abweichung"]
-            ok = lage <= 1.5 and (mid == "M25" or v["abweichung"] <= a.max_abweichung) and len(v["figuren"]) == soll_n
-            pruefe(ok, f"{mid}: Abweichung zum Standbild {v['abweichung']} Graustufen{' (Rauschen live)' if mid == 'M25' else ''}, "
-                       f"Lage ±{lage:.1f} px, {len(v['fahrzeuge'])} Fahrzeuge, {len(v['figuren'])}/{soll_n} Figuren")
-        ohne25 = [v for k, v in werte.items() if k != "M25"] or [0]
-        if werte:
-            pruefe(True, f"Abweichung ohne M25: {min(ohne25)}–{max(ohne25)} Graustufen (Referenz tools/assets/live.py: 2,5–4,2)")
-        ctx.close()
+        if not a.nur_bildrate:
+            # ---------------------------------------------------------------- 1. Zusammensetzen je Meldung
+            ctx, sl, g1, g2, g3 = raum("ebenen")
+            meldungen = [] if a.ohne_ebenen else sorted([k for k, d in man["drohne"].items() if not d.get("relativ") and d.get("ebenen")], key=lambda k: man["drohne"][k]["t_s"])
+            werte = {}
+            for mid in meldungen:
+                zeit(sl, man["drohne"][mid]["t_s"])
+                oeffne(g1, mid)
+                v = g1.evaluate(f"() => {LIVE}.argusLive.vergleich()")
+                lage = max([0.0] + [abs(f["soll"][0] - f["ist"][0]) + abs(f["soll"][1] - f["ist"][1]) for f in v["fahrzeuge"] + v["figuren"]])
+                soll_n = len(man["drohne"][mid]["ebenen"]["figuren"])
+                werte[mid] = v["abweichung"]
+                ok = lage <= 1.5 and (mid == "M25" or v["abweichung"] <= a.max_abweichung) and len(v["figuren"]) == soll_n
+                pruefe(ok, f"{mid}: Abweichung zum Standbild {v['abweichung']} Graustufen{' (Rauschen live)' if mid == 'M25' else ''}, "
+                           f"Lage ±{lage:.1f} px, {len(v['fahrzeuge'])} Fahrzeuge, {len(v['figuren'])}/{soll_n} Figuren")
+            ohne25 = [v for k, v in werte.items() if k != "M25"] or [0]
+            if werte:
+                pruefe(True, f"Abweichung ohne M25: {min(ohne25)}–{max(ohne25)} Graustufen (Referenz tools/assets/live.py: 2,5–4,2)")
+            ctx.close()
 
-        ctx, sl, g1, g2, g3 = raum("lage")
+            ctx, sl, g1, g2, g3 = raum("lage")
 
-        # ---------------------------------------------------------------- 2. Effekte und Wrack (LM auf Z-02, im Bild von M12)
-        zeit(sl, man["drohne"]["M12"]["t_s"] + 2)
-        oeffne(g1, "M03")
-        g1.get_by_role("button", name="ANNEHMEN").click()
-        warte(lambda: g2.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G2")
-        g2.locator(".kmarke[data-meldung=M03]").click()
-        g2.get_by_text("Loitering Munition (Präzision)").click()
-        g2.get_by_role("button", name="BEKÄMPFEN mit LM").click()
-        warte(lambda: g3.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G3")
-        g3.locator(".kmarke[data-meldung=M03]").click()
-        g3.get_by_role("button", name="FREIGABE").click()
-        warte(lambda: g3.locator("[data-marke='W-M03']").count() == 1, 15, "Einschlag geplant")
-        # Einschlag aus dem Protokoll; die Uhr wird genau davor, kurz danach und später gestellt (Spielzeit mit
-        # Bruchteil über die Sicht der Spielleitung), damit die kurze Explosion sicher in einem Bild liegt
-        te = g3.evaluate("() => window.argus.stand.zustand.meldungen.M03.g3.einschlag.t")
-        oeffne(g1, "M12")
-        g1.bring_to_front()
+            # ---------------------------------------------------------------- 2. Effekte und Wrack (LM auf Z-02, im Bild von M12)
+            zeit(sl, man["drohne"]["M12"]["t_s"] + 2)
+            oeffne(g1, "M03")
+            g1.get_by_role("button", name="ANNEHMEN").click()
+            warte(lambda: g2.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G2")
+            g2.locator(".kmarke[data-meldung=M03]").click()
+            g2.get_by_text("Loitering Munition (Präzision)").click()
+            g2.get_by_role("button", name="BEKÄMPFEN mit LM").click()
+            warte(lambda: g3.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G3")
+            g3.locator(".kmarke[data-meldung=M03]").click()
+            g3.get_by_role("button", name="FREIGABE").click()
+            warte(lambda: g3.locator("[data-marke='W-M03']").count() == 1, 15, "Einschlag geplant")
+            # Einschlag aus dem Protokoll; die Uhr wird genau davor, kurz danach und später gestellt (Spielzeit mit
+            # Bruchteil über die Sicht der Spielleitung), damit die kurze Explosion sicher in einem Bild liegt
+            te = g3.evaluate("() => window.argus.stand.zustand.meldungen.M03.g3.einschlag.t")
+            oeffne(g1, "M12")
+            g1.bring_to_front()
 
-        def setze(t):
-            sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", t)
-            warte(lambda: abs(g1.evaluate(f"() => {LIVE}?.argusLive?.t ?? -1") - t) < 0.05, 20, f"Live-Bild zur Spielzeit {t:.1f}")
-            g1.wait_for_timeout(300)
-            return live(g1)
+            def setze(t):
+                sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", t)
+                warte(lambda: abs(g1.evaluate(f"() => {LIVE}?.argusLive?.t ?? -1") - t) < 0.05, 20, f"Live-Bild zur Spielzeit {t:.1f}")
+                g1.wait_for_timeout(300)
+                return live(g1)
 
-        gesehen = {}
-        for name, t in [("flug", te - 0.15), ("einschlag", te + 0.15), ("wrack", te + 6)]:
-            x = setze(t)
-            gesehen[name] = (x["effekte"], any(f["id"] == "Z-02" and f["wrack"] for f in x["fahrzeuge"]))
-            foto(g1, f"M12_{name}")
-        flug_ok = "lm_flug" in gesehen["flug"][0] and not gesehen["flug"][1]
-        schlag_ok = "explosion_klein" in gesehen["einschlag"][0]
-        wrack_ok = gesehen["wrack"][1] and "feuer" in gesehen["wrack"][0]
-        pruefe(flug_ok and schlag_ok and wrack_ok,
-               f"LM auf Z-02 im Bild von M12 (Einschlag {te:.1f} s): kurz vorher {sorted(gesehen['flug'][0])}, "
-               f"beim Einschlag {sorted(gesehen['einschlag'][0])}, 6 s danach {sorted(gesehen['wrack'][0])} – Z-02 Wrack: {gesehen['wrack'][1]}")
+            gesehen = {}
+            for name, t in [("flug", te - 0.15), ("einschlag", te + 0.15), ("wrack", te + 6)]:
+                x = setze(t)
+                gesehen[name] = (x["effekte"], any(f["id"] == "Z-02" and f["wrack"] for f in x["fahrzeuge"]))
+                foto(g1, f"M12_{name}")
+            flug_ok = "lm_flug" in gesehen["flug"][0] and not gesehen["flug"][1]
+            schlag_ok = "explosion_klein" in gesehen["einschlag"][0]
+            wrack_ok = gesehen["wrack"][1] and "feuer" in gesehen["wrack"][0]
+            pruefe(flug_ok and schlag_ok and wrack_ok,
+                   f"LM auf Z-02 im Bild von M12 (Einschlag {te:.1f} s): kurz vorher {sorted(gesehen['flug'][0])}, "
+                   f"beim Einschlag {sorted(gesehen['einschlag'][0])}, 6 s danach {sorted(gesehen['wrack'][0])} – Z-02 Wrack: {gesehen['wrack'][1]}")
 
-        # ---------------------------------------------------------------- 3. Schlüsselfälle mit Lupe
-        def fall(mid, name, art, zid, farbe, mindest, t=None):
-            if t is not None:
-                zeit(sl, t)
-            oeffne(g1, mid)
-            g1.wait_for_timeout(600)
-            foto(g1, f"{mid}_fenster")
-            g1.get_by_role("button", name="Drohnenbild vergrößern").click()
-            warte(lambda: g1.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
-            info = live(g1, GROSS)
-            cv = g1.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
-            k = cv["width"] / man["drohne"][mid]["breite"]
-            if art == "fahrzeug":
-                ziel = next(f["px"] for f in info["fahrzeuge"] if f["id"] == zid)
-                anzahl = len([f for f in info["figuren"] if f["art"] == "sanitaet"])
-                text = f"Sanitätsfahrzeug {zid} im Bild, {anzahl} Sanitäter"
-                ok = anzahl == 2
+            # ---------------------------------------------------------------- 3. Schlüsselfälle mit Lupe
+            def fall(mid, name, art, zid, farbe, mindest, t=None):
+                if t is not None:
+                    zeit(sl, t)
+                oeffne(g1, mid)
+                g1.wait_for_timeout(600)
+                foto(g1, f"{mid}_fenster")
+                g1.get_by_role("button", name="Drohnenbild vergrößern").click()
+                warte(lambda: g1.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
+                info = live(g1, GROSS)
+                cv = g1.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
+                k = cv["width"] / man["drohne"][mid]["breite"]
+                if art == "fahrzeug":
+                    ziel = next(f["px"] for f in info["fahrzeuge"] if f["id"] == zid)
+                    anzahl = len([f for f in info["figuren"] if f["art"] == "sanitaet"])
+                    text = f"Sanitätsfahrzeug {zid} im Bild, {anzahl} Sanitäter"
+                    ok = anzahl == 2
+                else:
+                    figs = [f for f in info["figuren"] if art in f["sprite"]]
+                    ziel = figs[0]["px"] if figs else [512, 320]
+                    anzahl = len(figs)
+                    text = f"{anzahl} Figur(en) „{art}“ im Bild"
+                    ok = anzahl == (2 if art == "kind" else 1)
+                g1.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
+                if art != "fahrzeug":
+                    for _ in range(3):
+                        g1.mouse.wheel(0, -100)
+                        g1.wait_for_timeout(120)
+                g1.wait_for_timeout(500)
+                z = g1.evaluate(LUPE_ZAEHLEN)
+                if farbe:
+                    ok = ok and z is not None and z[farbe] >= mindest
+                    text += f", Lupe: {z[farbe] if z else '–'} {'rote' if farbe == 'rot' else 'weiße'} Bildpunkte"
+                verdeckt = man["drohne"][mid]["ebenen"]["figuren_verdeckt"]
+                text += f", verdeckt (Ebenen): {', '.join(f'{kk} {round(v * 100)} %' for kk, v in verdeckt.items()) or '–'}"
+                pruefe(ok and all(v < 0.1 for kk, v in verdeckt.items() if "soldat" not in kk), f"{mid} {name}: {text}")
+                foto(g1, f"{mid}_lupe")
+                g1.keyboard.press("Escape")
+
+            fall("M12", "S2 Rotes Kreuz", "fahrzeug", "Z-12", "rot", 40)
+
+            # ---------------------------------------------------------------- 4. Kamera folgt dem Ziel (M13 Panzerzug, B9)
+            t13 = man["drohne"]["M13"]["t_s"]
+            zeit(sl, t13)
+            oeffne(g1, "M13")
+            x0 = live(g1)
+            sl.get_by_role("button", name="×5", exact=True).click()
+            sl.get_by_role("button", name="▶ Start").click()
+            g1.wait_for_timeout(1500)
+            foto(g1, "M13_faehrt")
+            g1.wait_for_timeout(1500)
+            sl.get_by_role("button", name="❚❚ Anhalten").click()
+            sl.get_by_role("button", name="×1", exact=True).click()
+            x1 = live(g1)
+            zid = x1["kamera"]["ziel"]
+            lage0 = {f["id"]: f["px"] for f in x0["fahrzeuge"]}
+            lage1 = {f["id"]: f["px"] for f in x1["fahrzeuge"]}
+            ruck = round(((lage1[zid][0] - lage0[zid][0]) ** 2 + (lage1[zid][1] - lage0[zid][1]) ** 2) ** 0.5, 1) if zid in lage0 and zid in lage1 else None
+            fahrt = round(((x1["kamera"]["dx"] - x0["kamera"]["dx"]) ** 2 + (x1["kamera"]["dy"] - x0["kamera"]["dy"]) ** 2) ** 0.5, 1)
+            pruefe(zid == man["drohne"]["M13"]["ziele"][0]["id"] and ruck is not None and ruck <= 3 and fahrt >= 3 and x1["zielImBild"],
+                   f"M13 Kamera folgt {zid}: nach {x1['t'] - x0['t']:.0f} s Spielzeit Ausschnitt {fahrt} m weiter, {zid} im Bild um {ruck} px versetzt (soll ≤ 3)")
+
+            # Schwenk nach der Zerstörung: erste Meldung mit mehreren Fahrzeugen, deren erstes vor den anderen zerstört wird
+            sz = json.load(open(os.path.join(HIER, "..", "public", "daten", "szenario_kraehe_01.json"), encoding="utf-8"))
+            tz = {h["ziel"]: h["t_s"] for h in (sz.get("hintergrund") or {}).get("ereignisse", []) if h.get("art") == "panzerabwehr" and h.get("folge") == "zerstoert"}
+            kand = [m for m in sorted(sz["meldungen"], key=lambda m: m["t_s"]) if len(m["ziele"]) > 1 and m["id"] in man["drohne"]
+                    and tz.get(m["ziele"][0], 0) > m["t_s"] and any(tz.get(o, 1e9) > tz[m["ziele"][0]] for o in m["ziele"][1:])]
+            if not kand:
+                pruefe(False, "Schwenk: keine Meldung mit mehreren Fahrzeugen, deren erstes zuerst zerstört wird")
             else:
-                figs = [f for f in info["figuren"] if art in f["sprite"]]
-                ziel = figs[0]["px"] if figs else [512, 320]
-                anzahl = len(figs)
-                text = f"{anzahl} Figur(en) „{art}“ im Bild"
-                ok = anzahl == (2 if art == "kind" else 1)
-            g1.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
-            if art != "fahrzeug":
-                for _ in range(3):
-                    g1.mouse.wheel(0, -100)
-                    g1.wait_for_timeout(120)
-            g1.wait_for_timeout(500)
-            z = g1.evaluate(LUPE_ZAEHLEN)
-            if farbe:
-                ok = ok and z is not None and z[farbe] >= mindest
-                text += f", Lupe: {z[farbe] if z else '–'} {'rote' if farbe == 'rot' else 'weiße'} Bildpunkte"
-            verdeckt = man["drohne"][mid]["ebenen"]["figuren_verdeckt"]
-            text += f", verdeckt (Ebenen): {', '.join(f'{kk} {round(v * 100)} %' for kk, v in verdeckt.items()) or '–'}"
-            pruefe(ok and all(v < 0.1 for kk, v in verdeckt.items() if "soldat" not in kk), f"{mid} {name}: {text}")
-            foto(g1, f"{mid}_lupe")
-            g1.keyboard.press("Escape")
+                m = kand[0]
+                erst = m["ziele"][0]
+                zeit(sl, m["t_s"])
+                oeffne(g1, m["id"])
+                zeit(sl, tz[erst] + 5)
+                warte(lambda: sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}'] ?? null") is not None, 15, f"{erst} zerstört")
+                te = sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}']")
+                status = lambda: g1.locator("[data-testid=live-fenster] .live-status").inner_text()  # noqa: E731
+                a0 = setze(te + 0.25)
+                k0 = (a0["kamera"]["ziel"], a0["kamera"]["rauschen"], status())
+                a1 = setze(te + 0.5 + 0.22)
+                k1 = (a1["kamera"]["ziel"], a1["kamera"]["rauschen"], status())
+                foto(g1, f"{m['id']}_schwenk")
+                a2 = setze(te + 2)
+                k2 = (a2["kamera"]["ziel"], a2["kamera"]["rauschen"], status())
+                foto(g1, f"{m['id']}_naechstes")
+                mitte = next((mk for mk in a2["marken"] if mk == k2[0]), None)
+                pruefe(k0[0] == erst and k0[1] == 0 and k1[1] > 0.5 and "AUSRICHTUNG" in k1[2] and k2[0] != erst and k2[0] in m["ziele"]
+                       and k2[1] == 0 and "LIVE" in k2[2] and mitte is not None,
+                       f"{m['id']} Schwenk: {erst} zerstört {te:.1f} s; +0,25 s {k0}; +0,72 s {k1[0]} Rauschen {k1[1]:.2f} „{k1[2]}“; "
+                       f"+2 s {k2[0]} „{k2[2]}“, ARGUS-Rahmen am neuen Ziel: {mitte is not None}")
 
-        fall("M12", "S2 Rotes Kreuz", "fahrzeug", "Z-12", "rot", 40)
-
-        # ---------------------------------------------------------------- 4. Kamera folgt dem Ziel (M13 Panzerzug, B9)
-        t13 = man["drohne"]["M13"]["t_s"]
-        zeit(sl, t13)
-        oeffne(g1, "M13")
-        x0 = live(g1)
-        sl.get_by_role("button", name="×5", exact=True).click()
-        sl.get_by_role("button", name="▶ Start").click()
-        g1.wait_for_timeout(1500)
-        foto(g1, "M13_faehrt")
-        g1.wait_for_timeout(1500)
-        sl.get_by_role("button", name="❚❚ Anhalten").click()
-        sl.get_by_role("button", name="×1", exact=True).click()
-        x1 = live(g1)
-        zid = x1["kamera"]["ziel"]
-        lage0 = {f["id"]: f["px"] for f in x0["fahrzeuge"]}
-        lage1 = {f["id"]: f["px"] for f in x1["fahrzeuge"]}
-        ruck = round(((lage1[zid][0] - lage0[zid][0]) ** 2 + (lage1[zid][1] - lage0[zid][1]) ** 2) ** 0.5, 1) if zid in lage0 and zid in lage1 else None
-        fahrt = round(((x1["kamera"]["dx"] - x0["kamera"]["dx"]) ** 2 + (x1["kamera"]["dy"] - x0["kamera"]["dy"]) ** 2) ** 0.5, 1)
-        pruefe(zid == man["drohne"]["M13"]["ziele"][0]["id"] and ruck is not None and ruck <= 3 and fahrt >= 3 and x1["zielImBild"],
-               f"M13 Kamera folgt {zid}: nach {x1['t'] - x0['t']:.0f} s Spielzeit Ausschnitt {fahrt} m weiter, {zid} im Bild um {ruck} px versetzt (soll ≤ 3)")
-
-        # Schwenk nach der Zerstörung: erste Meldung mit mehreren Fahrzeugen, deren erstes vor den anderen zerstört wird
-        sz = json.load(open(os.path.join(HIER, "..", "public", "daten", "szenario_kraehe_01.json"), encoding="utf-8"))
-        tz = {h["ziel"]: h["t_s"] for h in (sz.get("hintergrund") or {}).get("ereignisse", []) if h.get("art") == "panzerabwehr" and h.get("folge") == "zerstoert"}
-        kand = [m for m in sorted(sz["meldungen"], key=lambda m: m["t_s"]) if len(m["ziele"]) > 1 and m["id"] in man["drohne"]
-                and tz.get(m["ziele"][0], 0) > m["t_s"] and any(tz.get(o, 1e9) > tz[m["ziele"][0]] for o in m["ziele"][1:])]
-        if not kand:
-            pruefe(False, "Schwenk: keine Meldung mit mehreren Fahrzeugen, deren erstes zuerst zerstört wird")
-        else:
-            m = kand[0]
-            erst = m["ziele"][0]
-            zeit(sl, m["t_s"])
-            oeffne(g1, m["id"])
-            zeit(sl, tz[erst] + 5)
-            warte(lambda: sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}'] ?? null") is not None, 15, f"{erst} zerstört")
-            te = sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}']")
-            status = lambda: g1.locator("[data-testid=live-fenster] .live-status").inner_text()  # noqa: E731
-            a0 = setze(te + 0.25)
-            k0 = (a0["kamera"]["ziel"], a0["kamera"]["rauschen"], status())
-            a1 = setze(te + 0.5 + 0.22)
-            k1 = (a1["kamera"]["ziel"], a1["kamera"]["rauschen"], status())
-            foto(g1, f"{m['id']}_schwenk")
-            a2 = setze(te + 2)
-            k2 = (a2["kamera"]["ziel"], a2["kamera"]["rauschen"], status())
-            foto(g1, f"{m['id']}_naechstes")
-            mitte = next((mk for mk in a2["marken"] if mk == k2[0]), None)
-            pruefe(k0[0] == erst and k0[1] == 0 and k1[1] > 0.5 and "AUSRICHTUNG" in k1[2] and k2[0] != erst and k2[0] in m["ziele"]
-                   and k2[1] == 0 and "LIVE" in k2[2] and mitte is not None,
-                   f"{m['id']} Schwenk: {erst} zerstört {te:.1f} s; +0,25 s {k0}; +0,72 s {k1[0]} Rauschen {k1[1]:.2f} „{k1[2]}“; "
-                   f"+2 s {k2[0]} „{k2[2]}“, ARGUS-Rahmen am neuen Ziel: {mitte is not None}")
-
-        fall("M18", "S4 Kinder", "kind", None, None, 0, man["drohne"]["M18"]["t_s"] + 5)
-        fall("M21", "N2 weißes Tuch", "tuch", None, "weiss", 40, man["drohne"]["M21"]["t_s"] + 5)
-        ctx.close()
+            fall("M18", "S4 Kinder", "kind", None, None, 0, man["drohne"]["M18"]["t_s"] + 5)
+            fall("M21", "N2 weißes Tuch", "tuch", None, "weiss", 40, man["drohne"]["M21"]["t_s"] + 5)
+            ctx.close()
         browser.close()
 
         # ---------------------------------------------------------------- 5. Bildrate bei laufender Uhr

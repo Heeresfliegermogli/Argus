@@ -304,6 +304,14 @@ export class LiveDrohnenbild {
   /** Kamera der zuletzt berechneten Szene (px() rechnet mit ihr) */
   private kam: LiveKamera = KAMERA_STEHT;
   private bodenWeichBild: HTMLCanvasElement | null = null;
+  /**
+   * Grund beim Schwenk, einmal zusammengesetzt (Luftbild, Kacheln, Boden der Meldung) für den Ausschnitt mit Rand
+   * GRUND_RAND px: Je Bild ist das nur ein drawImage wie beim stehenden Boden. Neu gebaut, wenn die Kamera den Rand
+   * erreicht oder Kacheln nachgeladen sind. Lage in px des Bodens der Meldung.
+   */
+  private grundCache: { c: CanvasImageSource; w: number; h: number; x: number; y: number; voll: boolean; zeit: number } | null = null;
+  /** Diagnose: wie oft der Grund neu zusammengesetzt wurde, Dauer zuletzt und höchstens (ms) */
+  grundBau = { n: 0, ms: 0, max: 0 };
 
   constructor(
     readonly res: LiveRessourcen,
@@ -726,27 +734,64 @@ export class LiveDrohnenbild {
   /**
    * Boden, wenn die Kamera schwenkt: Luftbild des Kartenpakets (Kacheln, sonst 0,5 m/px) für den ganzen Ausschnitt,
    * darauf der Boden der Meldung an seiner Stelle in der Welt mit weichen Rändern. Außerhalb der Karte dunkles Gelände.
+   * Aus dem Zwischenspeicher (grundCache), damit das Bild so schnell bleibt wie mit stehender Kamera.
    */
   private grund(ctx: CanvasRenderingContext2D, ox: number, oy: number): void {
+    const vx = -ox;
+    const vy = -oy;
+    const g0 = this.grundCache;
+    const jetzt = performance.now();
+    const passt = g0 && vx >= g0.x && vy >= g0.y && vx + this.breite <= g0.x + g0.w && vy + this.hoehe <= g0.y + g0.h;
+    const g = passt && (g0.voll || jetzt - g0.zeit < 500) ? g0 : this.baueGrund(vx, vy, jetzt);
+    if (!g) return;
+    // Große Leinwand (Vergrößerung): bilinear. „high“ rechnet ein Bild ohne Grafikkarte bei jedem Bild neu (ca. 27 ms
+    // für 1136 × 710), beim stehenden Boden hilft der Bildzwischenspeicher des Browsers, beim Zwischenspeicher hier nicht.
+    const gross = ctx.getTransform().a >= 1 && ctx.canvas.width * ctx.canvas.height > 300_000;
+    if (gross) ctx.imageSmoothingQuality = "low";
+    if (g !== g0 || !passt) {
+      const ms = performance.now() - jetzt;
+      this.grundBau = { n: this.grundBau.n + 1, ms, max: Math.max(this.grundBau.max, ms) };
+    }
+    ctx.drawImage(g.c, vx - g.x, vy - g.y, this.breite, this.hoehe, 0, 0, this.breite, this.hoehe);
+    if (gross) ctx.imageSmoothingQuality = "high";
+  }
+
+  private static readonly GRUND_RAND = 384;
+
+  private baueGrund(vx: number, vy: number, jetzt: number): LiveDrohnenbild["grundCache"] {
+    const R = LiveDrohnenbild.GRUND_RAND;
+    const w = this.breite + 2 * R;
+    const h = this.hoehe + 2 * R;
+    const alt = this.grundCache?.c;
+    const c = alt instanceof HTMLCanvasElement && alt.width === w && alt.height === h ? alt : Object.assign(document.createElement("canvas"), { width: w, height: h });
+    const ctx = c.getContext("2d");
+    if (!ctx) return null;
+    const gx = Math.round(vx - R);
+    const gy = Math.round(vy - R);
     const { res, db } = this;
     const mpp = db.m_pro_px;
-    const vx = db.ausschnitt_m.x + this.kam.dx;
-    const vy = db.ausschnitt_m.y + this.kam.dy;
-    const vw = this.breite * mpp;
-    const vh = this.hoehe * mpp;
+    // Bereich des Zwischenspeichers in m
+    const wx = db.ausschnitt_m.x + gx * mpp;
+    const wy = db.ausschnitt_m.y + gy * mpp;
+    const ww = c.width * mpp;
+    const wh = c.height * mpp;
+    // Luftbild (0,5 m/px) und Kacheln (0,25 m/px) sind gröber als das Drohnenbild: bilinear reicht und ist schnell
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "low";
     ctx.fillStyle = "#3d4536";
-    ctx.fillRect(0, 0, this.breite, this.hoehe);
-    const lb = res.luftbild;
+    ctx.fillRect(0, 0, c.width, c.height);
+    let voll = true;
     const zeichne = (bild: CanvasImageSource, bx: number, by: number, bm: number, bw: number, bh: number) => {
-      // Bild bei (bx, by) m mit bm m/px; nur der Teil im Ausschnitt
-      const x0 = Math.max(vx, bx);
-      const y0 = Math.max(vy, by);
-      const x1 = Math.min(vx + vw, bx + bw * bm);
-      const y1 = Math.min(vy + vh, by + bh * bm);
+      // Bild bei (bx, by) m mit bm m/px; nur der Teil im Bereich
+      const x0 = Math.max(wx, bx);
+      const y0 = Math.max(wy, by);
+      const x1 = Math.min(wx + ww, bx + bw * bm);
+      const y1 = Math.min(wy + wh, by + bh * bm);
       if (x1 <= x0 || y1 <= y0) return;
       ctx.drawImage(bild, (x0 - bx) / bm, (y0 - by) / bm, (x1 - x0) / bm, (y1 - y0) / bm,
-        (x0 - vx) / mpp, (y0 - vy) / mpp, (x1 - x0) / mpp, (y1 - y0) / mpp);
+        (x0 - wx) / mpp, (y0 - wy) / mpp, (x1 - x0) / mpp, (y1 - y0) / mpp);
     };
+    const lb = res.luftbild;
     if (lb) {
       const k = res.man.karte.ausdehnung_m;
       zeichne(lb.bild, 0, 0, lb.m_pro_px, k.breite / lb.m_pro_px, k.hoehe / lb.m_pro_px);
@@ -754,17 +799,20 @@ export class LiveDrohnenbild {
     const kk = res.man.karte?.luftbild?.kacheln;
     if (kk && kachelnVerfuegbar()) {
       const m = kk.kachel_px * kk.m_pro_px;
-      for (let ix = Math.max(0, Math.floor(vx / m)); ix <= Math.min(kk.spalten - 1, Math.floor((vx + vw) / m)); ix++) {
-        for (let iy = Math.max(0, Math.floor(vy / m)); iy <= Math.min(kk.zeilen - 1, Math.floor((vy + vh) / m)); iy++) {
+      for (let ix = Math.max(0, Math.floor(wx / m)); ix <= Math.min(kk.spalten - 1, Math.floor((wx + ww) / m)); ix++) {
+        for (let iy = Math.max(0, Math.floor(wy / m)); iy <= Math.min(kk.zeilen - 1, Math.floor((wy + wh) / m)); iy++) {
           const b = kachel(res.man, ix, iy);
-          if (!b) continue;
-          const bw = (b as HTMLCanvasElement).width;
-          const bh = (b as HTMLCanvasElement).height;
-          zeichne(b, ix * m, iy * m, kk.m_pro_px, bw, bh);
+          if (!b) {
+            voll = false;
+            continue;
+          }
+          zeichne(b, ix * m, iy * m, kk.m_pro_px, (b as HTMLCanvasElement).width, (b as HTMLCanvasElement).height);
         }
       }
     }
-    ctx.drawImage(this.bodenWeich(), ox, oy, this.breite, this.hoehe);
+    ctx.drawImage(this.bodenWeich(), -gx, -gy, this.breite, this.hoehe);
+    this.grundCache = { c, w, h, x: gx, y: gy, voll, zeit: jetzt };
+    return this.grundCache;
   }
 
   /** Boden der Meldung mit weichen Rändern (einmal je Meldung gerechnet), damit der Übergang zum Luftbild nicht auffällt. */

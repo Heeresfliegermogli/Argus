@@ -2,6 +2,7 @@
 // Kennungen in Daten und Protokoll bleiben.
 import { describe, expect, it } from "vitest";
 import { rollenImText } from "../src/kern/anzeige";
+import { beschreibe } from "../src/kern/beschreibung";
 import type { Ereignis } from "../src/kern/ereignisse";
 import { welt } from "../src/kern/welt";
 import { zielName, zielNr, zielNummern } from "../src/kern/zielnummern";
@@ -64,5 +65,20 @@ describe("Zielnummern (B7)", () => {
     expect(n.get("M01")).toBe("1");
     expect(n.get(vIds[0])).toBe("1a");
     expect(n.get("M02")).toBe("2");
+  });
+});
+
+describe("Protokoll der Spielleitung (B3, B7)", () => {
+  it("Ziel n mit interner Kennung, Empfänger als Rollenname", async () => {
+    const inh = await inhalte();
+    seq = 0;
+    const m = e("meldung", { meldung: "M03" }, 240);
+    expect(beschreibe(m, inh)).toMatch(/^ARGUS Ziel 3 \(M03\): /);
+    const g1 = e("g1_entscheid", { meldung: "M03", entscheid: "annehmen" }, 250);
+    expect(beschreibe(g1, inh)).toMatch(/^Ziel 3 \(M03\) /);
+    const i = inh.szenario.injects.find((x) => x.an === "G3")!;
+    const inj = e("inject", { inject: i.id }, i.t_s ?? 30);
+    expect(beschreibe(inj, inh)).toContain(`Inject ${i.id} an Führung`);
+    expect(beschreibe(inj, inh)).not.toMatch(/\bG[123]\b/);
   });
 });

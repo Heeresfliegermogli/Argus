@@ -1,7 +1,7 @@
 # Lasttest-Seite (Firebase)
 
 `…/Argus/lasttest.html` spielt gegen die Firebase-Datenbank eine echte Sitzung durch: n Teams à 3 Bot-Spieler
-(G1, G2, G3, **je eine eigene Firebase-Verbindung**, Standard Long-Polling wie im Hörsaal) und ein Host
+(Aufklärung, Zielprüfung, Führung, **je eine eigene Firebase-Verbindung**, Standard Long-Polling wie im Hörsaal) und ein Host
 (Spielleitung, führt die Engine aller Teams). Jeder Teilnehmer ist eine eigene `Sitzung` der App
 (`src/sitzung/sitzung.ts`) – Lobby, Anwesenheit, Teams, Host, Protokolle wie in den Fenstern im Hörsaal, nur ohne
 Oberfläche. Die Bots spielen das Drehbuch der fünf Modellteams wie `tools/e2e_drehbuch.py` (Plan aus

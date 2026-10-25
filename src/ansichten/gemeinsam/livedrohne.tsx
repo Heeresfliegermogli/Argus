@@ -153,7 +153,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
         zaehler = { n: 0, ab: jetzt };
       }
       (lw as unknown as { argusLive?: unknown }).argusLive = {
-        meldung: b.id, t: u.t, fps: Number(lw.dataset.fps ?? 0), bildMs: { ...b.bildMs },
+        meldung: b.id, t: u.t, fps: Number(lw.dataset.fps ?? 0), bildMs: { ...b.bildMs }, grundBau: { ...b.grundBau },
         fahrzeuge: sz.fahrzeuge.map((f) => ({ id: f.id, sprite: f.sprite, px: f.px.map((v) => Math.round(v)), wrack: f.wrack })),
         figuren: sz.figuren.map((f) => ({ bei: f.fg.bei, art: f.fg.art, sprite: f.fg.sprite, px: f.px.map((v) => Math.round(v)) })),
         marken: marken.map((m) => m.id), zielImBild: sz.zielImBild, aufnahme, effekte: aufnahme ? [] : [...b.gezeigt], kamera: { ...sz.kamera },

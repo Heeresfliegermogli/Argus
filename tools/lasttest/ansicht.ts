@@ -55,7 +55,7 @@ export function einstellungenHtml(o: LastOptionen, auf: Aufteilung, dauerS: numb
     <section class="karte">
       <h1><span class="marke">ARGUS</span> Lasttest Firebase</h1>
       <p>Spielt eine echte Sitzung in der Datenbank durch: <b>${o.teams} ${o.teams === 1 ? "Team" : "Teams"} à 3 Bot-Spieler</b>
-        (G1, G2, G3 – je eine eigene Firebase-Verbindung) und ein <b>Host</b> (Spielleitung) – das Drehbuch der fünf Modellteams wie
+        (Aufklärung, Zielprüfung, Führung – je eine eigene Firebase-Verbindung) und ein <b>Host</b> (Spielleitung) – das Drehbuch der fünf Modellteams wie
         <code>tools/e2e_drehbuch.py</code>. Gemessen wird der Weg <b>Klick → Protokoll</b>: vom Senden einer Aktion bis das Ereignis
         dazu im eigenen Fenster steht.</p>
       <div class="felder">
