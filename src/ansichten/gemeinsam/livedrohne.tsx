@@ -54,7 +54,7 @@ interface TaktElemente {
   leinwand: HTMLCanvasElement | null;
   lupe: HTMLCanvasElement | null;
   rahmen: Map<string, HTMLElement>;
-  /** Kopfzeile rechts: „● LIVE 10:14:31“ bzw. „AUFNAHME 10:14:30“ */
+  /** Kopfzeile rechts: „● LIVE 14:31“, beim Schwenk „◌ AUSRICHTUNG …“, bzw. „AUFNAHME 14:30“ */
   status: HTMLElement | null;
 }
 
