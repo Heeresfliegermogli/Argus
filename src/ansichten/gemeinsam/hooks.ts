@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { Sicht, SichtStand } from "../../sitzung/sicht";
 import { meldeSicht } from "../../sitzung/fehlersuche";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
+import { zielName } from "../../kern/zielnummern";
 
 /** Stand der Sicht; die Komponente zeichnet bei jeder Änderung neu. */
 export function useStand(s: Sicht): SichtStand {
@@ -48,7 +49,7 @@ export function useEntfallHinweis(s: Sicht, st: SichtStand, rolle: "g1" | "g2" |
       for (const id of ids) {
         if (bekannt.current.has(id)) continue;
         const e = z.meldungen[id].entfallen!;
-        s.hinweis("info", `${id} entfällt – ${e.grund}`);
+        s.hinweis("info", `${zielName(s.inh, z, id, false)} entfällt – ${e.grund}`);
       }
     }
     bekannt.current = new Set(ids);
