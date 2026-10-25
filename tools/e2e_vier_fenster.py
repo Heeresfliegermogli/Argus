@@ -71,9 +71,9 @@ def main():
             if r == "sl":
                 warte(lambda: s.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
             else:
-                # Vor Spielbeginn öffnet sich die Einweisungskarte der Gruppe (Schritt 6)
+                # Vor Spielbeginn öffnet sich die Einweisung der Rolle (Folien, überspringbar – B5)
                 warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 10, f"Einweisung {r}")
-                s.get_by_test_id("einweisung-schliessen").click()
+                s.get_by_test_id("einweisung-ueberspringen").click()
         sl, g1, g2, g3 = (seiten[r] for r in ROLLEN)
 
         def attr(s, name):
@@ -98,7 +98,6 @@ def main():
         print("G1 hat Meldung:", g1.get_by_test_id("offene-meldung").get_attribute("data-meldung"))
 
         # G1 nimmt die erste Meldung an
-        g1.fill("[data-testid=g1-vermerk]", "heiß, fährt – passt")
         g1.get_by_role("button", name="ANNEHMEN").click()
         warte(lambda: g2.locator("[data-testid=g2-offen]").inner_text() != "0", 20, "Zielmeldung bei G2")
 

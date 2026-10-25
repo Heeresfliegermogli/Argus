@@ -4,7 +4,7 @@
 Ergänzt tools/ui_bilder.py (kurzer Ablauf bis S1). Hier:
   • volle Warteschlangen (Spielzeit erst 13:20, dann 20:50 gesetzt: viele Meldungen und Lagemeldungen auf einmal;
     seit Schritt 7 entfallen Meldungen, deren Fahrzeuge zerstört oder abgezogen sind),
-  • längste erlaubte Texte (Vermerk, Begründung, Bemerkung, Lagehinweis),
+  • längste erlaubte Texte (Begründung, Bemerkung, Lagehinweis),
   • die Schlüsselfälle im Drohnenbild von G1 mit Vergrößerung auf das entscheidende Detail
     (S2 Rotes Kreuz M12, S4 Kinder M18, S3 drei Panzer M20, N2 weißes Tuch M21),
   • G2 mit mehreren Warnungen (Mörser bei M12) und BEOBACHTEN, G3 mit Regelwarnung,
@@ -67,7 +67,7 @@ def main():
                 warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
             elif r != "plenum":
                 warte(lambda: pg.locator(f"[data-testid=einweisung-{r}]").count() == 1, 10, f"Einweisung {r}")
-                pg.get_by_test_id("einweisung-schliessen").click()
+                pg.get_by_test_id("einweisung-ueberspringen").click()
         sl, g1, g2, g3, pl = (s[r] for r in ROLLEN)
 
         def offen(stufe):
@@ -100,10 +100,7 @@ def main():
         g1.wait_for_timeout(500)
         lupe("M12", "S2_rotes_kreuz")
         for mid in offen("g1"):
-            daten = {"meldung": mid, "entscheid": "annehmen"}
-            if mid == "M12":
-                daten["vermerk"] = LANG_120
-            senden(g1, "g1_entscheid", daten)
+            senden(g1, "g1_entscheid", {"meldung": mid, "entscheid": "annehmen"})
         warte(lambda: g1.locator("[data-testid=g1-offen]").inner_text() == "0", 15, "G1 leer")
 
         # G2: viele Marken auf der Karte, M12 mit Mörser (mehrere Warnungen, am vorausberechneten Einschlagort) und längster Begründung

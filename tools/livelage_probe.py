@@ -118,7 +118,7 @@ def main():
         g1, g2, g3, pl = (seite(r.upper(), url(rolle=r, raum=a.raum)) for r in ["g1", "g2", "g3", "plenum"])
         for s, r in [(g1, "g1"), (g2, "g2"), (g3, "g3")]:
             warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 20, f"Einweisung {r}")
-            s.get_by_test_id("einweisung-schliessen").click()
+            s.get_by_test_id("einweisung-ueberspringen").click()
         for s, k in [(sl, "kontrollkarte"), (g2, "lagekarte"), (g3, "lagekarte")]:
             warte(lambda: s.locator(f"[data-testid={k}][data-bereit='1']").count() == 1, 20, f"Karte {k} bereit")
 
@@ -273,6 +273,7 @@ def main():
         # ---------------------------------------------------------------- Teil B
         print("Teil B – zwei Teams, Übersicht der Spielleitung")
         sl = seite("SL-B", url())
+        sl.get_by_role("button", name="Spielleitung").click()
         sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
         sl.get_by_role("button", name="Neue Sitzung anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
@@ -280,11 +281,12 @@ def main():
         tt = []
         for name in ["Team A", "Team B"]:
             s = seite(name, url())
+            s.get_by_role("button", name="Ich spiele mit").click()
             s.get_by_label("Code der Sitzung").fill(code)
             s.get_by_role("button", name="Beitreten").click()
             warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, "Lobby")
             s.get_by_placeholder("Teamname").fill(name)
-            s.get_by_role("button", name="G1 Aufklärung").click()
+            s.get_by_role("button", name="Aufklärung", exact=True).click()
             warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"{name} erstellt")
             tt.append(s)
         warte(lambda: len(sl.evaluate("() => window.argusTeams()")) == 2, 20, "zwei Teams")

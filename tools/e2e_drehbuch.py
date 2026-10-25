@@ -350,6 +350,7 @@ def main():
         # 1. Sitzung, Lobby, Teams, Plenum
         sl = seite("SL")
         sl.goto(startseite(a.basis, a))
+        sl.get_by_role("button", name="Spielleitung").click()
         sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
         sl.get_by_role("button", name="Neue Sitzung anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
@@ -365,13 +366,14 @@ def main():
             for r in ROLLEN:
                 s = seite(f"T{i + 1}/{r}")
                 s.goto(startseite(a.basis, a))
+                s.get_by_role("button", name="Ich spiele mit").click()
                 s.get_by_label("Code der Sitzung").fill(code)
                 s.get_by_role("button", name="Beitreten").click()
                 warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, f"Lobby {name}/{r}")
                 s.get_by_placeholder("z. B. Lt Müller (freiwillig)").fill(f"Lt {r.upper()}-{i + 1}")
                 if r == "g1":
                     s.get_by_placeholder("Teamname").fill(name)
-                    s.get_by_role("button", name="G1 Aufklärung").click()
+                    s.get_by_role("button", name="Aufklärung", exact=True).click()
                     warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {name} erstellt")
                 else:
                     karte = s.locator(f"section.team-karte[data-teamname='{name}']")
@@ -396,7 +398,7 @@ def main():
         for t in teams:
             for r, s in zip(ROLLEN, t["fenster"]):
                 warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 40, f"Einweisung {t['name']}/{r}")
-                s.get_by_role("button", name="Verstanden – zur Ansicht").click()
+                s.get_by_role("button", name="Überspringen").click()
         warte(lambda: all(x["seq"] >= 2 for x in sl_teams()), 20, "Spielstände angelegt")
         sl.get_by_role("button", name=f"×{a.tempo}", exact=True).click()
         warte(lambda: all(x["uhr"]["tempo"] == a.tempo for x in sl_teams()), 20, f"Tempo ×{a.tempo} überall")
@@ -459,7 +461,7 @@ def main():
         fotos.sort()
         team2_ansicht = False
         notiz_sl2 = False
-        NOTIZ_TEXT = "SL 2: G3 hat I-04 gelesen, aber nicht weitergegeben (e2e)"
+        NOTIZ_TEXT = "SL 2: Führung hat I-04 gelesen, aber nicht weitergegeben (e2e)"
         naechste_messung = time.time() + 8
         naechste_debug = time.time()
         layout_mitte = False

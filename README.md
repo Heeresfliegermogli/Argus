@@ -2,12 +2,16 @@
 
 Browserbasiertes Planspiel für den Lehrgang OL TrD (Politische Bildung, Militärethik). Fünf Teams à
 drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen des fiktiven KI-Systems
-ARGUS: G1 Aufklärung, G2 Zielprüfung, G3 Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
+ARGUS: Aufklärung, Zielprüfung, Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Schritt 8 „Auswertung mit Teamvergleich“ – Auflösung im Plenum über alle Teams: Teamvergleich der
+Stand: Änderungen B1–B12 nach dem Solo-Durchlauf (25.10.2026) – Startseite mit zwei Knöpfen, Codes aus drei
+Zeichen, Rollen ohne G-Nummern, Spieluhr 00:00–25:00, „Ziel 1, 2, 3 …“, Einweisung als Folien, Drohnenbild
+verschiebbar und schließbar, Drohne verfolgt das Ziel, Fahrwege und Vorschau der Verstärkung für die Spielleitung,
+im Test ohne Lobby alle Rollen bedienbar (Eintrag in `claude/Entscheidungen.md`; intern heißen die Rollen weiter
+`g1`/`g2`/`g3`, die Meldungen `M07`). Davor Schritt 8 „Auswertung mit Teamvergleich“ – Auflösung im Plenum über alle Teams: Teamvergleich der
 Schlüssel- und Nebenfälle (wer an welcher Stufe entschieden hat), Kennzahlen je Team, Kernaussage zur Konfidenz,
-Replay je Schlüsselfall mit Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben und Drohnenbild wie G1 es sah,
+Replay je Schlüsselfall mit Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben und Drohnenbild, wie die Aufklärung es sah,
 Notizen der SL 2, Export ohne Namen; Üben mit `?auswertung=demo`. Überblick: [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
 Davor Schritt 6b „Oberfläche neu“ ([`docs/UI.md`](docs/UI.md)) und Schritt 7 „Engine und Live-Lage“ – Trefferregel nach der Lage beim Einschlag mit Vorausrechnung
 der Warnungen, Bewegung entlang der Routen, Tracking gemeldeter Ziele, Hintergrundgefecht H-01–H-12,
@@ -25,14 +29,16 @@ und `tools/referenz/simuliere_durchlauf.py`.
 
 Seite: `https://heeresfliegermogli.github.io/Argus/`
 
-1. **Spielleitung:** Name, **Neue Sitzung anlegen** → Übersicht mit Code (z. B. `KRAEHE-7Q`),
-   **Plenum öffnen** für das Smartboard.
-2. **Teilnehmer:** Seite öffnen, Code eingeben, **Beitreten** → Lobby: Team erstellen (Name frei, 🎲
+1. **Spielleitung:** **Spielleitung** → Name, **Neue Sitzung anlegen** → Übersicht mit Code (drei Zeichen,
+   z. B. `K7P`), **Plenum öffnen** für das Smartboard. Die zuletzt genutzte Sitzung bietet die Seite unter
+   **Spielleitung** zum Fortsetzen an.
+2. **Teilnehmer:** Seite öffnen, **Ich spiele mit**, Code eingeben, **Beitreten** → Lobby: Team erstellen (Name frei, 🎲
    schlägt einen vor) oder einem Team beitreten, Rolle wählen; zu zweit übernimmt eine Person zwei
    Rollen (**+ dazu**).
-3. **Spielleitung:** **Spiel öffnen – alle Teams** (Ansichten mit Einweisung erscheinen), dann
-   **▶ Uhr starten – alle**. „ansehen ›“ öffnet ein Team: Steuerung oder Zuschauen bei G1–G3.
-4. **Zweite Spielleitung:** Startseite → Code → **als Spielleitung**; beobachtet und kann
+3. **Spielleitung:** **Spiel öffnen – alle Teams** (Ansichten mit Einweisung als Folien erscheinen), dann
+   **▶ Uhr starten – alle**. „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte mit Fahrwegen) oder Zuschauen
+   bei Aufklärung, Zielprüfung, Führung (◉, nur lesen, blau umrandet).
+4. **Zweite Spielleitung:** Startseite → **Spielleitung** → Bestehende Sitzung öffnen → Code → **als Spielleitung**; beobachtet und kann
    „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst). In der Teamansicht **✎ Notiz** je Fall.
 5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum die Auswertung (Bild ↓ / Presenter: Teamvergleich,
    Kennzahlen, Konfidenz, S3, S2, S1, S4, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
@@ -40,12 +46,13 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
 
 | Fenster | Adresse |
 |---|---|
-| Teilnehmer | `…/Argus/?sitzung=KRAEHE-7Q` |
-| Spielleitung | `…/Argus/?sitzung=KRAEHE-7Q&rolle=sl` |
-| Plenum (Smartboard) | `…/Argus/?sitzung=KRAEHE-7Q&rolle=plenum` |
-| Test ohne Lobby (ein Team, wie bis Schritt 6) | `…/Argus/?rolle=g1&raum=kraehe` (g1, g2, g3, sl, plenum) |
+| Teilnehmer | `…/Argus/?sitzung=K7P` |
+| Spielleitung | `…/Argus/?sitzung=K7P&rolle=sl` |
+| Plenum (Smartboard) | `…/Argus/?sitzung=K7P&rolle=plenum` |
+| Test ohne Lobby, allein in einem Fenster (Steuerung und alle drei Rollen bedienbar) | `…/Argus/?rolle=sl&raum=kraehe` |
+| Test ohne Lobby, ein Fenster je Rolle | `…/Argus/?rolle=g1&raum=kraehe` (g1 Aufklärung, g2 Zielprüfung, g3 Führung, sl, plenum) |
 
-Druckfassung der Einweisungskarten, A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
+Druckfassung der Einweisungskarten (mit den Folien je Rolle), A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
 Unbeteiligten: [`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
 
 Weitere Parameter: `sync=lokal` (alle Fenster an einem PC, ohne Netz), `transport=auto`
@@ -90,7 +97,7 @@ python3 tools/e2e_teams.py http://localhost:4173/                               
 python3 tools/e2e_teams.py file://$PWD/dist/argus-offline.html                   # Offline-Datei
 python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport auto \
   --db "http://localhost:5555?ns=argus-test"                                      # Firebase-Nachbildung mit Regeln
-python3 tools/lobby_probe.py http://localhost:4173/                              # 19 Aufgaben der Lobby
+python3 tools/lobby_probe.py http://localhost:4173/                              # 20 Aufgaben Startseite und Lobby
 ```
 
 Oberfläche in 1530 × 800 (seit 6b Karte als Arbeitsfläche; kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
@@ -98,9 +105,9 @@ Oberfläche in 1530 × 800 (seit 6b Karte als Arbeitsfläche; kein Rollbalken, n
 ```bash
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
 python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, viele Marken, lange Texte
-python3 tools/bedientest_probe.py http://localhost:4173/                  # 15 Aufgaben des Bedientests lösbar?
+python3 tools/bedientest_probe.py http://localhost:4173/                  # 18 Aufgaben des Bedientests lösbar?
 python3 tools/livelage_probe.py http://localhost:4173/ --bilder live      # Effekte, Tracking, Verstärkung, Bildrate
-python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne      # Live-Drohnenbild (G1): Ebenen, Schlüsselfälle, Bildrate
+python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne      # Live-Drohnenbild: Ebenen, Schlüsselfälle, Kamera folgt, Bildrate
 ```
 
 Das ganze Drehbuch mit fünf Teams (Schritt 7): `tests/durchlauf.test.ts` spielt die fünf Läufe von
@@ -123,7 +130,8 @@ Nach Änderungen an Szenario oder Regeln: `python3 tools/referenz/erzeuge_refere
   (`.github/workflows/pages.yml`). Einmalig: Repository → Settings → Pages → Source „GitHub Actions“.
 * **Firebase-Regeln** (`firebase/database.rules.json`): Firebase-Konsole → Projekt `argus-sync-e9fbc`
   → Realtime Database → Regeln → Inhalt ersetzen → Veröffentlichen. Die Regeln ersetzen den
-  Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…` (Info, Teams,
+  Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…` (Code aus drei Zeichen
+  `ACEFHJKMNPRTVWXY34679`, klein gespeichert, oder ein Raum des Tests ohne Lobby mit 4–32 Zeichen; Info, Teams,
   Anwesenheit, Host, Läufe je Team) und der Sync-Test (`rooms/…`) sind beschreibbar, eine Liste aller
   Sitzungen ist nicht lesbar, Protokoll und Aktionen nur anhängbar, Formate werden geprüft.
 

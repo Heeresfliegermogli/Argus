@@ -88,9 +88,16 @@ def main():
                 warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
         sl, g1, g2, g3, pl = (s[r] for r in ROLLEN)
         warte(lambda: g1.locator("[data-testid=einweisung-g1]").count() == 1, 10, "Einweisung G1 offen")
+        # Einweisung als Folien (B5): jede Folie fotografieren, am Ende „Verstanden – zur Ansicht“
         for r in ["g1", "g2", "g3"]:
             s[r].wait_for_timeout(300)
-            foto(s[r], f"{r}_einweisung")
+            n = 1
+            foto(s[r], f"{r}_einweisung_{n}")
+            while s[r].get_by_test_id("einweisung-schliessen").count() == 0:
+                s[r].get_by_test_id("einweisung-weiter").click()
+                n += 1
+                s[r].wait_for_timeout(200)
+                foto(s[r], f"{r}_einweisung_{n}")
             s[r].get_by_test_id("einweisung-schliessen").click()
         warte(lambda: pl.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "Plenumskarte bereit")
         pl.wait_for_timeout(800)
@@ -105,13 +112,11 @@ def main():
         warte(lambda: g1.locator("[data-meldung=M08]").count() > 0, 30, "M08 bei G1")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
 
-        # G1: alle offenen Meldungen vor M08 annehmen (die erste mit Vermerk), M08 bleibt offen. Seit Szenario 2.0
+        # G1: alle offenen Meldungen vor M08 annehmen, M08 bleibt offen. Seit Szenario 2.0
         # fahren die Spähtrupps wieder ab: deren Meldungen sind beim Sprung auf 08:25 schon entfallen.
         offen_g1 = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1' && id !== 'M08')")
-        for k, mid in enumerate(offen_g1):
+        for mid in offen_g1:
             g1.locator(f".kmarke[data-meldung={mid}]").first.click()
-            if k == 0:
-                g1.fill("[data-testid=g1-vermerk]", "Wärme und Kettenspuren bestätigen")
             g1.get_by_test_id("g1-annehmen").click()
             warte(lambda: g1.locator(f".kmarke[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
         g1.locator(".kmarke[data-meldung=M08]").first.click()

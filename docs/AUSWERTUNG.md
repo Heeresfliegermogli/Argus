@@ -1,6 +1,9 @@
 # ARGUS – Auswertung im Plenum (Schritt 8)
 
-Stand 22.10.2026. Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen. Gesteuert von der
+Stand 22.10.2026, Anzeige angepasst am 25.10.2026 (B3, B4, B6, B7, B9): Rollen heißen Aufklärung, Zielprüfung,
+Führung (in der Kette **A → Z → F**), Zeiten in Spielzeit 00:00–25:00, Ziele „Ziel n“ wie im Spiel (die Spielleitung
+sieht die interne Kennung klein daneben), kein Vermerk mehr, das Drohnenbild im Replay verfolgt das Ziel wie im
+Spiel. Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen. Gesteuert von der
 Spielleitung mit wenigen Klicks (oder einem Presenter). Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**, nie
 Namen von Personen, keine Rangliste und keine Punkte.
 
@@ -12,28 +15,29 @@ dieselbe Ansicht in ihrer Übersicht über **Auswertung ›**.
 
 | Kapitel | Zeit | Inhalt |
 |---|---|---|
-| 1 Teams | 0:45 | Teamvergleich: Teams × S3, S2, S1, S4 und N1–N4. Je Zelle der Ausgang (✓ richtig, ✕ falsch, ◐ zu Unrecht abgelehnt, … offen/entfallen), die Kette **G1 → G2 → G3 → ✸** (✓ weiter, ✕ gestoppt, ◷ zurückgestellt, ↩ zurück an G2, FT Fast-Track) mit der **entscheidenden Stufe umrandet**, darunter zwei Zeilen („FREIGABE 10:22:15 (PzAbw)“ / „→ Verbündete getroffen“). Unten je Fall: wie viele Teams richtig/falsch. Klick auf eine Zelle öffnet das Replay dieses Falls für dieses Team. |
-| 2 Kennzahlen | 0:45 | je Team: Fehlbekämpfungen (Zahl und Art), Freigabe trotz Regelwarnung, Widerspruch gegen ARGUS (zu Recht / zu Unrecht), Bearbeitungszeit je Stufe (Median, dazu ≥ 90 % und darunter), Fast-Track (wann ein, Meldungen ohne G1), I-04 gelesen (Uhrzeit, wie lange nach Eingang), Lagehinweise an G1/G2 (erster nach I-04) |
+| 1 Teams | 0:45 | Teamvergleich: Teams × S3, S2, S1, S4 und N1–N4. Je Zelle der Ausgang (✓ richtig, ✕ falsch, ◐ zu Unrecht abgelehnt, … offen/entfallen), die Kette **A → Z → F → ✸** (Aufklärung, Zielprüfung, Führung) (✓ weiter, ✕ gestoppt, ◷ zurückgestellt, ↩ zurück an die Zielprüfung, FT Fast-Track) mit der **entscheidenden Stufe umrandet**, darunter zwei Zeilen („FREIGABE 10:22:15 (PzAbw)“ / „→ Verbündete getroffen“). Unten je Fall: wie viele Teams richtig/falsch. Klick auf eine Zelle öffnet das Replay dieses Falls für dieses Team. |
+| 2 Kennzahlen | 0:45 | je Team: Fehlbekämpfungen (Zahl und Art), Freigabe trotz Regelwarnung, Widerspruch gegen ARGUS (zu Recht / zu Unrecht), Bearbeitungszeit je Stufe (Median, dazu ≥ 90 % und darunter), Fast-Track (wann ein, Meldungen ohne Aufklärung), I-04 gelesen (Spielzeit, wie lange nach Eingang), Lagehinweise an G1/G2 (erster nach I-04) |
 | 3 Konfidenz | 0:30 | Kernaussage: Streudiagramm Konfidenz × Sichtstörung je Meldung; die vier falschen Empfehlungen (M08, M12, M20, M21) rot mit „n von 5 Teams bekämpft“; Ø 93,5 % (falsch) gegen 88,3 % (richtig BEKÄMPFEN); alle vier über der Fast-Track-Schwelle; Kernaussage aus dem Szenario |
-| S3, S2, S1, S4 | je 2:30 | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild wie G1 es sah, Leitfragen und Bezüge, Notizen der SL 2 |
-| Schluss | – | „Wer hat in diesem Spiel entschieden: ihr oder ARGUS?“ mit vier Zahlen über alle Teams (Freigaben, davon auf BEKÄMPFEN von ARGUS, Meldungen per Fast-Track ohne G1, Widerspruch) |
+| S3, S2, S1, S4 | je 2:30 | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild, wie die Aufklärung es sah, Leitfragen und Bezüge, Notizen der SL 2 |
+| Schluss | – | „Wer hat in diesem Spiel entschieden: ihr oder ARGUS?“ mit vier Zahlen über alle Teams (Freigaben, davon auf BEKÄMPFEN von ARGUS, Meldungen per Fast-Track ohne Aufklärung, Widerspruch) |
 
 Oben rechts läuft das **Zeitbudget** (Kapitel / gesamt, bei Überschreitung bernsteinfarben; Klick setzt zurück).
 
 ### Replay je Schlüsselfall
 
 * **Zeitleiste** (unter der Karte): je Team eine Zeile mit Ausgang, darauf die Marken der Meldung (◆ ARGUS, schraffiert
-  bei Fast-Track) → G1 → G2 → G3 (Freigabe rot) → ✸ Einschlag (rot bei Fehltreffer) und – wo es den Fall betrifft –
-  ✉ Lagemeldung gelesen, ▲ Lagehinweis an G1/G2, „FT ein“, ✎ Notiz der SL. Gestrichelte Linien: Lagemeldung zum Fall
+  bei Fast-Track) → A → Z → F (Freigabe rot) → ✸ Einschlag (rot bei Fehltreffer) und – wo es den Fall betrifft –
+  ✉ Lagemeldung gelesen, ▲ Lagehinweis an Aufklärung/Zielprüfung, „FT ein“, ✎ Notiz der SL. Gestrichelte Linien: Lagemeldung zum Fall
   (S3: I-04, S4: I-07) und Meldezeit, für alle Teams gleich. Klick oder Ziehen auf einer Zeile wählt Team und Zeitpunkt,
   Klick auf eine Marke springt genau dorthin.
 * **Kontrollkarte** des gewählten Teams mit Ground Truth, Bewegung, Wirkungen und Effekten zur Zeit des Replays (Stand aus
   dem Protokoll bis zu diesem Zeitpunkt), Ausschnitt auf den Fall (Weg der Fahrzeuge im Zeitfenster, Einschläge).
 * **▶** spielt das Zeitfenster des Falls in ca. 45 s ab (Tempo je Fall ×4 bis ×15) – vom Budget von 2:30 bleibt der
   größte Teil für das Gespräch.
-* **Drohnenbild, wie G1 es sah**: das Live-Bild zur Zeit der Entscheidung von G1 (bei Fast-Track zur Meldezeit mit
-  „Fast-Track: G1 hat dieses Bild nie gesehen.“), Klick = groß mit Lupe (Esc schließt). Darunter die Sensordaten, die
-  nur G1 hatte (Wärme, Bewegung, Spuren, Kennzeichnung, Personen).
+* **Drohnenbild, wie die Aufklärung es sah**: das Live-Bild zur Zeit der Entscheidung der Aufklärung (bei Fast-Track
+  zur Meldezeit mit „Fast-Track: Die Aufklärung hat dieses Bild nie gesehen.“), mit derselben Kamera wie im Spiel
+  (verfolgt das Ziel, schwenkt nach einer Zerstörung), Klick = groß mit Lupe (Esc schließt). Darunter die
+  Sensordaten, die nur die Aufklärung hatte (Wärme, Bewegung, Spuren, Kennzeichnung, Personen).
 * **Leitfragen und Bezüge** aus dem Szenario, **Notizen der SL 2** zu diesem Fall (gewähltes Team zuerst).
 
 ### Bedienung
@@ -51,9 +55,9 @@ Die ganze Auflösung braucht **11 Bedienschritte** (7 × weiter, 4 × ▶), dazu
 
 ### Notizen der SL 2
 
-Während des Spiels: in der Teamansicht (Steuerung oder Zuschauen bei G1–G3) **✎ Notiz** – der Fall, der bei diesem Team
+Während des Spiels: in der Teamansicht (Steuerung oder Zuschauen bei den drei Rollen) **✎ Notiz** – der Fall, der bei diesem Team
 gerade läuft, ist vorgewählt (S1–S4, N1–N4 oder „allgemein“), Text, Enter. Die Notiz steht im Protokoll des Teams
-(`notiz {text, fall}`) und erscheint in der Auswertung beim Fall – also **am Smartboard**: Rollen (G1, G2, G3) statt
+(`notiz {text, fall}`) und erscheint in der Auswertung beim Fall – also **am Smartboard**: Rollen (Aufklärung, Zielprüfung, Führung) statt
 Namen, so steht es auch im Feld. Nach dem Spiel kann die Spielleitung in ihrer Auswertung im Replay weitere Notizen zum
 gewählten Team und Fall schreiben.
 
@@ -76,13 +80,13 @@ Protokoll steht.
 | **richtig** | nichts davon: das Team hat gestoppt oder zurückgestellt, oder (echtes Ziel) ohne Fehltreffer bekämpft |
 | **zu Unrecht abgelehnt** | echtes Ziel, das nach der Lösung bekämpft werden sollte, wurde abgelehnt (N3) |
 | offen / entfallen / nicht erreicht | bei Spielende noch in der Kette / Fahrzeug zerstört oder abgezogen, bevor jemand entschied / Meldung kam nicht |
-| entscheidende Stufe | bei „falsch“ und bei Bekämpfung G3 (Freigabe), sonst die Stufe, die gestoppt oder zurückgestellt hat |
+| entscheidende Stufe | bei „falsch“ und bei Bekämpfung die Führung (Freigabe), sonst die Stufe, die gestoppt oder zurückgestellt hat |
 | Fehlbekämpfung | Wirkung mit mindestens einem Treffer der Art verbündet, Sanität, zivil, Attrappe, außer Gefecht/ergibt sich |
-| Freigabe trotz Regelwarnung | G3 gab frei, obwohl die Vorausrechnung eine Warnung zum Einschlag zeigte |
-| **Widerspruch gegen ARGUS** | am Ende anders gehandelt, als ARGUS empfahl: BEKÄMPFEN, aber ein Mensch stoppte (G1 ABLEHNEN, G2 NICHT BEKÄMPFEN/BEOBACHTEN, G3 ABLEHNEN/ZURÜCK) und es kam zu keiner Wirkung – oder NICHT BEKÄMPFEN, aber bekämpft. **Zu Recht**, wenn die Lösung im Szenario das Stoppen verlangt bzw. die Wirkung ohne Fehltreffer und Verstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man widersprechen könnte |
+| Freigabe trotz Regelwarnung | Die Führung gab frei, obwohl die Vorausrechnung eine Warnung zum Einschlag zeigte |
+| **Widerspruch gegen ARGUS** | am Ende anders gehandelt, als ARGUS empfahl: BEKÄMPFEN, aber ein Mensch stoppte (Aufklärung ABLEHNEN, Zielprüfung NICHT BEKÄMPFEN/BEOBACHTEN, Führung ABLEHNEN/ZURÜCK) und es kam zu keiner Wirkung – oder NICHT BEKÄMPFEN, aber bekämpft. **Zu Recht**, wenn die Lösung im Szenario das Stoppen verlangt bzw. die Wirkung ohne Fehltreffer und Verstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man widersprechen könnte |
 | Bearbeitungszeit je Stufe | Eingang bei der Stufe bis zu ihrer Entscheidung (jede Runde, z. B. nach ZURÜCK erneut), Median; getrennt nach Konfidenz ≥ Fast-Track-Schwelle (90 %) und darunter |
-| Fast-Track | Zeitpunkt des letzten Einschaltens, Meldungen, die ohne G1 an G2 gingen |
-| I-04 gelesen | Quittung von G3 („gelesen“) der ersten festen Lagemeldung zu einem Fall (Reihenfolge der Fälle: I-04 zu S3; I-07 zu S4 erscheint im Replay) |
+| Fast-Track | Zeitpunkt des letzten Einschaltens, Meldungen, die ohne Aufklärung an die Zielprüfung gingen |
+| I-04 gelesen | Quittung der Führung („gelesen“) der ersten festen Lagemeldung zu einem Fall (Reihenfolge der Fälle: I-04 zu S3; I-07 zu S4 erscheint im Replay) |
 | Lagehinweise | Anzahl, erster nach I-04 |
 | ARGUS falsch | BEKÄMPFEN, aber das Ziel war zur Meldezeit nicht legitim (wie `pruefe_szenario.py`): M08, M12, M20, M21 |
 
@@ -90,8 +94,10 @@ Protokoll steht.
 
 **Export ▾** oben rechts: JSON ohne Freitexte, JSON mit Freitexten, CSV (Kennzahlen und Fälle je Team, Semikolon, für
 Excel). Teams heißen **Team A, B, C …** (Reihenfolge wie in der Auswertung), keine Namen von Personen oder Teams, keine
-Kennungen der Rechner, nur Spielzeit (keine Uhrzeit des Seminars). Freitexte (Vermerk, Begründung, Bemerkung,
-Lagehinweise, Notizen der SL) nur auf Wunsch, weil sie Namen enthalten können. Inhalt: Fälle, ARGUS-Bilanz je Meldung
+Kennungen der Rechner, nur Spielzeit 00:00–25:00 (keine Uhrzeit des Seminars). Seit 25.10.2026 mit Legende der
+Rollen (`rollen`: g1 Aufklärung, g2 Zielprüfung, g3 Führung), je Meldung die Zielnummer der Spieler (`ziel`), CSV-Spalten
+`median_aufklaerung_s`, `median_zielpruefung_s`, `median_fuehrung_s`. Freitexte (Begründung, Bemerkung,
+Lagehinweise, Notizen der SL; Vermerke nur aus älteren Läufen) nur auf Wunsch, weil sie Namen enthalten können. Inhalt: Fälle, ARGUS-Bilanz je Meldung
 (Konfidenz, Sichtstörung, wie viele Teams bekämpft), je Team Kennzahlen, Fälle mit Kette und Einschlag, alle Meldungen
 mit Entscheidungen, Wirkungen und entfallenen Meldungen, Lagehinweise, Verstärkungen.
 

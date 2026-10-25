@@ -3,11 +3,11 @@
 
 Ablauf nur über die Oberfläche, wie im Hörsaal:
   1. Spielleitung legt auf der Startseite eine Sitzung an und liest den Code ab.
-  2. 15 Teilnehmer-Fenster geben den Code ein, je ein Fenster erstellt ein Team mit eigenem Namen
-     (G1), die anderen beiden treten ihm als G2 und G3 bei.
+  2. 15 Teilnehmer-Fenster („Ich spiele mit“) geben den Code ein, je ein Fenster erstellt ein Team mit eigenem
+     Namen (Aufklärung), die anderen beiden treten ihm als Zielprüfung und Führung bei.
   3. Spielleitung: „Spiel öffnen – alle Teams“, Spielzeit 00:15 für alle, „Uhr starten – alle“.
   4. Jedes Team bearbeitet M01 anders (annehmen/ablehnen, LM/Mörser, Freigabe/Ablehnung, Fast-Track,
-     Lagehinweis). Die Spielleitung schreibt eine Notiz in Team 2 und schaut G1 von Team 3 zu.
+     Lagehinweis). Die Spielleitung schreibt eine Notiz in Team 2 und schaut der Aufklärung von Team 3 zu.
   5. Tempo ×10 für alle, kurz laufen lassen, „Anhalten – alle“.
 Geprüft wird:
   • je Team gleicher Lauf, gleiche Laufnummer und gleicher Fingerabdruck in allen vier Fenstern
@@ -121,6 +121,7 @@ def main():
         # 1. Spielleitung legt die Sitzung an
         sl = seite("SL")
         sl.goto(startseite(a.basis, a))
+        sl.get_by_role("button", name="Spielleitung").click()
         sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
         sl.get_by_role("button", name="Neue Sitzung anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
@@ -135,14 +136,15 @@ def main():
             for r in ROLLEN:
                 s = seite(f"{name[:8]}/{r}")
                 s.goto(startseite(a.basis, a))
-                # Teilnehmer tippen den Code so, wie er am Smartboard steht – Team 2 nur die zwei Zeichen hinten
-                s.get_by_label("Code der Sitzung").fill(code.split("-")[1].lower() if i == 1 else code)
+                s.get_by_role("button", name="Ich spiele mit").click()
+                # Teilnehmer tippen den Code so, wie er am Smartboard steht – Team 2 klein
+                s.get_by_label("Code der Sitzung").fill(code.lower() if i == 1 else code)
                 s.get_by_role("button", name="Beitreten").click()
                 warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, f"Lobby {name}/{r}")
                 s.get_by_placeholder("z. B. Lt Müller (freiwillig)").fill(f"Lt {r.upper()}-{i + 1}")
                 if r == "g1":
                     s.get_by_placeholder("Teamname").fill(name)
-                    s.get_by_role("button", name="G1 Aufklärung").click()
+                    s.get_by_role("button", name="Aufklärung", exact=True).click()
                     warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {name} erstellt")
                 else:
                     karte = s.locator(f"section.team-karte[data-teamname='{name}']")
@@ -174,7 +176,7 @@ def main():
                 warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 30, f"Einweisung {t['name']}/{r}")
         teams[0]["fenster"][1].screenshot(path=os.path.join(a.bilder, "tt-g2-einweisung.png"))
         for s in alle_tt:
-            s.get_by_role("button", name="Verstanden – zur Ansicht").click()
+            s.get_by_role("button", name="Überspringen").click()
         warte(lambda: all(x["seq"] >= 2 for x in sl_teams()), 20, "Spielstände angelegt")
         laeufe = {x["lauf"] for x in sl_teams()}
         if len(laeufe) != a.teams:
@@ -193,15 +195,14 @@ def main():
         # 4. Jedes Team bearbeitet M01 anders
         for i, t in enumerate(teams):
             g1, g2, g3 = t["fenster"]
-            warte(lambda: g1.get_by_test_id("g1-offen").inner_text() != "0", 30, f"{t['name']}: M01 bei G1")
+            warte(lambda: g1.get_by_test_id("g1-offen").inner_text() != "0", 30, f"{t['name']}: Ziel 1 bei der Aufklärung")
             if i % 2 == 0:
-                g1.get_by_placeholder("Vermerk an G2").fill(f"fährt, heiß – Team {i + 1}")
                 g1.get_by_role("button", name="ANNEHMEN").click()
-                warte(lambda: g2.get_by_test_id("g2-offen").inner_text() != "0", 20, f"{t['name']}: Zielmeldung bei G2")
+                warte(lambda: g2.get_by_test_id("g2-offen").inner_text() != "0", 20, f"{t['name']}: Zielmeldung bei der Zielprüfung")
                 wm = "LM" if i == 0 else "MRS"
                 g2.locator(f"label[data-wm={wm}]").click()
                 g2.get_by_role("button", name=f"BEKÄMPFEN mit {wm}").click()
-                warte(lambda: g3.get_by_test_id("g3-offen").inner_text() != "0", 20, f"{t['name']}: Empfehlung bei G3")
+                warte(lambda: g3.get_by_test_id("g3-offen").inner_text() != "0", 20, f"{t['name']}: Empfehlung bei der Führung")
                 g3.get_by_role("button", name="ABLEHNEN" if i == 4 else "FREIGABE").click()
             else:
                 g1.get_by_role("button", name="ABLEHNEN").click()
@@ -210,15 +211,15 @@ def main():
             g3.get_by_role("button", name="Senden").click()
         print(f"M01 in allen Teams bearbeitet ({time.time() - t0:.1f} s)")
 
-        # Spielleitung: Notiz in Team 2 (über die Teamansicht), Zuschauen bei G1 von Team 3
+        # Spielleitung: Notiz in Team 2 (über die Teamansicht), Zuschauen bei der Aufklärung von Team 3
         sl.locator(f"[data-ansehen='{teams[1]['name']}']").click()
         warte(lambda: sl.get_by_test_id("sl-leiste").count() == 1, 10, "Teamansicht der SL")
-        sl.get_by_placeholder("Beobachtung, z. B. „G3 diskutiert I-04“").fill("Team 2 diskutiert den Lagehinweis")
+        sl.locator("input[placeholder^='Beobachtung']").fill("Team 2 diskutiert den Lagehinweis")
         sl.keyboard.press("Enter")
         sl.screenshot(path=os.path.join(a.bilder, "sl-team-steuerung.png"))
         sl.get_by_test_id("sl-teamwahl").select_option(teams[2]["id"])
         sl.locator("[data-sl-rolle=g1]").click()
-        warte(lambda: sl.get_by_test_id("nur-lesen").count() == 1, 10, "Zuschauen G1")
+        warte(lambda: sl.get_by_test_id("nur-lesen").count() == 1, 10, "Zuschauen Aufklärung")
         if sl.get_by_role("button", name="ANNEHMEN").count() and sl.get_by_role("button", name="ANNEHMEN").first.is_enabled():
             fehler.append("Zuschauen: ANNEHMEN ist bedienbar")
         sl.screenshot(path=os.path.join(a.bilder, "sl-zuschauen-g1.png"))

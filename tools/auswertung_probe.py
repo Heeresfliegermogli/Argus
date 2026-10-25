@@ -16,7 +16,7 @@ Ablauf (1530 × 800, wie die Dienstrechner und das Smartboard):
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/auswertung_probe.py http://localhost:4173/ --bilder auswertung-probe
-  python3 tools/auswertung_probe.py "http://localhost:4173/?sitzung=KRAEHE-7Q&rolle=plenum&sync=lokal" --erwartet plan.json
+  python3 tools/auswertung_probe.py "http://localhost:4173/?sitzung=K7P&rolle=plenum&sync=lokal" --erwartet plan.json
 """
 import argparse
 import json
@@ -132,7 +132,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
         # ---------------------------------------------------------------- Inhalte je Kapitel
         if k == "teams":
             ist = s.eval_on_selector_all("[data-testid=teamvergleich] td[data-fall]",
-                                         "cs => cs.map(c => ({ team: c.closest('tr').dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, stufe: c.querySelector('.glied.entscheidend i')?.textContent ?? null }))")
+                                         "cs => cs.map(c => ({ team: c.closest('tr').dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, stufe: c.querySelector('.glied.entscheidend')?.className.match(/\bg-(g[123])\b/)?.[1] ?? null }))")
             tabelle = {}
             for c in ist:
                 tabelle.setdefault(c["team"], {})[c["fall"]] = c
@@ -192,7 +192,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
             if len(teams) > 2:
                 s.keyboard.press("3")
                 warte(lambda: r.get_attribute("data-team") == teams[2]["id"], 5, f"{k}: Team 3 per Ziffer")
-            # Sprung über die Marke „Einschlag“ oder die letzte Entscheidung von G3
+            # Sprung über die Marke „Einschlag“ oder die letzte Entscheidung der Führung
             marke = s.locator(".zl-zeile.an .zl-marke[data-art=einschlag], .zl-zeile.an .zl-marke[data-art=g3]").last
             if marke.count():
                 soll_t = marke.get_attribute("title")

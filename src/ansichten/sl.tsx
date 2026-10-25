@@ -288,7 +288,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                   <td class="zahl sehr-leise">{e.seq}</td>
                   <td class="zahl">{uhrzeit(start, e.t_s)}</td>
                   <td class="typ">{absenderText(e)}</td>
-                  <td>{beschreibe(e, inh)}</td>
+                  <td>{beschreibe(e, inh, st.zustand)}</td>
                 </tr>
               ))}
             </tbody>

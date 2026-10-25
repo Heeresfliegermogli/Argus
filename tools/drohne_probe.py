@@ -8,9 +8,10 @@ Prüft im Browser (SL steuert die Uhr, G1 öffnet die Meldungen über ihre Marke
    und Figuren an ihrer Stelle im Manifest). M25 nur Lage – Rauschen und Zeilenversatz macht die Oberfläche.
 2. Schlüsselfälle in der Vergrößerung mit Lupe: Rotes Kreuz (M12, S2), Kinder (M18, S4), weißes Tuch (M21, N2)
    – die Figuren sind im Bild, nicht verdeckt, und in der Lupe zählbar (rote bzw. weiße Bildpunkte, Fotos).
-3. Bewegung: Der Panzerzug in M13 fährt im Bild (Lage nach 15 s Spielzeit anders). Hat er den Ausschnitt
-   verlassen (die Kamera steht), zeigt das Fenster die Aufnahme zur Meldezeit („AUFNAHME 10:14:30“) mit der
-   ARGUS-Markierung wie im Manifest.
+3. Kamera folgt dem Ziel (B9, 25.10.2026): Der Panzerzug in M13 fährt, die Kamera fährt mit – das verfolgte
+   Fahrzeug bleibt an seiner Stelle im Bild, der Ausschnitt wandert. Wird das verfolgte Fahrzeug einer Gruppe
+   zerstört, bleibt die Kamera ca. 0,5 s darauf, schwenkt dann mit kurzem Bildrauschen („◌ AUSRICHTUNG …“) zum
+   nächsten Fahrzeug der Meldung und zeigt wieder „● LIVE“.
 4. Effekte und Wracks: Eine LM auf Z-02 (über M03, Freigabe durch G3) schlägt im Bild von M12 ein –
    Flug, Einschlag, danach Wrack mit Feuer.
 5. Bildrate bei laufender Uhr (×1 und ×10, M17 – das Ziel fährt im Bild): Fenster am Ort und Vergrößerung, dazu die Karte.
@@ -83,7 +84,7 @@ def main():
         browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
 
         def raum(name):
-            """SL, G1, G2, G3 in einem neuen Raum; die Uhr steht bei 10:00."""
+            """SL, G1, G2, G3 in einem neuen Raum; die Uhr steht bei 00:00."""
             ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
             s = {}
             for r in ["sl", "g1", "g2", "g3"]:
@@ -95,7 +96,7 @@ def main():
                 if r == "sl":
                     warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
             for r in ["g1", "g2", "g3"]:
-                s[r].get_by_role("button", name="Verstanden – zur Ansicht").click()
+                s[r].get_by_role("button", name="Überspringen").click()
             return ctx, s["sl"], s["g1"], s["g2"], s["g3"]
 
         def zeit(sl, t):
@@ -208,30 +209,56 @@ def main():
 
         fall("M12", "S2 Rotes Kreuz", "fahrzeug", "Z-12", "rot", 40)
 
-        # ---------------------------------------------------------------- 4. Bewegung (M13 Panzerzug), Aufnahme
-        zeit(sl, man["drohne"]["M13"]["t_s"])
+        # ---------------------------------------------------------------- 4. Kamera folgt dem Ziel (M13 Panzerzug, B9)
+        t13 = man["drohne"]["M13"]["t_s"]
+        zeit(sl, t13)
         oeffne(g1, "M13")
-        vorher = {f["id"]: f["px"] for f in live(g1)["fahrzeuge"]}
+        x0 = live(g1)
         sl.get_by_role("button", name="×5", exact=True).click()
         sl.get_by_role("button", name="▶ Start").click()
         g1.wait_for_timeout(1500)
         foto(g1, "M13_faehrt")
         g1.wait_for_timeout(1500)
         sl.get_by_role("button", name="❚❚ Anhalten").click()
-        nachher = {f["id"]: f["px"] for f in live(g1)["fahrzeuge"]}
-        wege = {i: round(((nachher[i][0] - vorher[i][0]) ** 2 + (nachher[i][1] - vorher[i][1]) ** 2) ** 0.5) for i in vorher if i in nachher}
-        weg_aus = [i for i in vorher if i not in nachher]
-        pruefe(any(w > 20 for w in wege.values()) or bool(weg_aus), f"M13 Bewegung: Weg im Bild nach ca. 15 s Spielzeit {wege} px, aus dem Bild: {weg_aus or '–'}")
-        # Ziel hat den Ausschnitt verlassen: Aufnahme zur Meldezeit statt leerem Live-Bild
-        t13 = man["drohne"]["M13"]["t_s"]
-        zeit(sl, t13 + 60)
-        warte(lambda: (live(g1) or {}).get("aufnahme") is True, 15, "Aufnahme M13")
-        kopf = g1.locator("[data-testid=live-fenster] .live-status").inner_text()
-        rahmen = g1.locator("[data-testid=live-fenster] .argus-rahmen:visible").count()
-        foto(g1, "M13_aufnahme")
-        soll = f"AUFNAHME 10:{t13 // 60:02d}:{t13 % 60:02d}"
-        pruefe(kopf == soll and rahmen == len(man["drohne"]["M13"]["ziele"]),
-               f"M13 nach 60 s: Ziel aus dem Bild – Kopf „{kopf}“ (soll „{soll}“), {rahmen} ARGUS-Rahmen wie in der Aufnahme")
+        sl.get_by_role("button", name="×1", exact=True).click()
+        x1 = live(g1)
+        zid = x1["kamera"]["ziel"]
+        lage0 = {f["id"]: f["px"] for f in x0["fahrzeuge"]}
+        lage1 = {f["id"]: f["px"] for f in x1["fahrzeuge"]}
+        ruck = round(((lage1[zid][0] - lage0[zid][0]) ** 2 + (lage1[zid][1] - lage0[zid][1]) ** 2) ** 0.5, 1) if zid in lage0 and zid in lage1 else None
+        fahrt = round(((x1["kamera"]["dx"] - x0["kamera"]["dx"]) ** 2 + (x1["kamera"]["dy"] - x0["kamera"]["dy"]) ** 2) ** 0.5, 1)
+        pruefe(zid == man["drohne"]["M13"]["ziele"][0]["id"] and ruck is not None and ruck <= 3 and fahrt >= 3 and x1["zielImBild"],
+               f"M13 Kamera folgt {zid}: nach {x1['t'] - x0['t']:.0f} s Spielzeit Ausschnitt {fahrt} m weiter, {zid} im Bild um {ruck} px versetzt (soll ≤ 3)")
+
+        # Schwenk nach der Zerstörung: erste Meldung mit mehreren Fahrzeugen, deren erstes vor den anderen zerstört wird
+        sz = json.load(open(os.path.join(HIER, "..", "public", "daten", "szenario_kraehe_01.json"), encoding="utf-8"))
+        tz = {h["ziel"]: h["t_s"] for h in (sz.get("hintergrund") or {}).get("ereignisse", []) if h.get("art") == "panzerabwehr" and h.get("folge") == "zerstoert"}
+        kand = [m for m in sorted(sz["meldungen"], key=lambda m: m["t_s"]) if len(m["ziele"]) > 1 and m["id"] in man["drohne"]
+                and tz.get(m["ziele"][0], 0) > m["t_s"] and any(tz.get(o, 1e9) > tz[m["ziele"][0]] for o in m["ziele"][1:])]
+        if not kand:
+            pruefe(False, "Schwenk: keine Meldung mit mehreren Fahrzeugen, deren erstes zuerst zerstört wird")
+        else:
+            m = kand[0]
+            erst = m["ziele"][0]
+            zeit(sl, m["t_s"])
+            oeffne(g1, m["id"])
+            zeit(sl, tz[erst] + 5)
+            warte(lambda: sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}'] ?? null") is not None, 15, f"{erst} zerstört")
+            te = sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}']")
+            status = lambda: g1.locator("[data-testid=live-fenster] .live-status").inner_text()  # noqa: E731
+            a0 = setze(te + 0.25)
+            k0 = (a0["kamera"]["ziel"], a0["kamera"]["rauschen"], status())
+            a1 = setze(te + 0.5 + 0.22)
+            k1 = (a1["kamera"]["ziel"], a1["kamera"]["rauschen"], status())
+            foto(g1, f"{m['id']}_schwenk")
+            a2 = setze(te + 2)
+            k2 = (a2["kamera"]["ziel"], a2["kamera"]["rauschen"], status())
+            foto(g1, f"{m['id']}_naechstes")
+            mitte = next((mk for mk in a2["marken"] if mk == k2[0]), None)
+            pruefe(k0[0] == erst and k0[1] == 0 and k1[1] > 0.5 and "AUSRICHTUNG" in k1[2] and k2[0] != erst and k2[0] in m["ziele"]
+                   and k2[1] == 0 and "LIVE" in k2[2] and mitte is not None,
+                   f"{m['id']} Schwenk: {erst} zerstört {te:.1f} s; +0,25 s {k0}; +0,72 s {k1[0]} Rauschen {k1[1]:.2f} „{k1[2]}“; "
+                   f"+2 s {k2[0]} „{k2[2]}“, ARGUS-Rahmen am neuen Ziel: {mitte is not None}")
 
         fall("M18", "S4 Kinder", "kind", None, None, 0, man["drohne"]["M18"]["t_s"] + 5)
         fall("M21", "N2 weißes Tuch", "tuch", None, "weiss", 40, man["drohne"]["M21"]["t_s"] + 5)
@@ -255,7 +282,7 @@ def main():
             g1 = ctx.new_page()
             g1.on("pageerror", lambda e: konsole.append(f"g1: pageerror: {e}"))
             g1.goto(adresse(a.basis, "g1", raumname))
-            g1.get_by_role("button", name="Verstanden – zur Ansicht").click()
+            g1.get_by_role("button", name="Überspringen").click()
             zeit(sl, man["drohne"][FPS_MELDUNG]["t_s"])
             sl.get_by_role("button", name=f"×{tempo}", exact=True).click()
             warte(lambda: g1.locator(f".kmarke[data-meldung={FPS_MELDUNG}]").count() == 1, 20, FPS_MELDUNG)
