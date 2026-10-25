@@ -253,7 +253,7 @@ export function LagekarteAnsicht(p: {
   const eckeEl = useRef<HTMLDivElement>(null);
   const linieEl = useRef<SVGLineElement>(null);
   const punktEl = useRef<SVGCircleElement>(null);
-  const fensterLageRef = useRef<{ id: string; r: Rechteck; bw: number; bh: number; zoom: number; manuell?: boolean } | null>(null);
+  const fensterLageRef = useRef<{ id: string; r: Rechteck; bw: number; bh: number; zoom: number; manuell?: boolean; vorlaeufig?: boolean } | null>(null);
   /** Ziehen des Fensters (B8): Startpunkt und ob schon gezogen wurde (dann kein Klick) */
   const ziehRef = useRef<{ x: number; y: number; r: Rechteck; bewegt: boolean; id: number } | null>(null);
   const gezogenRef = useRef(false);
@@ -283,7 +283,7 @@ export function LagekarteAnsicht(p: {
       fensterLageRef.current = lage;
       fe.style.transform = `translate(${Math.round(lage.r[0])}px, ${Math.round(lage.r[1])}px)`;
     }
-    const neu = !lage || lage.id !== f.id || (!lage.manuell && (lage.bw !== b.breite || lage.bh !== b.hoehe || lage.zoom !== zoomRef.current
+    const neu = !lage || lage.id !== f.id || !!lage.vorlaeufig || (!lage.manuell && (lage.bw !== b.breite || lage.bh !== b.hoehe || lage.zoom !== zoomRef.current
       || (p0 !== null && innen(p0, lage.r, FENSTER.frei))));
     if (neu && p0) {
       // andere Marken und Zeichen möglichst frei lassen
@@ -298,8 +298,8 @@ export function LagekarteAnsicht(p: {
       fe.style.transform = `translate(${Math.round(lage.r[0])}px, ${Math.round(lage.r[1])}px)`;
       fe.style.visibility = "visible";
     } else if (!lage) {
-      // Ziel (noch) nicht auf der Karte: Fenster oben links
-      lage = { id: f.id, r: [FENSTER.rand, FENSTER.rand, FENSTER.rand + f.breite, FENSTER.rand + f.hoehe], bw: b.breite, bh: b.hoehe, zoom: zoomRef.current };
+      // Ziel (noch) nicht auf der Karte: Fenster oben links, bis das Zeichen da ist
+      lage = { id: f.id, r: [FENSTER.rand, FENSTER.rand, FENSTER.rand + f.breite, FENSTER.rand + f.hoehe], bw: b.breite, bh: b.hoehe, zoom: zoomRef.current, vorlaeufig: true };
       fensterLageRef.current = lage;
       fe.style.transform = `translate(${FENSTER.rand}px, ${FENSTER.rand}px)`;
       fe.style.visibility = "visible";

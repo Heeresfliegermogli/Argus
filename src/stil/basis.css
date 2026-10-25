@@ -837,7 +837,7 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .ekarte.folien { width: 940px; height: min(600px, calc(100vh - 40px)); }
 .folie-rumpf { flex: 1; min-height: 0; display: flex; }
 .folie { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.folie-rolle { padding: 4px 0 8px; gap: 6px; }
+.folie-rolle { padding: 4px 0 8px; gap: 6px; justify-content: center; }
 .folie-rolle .ekarte-team { padding: 14px 28px 4px; }
 .folie-rolle .ekarte-team p { font-size: 15px; margin: 0 0 6px; }
 .folie-wichtig { margin: 8px 28px 0 !important; font-size: 16px !important; padding: 10px 14px !important; }
@@ -867,7 +867,7 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .mini-reihe > .kmarke.mini, .mini-knoepfe + .kmarke.mini { position: static; }
 .mini-drohne { position: absolute; left: 12px; top: 12px; width: 230px; height: 144px; border: 2px solid var(--g1); border-radius: 5px; overflow: hidden;
   background: linear-gradient(135deg, #59644c, #424b39 60%, #5f5a45); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
-.mini-drohne::after { content: ""; position: absolute; left: 242px; top: 108px; width: 70px; height: 2px; background: #f0b13d; transform-origin: 0 0; transform: rotate(14deg); }
+.mini-linie { position: absolute; left: 242px; top: 110px; width: 66px; height: 2.5px; background: #f0b13d; transform-origin: 0 0; transform: rotate(18deg); }
 .mini-drohne-kopf { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 1px 5px;
   background: rgba(0,0,0,.55); color: #e6e8e2; font: 500 10px/1.5 var(--mono); }
 .mini-x { background: rgba(0,0,0,.6); border-radius: 3px; padding: 0 4px; }
@@ -899,11 +899,13 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .druck-folien { list-style: none; margin: 0; padding: 8px 22px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; flex: 1; min-height: 0; }
 .druck-folien.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .druck-folien li { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
-.druck-folien li b { display: flex; align-items: center; gap: 6px; font-size: 14px; }
-.druck-folien li b .schritt { --rollenfarbe: var(--ek); width: 20px; height: 20px; font-size: 12px; }
+.druck-folien li .folie-titel { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.druck-folien li .folie-titel .schritt { --rollenfarbe: var(--ek); width: 20px; height: 20px; font-size: 12px; }
 .druck-folien li span { font-size: 12.5px; color: #39434c; line-height: 1.32; }
-.druck-folien .folie-bild { min-height: 0; padding: 6px; zoom: .5; }
-.druck-folien.n4 .folie-bild { display: none; }
+.druck-folien .folie-bild { min-height: 0; padding: 6px; zoom: .46; }
+.druck-folien.n4 { gap: 4px 16px; }
+.druck-folien.n4 li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.druck-folien.n4 .folie-bild { zoom: .42; }
 .druck-wichtig { margin: 6px 22px 0 !important; }
 .ekarte.sl .druck-folien { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 

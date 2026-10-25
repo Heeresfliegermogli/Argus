@@ -810,17 +810,22 @@ export class Lagekarte {
   /** Fahrwege: dünne Linien mit Pfeil am Ende; Vorschau einer Verstärkung grau gestrichelt mit Zeichen am Start. */
   private wege(g: Graphics): void {
     const farbe: Record<string, number> = { feind: 0xc0392b, verbuendet: 0x2f6fc4, ausser_gefecht: 0x8e5a52, attrappe: 0xc0392b };
-    for (const w of this.fahrwege) {
+    const mitVorschau = this.fahrwege.some((w) => w.vorschau);
+    // erst die Routen, darüber die Vorschau (die anderen Routen treten dann zurück)
+    for (const w of [...this.fahrwege].sort((a, b) => Number(!!a.vorschau) - Number(!!b.vorschau))) {
       const pts = w.punkte.map((p) => this.bs(p)).filter((p, i, a) => i === 0 || Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) > 0.5);
       if (pts.length < 2) continue;
-      const f = w.vorschau ? 0x7d838b : farbe[w.art] ?? 0x5d6670;
+      const f = w.vorschau ? 0xd9dde1 : farbe[w.art] ?? 0x5d6670;
       if (w.vorschau) {
-        this.strich(g, pts, 7, 5);
-        g.stroke({ width: 2.6, color: f, alpha: 0.95 });
+        g.moveTo(pts[0][0], pts[0][1]);
+        for (const p of pts.slice(1)) g.lineTo(p[0], p[1]);
+        g.stroke({ width: 6, color: 0x1d252c, alpha: 0.55 });
+        this.strich(g, pts, 9, 5);
+        g.stroke({ width: 3, color: f, alpha: 1 });
       } else {
         g.moveTo(pts[0][0], pts[0][1]);
         for (const p of pts.slice(1)) g.lineTo(p[0], p[1]);
-        g.stroke({ width: 1.6, color: f, alpha: 0.55 });
+        g.stroke({ width: 1.4, color: f, alpha: mitVorschau ? 0.18 : 0.42 });
       }
       // Pfeil am Ende
       const [ax, ay] = pts[pts.length - 2];
@@ -830,8 +835,15 @@ export class Lagekarte {
       const uy = (by - ay) / l;
       const k = w.vorschau ? 9 : 7;
       g.poly([bx, by, bx - ux * k - uy * k * 0.55, by - uy * k + ux * k * 0.55, bx - ux * k + uy * k * 0.55, by - uy * k - ux * k * 0.55], true)
-        .fill({ color: f, alpha: w.vorschau ? 0.95 : 0.6 });
-      if (w.vorschau && w.sidc) this.zeichenSprite(`weg-${w.id}`, w.sidc, 15, pts[0][0], pts[0][1], 0.9, undefined, "#7d838b");
+        .fill({ color: f, alpha: w.vorschau ? 1 : mitVorschau ? 0.2 : 0.5 });
+      if (w.vorschau && w.sidc) {
+        // Start am Kartenrand: Zeichen etwas nach innen, damit es zu sehen ist
+        const [x0, y0] = this.bs([0, 0]);
+        const [x1, y1] = this.bs([this.inh.karte.ausdehnung_m.breite, this.inh.karte.ausdehnung_m.hoehe]);
+        const sx = Math.max(Math.max(x0, 0) + 14, Math.min(Math.min(x1, this.breite) - 14, pts[0][0]));
+        const sy = Math.max(Math.max(y0, 0) + 14, Math.min(Math.min(y1, this.hoehe) - 14, pts[0][1]));
+        this.zeichenSprite(`weg-${w.id}`, w.sidc, 15, sx, sy, 0.95, undefined, "#9aa0a7");
+      }
     }
   }
 

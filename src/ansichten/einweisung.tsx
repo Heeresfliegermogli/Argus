@@ -103,7 +103,7 @@ function texte(inh: Inhalte): Record<KartenRolle, RollenText> {
         {
           titel: "Drohnenbild ansehen",
           text: <>Neben dem Ziel läuft das Drohnenbild live; die Drohne verfolgt das Ziel. <b>Klick ins Bild:</b> groß mit Lupe (Mausrad: stärker). An der Kopfleiste verschiebst du das Fenster, <M>✕</M> schließt es, die Marke öffnet es wieder.</>,
-          bild: <MiniKarte marke="Ziel 3" art="gewaehlt" klasse="mit-drohne"><MiniDrohne /></MiniKarte>,
+          bild: <MiniKarte marke="Ziel 3" art="gewaehlt" klasse="mit-drohne"><i class="mini-linie" /><MiniDrohne /></MiniKarte>,
         },
         {
           titel: "Daten prüfen",
@@ -343,7 +343,7 @@ export function Einweisungskarte(p: { inh: Inhalte; rolle: KartenRolle; team?: K
         {tx.folien.map((f, i) => (
           <li>
             {f.bild && <div class="folie-bild">{f.bild}</div>}
-            <div><b><span class="schritt">{i + 1}</span>{f.titel}</b><span>{f.text}</span></div>
+            <div><b class="folie-titel"><span class="schritt">{i + 1}</span>{f.titel}</b><span>{f.text}</span></div>
           </li>
         ))}
       </ol>
