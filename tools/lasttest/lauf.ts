@@ -19,7 +19,7 @@ import { forceWebSockets } from "firebase/database";
 import { ladeInhalte } from "../../src/inhalte/laden";
 import type { Inhalte } from "../../src/inhalte/typen";
 import { type AktionsDaten, type AktionsTyp, zufall } from "../../src/kern/ereignisse";
-import { type GruppenRolle, GRUPPEN_ROLLEN, codeNormalisieren, codeVorsilbe, neuerCode } from "../../src/kern/sitzungen";
+import { type GruppenRolle, GRUPPEN_ROLLEN, codeNormalisieren, neuerCode } from "../../src/kern/sitzungen";
 import { type Spielzustand, fingerabdruck } from "../../src/kern/zustand";
 import type { Spiel } from "../../src/sitzung/spiel";
 import { Sitzung } from "../../src/sitzung/sitzung";
@@ -313,7 +313,7 @@ export class Lasttest {
       if (!s) throw new Error("Sitzung konnte nicht angelegt werden (Datenbank erreichbar? Regeln?)");
       this.code = s;
     } else {
-      const s = codeNormalisieren(this.opt.code ?? "", codeVorsilbe(inh.szenario.anzeige));
+      const s = codeNormalisieren(this.opt.code ?? "");
       if (!s) throw new Error("Bitte den Code der Sitzung vom Host-Gerät eingeben");
       this.setze("vorbereiten", `Sitzung ${s.toUpperCase()} suchen …`);
       const da = await sitzungVorhanden({ sync: "firebase", db: this.opt.db, transport: this.opt.transport }, s, 20000);

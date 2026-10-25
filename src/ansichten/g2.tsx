@@ -1,6 +1,6 @@
-// G2 Zielprüfung (Schritt 6b): Die Karte ist die Arbeitsfläche. Angenommene Ziele stehen als Marke am Ziel,
-// zurückgestellte (BEOBACHTEN) bleiben als Marke stehen. Rechts: Eingang als Zahl, die geöffnete Zielmeldung,
-// Wirkmittel mit Warnungen am vorausberechneten Einschlagort (Vorschau auf der Karte) und die Empfehlung an G3.
+// Zielprüfung (intern g2; Schritt 6b): Die Karte ist die Arbeitsfläche. Angenommene Ziele stehen als Marke „Ziel 7“ am
+// Ziel, zurückgestellte (BEOBACHTEN) bleiben als Marke stehen. Rechts: Eingang als Zahl, die geöffnete Zielmeldung,
+// Wirkmittel mit Warnungen am vorausberechneten Einschlagort (Vorschau auf der Karte) und die Empfehlung an die Führung.
 //   ① Zielmeldung öffnen (Marke; die älteste neue öffnet sich von selbst)  ② Wirkmittel wählen, Warnungen prüfen
 //   ③ BEKÄMPFEN mit Wirkmittel, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN
 import { useMemo, useState } from "preact/hooks";
@@ -11,6 +11,7 @@ import { lagebildZielmeldungen } from "../kern/lagebild";
 import { type Wirkungsergebnis, vorhersage } from "../kern/regeln";
 import { warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
+import { zielName } from "../kern/zielnummern";
 import type { Spielzustand } from "../kern/zustand";
 import type { Vorschau } from "../karte/lagekarte";
 import type { Inhalte, Meldung, Punkt } from "../inhalte/typen";
@@ -109,7 +110,7 @@ export function G2Ansicht(p: { s: Sicht }) {
   const vs = m && vorschauWm ? vorschauFuer(inh, z, m, vorschauWm, t) : null;
   const vorschau = vs?.vorschau ?? null;
   const pruefungGewaehlt = m && wm ? vorhersage(inh, m, wm, t, z.zerstoert).pruefung : null;
-  const marken = [...meldungsMarken(offen, gewaehlt, oeffnen), ...wirkungsMarken(lagebild)];
+  const marken = [...meldungsMarken(offen, gewaehlt, oeffnen, (id) => zielName(inh, z, id, false)), ...wirkungsMarken(lagebild)];
 
   return (
     <main class="inhalt ansicht-karte ansicht-g2">
@@ -125,12 +126,12 @@ export function G2Ansicht(p: { s: Sicht }) {
 
       <aside class="stapel meldungsfeld">
         <EingangLeiste anzahl={neu.length} zurueck={offen.length - neu.length} testid="g2-offen" />
-        <Panel titel={m && ms ? <>Zielmeldung {ms.id} <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)}{m.folge_von ? ` · Folgemeldung zu ${m.folge_von}` : ""}</span></> : "Zielmeldung"}
+        <Panel titel={m && ms ? <>Zielmeldung <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)}{m.folge_von ? ` · Folgemeldung zu ${zielName(inh, z, m.folge_von, false)}` : ""}</span></> : "Zielmeldung"}
           klasse="flach" testid="offene-meldung" meldung={ms?.id}
           rechts={ms?.beobachten ? <span class="badge info">zurückgestellt</span> : ms?.fastTrack ? <span class="badge warn">Fast-Track</span> : null}>
           {!m || !gewaehlt ? (
             <div class="hinweistext" style="padding:4px 0" data-testid="g2-warten">
-              {offen.length ? "Zurückgestellte Ziele bleiben als Marke auf der Karte – anklicken öffnet sie." : "Warten auf Zielmeldungen von G1 … Angenommene Ziele erscheinen als Marke auf der Karte und öffnen sich hier."}
+              {offen.length ? "Zurückgestellte Ziele bleiben als Marke auf der Karte – anklicken öffnet sie." : "Warten auf Zielmeldungen der Aufklärung … Angenommene Ziele erscheinen als Marke auf der Karte und öffnen sich hier."}
             </div>
           ) : <ZielmeldungKompakt zm={zielmeldung(inh, z, gewaehlt)} />}
         </Panel>
@@ -162,14 +163,14 @@ export function G2Ansicht(p: { s: Sicht }) {
             </div>
           )}
         </Panel>
-        <Panel schritt={3} titel="Empfehlung an G3" klasse="flach">
+        <Panel schritt={3} titel="Empfehlung an die Führung" klasse="flach">
           <div class="stapel" style="gap:8px">
             <input class="feld" placeholder="Begründung (eine Zeile, freiwillig)" maxLength={TEXT_MAX.begruendung} value={begruendung}
               onInput={(e) => setBegruendung((e.target as HTMLInputElement).value)} disabled={gesperrt} data-testid="g2-begruendung" />
             <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt || !wm} klasse="gross toedlich" onClick={() => empfehlen("bekaempfen")}
               titel={!wm ? "zuerst unter ② ein Wirkmittel wählen" : undefined} testid="g2-bekaempfen">
               BEKÄMPFEN{wm ? ` mit ${inh.wirkmittel[wm].kurz}` : ""}
-              <span class="unterzeile">{!wm ? "erst Wirkmittel wählen" : pruefungGewaehlt && !pruefungGewaehlt.zulaessig ? "⚠ trotz Warnung – wird protokolliert" : "Empfehlung geht an G3"}</span>
+              <span class="unterzeile">{!wm ? "erst Wirkmittel wählen" : pruefungGewaehlt && !pruefungGewaehlt.zulaessig ? "⚠ trotz Warnung – wird protokolliert" : "Empfehlung geht an die Führung"}</span>
             </AktionsKnopf>
             <div class="knopf-reihe">
               <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt || !!ms?.beobachten} onClick={() => empfehlen("beobachten")} testid="g2-beobachten"

@@ -11,6 +11,8 @@ import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { verstaerkungStand } from "../kern/welt";
+import { fahrwegeAlle, verstaerkungVorschau } from "../kern/fahrwege";
+import { zielNr } from "../kern/zielnummern";
 import { istVeraltet } from "../sync/adapter";
 import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
 import { rollenAnzeige } from "../kern/sitzungen";
@@ -57,7 +59,7 @@ export function plenumOeffnen(): void {
   window.open(u.toString(), "argus-plenum");
 }
 
-/** Reihenfolge in der Fensterleiste: Spielleitung, G1, G2, G3, Plenum. */
+/** Reihenfolge in der Fensterleiste: Spielleitung, Aufklärung, Zielprüfung, Führung, Plenum. */
 function fensterRang(x: SichtTeilnehmer): number {
   if (x.art === "sl") return 0;
   if (x.art === "plenum") return 9;
@@ -84,6 +86,10 @@ export function SLAnsicht(p: { s: Sicht }) {
   const lagebild = useMemo(() => lagebildKontrolle(inh, z, tLage), [inh, z, tLage]);
   const fx = useMemo(() => effekte(inh, z, "alle"), [inh, z]);
   const bedingt = bedingtStand(inh, z, t);
+  // Fahrwege der Einheiten (B10); beim Zeigen auf eine Verstärkung ihre Fahrwege ausgegraut als Vorschau
+  const [vorschauV, setVorschauV] = useState<string | null>(null);
+  const tWege = Math.floor(tLage / 15);
+  const fahrwege = useMemo(() => [...fahrwegeAlle(inh, tLage), ...(vorschauV ? verstaerkungVorschau(inh, vorschauV, tLage) : [])], [inh, tWege, vorschauV]);
 
   const plan = useMemo<Plan[]>(() => {
     const liste: Plan[] = sz.meldungen.map((m) => {
@@ -143,7 +149,7 @@ export function SLAnsicht(p: { s: Sicht }) {
               <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={zeitSetzen}>Spielzeit setzen</button>
             </div>
             <div class="zeile zwischen">
-              <span class="klein">Fast-Track <b>{z.fastTrack ? "EIN" : "AUS"}</b> <span class="sehr-leise">(auf Zuruf von G3)</span></span>
+              <span class="klein">Fast-Track <b>{z.fastTrack ? "EIN" : "AUS"}</b> <span class="sehr-leise">(auf Zuruf der Führung)</span></span>
               <AktionsKnopf s={s} wartet={s.wartetAuf("fast_track")} klasse="klein" onClick={() => s.senden("fast_track", { an: !z.fastTrack })}>
                 {z.fastTrack ? "aus" : "ein"}
               </AktionsKnopf>
@@ -192,15 +198,17 @@ export function SLAnsicht(p: { s: Sicht }) {
               );
             })}
             {verstaerkungStand(inh, z.verstaerkungen, Math.min(t, sz.spieluhr.dauer_s)).map((v) => (
-              <div class={`bedingt ${v.eingespielt !== undefined ? "ausgeloest" : v.gesperrtBis !== undefined ? "entfaellt" : ""}`} key={v.id} data-verstaerkung-sl={v.id}
-                title={`${v.name} (${v.kurz}): ${v.zweck}`}>
+              <div class={`bedingt ${v.eingespielt !== undefined ? "ausgeloest" : v.gesperrtBis !== undefined ? "entfaellt" : ""} ${vorschauV === v.id ? "vorschau" : ""}`} key={v.id} data-verstaerkung-sl={v.id}
+                title={`${v.name} (${v.kurz}): ${v.zweck}`}
+                onMouseEnter={() => v.eingespielt === undefined && setVorschauV(v.id)} onMouseLeave={() => setVorschauV((x) => (x === v.id ? null : x))}>
                 <div>
                   <div><b>{v.id}</b> <span class="status">· {v.name} · {v.kurz}{v.eingespielt !== undefined ? ` · eingespielt ${uhrzeit(start, v.eingespielt)}` : ""}</span></div>
                   <div class="status">{v.gesperrtBis !== undefined ? `jetzt gesperrt (käme Schule oder Sanität zu nahe), wieder ab ${uhrzeit(start, v.gesperrtBis)}` : v.zweck}</div>
                 </div>
                 {v.eingespielt === undefined && (
                   <button type="button" class="knopf klein" disabled={!darfSteuern || v.gesperrtBis !== undefined || z.ende}
-                    onClick={() => s.senden("verstaerkung_einspielen", { gruppe: v.id })}>einspielen</button>
+                    onFocus={() => setVorschauV(v.id)} onBlur={() => setVorschauV((x) => (x === v.id ? null : x))}
+                    onClick={() => { setVorschauV(null); s.senden("verstaerkung_einspielen", { gruppe: v.id }); }}>einspielen</button>
                 )}
               </div>
             ))}
@@ -224,7 +232,7 @@ export function SLAnsicht(p: { s: Sicht }) {
         </Panel>
         <Panel titel="Notiz ins Protokoll" klasse="flach">
           <div class="zeile" style="flex-wrap:nowrap">
-            <input class="feld" maxLength={TEXT_MAX.notiz} placeholder="Beobachtung, z. B. „G3 diskutiert I-04“" value={notiz}
+            <input class="feld" maxLength={TEXT_MAX.notiz} placeholder="Beobachtung, z. B. „Führung diskutiert I-04“" value={notiz}
               onInput={(e) => setNotiz((e.target as HTMLInputElement).value)}
               onKeyDown={(e) => { if (e.key === "Enter" && notiz.trim()) { s.senden("notiz", { text: notiz.trim() }); setNotiz(""); } }} />
             <button type="button" class="knopf" disabled={!notiz.trim()} onClick={() => { s.senden("notiz", { text: notiz.trim() }); setNotiz(""); }}>+</button>
@@ -233,9 +241,9 @@ export function SLAnsicht(p: { s: Sicht }) {
       </div>
 
       <Panel titel="Kontrollkarte" klasse="ohne-rand"
-        rechts={<span class="klein sehr-leise">Ground Truth, Lage {uhrzeit(start, tLage)} · Ziele mit Maus zeigen · Mausrad zoomt (Fahrzeuge ab Zoom)</span>}>
+        rechts={<span class="klein sehr-leise">{vorschauV ? `Vorschau ${vorschauV}: Fahrwege grau, Einheiten am Start` : `Ground Truth, Lage ${uhrzeit(start, tLage)} · Ziele mit Maus zeigen · Mausrad zoomt`}</span>}>
         <LagekarteAnsicht inh={inh} lagebild={lagebild} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={17} testid="kontrollkarte"
-          uhr={() => s.kartenUhr()} effekte={fx} />
+          uhr={() => s.kartenUhr()} effekte={fx} fahrwege={fahrwege} />
       </Panel>
       <Panel liste titel={
         <div class="reiter">
@@ -256,7 +264,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                 return (
                   <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
                     <td class="zahl klein">{uhrzeit(start, x.t)}</td>
-                    <td><b>{x.id}</b>{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
+                    <td style="white-space:nowrap">{x.art === "meldung" ? <><b>Ziel {zielNr(inh, z, x.id)}</b> <span class="sehr-leise klein">{x.id}</span></> : <b>{x.id}</b>}{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
                     <td class="klein">{x.text}<div class="sehr-leise">{x.zusatz}</div></td>
                     <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
                     <td style="text-align:right">

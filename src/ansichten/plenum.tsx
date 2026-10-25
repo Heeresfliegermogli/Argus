@@ -145,7 +145,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
           <div class="plenum-zahl"><span>Wirkungen</span><b>{wirkungen.length}</b></div>
           <div class="plenum-zahl"><span>davon mit Fehltreffer</span><b style={wirkungen.some((w) => w.fehl) ? "color:#ff8f86" : ""}>{wirkungen.filter((w) => w.fehl).length}</b></div>
           <div class="plenum-zahl"><span>Freigaben trotz Regelwarnung</span><b>{trotzWarnung}</b></div>
-          <div class="plenum-zahl"><span>Von ARGUS nie gemeldet</span><b>{ungemeldet.map((x) => x.id).join(", ")}</b></div>
+          <div class="plenum-zahl"><span>Von ARGUS nie gemeldet</span><b>{ungemeldet.map((x) => inh.fahrzeuge[x.typ]?.name ?? x.typ).join(", ") || "–"}</b></div>
         </Panel>
         <Panel titel="Wirkungen" liste>
           {wirkungen.length === 0 ? <div class="hinweistext">Keine Wirkung.</div> : (

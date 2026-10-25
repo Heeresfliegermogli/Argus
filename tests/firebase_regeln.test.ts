@@ -29,7 +29,7 @@ interface Db {
 }
 const regeln = require("../firebase/database.rules.json");
 
-const S = "/argus/v1/sitzungen/kraehe-7q";
+const S = "/argus/v1/sitzungen/k7p";
 const TEAM = "tk3x9a";
 const LAUF = "20261125-0930-abcd";
 const P = `${S}/laeufe/${TEAM}/${LAUF}/protokoll`;
@@ -37,7 +37,7 @@ const A = `${S}/laeufe/${TEAM}/${LAUF}/aktionen`;
 const leer = () => targaryen.database(regeln, {}).with({ debug: true }).as(null);
 
 const info = (extra: Partial<SitzungsInfo> = {}) => ({
-  code: "KRAEHE-7Q", szenario: "kraehe-01", version: "1.3", titel: "ARGUS – Verteidigung Brücke ELSTER", erstellt: Date.now(), von: "SL 1", ...extra,
+  code: "K7P", szenario: "kraehe-01", version: "1.3", titel: "ARGUS – Verteidigung Brücke ELSTER", erstellt: Date.now(), von: "SL 1", ...extra,
 });
 const team = (extra: Partial<TeamDaten> = {}) => ({ name: "Falke", farbe: "#e8839b", erstellt: Date.now(), ...extra });
 const ereignis = (seq: number, extra: Partial<Ereignis> = {}) => ({
@@ -55,6 +55,18 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
     expect(leer().write(`${S}/fremd`, 1).allowed).toBe(false);
     expect(leer().read("/argus/v1/sitzungen/Gross Buchstaben/teams").allowed).toBe(false);
     expect(leer().write("/argus/v1/raeume/kraehe/aktuell", LAUF).allowed).toBe(false); // alter Raum-Bereich ist zu
+  });
+
+  it("kurze Codes (B2): drei Zeichen ohne verwechselbare, Räume des Tests ohne Lobby ab vier Zeichen", () => {
+    expect(leer().read("/argus/v1/sitzungen/k7p/teams").allowed).toBe(true);
+    expect(leer().read("/argus/v1/sitzungen/a3x/info").allowed).toBe(true);
+    expect(leer().read("/argus/v1/sitzungen/o1l/teams").allowed).toBe(false); // 0/O, 1/I/L gibt es nicht
+    expect(leer().read("/argus/v1/sitzungen/b8s/teams").allowed).toBe(false);
+    expect(leer().read("/argus/v1/sitzungen/ab/teams").allowed).toBe(false);
+    expect(leer().read("/argus/v1/sitzungen/bedientest/teams").allowed).toBe(true);
+    expect(leer().write("/argus/v1/sitzungen/o1l/info", info({ code: "O1L" })).allowed).toBe(false);
+    expect(leer().write("/argus/v1/sitzungen/a3x/info", info({ code: "A3X" })).allowed).toBe(true);
+    expect(leer().write("/argus/v1/sitzungen/a3x/info", info({ code: "A3Y" })).allowed).toBe(false);
   });
 
   it("info: einmal anlegen, Code passt zum Schlüssel, danach unveränderlich", () => {

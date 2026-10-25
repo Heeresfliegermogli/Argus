@@ -13,12 +13,13 @@ import { EinweisungDruck } from "./ansichten/einweisung";
 import { PlenumFenster, SLFenster } from "./ansichten/sl-fenster";
 import { Start } from "./ansichten/start";
 import { TTFenster } from "./ansichten/tt-fenster";
-import { type Einstellungen, leseEinstellungen, merke, merken, sitzungsAdresse } from "./config";
+import { type Einstellungen, leseEinstellungen, merke, merkeSitzung, merken, sitzungsAdresse } from "./config";
 import { setzeBildrateMax } from "./karte/bildrate";
 import { ladeInhalte } from "./inhalte/laden";
 import type { Inhalte } from "./inhalte/typen";
 import type { TeamLauf } from "./kern/auswertung";
 import { type Ereignis, type Rolle, zufall } from "./kern/ereignisse";
+import { ROLLEN_NAME } from "./kern/sichten";
 import { zustandAus } from "./kern/zustand";
 import { meldeSitzung } from "./sitzung/fehlersuche";
 import { Sitzung } from "./sitzung/sitzung";
@@ -78,6 +79,8 @@ function Fenster(p: { e: Einstellungen }) {
       s = new Sitzung(inh, adapterFuer(e, schluessel), { art, client: kennung(e, art, direkt?.rolle ?? null), name: e.name, direkt });
       await s.starten();
       merken(e);
+      // Spielleitung einer Sitzung: auf der Startseite „Fortsetzen“ anbieten
+      if (e.sitzung && art === "sl") merkeSitzung(e.sitzung, e.sync);
       setSitzung(s);
       meldeSitzung(s);
     })().catch((err: Error) => setFehler(err.message));
@@ -129,7 +132,7 @@ function AuswertungDemo(p: { e: Einstellungen }) {
 
 function titel(e: Einstellungen): string {
   if (e.sitzung) return e.rolle === "sl" ? "ARGUS · Spielleitung" : e.rolle === "plenum" ? "ARGUS · Plenum" : "ARGUS";
-  return e.rolle ? `ARGUS · ${e.rolle.toUpperCase()}` : "ARGUS";
+  return e.rolle ? `ARGUS · ${ROLLEN_NAME[e.rolle]}` : "ARGUS";
 }
 
 function App() {

@@ -799,3 +799,116 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .g1-sensor b { color: #ffd2cc; font-weight: 600; }
 .g1-bild .drohne-fenster .drohne-lupe-hinweis { font-size: 13px; }
 .g1-bild .drohne-fenster .drohne-kopf, .g1-bild .drohne-fenster .drohne-fuss { font-size: 12px; }
+
+/* ---------------------------------------------------------------- Startseite (B1, 25.10.2026): zwei große Knöpfe */
+.start-wahl { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.start-gross {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 210px;
+  border-radius: 12px; border: 2px solid var(--linie-2); background: var(--flaeche); cursor: pointer;
+  font-size: 34px; font-weight: 700; letter-spacing: .02em; color: var(--text);
+}
+.start-gross span { font-size: 16px; font-weight: 500; color: var(--text-2); }
+.start-gross.mitspielen { border-color: #36628f; background: linear-gradient(180deg, #1d2a38, var(--flaeche)); }
+.start-gross.spielleitung { border-color: #56616c; }
+.start-gross:hover { filter: brightness(1.12); }
+.start-mitte { width: min(520px, 100%) !important; align-self: center; }
+.start-zurueck { margin-top: 14px; }
+.start-letzte { padding: 10px 12px; margin-bottom: 14px; border-radius: 8px; background: #1d2a38; border: 1px solid #36628f; }
+.start-fuss { margin-top: 4px; }
+a.knopf { text-decoration: none; display: inline-flex; align-items: center; }
+a.knopf.aus { opacity: .45; pointer-events: none; }
+
+/* Drohnenbild am Ort (B8): an der Kopfleiste verschiebbar, ✕ schließt (die Marke öffnet wieder) */
+.karte-fenster::before { content: ""; position: absolute; left: 0; right: 30px; top: 0; height: 24px; cursor: move; z-index: 4; }
+.karte-fenster.gezogen { box-shadow: 0 6px 24px rgba(0, 0, 0, .55); opacity: .96; }
+.karte-fenster .drohne-kopf { padding-right: 32px; }
+.fenster-zu {
+  position: absolute; top: 1px; right: 2px; z-index: 5; width: 24px; height: 21px; border: 0; border-radius: 4px;
+  background: rgba(0, 0, 0, .55); color: #f1f3f4; font-size: 14px; line-height: 1; cursor: pointer; padding: 0;
+}
+.fenster-zu:hover { background: #5a2522; }
+
+/* Zuschauen (Spielleitung, nur lesen; B11): deutlich gekennzeichnet – Rahmen und Abzeichen in Info-Blau */
+.rahmen.nur-lesen::after { content: ""; position: absolute; inset: var(--kopf) 0 0 0; border: 3px dashed #5e9bd6; pointer-events: none; z-index: 50; }
+.badge.zuschauen { color: #0e1317; background: #8fc0ee; font-weight: 700; }
+.sl-rollen .auge { font-size: 11px; margin-right: 4px; opacity: .7; }
+
+/* ---------------------------------------------------------------- Einweisung als Folien (B5, 25.10.2026) */
+.ekarte.folien { width: 940px; height: min(600px, calc(100vh - 40px)); }
+.folie-rumpf { flex: 1; min-height: 0; display: flex; }
+.folie { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.folie-rolle { padding: 4px 0 8px; gap: 6px; }
+.folie-rolle .ekarte-team { padding: 14px 28px 4px; }
+.folie-rolle .ekarte-team p { font-size: 15px; margin: 0 0 6px; }
+.folie-wichtig { margin: 8px 28px 0 !important; font-size: 16px !important; padding: 10px 14px !important; }
+.folie-schritt { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 26px; align-items: center; padding: 18px 28px; }
+.folie-schritt:not(:has(.folie-bild)) { grid-template-columns: 1fr; }
+.folie-text h2 { font-size: 24px; font-weight: 700; color: #1c2227; display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+.folie-text h2 .schritt { --rollenfarbe: var(--ek); width: 32px; height: 32px; font-size: 18px; }
+.folie-text p { font-size: 18px; line-height: 1.5; color: #2b343c; margin: 0; }
+.folie-bild { display: grid; place-items: center; padding: 14px; background: #e5dfd2; border-radius: 10px; min-height: 230px; }
+.folie-fuss { border-top: 1px solid #ddd5c4; padding-top: 12px; }
+.folie-fuss .knopf.leise { background: transparent; color: #39434c; border-color: #b9b2a3; }
+.folie-punkte { display: flex; gap: 8px; }
+.folie-punkte button { width: 11px; height: 11px; border-radius: 50%; border: 0; padding: 0; background: #c7bfae; cursor: pointer; }
+.folie-punkte button.an { background: var(--ek); box-shadow: 0 0 0 2px #1c2227; }
+
+/* kleine, neutrale Bilder der Bedienung */
+.mini-reihe { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.mini-karte { position: relative; width: 250px; height: 170px; border-radius: 8px; overflow: hidden; background: #ece7d8; border: 1px solid #c9c0ad;
+  background-image: linear-gradient(#d8d2c2 1px, transparent 1px), linear-gradient(90deg, #d8d2c2 1px, transparent 1px); background-size: 50px 50px; }
+.mini-karte.mit-drohne { width: 380px; height: 210px; }
+.mini-strasse { position: absolute; left: -10px; right: -10px; top: 108px; height: 7px; background: #b8b0a0; transform: rotate(-8deg); }
+.mini-bach { position: absolute; left: 46px; top: -10px; bottom: -10px; width: 5px; background: #8fb4d0; transform: rotate(8deg); }
+.mini-zeichen { position: absolute; left: 150px; top: 66px; width: 26px; height: 26px; transform: rotate(45deg); background: #ffa49c; border: 2px solid #1c2227; }
+.mini-karte.mit-drohne .mini-zeichen { left: 300px; top: 120px; }
+.kmarke.mini { position: absolute; left: 132px; top: 104px; transform: none; animation: none; pointer-events: none; }
+.mini-karte.mit-drohne .kmarke.mini { left: 282px; top: 158px; }
+.mini-reihe > .kmarke.mini, .mini-knoepfe + .kmarke.mini { position: static; }
+.mini-drohne { position: absolute; left: 12px; top: 12px; width: 230px; height: 144px; border: 2px solid var(--g1); border-radius: 5px; overflow: hidden;
+  background: linear-gradient(135deg, #59644c, #424b39 60%, #5f5a45); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.mini-drohne::after { content: ""; position: absolute; left: 242px; top: 108px; width: 70px; height: 2px; background: #f0b13d; transform-origin: 0 0; transform: rotate(14deg); }
+.mini-drohne-kopf { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 1px 5px;
+  background: rgba(0,0,0,.55); color: #e6e8e2; font: 500 10px/1.5 var(--mono); }
+.mini-x { background: rgba(0,0,0,.6); border-radius: 3px; padding: 0 4px; }
+.mini-rahmen { position: absolute; left: 88px; top: 54px; width: 54px; height: 36px; border: 2px solid var(--argus); }
+.mini-rahmen span { position: absolute; left: -2px; top: -17px; white-space: nowrap; font: 600 9px/1.4 var(--mono); background: var(--argus); color: #1c1405; padding: 0 3px; }
+.mini-lupe { position: absolute; right: 6px; bottom: 6px; font-size: 10px; background: rgba(0,0,0,.6); color: #e6e8e2; padding: 1px 6px; border-radius: 99px; }
+.mini-eingang { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #1c232a; color: #e8ecef; font-weight: 600; font-size: 16px; }
+.mini-eingang .schritt { --rollenfarbe: var(--ek); }
+.mini-eingang b { color: var(--argus); font-size: 22px; }
+.mini-panel { width: 330px; display: flex; flex-direction: column; gap: 8px; background: #1c232a; color: #e8ecef; padding: 12px; border-radius: 8px; font-size: 14px; }
+.mini-argus { display: flex; gap: 10px; align-items: center; border: 1px solid var(--argus-rand); background: var(--argus-flaeche); padding: 6px 9px; border-radius: 6px; color: var(--argus); }
+.mini-zeilen { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; color: var(--text-2); }
+.mini-zeilen span::after { content: " ·····"; color: var(--text-3); }
+.mini-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.mini-knoepfe .knopf { pointer-events: none; min-width: 110px; }
+.mini-kreis { position: absolute; border-radius: 50%; }
+.mini-kreis.ok { left: 138px; top: 54px; width: 50px; height: 50px; border: 3px solid #2f9e5b; background: rgba(47,158,91,.22); }
+.mini-kreis.rot { left: 120px; top: 36px; width: 86px; height: 86px; border: 3px dashed #e0453b; }
+.mini-kreis.geplant { left: 136px; top: 52px; width: 54px; height: 54px; border: 3px dashed #d8443a; }
+.mini-karte .kmarke.mini.wirkung { left: 112px; top: 112px; }
+.mini-wm { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 15px; }
+.mini-wm .ok { color: #1d6b3e; } .mini-wm .rot { color: #b5281f; }
+.mini-inject { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--argus-rand); border-radius: 6px; padding: 8px; }
+.mini-inject .knopf { align-self: flex-end; pointer-events: none; }
+.mini-hinweis { border: 1px dashed var(--linie-2); border-radius: 6px; padding: 8px; color: var(--text-2); }
+
+/* Druck: Folien als Raster auf einer Karte */
+.ekarte.druck { display: flex; flex-direction: column; }
+.druck-folien { list-style: none; margin: 0; padding: 8px 22px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; flex: 1; min-height: 0; }
+.druck-folien.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.druck-folien li { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.druck-folien li b { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.druck-folien li b .schritt { --rollenfarbe: var(--ek); width: 20px; height: 20px; font-size: 12px; }
+.druck-folien li span { font-size: 12.5px; color: #39434c; line-height: 1.32; }
+.druck-folien .folie-bild { min-height: 0; padding: 6px; zoom: .5; }
+.druck-folien.n4 .folie-bild { display: none; }
+.druck-wichtig { margin: 6px 22px 0 !important; }
+.ekarte.sl .druck-folien { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Verstärkung: Vorschau der Fahrwege (B10) */
+.v-vorschau { display: flex; flex-direction: column; gap: 3px; padding: 6px; margin-bottom: 6px; background: var(--flaeche-2); border-radius: 6px; }
+.v-vorschau svg { border-radius: 4px; display: block; }
+.verstaerkung-zeile.vorschau, .bedingt.vorschau { outline: 2px dashed #7d838b; outline-offset: -2px; }
+.kd-intern { font-size: 13px; fill: var(--text-3); font-weight: 500; }

@@ -25,8 +25,15 @@ import type { Ereignis } from "./ereignisse";
 import { gtBei } from "./geometrie";
 import { weltFuer } from "./lage";
 import { FEHL } from "./lagebild";
+import { ROLLEN_DATIV, ROLLEN_NAME, ROLLEN_ZEICHEN } from "./sichten";
 import { uhrzeit } from "./uhr";
+import { zielNr } from "./zielnummern";
 import { type Spielzustand, anfangsZustand, anwenden } from "./zustand";
+
+/** „Ziel 8“ für eine Meldung des Szenarios – in allen Teams dieselbe Nummer (B7). */
+function zielText(inh: Inhalte, id: string): string {
+  return `Ziel ${zielNr(inh, null, id)}`;
+}
 
 /** Ein Team mit seinem Lauf, wie die Auswertung es braucht (Plenum, Spielleitung, Demo, Test). */
 export interface TeamLauf {
@@ -152,7 +159,8 @@ export function meldungsVerlaeufe(team: TeamLauf): Map<string, MeldungsVerlauf> 
     if (e.typ === "g1_entscheid" || e.typ === "g2_empfehlung" || e.typ === "g3_entscheid") {
       const mv = out.get(e.daten.meldung);
       if (!mv) continue;
-      if (e.typ === "g1_entscheid") mv.entscheidungen.push({ stufe: "g1", t: e.t_s, was: e.daten.entscheid, text: e.daten.vermerk });
+      // Vermerk der Aufklärung gibt es seit B6 nicht mehr (ältere Läufe: wird nicht mehr gezeigt)
+      if (e.typ === "g1_entscheid") mv.entscheidungen.push({ stufe: "g1", t: e.t_s, was: e.daten.entscheid });
       else if (e.typ === "g2_empfehlung") {
         mv.entscheidungen.push({ stufe: "g2", t: e.t_s, was: e.daten.empfehlung, wirkmittel: e.daten.wirkmittel, text: e.daten.begruendung, warnungen: e.daten.warnungen ?? [] });
       } else {
@@ -239,21 +247,22 @@ export interface Kette {
 
 const WAS_TEXT: Record<string, string> = {
   annehmen: "ANNEHMEN", ablehnen: "ABLEHNEN", bekaempfen: "BEKÄMPFEN", beobachten: "BEOBACHTEN (zurückgestellt)",
-  nicht_bekaempfen: "NICHT BEKÄMPFEN", freigabe: "FREIGABE", zurueck: "ZURÜCK AN G2",
+  nicht_bekaempfen: "NICHT BEKÄMPFEN", freigabe: "FREIGABE", zurueck: "ZURÜCK AN ZIELPRÜFUNG",
 };
 
-/** Kette G1 → G2 → G3 → Einschlag einer Meldung, wie das Team sie durchlaufen hat. */
+/** Kette Aufklärung → Zielprüfung → Führung → Einschlag einer Meldung, wie das Team sie durchlaufen hat. */
 export function kette(inh: Inhalte, mv: MeldungsVerlauf | undefined, meldung: string): Kette {
   const start = (inh.basis ?? inh).szenario.spieluhr.start;
   const uz = (t?: number) => (t === undefined ? "" : ` ${uhrzeit(start, t)}`);
-  if (!mv) return { meldung, glieder: (["g1", "g2", "g3"] as Stufe3[]).map((s) => ({ stufe: s, zeichen: "–", art: "leer" as const, titel: `${s.toUpperCase()}: Meldung kam nicht` })) };
+  const R = ROLLEN_NAME;
+  if (!mv) return { meldung, glieder: (["g1", "g2", "g3"] as Stufe3[]).map((s) => ({ stufe: s, zeichen: "–", art: "leer" as const, titel: `${R[s]}: Meldung kam nicht` })) };
   const glieder: KettenGlied[] = [];
-  // G1
+  // Aufklärung
   const g1 = letzte(mv, "g1");
-  if (mv.fastTrack) glieder.push({ stufe: "g1", zeichen: "FT", art: "ft", titel: "G1: Fast-Track – G1 hat die Meldung nicht gesehen" });
-  else if (g1) glieder.push({ stufe: "g1", zeichen: g1.e.was === "annehmen" ? "✓" : "✕", art: g1.e.was === "annehmen" ? "weiter" : "halt", t: g1.e.t, titel: `G1: ${WAS_TEXT[g1.e.was]}${uz(g1.e.t)}${g1.e.text ? ` – „${g1.e.text}“` : ""}` });
-  else glieder.push({ stufe: "g1", zeichen: mv.stufe === "g1" ? "…" : "–", art: mv.stufe === "g1" ? "offen" : "leer", titel: mv.stufe === "g1" ? "G1: bei Spielende noch offen" : "G1: –" });
-  // G2
+  if (mv.fastTrack) glieder.push({ stufe: "g1", zeichen: "FT", art: "ft", titel: `${R.g1}: Fast-Track – die Aufklärung hat die Meldung nicht gesehen` });
+  else if (g1) glieder.push({ stufe: "g1", zeichen: g1.e.was === "annehmen" ? "✓" : "✕", art: g1.e.was === "annehmen" ? "weiter" : "halt", t: g1.e.t, titel: `${R.g1}: ${WAS_TEXT[g1.e.was]}${uz(g1.e.t)}` });
+  else glieder.push({ stufe: "g1", zeichen: mv.stufe === "g1" ? "…" : "–", art: mv.stufe === "g1" ? "offen" : "leer", titel: mv.stufe === "g1" ? `${R.g1}: bei Spielende noch offen` : `${R.g1}: –` });
+  // Zielprüfung
   const g2 = letzte(mv, "g2");
   if (g2) {
     const e = g2.e;
@@ -262,10 +271,10 @@ export function kette(inh: Inhalte, mv: MeldungsVerlauf | undefined, meldung: st
     glieder.push({
       stufe: "g2", zeichen: e.was === "bekaempfen" ? "✓" : e.was === "beobachten" ? "◷" : "✕",
       art, t: e.t, vorher,
-      titel: `G2: ${WAS_TEXT[e.was]}${e.wirkmittel ? ` mit ${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel}` : ""}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` · Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
+      titel: `${R.g2}: ${WAS_TEXT[e.was]}${e.wirkmittel ? ` mit ${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel}` : ""}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` · Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
     });
-  } else glieder.push({ stufe: "g2", zeichen: mv.stufe === "g2" ? "…" : "–", art: mv.stufe === "g2" ? "offen" : "leer", titel: mv.stufe === "g2" ? "G2: bei Spielende noch offen" : "G2: –" });
-  // G3
+  } else glieder.push({ stufe: "g2", zeichen: mv.stufe === "g2" ? "…" : "–", art: mv.stufe === "g2" ? "offen" : "leer", titel: mv.stufe === "g2" ? `${R.g2}: bei Spielende noch offen` : `${R.g2}: –` });
+  // Führung
   const g3 = letzte(mv, "g3");
   if (g3) {
     const e = g3.e;
@@ -273,9 +282,9 @@ export function kette(inh: Inhalte, mv: MeldungsVerlauf | undefined, meldung: st
     glieder.push({
       stufe: "g3", zeichen: e.was === "freigabe" ? "✓" : e.was === "zurueck" ? "↩" : "✕", art: e.was === "freigabe" ? "weiter" : e.was === "zurueck" ? "warten" : "halt",
       t: e.t, vorher,
-      titel: `G3: ${WAS_TEXT[e.was]}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` trotz Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
+      titel: `${R.g3}: ${WAS_TEXT[e.was]}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` trotz Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
     });
-  } else glieder.push({ stufe: "g3", zeichen: mv.stufe === "g3" ? "…" : "–", art: mv.stufe === "g3" ? "offen" : "leer", titel: mv.stufe === "g3" ? "G3: bei Spielende noch offen" : "G3: –" });
+  } else glieder.push({ stufe: "g3", zeichen: mv.stufe === "g3" ? "…" : "–", art: mv.stufe === "g3" ? "offen" : "leer", titel: mv.stufe === "g3" ? `${R.g3}: bei Spielende noch offen` : `${R.g3}: –` });
   const w = mv.wirkung;
   const einschlag = w ? {
     t: w.t, fehl: w.fehl.length > 0, regel: w.verstoesse.length > 0,
@@ -301,7 +310,7 @@ export interface FallErgebnis {
 }
 
 const STUFE_HALT: Record<string, string> = {
-  ablehnen: "lehnt ab", nicht_bekaempfen: "nicht bekämpfen", beobachten: "stellt zurück", zurueck: "zurück an G2",
+  ablehnen: "lehnt ab", nicht_bekaempfen: "nicht bekämpfen", beobachten: "stellt zurück", zurueck: "zurück an die Zielprüfung",
 };
 
 /** Ausgang eines Falls für ein Team. */
@@ -330,25 +339,26 @@ export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlau
     const kt = id === f.meldung ? k : folge[f.folge.indexOf(id)];
     markiere("g3", kt);
     const was = w.fehl.length ? `→ ${w.fehl.map((x) => FEHL_TEXT[x]).join(", ")} getroffen` : `→ Verstoß ${w.verstoesse.map((v) => v.split(":")[0]).join(", ")}`;
-    return erg("falsch", [`${id !== f.meldung ? `${id} ` : ""}FREIGABE ${uz(w.t_freigabe)} (${wmKurz(w)})`, was], "g3", w.t_freigabe);
+    return erg("falsch", [`${id !== f.meldung ? `${zielText(inh, id)} ` : ""}FREIGABE ${uz(w.t_freigabe)} (${wmKurz(w)})`, was], "g3", w.t_freigabe);
   }
-  if (!haupt) return erg("nicht_erreicht", [zSpielende ? `${f.meldung} kam vor Spielende nicht` : `${f.meldung} kommt noch`]);
+  if (!haupt) return erg("nicht_erreicht", [zSpielende ? `${zielText(inh, f.meldung)} kam vor Spielende nicht` : `${zielText(inh, f.meldung)} kommt noch`]);
   const m = inh.meldungen[f.meldung];
   const soll = m ? sollBekaempfen(m) : true;
   // Wer hat gestoppt? (letzte stoppende Entscheidung, falls am Ende keine Wirkung)
   const stopp = stoppVon(haupt);
-  const stoppText = (e: Entscheidung) => `${e.stufe.toUpperCase()} ${STUFE_HALT[e.was] ?? e.was} ${uz(e.t)}`;
+  const stoppText = (e: Entscheidung) => `${ROLLEN_NAME[e.stufe]} ${STUFE_HALT[e.was] ?? e.was} ${uz(e.t)}`;
   const folgeText = () => {
     const teile: string[] = [];
     for (const id of f.folge) {
       const mv = verlaeufe.get(id);
       if (!mv) continue;
-      if (mv.wirkung) teile.push(`${id} FREIGABE ${uz(mv.wirkung.t_freigabe)}`);
-      else if (mv.entfallen) teile.push(`${id} entfallen`);
-      else if (mv.stufe === "g1" || mv.stufe === "g2" || mv.stufe === "g3") teile.push(`${id} offen bei ${mv.stufe.toUpperCase()}`);
+      const zt = zielText(inh, id);
+      if (mv.wirkung) teile.push(`${zt} FREIGABE ${uz(mv.wirkung.t_freigabe)}`);
+      else if (mv.entfallen) teile.push(`${zt} entfallen`);
+      else if (mv.stufe === "g1" || mv.stufe === "g2" || mv.stufe === "g3") teile.push(`${zt} offen bei ${ROLLEN_DATIV[mv.stufe]}`);
       else {
         const s = stoppVon(mv);
-        teile.push(s ? `${id} ${s.stufe.toUpperCase()} ${STUFE_HALT[s.was] ?? s.was}` : `${id} erledigt`);
+        teile.push(s ? `${zt}: ${ROLLEN_NAME[s.stufe]} ${STUFE_HALT[s.was] ?? s.was}` : `${zt} erledigt`);
       }
     }
     return teile.length ? teile.join(", ") : undefined;
@@ -369,11 +379,11 @@ export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlau
   }
   if (haupt.entfallen) {
     if (stopp) markiere(stopp.stufe);
-    const wo = haupt.entfallen.stufe !== "meldung" ? ` bei ${haupt.entfallen.stufe.toUpperCase()}` : "";
+    const wo = haupt.entfallen.stufe !== "meldung" ? ` bei ${ROLLEN_DATIV[haupt.entfallen.stufe]}` : "";
     return erg(stopp && !soll ? "richtig" : "entfallen", [stopp ? stoppText(stopp) : undefined, `entfallen${wo} – ${haupt.entfallen.grund}`, folgeText()], stopp?.stufe, stopp?.t);
   }
   if (haupt.stufe === "wirkung") return erg("offen", ["freigegeben", "Einschlag nach Spielende"], "g3");
-  return erg("offen", [`${zSpielende ? "bei Spielende" : "jetzt"} bei ${haupt.stufe.toUpperCase()}`, folgeText()]);
+  return erg("offen", [`${zSpielende ? "bei Spielende" : "jetzt"} bei ${haupt.stufe === "g1" || haupt.stufe === "g2" || haupt.stufe === "g3" ? ROLLEN_DATIV[haupt.stufe] : haupt.stufe}`, folgeText()]);
 }
 
 function stoppVon(mv: MeldungsVerlauf): Entscheidung | undefined {
@@ -677,7 +687,7 @@ const MARKE_G: Record<string, { zeichen: string; klasse: string }> = {
   freigabe: { zeichen: "✓", klasse: "freigabe" }, zurueck: { zeichen: "↩", klasse: "warten" },
 };
 
-/** Marken eines Teams für die Zeitleiste eines Falls: Meldung → G1 → G2 → G3 → Einschlag, Lagemeldungen gelesen, Lagehinweise. */
+/** Marken eines Teams für die Zeitleiste eines Falls: Meldung → Aufklärung → Zielprüfung → Führung → Einschlag, Lagemeldungen gelesen, Lagehinweise. */
 export function zeitleiste(basis: Inhalte, t: TeamAuswertung, f: FallDef): ZeitMarke[] {
   const inh = basis.basis ?? basis;
   const start = inh.szenario.spieluhr.start;
@@ -686,25 +696,26 @@ export function zeitleiste(basis: Inhalte, t: TeamAuswertung, f: FallDef): ZeitM
   for (const id of [f.meldung, ...f.folge]) {
     const mv = t.verlaeufe.get(id);
     if (!mv) continue;
-    out.push({ t: mv.t, art: "meldung", zeichen: id, text: `${id} erscheint ${uz(mv.t)}${mv.fastTrack ? " – Fast-Track direkt an G2" : ""}`, klasse: mv.fastTrack ? "ft" : "info", meldung: id });
+    const zt = zielText(inh, id);
+    out.push({ t: mv.t, art: "meldung", zeichen: zielNr(inh, null, id), text: `${zt} erscheint ${uz(mv.t)}${mv.fastTrack ? " – Fast-Track direkt an die Zielprüfung" : ""}`, klasse: mv.fastTrack ? "ft" : "info", meldung: id });
     for (const e of mv.entscheidungen) {
       const g = MARKE_G[e.was] ?? { zeichen: "•", klasse: "info" };
       out.push({
-        t: e.t, art: e.stufe, zeichen: `${e.stufe.toUpperCase()}${g.zeichen}`, klasse: g.klasse, meldung: id,
-        text: `${id} · ${e.stufe.toUpperCase()}: ${WAS_TEXT[e.was] ?? e.was}${e.wirkmittel ? ` (${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel})` : ""} ${uz(e.t)}${e.text ? ` – „${e.text}“` : ""}`,
+        t: e.t, art: e.stufe, zeichen: `${ROLLEN_ZEICHEN[e.stufe]}${g.zeichen}`, klasse: g.klasse, meldung: id,
+        text: `${zt} · ${ROLLEN_NAME[e.stufe]}: ${WAS_TEXT[e.was] ?? e.was}${e.wirkmittel ? ` (${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel})` : ""} ${uz(e.t)}${e.text ? ` – „${e.text}“` : ""}`,
       });
     }
     if (mv.wirkung) {
       const w = mv.wirkung;
       out.push({ t: w.t, art: "einschlag", zeichen: "✸", klasse: wirkungFehlerhaft(w) ? "fehl" : "ok", meldung: id, text: kette(inh, mv, id).einschlag?.text ?? "Einschlag" });
     }
-    if (mv.entfallen && mv.entfallen.stufe !== "meldung") out.push({ t: mv.entfallen.t, art: "meldung", zeichen: "∅", klasse: "entfallen", meldung: id, text: `${id} entfällt ${uz(mv.entfallen.t)} – ${mv.entfallen.grund}` });
+    if (mv.entfallen && mv.entfallen.stufe !== "meldung") out.push({ t: mv.entfallen.t, art: "meldung", zeichen: "∅", klasse: "entfallen", meldung: id, text: `${zt} entfällt ${uz(mv.entfallen.t)} – ${mv.entfallen.grund}` });
   }
   for (const lm of t.kennzahlen.lagemeldungen.filter((x) => x.fall === f.id)) {
-    if (lm.gelesen !== undefined) out.push({ t: lm.gelesen, art: "gelesen", zeichen: "✉", klasse: "info", text: `G3 hat ${lm.id} gelesen ${uz(lm.gelesen)}${lm.erschienen !== undefined ? ` (${Math.round(lm.gelesen - lm.erschienen)} s nach Eingang)` : ""}` });
+    if (lm.gelesen !== undefined) out.push({ t: lm.gelesen, art: "gelesen", zeichen: "✉", klasse: "info", text: `Die Führung hat ${lm.id} gelesen ${uz(lm.gelesen)}${lm.erschienen !== undefined ? ` (${Math.round(lm.gelesen - lm.erschienen)} s nach Eingang)` : ""}` });
   }
   for (const h of t.kennzahlen.lagehinweise.liste) {
-    out.push({ t: h.t, art: "hinweis", zeichen: "▲", klasse: "hinweis", text: `Lagehinweis G3 → ${h.an.map((r) => r.toUpperCase()).join(", ")} ${uz(h.t)}: „${h.text}“` });
+    out.push({ t: h.t, art: "hinweis", zeichen: "▲", klasse: "hinweis", text: `Lagehinweis Führung → ${h.an.map((r) => ROLLEN_NAME[r as Stufe3] ?? r).join(", ")} ${uz(h.t)}: „${h.text}“` });
   }
   for (const w of t.kennzahlen.fastTrack.wechsel) out.push({ t: w.t, art: "ft", zeichen: w.an ? "FT ein" : "FT aus", klasse: "ft", text: `Fast-Track ${w.an ? "EIN" : "AUS"} ${uz(w.t)}` });
   for (const n of t.notizen.filter((x) => x.fall === f.id)) out.push({ t: n.t, art: "notiz", zeichen: "✎", klasse: "notiz", text: `Notiz SL: ${n.text}` });
@@ -736,7 +747,7 @@ export function ereignisseBis(protokoll: Ereignis[], t: number): number {
 // ---------------------------------------------------------------- Export (anonym)
 
 export interface ExportOptionen {
-  /** Freitexte (Vermerk, Begründung, Bemerkung, Lagehinweise, Notizen der Spielleitung) mitnehmen */
+  /** Freitexte (Begründung, Bemerkung, Lagehinweise, Notizen der Spielleitung) mitnehmen */
   freitext: boolean;
 }
 
@@ -757,12 +768,13 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
     art: "ARGUS-Auswertung (anonym)",
     szenario: { id: sz.id, version: sz.version, titel: sz.titel },
     erzeugt: new Date().toISOString().slice(0, 10),
-    hinweis: "Spielzeit in s ab Spielbeginn (10:00:00). Keine Namen von Personen oder Teams, keine Kennungen der Rechner."
+    hinweis: "Spielzeit in s ab Spielbeginn (Spieluhr 00:00, Ende 25:00). Rollen: g1 Aufklärung, g2 Zielprüfung, g3 Führung. Ziele wie im Spiel (ziel: „Ziel 8“), dazu die Kennung der Meldung. Keine Namen von Personen oder Teams, keine Kennungen der Rechner."
       + (opt.freitext ? " Freitexte sind enthalten." : " Ohne Freitexte."),
-    faelle: a.faelle.map((f) => ({ id: f.id, art: f.art, titel: f.titel, meldung: f.meldung, folge: f.folge })),
+    rollen: { g1: ROLLEN_NAME.g1, g2: ROLLEN_NAME.g2, g3: ROLLEN_NAME.g3 },
+    faelle: a.faelle.map((f) => ({ id: f.id, art: f.art, titel: f.titel, meldung: f.meldung, ziel: zielText(inh, f.meldung), folge: f.folge })),
     argus: {
       richtig: a.konfidenz.richtig, falsch: a.konfidenz.falsch, konfidenz_falsch_mittel: a.konfidenz.mittelFalsch, konfidenz_richtig_bekaempfen_mittel: a.konfidenz.mittelRichtig,
-      meldungen: a.konfidenz.punkte.map((p) => ({ meldung: p.meldung, konfidenz: p.konfidenz, empfehlung: p.empfehlung, sicht_gestoert: p.gestoert, argus_falsch: p.falsch, fall: p.fall ?? null, teams_bekaempft: p.bekaempft, teams_entschieden: p.entschieden })),
+      meldungen: a.konfidenz.punkte.map((p) => ({ meldung: p.meldung, ziel: zielText(inh, p.meldung), konfidenz: p.konfidenz, empfehlung: p.empfehlung, sicht_gestoert: p.gestoert, argus_falsch: p.falsch, fall: p.fall ?? null, teams_bekaempft: p.bekaempft, teams_entschieden: p.entschieden })),
     },
     teams: a.teams.map((t, i) => {
       const lauf = teams.find((x) => x.id === t.id)!;
@@ -794,7 +806,7 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
           }];
         })),
         meldungen: [...t.verlaeufe.values()].map((mv) => ({
-          meldung: mv.id, t: r1(mv.t), fast_track: mv.fastTrack, stand: mv.zurueckgestellt ? "zurueckgestellt" : mv.stufe,
+          meldung: mv.id, ziel: `Ziel ${zielNr(inh, lauf.zustand, mv.id)}`, t: r1(mv.t), fast_track: mv.fastTrack, stand: mv.zurueckgestellt ? "zurueckgestellt" : mv.stufe,
           entscheidungen: mv.entscheidungen.map((e) => ({
             stufe: e.stufe, t: r1(e.t), entscheid: e.was, ...(e.wirkmittel ? { wirkmittel: e.wirkmittel } : {}),
             warnungen: e.warnungen?.length ?? 0, ...(opt.freitext && e.text ? { text: e.text } : {}),
@@ -813,7 +825,7 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
 export function exportCsv(a: Auswertung): string {
   const kopf = [
     "team", "meldungen_bearbeitet", "meldungen_erschienen", "fehlbekaempfungen", "fehl_arten", "freigaben_trotz_warnung",
-    "widerspruch", "zu_recht", "zu_unrecht", "median_g1_s", "median_g2_s", "median_g3_s", "fast_track_seit_s", "lagemeldung", "gelesen_s",
+    "widerspruch", "zu_recht", "zu_unrecht", "median_aufklaerung_s", "median_zielpruefung_s", "median_fuehrung_s", "fast_track_seit_s", "lagemeldung", "gelesen_s",
     "lagehinweise", ...a.faelle.map((f) => f.id),
   ];
   const zelle = (v: unknown) => {

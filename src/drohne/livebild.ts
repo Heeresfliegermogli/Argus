@@ -15,7 +15,13 @@
 //
 // Keine Darstellung getöteter Menschen: Personen, die eine Wirkung getroffen hat, und Personen an einem
 // zerstörten Fahrzeug verschwinden aus dem Bild (wie in den Standbildern: Wracks ohne Besatzung).
-import { atlas, assetUrl } from "../assets/assets";
+//
+// Kamera (Änderung B9, 25.10.2026): Die Drohne verfolgt das Ziel. Zur Meldezeit steht der Ausschnitt wie im Standbild,
+// danach bleibt das verfolgte Fahrzeug an seiner Stelle im Bild und der Boden zieht darunter weg. Ca. 0,5 s nach der
+// Zerstörung (bzw. wenn es den Raum verlässt) schwenkt die Kamera auf das nächste noch stehende Fahrzeug der Meldung,
+// dazwischen kurzes Bildrauschen (Ausrichtung). Außerhalb des Bodens der Meldung zeigt das Bild das Luftbild des
+// Kartenpakets (in Kamerafarbe, auf der Webseite mit den 0,25-m-Kacheln), weich an den Boden angesetzt.
+import { atlas, assetUrl, kachelnVerfuegbar } from "../assets/assets";
 import type { AssetManifest, BildZiel, Drohnenbild, EbenenFahrzeug, EbenenFigur } from "../assets/typen";
 import type { Inhalte, Punkt, Ziel } from "../inhalte/typen";
 import type { Effekt } from "../kern/effekte";
@@ -47,6 +53,22 @@ export interface LiveRessourcen {
   fx: LiveAtlas;
   kamera: HTMLImageElement;
   rauschen: HTMLCanvasElement;
+  /** Luftbild des Kartenpakets in Kamerafarbe (Boden außerhalb der Ebenen einer Meldung, wenn die Kamera schwenkt) */
+  luftbild: { bild: CanvasImageSource; m_pro_px: number } | null;
+}
+
+/** Luftbild-Kacheln (0,25 m/px, nur Webseite) in Kamerafarbe, je Fenster einmal geladen. */
+const kacheln = new Map<string, CanvasImageSource | "laedt" | "fehlt">();
+
+function kachel(man: AssetManifest, ix: number, iy: number): CanvasImageSource | null {
+  const k = man.karte.luftbild.kacheln;
+  const pfad = k.muster.replace("{x}", String(ix)).replace("{y}", String(iy));
+  const da = kacheln.get(pfad);
+  if (da === "laedt" || da === "fehlt") return null;
+  if (da) return da;
+  kacheln.set(pfad, "laedt");
+  ladeBild(pfad).then((img) => kacheln.set(pfad, faerben(img, man.drohne_ebenen.farbmatrix))).catch(() => kacheln.set(pfad, "fehlt"));
+  return null;
 }
 
 export interface LiveEbenen {
@@ -134,8 +156,11 @@ let ressourcen: { man: AssetManifest; p: Promise<LiveRessourcen> } | null = null
 export function ladeLiveRessourcen(man: AssetManifest): Promise<LiveRessourcen> {
   if (ressourcen?.man === man) return ressourcen.p;
   const p = (async () => {
-    const [fz, fx, kamera] = await Promise.all([ladeAtlas(man, "fahrzeuge"), ladeAtlas(man, "effekte"), ladeBild(man.drohne_ebenen.kamera)]);
-    return { man, fz, fx, kamera, rauschen: rauschBild() };
+    const stufe = [...(man.karte?.luftbild?.stufen ?? [])].sort((a, b) => a.m_pro_px - b.m_pro_px)[0];
+    const [fz, fx, kamera, lb] = await Promise.all([ladeAtlas(man, "fahrzeuge"), ladeAtlas(man, "effekte"), ladeBild(man.drohne_ebenen.kamera),
+      stufe ? ladeBild(stufe.datei).catch(() => null) : Promise.resolve(null)]);
+    const luftbild = lb && stufe ? { bild: faerben(lb, man.drohne_ebenen.farbmatrix), m_pro_px: stufe.m_pro_px } : null;
+    return { man, fz, fx, kamera, rauschen: rauschBild(), luftbild };
   })();
   p.catch(() => {
     ressourcen = null;
@@ -193,7 +218,23 @@ export interface Szene {
   marken: LiveMarke[];
   /** Ist mindestens ein gemeldetes Fahrzeug im Bild? */
   zielImBild: boolean;
+  /** Kamera zur Spielzeit (Versatz gegenüber dem Standbild, verfolgtes Fahrzeug, Ausrichtung) */
+  kamera: LiveKamera;
 }
+
+/** Kamera: Versatz des Ausschnitts in m gegenüber der Meldezeit, verfolgtes Fahrzeug, Bildrauschen beim Schwenk (0…1). */
+export interface LiveKamera {
+  dx: number;
+  dy: number;
+  ziel: string | null;
+  rauschen: number;
+}
+
+const KAMERA_STEHT: LiveKamera = { dx: 0, dy: 0, ziel: null, rauschen: 0 };
+/** Nach der Zerstörung bleibt die Kamera so lange (Echtzeit, s) auf dem Wrack, dann schwenkt sie. */
+export const SCHWENK_VERZUG_S = 0.5;
+/** Dauer des Bildrauschens beim Schwenk (Echtzeit, s) */
+export const SCHWENK_RAUSCHEN_S = 0.45;
 
 /** Transformation Drohnenbild (px) → Leinwand (px): x' = x · s + ox */
 export interface LiveTransform {
@@ -260,6 +301,9 @@ export class LiveDrohnenbild {
   bildMs = { mittel: 0, max: 0, n: 0 };
   /** Effekte (Namen im Atlas), die das letzte Bild gezeigt hat – für Tests */
   gezeigt = new Set<string>();
+  /** Kamera der zuletzt berechneten Szene (px() rechnet mit ihr) */
+  private kam: LiveKamera = KAMERA_STEHT;
+  private bodenWeichBild: HTMLCanvasElement | null = null;
 
   constructor(
     readonly res: LiveRessourcen,
@@ -276,10 +320,57 @@ export class LiveDrohnenbild {
     this.rauchStaerke = new Map((db.wracks ?? []).map((w) => [w.id, w.staerke]));
   }
 
-  /** Welt (m) → Drohnenbild (px) */
+  /** Welt (m) → Drohnenbild (px), mit dem Versatz der Kamera */
   px(p: Punkt): Punkt {
     const a = this.db.ausschnitt_m;
+    return [(p[0] - a.x - this.kam.dx) * this.ppm, (p[1] - a.y - this.kam.dy) * this.ppm];
+  }
+
+  /** Bildpunkt eines Weltpunkts im Standbild (ohne Kamera) */
+  private pxStandbild(p: Punkt): Punkt {
+    const a = this.db.ausschnitt_m;
     return [(p[0] - a.x) * this.ppm, (p[1] - a.y) * this.ppm];
+  }
+
+  /**
+   * Kamera zur Spielzeit t (B9): folgt dem ersten Fahrzeug der Meldung, das noch steht. Endet es (zerstört oder aus
+   * dem Raum), bleibt die Kamera SCHWENK_VERZUG_S darauf und schwenkt dann mit kurzem Rauschen zum nächsten; gibt es
+   * keines mehr, bleibt sie beim letzten. Zeiten in Echtzeit: bei Tempo ×10 ist der Verzug 5 s Spielzeit.
+   */
+  kamera(lage: LiveLage, t: number, tempo = 1): LiveKamera {
+    const { inh, z } = lage;
+    const tM = this.meldezeit(inh);
+    const ids = (inh.meldungen[this.id]?.ziele ?? (this.db.ziele as BildZiel[]).map((x) => x.id)).filter((id) => inh.ziele[id]);
+    if (!ids.length || t <= tM) return KAMERA_STEHT;
+    const k = Math.max(1, tempo);
+    const verzug = SCHWENK_VERZUG_S * k;
+    const rausch = SCHWENK_RAUSCHEN_S * k;
+    const ende = ids.map((id) => Math.min(z.zerstoert[id] ?? Infinity, inh.ziele[id].bis_s ?? Infinity));
+    let letzter = 0;
+    ende.forEach((e, i) => { if (e > ende[letzter]) letzter = i; });
+    const zielBei = (x: number) => {
+      for (let i = 0; i < ids.length; i++) if (x < ende[i] + verzug + rausch / 2) return i;
+      return letzter;
+    };
+    const i = zielBei(t);
+    const erster = zielBei(tM);
+    // Rauschen während des Schwenks von j zum nächsten Ziel
+    let rauschen = 0;
+    for (let j = 0; j < ids.length; j++) {
+      const s0 = ende[j] + verzug;
+      if (t < s0 || t >= s0 + rausch || zielBei(s0) !== j || zielBei(s0 + rausch) === j) continue;
+      const f = (t - s0) / rausch;
+      rauschen = Math.max(rauschen, Math.min(1, Math.min(f, 1 - f) * 6));
+    }
+    const ziel = inh.ziele[ids[i]];
+    const jetzt = position(ziel, Math.min(t, ende[i]));
+    // Bildpunkt, an dem das Ziel stehen soll: das erste wie im Standbild, die folgenden zur Mitte hin
+    let anker = this.pxStandbild(position(ziel, tM));
+    if (i !== erster) anker = [Math.max(this.breite * 0.25, Math.min(this.breite * 0.75, anker[0])), Math.max(this.hoehe * 0.25, Math.min(this.hoehe * 0.75, anker[1]))];
+    const a = this.db.ausschnitt_m;
+    const dx = jetzt[0] - a.x - anker[0] / this.ppm;
+    const dy = jetzt[1] - a.y - anker[1] / this.ppm;
+    return { dx: Math.abs(dx) < 1e-3 ? 0 : dx, dy: Math.abs(dy) < 1e-3 ? 0 : dy, ziel: ids[i], rauschen };
   }
 
   private imBild(q: Punkt, rand = 80): boolean {
@@ -308,9 +399,10 @@ export class LiveDrohnenbild {
     ctx.restore();
   }
 
-  /** Was zur Spielzeit t im Bild ist: Fahrzeuge (mit Zustand), Figuren, ARGUS-Markierung. */
-  szene(lage: LiveLage, t: number): Szene {
+  /** Was zur Spielzeit t im Bild ist: Fahrzeuge (mit Zustand), Figuren, ARGUS-Markierung; die Kamera folgt dem Ziel. */
+  szene(lage: LiveLage, t: number, tempo = 1): Szene {
     const { inh, z } = lage;
+    this.kam = this.kamera(lage, t, tempo);
     const eb = this.db.ebenen;
     const tMeldung = this.meldezeit(inh);
     const katalog = inh.fahrzeuge;
@@ -390,7 +482,7 @@ export class LiveDrohnenbild {
       zielImBild = true;
       marken.push({ id: bz.id, box: [x, y, bw, bh] });
     }
-    return { t, fahrzeuge, figuren, marken, zielImBild };
+    return { t, fahrzeuge, figuren, marken, zielImBild, kamera: this.kam };
   }
 
   // ---------------------------------------------------------------- Zeichnen
@@ -450,7 +542,13 @@ export class LiveDrohnenbild {
     ctx.setTransform(tr.s, 0, 0, tr.s, tr.ox, tr.oy);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(eb.boden, 0, 0, this.breite, this.hoehe);
+    // Ebenen der Meldung liegen in der Welt: Die Kamera verschiebt sie (dx, dy in m → px)
+    this.kam = sz.kamera;
+    const ox = -sz.kamera.dx * this.ppm;
+    const oy = -sz.kamera.dy * this.ppm;
+    const steht = ox === 0 && oy === 0;
+    if (steht) ctx.drawImage(eb.boden, 0, 0, this.breite, this.hoehe);
+    else this.grund(ctx, ox, oy);
 
     // Krater (nach Einschlägen, unter den Fahrzeugen)
     const zu = res.man.effekte.zuordnung;
@@ -511,7 +609,7 @@ export class LiveDrohnenbild {
     ctx.restore();
     for (const f of sz.figuren) if (f.fg.oben) this.sprite(ctx, res.fz, f.fg.sprite, f.px, this.massFz(f.fg.sprite), f.fg.hdg);
 
-    if (eb.kronen) ctx.drawImage(eb.kronen, 0, 0, this.breite, this.hoehe);
+    if (eb.kronen) ctx.drawImage(eb.kronen, ox, oy, this.breite, this.hoehe);
 
     // Rauch der Wracks (Fahne nach Südost, ca. 30 m)
     const rauch = this.anim("rauch");
@@ -524,12 +622,14 @@ export class LiveDrohnenbild {
 
     this.effekteZeichnen(ctx, lage.effekte, t, tp, realMs);
 
-    if (eb.stoerung) ctx.drawImage(eb.stoerung, 0, 0, this.breite, this.hoehe);
+    if (eb.stoerung) ctx.drawImage(eb.stoerung, ox, oy, this.breite, this.hoehe);
     ctx.drawImage(res.kamera, 0, 0, this.breite, this.hoehe);
     ctx.restore();
 
     const stoerung = this.db.ebenen?.bildstoerung;
     if (stoerung) this.bildstoerung(ctx, stoerung, realMs, tr, w, h);
+    // Schwenk zum nächsten Ziel: kurzes, starkes Bildrauschen (Ausrichtung)
+    if (sz.kamera.rauschen > 0) this.bildstoerung(ctx, 1.5 + 2 * sz.kamera.rauschen, realMs, tr, w, h, sz.kamera.rauschen);
     // Messen (Tests): Zeichenbefehle sofort ausführen lassen, damit die Zeit das Rastern enthält
     if ((globalThis as { __argusLiveMessen?: boolean }).__argusLiveMessen) ctx.getImageData(0, 0, 1, 1);
 
@@ -623,8 +723,81 @@ export class LiveDrohnenbild {
     }
   }
 
-  /** Bildstörung (M25): Rauschen und Zeilenversatz, die sich bewegen (12 Wechsel je Sekunde). */
-  private bildstoerung(ctx: CanvasRenderingContext2D, staerke: number, realMs: number, tr: LiveTransform, w: number, h: number): void {
+  /**
+   * Boden, wenn die Kamera schwenkt: Luftbild des Kartenpakets (Kacheln, sonst 0,5 m/px) für den ganzen Ausschnitt,
+   * darauf der Boden der Meldung an seiner Stelle in der Welt mit weichen Rändern. Außerhalb der Karte dunkles Gelände.
+   */
+  private grund(ctx: CanvasRenderingContext2D, ox: number, oy: number): void {
+    const { res, db } = this;
+    const mpp = db.m_pro_px;
+    const vx = db.ausschnitt_m.x + this.kam.dx;
+    const vy = db.ausschnitt_m.y + this.kam.dy;
+    const vw = this.breite * mpp;
+    const vh = this.hoehe * mpp;
+    ctx.fillStyle = "#3d4536";
+    ctx.fillRect(0, 0, this.breite, this.hoehe);
+    const lb = res.luftbild;
+    const zeichne = (bild: CanvasImageSource, bx: number, by: number, bm: number, bw: number, bh: number) => {
+      // Bild bei (bx, by) m mit bm m/px; nur der Teil im Ausschnitt
+      const x0 = Math.max(vx, bx);
+      const y0 = Math.max(vy, by);
+      const x1 = Math.min(vx + vw, bx + bw * bm);
+      const y1 = Math.min(vy + vh, by + bh * bm);
+      if (x1 <= x0 || y1 <= y0) return;
+      ctx.drawImage(bild, (x0 - bx) / bm, (y0 - by) / bm, (x1 - x0) / bm, (y1 - y0) / bm,
+        (x0 - vx) / mpp, (y0 - vy) / mpp, (x1 - x0) / mpp, (y1 - y0) / mpp);
+    };
+    if (lb) {
+      const k = res.man.karte.ausdehnung_m;
+      zeichne(lb.bild, 0, 0, lb.m_pro_px, k.breite / lb.m_pro_px, k.hoehe / lb.m_pro_px);
+    }
+    const kk = res.man.karte?.luftbild?.kacheln;
+    if (kk && kachelnVerfuegbar()) {
+      const m = kk.kachel_px * kk.m_pro_px;
+      for (let ix = Math.max(0, Math.floor(vx / m)); ix <= Math.min(kk.spalten - 1, Math.floor((vx + vw) / m)); ix++) {
+        for (let iy = Math.max(0, Math.floor(vy / m)); iy <= Math.min(kk.zeilen - 1, Math.floor((vy + vh) / m)); iy++) {
+          const b = kachel(res.man, ix, iy);
+          if (!b) continue;
+          const bw = (b as HTMLCanvasElement).width;
+          const bh = (b as HTMLCanvasElement).height;
+          zeichne(b, ix * m, iy * m, kk.m_pro_px, bw, bh);
+        }
+      }
+    }
+    ctx.drawImage(this.bodenWeich(), ox, oy, this.breite, this.hoehe);
+  }
+
+  /** Boden der Meldung mit weichen Rändern (einmal je Meldung gerechnet), damit der Übergang zum Luftbild nicht auffällt. */
+  private bodenWeich(): CanvasImageSource {
+    if (this.bodenWeichBild) return this.bodenWeichBild;
+    const c = document.createElement("canvas");
+    c.width = this.breite;
+    c.height = this.hoehe;
+    const g = c.getContext("2d");
+    if (!g) return this.eb.boden;
+    g.drawImage(this.eb.boden, 0, 0, c.width, c.height);
+    // Maske: Rechteck mit Abstand r zum Rand, weichgezeichnet (ohne filter: harte Kante)
+    const r = 36;
+    const roh = document.createElement("canvas");
+    roh.width = c.width;
+    roh.height = c.height;
+    const rg = roh.getContext("2d")!;
+    rg.fillStyle = "#000";
+    rg.fillRect(r, r, c.width - 2 * r, c.height - 2 * r);
+    const maske = document.createElement("canvas");
+    maske.width = c.width;
+    maske.height = c.height;
+    const m = maske.getContext("2d")!;
+    m.filter = `blur(${r / 2}px)`;
+    m.drawImage(roh, 0, 0);
+    g.globalCompositeOperation = "destination-in";
+    g.drawImage(m.filter === "none" ? roh : maske, 0, 0);
+    this.bodenWeichBild = c;
+    return c;
+  }
+
+  /** Bildstörung (M25): Rauschen und Zeilenversatz, die sich bewegen (12 Wechsel je Sekunde); `alpha` beim Schwenk. */
+  private bildstoerung(ctx: CanvasRenderingContext2D, staerke: number, realMs: number, tr: LiveTransform, w: number, h: number, voll = 0): void {
     const takt = Math.floor(realMs / 83);
     let s = (takt * 2654435761) >>> 0;
     const zufall = () => {
@@ -650,9 +823,9 @@ export class LiveDrohnenbild {
       const dx = Math.round((zufall() - 0.5) * 28 * staerke * tr.s);
       if (dx) ctx.drawImage(ctx.canvas, x0, sy, x1 - x0, sh, x0 + dx, sy, x1 - x0, sh);
     }
-    // Rauschen
-    ctx.globalAlpha = Math.min(0.5, 0.28 * staerke + 0.04);
-    ctx.globalCompositeOperation = "overlay";
+    // Rauschen (beim Schwenk fast deckend)
+    ctx.globalAlpha = voll > 0 ? 0.35 + 0.6 * voll : Math.min(0.5, 0.28 * staerke + 0.04);
+    ctx.globalCompositeOperation = voll > 0 ? "source-over" : "overlay";
     const pat = ctx.createPattern(this.res.rauschen, "repeat");
     if (pat) {
       pat.setTransform(new DOMMatrix([1, 0, 0, 1, Math.floor(zufall() * 192), Math.floor(zufall() * 192)]));

@@ -1,5 +1,6 @@
 // Lädt Szenario, Karte und Kataloge und baut die Nachschlage-Tabellen.
 import { holeJson } from "@quelle";
+import { anzeigeDaten, anzeigeSzenario } from "../kern/anzeige";
 import type {
   Inhalte, Karte, KatalogFahrzeuge, KatalogWirkmittel, Regeln, Szenario,
 } from "./typen";
@@ -18,9 +19,15 @@ export async function ladeInhalte(szenarioDatei = STANDARD_SZENARIO, hole: JsonH
   return baueInhalte(szenario, karte as Karte, fahrzeuge as KatalogFahrzeuge, wirkmittel as KatalogWirkmittel, regeln as Regeln);
 }
 
+/**
+ * Inhalte mit Nachschlage-Tabellen. Die Texte des Szenarios und der Regeln kommen für die Anzeige umgeschrieben an
+ * (Rollen ohne G-Nummern, Spieluhr 00:00–25:00, „Ziel 7“ statt M07; src/kern/anzeige.ts) – Kennungen bleiben.
+ */
 export function baueInhalte(
-  szenario: Szenario, karte: Karte, fahrzeuge: KatalogFahrzeuge, wirkmittel: KatalogWirkmittel, regeln: Regeln,
+  szenarioRoh: Szenario, karte: Karte, fahrzeuge: KatalogFahrzeuge, wirkmittel: KatalogWirkmittel, regelnRoh: Regeln,
 ): Inhalte {
+  const szenario = anzeigeSzenario(szenarioRoh);
+  const regeln = anzeigeDaten(regelnRoh, szenarioRoh);
   const nachId = <T extends { id: string }>(liste: T[]): Record<string, T> =>
     Object.fromEntries(liste.map((e) => [e.id, e]));
   return {

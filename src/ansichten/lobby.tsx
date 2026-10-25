@@ -4,7 +4,7 @@
 // Sobald die Spielleitung das Spiel für das eigene Team öffnet, wechselt das Fenster in die Ansicht.
 import { useEffect, useState } from "preact/hooks";
 import { GRUPPEN_ROLLEN, type GruppenRolle, SPIELERNAME_MAX, TEAMNAME_MAX, teamnameVorschlag } from "../kern/sitzungen";
-import { ROLLEN_NAME } from "../kern/sichten";
+import { ROLLEN_NAME, ROLLEN_ZEICHEN } from "../kern/sichten";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { Hinweise, Panel } from "./gemeinsam/bausteine";
 import { useSitzung } from "./gemeinsam/hooks";
@@ -50,13 +50,14 @@ function Slot(p: { s: Sitzung; t: TeamStand; rolle: GruppenRolle; eigenesTeam: b
   const laeuft = !!t.lauf;
   const anderesTeam = !p.eigenesTeam && !!s.stand.ich.team;
   const knopf = p.eigenesTeam ? "+ dazu" : anderesTeam ? "wechseln" : "beitreten";
-  const titel = p.eigenesTeam ? `${rolle.toUpperCase()} zusätzlich übernehmen (Doppelrolle)`
-    : anderesTeam ? `Zu Team ${t.name} wechseln und dort ${rolle.toUpperCase()} übernehmen` : `Team ${t.name} als ${rolle.toUpperCase()} beitreten`;
+  const name = ROLLEN_NAME[rolle];
+  const titel = p.eigenesTeam ? `${name} zusätzlich übernehmen (Doppelrolle)`
+    : anderesTeam ? `Zu Team ${t.name} wechseln und dort ${name} übernehmen` : `Team ${t.name} als ${name} beitreten`;
   return (
     <div class={`slot ${frei ? "frei" : "besetzt"} ${meins ? "meins" : ""}`} data-slot={`${t.name}:${rolle}`}>
-      <span class={`slot-rolle rolle-${rolle}`}>{rolle.toUpperCase()}</span>
+      <span class={`slot-rolle rolle-${rolle}`} aria-hidden="true">{ROLLEN_ZEICHEN[rolle]}</span>
       <div class="slot-mitte">
-        <div class="slot-titel">{ROLLEN_NAME[rolle].replace(/^G\d /, "")}</div>
+        <div class="slot-titel">{name}</div>
         <div class="slot-wer">
           {meins && <b>du{s.stand.name ? ` (${s.stand.name})` : ""}</b>}
           {online.filter((x) => x.client !== ich).map((x) => <span key={x.client}>{x.name}</span>)}
@@ -154,7 +155,7 @@ export function Lobby(p: { s: Sitzung }) {
                 <div>Deine Rolle: <b>{st.ich.rollen.map((r) => ROLLEN_NAME[r]).join(" und ")}</b></div>
                 {st.ich.rollen.length > 1 && <div class="klein leise">Doppelrolle: Im Spiel schaltest du oben zwischen den Rollen um.</div>}
                 {eigen.frei.length > 0 && st.ich.rollen.length < 3 && (
-                  <div class="klein leise">Noch frei: {eigen.frei.map((r) => r.toUpperCase()).join(", ")}. Fehlt jemand, übernimm die Rolle mit „+ dazu“.</div>
+                  <div class="klein leise">Noch frei: {eigen.frei.map((r) => ROLLEN_NAME[r]).join(", ")}. Fehlt jemand, übernimm die Rolle mit „+ dazu“.</div>
                 )}
                 <div class="hinweis-box">Die Spielleitung startet das Spiel für alle Teams. Dann erscheint hier deine Ansicht mit einer kurzen Einweisung.</div>
                 <button type="button" class="knopf klein leise" style="align-self:flex-start" onClick={() => void s.teamVerlassen()}>Team verlassen</button>
@@ -185,7 +186,7 @@ export function Lobby(p: { s: Sitzung }) {
           <Panel titel="Die drei Rollen im Team" klasse="flach">
             <div class="rollen-erklaerung">
               {GRUPPEN_ROLLEN.map((r) => (
-                <div key={r}><span class={`slot-rolle rolle-${r}`}>{r.toUpperCase()}</span><span><b>{ROLLEN_NAME[r].replace(/^G\d /, "")}</b> {ROLLE_KURZTEXT[r]}</span></div>
+                <div key={r}><span class={`slot-rolle rolle-${r}`} aria-hidden="true">{ROLLEN_ZEICHEN[r]}</span><span><b>{ROLLEN_NAME[r]}</b> {ROLLE_KURZTEXT[r]}</span></div>
               ))}
               <div class="klein leise" style="margin-top:4px">Jede Rolle sitzt an einem eigenen Rechner. Seid ihr nur zu zweit, übernimmt eine Person zwei Rollen (im eigenen Team „+ dazu“).</div>
             </div>

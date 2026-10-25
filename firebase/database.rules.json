@@ -6,12 +6,12 @@
       "v1": {
         "sitzungen": {
           "$s": {
-            ".read": "$s.matches(/^[a-z0-9-]{3,32}$/)",
+            ".read": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/))",
             "info": {
-              ".write": "$s.matches(/^[a-z0-9-]{3,32}$/) && !data.exists()",
+              ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && !data.exists()",
               ".validate": "newData.hasChildren(['code', 'szenario', 'version', 'titel', 'erstellt', 'von'])",
               "code": {
-                ".validate": "newData.isString() && newData.val().toLowerCase() === $s"
+                ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().toLowerCase() === $s"
               },
               "szenario": {
                 ".validate": "newData.isString() && newData.val().length <= 40"
@@ -33,7 +33,7 @@
               }
             },
             "host": {
-              ".write": "$s.matches(/^[a-z0-9-]{3,32}$/)",
+              ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/))",
               ".validate": "newData.hasChildren(['id', 'name', 'puls'])",
               "id": {
                 ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9]{6}$/)"
@@ -50,7 +50,7 @@
             },
             "anwesenheit": {
               "$client": {
-                ".write": "$s.matches(/^[a-z0-9-]{3,32}$/) && $client.matches(/^[a-z0-9]{6}$/)",
+                ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && $client.matches(/^[a-z0-9]{6}$/)",
                 ".validate": "newData.hasChildren(['client', 'art', 'name', 'puls'])",
                 "client": {
                   ".validate": "newData.val() === $client"
@@ -77,7 +77,7 @@
             },
             "teams": {
               "$team": {
-                ".write": "$s.matches(/^[a-z0-9-]{3,32}$/) && $team.matches(/^t[a-z0-9]{4,8}$/)",
+                ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && $team.matches(/^t[a-z0-9]{4,8}$/)",
                 ".validate": "newData.hasChildren(['name', 'farbe', 'erstellt'])",
                 "name": {
                   ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
@@ -120,7 +120,7 @@
                   ".validate": "$lauf.matches(/^[0-9]{8}-[0-9]{4}-[a-z0-9]{4}$/)",
                   "protokoll": {
                     "$e": {
-                      ".write": "$s.matches(/^[a-z0-9-]{3,32}$/) && !data.exists()",
+                      ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && !data.exists()",
                       ".validate": "$e.matches(/^e[0-9]{6}$/) && newData.hasChildren(['seq', 'typ', 'ts', 't_s', 'von', 'daten'])",
                       "seq": {
                         ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 999999"
@@ -174,7 +174,7 @@
                   },
                   "aktionen": {
                     "$a": {
-                      ".write": "$s.matches(/^[a-z0-9-]{3,32}$/) && !data.exists()",
+                      ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && !data.exists()",
                       ".validate": "$a.matches(/^[-A-Za-z0-9_]{10,40}$/) && newData.hasChildren(['id', 'typ', 'von', 'ts', 'daten'])",
                       "id": {
                         ".validate": "newData.val() === $a"

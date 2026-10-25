@@ -23,7 +23,7 @@ async function oeffne(code: string, art: "tt" | "sl" | "plenum", name?: string):
 async function neueSitzung(): Promise<{ code: string; sl: Sitzung }> {
   const inh = await inhalte();
   const code = await Sitzung.anlegen(inh, (c) => new LokalAdapter(c), "SL 1", neuerCode);
-  expect(code).toMatch(/^kraehe-[a-z0-9]{2}$/);
+  expect(code).toMatch(/^[acefhjkmnprtvwxy34679]{3}$/);
   const sl = await oeffne(code!, "sl", "SL 1");
   await bis(() => sl.stand.istHost && sl.stand.infoGeladen && !!sl.stand.info, 3000, "SL steuert");
   return { code: code!, sl };
@@ -42,14 +42,22 @@ afterEach(() => {
 });
 
 describe("Codes und Namen", () => {
-  it("Code-Eingabe verzeiht Schreibweisen", () => {
-    expect(codeNormalisieren("KRAEHE-7Q", "KRAEHE")).toBe("kraehe-7q");
-    expect(codeNormalisieren(" kraehe 7q ", "KRAEHE")).toBe("kraehe-7q");
-    expect(codeNormalisieren("KRÄHE-7Q", "KRAEHE")).toBe("kraehe-7q");
-    expect(codeNormalisieren("kraehe7q", "KRAEHE")).toBe("kraehe-7q");
-    expect(codeNormalisieren("7q", "KRAEHE")).toBe("kraehe-7q");
-    expect(codeNormalisieren("", "KRAEHE")).toBeNull();
-    expect(codeNormalisieren("x", "KRAEHE")).toBeNull();
+  it("Code-Eingabe verzeiht Schreibweisen (drei Zeichen, B2)", () => {
+    expect(codeNormalisieren("K7P")).toBe("k7p");
+    expect(codeNormalisieren(" k 7 p ")).toBe("k7p");
+    expect(codeNormalisieren("k-7-p")).toBe("k7p");
+    expect(codeNormalisieren("")).toBeNull();
+    expect(codeNormalisieren("x")).toBeNull();
+    expect(codeNormalisieren("K7PX")).toBeNull();
+    expect(codeNormalisieren("O1L")).toBeNull(); // verwechselbare Zeichen gibt es nicht
+  });
+
+  it("Neue Codes: drei Zeichen ohne verwechselbare", () => {
+    for (let i = 0; i < 300; i++) {
+      const c = neuerCode();
+      expect(c).toMatch(/^[ACEFHJKMNPRTVWXY34679]{3}$/);
+      expect(codeNormalisieren(c)).toBe(c.toLowerCase());
+    }
   });
 
   it("Würfel schlägt freie Namen vor", () => {

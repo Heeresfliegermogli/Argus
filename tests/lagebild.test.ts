@@ -86,7 +86,7 @@ describe("Lagebild G2/G3", () => {
     ]), inh);
     const g2 = lagebildZielmeldungen(inh, z, "g2");
     expect(g2.objekte).toHaveLength(1);
-    expect(g2.objekte[0].text).toBe("M18/M23");
+    expect(g2.objekte[0].text).toBe("Ziel 18/23"); // Zielnummern statt M18/M23 (B7)
     expect(g2.objekte[0].zustand).toBe("bekaempft");
     expect(g2.objekte[0].sidc[3]).toBe("X");
     expect(g2.wirkungen.map((w) => w.id)).toEqual(["W-M23"]);
@@ -137,7 +137,7 @@ describe("Tracking (Schritt 7)", () => {
     ]), inh);
     const gw = lagebildZielmeldungen(inh, geplant, "g3", 150).wirkungen.find((x) => x.geplant)!;
     expect(gw.pos).toEqual([926, 322]);
-    expect(gw.text).toMatch(/LM · 10:03:01/);
+    expect(gw.text).toMatch(/LM · 03:01$/); // Spieluhr 00:00–25:00 (B4)
   });
 
   it("ein fahrendes Ziel: Bahn = Route, Position zur Lagezeit", async () => {
@@ -211,7 +211,7 @@ describe("Freigegebene Wirkung (Vorlaufzeit läuft)", () => {
       expect(lb.wirkungen).toHaveLength(1);
       expect(lb.wirkungen[0].geplant).toBe(true);
       expect(lb.wirkungen[0].radius_m).toBe(80);
-      expect(lb.wirkungen[0].text).toBe("M01 Mrs · 10:02:10"); // Freigabe 10:01:35 + 35 s bis zum Einschlag
+      expect(lb.wirkungen[0].text).toBe("Ziel 1 Mrs · 02:10"); // Freigabe 01:35 + 35 s bis zum Einschlag
     }
     const nach = zustandAus(protokoll([...bis,
       ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [880, 300], t_freigabe: 95, getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 185],

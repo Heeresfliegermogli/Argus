@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { type AssetManifest, assetUrl, kachelnVerfuegbar, ladeManifest } from "../../assets/assets";
 import type { Inhalte, Punkt } from "../../inhalte/typen";
 import { type Effekt, effekteSchluessel } from "../../kern/effekte";
+import type { Fahrweg } from "../../kern/fahrwege";
 import { type Lagebild, lagebildSchluessel } from "../../kern/lagebild";
 import type { MeldungsStand } from "../../kern/zustand";
 // Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt.
@@ -32,14 +33,22 @@ export interface KartenMarke {
   onClick?: () => void;
 }
 
-/** Fenster am Ort eines Ziels (G1: Drohnenbild) mit Linie zum Zeichen. */
+/**
+ * Fenster am Ort eines Ziels (Aufklärung: Drohnenbild) mit Linie zum Zeichen. Seit B8 verschiebbar (an der Kopfleiste
+ * ziehen) und schließbar (✕; wieder öffnen über die Marke).
+ */
 export interface KartenFenster {
   /** Meldung, an deren Zeichen das Fenster hängt */
   id: string;
   breite: number;
   hoehe: number;
   inhalt: ComponentChildren;
+  /** ✕ oben rechts schließt das Fenster */
+  onSchliessen?: () => void;
 }
+
+/** Höhe der Kopfleiste, an der man das Fenster zieht (px) */
+const ZIEH_LEISTE = 30;
 
 /** Abstand Fenster–Ziel und Ränder (px) */
 const FENSTER = { abstand: 46, rand: 8, unten: 40, frei: 26 };
@@ -99,18 +108,19 @@ export function fensterLage(p: Punkt, w: number, h: number, bw: number, bh: numb
 }
 
 /**
- * Marken der offenen Meldungen einer Rolle: ein Knopf je Meldung am Zeichen, Klick öffnet. Zurückgestellte
- * bleiben als Marke stehen („· zurückgestellt“); `zusatz` hängt einen kurzen Hinweis an (z. B. „⚠“ bei G3).
+ * Marken der offenen Meldungen einer Rolle: ein Knopf je Meldung am Zeichen („Ziel 7“, B7), Klick öffnet. Zurückgestellte
+ * bleiben als Marke stehen („· zurückgestellt“); `zusatz` hängt einen kurzen Hinweis an (z. B. „⚠“ bei der Führung).
  */
 export function meldungsMarken(offen: MeldungsStand[], gewaehlt: string | null, waehle: (id: string) => void,
-  zusatz?: (st: MeldungsStand) => string | undefined): KartenMarke[] {
+  name: (id: string) => string, zusatz?: (st: MeldungsStand) => string | undefined): KartenMarke[] {
   return offen.map((st) => {
     const z = st.beobachten ? "zurückgestellt" : zusatz?.(st);
-    const text = z ? `${st.id} · ${z}` : st.id;
+    const n = name(st.id);
+    const text = z ? `${n} · ${z}` : n;
     return {
       id: st.id, text, mass: text,
       art: st.id === gewaehlt ? "gewaehlt" : st.beobachten ? "zurueck" : "offen",
-      titel: st.id === gewaehlt ? `${st.id} ist geöffnet` : `${st.id} öffnen`,
+      titel: st.id === gewaehlt ? `${n} ist geöffnet` : `${n} öffnen`,
       onClick: () => waehle(st.id),
     };
   });
@@ -122,6 +132,15 @@ export function wirkungsMarken(lb: Lagebild): KartenMarke[] {
     const text = `Einschlag ${w.text.split(" · ").pop()}`;
     return { id: w.id, text, mass: text, art: "wirkung" as const, titel: w.zeilen.join(" · ") };
   });
+}
+
+/** Fenster ganz in die Karte schieben (Rand wie bei der automatischen Lage). */
+function klemmeFenster(r: Rechteck, bw: number, bh: number): Rechteck {
+  const w = r[2] - r[0];
+  const h = r[3] - r[1];
+  const x = Math.max(FENSTER.rand, Math.min(bw - w - FENSTER.rand, r[0]));
+  const y = Math.max(FENSTER.rand, Math.min(bh - h - FENSTER.rand, r[1]));
+  return [x, y, x + w, y + h];
 }
 
 /** Nächster Punkt des Rechtecks zu p (Ansatz der Linie am Fenster). */
@@ -213,6 +232,8 @@ export function LagekarteAnsicht(p: {
   ecke?: ComponentChildren;
   /** auf einen Punkt zoomen, sobald die Karte steht und wenn sich `schluessel` ändert (Replay der Auswertung) */
   fokus?: { pos: Punkt; faktor: number; schluessel: string };
+  /** Fahrwege der Einheiten (Kontrollkarte, B10; Knopf „Fahrwege“ blendet sie aus) und Vorschau einer Verstärkung */
+  fahrwege?: Fahrweg[];
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -222,6 +243,7 @@ export function LagekarteAnsicht(p: {
   const [info, setInfo] = useState<KartenInfo | null>(null);
   const [zoom, setZoom] = useState(1);
   const [grund, setGrund] = useState<Hintergrund>(p.hintergrund ?? "topo");
+  const [wegeAn, setWegeAn] = useState(true);
   const wahlRef = useRef(p.onWahl);
   wahlRef.current = p.onWahl;
 
@@ -231,7 +253,10 @@ export function LagekarteAnsicht(p: {
   const eckeEl = useRef<HTMLDivElement>(null);
   const linieEl = useRef<SVGLineElement>(null);
   const punktEl = useRef<SVGCircleElement>(null);
-  const fensterLageRef = useRef<{ id: string; r: Rechteck; bw: number; bh: number; zoom: number } | null>(null);
+  const fensterLageRef = useRef<{ id: string; r: Rechteck; bw: number; bh: number; zoom: number; manuell?: boolean } | null>(null);
+  /** Ziehen des Fensters (B8): Startpunkt und ob schon gezogen wurde (dann kein Klick) */
+  const ziehRef = useRef<{ x: number; y: number; r: Rechteck; bewegt: boolean; id: number } | null>(null);
+  const gezogenRef = useRef(false);
   const fensterRef = useRef(p.fenster);
   fensterRef.current = p.fenster;
   const letztesBild = useRef<KartenBild | null>(null);
@@ -252,8 +277,14 @@ export function LagekarteAnsicht(p: {
     if (!f || !fe) return;
     const p0 = b.punkte.get(f.id) ?? null;
     let lage = fensterLageRef.current;
-    const neu = !lage || lage.id !== f.id || lage.bw !== b.breite || lage.bh !== b.hoehe || lage.zoom !== zoomRef.current
-      || (p0 !== null && innen(p0, lage.r, FENSTER.frei));
+    if (lage && lage.manuell && lage.id === f.id && (lage.bw !== b.breite || lage.bh !== b.hoehe)) {
+      // von Hand verschoben: bleibt, wo es ist – nur in die Karte zurück, wenn sie kleiner wurde
+      lage = { ...lage, r: klemmeFenster(lage.r, b.breite, b.hoehe), bw: b.breite, bh: b.hoehe };
+      fensterLageRef.current = lage;
+      fe.style.transform = `translate(${Math.round(lage.r[0])}px, ${Math.round(lage.r[1])}px)`;
+    }
+    const neu = !lage || lage.id !== f.id || (!lage.manuell && (lage.bw !== b.breite || lage.bh !== b.hoehe || lage.zoom !== zoomRef.current
+      || (p0 !== null && innen(p0, lage.r, FENSTER.frei))));
     if (neu && p0) {
       // andere Marken und Zeichen möglichst frei lassen
       const hindernisse: Hindernis[] = [];
@@ -356,6 +387,11 @@ export function LagekarteAnsicht(p: {
   useEffect(() => {
     if (bereit) karte.current?.setzeMarken(new Map((p.marken ?? []).map((m) => [m.id, m.mass])));
   }, [bereit, mSchl]);
+  const wege = (p.fahrwege ?? []).filter((w) => wegeAn || w.vorschau);
+  const wSchl = wege.map((w) => `${w.id}:${w.art}:${w.punkte.length}`).join("|");
+  useEffect(() => {
+    if (bereit) karte.current?.setzeFahrwege(wege);
+  }, [bereit, wSchl]);
   const fokusRef = useRef(p.fokus);
   fokusRef.current = p.fokus;
   useEffect(() => {
@@ -367,6 +403,41 @@ export function LagekarteAnsicht(p: {
     if (!fId) fensterLageRef.current = null;
     else if (bereit) karte.current?.zeichnen(true);
   }, [bereit, fId]);
+
+  // Fenster ziehen (B8): an der Kopfleiste; ein Klick ohne Ziehen geht wie bisher an den Inhalt (Vergrößerung)
+  const ziehStart = (e: PointerEvent) => {
+    const lage = fensterLageRef.current;
+    const fe = fensterEl.current;
+    if (!lage || !fe || e.button !== 0 || (e.target as HTMLElement).closest("[data-schliessen]")) return;
+    const oben = e.clientY - fe.getBoundingClientRect().top;
+    if (oben > ZIEH_LEISTE) return;
+    ziehRef.current = { x: e.clientX, y: e.clientY, r: lage.r, bewegt: false, id: e.pointerId };
+    gezogenRef.current = false;
+  };
+  const ziehen = (e: PointerEvent) => {
+    const z = ziehRef.current;
+    const fe = fensterEl.current;
+    const lage = fensterLageRef.current;
+    if (!z || !fe || !lage || e.pointerId !== z.id) return;
+    const dx = e.clientX - z.x;
+    const dy = e.clientY - z.y;
+    if (!z.bewegt && Math.hypot(dx, dy) < 5) return;
+    if (!z.bewegt) fe.setPointerCapture(e.pointerId);
+    z.bewegt = true;
+    const b = letztesBild.current;
+    const r = klemmeFenster([z.r[0] + dx, z.r[1] + dy, z.r[2] + dx, z.r[3] + dy], b?.breite ?? lage.bw, b?.hoehe ?? lage.bh);
+    fensterLageRef.current = { ...lage, r, manuell: true };
+    fe.style.transform = `translate(${Math.round(r[0])}px, ${Math.round(r[1])}px)`;
+    fe.classList.add("gezogen");
+    if (b) aufBildRef.current(b);
+  };
+  const ziehEnde = (e: PointerEvent) => {
+    const z = ziehRef.current;
+    if (!z || e.pointerId !== z.id) return;
+    gezogenRef.current = z.bewegt;
+    ziehRef.current = null;
+    fensterEl.current?.classList.remove("gezogen");
+  };
 
   const infoStil = (() => {
     if (!info || !host.current) return {};
@@ -425,8 +496,15 @@ export function LagekarteAnsicht(p: {
       )}
       {p.fenster && (
         <div class="karte-fenster" ref={fensterEl} key={p.fenster.id} data-fenster={p.fenster.id}
-          style={{ width: `${p.fenster.breite}px`, height: `${p.fenster.hoehe}px`, visibility: "hidden" }}>
+          style={{ width: `${p.fenster.breite}px`, height: `${p.fenster.hoehe}px`, visibility: "hidden" }}
+          onPointerDown={ziehStart} onPointerMove={ziehen} onPointerUp={ziehEnde} onPointerCancel={ziehEnde}
+          onClickCapture={(e) => { if (gezogenRef.current) { gezogenRef.current = false; e.stopPropagation(); e.preventDefault(); } }}
+          title="Kopfleiste ziehen: verschieben">
           {p.fenster.inhalt}
+          {p.fenster.onSchliessen && (
+            <button type="button" class="fenster-zu" data-schliessen onClick={(e) => { e.stopPropagation(); p.fenster?.onSchliessen?.(); }}
+              title="Drohnenbild schließen – die Marke öffnet es wieder" aria-label="Drohnenbild schließen">✕</button>
+          )}
         </div>
       )}
       {p.ecke && <div class="karte-ecke" ref={eckeEl}>{p.ecke}</div>}
@@ -435,6 +513,10 @@ export function LagekarteAnsicht(p: {
         <button type="button" class="knopf" title="Hineinzoomen (auch Mausrad)" aria-label="Hineinzoomen" onClick={() => karte.current?.zoom(1.5)}>+</button>
         <button type="button" class="knopf" title="Herauszoomen" aria-label="Herauszoomen" onClick={() => karte.current?.zoom(1 / 1.5)} disabled={zoom <= 1}>−</button>
         <button type="button" class="knopf" title="Ganze Karte zeigen (auch Doppelklick)" aria-label="Ganze Karte" onClick={() => karte.current?.ganzeKarte()} disabled={zoom <= 1}>⤢</button>
+        {p.fahrwege && (
+          <button type="button" class={`knopf ${wegeAn ? "an" : ""}`} onClick={() => setWegeAn(!wegeAn)} data-testid="karte-fahrwege" aria-pressed={wegeAn}
+            title={wegeAn ? "Fahrwege der Einheiten ausblenden" : "Fahrwege der Einheiten zeigen"}>Fahrwege</button>
+        )}
         <button type="button" class="knopf" onClick={() => setGrund(grund === "topo" ? "luftbild" : "topo")} data-testid="karte-grund"
           title={grund === "topo" ? (kachelnVerfuegbar() ? "Luftbild zeigen (beim Hineinzoomen schärfer)" : "Luftbild zeigen") : "Topografische Karte zeigen"}>
           {grund === "topo" ? "Luftbild" : "Karte"}

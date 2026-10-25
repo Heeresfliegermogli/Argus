@@ -186,7 +186,8 @@ export function neueLaufId(jetzt = new Date()): string {
 }
 
 export const LAUF_MUSTER = /^\d{8}-\d{4}-[a-z0-9]{4}$/;
-export const RAUM_MUSTER = /^[a-z0-9-]{3,32}$/;
+/** Raum des Tests ohne Lobby (?raum=…): ab vier Zeichen, damit er nie wie ein Code der Sitzung (drei Zeichen) aussieht. */
+export const RAUM_MUSTER = /^[a-z0-9-]{4,32}$/;
 
 export function zufall(n: number): string {
   const zeichen = "abcdefghijkmnpqrstuvwxyz23456789";

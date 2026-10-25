@@ -1,17 +1,19 @@
-// G1 Aufklärung (Schritt 6b): Die Karte ist die Arbeitsfläche. Jede ARGUS-Meldung erscheint als Marke am Ziel;
-// die geöffnete zeigt ihr Drohnenbild live in einem Fenster am Ort (Linie zum Ziel), Klick = groß mit Lupe.
-// Rechts: Eingang als Zahl, ARGUS-Daten, Sensordaten, Entscheidung ANNEHMEN oder ABLEHNEN mit Vermerk.
+// Aufklärung (intern g1; Schritt 6b, Änderungen B6–B9 vom 25.10.2026): Die Karte ist die Arbeitsfläche. Jede
+// ARGUS-Meldung erscheint als Marke „Ziel 7“ am Ziel; die geöffnete zeigt ihr Drohnenbild live in einem Fenster am Ort
+// (Linie zum Ziel), Klick = groß mit Lupe. Das Fenster lässt sich an der Kopfleiste verschieben und mit ✕ schließen,
+// die Marke öffnet es wieder; die Drohne verfolgt das Ziel. Rechts: Eingang als Zahl, ARGUS-Daten, Sensordaten,
+// Entscheidung ANNEHMEN oder ABLEHNEN (gleich gewichtet, kein Vermerk mehr).
 //   ① Meldung öffnen (Marke; die älteste öffnet sich von selbst)  ② Drohnenbild und Daten prüfen  ③ entscheiden
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { drohnenbild, drohnenEbenen, vorladen } from "../assets/assets";
 import type { LiveLage } from "../drohne/livebild";
 import { bekannteZiele, effekte } from "../kern/effekte";
-import { TEXT_MAX } from "../kern/ereignisse";
 import { feinlage } from "../kern/geometrie";
 import { lagebildZielmeldungen } from "../kern/lagebild";
 import { gemeldetePosition } from "../kern/regeln";
 import { warteschlange } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
+import { zielName } from "../kern/zielnummern";
 import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, Empfehlung, EingangLeiste, KartenLagehinweise, Konfidenz, Panel } from "./gemeinsam/bausteine";
 import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
@@ -35,7 +37,8 @@ export function G1Ansicht(p: { s: Sicht }) {
   const z = st.zustand;
   const offen = warteschlange(z, "g1");
   const [gewaehlt, waehle] = useAuswahl(offen.map((m) => m.id));
-  const [vermerk, setVermerk] = useState("");
+  /** Meldung, deren Drohnenbild geschlossen ist (B8; die Marke öffnet es wieder) */
+  const [zu, setZu] = useState<string | null>(null);
   const m = gewaehlt ? inh.meldungen[gewaehlt] : null;
   const ms = gewaehlt ? z.meldungen[gewaehlt] : null;
   const wartet = !!gewaehlt && s.wartetAuf("g1_entscheid", gewaehlt);
@@ -56,22 +59,24 @@ export function G1Ansicht(p: { s: Sicht }) {
   }, [man, naechste.join(",")]);
 
   const oeffnen = (id: string | null) => {
+    setZu(null); // Klick auf die Marke der offenen Meldung öffnet ihr Drohnenbild wieder
     if (id === gewaehlt) return;
     waehle(id);
-    setVermerk("");
   };
   const entscheiden = (entscheid: "annehmen" | "ablehnen") => {
     if (!gewaehlt) return;
-    s.senden("g1_entscheid", { meldung: gewaehlt, entscheid, vermerk: vermerk.trim() || undefined });
-    setVermerk("");
+    s.senden("g1_entscheid", { meldung: gewaehlt, entscheid });
     waehle(null);
   };
 
   const alter = m && ms ? Math.max(0, Math.round(t - ms.erschienen.t_s)) + (m.sensor.bildalter_s ?? 0) : 0;
-  const marken = meldungsMarken(offen, gewaehlt, oeffnen);
-  const fenster = m ? {
+  const name = (id: string) => zielName(inh, z, id, false);
+  const marken = meldungsMarken(offen, gewaehlt, oeffnen, name);
+  const fensterZu = !!m && zu === m.id;
+  const fenster = m && !fensterZu ? {
     id: m.id, ...DROHNEN_FENSTER,
     inhalt: <LiveDrohnenFenster meldung={m} lage={() => lage.current} uhr={() => s.kartenUhr()} start={start} />,
+    onSchliessen: () => setZu(m.id),
   } : null;
 
   return (
@@ -97,7 +102,7 @@ export function G1Ansicht(p: { s: Sicht }) {
               <h3>
                 <span>{inh.szenario.argus_system.name}</span>
                 <span class="argus-meldung" data-testid="offene-meldung" data-meldung={m.id}>
-                  <b>{m.id}</b> · {uhrzeit(start, ms.erschienen.t_s)} · Lage {feinlage(gemeldetePosition(inh, m), inh.karte)}
+                  <b>{zielName(inh, z, m.id)}</b> · {uhrzeit(start, ms.erschienen.t_s)} · Lage {feinlage(gemeldetePosition(inh, m), inh.karte)}
                   {ms.fastTrack && <span class="badge warn">Fast-Track</span>}
                 </span>
               </h3>
@@ -109,6 +114,7 @@ export function G1Ansicht(p: { s: Sicht }) {
                   {m.argus.hinweis && <tr><th>Hinweis</th><td>{m.argus.hinweis}</td></tr>}
                 </tbody>
               </table>
+              {fensterZu && <div class="klein leise" data-testid="drohnenbild-zu">Drohnenbild geschlossen – die Marke „{name(m.id)}“ öffnet es wieder.</div>}
             </section>
             <Panel schritt={2} titel="Sensordaten Drohne" klasse="flach">
               <table class="tabelle" data-testid="sensordaten">
@@ -128,19 +134,14 @@ export function G1Ansicht(p: { s: Sicht }) {
             </Panel>
           </>
         )}
-        <Panel schritt={3} titel="Entscheidung G1" klasse="flach">
-          <div class="stapel" style="gap:8px">
-            <input class="feld" placeholder="Vermerk an G2 (eine Zeile, freiwillig)" maxLength={TEXT_MAX.vermerk} value={vermerk}
-              onInput={(e) => setVermerk((e.target as HTMLInputElement).value)} disabled={gesperrt} data-testid="g1-vermerk"
-              onKeyDown={(e) => e.key === "Enter" && e.preventDefault()} />
-            <div class="knopf-reihe">
-              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("annehmen")} testid="g1-annehmen">
-                ANNEHMEN<span class="unterzeile">als Ziel an G2</span>
-              </AktionsKnopf>
-              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("ablehnen")} testid="g1-ablehnen">
-                ABLEHNEN<span class="unterzeile">kein Ziel</span>
-              </AktionsKnopf>
-            </div>
+        <Panel schritt={3} titel="Entscheiden" klasse="flach">
+          <div class="knopf-reihe">
+            <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("annehmen")} testid="g1-annehmen">
+              ANNEHMEN<span class="unterzeile">als Ziel an die Zielprüfung</span>
+            </AktionsKnopf>
+            <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("ablehnen")} testid="g1-ablehnen">
+              ABLEHNEN<span class="unterzeile">kein Ziel</span>
+            </AktionsKnopf>
           </div>
         </Panel>
         <div class="kleingedruckt" style="padding:0 2px" data-testid="kleingedrucktes">

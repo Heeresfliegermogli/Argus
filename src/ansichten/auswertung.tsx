@@ -24,6 +24,13 @@ import { lagebildKontrolle } from "../kern/lagebild";
 import { position, vorhanden } from "../kern/geometrie";
 import { gemeldetePosition } from "../kern/regeln";
 import { mmss, uhrzeit } from "../kern/uhr";
+import { ROLLEN_NAME, ROLLEN_ZEICHEN } from "../kern/sichten";
+import { zielNr } from "../kern/zielnummern";
+
+/** „Ziel 8“ – in allen Teams dieselbe Nummer (B7). */
+function zielText(inh: Inhalte, id: string): string {
+  return `Ziel ${zielNr(inh, null, id)}`;
+}
 import type { LiveLage } from "../drohne/livebild";
 import { Menue } from "./gemeinsam/bausteine";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
@@ -141,7 +148,7 @@ export function AuswertungAnsicht(p: AuswertungProps) {
         {a.teams.length === 0 ? <div class="leer">Noch kein Team hat gespielt.</div>
           : k.id === "teams" ? <Teamvergleich a={a} inh={p.inh} waehle={(f, t) => { setTeam(t); const i = kapitel.findIndex((x) => x.id === f); if (i >= 0) geh(i); }} />
             : k.id === "kennzahlen" ? <KennzahlenTafel a={a} inh={p.inh} />
-              : k.id === "konfidenz" ? <KonfidenzTafel a={a} inh={p.inh} />
+              : k.id === "konfidenz" ? <KonfidenzTafel a={a} inh={p.inh} sl={p.art === "sl"} />
                 : k.fall ? <Replay key={k.id} a={a} inh={p.inh} teams={p.teams} fall={k.fall} team={teamId!} setTeam={setTeam} spielt={spielt} setSpielt={setSpielt} notiz={p.notiz} />
                   : <Schluss a={a} inh={p.inh} />}
       </main>
@@ -243,14 +250,14 @@ function Ausgang(p: { e: FallErgebnis; gross?: boolean }) {
   );
 }
 
-/** Kette G1 → G2 → G3 (→ Einschlag): wer an welcher Stufe was entschieden hat; die entscheidende Stufe umrandet. */
+/** Kette A → Z → F (Aufklärung, Zielprüfung, Führung; → Einschlag): wer an welcher Stufe was entschieden hat; die entscheidende Stufe umrandet. */
 function KetteZeile(p: { e: FallErgebnis; kompakt?: boolean }) {
   const k = p.e.kette;
   return (
     <span class={`kette ${p.kompakt ? "kompakt" : ""}`} aria-label={k.glieder.map((g) => g.titel).join("; ")}>
       {k.glieder.map((g: KettenGlied) => (
         <span key={g.stufe} class={`glied g-${g.stufe} ${g.art} ${g.entscheidend ? "entscheidend" : ""}`} title={g.titel}>
-          <i>{g.stufe.toUpperCase()}</i><b>{g.vorher ? "◷›" : ""}{g.zeichen}</b>
+          <i>{ROLLEN_ZEICHEN[g.stufe]}</i><b>{g.vorher ? "◷›" : ""}{g.zeichen}</b>
         </span>
       ))}
       {k.einschlag && <span class={`glied einschlag ${k.einschlag.fehl || k.einschlag.regel ? "fehl" : ""}`} title={k.einschlag.text}><b>✸</b></span>}
@@ -283,6 +290,8 @@ function Teamvergleich(p: { a: Auswertung; inh: Inhalte; waehle: (fall: string, 
           <span><span class="glied warten mini"><b>◷</b></span> zurückgestellt</span>
           <span><span class="glied ft mini"><b>FT</b></span> Fast-Track</span>
           <span><span class="glied entscheidend mini"><b>·</b></span> hat entschieden</span>
+          <span class="trenner" />
+          <span class="leise">A Aufklärung · Z Zielprüfung · F Führung</span>
         </div>
       </div>
       <table class="vergleich">
@@ -378,10 +387,10 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
             <th>Fehlbekämpfungen</th>
             <th>Freigabe trotz Regel&shy;warnung</th>
             <th>Widerspruch gegen ARGUS</th>
-            <th>Bearbeitungszeit je Stufe</th>
+            <th>Bearbeitungszeit je Stufe <span class="th-zusatz">(A · Z · F)</span></th>
             <th>Fast-Track</th>
             <th>{lmId} gelesen{lmErschienen !== undefined && <span class="th-zusatz"> (kam {uhrzeit(start, lmErschienen).slice(0, 5)})</span>}</th>
-            <th>Lagehinweise an G1/G2</th>
+            <th>Lagehinweise der Führung</th>
           </tr>
         </thead>
         <tbody>
@@ -403,14 +412,14 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
                 </td>
                 <td data-kz="zeit">
                   <div class="stufen-zeit">
-                    {(["g1", "g2", "g3"] as const).map((s) => <span key={s} class={`sz g-${s}`}><i>{s.toUpperCase()}</i><b>{sek(k.zeiten.alle[s])}</b> s</span>)}
+                    {(["g1", "g2", "g3"] as const).map((s) => <span key={s} class={`sz g-${s}`} title={ROLLEN_NAME[s]}><i>{ROLLEN_ZEICHEN[s]}</i><b>{sek(k.zeiten.alle[s])}</b> s</span>)}
                   </div>
                   <div class="unter">≥ {schwelle} %: {sek(k.zeiten.hoch.g1)} · {sek(k.zeiten.hoch.g2)} · {sek(k.zeiten.hoch.g3)} s · darunter {sek(k.zeiten.niedrig.g1)} · {sek(k.zeiten.niedrig.g2)} · {sek(k.zeiten.niedrig.g3)} s</div>
                 </td>
                 <td data-kz="ft">
                   {k.fastTrack.an ? <b class="wert bernstein">EIN</b> : <b class="wert leise">aus</b>}
                   <div class="unter">{k.fastTrack.an && k.fastTrack.seit !== undefined ? `ab ${uhrzeit(start, k.fastTrack.seit)}` : k.fastTrack.wechsel.length ? `zuletzt aus ${uhrzeit(start, k.fastTrack.wechsel[k.fastTrack.wechsel.length - 1].t)}` : "nie eingeschaltet"}
-                    {k.fastTrack.meldungen > 0 && ` · ${k.fastTrack.meldungen} Meldungen ohne G1`}</div>
+                    {k.fastTrack.meldungen > 0 && ` · ${k.fastTrack.meldungen} Meldungen ohne Aufklärung`}</div>
                 </td>
                 <td data-kz="lm">
                   {lm?.gelesen !== undefined ? <b class="wert">{uhrzeit(start, lm.gelesen)}</b> : <b class="wert rot">nicht gelesen</b>}
@@ -435,7 +444,7 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
 
 // ---------------------------------------------------------------- Kapitel 3: Konfidenz
 
-function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte }) {
+function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte; sl?: boolean }) {
   const { a, inh } = p;
   const k = a.konfidenz;
   const schwelle = inh.regeln.fast_track.schwelle;
@@ -498,7 +507,7 @@ function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte }) {
           {/* Punkte: richtig hohl und grau, falsch rot als Raute mit Beschriftung */}
           {pos.filter((x) => !x.pt.falsch).map(({ pt, x, y }) => (
             <circle key={pt.meldung} cx={x} cy={y} r={7} class={`kd-punkt richtig ${pt.empfehlung === "NICHT BEKÄMPFEN" ? "warnt" : ""}`} data-meldung={pt.meldung}>
-              <title>{`${pt.meldung}: ${pt.konfidenz} %, ${pt.empfehlung}, Bild ${Math.round(pt.gestoert * 100)} % verdeckt – ARGUS lag richtig`}</title>
+              <title>{`${zielText(p.inh, pt.meldung)}: ${pt.konfidenz} %, ${pt.empfehlung}, Bild ${Math.round(pt.gestoert * 100)} % verdeckt – ARGUS lag richtig`}</title>
             </circle>
           ))}
           <text x={lx} y={O + 76} class="kd-label-kopf">ARGUS lag falsch</text>
@@ -508,9 +517,9 @@ function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte }) {
               <g key={pt.meldung} data-falsch={pt.meldung}>
                 <polyline points={`${x + 9},${y} ${lx - 18},${ly - 7} ${lx - 6},${ly - 7}`} class="kd-leitlinie" />
                 <rect x={x - 8} y={y - 8} width={16} height={16} transform={`rotate(45 ${x} ${y})`} class="kd-punkt falsch">
-                  <title>{`${pt.meldung}: ${pt.konfidenz} % – ARGUS lag falsch`}</title>
+                  <title>{`${zielText(p.inh, pt.meldung)}: ${pt.konfidenz} % – ARGUS lag falsch`}</title>
                 </rect>
-                <text x={lx} y={ly} class="kd-label">✕ {pt.meldung}{pt.fall ? ` · ${pt.fall}` : ""} · {pt.konfidenz} %</text>
+                <text x={lx} y={ly} class="kd-label">✕ {zielText(p.inh, pt.meldung)}{pt.fall ? ` · ${pt.fall}` : ""} · {pt.konfidenz} %{p.sl ? <tspan class="kd-intern"> {pt.meldung}</tspan> : null}</text>
                 <text x={lx} y={ly + 22} class="kd-label-unter">{pt.bekaempft} von {nTeams} Teams bekämpft</text>
               </g>
             );
@@ -703,7 +712,7 @@ function NotizFeld(p: { fall: string; team: TeamAuswertung; senden: (text: strin
   );
 }
 
-/** Drohnenbild, wie G1 es bei der Entscheidung sah (live zur Zeit der Entscheidung, Lupe per Klick). */
+/** Drohnenbild, wie die Aufklärung es bei der Entscheidung sah (live zur Zeit der Entscheidung, die Drohne verfolgt das Ziel; Lupe per Klick). */
 function G1Bild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswertung; fall: FallDef }) {
   const { welt, tw, fall } = p;
   const start = p.inh.szenario.spieluhr.start;
@@ -715,17 +724,17 @@ function G1Bild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswer
     return { inh: welt, z, effekte: effekte(welt, z, bekannteZiele(welt, z, "g1")) };
   }, [p.lauf, tBild, welt]);
   const m = welt.meldungen[fall.meldung];
-  const hinweis = !mv ? "Die Meldung kam bei diesem Team nicht." : mv.fastTrack ? "Fast-Track: G1 hat dieses Bild nie gesehen." : !g1 ? "G1 hat nicht entschieden." : null;
+  const hinweis = !mv ? "Die Meldung kam bei diesem Team nicht." : mv.fastTrack ? "Fast-Track: Die Aufklärung hat dieses Bild nie gesehen." : !g1 ? "Die Aufklärung hat nicht entschieden." : null;
   return (
     <div class="g1-bild" data-testid="g1-bild">
-      <h2>Drohnenbild, wie G1 es sah <span class="sehr-leise klein">{g1 ? `bei der Entscheidung ${uhrzeit(start, g1.t)} – ${g1.was === "annehmen" ? "ANNEHMEN" : "ABLEHNEN"}` : mv ? `zur Meldezeit ${uhrzeit(start, mv.t)}` : ""}</span></h2>
+      <h2>Drohnenbild, wie die Aufklärung es sah <span class="sehr-leise klein">{g1 ? `bei der Entscheidung ${uhrzeit(start, g1.t)} – ${g1.was === "annehmen" ? "ANNEHMEN" : "ABLEHNEN"}` : mv ? `zur Meldezeit ${uhrzeit(start, mv.t)}` : ""}</span></h2>
       <div class={`g1-bild-rahmen ${hinweis ? "mit-hinweis" : ""}`}>
         {m && <LiveDrohnenFenster key={`${tw.id}-${fall.id}`} meldung={m} lage={() => lage} uhr={() => ({ t: tBild, tempo: 1, laeuft: false })} start={start} />}
         {hinweis && <div class="g1-bild-hinweis">{hinweis}</div>}
       </div>
       {m && (
-        <div class="g1-sensor" title="Sensordaten der Drohne – nur G1 sah sie (ARGUS wertet sie nicht aus)">
-          <span class="leise">Sensordaten (nur G1):</span> Wärme {m.sensor.waerme} · Bewegung {m.sensor.bewegung} · Spuren {m.sensor.spuren}
+        <div class="g1-sensor" title="Sensordaten der Drohne – nur die Aufklärung sah sie (ARGUS wertet sie nicht aus)">
+          <span class="leise">Sensordaten (nur Aufklärung):</span> Wärme {m.sensor.waerme} · Bewegung {m.sensor.bewegung} · Spuren {m.sensor.spuren}
           {m.sensor.kennzeichnung && m.sensor.kennzeichnung !== "keine erkannt" ? <> · Kennzeichnung <b>{m.sensor.kennzeichnung}</b></> : null}
           {m.sensor.personen && m.sensor.personen !== "–" ? <> · Personen {m.sensor.personen}</> : null}
         </div>
@@ -734,7 +743,7 @@ function G1Bild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswer
   );
 }
 
-/** Zeitleiste aller Teams zu einem Fall: Meldung → G1 → G2 → G3 → Einschlag; Klick wählt Team und Zeit. */
+/** Zeitleiste aller Teams zu einem Fall: Meldung → Aufklärung → Zielprüfung → Führung → Einschlag; Klick wählt Team und Zeit. */
 function FallZeitleiste(p: {
   a: Auswertung; inh: Inhalte; fall: FallDef; von: number; bis: number; t: number; setze: (t: number) => void; team: string; setTeam: (t: string) => void;
   spielt: boolean; umschalten: () => void; tempo: number;
@@ -746,8 +755,8 @@ function FallZeitleiste(p: {
   const schritt = bis - von > 420 ? 60 : 30;
   for (let x = Math.ceil(von / schritt) * schritt; x <= bis; x += schritt) ticks.push(x);
   const global = [
-    ...fallInjects(inh).filter((i) => i.fall === fall.id).map((i) => ({ t: i.t, text: i.id, klasse: "inject", titel: `${i.id} an G3 ${uhrzeit(start, i.t)}: „${inh.injects[i.id]?.text ?? ""}“` })),
-    ...[fall.meldung, ...fall.folge].map((id) => ({ t: inh.meldungen[id]?.t_s ?? 0, text: id, klasse: "meldung", titel: `${id} von ARGUS ${uhrzeit(start, inh.meldungen[id]?.t_s ?? 0)}` })),
+    ...fallInjects(inh).filter((i) => i.fall === fall.id).map((i) => ({ t: i.t, text: i.id, klasse: "inject", titel: `${i.id} an die Führung ${uhrzeit(start, i.t)}: „${inh.injects[i.id]?.text ?? ""}“` })),
+    ...[fall.meldung, ...fall.folge].map((id) => ({ t: inh.meldungen[id]?.t_s ?? 0, text: zielText(inh, id), klasse: "meldung", titel: `${zielText(inh, id)} von ARGUS ${uhrzeit(start, inh.meldungen[id]?.t_s ?? 0)}` })),
   ];
   const spur = useRef<HTMLDivElement | null>(null);
   const zuZeit = (clientX: number, el: HTMLElement) => {
@@ -763,8 +772,8 @@ function FallZeitleiste(p: {
         </button>
         <span class="zl-legende klein">
           <span><i class="zl-marke meldung muster">M</i>ARGUS-Meldung</span>
-          <span><i class="zl-marke g1 muster">G1✓</i><i class="zl-marke g2 muster">G2◷</i><i class="zl-marke g3 muster">G3✕</i>Entscheidung</span>
-          <span><i class="zl-marke g3 freigabe muster">G3✓</i>Freigabe</span>
+          <span><i class="zl-marke g1 muster">A✓</i><i class="zl-marke g2 muster">Z◷</i><i class="zl-marke g3 muster">F✕</i>Entscheidung (A Aufklärung, Z Zielprüfung, F Führung)</span>
+          <span><i class="zl-marke g3 freigabe muster">F✓</i>Freigabe</span>
           <span><i class="zl-marke einschlag fehl muster">✸</i>Einschlag</span>
           <span><i class="zl-marke gelesen muster">✉</i>Lagemeldung gelesen</span>
           <span><i class="zl-marke hinweis muster">▲</i>Lagehinweis</span>
@@ -834,7 +843,7 @@ function Schluss(p: { a: Auswertung; inh: Inhalte }) {
       <div class="schluss-zahlen">
         <Zahl wert={summe((t) => t.kennzahlen.freigaben.gesamt)} text={`Freigaben in ${a.teams.length} Teams`} />
         <Zahl wert={summe((t) => t.kennzahlen.freigaben.wieArgus)} text="davon wie von ARGUS empfohlen" />
-        <Zahl wert={summe((t) => t.kennzahlen.fastTrack.meldungen)} text="Meldungen per Fast-Track ohne G1" />
+        <Zahl wert={summe((t) => t.kennzahlen.fastTrack.meldungen)} text="Meldungen per Fast-Track ohne Aufklärung" />
         <Zahl wert={summe((t) => t.kennzahlen.widerspruch.gesamt)} text={`Mal widersprochen – ${summe((t) => t.kennzahlen.widerspruch.zuRecht)} zu Recht`} />
       </div>
     </section>

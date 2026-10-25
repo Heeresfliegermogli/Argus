@@ -4,7 +4,7 @@ import { verarbeiteAktion } from "../src/engine/aktionen";
 import { pruefeInhalte } from "../src/inhalte/pruefen";
 import type { Absender, Aktion, Ereignis } from "../src/kern/ereignisse";
 import { warteschlange, zielmeldung } from "../src/kern/sichten";
-import { spielzeit, uhrzeit } from "../src/kern/uhr";
+import { spieluhrImText, spielzeit, uhrzeit } from "../src/kern/uhr";
 import { ProtokollLuecke, anfangsZustand, anwenden, fingerabdruck, zustandAus } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
 
@@ -43,7 +43,9 @@ describe("Spielstand aus dem Protokoll", () => {
     expect(z.zerstoert["Z-01"]).toBe(220);
     expect(z.aktionen).toEqual({ a1: 4, a2: 5, a3: 6 });
     expect(z.meldungen.M01.verlauf).toEqual([3, 4, 5, 6, 7]);
-    expect(zielmeldung(inh, z, "M01").vermerkG1).toBe("heiß, fährt");
+    // Vermerk steht weiter im Protokoll (ältere Läufe), die Zielmeldung zeigt ihn seit B6 nicht mehr; Zielnummer statt M01
+    expect(z.meldungen.M01.g1?.vermerk).toBe("heiß, fährt");
+    expect(zielmeldung(inh, z, "M01").zielNr).toBe("Ziel 1 (2 Fz)");
     expect(fingerabdruck(z)).toBe(fingerabdruck(zustandAus(p, inh)));
   });
 
@@ -75,7 +77,11 @@ describe("Spielstand aus dem Protokoll", () => {
     const uhr = { laeuft: true, t_s: 100, ts: 50_000, tempo: 2 };
     expect(spielzeit(uhr, 60_000)).toBe(120);
     expect(spielzeit({ ...uhr, laeuft: false }, 60_000)).toBe(100);
-    expect(uhrzeit("10:00:00", 1245)).toBe("10:20:45");
+    // Spieluhr 00:00–25:00 (B4)
+    expect(uhrzeit("10:00:00", 1245)).toBe("20:45");
+    expect(uhrzeit("10:00:00", 1500)).toBe("25:00");
+    expect(spieluhrImText("um 10:17:00 und bis 10:25, nicht 11:40 oder 8:58", "10:00:00", 1500)).toBe("um 17:00 und bis 25:00, nicht 11:40 oder 8:58");
+    expect(spieluhrImText("keine seit Erstsichtung 09:52", "10:00:00", 1500)).toBe("keine seit Erstsichtung −08:00");
   });
 });
 
@@ -151,7 +157,7 @@ describe("Zeitplan und Aktionen", () => {
     const von = (rolle: Absender["rolle"]): Absender => ({ rolle, client: "c" });
     const a = (typ: Aktion["typ"], daten: unknown, rolle: Absender["rolle"]) => ({ id: "x", typ, von: von(rolle), ts: 0, daten }) as Aktion;
     expect(verarbeiteAktion(inh, z, a("g1_entscheid", { meldung: "M12", entscheid: "annehmen" }, "g1"), 801))
-      .toEqual({ ok: false, grund: "Meldung M12 ist nicht (mehr) bei G1" });
+      .toEqual({ ok: false, grund: "Meldung M12 ist nicht (mehr) bei der Aufklärung" });
     expect(verarbeiteAktion(inh, z, a("g2_empfehlung", { meldung: "M12", empfehlung: "bekaempfen", wirkmittel: "LM" }, "g3"), 801).ok).toBe(false);
     const mrs = verarbeiteAktion(inh, z, a("g2_empfehlung", { meldung: "M12", empfehlung: "bekaempfen", wirkmittel: "MRS" }, "g2"), 801);
     expect(mrs.ok && mrs.entwuerfe[0].typ === "g2_empfehlung" && mrs.entwuerfe[0].daten.warnungen?.some((w) => w.startsWith("R2"))).toBe(true);

@@ -51,11 +51,11 @@ describe("Auswertung: Fälle", () => {
     expect(s3.kette.glieder.find((g) => g.entscheidend)?.stufe).toBe("g3");
     expect(s3.kette.einschlag?.fehl).toBe(true);
     expect(s3.kette.einschlag?.text).toContain("Z-15 verbündet");
-    expect(s3.zeilen).toEqual(["FREIGABE 10:22:15 (PzAbw)", "→ Verbündete getroffen"]);
+    expect(s3.zeilen).toEqual(["FREIGABE 22:15 (PzAbw)", "→ Verbündete getroffen"]);
     const s4 = a.teams[1].faelle.S4;
     expect(s4.kette.glieder[1].zeichen).toBe("◷");
-    expect(s4.zeilen).toEqual(["G2 stellt zurück 10:20:10", "M23 FREIGABE 10:24:25"]);
-    expect(a.teams[1].faelle.S1.text).toBe("G1 lehnt ab 10:09:10");
+    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:10", "Ziel 23 FREIGABE 24:25"]);
+    expect(a.teams[1].faelle.S1.text).toBe("Aufklärung lehnt ab 09:10");
   });
 });
 
@@ -120,7 +120,7 @@ describe("Replay", () => {
     expect(von).toBeLessThanOrEqual(1000);
     expect(bis).toBeGreaterThanOrEqual(1435);
     const ideal = zeitleiste(inh, a.teams[1], f).map((m) => m.zeichen);
-    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "M20", "G1✓", "G2✓", "G3✕", "✎"]));
+    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "20", "A✓", "Z✓", "F✕", "✎"]));
     const naiv = zeitleiste(inh, a.teams[0], f);
     expect(naiv.find((m) => m.art === "einschlag")?.klasse).toBe("fehl");
     expect(naiv.find((m) => m.art === "meldung")?.klasse).toBe("ft");

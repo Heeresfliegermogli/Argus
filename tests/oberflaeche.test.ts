@@ -67,11 +67,12 @@ describe("Marken der Meldungen", () => {
   it("je offene Meldung ein Knopf; gewählt, zurückgestellt und Zusatz (⚠) erkennbar", () => {
     const geklickt: string[] = [];
     const m = meldungsMarken([stand("M01"), stand("M03", { beobachten: true }), stand("M04")], "M04", (id) => geklickt.push(id),
-      (st) => (st.id === "M01" ? "⚠" : undefined));
+      (id) => `Ziel ${Number(id.slice(1))}`, (st) => (st.id === "M01" ? "⚠" : undefined));
+    // Spieler sehen „Ziel 1“, die Marke trägt intern weiter die Meldung (B7)
     expect(m.map((x) => [x.id, x.text, x.art])).toEqual([
-      ["M01", "M01 · ⚠", "offen"],
-      ["M03", "M03 · zurückgestellt", "zurueck"],
-      ["M04", "M04", "gewaehlt"],
+      ["M01", "Ziel 1 · ⚠", "offen"],
+      ["M03", "Ziel 3 · zurückgestellt", "zurueck"],
+      ["M04", "Ziel 4", "gewaehlt"],
     ]);
     m[1].onClick?.();
     expect(geklickt).toEqual(["M03"]);

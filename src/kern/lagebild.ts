@@ -23,6 +23,7 @@ import { einschlagVon } from "./lage";
 import { gemeldetePosition } from "./regeln";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
+import { zielNr } from "./zielnummern";
 import type { MeldungsStand, Spielzustand } from "./zustand";
 
 export type ObjektZustand = "offen" | "zurueckgestellt" | "freigegeben" | "bekaempft" | "erledigt";
@@ -159,7 +160,7 @@ function geplanteWirkung(inh: Inhalte, z: Spielzustand, m: Meldung, st: Meldungs
     id: `W-${m.id}`,
     pos: e.pos,
     radius_m: wm.wirkradius_m,
-    text: `${m.id} ${wm.kurz} · ${uhrzeit(start, e.t)}`,
+    text: `Ziel ${zielNr(inh, z, m.id)} ${wm.kurz} · ${uhrzeit(start, e.t)}`,
     zeilen: [`freigegeben ${uhrzeit(start, st.g3.t_s)}, Einschlag ${uhrzeit(start, e.t)} (vorausberechnet)`, wm.name],
     geplant: true,
   };
@@ -252,16 +253,18 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
       menge = m.ziele.length > 1 ? Math.max(stehend, zerstoert ? m.ziele.length : 1) : undefined;
     }
     const zeichenStatus = bekaempft || zerstoert ? "X" : "P";
+    // Spieler sehen „Ziel 7“ (B7), nie die Kennung M07 oder Z-07
+    const nummern = ids.map((id) => zielNr(inh, z, id));
     objekte.push({
       id: nr,
       pos,
       sidc: zeichenArgus(inh, m.argus.klasse, m.argus.konfidenz, zeichenStatus),
       menge,
-      text: ids.join("/"),
-      titel: `${ids.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
+      text: `Ziel ${nummern.join("/")}`,
+      titel: `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
       zeilen: [
-        `Ziel ${nr} · gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
-        ...liste.map((x) => `${x.m.id}: ${standText(x.st)}`),
+        `gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
+        ...liste.map((x) => `Ziel ${zielNr(inh, z, x.m.id)}: ${standText(x.st)}`),
         ...(zerstoert && !bekaempft ? ["Ziel zerstört"] : []),
       ],
       zustand: bekaempft ? "bekaempft" : zustand,
@@ -280,7 +283,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
         id: `W-${x.m.id}`,
         pos: w.pos,
         radius_m: wm?.wirkradius_m ?? 0,
-        text: `${x.m.id} ${wm?.kurz ?? w.wirkmittel}`,
+        text: `Ziel ${zielNr(inh, z, x.m.id)} ${wm?.kurz ?? w.wirkmittel}`,
         zeilen: [`Einschlag ${uhrzeit(start, w.t_einschlag)} mit ${wm?.name ?? w.wirkmittel}`, `freigegeben ${uhrzeit(start, w.t_freigabe)}`],
       });
     }
@@ -314,7 +317,7 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
       id: `W-${id}`,
       pos: w.pos,
       radius_m: wm?.wirkradius_m ?? 0,
-      text: `${id} ${wm?.kurz ?? w.wirkmittel}`,
+      text: `Ziel ${zielNr(inh, z, id)} ${wm?.kurz ?? w.wirkmittel}`,
       zeilen: [`Einschlag ${uhrzeit(start, w.t_einschlag)} (frei ${uhrzeit(start, w.t_freigabe)}) mit ${wm?.name ?? w.wirkmittel}`,
         treffer.length ? `getroffen: ${treffer.join(", ")}` : "nichts getroffen"],
       fehl: w.getroffen.some((g) => FEHL.has(g.kategorie)),
@@ -343,8 +346,8 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
       titel: `${ziel.id} · ${f?.name ?? ziel.typ}`,
       zeilen: [
         `${GT_NAME[gt.kategorie]}: ${gt.text}`,
-        ziel.ungemeldet ? "von ARGUS nicht gemeldet" : `gemeldet in ${meld.join(", ")}`,
-        ...(zerstoert ? [`zerstört ${uhrzeit(start, tZerst)}${durch ? ` (${durch.startsWith("M") || durch.startsWith("V") ? `Wirkung ${durch}` : durch})` : ""}`] : []),
+        ziel.ungemeldet ? "von ARGUS nicht gemeldet" : `gemeldet als ${meld.map((id) => `Ziel ${zielNr(inh, z, id)}`).join(", ")}`,
+        ...(zerstoert ? [`zerstört ${uhrzeit(start, tZerst)}${durch ? ` (${inh.meldungen[durch] ? `Wirkung auf Ziel ${zielNr(inh, z, durch)}` : durch})` : ""}`] : []),
       ],
       zustand: zerstoert ? "bekaempft" : "offen",
       kategorie: gt.kategorie,

@@ -15,6 +15,7 @@ import { Application, CanvasTextMetrics, Container, Graphics, Sprite, Spriteshee
 import { atlas, assetUrl, kachelnVerfuegbar, type AssetManifest } from "../assets/assets";
 import type { Inhalte, Punkt } from "../inhalte/typen";
 import type { Effekt } from "../kern/effekte";
+import type { Fahrweg } from "../kern/fahrwege";
 import type { KartenObjekt, Lagebild, PersonenMarke, WirkungsMarke } from "../kern/lagebild";
 import { LEER, bahnLage } from "../kern/lagebild";
 import { bildrateMax } from "./bildrate";
@@ -153,6 +154,7 @@ export class Lagekarte {
 
   private lb: Lagebild = LEER;
   private vorschau: Vorschau | null = null;
+  private fahrwege: Fahrweg[] = [];
   private gewaehlt: string | null = null;
   /** Marken (Meldung bzw. „W-M01“ → Text): die Karte hält ihnen den Platz frei, die Ansicht zeichnet sie als HTML */
   private marken = new Map<string, string>();
@@ -290,6 +292,12 @@ export class Lagekarte {
 
   setzeVorschau(v: Vorschau | null): void {
     this.vorschau = v;
+    this.zeichnen();
+  }
+
+  /** Fahrwege der Einheiten (Kontrollkarte, B10) und die Vorschau einer Verstärkung. */
+  setzeFahrwege(liste: Fahrweg[]): void {
+    this.fahrwege = liste;
     this.zeichnen();
   }
 
@@ -706,6 +714,7 @@ export class Lagekarte {
       g.clear();
       this.rahmenUndRaster(g);
       this.zonen(g);
+      this.wege(g);
       this.namen();
       this.kraefte(g);
       this.benutztStatisch = this.benutzt;
@@ -795,6 +804,34 @@ export class Lagekarte {
         const kurz = z.typ === "no_strike" ? `${z.id} ${z.name.split(" ")[0]}` : `${z.id} ≤ ${z.max_wirkradius_m ?? "?"} m`;
         this.belegen(this.text(`zone-${z.id}`, kurz, { ...this.stil(12.5, "700", farbe === FARBE.ns ? 0xb5281f : 0xb35f0a), stroke: { color: 0xfffbf2, width: 3.5, join: "round" } }, lx, ly));
       }
+    }
+  }
+
+  /** Fahrwege: dünne Linien mit Pfeil am Ende; Vorschau einer Verstärkung grau gestrichelt mit Zeichen am Start. */
+  private wege(g: Graphics): void {
+    const farbe: Record<string, number> = { feind: 0xc0392b, verbuendet: 0x2f6fc4, ausser_gefecht: 0x8e5a52, attrappe: 0xc0392b };
+    for (const w of this.fahrwege) {
+      const pts = w.punkte.map((p) => this.bs(p)).filter((p, i, a) => i === 0 || Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) > 0.5);
+      if (pts.length < 2) continue;
+      const f = w.vorschau ? 0x7d838b : farbe[w.art] ?? 0x5d6670;
+      if (w.vorschau) {
+        this.strich(g, pts, 7, 5);
+        g.stroke({ width: 2.6, color: f, alpha: 0.95 });
+      } else {
+        g.moveTo(pts[0][0], pts[0][1]);
+        for (const p of pts.slice(1)) g.lineTo(p[0], p[1]);
+        g.stroke({ width: 1.6, color: f, alpha: 0.55 });
+      }
+      // Pfeil am Ende
+      const [ax, ay] = pts[pts.length - 2];
+      const [bx, by] = pts[pts.length - 1];
+      const l = Math.hypot(bx - ax, by - ay) || 1;
+      const ux = (bx - ax) / l;
+      const uy = (by - ay) / l;
+      const k = w.vorschau ? 9 : 7;
+      g.poly([bx, by, bx - ux * k - uy * k * 0.55, by - uy * k + ux * k * 0.55, bx - ux * k + uy * k * 0.55, by - uy * k - ux * k * 0.55], true)
+        .fill({ color: f, alpha: w.vorschau ? 0.95 : 0.6 });
+      if (w.vorschau && w.sidc) this.zeichenSprite(`weg-${w.id}`, w.sidc, 15, pts[0][0], pts[0][1], 0.9, undefined, "#7d838b");
     }
   }
 
@@ -948,12 +985,12 @@ export class Lagekarte {
     ]);
   }
 
-  private zeichenTextur(code: string, groesse: number, menge?: number): ZeichenTextur {
-    const schl = `${code}|${groesse}|${menge ?? ""}`;
+  private zeichenTextur(code: string, groesse: number, menge?: number, grau?: string): ZeichenTextur {
+    const schl = `${code}|${groesse}|${menge ?? ""}|${grau ?? ""}`;
     let z = this.zeichenCache.get(schl);
     if (!z) {
       const faktor = 2;
-      const sym = new ms.Symbol(code, { size: groesse, colorMode: "Medium", outlineColor: "rgba(255,255,255,0.85)", outlineWidth: 3, quantity: menge ? String(menge) : undefined, infoColor: "#1d252c" });
+      const sym = new ms.Symbol(code, { size: groesse, colorMode: "Medium", outlineColor: "rgba(255,255,255,0.85)", outlineWidth: 3, quantity: menge ? String(menge) : undefined, infoColor: "#1d252c", ...(grau ? { monoColor: grau } : {}) });
       const canvas = sym.asCanvas(faktor);
       const a = sym.getAnchor();
       const sz = sym.getSize();
@@ -963,8 +1000,8 @@ export class Lagekarte {
     return z;
   }
 
-  private zeichenSprite(schl: string, code: string, groesse: number, x: number, y: number, alpha: number, menge?: number): ZeichenTextur {
-    const z = this.zeichenTextur(code, groesse, menge);
+  private zeichenSprite(schl: string, code: string, groesse: number, x: number, y: number, alpha: number, menge?: number, grau?: string): ZeichenTextur {
+    const z = this.zeichenTextur(code, groesse, menge, grau);
     let sp = this.zeichenSprites.get(schl);
     if (!sp) {
       sp = new Sprite(z.tex);

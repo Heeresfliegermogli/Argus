@@ -3,7 +3,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../../inhalte/typen";
 import type { Rolle } from "../../kern/ereignisse";
-import { type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
+import { ROLLEN_NAME, type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
 import { uhrzeit } from "../../kern/uhr";
 import type { Spielzustand } from "../../kern/zustand";
 import type { Hinweis } from "../../sitzung/hinweise";
@@ -92,7 +92,7 @@ export function EingangLeiste(p: { anzahl: number; zurueck?: number; testid: str
   );
 }
 
-/** Die Zielmeldung, wie G2 und G3 sie sehen (kein Bild, keine Sensordaten) – kompakt im Meldungsfeld. */
+/** Die Zielmeldung, wie Zielprüfung und Führung sie sehen (kein Bild, keine Sensordaten) – kompakt im Meldungsfeld. */
 export function ZielmeldungKompakt(p: { zm: Zielmeldung }) {
   const zm = p.zm;
   return (
@@ -100,24 +100,23 @@ export function ZielmeldungKompakt(p: { zm: Zielmeldung }) {
       <span class="feldname">Ziel · Lage</span><span class="wert"><b>{zm.zielNr}</b> · {zm.lage}</span>
       <span class="feldname">Klasse</span><span class="wert"><b>{zm.klasse}</b></span>
       <span class="feldname">Konfidenz</span><span class="wert"><Konfidenz wert={zm.konfidenz} /></span>
-      <span class="feldname">ARGUS</span><span class="wert"><Empfehlung wert={zm.argusEmpfehlung} /></span>
-      <span class="feldname">Vermerk G1</span>
-      <span class="wert breit">{zm.fastTrack ? <span class="badge warn">Fast-Track – ohne Prüfung durch G1</span> : zm.vermerkG1 ? <span class="zwei-zeilen" title={zm.vermerkG1}>{zm.vermerkG1}</span> : <span class="sehr-leise">kein Vermerk</span>}</span>
+      <span class="feldname">ARGUS</span><span class="wert"><Empfehlung wert={zm.argusEmpfehlung} />
+        {zm.fastTrack && <span class="badge warn" style="margin-left:6px">Fast-Track – ohne Aufklärung</span>}</span>
     </div>
   );
 }
 
-/** Lagehinweise von G3 an G1/G2 und Meldungen „an alle“ (z. B. Reserve-Inject R-01 des ARGUS-Systems). */
+/** Lagehinweise der Führung an Aufklärung/Zielprüfung und Meldungen „an alle“ (z. B. Reserve-Inject R-01 des ARGUS-Systems). */
 function lagehinweisEintraege(inh: Inhalte, z: Spielzustand, rolle: Rolle) {
   return [
-    ...lagehinweiseFuer(z, rolle).map((l) => ({ schl: `l${l.seq}`, seq: l.seq, t: l.t_s, von: "G3", an: `an ${l.an.map((r) => r.toUpperCase()).join(", ")}`, text: l.text })),
+    ...lagehinweiseFuer(z, rolle).map((l) => ({ schl: `l${l.seq}`, seq: l.seq, t: l.t_s, von: ROLLEN_NAME.g3, an: `an ${l.an.map((r) => ROLLEN_NAME[r]).join(", ")}`, text: l.text })),
     ...injectsFuer(inh, z, rolle).filter((i) => inh.injects[i.id]?.an === "alle")
       .map((i) => ({ schl: `i${i.id}`, seq: i.erschienen.seq, t: i.erschienen.t_s, von: inh.injects[i.id].von, an: "an alle", text: inh.injects[i.id].text })),
   ].sort((a, b) => b.seq - a.seq);
 }
 
 /**
- * Lagehinweise auf der Karte (G1, G2; Schritt 6b): Kasten oben links. Der neueste Hinweis steht ganz da, ältere
+ * Lagehinweise auf der Karte (Aufklärung, Zielprüfung; Schritt 6b): Kasten oben links. Der neueste Hinweis steht ganz da, ältere
  * einzeilig (Klick zeigt sie ganz); ohne Hinweis nur eine Zeile.
  */
 export function KartenLagehinweise(p: { inh: Inhalte; z: Spielzustand; rolle: Rolle }) {
@@ -126,7 +125,7 @@ export function KartenLagehinweise(p: { inh: Inhalte; z: Spielzustand; rolle: Ro
   const [offen, setOffen] = useState<string | null>(null);
   return (
     <section class={`karten-hinweise ${eintraege.length ? "voll" : "leer"}`} data-testid="lagehinweise">
-      <h2>Lagehinweise <span class="leise" style="font-weight:500">von G3</span>
+      <h2>Lagehinweise <span class="leise" style="font-weight:500">der Führung</span>
         {eintraege.length > 0 ? <span class="badge info" data-testid="lagehinweise-zahl">{eintraege.length}</span>
           : <span class="klein sehr-leise" style="font-weight:500">· noch keine</span>}
       </h2>

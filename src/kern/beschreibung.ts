@@ -2,7 +2,7 @@
 import type { Inhalte } from "../inhalte/typen";
 import type { Ereignis } from "./ereignisse";
 import { trefferText } from "./regeln";
-import { ENTSCHEID_TEXT, ROLLEN_NAME } from "./sichten";
+import { ENTSCHEID_TEXT, ROLLEN_DATIV, ROLLEN_NAME } from "./sichten";
 import { uhrzeit } from "./uhr";
 
 export function absenderText(e: Ereignis): string {
@@ -25,7 +25,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte): string {
     }
     case "meldung": {
       const m = inh.meldungen[e.daten.meldung];
-      const zusatz = e.daten.entfaellt ? " – entfällt, Ziel schon zerstört oder weg" : e.daten.fast_track ? " – Fast-Track direkt an G2" : "";
+      const zusatz = e.daten.entfaellt ? " – entfällt, Ziel schon zerstört oder weg" : e.daten.fast_track ? " – Fast-Track direkt an die Zielprüfung" : "";
       return `ARGUS ${e.daten.meldung}: ${m?.argus.klasse ?? "?"} ${m?.argus.konfidenz ?? "?"} % ${m?.argus.empfehlung ?? ""}${zusatz}${e.daten.manuell ? " (manuell)" : ""}`;
     }
     case "g1_entscheid":
@@ -48,7 +48,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte): string {
       return `Einschlag ${wm(d.wirkmittel)} auf ${d.meldung}${d.ziel ? ` (${d.ziel})` : ""}${spaet}: ${g.length ? g.map(trefferText).join(", ") : "nichts getroffen"}${v}`;
     }
     case "meldung_entfaellt":
-      return `${e.daten.meldung} entfällt bei ${e.daten.stufe.toUpperCase()} – ${e.daten.grund}`;
+      return `${e.daten.meldung} entfällt bei ${ROLLEN_DATIV[e.daten.stufe]} – ${e.daten.grund}`;
     case "verstaerkung": {
       const g = inh.szenario.verstaerkungen?.gruppen.find((x) => x.id === e.daten.gruppe) ?? inh.basis?.szenario.verstaerkungen?.gruppen.find((x) => x.id === e.daten.gruppe);
       return `Verstärkung ${e.daten.gruppe} eingespielt: ${g?.name ?? "?"} (${g?.kurz ?? "?"})`;
@@ -72,7 +72,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte): string {
     case "inject_quittiert":
       return `Inject ${e.daten.inject} quittiert`;
     case "lagehinweis":
-      return `Lagehinweis an ${e.daten.an.map((r) => r.toUpperCase()).join("/")}: „${e.daten.text}“`;
+      return `Lagehinweis an ${e.daten.an.map((r) => ROLLEN_NAME[r]).join("/")}: „${e.daten.text}“`;
     case "fast_track":
       return `Fast-Track ${e.daten.an ? "EIN" : "AUS"}`;
     case "notiz":

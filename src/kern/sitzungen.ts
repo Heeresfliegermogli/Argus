@@ -1,9 +1,9 @@
 // Sitzung, Teams und Rollen (Schritt 4b): Codes, Teamnamen, Teamfarben und die Frage „wer sitzt wo“.
 // Reine Funktionen ohne Netz, damit Lobby, Spielleitung, Adapter und Tests dieselben Regeln nutzen.
 //
-// Eine Sitzung hat einen kurzen Code (z. B. KRAEHE-7Q). Die Teilnehmer geben ihn auf der Startseite
-// ein und bilden in der Lobby Teams à drei (G1, G2, G3). Wer allein ist, übernimmt zwei oder drei
-// Rollen (Doppelrolle). Jedes Team spielt dieselbe Lage in einem eigenen Spielstand.
+// Eine Sitzung hat einen kurzen Code aus drei Zeichen (z. B. K7P). Die Teilnehmer geben ihn auf der Startseite
+// ein und bilden in der Lobby Teams à drei (Aufklärung, Zielprüfung, Führung; intern g1, g2, g3). Fehlt jemand,
+// übernimmt eine Person zwei oder drei Rollen (Doppelrolle). Jedes Team spielt dieselbe Lage in einem eigenen Spielstand.
 import { type Rolle, zufall } from "./ereignisse";
 
 export type GruppenRolle = "g1" | "g2" | "g3";
@@ -15,7 +15,11 @@ export function istGruppenRolle(r: unknown): r is GruppenRolle {
 
 // ---------------------------------------------------------------- Codes
 
-/** Pfadschlüssel einer Sitzung (Firebase, localStorage): Kleinbuchstaben, Ziffern, Bindestrich. */
+/**
+ * Pfadschlüssel einer Sitzung (Firebase, localStorage): Kleinbuchstaben, Ziffern, Bindestrich. Sitzungen der
+ * Startseite haben seit B2 (25.10.2026) einen Code aus drei Zeichen (CODE_MUSTER); längere Schlüssel sind Räume
+ * des Tests ohne Lobby (?raum=…, ab vier Zeichen).
+ */
 export const SITZUNG_MUSTER = /^[a-z0-9-]{3,32}$/;
 /** Team-Kennung, z. B. tk3x9 („traum“ ist das Team des Direktaufrufs ohne Lobby). */
 export const TEAM_MUSTER = /^t[a-z0-9]{4,8}$/;
@@ -24,26 +28,22 @@ export const SPIELERNAME_MAX = 40;
 /** Team des Direktaufrufs …/?rolle=g1&raum=… (ein Team, ohne Lobby, wie bis Schritt 6). */
 export const DIREKT_TEAM = "traum";
 
-const CODE_ZEICHEN = "abcdefghjkmnpqrstuvwxyz23456789"; // ohne 0/o, 1/l/i
+/**
+ * Zeichen der Codes ohne verwechselbare Paare: kein 0/O/Q/D, 1/I/L, 2/Z, 5/S, 8/B, 6/G, U (zu V). Groß angezeigt,
+ * klein gespeichert. 21 Zeichen ⇒ 9 261 Codes; beim Anlegen wird ein belegter Code verworfen.
+ */
+export const CODE_ZEICHEN = "ACEFHJKMNPRTVWXY34679";
+export const CODE_LAENGE = 3;
+/** Code einer Sitzung als Pfadschlüssel (klein), z. B. „k7p“ */
+export const CODE_MUSTER = new RegExp(`^[${CODE_ZEICHEN.toLowerCase()}]{${CODE_LAENGE}}$`);
 
-/** Vorsilbe des Codes aus dem Szenario: „KRÄHE-01“ → „KRAEHE“. */
-export function codeVorsilbe(anzeige: string): string {
-  const roh = anzeige.split("-")[0] ?? anzeige;
-  const v = umschreiben(roh).replace(/[^A-Z0-9]/g, "");
-  return (v || "ARGUS").slice(0, 12);
-}
-
-function umschreiben(s: string): string {
-  return s.toUpperCase().replace(/Ä/g, "AE").replace(/Ö/g, "OE").replace(/Ü/g, "UE").replace(/ß/g, "SS");
-}
-
-/** Neuer Code zur Anzeige, z. B. KRAEHE-7Q. */
-export function neuerCode(vorsilbe: string): string {
-  let rest = "";
-  const werte = new Uint32Array(2);
+/** Neuer Code zur Anzeige, z. B. K7P. */
+export function neuerCode(): string {
+  let code = "";
+  const werte = new Uint32Array(CODE_LAENGE);
   crypto.getRandomValues(werte);
-  for (const w of werte) rest += CODE_ZEICHEN[w % CODE_ZEICHEN.length];
-  return `${vorsilbe}-${rest.toUpperCase()}`;
+  for (const w of werte) code += CODE_ZEICHEN[w % CODE_ZEICHEN.length];
+  return code;
 }
 
 /** Code zur Anzeige (Großbuchstaben). */
@@ -52,18 +52,12 @@ export function codeAnzeige(schluessel: string): string {
 }
 
 /**
- * Eingabe eines Teilnehmers in den Pfadschlüssel wandeln. Verzeiht Kleinschreibung, Leerzeichen,
- * Umlaute und fehlenden Bindestrich; nur die zwei Zeichen hinter dem Bindestrich reichen auch
- * („7q“ → kraehe-7q). Gibt null zurück, wenn daraus kein gültiger Code wird.
+ * Eingabe eines Teilnehmers in den Pfadschlüssel wandeln: drei Zeichen, Groß-/Kleinschreibung und Leerzeichen egal
+ * („k 7 p“ → k7p). Gibt null zurück, wenn daraus kein gültiger Code wird.
  */
-export function codeNormalisieren(eingabe: string, vorsilbe: string): string | null {
-  let s = umschreiben(eingabe.trim()).replace(/[\s_.]+/g, "-").replace(/[^A-Z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  const v = vorsilbe.toUpperCase();
-  if (!s) return null;
-  if (/^[A-Z0-9]{2}$/.test(s)) s = `${v}-${s}`;
-  else if (s.startsWith(v) && !s.startsWith(`${v}-`) && s.length === v.length + 2) s = `${v}-${s.slice(v.length)}`;
-  const k = s.toLowerCase();
-  return SITZUNG_MUSTER.test(k) ? k : null;
+export function codeNormalisieren(eingabe: string): string | null {
+  const k = eingabe.trim().toLowerCase().replace(/[\s._-]+/g, "");
+  return CODE_MUSTER.test(k) ? k : null;
 }
 
 export function neueTeamId(): string {
@@ -121,9 +115,10 @@ export function rollenAus(text: string | undefined | null): GruppenRolle[] {
   return GRUPPEN_ROLLEN.filter((r) => teile.includes(r));
 }
 
-export const ROLLEN_KURZ: Record<GruppenRolle, string> = { g1: "G1", g2: "G2", g3: "G3" };
+/** Rollen ohne G-Nummern (B3); kurz genug für Knöpfe und Chips. */
+export const ROLLEN_KURZ: Record<GruppenRolle, string> = { g1: "Aufklärung", g2: "Zielprüfung", g3: "Führung" };
 
-/** „G1 · G2“ */
+/** „Aufklärung · Zielprüfung“ */
 export function rollenAnzeige(rollen: GruppenRolle[]): string {
   return rollen.map((r) => ROLLEN_KURZ[r]).join(" · ");
 }

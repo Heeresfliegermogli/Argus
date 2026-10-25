@@ -71,7 +71,7 @@ export function einstellungenHtml(o: LastOptionen, auf: Aufteilung, dauerS: numb
         <span class="leise">Aufteilung</span>
         ${wahl("alles", "Alles auf diesem Gerät – Host und alle Bots")}
         ${wahl("host", "Verteilt – dieses Gerät legt die Sitzung an und führt den Host")}
-        ${wahl("beitreten", `Verteilt – dieses Gerät tritt mit Bots bei: Code <input id="code" class="feld kurz" value="${esc(o.code ?? "")}" placeholder="KRAEHE-7Q" spellcheck="false" />`)}
+        ${wahl("beitreten", `Verteilt – dieses Gerät tritt mit Bots bei: Code <input id="code" class="feld kurz" value="${esc(o.code ?? "")}" placeholder="K7P" spellcheck="false" />`)}
         ${auf !== "alles" ? `<div class="zeile"><span class="leise">Bots auf diesem Gerät:</span>${hier}</div>` : ""}
       </div>
       ${auf === "beitreten"

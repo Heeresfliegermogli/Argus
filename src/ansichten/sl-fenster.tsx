@@ -2,7 +2,9 @@
 //
 // Spielleitung: Startet mit der Übersicht aller Teams (uebersicht.tsx). „ansehen ›“ öffnet ein Team:
 // „Steuerung“ ist die bekannte Spielleitungsansicht für dieses Team (Uhr, Kontrollkarte, Zeitplan,
-// Protokoll), G1 · G2 · G3 zeigen die Ansicht der Rolle zum Zuschauen (nur lesen). Die Leiste oben
+// Protokoll), Aufklärung · Zielprüfung · Führung zeigen die Ansicht der Rolle zum Zuschauen (nur lesen, deutlich
+// gekennzeichnet). Im Test ohne Lobby (ein Team, B11) sind die drei Rollen dort bedienbar: Eine Person kann allein
+// alle Rollen spielen. Die Leiste oben
 // links führt zurück zur Übersicht und wechselt Team und Ansicht, ohne Platz unter der Kopfzeile zu
 // brauchen (alles bleibt in 1530 × 800). Das steuernde Fenster führt die Hosts aller Teams – egal,
 // welche Ansicht es gerade zeigt.
@@ -100,20 +102,24 @@ function NotizKnopf(p: { s: Sitzung; team: string }) {
   );
 }
 
-/** Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder Zuschauen. */
-function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void }) {
+/**
+ * Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder eine Rolle. Mit Lobby ist das
+ * Zuschauen (nur lesen); im Test ohne Lobby (direkt) bedient die Spielleitung die Rollen selbst (B11).
+ */
+function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; direkt: boolean }) {
   const st = useSitzung(p.s);
   const teams = st.teams.filter((t) => t.lauf);
   return (
     <div class="sl-leiste" data-testid="sl-leiste">
       <button type="button" class="sl-zurueck" onClick={() => p.setze(null)} title="Übersicht aller Teams" data-testid="zur-uebersicht">◂ Übersicht</button>
-      <TeamWahl teams={teams} team={p.wahl.team} setze={(team) => p.setze({ ...p.wahl, team })} testid="sl-teamwahl" />
+      {!p.direkt && <TeamWahl teams={teams} team={p.wahl.team} setze={(team) => p.setze({ ...p.wahl, team })} testid="sl-teamwahl" />}
       <div class="sl-rollen" role="tablist">
         {(["sl", ...GRUPPEN_ROLLEN] as SLRolle[]).map((r) => (
           <button type="button" role="tab" key={r} aria-selected={r === p.wahl.rolle} class={`rolle-tab rolle-${r} ${r === p.wahl.rolle ? "an" : ""}`}
             onClick={() => p.setze({ ...p.wahl, rolle: r })} data-sl-rolle={r}
-            title={r === "sl" ? "Steuerung dieses Teams: Uhr, Kontrollkarte, Zeitplan, Protokoll" : `Zuschauen: Ansicht ${ROLLEN_NAME[r]} dieses Teams (nur lesen)`}>
-            {r === "sl" ? "Steuerung" : r.toUpperCase()}
+            title={r === "sl" ? "Steuerung dieses Teams: Uhr, Kontrollkarte, Zeitplan, Protokoll"
+              : p.direkt ? `${ROLLEN_NAME[r]} bedienen (Test ohne Lobby)` : `Zuschauen: Ansicht ${ROLLEN_NAME[r]} dieses Teams (nur lesen)`}>
+            {r === "sl" ? "Steuerung" : p.direkt ? ROLLEN_NAME[r] : <><span class="auge" aria-hidden="true">◉</span>{ROLLEN_NAME[r]}</>}
           </button>
         ))}
       </div>
@@ -124,11 +130,13 @@ function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void }
 
 function TeamAnsicht(p: { s: Sitzung; spiel: Spiel; wahl: Wahl; setze: (w: Wahl | null) => void }) {
   const { s, spiel, wahl } = p;
-  const sicht = useMemo(() => new Sicht(s, spiel, wahl.rolle, { nurLesen: wahl.rolle !== "sl" }), [s, spiel, wahl.rolle]);
+  const direkt = s.stand.direkt;
+  // Zuschauen nur lesen; im Test ohne Lobby sind alle Rollen bedienbar (B11)
+  const sicht = useMemo(() => new Sicht(s, spiel, wahl.rolle, { nurLesen: wahl.rolle !== "sl" && !direkt }), [s, spiel, wahl.rolle, direkt]);
   useMeldeSicht(sicht);
   const Ansicht = ANSICHTEN[wahl.rolle as Rolle];
   return (
-    <Rahmen s={sicht} band={<SLLeiste s={s} wahl={wahl} setze={p.setze} />} teamImBand>
+    <Rahmen s={sicht} band={<SLLeiste s={s} wahl={wahl} setze={p.setze} direkt={direkt} />} teamImBand>
       <Ansicht s={sicht} />
     </Rahmen>
   );

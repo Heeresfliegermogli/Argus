@@ -39,7 +39,7 @@ function SpielerMenue(p: { s: Sitzung; t: TeamStand; x: SpielerStand; schliessen
       <div class="menue-zeile"><span>Rollen in {t.name}</span>
         <span class="zeile" style="gap:4px">{GRUPPEN_ROLLEN.map((r) => (
           <button type="button" key={r} class={`knopf klein ${x.rollen.includes(r) ? "an" : ""}`} onClick={() => umschalten(r)}
-            title={x.rollen.includes(r) ? `${r.toUpperCase()} abgeben` : `${r.toUpperCase()} dazu`}>{r.toUpperCase()}</button>
+            title={x.rollen.includes(r) ? `${ROLLEN_NAME[r]} abgeben` : `${ROLLEN_NAME[r]} dazu`}>{ROLLEN_NAME[r]}</button>
         ))}</span>
       </div>
       {andere.length > 0 && <div class="menue-titel">verschieben nach</div>}
@@ -47,7 +47,7 @@ function SpielerMenue(p: { s: Sitzung; t: TeamStand; x: SpielerStand; schliessen
         <div class="menue-zeile" key={u.id}><TeamMarke name={u.name} farbe={u.farbe} klein />
           <span class="zeile" style="gap:4px">{GRUPPEN_ROLLEN.map((r) => (
             <button type="button" key={r} class={`knopf klein ${u.frei.includes(r) ? "weiter" : ""}`} onClick={() => void setze(u.id, [r])}
-              title={u.frei.includes(r) ? `${r.toUpperCase()} ist frei` : `${r.toUpperCase()} ist besetzt`}>{r.toUpperCase()}</button>
+              title={u.frei.includes(r) ? `${ROLLEN_NAME[r]} ist frei` : `${ROLLEN_NAME[r]} ist besetzt`}>{ROLLEN_NAME[r]}</button>
           ))}</span>
         </div>
       ))}
@@ -61,7 +61,7 @@ function FreiMenue(p: { s: Sitzung; t: TeamStand; rolle: GruppenRolle; schliesse
   const ohne = ohneTeam(p.s);
   return (
     <>
-      <div class="menue-kopf"><b>{p.rolle.toUpperCase()} frei</b> <span class="sehr-leise">in {p.t.name}</span></div>
+      <div class="menue-kopf"><b>{ROLLEN_NAME[p.rolle]} frei</b> <span class="sehr-leise">in {p.t.name}</span></div>
       {ohne.length === 0 ? <div class="klein sehr-leise">Alle Teilnehmer sind in Teams. Spieler aus anderen Teams über ihren Namen verschieben.</div> : (
         <>
           <div class="menue-titel">Teilnehmer ohne Team hierher setzen</div>
@@ -94,7 +94,7 @@ function RollenZelle(p: { s: Sitzung; t: TeamStand; rolle: GruppenRolle }) {
       ) : wer.map((x) => (
         <span class="menue-anker" key={x.client}>
           <button type="button" class={`spieler-chip ${x.online ? "" : "weg"}`} onClick={() => setMenue(x.client)}
-            title={`${x.name} · ${x.rollen.map((r) => r.toUpperCase()).join(" + ")} · ${x.online ? "da" : "nicht verbunden"} – Klick: Rolle ändern, verschieben`}>
+            title={`${x.name} · ${x.rollen.map((r) => ROLLEN_NAME[r]).join(" + ")} · ${x.online ? "da" : "nicht verbunden"} – Klick: Rolle ändern, verschieben`}>
             <i class="punkt" />{x.name}{x.rollen.length > 1 && <span class="sehr-leise"> ·{x.rollen.length}</span>}
           </button>
           <Menue offen={menue === x.client} schliessen={() => setMenue(null)}><SpielerMenue s={s} t={t} x={x} schliessen={() => setMenue(null)} /></Menue>
@@ -234,7 +234,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                 <th>Team</th>
                 {GRUPPEN_ROLLEN.map((r) => <th key={r}><span class={`rolle-punkt rolle-${r}`} />{ROLLEN_NAME[r]}</th>)}
                 <th>Spielzeit</th>
-                <th title="offene Meldungen bei G1 · G2 · G3 (zurückgestellt bei G2 in Klammern)">Eingang G1·G2·G3</th>
+                <th title="offene Meldungen bei Aufklärung · Zielprüfung · Führung (zurückgestellt bei der Zielprüfung in Klammern)">Eingang A · Z · F</th>
                 <th title="Schlüsselfälle live: grau kommt noch, blau offen, grün richtig, rot falsch">Schlüsselfälle</th>
                 <th title="Freigaben, die Geschütztes, Verbündete, Zivilpersonen oder die Attrappe treffen">Fehl</th>
                 <th>FT</th>

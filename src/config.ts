@@ -1,9 +1,9 @@
 // Einstellungen aus der Adresszeile.
 //
 // Sitzung mit Lobby (Schritt 4b):
-//   …/?sitzung=KRAEHE-7Q              Teilnehmer: Lobby, danach das eigene Team (ich= kommt dazu)
-//   …/?sitzung=KRAEHE-7Q&rolle=sl     Spielleitung (Übersicht aller Teams, Steuerung)
-//   …/?sitzung=KRAEHE-7Q&rolle=plenum Smartboard
+//   …/?sitzung=K7P                    Teilnehmer: Lobby, danach das eigene Team (ich= kommt dazu)
+//   …/?sitzung=K7P&rolle=sl           Spielleitung (Übersicht aller Teams, Steuerung)
+//   …/?sitzung=K7P&rolle=plenum       Smartboard
 // Direktaufruf ohne Lobby, ein Team (wie bis Schritt 6, z. B. für Tests und Probeläufe):
 //   …/?rolle=g1&raum=kraehe           rolle g1 | g2 | g3 | sl | plenum
 // Weitere Parameter:
@@ -61,6 +61,26 @@ export function gemerkterWert(k: string): string | null {
 export function merken(e: Einstellungen): void {
   merke("sync", e.sync);
   if (e.raum) merke("raum", e.raum);
+}
+
+/** Zuletzt als Spielleitung geöffnete Sitzung (Startseite: „Fortsetzen“), je Browser. */
+export interface LetzteSitzung {
+  code: string;
+  sync: "firebase" | "lokal";
+  zeit: number;
+}
+
+export function merkeSitzung(code: string, sync: "firebase" | "lokal"): void {
+  merke("letzte_sitzung", JSON.stringify({ code, sync, zeit: Date.now() } satisfies LetzteSitzung));
+}
+
+export function letzteSitzung(): LetzteSitzung | null {
+  try {
+    const l = JSON.parse(gemerkt("letzte_sitzung") ?? "null") as LetzteSitzung | null;
+    return l && typeof l.code === "string" && SITZUNG_MUSTER.test(l.code) && (l.sync === "lokal" || l.sync === "firebase") ? l : null;
+  } catch {
+    return null;
+  }
 }
 
 export function leseEinstellungen(search: string = location.search): Einstellungen {

@@ -1,7 +1,7 @@
-// G3 Führung (Schritt 6b): Die Karte ist die Arbeitsfläche. Empfehlungen von G2 stehen als Marke am Ziel,
-// freigegebene Wirkungen mit der Uhrzeit des Einschlags. Rechts: Eingang als Zahl, Entscheidung FREIGABE,
-// ABLEHNEN oder ZURÜCK AN G2, das Postfach der Lagemeldungen (nur G3, „Gelesen“ – für die Auswertung: wann
-// gelesen), Lagehinweis an G1/G2 und Fast-Track.
+// Führung (intern g3; Schritt 6b): Die Karte ist die Arbeitsfläche. Empfehlungen der Zielprüfung stehen als Marke
+// „Ziel 7“ am Ziel, freigegebene Wirkungen mit der Spielzeit des Einschlags. Rechts: Eingang als Zahl, Entscheidung
+// FREIGABE, ABLEHNEN oder ZURÜCK AN ZIELPRÜFUNG, das Postfach der Lagemeldungen (nur die Führung, „Gelesen“ – für die
+// Auswertung: wann gelesen), Lagehinweis an Aufklärung und Zielprüfung und Fast-Track.
 //   ① Empfehlung öffnen (Marke; die älteste öffnet sich von selbst)  ② entscheiden
 //   · jederzeit: Lagemeldungen lesen, Lagehinweis geben
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -10,6 +10,8 @@ import { TEXT_MAX } from "../kern/ereignisse";
 import { lagebildZielmeldungen } from "../kern/lagebild";
 import { injectsFuer, warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
+import { zielName } from "../kern/zielnummern";
+import { ROLLEN_NAME } from "../kern/sichten";
 import type { InjectStand } from "../kern/zustand";
 import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, EingangLeiste, Panel, ZielmeldungKompakt } from "./gemeinsam/bausteine";
@@ -119,7 +121,7 @@ export function G3Ansicht(p: { s: Sicht }) {
     setHinweis("");
   };
   const zm = gewaehlt ? zielmeldung(inh, z, gewaehlt) : null;
-  const marken = [...meldungsMarken(offen, gewaehlt, oeffnen, (x) => (x.g2?.warnungen.length ? "⚠" : undefined)), ...wirkungsMarken(lagebild)];
+  const marken = [...meldungsMarken(offen, gewaehlt, oeffnen, (id) => zielName(inh, z, id, false), (x) => (x.g2?.warnungen.length ? "⚠" : undefined)), ...wirkungsMarken(lagebild)];
   const letzter = z.lagehinweise[z.lagehinweise.length - 1];
 
   return (
@@ -132,37 +134,37 @@ export function G3Ansicht(p: { s: Sicht }) {
 
       <aside class="stapel meldungsfeld">
         <EingangLeiste anzahl={offen.length} testid="g3-offen">
-          <span class="fasttrack" title={`Fast-Track: Meldungen ab ${inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne Prüfung durch G1 direkt an G2`}>
+          <span class="fasttrack" title={`Fast-Track: Meldungen ab ${inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne Prüfung durch die Aufklärung direkt an die Zielprüfung`}>
             Fast-Track <span class={`badge ${z.fastTrack ? "warn" : ""}`} data-testid="fasttrack-status">{z.fastTrack ? "EIN" : "AUS"}</span>
           </span>
           <AktionsKnopf s={s} wartet={s.wartetAuf("fast_track")} gesperrt={z.ende} klasse="klein" onClick={() => s.senden("fast_track", { an: !z.fastTrack })}>
             {z.fastTrack ? "ausschalten" : "einschalten"}
           </AktionsKnopf>
         </EingangLeiste>
-        <Panel schritt={2} titel={m && ms ? <>Entscheiden: {m.id} <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)}</span></> : "Entscheiden"}
+        <Panel schritt={2} titel={m && ms ? <>Entscheiden <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)}</span></> : "Entscheiden"}
           klasse="flach" testid="g3-entscheiden" meldung={ms?.id}>
           {!ms || !zm ? (
-            <div class="hinweistext" style="padding:2px 0 4px" data-testid="g3-warten">Warten auf Empfehlungen von G2 … Sie erscheinen als Marke auf der Karte und öffnen sich hier. Ohne deine FREIGABE wird nichts bekämpft.</div>
+            <div class="hinweistext" style="padding:2px 0 4px" data-testid="g3-warten">Warten auf Empfehlungen der Zielprüfung … Sie erscheinen als Marke auf der Karte und öffnen sich hier. Ohne deine FREIGABE wird nichts bekämpft.</div>
           ) : (
             <div class="stapel" style="gap:7px">
               <ZielmeldungKompakt zm={zm} />
               <div class="g2-zeile">
-                <span class="feldname">G2 empfiehlt</span>
+                <span class="feldname">Zielprüfung empfiehlt</span>
                 <span><b class="rot">BEKÄMPFEN</b> mit {inh.wirkmittel[wm ?? ""]?.name ?? "?"}</span>
                 {ms.g2?.begruendung && <span class="zwei-zeilen leise" title={ms.g2.begruendung}>„{ms.g2.begruendung}“</span>}
               </div>
-              {/* Warnungen von G2 (zu seiner Zeit gerechnet) nur, soweit die Prüfung jetzt sie nicht ohnehin zeigt */}
+              {/* Warnungen der Zielprüfung (zu ihrer Zeit gerechnet) nur, soweit die Prüfung jetzt sie nicht ohnehin zeigt */}
               {g2Extra.length > 0 && (
-                <div class="g2-warnung" data-testid="g3-warnungen">{g2Extra.map((w) => <div>⚠ bei G2: {w}</div>)}</div>
+                <div class="g2-warnung" data-testid="g3-warnungen">{g2Extra.map((w) => <div>⚠ bei der Zielprüfung: {w}</div>)}</div>
               )}
               {vs && (
                 <div class={vs.v.pruefung.zulaessig ? "wm-status ok" : "warnung"} data-testid="g3-jetzt">
                   Freigabe jetzt: Einschlag {uhrzeit(start, vs.v.einschlag.t)}{vs.v.pruefung.zulaessig ? " – keine Regelwarnung" : ""}
                   {vs.v.pruefung.verstoesse.map((x) => <div>⚠ {x.regel}: {x.text}</div>)}
-                  {!vs.v.pruefung.zulaessig && <div class="klein" style="opacity:.8">{ms.g2?.warnungen.length ? "G2 hat dazu gewarnt. " : ""}Freigabe möglich, der Verstoß wird protokolliert.</div>}
+                  {!vs.v.pruefung.zulaessig && <div class="klein" style="opacity:.8">{ms.g2?.warnungen.length ? "Die Zielprüfung hat dazu gewarnt. " : ""}Freigabe möglich, der Verstoß wird protokolliert.</div>}
                 </div>
               )}
-              {bestandLeer && <div class="warnung">{inh.wirkmittel[wm!].kurz} aufgebraucht – ZURÜCK AN G2</div>}
+              {bestandLeer && <div class="warnung">{inh.wirkmittel[wm!].kurz} aufgebraucht – ZURÜCK AN ZIELPRÜFUNG</div>}
             </div>
           )}
           <div class="stapel" style="gap:7px;margin-top:8px">
@@ -173,20 +175,20 @@ export function G3Ansicht(p: { s: Sicht }) {
                 FREIGABE
               </AktionsKnopf>
               <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("ablehnen")} testid="g3-ablehnen">ABLEHNEN</AktionsKnopf>
-              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("zurueck")} testid="g3-zurueck">ZURÜCK AN G2</AktionsKnopf>
+              <AktionsKnopf s={s} wartet={wartet} gesperrt={gesperrt} klasse="gross" onClick={() => entscheiden("zurueck")} testid="g3-zurueck">ZURÜCK<span class="unterzeile">an die Zielprüfung</span></AktionsKnopf>
             </div>
           </div>
         </Panel>
         <Postfach s={s} injects={injects} />
-        <Panel titel="Lagehinweis an G1 und G2" klasse="flach">
+        <Panel titel="Lagehinweis an Aufklärung und Zielprüfung" klasse="flach">
           <div class="stapel" style="gap:6px">
-            <textarea class="feld" rows={2} maxLength={TEXT_MAX.lagehinweis} placeholder="Hinweis an G1 und G2 (bis zwei Zeilen)" value={hinweis}
+            <textarea class="feld" rows={2} maxLength={TEXT_MAX.lagehinweis} placeholder="Hinweis an Aufklärung und Zielprüfung (bis zwei Zeilen)" value={hinweis}
               onInput={(e) => setHinweis((e.target as HTMLTextAreaElement).value)} style="resize:none" data-testid="g3-lagehinweis" />
             <div class="zeile zwischen" style="flex-wrap:nowrap">
               <div class="zeile" style="flex-wrap:nowrap;min-width:0;flex:1">
                 <span class="klein sehr-leise">an</span>
                 {(["g1", "g2"] as const).map((r) => (
-                  <label class="zeile klein" key={r} style="gap:4px;flex:0 0 auto;flex-wrap:nowrap"><input type="checkbox" checked={an[r]} onChange={() => setAn({ ...an, [r]: !an[r] })} />{r.toUpperCase()}</label>
+                  <label class="zeile klein" key={r} style="gap:4px;flex:0 0 auto;flex-wrap:nowrap"><input type="checkbox" checked={an[r]} onChange={() => setAn({ ...an, [r]: !an[r] })} />{ROLLEN_NAME[r]}</label>
                 ))}
                 {letzter && (
                   <span class="klein leise einzeilig" data-testid="g3-gesendet" title={letzter.text}>

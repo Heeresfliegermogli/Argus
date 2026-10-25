@@ -15,7 +15,7 @@ import type { Inhalte } from "../inhalte/typen";
 import { type Absender, type AktionsDaten, type AktionsTyp, type Rolle, neueLaufId, zufall } from "../kern/ereignisse";
 import { ROLLEN_NAME } from "../kern/sichten";
 import {
-  DIREKT_TEAM, GRUPPEN_ROLLEN, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, codeVorsilbe, freieFarbe, neueTeamId,
+  DIREKT_TEAM, GRUPPEN_ROLLEN, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, freieFarbe, neueTeamId,
   rollenAus, rollenText, teamnameBereinigt,
 } from "../kern/sitzungen";
 import {
@@ -46,9 +46,9 @@ export interface TeamStand {
 }
 
 export interface SitzungsStand {
-  /** Pfadschlüssel, z. B. kraehe-7q */
+  /** Pfadschlüssel, z. B. k7p */
   sitzung: string;
-  /** Anzeige, z. B. KRAEHE-7Q */
+  /** Anzeige, z. B. K7P */
   code: string;
   art: FensterArt;
   client: string;
@@ -281,7 +281,7 @@ export class Sitzung {
       const rest = ich.rollen.filter((r) => !verloren.includes(r));
       const wer = t.spieler.find((x) => x.client !== this.client && x.online && x.rollen.includes(verloren[0]))?.name ?? "jemand";
       await this.schreibe(() => this.adapter.setzeSpieler(t.id, this.client, rest.length ? this.eintrag(rest, false) : null));
-      this.hinweis("warnung", `${verloren.map((r) => r.toUpperCase()).join(" und ")} in Team ${t.name} hat ${wer} schon genommen – bitte eine andere Rolle wählen.`);
+      this.hinweis("warnung", `${verloren.map((r) => ROLLEN_NAME[r]).join(" und ")} in Team ${t.name} hat ${wer} schon genommen – bitte eine andere Rolle wählen.`);
     } finally {
       this.konflikt = false;
     }
@@ -342,7 +342,7 @@ export class Sitzung {
     if (!t) return false;
     const besetzt = t.spieler.find((x) => x.online && x.client !== this.client && x.rollen.includes(rolle));
     if (besetzt) {
-      this.hinweis("warnung", `${rolle.toUpperCase()} in Team ${t.name} hat schon ${besetzt.name}.`);
+      this.hinweis("warnung", `${ROLLEN_NAME[rolle]} in Team ${t.name} hat schon ${besetzt.name}.`);
       return false;
     }
     const eigen = this.s.ich.team === team;
@@ -529,10 +529,10 @@ export class Sitzung {
   }
 
   /** Neue Sitzung anlegen (Startseite der Spielleitung). Gibt den Pfadschlüssel zurück oder null. */
-  static async anlegen(inh: Inhalte, adapterFuer: (sitzung: string) => SyncAdapter, name: string, codeFabrik: (v: string) => string): Promise<string | null> {
+  static async anlegen(inh: Inhalte, adapterFuer: (sitzung: string) => SyncAdapter, name: string, codeFabrik: () => string): Promise<string | null> {
     const sz = inh.szenario;
-    for (let versuch = 0; versuch < 6; versuch++) {
-      const code = codeFabrik(codeVorsilbe(sz.anzeige));
+    for (let versuch = 0; versuch < 8; versuch++) {
+      const code = codeFabrik();
       const a = adapterFuer(code.toLowerCase());
       await a.verbinden();
       try {

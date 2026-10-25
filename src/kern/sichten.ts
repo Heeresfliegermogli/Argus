@@ -1,7 +1,7 @@
 // Was welche Rolle sieht. Die Informationsverteilung ist Teil des Lernziels und steht deshalb an
-// einer Stelle: G1 sieht die volle ARGUS-Meldung (Bild, Sensordaten, Kleingedrucktes). G2 und G3
-// sehen nur die Zielmeldung. Nur G3 bekommt die Lage-Injects. Ungemeldete Ziele sehen nur
-// Spielleitung und Plenum.
+// einer Stelle: Die Aufklärung (g1) sieht die volle ARGUS-Meldung (Bild, Sensordaten, Kleingedrucktes).
+// Zielprüfung (g2) und Führung (g3) sehen nur die Zielmeldung. Nur die Führung bekommt die Lage-Injects.
+// Ungemeldete Ziele sehen nur Spielleitung und Plenum.
 //
 // Hinweis: Alle Rechner laden dieselben Dateien; die Trennung ist eine Frage der Anzeige, kein
 // Geheimnisschutz (im Unterricht ausreichend, alles ist fiktiv).
@@ -10,30 +10,41 @@ import type { Rolle } from "./ereignisse";
 import { feinlage } from "./geometrie";
 import { gemeldetePosition } from "./regeln";
 import { uhrzeit } from "./uhr";
+import { zielName } from "./zielnummern";
 import type { InjectStand, MeldungsStand, Spielzustand } from "./zustand";
 
+/** Rollen ohne G-Nummern (Änderung B3: G1 heißt in der Bundeswehr Personal). Interne Kennungen g1/g2/g3 bleiben. */
 export const ROLLEN_NAME: Record<Rolle, string> = {
-  g1: "G1 Aufklärung",
-  g2: "G2 Zielprüfung",
-  g3: "G3 Führung",
+  g1: "Aufklärung",
+  g2: "Zielprüfung",
+  g3: "Führung",
   sl: "Spielleitung",
   plenum: "Plenum",
 };
 
-/** Die Zielmeldung, wie G2 und G3 sie sehen (kein Bild, keine Sensordaten). */
+/** Mit Artikel im Dativ: „bei der Aufklärung“, „von der Führung“. */
+export const ROLLEN_DATIV: Record<"g1" | "g2" | "g3", string> = { g1: "der Aufklärung", g2: "der Zielprüfung", g3: "der Führung" };
+/** Mit Artikel im Akkusativ: „an die Zielprüfung“. */
+export const ROLLEN_AKK: Record<"g1" | "g2" | "g3", string> = { g1: "die Aufklärung", g2: "die Zielprüfung", g3: "die Führung" };
+/** Ein Buchstabe für enge Stellen (Kette in der Auswertung, Zeitleiste), immer mit Legende oder Tooltip. */
+export const ROLLEN_ZEICHEN: Record<"g1" | "g2" | "g3", string> = { g1: "A", g2: "Z", g3: "F" };
+
+/** Die Zielmeldung, wie Zielprüfung und Führung sie sehen (kein Bild, keine Sensordaten, seit B6 kein Vermerk). */
 export interface Zielmeldung {
   meldung: string;
+  /** Anzeige für die Spieler: „Ziel 7“ bzw. „Ziel 7 (3 Fz)“ (Änderung B7) */
   zielNr: string;
   lage: string;
   klasse: string;
   konfidenz: number;
   argusEmpfehlung: string;
-  vermerkG1?: string;
   fastTrack: boolean;
   uhrzeit: string;
+  /** Folgemeldung zu „Ziel 18“ */
   folgeVon?: string;
 }
 
+/** Interner Schlüssel des Ziels einer Meldung (Ziel-ID oder Gruppe): fasst Folgemeldungen auf der Karte zusammen. */
 export function zielNummer(inh: Inhalte, m: Meldung): string {
   if (m.ziele.length === 1) return m.ziele[0];
   const gruppe = inh.ziele[m.ziele[0]]?.gruppe;
@@ -45,15 +56,14 @@ export function zielmeldung(inh: Inhalte, z: Spielzustand, id: string): Zielmeld
   const st = z.meldungen[id];
   return {
     meldung: id,
-    zielNr: zielNummer(inh, m),
+    zielNr: zielName(inh, z, id),
     lage: feinlage(gemeldetePosition(inh, m), inh.karte),
     klasse: m.argus.klasse,
     konfidenz: m.argus.konfidenz,
     argusEmpfehlung: m.argus.empfehlung,
-    vermerkG1: st?.g1?.vermerk,
     fastTrack: !!st?.fastTrack,
     uhrzeit: uhrzeit(inh.szenario.spieluhr.start, st?.erschienen.t_s ?? m.t_s),
-    folgeVon: m.folge_von,
+    folgeVon: m.folge_von ? zielName(inh, z, m.folge_von, false) : undefined,
   };
 }
 
@@ -99,18 +109,18 @@ export function lagehinweiseFuer(z: Spielzustand, rolle: Rolle) {
 }
 
 export const STUFE_TEXT: Record<MeldungsStand["stufe"], string> = {
-  g1: "bei G1",
-  g2: "bei G2",
-  g3: "bei G3",
+  g1: "bei der Aufklärung",
+  g2: "bei der Zielprüfung",
+  g3: "bei der Führung",
   wirkung: "Wirkung läuft",
   erledigt: "erledigt",
   entfallen: "entfallen",
 };
 
 export const ERGEBNIS_TEXT: Record<NonNullable<MeldungsStand["ergebnis"]>, string> = {
-  abgelehnt_g1: "von G1 abgelehnt",
-  nicht_bekaempfen_g2: "G2: nicht bekämpfen",
-  abgelehnt_g3: "von G3 abgelehnt",
+  abgelehnt_g1: "von der Aufklärung abgelehnt",
+  nicht_bekaempfen_g2: "Zielprüfung: nicht bekämpfen",
+  abgelehnt_g3: "von der Führung abgelehnt",
   bekaempft: "bekämpft",
 };
 
@@ -121,5 +131,5 @@ export const ENTSCHEID_TEXT: Record<string, string> = {
   beobachten: "BEOBACHTEN",
   nicht_bekaempfen: "NICHT BEKÄMPFEN",
   freigabe: "FREIGABE",
-  zurueck: "ZURÜCK AN G2",
+  zurueck: "ZURÜCK AN ZIELPRÜFUNG",
 };

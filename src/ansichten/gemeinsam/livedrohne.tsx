@@ -88,7 +88,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
       if (!faellig) return;
       letztes = jetzt;
       const b = x.bild;
-      const sz: Szene = b.szene(lage, u.t);
+      const sz: Szene = b.szene(lage, u.t, u.tempo);
       // Hat das Ziel den Ausschnitt verlassen (die Kamera steht), zeigt das Bild die Aufnahme zur Meldezeit.
       const aufnahme = !sz.zielImBild;
       const tMeldung = b.meldezeit(lage.inh);
@@ -126,7 +126,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
       }
       e.huelle.classList.toggle("aufnahme", aufnahme);
       if (e.status) {
-        const txt = aufnahme ? `AUFNAHME ${uhrzeit(x.start, tMeldung)}` : `● LIVE ${uhrzeit(x.start, u.t)}`;
+        const txt = aufnahme ? `AUFNAHME ${uhrzeit(x.start, tMeldung)}` : sz.kamera.rauschen > 0 ? "◌ AUSRICHTUNG …" : `● LIVE ${uhrzeit(x.start, u.t)}`;
         if (e.status.textContent !== txt) e.status.textContent = txt;
       }
       // ARGUS-Rahmen: live am Fahrzeug, in der Aufnahme wie im Manifest
@@ -156,7 +156,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
         meldung: b.id, t: u.t, fps: Number(lw.dataset.fps ?? 0), bildMs: { ...b.bildMs },
         fahrzeuge: sz.fahrzeuge.map((f) => ({ id: f.id, sprite: f.sprite, px: f.px.map((v) => Math.round(v)), wrack: f.wrack })),
         figuren: sz.figuren.map((f) => ({ bei: f.fg.bei, art: f.fg.art, sprite: f.fg.sprite, px: f.px.map((v) => Math.round(v)) })),
-        marken: marken.map((m) => m.id), zielImBild: sz.zielImBild, aufnahme, effekte: aufnahme ? [] : [...b.gezeigt],
+        marken: marken.map((m) => m.id), zielImBild: sz.zielImBild, aufnahme, effekte: aufnahme ? [] : [...b.gezeigt], kamera: { ...sz.kamera },
         vergleich: () => vergleicheMitStandbild(b, opt.current.lage()),
       };
     };

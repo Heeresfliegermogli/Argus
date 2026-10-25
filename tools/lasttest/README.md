@@ -15,7 +15,7 @@ Rohdaten als JSON.
 
 Adresszeile (optional): `db=…`, `transport=lp|auto` (auto = nur WebSocket), `tempo=1|2|5|10|20`, `teams=1…5`,
 `beobachter=1` (Plenum und SL 2 verbinden sich zusätzlich), `aufteilung=alles|host|beitreten`, `hier=1,2`,
-`code=KRAEHE-7Q`, `start=1`.
+`code=K7P`, `start=1`.
 
 **Verteilt:** Hält ein Browser nicht alle Verbindungen gleichzeitig offen (Long-Polling über HTTP/1.1: höchstens 6
 je Server), legt ein Gerät die Sitzung an und führt den Host (`aufteilung=host&hier=1`), weitere Geräte treten mit

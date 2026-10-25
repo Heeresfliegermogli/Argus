@@ -5,6 +5,7 @@ import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
 } from "../kern/ereignisse";
 import { einschlag, vorhersage } from "../kern/regeln";
+import { ROLLEN_DATIV } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { einspielSperre, verstaerkungen } from "../kern/welt";
 import type { Spielzustand } from "../kern/zustand";
@@ -50,7 +51,7 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
     const id = d.meldung as string;
     const st = z.meldungen[id];
     if (!st) return `Meldung ${id} liegt nicht vor`;
-    if (st.stufe !== stufe) return `Meldung ${id} ist nicht (mehr) bei ${stufe.toUpperCase()}`;
+    if (st.stufe !== stufe) return `Meldung ${id} ist nicht (mehr) bei ${ROLLEN_DATIV[stufe as "g1" | "g2" | "g3"] ?? stufe}`;
     return null;
   };
 
@@ -89,7 +90,7 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       if (dd.entscheid !== "freigabe") return ja(entwurf("g3_entscheid", { meldung: dd.meldung, entscheid: dd.entscheid, bemerkung }));
       const wm = z.meldungen[dd.meldung].g2?.wirkmittel;
       if (!wm) return nein("Empfehlung ohne Wirkmittel");
-      if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – zurück an G2`);
+      if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – zurück an die Zielprüfung`);
       const e = einschlag(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert);
       return ja(entwurf("g3_entscheid", {
         meldung: dd.meldung, entscheid: "freigabe", bemerkung, wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),

@@ -98,7 +98,7 @@ export function Rahmen(p: {
     spieler: Object.fromEntries((["g1", "g2", "g3"] as const).map((r) => [r, st.teilnehmer.filter((x) => x.art === "tt" && x.rollen.includes(r)).map((x) => x.name)])),
   };
   return (
-    <div class="rahmen" data-rolle={rolle} data-seq={z.seq} data-fp={fingerabdruck(z)} data-lauf={st.lauf ?? ""} data-host={st.istHost ? "1" : "0"} data-team={st.team}>
+    <div class={`rahmen ${st.nurLesen ? "nur-lesen" : ""}`} data-rolle={rolle} data-seq={z.seq} data-fp={fingerabdruck(z)} data-lauf={st.lauf ?? ""} data-host={st.istHost ? "1" : "0"} data-team={st.team}>
       <header class="kopf">
         <div class="kopf-links">
           {p.band ?? <div class={`rollenband rolle-${rolle}`}><span class="marke">ARGUS</span><span>{ROLLEN_NAME[rolle]}</span></div>}
@@ -109,14 +109,14 @@ export function Rahmen(p: {
         </div>
         <UhrAnzeige inh={p.s.inh} z={z} t={t} lauf={st.lauf} />
         <div class="kopf-rechts">
-          {st.nurLesen && <span class="badge info" data-testid="nur-lesen">Zuschauen – nur lesen</span>}
-          {z.fastTrack && <span class="badge warn" title={`Meldungen ab ${p.s.inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne G1 an G2`}>Fast-Track EIN</span>}
+          {st.nurLesen && <span class="badge zuschauen" data-testid="nur-lesen" title="Die Spielleitung sieht die Ansicht dieser Rolle; Eingaben sind gesperrt.">◉ Zuschauen – nur lesen</span>}
+          {z.fastTrack && <span class="badge warn" title={`Meldungen ab ${p.s.inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne die Aufklärung an die Zielprüfung`}>Fast-Track EIN</span>}
           {rolle !== "sl" && !hostDa && <span class="badge schlecht">Spielleitung fehlt</span>}
           <span class={`badge ${st.verbindung.verbunden ? "gut" : "schlecht"}`} title={`${st.verbindung.fehler ?? st.verbindung.art} · ${st.teilnehmer.length} Fenster · Sitzung ${st.raum}`}>
             <span class="punkt" />{st.verbindung.verbunden ? `verbunden · ${st.teilnehmer.length}` : "keine Verbindung"}
           </span>
           {rolle !== "plenum" && (
-            <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Einweisungskarte deiner Rolle">
+            <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Kurze Anleitung deiner Rolle (Folien) – jederzeit wieder aufrufbar">
               Einweisung
             </button>
           )}

@@ -26,7 +26,7 @@ export interface Verbindung {
 }
 
 export interface SitzungsInfo {
-  /** Anzeige, z. B. KRAEHE-7Q */
+  /** Anzeige, z. B. K7P */
   code: string;
   szenario: string;
   version: string;

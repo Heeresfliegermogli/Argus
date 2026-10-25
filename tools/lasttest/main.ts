@@ -1,6 +1,6 @@
 // Lasttest-Seite (…/Argus/lasttest.html): Einstellungen, Start, Verlauf und Ergebnis.
 // Adresszeile (alles optional): db=…, transport=lp|auto, tempo=1|2|5|10|20, teams=1…5, beobachter=1,
-// aufteilung=alles|host|beitreten, hier=1,2 (Teams mit Bots auf diesem Gerät), code=KRAEHE-7Q (beitreten),
+// aufteilung=alles|host|beitreten, hier=1,2 (Teams mit Bots auf diesem Gerät), code=K7P (beitreten),
 // start=1 (sofort starten, z. B. für tools/lasttest_probe.py).
 import { type Aufteilung, TEMPI, einstellungenHtml, laufHtml } from "./ansicht";
 import { auswerten, rohdaten } from "./auswertung";

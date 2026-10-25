@@ -25,11 +25,29 @@ function sekunden(hhmmss: string): number {
   return h * 3600 + m * 60 + (s || 0);
 }
 
-/** Uhrzeit im Spiel, z. B. start 10:00:00 + 75 s → „10:01:15“. */
-export function uhrzeit(start: string, t_s: number): string {
-  const tot = sekunden(start) + Math.floor(t_s);
-  const zwei = (n: number) => String(n).padStart(2, "0");
-  return `${zwei(Math.floor(tot / 3600) % 24)}:${zwei(Math.floor(tot / 60) % 60)}:${zwei(tot % 60)}`;
+const zwei = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Spieluhr zur Anzeige (seit 25.10.2026: 00:00–25:00 statt 10:00–10:25): Spielzeit als mm:ss, z. B. 75 s → „01:15“.
+ * `start` (spieluhr.start der Daten) bleibt als Parameter, zählt für die Anzeige aber nicht mehr.
+ */
+export function uhrzeit(_start: string, t_s: number): string {
+  const t = Math.max(0, Math.floor(t_s));
+  return `${zwei(Math.floor(t / 60))}:${zwei(t % 60)}`;
+}
+
+/**
+ * Uhrzeiten in Texten des Szenarios (z. B. „um 10:17:00“, „bis 10:25“) in die Spieluhr umrechnen („um 17:00“,
+ * „bis 25:00“). Uhrzeiten bis eine Stunde vor Spielbeginn werden negativ („Erstsichtung 09:52“ → „Erstsichtung
+ * −08:00“). Andere Zahlen bleiben.
+ */
+export function spieluhrImText(text: string, start: string, dauer_s: number): string {
+  const s0 = sekunden(start);
+  return text.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g, (ganz, h: string, m: string, s?: string) => {
+    const t = Number(h) * 3600 + Number(m) * 60 + Number(s ?? 0) - s0;
+    if (Number(m) > 59 || (s !== undefined && Number(s) > 59) || t < -3600 || t > dauer_s + 600) return ganz;
+    return t < 0 ? `−${uhrzeit(start, -t)}` : uhrzeit(start, t);
+  });
 }
 
 export function mmss(t_s: number): string {
