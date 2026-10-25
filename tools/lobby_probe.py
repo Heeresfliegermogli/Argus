@@ -4,17 +4,20 @@
 Menschen nicht (docs/BEDIENTEST.md, Teil Lobby), zeigt aber, dass jede Aufgabe mit dem lösbar ist,
 was auf dem Bildschirm steht – ohne Erklärung.
 
-Teilnehmer:  Code eingeben (auch klein und ohne Bindestrich), falscher Code, Team mit eigenem Namen,
+Startseite:  zuerst nur „Ich spiele mit“ und „Spielleitung“; wer mitspielt, sieht nur das Codefeld (B1, 25.10.2026).
+Teilnehmer:  Code eingeben (drei Zeichen, auch klein und mit Leerzeichen), falscher Code, Team mit eigenem Namen,
              Würfel, beitreten, Rolle abgeben und wechseln, Doppelrolle, Team wechseln, gleichzeitiger
              Zugriff auf dieselbe Rolle, Neuladen, später Beitritt in ein laufendes Spiel.
 Spielleitung: umbenennen, verschieben, Teilnehmer ohne Team zuweisen, Team löschen, Spiel öffnen und
-             Uhr starten für alle, Zuschauen, Plenum mit Code und Teamwahl.
+             Uhr starten für alle, Zuschauen, Plenum mit Code und Teamwahl, zuletzt genutzte Sitzung fortsetzen.
+Rollen heißen Aufklärung, Zielprüfung, Führung (B3); die Einweisung sind Folien mit „Überspringen“ (B5).
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/lobby_probe.py http://localhost:4173/ [--bilder lobby-bilder]
 """
 import argparse
 import os
+import re
 import sys
 import time
 import urllib.parse
@@ -69,21 +72,33 @@ def main():
                                    pg.on("console", lambda m: konsole.append(f"{m.type}: {m.text}") if m.type == "error" else None)))
         bild = lambda pg, n: pg.screenshot(path=os.path.join(a.bilder, f"{n}.png"))  # noqa: E731
 
-        # Spielleitung legt die Sitzung an
+        # Startseite: zwei große Knöpfe, sonst nichts zum Anlegen oder Testen (B1)
         sl = ctx.new_page()
         sl.goto(start)
+        warte(lambda: sl.get_by_role("button", name="Ich spiele mit").count() == 1, 15, "Startseite")
+        for n in ["Neue Sitzung anlegen", "Allein testen", "Lasttest", "Auswertung üben"]:
+            assert sl.get_by_text(n).count() == 0, f"„{n}“ schon auf der ersten Seite"
+        bild(sl, "start-wahl")
+        # Spielleitung legt die Sitzung an
+        sl.get_by_role("button", name="Spielleitung").click()
         sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
+        bild(sl, "start-spielleitung")
         sl.get_by_role("button", name="Neue Sitzung anlegen").click()
         warte(lambda: sl.get_by_text("steuert alle Teams").count() == 1, 20, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()
+        assert re.fullmatch(r"[ACEFHJKMNPRTVWXY34679]{3}", code), f"Code „{code}“ ist kein kurzer Code (B2)"
         with ctx.expect_page() as neu:
             sl.get_by_role("button", name="Plenum öffnen").click()
         plenum = neu.value
         tt = {}
 
+        def mitspielen(pg):
+            pg.goto(start)
+            pg.get_by_role("button", name="Ich spiele mit").click()
+
         def teilnehmer(n, eingabe=None):
             pg = ctx.new_page()
-            pg.goto(start)
+            mitspielen(pg)
             pg.get_by_label("Code der Sitzung").fill(eingabe or code)
             pg.get_by_role("button", name="Beitreten").click()
             warte(lambda: pg.get_by_text("Team erstellen oder einem Team beitreten").count() == 1, 15, f"Lobby {n}")
@@ -92,7 +107,7 @@ def main():
             tt[n] = pg
             return pg
 
-        def karte(pg, team):  # Teamkarte rechts in der Lobby: Teamname oben, darunter G1, G2, G3
+        def karte(pg, team):  # Teamkarte rechts in der Lobby: Teamname oben, darunter Aufklärung, Zielprüfung, Führung
             return pg.locator("section.team-karte", has=pg.get_by_text(team, exact=True))
 
         def zeile(pg, team, rollentext):
@@ -101,27 +116,33 @@ def main():
         # ---------------------------------------------------------------- Teilnehmer
         def l1():
             pg = ctx.new_page()
-            pg.goto(start)
-            pg.get_by_label("Code der Sitzung").fill("KRAEHE-QQ" if code != "KRAEHE-QQ" else "KRAEHE-ZZ")
+            mitspielen(pg)
+            # wer mitspielt, sieht nur das Codefeld (B1)
+            for n in ["Neue Sitzung anlegen", "Allein testen", "Fortsetzen"]:
+                assert pg.get_by_text(n).count() == 0, f"„{n}“ beim Mitspielen sichtbar"
+            pg.get_by_label("Code der Sitzung").fill("K0")
+            pg.get_by_role("button", name="Beitreten").click()
+            warte(lambda: pg.get_by_text("ist kein Code").count() == 1, 10, "Meldung „ist kein Code“")
+            pg.get_by_label("Code der Sitzung").fill("WWW" if code != "WWW" else "YYY")
             pg.get_by_role("button", name="Beitreten").click()
             warte(lambda: pg.get_by_text("gibt es nicht").count() == 1, 10, "Meldung „gibt es nicht“")
             bild(pg, "start-falscher-code")
             pg.close()
 
         def l2():
-            teilnehmer("Lt Anders", code.replace("-", "").lower())  # klein und ohne Bindestrich
+            teilnehmer("Lt Anders", f" {code[0].lower()} {code[1:].lower()}")  # klein und mit Leerzeichen
             pg = tt["Lt Anders"]
             pg.get_by_placeholder("Teamname").fill("Adler 1")
-            pg.get_by_role("button", name="G2 Zielprüfung").click()
+            pg.get_by_role("button", name="Zielprüfung", exact=True).click()
             warte(lambda: pg.get_by_text("Du bist im Team").count() == 1, 10, "im Team")
-            assert pg.get_by_text("Deine Rolle: G2 Zielprüfung").count() == 1
+            assert pg.get_by_text("Deine Rolle: Zielprüfung").count() == 1
 
         def l3():
             pg = teilnehmer("Lt Brandt")
             pg.get_by_title("Namen vorschlagen").click()
             name = pg.get_by_placeholder("Teamname").input_value()
             assert name, "Würfel ohne Vorschlag"
-            pg.get_by_role("button", name="G1 Aufklärung").click()
+            pg.get_by_role("button", name="Aufklärung", exact=True).click()
             warte(lambda: pg.get_by_text("Du bist im Team").count() == 1, 10, "im Team")
             tt["team_b"] = name
 
@@ -129,7 +150,7 @@ def main():
             pg = teilnehmer("Lt Claus")
             warte(lambda: karte(pg, "Adler 1").count() == 1, 10, "Karte Adler 1")
             zeile(pg, "Adler 1", "Aufklärung").get_by_role("button", name="beitreten").click()
-            warte(lambda: pg.get_by_text("Deine Rolle: G1 Aufklärung").count() == 1, 10, "G1 in Adler 1")
+            warte(lambda: pg.get_by_text("Deine Rolle: Aufklärung").count() == 1, 10, "Aufklärung in Adler 1")
             bild(pg, "lobby-beigetreten")
 
         def l5():
@@ -137,12 +158,12 @@ def main():
             zeile(pg, "Adler 1", "Aufklärung").get_by_role("button", name="abgeben").click()
             warte(lambda: pg.get_by_text("Team erstellen oder einem Team beitreten").count() == 1, 10, "wieder ohne Team")
             zeile(pg, "Adler 1", "Führung").get_by_role("button", name="beitreten").click()
-            warte(lambda: pg.get_by_text("Deine Rolle: G3 Führung").count() == 1, 10, "G3 in Adler 1")
+            warte(lambda: pg.get_by_text("Deine Rolle: Führung").count() == 1, 10, "Führung in Adler 1")
 
         def l6():
             pg = tt["Lt Anders"]
             zeile(pg, "Adler 1", "Aufklärung").get_by_role("button", name="+ dazu").click()
-            warte(lambda: pg.get_by_text("Deine Rolle: G1 Aufklärung und G2 Zielprüfung").count() == 1, 10, "Doppelrolle")
+            warte(lambda: pg.get_by_text("Deine Rolle: Aufklärung und Zielprüfung").count() == 1, 10, "Doppelrolle")
             bild(pg, "lobby-doppelrolle")
 
         def l7():
@@ -151,35 +172,35 @@ def main():
             warte(lambda: d.get_by_text("Du bist im Team").count() == 1, 10, "D im Team B")
             e = teilnehmer("Lt Ernst")
             e.get_by_placeholder("Teamname").fill("Condor")
-            e.get_by_role("button", name="G1 Aufklärung").click()
+            e.get_by_role("button", name="Aufklärung", exact=True).click()
             warte(lambda: karte(d, "Condor").count() == 1, 10, "Condor bei D")
             zeile(d, "Condor", "Führung").get_by_role("button", name="wechseln").click()
-            warte(lambda: d.get_by_text("Deine Rolle: G3 Führung").count() == 1 and karte(d, tt["team_b"]).get_by_text("Lt Dorn").count() == 0, 10, "D in Condor")
+            warte(lambda: d.get_by_text("Deine Rolle: Führung").count() == 1 and karte(d, tt["team_b"]).get_by_text("Lt Dorn").count() == 0, 10, "D in Condor")
 
         def l8():
             # gleichzeitiger Zugriff: zwei Teilnehmer klicken dieselbe freie Rolle
             f = teilnehmer("Lt Falk")
             g = teilnehmer("Lt Gerd")
             for pg in (f, g):
-                warte(lambda: zeile(pg, "Condor", "Zielprüfung").get_by_role("button", name="beitreten").count() == 1, 10, "G2 frei")
+                warte(lambda: zeile(pg, "Condor", "Zielprüfung").get_by_role("button", name="beitreten").count() == 1, 10, "Zielprüfung frei")
             kf = zeile(f, "Condor", "Zielprüfung").get_by_role("button", name="beitreten").element_handle()
             kg = zeile(g, "Condor", "Zielprüfung").get_by_role("button", name="beitreten").element_handle()
             f.evaluate("(k) => k.click()", kf)
             g.evaluate("(k) => k.click()", kg)
 
             def genau_einer():
-                drin = [pg.get_by_text("Deine Rolle: G2 Zielprüfung").count() == 1 for pg in (f, g)]
+                drin = [pg.get_by_text("Deine Rolle: Zielprüfung").count() == 1 for pg in (f, g)]
                 return sum(drin) == 1 and karte(sl, "Condor").count() == 0  # SL-Übersicht hat keine Karten
-            warte(lambda: sum(pg.get_by_text("Deine Rolle: G2 Zielprüfung").count() for pg in (f, g)) == 1, 10, "genau einer behält G2")
+            warte(lambda: sum(pg.get_by_text("Deine Rolle: Zielprüfung").count() for pg in (f, g)) == 1, 10, "genau einer behält die Zielprüfung")
             _ = genau_einer
-            verlierer = f if g.get_by_text("Deine Rolle: G2 Zielprüfung").count() else g
+            verlierer = f if g.get_by_text("Deine Rolle: Zielprüfung").count() else g
             tt["frei"] = verlierer
             # Der andere ist in keinem Team und sieht, wer die Rolle hat. Je nach Laufzeit war sein Knopf
             # schon weg, er bekam „hat schon …“, oder er gab die Rolle nach dem Abgleich wieder ab
             # („… schon genommen“). Den echten Gleichstand prüft tests/teams.test.ts.
             sieger = "Lt Gerd" if verlierer is f else "Lt Falk"
             warte(lambda: verlierer.get_by_text("Team erstellen oder einem Team beitreten").count() == 1
-                  and zeile(verlierer, "Condor", "Zielprüfung").get_by_text(sieger).count() == 1, 10, "der andere sieht, wer G2 hat")
+                  and zeile(verlierer, "Condor", "Zielprüfung").get_by_text(sieger).count() == 1, 10, "der andere sieht, wer die Zielprüfung hat")
             bild(verlierer, "lobby-gleichzeitig")
 
         # ---------------------------------------------------------------- Spielleitung in der Lobby
@@ -191,15 +212,15 @@ def main():
             warte(lambda: karte(tt["Lt Ernst"], "Condor Süd").count() == 1, 10, "neuer Name beim Teilnehmer")
 
         def s2():
-            # Lt Dorn (G3 in Condor Süd) nach Team B als G3 verschieben
+            # Lt Dorn (Führung in Condor Süd) nach Team B als Führung verschieben
             sl.get_by_role("button", name="Lt Dorn").click()
             menue = sl.locator(".menue")
-            menue.locator("div", has_text=tt["team_b"]).last.get_by_role("button", name="G3").click()
-            warte(lambda: tt["Lt Dorn"].get_by_text("Deine Rolle: G3 Führung").count() == 1
+            menue.locator("div", has_text=tt["team_b"]).last.get_by_role("button", name="Führung", exact=True).click()
+            warte(lambda: tt["Lt Dorn"].get_by_text("Deine Rolle: Führung").count() == 1
                   and karte(tt["Lt Dorn"], tt["team_b"]).get_by_text("du (Lt Dorn)").count() == 1, 10, "Dorn in Team B")
 
         def s3():
-            # Teilnehmer ohne Team (der bei s8 leer ausging) Condor Süd als G3 zuweisen
+            # Teilnehmer ohne Team (der bei L8 leer ausging) Condor Süd als Führung zuweisen
             name = "Lt Falk" if tt["frei"] is tt["Lt Falk"] else "Lt Gerd"
             sl.locator("tr", has_text="Condor Süd").get_by_role("button", name="frei").first.click()
             sl.locator(".menue").get_by_role("button", name=name).click()
@@ -208,7 +229,7 @@ def main():
         def s4():
             h = teilnehmer("Lt Hahn")
             h.get_by_placeholder("Teamname").fill("Weg damit")
-            h.get_by_role("button", name="G1 Aufklärung").click()
+            h.get_by_role("button", name="Aufklärung", exact=True).click()
             warte(lambda: sl.locator("tr", has_text="Weg damit").count() == 1, 10, "Team in der Übersicht")
             bild(plenum, "plenum-vor-start")
             sl.locator("tr", has_text="Weg damit").get_by_title("Team Weg damit löschen").click()
@@ -227,27 +248,27 @@ def main():
             for n in ["Lt Anders", "Lt Claus", "Lt Brandt", "Lt Ernst"]:
                 pg = tt[n]
                 try:
-                    warte(lambda: pg.get_by_role("button", name="Verstanden – zur Ansicht").count() == 1, 10, f"Einweisung {n}")
+                    warte(lambda: pg.get_by_role("button", name="Überspringen").count() == 1, 10, f"Einweisung {n}")
                 except AssertionError:
                     bild(pg, f"fehler-einweisung-{n.replace(' ', '_')}")
                     print(n, pg.evaluate("() => JSON.stringify({ich: window.argusSitzung.stand.ich, teams: window.argusTeams().map(t => [t.name, t.lauf, t.spieler.map(x => x.name + ':' + x.rollen)])})"))
                     raise
-                pg.get_by_role("button", name="Verstanden – zur Ansicht").click()
+                pg.get_by_role("button", name="Überspringen").click()
             sl.get_by_role("button", name="▶ Uhr starten – alle").click()
             warte(lambda: sl.locator("tr", has_text="Adler 1").get_by_text("läuft").count() == 1, 10, "Uhr Adler 1 läuft")
 
         def t1():
             pg = tt["Lt Anders"]
-            warte(lambda: pg.get_by_role("tab", name="G1 Aufklärung").count() == 1, 10, "Umschalter mit G1")
+            warte(lambda: pg.get_by_role("tab", name="Aufklärung").count() == 1, 10, "Umschalter mit Aufklärung")
             bild(pg, "tt-doppelrolle-g1")
-            pg.get_by_role("tab", name="G2").click()
-            warte(lambda: pg.get_by_role("tab", name="G2 Zielprüfung").count() == 1 and pg.locator(".rahmen[data-rolle=g2]").count() == 1, 10, "Ansicht G2")
+            pg.get_by_role("tab", name="Zielprüfung").click()
+            warte(lambda: pg.get_by_role("tab", name="Zielprüfung", selected=True).count() == 1 and pg.locator(".rahmen[data-rolle=g2]").count() == 1, 10, "Ansicht Zielprüfung")
             bild(pg, "tt-doppelrolle-g2")
 
         def s6():
             sl.locator("tr", has_text="Adler 1").get_by_role("button", name="ansehen ›").click()
-            sl.get_by_role("tab", name="G3").click()
-            warte(lambda: sl.get_by_text("Zuschauen – nur lesen").count() == 1, 10, "Zuschauen G3")
+            sl.get_by_role("tab", name="Führung").click()
+            warte(lambda: sl.get_by_text("Zuschauen – nur lesen").count() == 1, 10, "Zuschauen Führung")
             bild(sl, "sl-zuschauen-g3")
             sl.get_by_role("tab", name="Steuerung").click()
             warte(lambda: sl.get_by_role("button", name="❚❚ Anhalten").count() == 1, 10, "Steuerung Adler 1")
@@ -259,26 +280,49 @@ def main():
         def t2():
             pg = tt["Lt Claus"]
             pg.reload()
-            warte(lambda: pg.locator(".rahmen[data-rolle=g3]").count() == 1, 15, "nach Neuladen wieder G3")
+            warte(lambda: pg.locator(".rahmen[data-rolle=g3]").count() == 1, 15, "nach Neuladen wieder Führung")
             assert pg.get_by_text("Adler 1").count() >= 1
 
         def t3():
             j = teilnehmer("Lt Jung")
             zeile(j, tt["team_b"], "Zielprüfung").get_by_role("button", name="beitreten").click()
-            warte(lambda: j.get_by_role("button", name="Verstanden – zur Ansicht").count() == 1, 10, "Einweisung G2 auch beim späten Beitritt")
+            warte(lambda: j.get_by_role("button", name="weiter ›").count() == 1, 10, "Einweisung Zielprüfung auch beim späten Beitritt")
+            # Folien durchblättern bis „Verstanden“ (B5: drei bis fünf Folien je Rolle)
+            folien = 1
+            while j.get_by_role("button", name="Verstanden – zur Ansicht").count() == 0:
+                j.get_by_role("button", name="weiter ›").click()
+                folien += 1
+                assert folien <= 6, "mehr als fünf Folien"
+            assert 3 <= folien <= 5, f"{folien} Folien"
+            bild(j, "einweisung-letzte-folie")
             j.get_by_role("button", name="Verstanden – zur Ansicht").click()
-            warte(lambda: j.locator(".rahmen[data-rolle=g2]").count() == 1, 10, "Ansicht G2")
+            warte(lambda: j.locator(".rahmen[data-rolle=g2]").count() == 1, 10, "Ansicht Zielprüfung")
+            # später wieder aufrufbar
+            j.get_by_role("button", name="Einweisung", exact=True).click()
+            warte(lambda: j.get_by_role("button", name="Überspringen").count() == 1, 10, "Einweisung wieder offen")
+            j.get_by_role("button", name="Überspringen").click()
+            warte(lambda: j.get_by_role("button", name="Überspringen").count() == 0, 10, "Einweisung zu")
 
         def p2():
             plenum.get_by_role("combobox").select_option(label="Condor Süd")
             warte(lambda: plenum.locator(".team-wahl").get_by_text("Condor Süd").count() >= 0 and plenum.locator("select").input_value() != "", 10, "Teamwahl")
             bild(plenum, "plenum-team")
 
+        def s7():
+            pg = ctx.new_page()
+            pg.goto(start)
+            pg.get_by_role("button", name="Spielleitung").click()
+            warte(lambda: pg.get_by_test_id("letzte-sitzung").get_by_text(code).count() >= 1, 10, f"letzte Sitzung {code} angeboten")
+            bild(pg, "start-fortsetzen")
+            pg.get_by_role("button", name="Fortsetzen als Spielleitung").click()
+            warte(lambda: pg.get_by_text("Alle Teams").count() >= 1 and pg.get_by_test_id("code").inner_text().strip() == code, 20, "Übersicht der Sitzung")
+            pg.close()
+
         for name, f in [
-            ("L1 falscher Code → verständliche Meldung", l1),
-            ("L2 Code klein/ohne Bindestrich, Team mit eigenem Namen als G2", l2),
-            ("L3 Würfel schlägt Namen vor, Team als G1", l3),
-            ("L4 einem Team als G1 beitreten", l4),
+            ("L1 nur Codefeld; falscher Code → verständliche Meldung", l1),
+            ("L2 Code klein/mit Leerzeichen, Team mit eigenem Namen als Zielprüfung", l2),
+            ("L3 Würfel schlägt Namen vor, Team als Aufklärung", l3),
+            ("L4 einem Team als Aufklärung beitreten", l4),
             ("L5 Rolle abgeben, andere Rolle nehmen", l5),
             ("L6 Doppelrolle mit „+ dazu“", l6),
             ("L7 Team wechseln", l7),
@@ -289,11 +333,12 @@ def main():
             ("S4 SL löscht Team (zweistufig)", s4),
             ("P1 Plenum zeigt Code und Teams vor dem Start", p1),
             ("S5 Spiel öffnen und Uhr starten – alle", s5),
-            ("T1 Doppelrolle: Umschalter G1/G2 im Spiel", t1),
-            ("S6 SL schaut G3 zu, Steuerung, zurück", s6),
+            ("T1 Doppelrolle: Umschalter Aufklärung/Zielprüfung im Spiel", t1),
+            ("S6 SL schaut der Führung zu, Steuerung, zurück", s6),
             ("T2 Neuladen führt in Team und Rolle zurück", t2),
-            ("T3 später Beitritt in laufendes Spiel", t3),
+            ("T3 später Beitritt, Folien durchblättern, Einweisung wieder aufrufen", t3),
             ("P2 Plenum: Team wählen", p2),
+            ("S7 zuletzt genutzte Sitzung als Spielleitung fortsetzen", s7),
         ]:
             aufgabe(name, f)
         browser.close()
