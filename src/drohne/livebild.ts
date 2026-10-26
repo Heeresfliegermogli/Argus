@@ -755,6 +755,7 @@ export class LiveDrohnenbild {
     // Maßstab Drohnenbild-px → Leinwand-px; stark vergrößert (Lupe, kleine Fläche) aus dem Speicher in Originalgröße
     const sRoh = ctx.getTransform().a;
     const s = sRoh > 1.5 ? 1 : Math.round(sRoh * 100) / 100;
+    if (!(s > 0)) return; // Leinwand ohne Größe (verdeckt, noch nicht gemessen)
     const g0 = this.grundCache.get(s);
     const jetzt = performance.now();
     const passt = g0 && vx >= g0.x && vy >= g0.y && vx + this.breite <= g0.x + g0.w && vy + this.hoehe <= g0.y + g0.h;
