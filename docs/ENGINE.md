@@ -116,7 +116,10 @@ echten Datenbank und 16 Rechnern steht aus.
 | `tests/szenario21.test.ts` (neu) | Durchbruch-Routen, I-13, Feuer, Zonennamen, nur 2. Kp |
 | `tools/livelage_probe.py` (A4 und A4b neu) | Durchbruch V-2 gesperrt bis 07:00; Mörser M05 feuert sichtbar (Blitz, Abschussrauch), Staub hinter fahrenden Fahrzeugen auf der Kontrollkarte |
 | `tools/drohne_probe.py` (2b neu) | Live-Drohnenbild: Mündungsblitz und Abschussrauch zur Schusszeit, kein Blitz zwischen den Stößen, Staub hinter M13 |
-| Gesamt | 130 automatische Tests (1 übersprungen), alle Probe-Werkzeuge bestanden |
+| `tools/e2e_drehbuch.py` (18 Fenster, ×5) | alle fünf Teams bis Spielende, Protokolle wie die Engine im Prozess, auch die Durchbruch-Ereignisse; gleiche Ausgänge, Treffer, Bestände und zerstörten Fahrzeuge, keine Konsolen- oder Layoutfehler. Abweichungen nur bei Zeiten aus Klicks: Die Modellpersonen klicken in dieser Testumgebung 2–7 s Spielzeit zu spät (bei G1 vereinzelt bis 34 s, ein Fenster), wie schon bei B1–B12 beschrieben. Befund: Der Vergleich der Warnungen erwartete noch „beim Einschlag hh:mm:ss“ (vor B4) und meldete deshalb Abweichungen der Uhrzeit – behoben |
+| Bildrate Live-Drohnenbild mit Staub | M15 (SPz-Zug fährt durchs Bild), Fenster am Ort, G1 allein, Rückfall Canvas: Ø 3,4 ms je Bild (Stand vor 2.1: 2,8 ms), höchstens 11 ms, 30 Bilder/s |
+| Übrige Probe-Werkzeuge | `ui_bilder.py` 29 und `ui_faelle.py` 22 Bilder in 1530 × 800 ohne Rollbalken, `bedientest_probe.py` 18/18, `lobby_probe.py` 20/20, `auswertung_probe.py`, `e2e_vier_fenster.py`, `e2e_teams.py` (16 Fenster) bestanden |
+| Gesamt | 130 automatische Tests (1 übersprungen) |
 
 ## Oberfläche (Schritt 6b, umgesetzt)
 
