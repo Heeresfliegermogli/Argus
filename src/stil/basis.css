@@ -603,7 +603,7 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .tafel-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .tafel h1, .replay h1, .konfidenz-diagramm h1 { font-size: 24px; font-weight: 700; letter-spacing: .01em; }
 .tafel-fuss { font-size: 14px; }
-.legende-zeile { display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--text-2); flex-wrap: wrap; }
+.legende-zeile { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); flex-wrap: wrap; }
 .legende-zeile > span { display: inline-flex; align-items: center; gap: 5px; }
 
 /* Ausgang eines Falls */

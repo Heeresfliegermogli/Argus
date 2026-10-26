@@ -268,8 +268,11 @@ function KetteZeile(p: { e: FallErgebnis; kompakt?: boolean }) {
 // ---------------------------------------------------------------- Kapitel 1: Teamvergleich
 
 /** Kurzfassung für die schmalen Zellen der Nebenfälle: ohne Wirkmittel, kurze Verben. */
+/** Text in den schmalen Spalten der Nebenfälle: ohne Wirkmittel und ohne Rolle (die Kette darüber zeigt, wer es war). */
 function zelleKurz(z: string): string {
-  return z.replace(/\s*\([^)]*\)\s*$/, "").replace("stellt zurück", "zurück").replace("nicht bekämpfen", "nicht bek.").replace("FREIGABE", "Freigabe");
+  const k = z.replace(/\s*\([^)]*\)\s*$/, "").replace("stellt zurück", "zurück").replace("nicht bekämpfen", "nicht bek.").replace("FREIGABE", "Freigabe")
+    .replace(/^(Aufklärung|Zielprüfung|Führung) /, "");
+  return k.charAt(0).toUpperCase() + k.slice(1);
 }
 
 function Teamvergleich(p: { a: Auswertung; inh: Inhalte; waehle: (fall: string, team: string) => void }) {
