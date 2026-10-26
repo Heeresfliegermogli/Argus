@@ -101,7 +101,7 @@ export function ZielmeldungKompakt(p: { zm: Zielmeldung }) {
       <span class="feldname">Klasse</span><span class="wert"><b>{zm.klasse}</b></span>
       <span class="feldname">Konfidenz</span><span class="wert"><Konfidenz wert={zm.konfidenz} /></span>
       <span class="feldname">ARGUS</span><span class="wert"><Empfehlung wert={zm.argusEmpfehlung} />
-        {zm.fastTrack && <span class="badge warn" style="margin-left:6px">Fast-Track – ohne Aufklärung</span>}</span>
+        {zm.fastTrack && <span class="badge warn" style="margin-left:6px" title="Fast-Track: kam ohne Prüfung durch die Aufklärung">Fast-Track</span>}</span>
     </div>
   );
 }

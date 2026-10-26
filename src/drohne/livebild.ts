@@ -60,15 +60,15 @@ export interface LiveRessourcen {
 /** Luftbild-Kacheln (0,25 m/px, nur Webseite) in Kamerafarbe, je Fenster einmal geladen. */
 const kacheln = new Map<string, CanvasImageSource | "laedt" | "fehlt">();
 
-function kachel(man: AssetManifest, ix: number, iy: number): CanvasImageSource | null {
+/** Kachel in Kamerafarbe; „laedt“, solange sie kommt, „fehlt“, wenn sie nicht zu laden ist (dann reicht das Luftbild). */
+function kachel(man: AssetManifest, ix: number, iy: number): CanvasImageSource | "laedt" | "fehlt" {
   const k = man.karte.luftbild.kacheln;
   const pfad = k.muster.replace("{x}", String(ix)).replace("{y}", String(iy));
   const da = kacheln.get(pfad);
-  if (da === "laedt" || da === "fehlt") return null;
   if (da) return da;
   kacheln.set(pfad, "laedt");
   ladeBild(pfad).then((img) => kacheln.set(pfad, faerben(img, man.drohne_ebenen.farbmatrix))).catch(() => kacheln.set(pfad, "fehlt"));
-  return null;
+  return "laedt";
 }
 
 export interface LiveEbenen {
@@ -820,7 +820,8 @@ export class LiveDrohnenbild {
       for (let ix = Math.max(0, Math.floor(wx / m)); ix <= Math.min(kk.spalten - 1, Math.floor((wx + ww) / m)); ix++) {
         for (let iy = Math.max(0, Math.floor(wy / m)); iy <= Math.min(kk.zeilen - 1, Math.floor((wy + wh) / m)); iy++) {
           const b = kachel(res.man, ix, iy);
-          if (!b) {
+          if (b === "fehlt") continue;
+          if (b === "laedt") {
             voll = false;
             continue;
           }
@@ -845,22 +846,24 @@ export class LiveDrohnenbild {
     const g = c.getContext("2d");
     if (!g) return this.eb.boden;
     g.drawImage(this.eb.boden, 0, 0, c.width, c.height);
-    // Maske: Rechteck mit Abstand r zum Rand, weichgezeichnet (ohne filter: harte Kante)
-    const r = 36;
-    const roh = document.createElement("canvas");
-    roh.width = c.width;
-    roh.height = c.height;
+    // Maske: Rechteck mit Abstand r zum Rand, weichgezeichnet (ohne filter: harte Kante). In 1/8 der Größe gerechnet
+    // und hochskaliert – der Weichzeichner kostet ohne Grafikkarte sonst 50–100 ms je Meldung und Fenster.
+    const k = 8;
+    const r = 36 / k;
+    const mw = Math.ceil(c.width / k);
+    const mh = Math.ceil(c.height / k);
+    const roh = Object.assign(document.createElement("canvas"), { width: mw, height: mh });
     const rg = roh.getContext("2d")!;
     rg.fillStyle = "#000";
-    rg.fillRect(r, r, c.width - 2 * r, c.height - 2 * r);
-    const maske = document.createElement("canvas");
-    maske.width = c.width;
-    maske.height = c.height;
+    rg.fillRect(r, r, mw - 2 * r, mh - 2 * r);
+    const maske = Object.assign(document.createElement("canvas"), { width: mw, height: mh });
     const m = maske.getContext("2d")!;
     m.filter = `blur(${r / 2}px)`;
     m.drawImage(roh, 0, 0);
     g.globalCompositeOperation = "destination-in";
-    g.drawImage(m.filter === "none" ? roh : maske, 0, 0);
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(m.filter === "none" ? roh : maske, 0, 0, c.width, c.height);
     this.bodenWeichBild = c;
     return c;
   }
