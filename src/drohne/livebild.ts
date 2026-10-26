@@ -231,6 +231,17 @@ export interface LiveKamera {
 }
 
 const KAMERA_STEHT: LiveKamera = { dx: 0, dy: 0, ziel: null, rauschen: 0 };
+
+/** Zusammengesetzter Grund beim Schwenk (Leinwand im Maßstab der Anzeige; x, y, w, h in px des Drohnenbilds). */
+interface GrundSpeicher {
+  c: HTMLCanvasElement;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  voll: boolean;
+  zeit: number;
+}
 /** Nach der Zerstörung bleibt die Kamera so lange (Echtzeit, s) auf dem Wrack, dann schwenkt sie. */
 export const SCHWENK_VERZUG_S = 0.5;
 /** Dauer des Bildrauschens beim Schwenk (Echtzeit, s) */
@@ -306,10 +317,12 @@ export class LiveDrohnenbild {
   private bodenWeichBild: HTMLCanvasElement | null = null;
   /**
    * Grund beim Schwenk, einmal zusammengesetzt (Luftbild, Kacheln, Boden der Meldung) für den Ausschnitt mit Rand
-   * GRUND_RAND px: Je Bild ist das nur ein drawImage wie beim stehenden Boden. Neu gebaut, wenn die Kamera den Rand
-   * erreicht oder Kacheln nachgeladen sind. Lage in px des Bodens der Meldung.
+   * GRUND_RAND px, **in der Größe, in der er gezeichnet wird** (Maßstab s je Leinwand: Fenster am Ort, Vergrößerung):
+   * Je Bild ist das dann eine Kopie 1 : 1 – ohne Grafikkarte wäre jedes verkleinerte oder vergrößerte Bild eine neue
+   * Umrechnung (ca. 4–27 ms je Bild und Fenster). Neu gebaut, wenn die Kamera den Rand erreicht, sich der Maßstab
+   * ändert oder Kacheln nachgeladen sind. x, y, w, h in px des Bodens der Meldung.
    */
-  private grundCache: { c: CanvasImageSource; w: number; h: number; x: number; y: number; voll: boolean; zeit: number } | null = null;
+  private grundCache = new Map<number, GrundSpeicher>();
   /** Diagnose: wie oft der Grund neu zusammengesetzt wurde, Dauer zuletzt und höchstens (ms) */
   grundBau = { n: 0, ms: 0, max: 0 };
 
@@ -739,31 +752,35 @@ export class LiveDrohnenbild {
   private grund(ctx: CanvasRenderingContext2D, ox: number, oy: number): void {
     const vx = -ox;
     const vy = -oy;
-    const g0 = this.grundCache;
+    // Maßstab Drohnenbild-px → Leinwand-px; stark vergrößert (Lupe, kleine Fläche) aus dem Speicher in Originalgröße
+    const sRoh = ctx.getTransform().a;
+    const s = sRoh > 1.5 ? 1 : Math.round(sRoh * 100) / 100;
+    const g0 = this.grundCache.get(s);
     const jetzt = performance.now();
     const passt = g0 && vx >= g0.x && vy >= g0.y && vx + this.breite <= g0.x + g0.w && vy + this.hoehe <= g0.y + g0.h;
-    const g = passt && (g0.voll || jetzt - g0.zeit < 500) ? g0 : this.baueGrund(vx, vy, jetzt);
+    const g = passt && (g0.voll || jetzt - g0.zeit < 500) ? g0 : this.baueGrund(vx, vy, s, jetzt);
     if (!g) return;
-    // Große Leinwand (Vergrößerung): bilinear. „high“ rechnet ein Bild ohne Grafikkarte bei jedem Bild neu (ca. 27 ms
-    // für 1136 × 710), beim stehenden Boden hilft der Bildzwischenspeicher des Browsers, beim Zwischenspeicher hier nicht.
-    const gross = ctx.getTransform().a >= 1 && ctx.canvas.width * ctx.canvas.height > 300_000;
-    if (gross) ctx.imageSmoothingQuality = "low";
-    if (g !== g0 || !passt) {
+    if (g !== g0) {
       const ms = performance.now() - jetzt;
       this.grundBau = { n: this.grundBau.n + 1, ms, max: Math.max(this.grundBau.max, ms) };
     }
-    ctx.drawImage(g.c, vx - g.x, vy - g.y, this.breite, this.hoehe, 0, 0, this.breite, this.hoehe);
-    if (gross) ctx.imageSmoothingQuality = "high";
+    // 1 : 1 kopiert (bis auf Bruchteile eines Bildpunkts): bilinear genügt und kostet fast nichts
+    const eins = Math.abs(sRoh - s) < 0.02;
+    if (eins) ctx.imageSmoothingQuality = "low";
+    ctx.drawImage(g.c, (vx - g.x) * s, (vy - g.y) * s, this.breite * s, this.hoehe * s, 0, 0, this.breite, this.hoehe);
+    if (eins) ctx.imageSmoothingQuality = "high";
   }
 
   private static readonly GRUND_RAND = 384;
 
-  private baueGrund(vx: number, vy: number, jetzt: number): LiveDrohnenbild["grundCache"] {
+  private baueGrund(vx: number, vy: number, s: number, jetzt: number): GrundSpeicher | null {
     const R = LiveDrohnenbild.GRUND_RAND;
     const w = this.breite + 2 * R;
     const h = this.hoehe + 2 * R;
-    const alt = this.grundCache?.c;
-    const c = alt instanceof HTMLCanvasElement && alt.width === w && alt.height === h ? alt : Object.assign(document.createElement("canvas"), { width: w, height: h });
+    const cw = Math.ceil(w * s);
+    const ch = Math.ceil(h * s);
+    const alt = this.grundCache.get(s)?.c;
+    const c = alt && alt.width === cw && alt.height === ch ? alt : Object.assign(document.createElement("canvas"), { width: cw, height: ch });
     const ctx = c.getContext("2d");
     if (!ctx) return null;
     const gx = Math.round(vx - R);
@@ -773,13 +790,13 @@ export class LiveDrohnenbild {
     // Bereich des Zwischenspeichers in m
     const wx = db.ausschnitt_m.x + gx * mpp;
     const wy = db.ausschnitt_m.y + gy * mpp;
-    const ww = c.width * mpp;
-    const wh = c.height * mpp;
-    // Luftbild (0,5 m/px) und Kacheln (0,25 m/px) sind gröber als das Drohnenbild: bilinear reicht und ist schnell
+    const ww = w * mpp;
+    const wh = h * mpp;
+    ctx.setTransform(s, 0, 0, s, 0, 0);
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "low";
+    ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = "#3d4536";
-    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillRect(0, 0, w, h);
     let voll = true;
     const zeichne = (bild: CanvasImageSource, bx: number, by: number, bm: number, bw: number, bh: number) => {
       // Bild bei (bx, by) m mit bm m/px; nur der Teil im Bereich
@@ -811,8 +828,11 @@ export class LiveDrohnenbild {
       }
     }
     ctx.drawImage(this.bodenWeich(), -gx, -gy, this.breite, this.hoehe);
-    this.grundCache = { c, w, h, x: gx, y: gy, voll, zeit: jetzt };
-    return this.grundCache;
+    const g: GrundSpeicher = { c, w, h, x: gx, y: gy, voll, zeit: jetzt };
+    // höchstens drei Maßstäbe behalten (Fenster am Ort, Vergrößerung, Lupe)
+    if (!this.grundCache.has(s) && this.grundCache.size >= 3) this.grundCache.delete(this.grundCache.keys().next().value!);
+    this.grundCache.set(s, g);
+    return g;
   }
 
   /** Boden der Meldung mit weichen Rändern (einmal je Meldung gerechnet), damit der Übergang zum Luftbild nicht auffällt. */

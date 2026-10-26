@@ -132,7 +132,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
         # ---------------------------------------------------------------- Inhalte je Kapitel
         if k == "teams":
             ist = s.eval_on_selector_all("[data-testid=teamvergleich] td[data-fall]",
-                                         "cs => cs.map(c => ({ team: c.closest('tr').dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, stufe: c.querySelector('.glied.entscheidend')?.className.match(/\bg-(g[123])\b/)?.[1] ?? null }))")
+                                         "cs => cs.map(c => ({ team: c.closest('tr').dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, stufe: c.querySelector('.glied.entscheidend')?.className.match(/\\bg-(g[123])\\b/)?.[1] ?? null }))")
             tabelle = {}
             for c in ist:
                 tabelle.setdefault(c["team"], {})[c["fall"]] = c
