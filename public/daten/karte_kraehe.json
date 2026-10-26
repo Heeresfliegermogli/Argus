@@ -72,7 +72,7 @@
     { "text": "Wald DACHS", "pos": [868, 520] },
     { "text": "Wald MARDER", "pos": [930, 40], "neu": true },
     { "text": "Hof RABE", "pos": [770, 255], "neu": true },
-    { "text": "Brücke ELSTER", "pos": [418, 386], "anker": [1, 1], "neu": true }
+    { "text": "Brücke ELSTER", "pos": [421, 409], "anker": [1, 0], "neu": true }
   ],
   "punkte": [
     { "id": "bruecke_elster", "name": "Brücke ELSTER", "pos": [430, 396], "art": "bruecke", "neu": true },

@@ -15,7 +15,7 @@
   A8  Daten für Animationen: feuernde Mörser (und der BMP-2 an der Brücke) mit Schussrhythmus (`feuert`).
   B6  (Hinweis aus Chat B) Der Vermerk der Aufklärung entfällt: Lagetexte, Lösungshilfe, Schlüsselfälle und Ablauf ohne
       Vermerk; was G1 sieht, sagt sie dem Team.
-  A7  Karte: Brücke ELSTER und Hauptstraße – Beschriftungen auseinander (Name links oberhalb der Brücke, Straßenname bei
+  A7  Karte: Brücke ELSTER und Hauptstraße – Beschriftungen auseinander (Name links unterhalb der Brücke, Straßenname bei
       25 % der Länge); im Luftbild keine Bäume auf der Brücke (tools/assets/gelaende.py).
 
 Einmalig benutzt wie bau_szenario_v2.py; maßgeblich ist danach die JSON-Datei. Das Skript bleibt als Nachweis, wie
@@ -498,8 +498,8 @@ REG["version"] = "2.1"
 # =============================================================================== Karte (A7: Beschriftungen an der Brücke)
 for n in K["namen"]:
     if n["text"] == "Brücke ELSTER":
-        n["pos"] = [418, 386]
-        n["anker"] = [1, 1]
+        n["pos"] = [421, 409]          # links unterhalb der Brücke: frei von Straße und Pfeiltext der 2. Kp (y 380)
+        n["anker"] = [1, 0]
 for l in K["linien"]:
     if l["id"] == "hauptstrasse":
         l["beschriftung_anteil"] = 0.25
