@@ -207,6 +207,12 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 | Prüfung | Ergebnis |
 |---|---|
+| **B1–B12 (25./26.10.2026)** `npm test` | 122 Tests, neu u. a. `tests/anzeige.test.ts` (Rollen mit Artikel, Spieluhr, Zielnummern mit Verstärkung „1a“, Protokolltexte), kurze Codes in `teams.test.ts` und den Firebase-Regeln |
+| **B12** `tools/lobby_probe.py` | 20/20 nur über sichtbare Beschriftungen: erste Seite nur zwei Knöpfe, Mitspieler sehen nur das Codefeld, falsches Format und unbekannter Code, Code klein mit Leerzeichen, Rollen Aufklärung/Zielprüfung/Führung, Folien durchblättern, Einweisung wieder aufrufen, zuletzt genutzte Sitzung fortsetzen |
+| **B12** `tools/bedientest_probe.py` | 18/18: Folien bzw. Überspringen, „Ziel 3“ über die Marke, Lupe, Drohnenbild an der Kopfleiste schieben, ✕ und über die Marke wieder öffnen, „Ziel 3 · zurückgestellt“, „Einschlag mm:ss“, Hinweis nur an die Zielprüfung, ZURÜCK an die Zielprüfung; „Allein testen (ein Fenster)“: Aufklärung bedienbar, Ziel kommt bei der Zielprüfung an |
+| **B12** `tools/ui_bilder.py`, `ui_faelle.py` | 29 bzw. 22 Bilder in 1530 × 800 ohne Rollbalken, alle Folien jeder Rolle; S2 Rotes Kreuz, S4 Kinder, S3, N2 weißes Tuch mit Lupe |
+| **B9** `tools/drohne_probe.py` | alle 27 Meldungen setzen sich zur Meldezeit wie das Standbild zusammen; M13: Kamera folgt Z-30 (Ausschnitt 219 m weiter, Z-30 bleibt auf ±0 px); M15: Z-33 zerstört → 0,25 s später noch LIVE auf Z-33, nach 0,72 s „◌ AUSRICHTUNG …“, nach 2 s LIVE auf Z-34 mit ARGUS-Rahmen; Rotes Kreuz 437 rote Bildpunkte in der Lupe, zwei Kinder, weißes Tuch 1900 weiße Bildpunkte; Bildrate Fenster am Ort und Vergrößerung je 30 Bilder/s (Canvas ohne Grafikkarte) |
+| **B2, B3** `e2e_vier_fenster.py` (lokal, Offline-Datei), `e2e_teams.py` (16 Fenster) | bestanden mit Startseite „Ich spiele mit“/„Spielleitung“, Codes aus drei Zeichen, Rollennamen |
 | `npm test` (Vitest) | 102 Tests (101 bestanden, Firebase-Nachbildung lokal übersprungen), neu `tests/oberflaeche.test.ts`: Fenster am Ort liegt überall ganz auf der Karte und verdeckt das Ziel nicht, weicht Marken aus; Marken je Meldung (zurückgestellt, ⚠, gewählt); Einweisung mit allen drei Rollen, Auftrag in der Du-Form |
 | `tools/ui_bilder.py` | 19 Bilder eines kurzen Ablaufs bis S1 (Einweisungskarten, leere Ansichten, Drohnenbild am Ort, Vergrößerung, Warnung, Lagehinweis, Spielende): kein Rollbalken, nichts abgeschnitten, keine Konsolenfehler |
 | `tools/ui_faelle.py` | 21 Bilder: Schlüsselfälle mit Lupe im Live-Bild (S2 Rotes Kreuz, S4 Kinder, S3, N2 weißes Tuch), viele Marken auf einmal (G1 bis 10, G2/G3 bis 11), 9 neue Lagemeldungen, längste Freitexte, mehrere Warnungen, Fehltreffer, Kontrollkarte gezoomt, Auflösung – alles in 1530 × 800 ohne Rollbalken |
@@ -219,6 +225,6 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 ## Offen
 
-* Bedientest mit Menschen (Teil A Lobby, Teil B Ansichten); dabei „AUFNAHME“ und die Kinder in M18 beobachten.
+* Bedientest mit Menschen (Teil A Start und Lobby, Teil B Ansichten); dabei „◌ AUSRICHTUNG …“ (ab Ziel 15) und die Kinder in Ziel 18 beobachten.
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
 * Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).
