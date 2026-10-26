@@ -252,8 +252,8 @@ SZ["injects"].append({
 # =============================================================================== Texte (A5, A6)
 LAGE = SZ["lage"]
 LAGE["plenum"]["absaetze"][0] = ("Übungslage, alles fiktiv. Russische Kräfte greifen seit den Morgenstunden nach Westen an. Unser "
-                                 "Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die 2. Kompanie deckt außerhalb des "
-                                 "Kartenausschnitts Brücke und Furt und kämpft auch selbst.")   # so kurz wie 2.0 (Einweisung Plenum passt)
+                                 "Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die 2. Kompanie deckt außerhalb der Karte "
+                                 "Brücke und Furt und kämpft auch selbst.")   # nicht länger als 2.0 (Einweisung im Plenum passt sonst nicht)
 LAGE["G2"]["absaetze"][0] = ("Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse, Konfidenz und Vermerk von G1. "
                              "Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene "
                              "2. Kompanie liegt westlich außerhalb der Karte.")

@@ -171,7 +171,7 @@ def startseite(basis, a, **extra):
 
 # ---------------------------------------------------------------- Vergleich der Protokolle
 
-UHRZEIT = re.compile(r"\s*–?\s*beim Einschlag \d{2}:\d{2}:\d{2}")
+UHRZEIT = re.compile(r"\s*–?\s*beim Einschlag \d{2}:\d{2}(?::\d{2})?")   # Spieluhr mm:ss (seit B4), früher hh:mm:ss
 ABSTAND = re.compile(r"Abstand \d+ m")
 
 
