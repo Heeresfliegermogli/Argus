@@ -80,6 +80,21 @@ class Daten:
     def groesse(self, ziel):
         return self.fahrzeuge[ziel["typ"]]["groesse_m"]
 
+    def alle_routen(self):
+        """(Name, Ziel, Route) aller Fahrten, die in der Live-Lage vorkommen können: Szenario, Verstärkungen und seit
+        Szenario 2.1 die Durchbruch-Routen (szenario.durchbruch, verstaerkungen[].durchbruch). Kein Haus darf darauf stehen."""
+        out = []
+        for z in list(self.szenario["ziele"]) + list(self.v_ziele.values()):
+            r = (z.get("bewegung") or {}).get("route")
+            if r:
+                out.append((z["id"], z, r))
+        gruppen = list((self.szenario.get("durchbruch") or {}).get("gruppen", []))
+        gruppen += [g["durchbruch"] for g in self.verstaerkungen if g.get("durchbruch")]
+        for g in gruppen:
+            for zid, r in g["routen"].items():
+                out.append((f"{zid} (Durchbruch)", self.alle_ziele[zid], r))
+        return out
+
     def meldepositionen(self):
         """(Ziel, Position, Meldung) für jedes gemeldete Ziel zur Meldezeit."""
         for m in self.szenario["meldungen"]:

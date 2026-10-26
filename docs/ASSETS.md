@@ -11,6 +11,12 @@ Drohnenbilder als **Ebenen** (Boden, Kronen, Störung) mit Fahrzeugen und Figure
 **Bilder der Verstärkungen** V1-M1 … V5-M1, **Wracks** aus dem Hintergrundgefecht in den Bildern,
 neue **Effekte** (LM im Flug, Leuchtspur, Mündungsblitz, Feindartillerie, Nebel) mit Zuordnung im Manifest.
 
+Szenario 2.1 (26.10.2026, Änderungen A7, A8, A9): Kartenpaket und alle Drohnenbilder neu erzeugt (neue Routen der
+Spähtrupps und des Hauptangriffs). Der Name „Brücke ELSTER“ steht links unterhalb der Brücke, frei von Hauptstraße und
+Pfeiltext der 2. Kompanie; im Umkreis von 15 m um die Brücke wachsen keine Baumkronen mehr über Straße und Brücke.
+Neue Effekte `abschussrauch` und `staub`, `muendungsblitz_steil` größer (feindliche Mörser feuern sichtbar, fahrende
+Fahrzeuge wirbeln Staub auf). Die Häuser lassen auch die Durchbruch-Routen über Brücke und Furt frei.
+
 ## Inhalt von `public/assets/`
 
 | Pfad | Inhalt | Größe |
@@ -20,7 +26,7 @@ neue **Effekte** (LM im Flug, Leuchtspur, Mündungsblitz, Feindartillerie, Nebel
 | `karte/luftbild_050.webp` | Luftbild 2000 × 1400 (0,5 m/px), Standard für die Lagekarte | 505 KB |
 | `karte/kacheln/z025/X_Y.webp` | 8 × 6 Kacheln à 512 px in 0,25 m/px, nur bei starkem Zoom nachladen | 1,2 MB |
 | `karte/topo_050.webp` | schematische Karte (Wald, Wege, Bach, Gebäude), ruhiger Hintergrund für G2/G3 | 103 KB |
-| `karte/lagekarte_beschriftet.webp` | Luftbild mit Raster, PQ, NS-01, EZ-01, allen Namen (Vorschau, Plenum, Druck) | 353 KB |
+| `karte/lagekarte_beschriftet.webp` | Luftbild mit Raster, PQ, Zonen „Schule“ und „Ortschaft“ (seit 2.1 ohne Kürzel), allen Namen (Vorschau, Plenum, Druck) | 353 KB |
 | `karte/gelaende.json` | erzeugte Einzelhäuser als Vektoren | 3 KB |
 | `drohne/M01.webp … M27.webp` | Standbild je ARGUS-Meldung, 1024 × 640, mit Sichtstörungen und Wracks | 14–139 KB |
 | `drohne/V1-M1.webp … V5-M1.webp` | Standbild je Verstärkung, nur mit deren Fahrzeugen | 23–54 KB |
@@ -94,7 +100,7 @@ Live-Vorschauen (`Live_M12.webp` …) ab.
 - `folge: zerstoert` → Wrack-Sprite; im Standbild mit Feuer im Motorraum und Rauchfahne nach Südost
   (`drohne[M].wracks[].staerke` wird kleiner, wenn der Rauch ein Ziel, das Rote Kreuz oder Personen verdecken würde).
   In der Live-Lage zeichnet die Oberfläche `feuer` und `rauch` (Zuordnung `effekte.zuordnung.wrack`).
-- `folge: ausser_gefecht` → Sprite mit abgesprungener Kette, kein Brand (Z-24 ab 10:19:30).
+- `folge: ausser_gefecht` → Sprite mit abgesprungener Kette, kein Brand (Z-24 ab 19:30).
 - Betroffene Bilder: M12 (Z-11), M16 (Z-11), M21 (Z-32, Z-24 (Kette ab)).
 - `manifest.ziele[Z].hintergrund` nennt Zeit und Folge, `objekte[].zustand` den Zustand im Bild.
 
@@ -118,7 +124,9 @@ Die Ziele V1-1 … V5-2 stehen im Ziel-Index mit Bild und Sprite.
 | `lm_flug` (neu) | LM im Flug (Schleife) | 8 × 16 fps | 3,2 m | um die Flugrichtung drehen (0 = Osten); Schatten wie bei Fahrzeugen, aber 4 m versetzt |
 | `leuchtspur` (neu) | PzAbw vom Westrand zum Ziel (Schleife) | 6 × 20 fps | 24 × 3 m | Anker 0,94/0,5; Anker = Kopf; vom Westrand zum Ziel bewegen und um die Flugrichtung drehen |
 | `muendungsblitz` (neu) | Kanone feuert (KPz, SPz) | 6 × 24 fps | 10 × 6 m | Anker 0,1/0,5; Anker = Mündung (Rohrende); um die Rohrrichtung drehen |
-| `muendungsblitz_steil` (neu) | Mörser feuert | 8 × 18 fps | 8 m |  |
+| `muendungsblitz_steil` (neu, 2.1 größer) | Mörser feuert (je Schuss am wechselnden Rohr) | 8 × 16 fps | 12 m |  |
+| `abschussrauch` (neu 2.1) | Rauch nach jedem Schuss eines feindlichen Mörsers oder einer Kanone | 16 × 6 fps | 18 m | nach dem Mündungsblitz am selben Ort abspielen (Echtzeit); zieht nach Südost ab |
+| `staub` (neu 2.1) | Staub hinter fahrenden Fahrzeugen | 4 Varianten (statisch) | 11 m | je Wolke eine Variante, mit dem Alter größer und blasser; Karte und Live-Drohnenbild |
 | `einschlag_artillerie` (neu) | Feindartillerie (H-01, H-04, H-12) | 18 × 14 fps | 44 m | danach krater; Staub zieht nach Südost |
 | `nebel` (neu) | Rauch-/Nebelwand (H-03), Schleife | 16 × 6 fps | 64 m | mehrere Instanzen über die Fläche (radius_m) verteilen, ein- und ausblenden |
 
@@ -126,7 +134,8 @@ Die Ziele V1-1 … V5-2 stehen im Ziel-Index mit Bild und Sprite.
 Einschlag `explosion_klein`; PZA: Flug `leuchtspur`, Einschlag `treffer_direkt`, danach `krater`),
 Hintergrund (`feindartillerie` → `einschlag_artillerie` + `krater`, `panzerabwehr` → `leuchtspur` +
 `treffer_direkt`, `rauch` → `nebel` als Fläche), Wracks (`feuer`, `rauch`), feuernde Fahrzeuge
-(`muendungsblitz`, Mörser `muendungsblitz_steil`). Der Wirkradius bleibt ein Kreis nach Spielregel.
+(`feuert`: `muendungsblitz`, Mörser `muendungsblitz_steil`; seit 2.1 `abschuss`: `abschussrauch`) und fahrende
+Fahrzeuge (seit 2.1 `fahrt`: `staub`). Der Wirkradius bleibt ein Kreis nach Spielregel.
 
 ## Drohnenbilder je Meldung
 
@@ -232,6 +241,8 @@ erzeugen und `npm test` laufen lassen.
   zum vorausberechneten Einschlagort, gedreht in Flugrichtung. PzAbw: `leuchtspur` vom Westrand zum Ziel
   (Anker = Kopf). Feindartillerie: `einschlag_artillerie` je Eintrag in `einschlaege`, danach `krater`.
   Rauch (H-03): mehrere `nebel` über den Kreis `radius_m`, ein- und ausblenden über `dauer_s`.
+  Feuernde Fahrzeuge (seit 2.1, `ziele[].feuert`): je Schuss Mündungsblitz, danach `abschussrauch`; Staub
+  (`fahrt`) hinter jedem Fahrzeug ab 1,5 m/s, je Wolke eine Variante (`kern/effekte.ts` → `staubSpur`).
   Größe `groesse_m` (bei Rechteck-Effekten `hoehe_m`) ist die sichtbare Größe, nicht der Wirkradius.
 - **Karte:** zuerst `luftbild_1m`, dann `luftbild_050`; Kacheln (0,25 m/px) erst laden, wenn mehr als
   2 Bildpunkte je Meter gebraucht werden. Raster, PQ, Zonen und Namen aus den Daten zeichnen.
@@ -245,5 +256,6 @@ der Live-Lage wäre das sichtbar gewesen. Der Generator stellt die Häuser jetzt
 Reihe nach auf und lässt jede Route frei (Abstand zum Grundriss ≥ halbe Fahrzeugbreite + 0,8 m, auch bei
 den Verstärkungen); `gen_assets.py` prüft das am Ende. Es sind 45 Häuser (vorher 47), aber das
 Mittelstück der Nordstraße (y ≈ 150–320 m), über das neun Angriffsrouten führen, ist jetzt unbebaut:
-Ober- und Unterdorf sind getrennt. EZ-01 bleibt nach den Daten bestehen. Wer dort Häuser will, legt die
-Routen in der Ortschaft auf die Straßen (Schritt 2b) und erzeugt neu.
+Ober- und Unterdorf sind getrennt. Die Ortschaft (EZ-01) bleibt nach den Daten bestehen. Wer dort Häuser will, legt die
+Routen in der Ortschaft auf die Straßen (Schritt 2b) und erzeugt neu. Seit 2.1 gelten Freihaltung und Prüfung auch für
+die Durchbruch-Routen (`Daten.alle_routen()`), ebenso `tests/assets_ebenen.test.ts`.

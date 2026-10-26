@@ -125,13 +125,15 @@ def main():
             # an der Kopfleiste ziehen (Hinweis beim Zeigen: „Kopfleiste ziehen: verschieben“)
             kopf = fenster.get_by_text(re.compile("UAV-2"))
             kb = kopf.bounding_box()
+            # Richtung nach dem freien Platz: Das Fenster öffnet neben dem Ziel (seit 2.1 liegt Ziel 3 weiter östlich)
+            sx = -1 if vorher["x"] + vorher["width"] / 2 > g1.viewport_size["width"] / 2 else 1
             g1.mouse.move(kb["x"] + 40, kb["y"] + kb["height"] / 2)
             g1.mouse.down()
             for i in range(1, 11):
-                g1.mouse.move(kb["x"] + 40 + 18 * i, kb["y"] + kb["height"] / 2 + 12 * i)
+                g1.mouse.move(kb["x"] + 40 + sx * 18 * i, kb["y"] + kb["height"] / 2 + 12 * i)
             g1.mouse.up()
             nachher = fenster.bounding_box()
-            assert nachher["x"] - vorher["x"] > 150 and nachher["y"] - vorher["y"] > 100, f"nicht verschoben: {vorher} → {nachher}"
+            assert sx * (nachher["x"] - vorher["x"]) > 150 and nachher["y"] - vorher["y"] > 100, f"nicht verschoben: {vorher} → {nachher}"
             assert g1.get_by_test_id("vergroesserung").count() == 0, "Ziehen hat die Vergrößerung geöffnet"
             g1.get_by_role("button", name="Drohnenbild schließen").click()
             warte(lambda: not fenster.is_visible() and g1.get_by_text("Drohnenbild geschlossen").count() == 1, 5, "geschlossen")

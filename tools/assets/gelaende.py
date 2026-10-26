@@ -166,10 +166,7 @@ class Gelaende:
         # bei den Verstärkungen, damit kein Fahrzeug durch ein Haus fährt oder darin hält (Schritt 5b).
         # Geprüft wird gegen den Grundriss des Hauses: Abstand ≥ halbe Fahrzeugbreite + 0,8 m.
         self.routen_frei = []      # (x, y, abstand) Punkte alle 2 m entlang aller Routen
-        for z in list(d.szenario["ziele"]) + list(d.v_ziele.values()):
-            r = (z.get("bewegung") or {}).get("route")
-            if not r:
-                continue
+        for _, z, r in d.alle_routen():          # seit 2.1 auch die Durchbruch-Routen über Brücke und Furt
             l, b = d.groesse(z)
             for (_, xa, ya), (_, xb, yb) in zip(r, r[1:]):
                 n = max(1, int(math.hypot(xb - xa, yb - ya) / 2))

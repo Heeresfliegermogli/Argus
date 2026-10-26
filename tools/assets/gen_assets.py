@@ -261,10 +261,7 @@ def pruefe_routen(d, g):
     karte = [(gb["id"], drehe(rechteck(-gb["laenge"] / 2, gb["laenge"] / 2, -gb["breite"] / 2, gb["breite"] / 2), tuple(gb["mitte"]), gb["winkel"]))
              for gb in d.gebaeude() if gb.get("laenge") and gb["art"] != "sportplatz"]
     fehler, warnungen = [], []
-    for z in list(d.szenario["ziele"]) + list(d.v_ziele.values()):
-        r = (z.get("bewegung") or {}).get("route")
-        if not r:
-            continue
+    for name, z, r in d.alle_routen():           # seit 2.1 auch die Durchbruch-Routen
         _, b = d.groesse(z)
         gefunden = set()
         for (ta, xa, ya), (tb, xb, yb) in zip(r, r[1:]):
@@ -275,11 +272,11 @@ def pruefe_routen(d, g):
                 for i, poly in enumerate(haeuser):
                     if ("h", i) not in gefunden and (im_polygon(p, poly) or abstand_polygon(p, poly) < b / 2):
                         gefunden.add(("h", i))
-                        fehler.append(f"{z['id']} fährt bei t ≈ {t:.0f} s durch ein erzeugtes Haus")
+                        fehler.append(f"{name} fährt bei t ≈ {t:.0f} s durch ein erzeugtes Haus")
                 for gid, poly in karte:
                     if ("k", gid) not in gefunden and (im_polygon(p, poly) or abstand_polygon(p, poly) < b / 2):
                         gefunden.add(("k", gid))
-                        warnungen.append(f"{z['id']} fährt bei t ≈ {t:.0f} s durch Gebäude {gid} (Kartendatei)")
+                        warnungen.append(f"{name} fährt bei t ≈ {t:.0f} s durch Gebäude {gid} (Kartendatei)")
     return fehler, warnungen
 
 
