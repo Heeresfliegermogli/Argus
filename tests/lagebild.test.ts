@@ -107,7 +107,7 @@ describe("Tracking (Schritt 7)", () => {
     const lb = lagebildZielmeldungen(inh, vorher, "g2", 100);
     const o = lb.objekte.find((x) => x.meldung === "M01")!;
     expect(o.bahn).toBeDefined();
-    expect(o.pos).toEqual([926, 322]); // Z-01 hält an der Hauptstraße
+    expect(o.pos).toEqual([772, 440]); // Z-01 hält östlich der Schule (Spähtrupp HAUPT, seit 2.1)
     expect(o.sidc).toBe(lagebildZielmeldungen(inh, vorher, "g2").objekte.find((x) => x.meldung === "M01")!.sidc); // ARGUS-Klasse, nicht Ground Truth
     expect(o.menge).toBe(2);
     expect(lagebildZielmeldungen(inh, vorher, "g1", 100).objekte.map((x) => x.meldung)).toEqual(["M01"]); // auch G1 (Karte ab 6b)
@@ -118,26 +118,26 @@ describe("Tracking (Schritt 7)", () => {
       ["meldung", { meldung: "M01" }, 20],
       ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60],
       ["g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "MRS" }, 110],
-      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "MRS", einschlag: { t: 175, pos: [926, 322], ziel: "Z-01" } }, 140],
-      ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [926, 322], t_freigabe: 140, t_einschlag: 175, ziel: "Z-01",
+      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "MRS", einschlag: { t: 175, pos: [772, 440], ziel: "Z-01" } }, 140],
+      ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [772, 440], t_freigabe: 140, t_einschlag: 175, ziel: "Z-01",
         getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 175],
     ]), inh);
     const w = lagebildZielmeldungen(inh, nachher, "g2", 230).objekte.find((x) => x.meldung === "M01")!;
     expect(w.zerstoert).toBe(true);
     expect(w.sidc[3]).toBe("X");
     expect(w.bahn?.halt).toBe(175);
-    expect(w.pos).toEqual([926, 322]);
+    expect(w.pos).toEqual([772, 440]);
     // geplante Wirkung vor dem Einschlag: am vorausberechneten Ort
     const geplant = zustandAus(protokoll([
       ...START,
       ["meldung", { meldung: "M01" }, 20],
       ["g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60],
       ["g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "LM" }, 110],
-      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "LM", einschlag: { t: 181.2, pos: [926, 322], ziel: "Z-01" } }, 140],
+      ["g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "LM", einschlag: { t: 180.8, pos: [772, 440], ziel: "Z-01" } }, 140],
     ]), inh);
     const gw = lagebildZielmeldungen(inh, geplant, "g3", 150).wirkungen.find((x) => x.geplant)!;
-    expect(gw.pos).toEqual([926, 322]);
-    expect(gw.text).toMatch(/LM · 03:01$/); // Spieluhr 00:00–25:00 (B4)
+    expect(gw.pos).toEqual([772, 440]);
+    expect(gw.text).toMatch(/LM · 03:00$/); // Spieluhr 00:00–25:00 (B4)
   });
 
   it("ein fahrendes Ziel: Bahn = Route, Position zur Lagezeit", async () => {

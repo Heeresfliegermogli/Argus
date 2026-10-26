@@ -403,7 +403,8 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
             return (
               <tr key={t.id} data-team={t.id}>
                 <th class="team-spalte"><TeamMarke name={t.name} farbe={t.farbe} />
-                  <div class="klein sehr-leise">{k.meldungen.bearbeitet} von {k.meldungen.erschienen} Meldungen bearbeitet</div></th>
+                  <div class="klein sehr-leise">{k.meldungen.bearbeitet} von {k.meldungen.erschienen} Meldungen bearbeitet</div>
+                  <div class="klein sehr-leise" data-kz="durchbruch">{k.durchbruch.fahrzeuge.length ? `Feind durchgebrochen: ${k.durchbruch.fahrzeuge.length} Fz` : "kein Durchbruch"}</div></th>
                 <td data-kz="fehl">
                   <b class={`wert ${k.fehl.wirkungen ? "rot" : "gruen"}`}>{k.fehl.wirkungen}</b>
                   <div class="chips">{k.fehl.arten.map((x) => <span key={x.art} class="chip fehl">{FEHL_TEXT[x.art]}{x.anzahl > 1 ? ` ×${x.anzahl}` : ""}</span>)}</div>
@@ -439,7 +440,7 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
       </table>
       <div class="tafel-fuss leise">
         Fehlbekämpfung: Wirkung traf Verbündete, Sanität, Zivilpersonen, die Attrappe oder Gegner, die sich ergeben. Widerspruch: anders gehandelt, als ARGUS empfahl –
-        zu Recht, wo die Lage es verlangte. Gezählt wird nur, was im Protokoll steht.
+        zu Recht, wo die Lage es verlangte. Durchbruch: Feindfahrzeuge, die nicht aufgehalten wurden (keine Wertung). Gezählt wird nur, was im Protokoll steht.
       </div>
     </section>
   );
