@@ -71,9 +71,104 @@ def mmss(t_s):
 
 
 def uhrzeit(start, t_s):
-    h, m, s = (int(v) for v in start.split(":"))
-    tot = h * 3600 + m * 60 + s + int(round(t_s))
-    return f"{tot // 3600 % 24:02d}:{tot // 60 % 60:02d}:{tot % 60:02d}"
+    """Spieluhr zur Anzeige (seit 25.10.2026, Änderung B4: 00:00–25:00 statt 10:00–10:25): Spielzeit als mm:ss,
+    abgerundet wie src/kern/uhr.ts. `start` (spieluhr.start der Daten) bleibt als Parameter, zählt aber nicht mehr."""
+    t = max(0, int(math.floor(t_s)))
+    return f"{t // 60:02d}:{t % 60:02d}"
+
+
+def _sekunden(hhmmss):
+    h, m, *s = (int(v) for v in hhmmss.split(":"))
+    return h * 3600 + m * 60 + (s[0] if s else 0)
+
+
+# ----------------------------------------------------------------------------- Anzeige-Texte (wie src/kern/anzeige.ts)
+# Änderungen B3, B4, B7 vom 25.10.2026: Die Daten behalten „G1“, „10:17:00“ und „M07“; für die Anzeige (und alles, was
+# Spielleitung oder Spieler lesen: Drehbuch, Mappe) werden Rollennamen, Spieluhr und Zielnummern umgeschrieben.
+# Kennungen (id, an, ziele …) bleiben, weil Engine, Protokoll und Auswertung mit ihnen rechnen.
+ROLLE = {"G1": "Aufklärung", "G2": "Zielprüfung", "G3": "Führung"}
+_ROLLEN_PREP_DIE = r"an|für|durch|ohne|gegen|um|nur"
+_ROLLEN_PREP_DER = r"von|bei|mit|nach|aus|vor|gibst|gibt|gebt|geben|meldet|zeigt"
+
+
+def rollen_im_text(text):
+    """G1/G2/G3 → Aufklärung/Zielprüfung/Führung, mit Artikel nach Präpositionen („an G2“ → „an die Zielprüfung“)."""
+    import re
+    if not re.search(r"\bG[123]\b", text):
+        return text
+    r = lambda g: ROLLE[g]
+    text = re.sub(r"\bG([123]) (Aufklärung|Zielprüfung|Führung)\b", r"\2", text)
+    text = re.sub(r"\b(AN|VON) (G[123])\b", lambda m: f"{m[1]} {r(m[2]).upper()}", text)
+    text = re.sub(rf"\b({_ROLLEN_PREP_DIE}) (G[123])\b", lambda m: f"{m[1]} die {r(m[2])}", text)
+    text = re.sub(rf"\b({_ROLLEN_PREP_DER}) (G[123])\b", lambda m: f"{m[1]} der {r(m[2])}", text)
+    text = re.sub(r"\bzu (G[123])\b", lambda m: f"zur {r(m[1])}", text)
+    text = re.sub(r"(^|[.!?]\s+|„|\(\s*)(G[123])(?=\s+[a-zäöüß])",
+                  lambda m: f"{m[1]}{'die' if m[1].startswith('(') else 'Die'} {r(m[2])}", text)
+    return re.sub(r"\bG([123])\b", lambda m: ROLLE[f"G{m[1]}"], text)
+
+
+def spieluhr_im_text(text, start, dauer_s):
+    """Uhrzeiten in Texten („um 10:17:00“, „bis 10:25“) in die Spieluhr umrechnen („um 17:00“, „bis 25:00“); bis eine
+    Stunde vor Spielbeginn negativ („09:52“ → „−08:00“). Andere Zahlen bleiben."""
+    import re
+    s0 = _sekunden(start)
+
+    def f(m):
+        h, mi, s = m[1], m[2], m[3]
+        t = int(h) * 3600 + int(mi) * 60 + int(s or 0) - s0
+        if int(mi) > 59 or (s is not None and int(s) > 59) or t < -3600 or t > dauer_s + 600:
+            return m[0]
+        return f"−{uhrzeit(start, -t)}" if t < 0 else uhrzeit(start, t)
+    return re.sub(r"\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b", f, text)
+
+
+def basis_nummern(sz):
+    """Zielnummer je Meldung des Szenarios (ohne Verstärkungen): Platz nach t_s, 1 … n (wie src/kern/zielnummern.ts)."""
+    liste = sorted(((m["t_s"], i, m["id"]) for i, m in enumerate(sz["meldungen"]) if not m.get("verstaerkung")))
+    return {mid: n for n, (_, _, mid) in enumerate(liste, 1)}
+
+
+def meldungen_im_text(text, basis):
+    """M07 → „Ziel 7“ (Anzeige)."""
+    import re
+    return re.sub(r"\bM(\d{2})\b", lambda m: f"Ziel {basis[f'M{m[1]}']}" if f"M{m[1]}" in basis else m[0], text)
+
+
+def anzeige_text(text, sz, basis=None):
+    """Ein Text des Szenarios für die Anzeige: Rollen, Spieluhr, Zielnummern."""
+    basis = basis if basis is not None else basis_nummern(sz)
+    return meldungen_im_text(spieluhr_im_text(rollen_im_text(text), sz["spieluhr"]["start"], sz["spieluhr"]["dauer_s"]), basis)
+
+
+KENNUNGEN = {
+    "id", "ziele", "typ", "kategorie", "art", "klasse", "empfehlung", "datei", "an", "ziel", "fall", "meldung", "folge_von",
+    "start", "gruppe", "bei", "folge", "phase", "aktion", "version", "stand", "anzeige", "karte", "fahrzeuge", "wirkmittel",
+    "regeln", "zugehoerigkeit", "seite", "schritt", "regel_id", "stufe", "prueft", "schaltet",
+}
+
+
+def _wandle(wert, f, schluessel=None):
+    if isinstance(wert, str):
+        return wert if schluessel in KENNUNGEN else f(wert)
+    if isinstance(wert, list):
+        return [_wandle(x, f, schluessel) for x in wert]
+    if isinstance(wert, dict):
+        return {k: _wandle(v, f, k) for k, v in wert.items()}
+    return wert
+
+
+def anzeige_szenario(sz):
+    """Alle Texte des Szenarios für die Anzeige umschreiben (Kennungen und spieluhr bleiben)."""
+    basis = basis_nummern(sz)
+    neu = _wandle(sz, lambda s: anzeige_text(s, sz, basis))
+    neu["spieluhr"] = dict(sz["spieluhr"])
+    return neu
+
+
+def anzeige_daten(daten, sz):
+    """Texte anderer Daten (Regeln, Kataloge): nur Rollen und Spieluhr."""
+    st, du = sz["spieluhr"]["start"], sz["spieluhr"]["dauer_s"]
+    return _wandle(daten, lambda s: spieluhr_im_text(rollen_im_text(s), st, du))
 
 
 def pq(p, karte):

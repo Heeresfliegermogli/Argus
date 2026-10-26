@@ -189,21 +189,34 @@ describe("Assets Schritt 5b: Live-Drohnenbild, Verstärkungen, Hintergrundgefech
       const lx = dx * Math.cos(w) - dy * Math.sin(w), ly = dx * Math.sin(w) + dy * Math.cos(w);
       return Math.hypot(Math.max(0, Math.abs(lx) - h.laenge / 2), Math.max(0, Math.abs(ly) - h.breite / 2));
     };
-    const ziele = [...sz.ziele, ...sz.verstaerkungen.gruppen.flatMap((v) => v.ziele)] as (RohZiel & { bewegung?: { route?: [number, number, number][] } })[];
+    // Routen: Szenario, Verstärkungen und Durchbruch-Routen (seit 2.1, A4: über Brücke oder Furt westlich aus dem Bild)
+    type Route = [number, number, number][];
+    const roh = sz as unknown as {
+      ziele: (RohZiel & { bewegung?: { route?: Route } })[];
+      verstaerkungen: { gruppen: { ziele: (RohZiel & { bewegung?: { route?: Route } })[]; durchbruch?: { routen: Record<string, Route> } }[] };
+      durchbruch?: { gruppen: { routen: Record<string, Route> }[] };
+    };
+    const alle = [...roh.ziele, ...roh.verstaerkungen.gruppen.flatMap((v) => v.ziele)];
+    const typ = new Map(alle.map((z) => [z.id, z.typ]));
+    const routen: [string, Route][] = alle.filter((z) => z.bewegung?.route).map((z) => [z.id, z.bewegung!.route!]);
+    for (const g of [...(roh.durchbruch?.gruppen ?? []), ...roh.verstaerkungen.gruppen.flatMap((v) => (v.durchbruch ? [v.durchbruch] : []))])
+      for (const [id, r] of Object.entries(g.routen)) routen.push([`${id} (Durchbruch)`, r]);
     expect(g.haeuser.length).toBeGreaterThan(30);
-    for (const z of ziele) {
-      const r = z.bewegung?.route;
-      if (!r) continue;
-      const halb = groesse.get(z.typ)![1] / 2;
+    expect(routen.filter(([id]) => id.endsWith("(Durchbruch)")).length).toBeGreaterThan(10);
+    // Verstöße sammeln und einmal vergleichen (ein expect je Punkt und Haus ist unter Last zu langsam)
+    const fehler: string[] = [];
+    for (const [id, r] of routen) {
+      const halb = groesse.get(typ.get(id.split(" ")[0])!)![1] / 2;
       for (let i = 1; i < r.length; i++) {
         const [, xa, ya] = r[i - 1], [, xb, yb] = r[i];
         const n = Math.max(1, Math.floor(Math.hypot(xb - xa, yb - ya) / 2));
         for (let k = 0; k <= n; k++) {
           const p: [number, number] = [xa + (k / n) * (xb - xa), ya + (k / n) * (yb - ya)];
-          for (const h of g.haeuser) expect(abstand(p, h), `${z.id} bei ${p.map(Math.round)}`).toBeGreaterThanOrEqual(halb);
+          if (g.haeuser.some((h) => abstand(p, h) < halb)) fehler.push(`${id} bei ${p.map(Math.round)}`);
         }
       }
     }
+    expect(fehler.slice(0, 10)).toEqual([]);
   });
 
   it("Größenbudget: Standbilder ≤ 150 KB, Ebenen je Meldung ≤ 200 KB, Spiel und Live-Ebenen je unter 6 MB", () => {
