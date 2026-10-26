@@ -98,7 +98,8 @@ export function SLAnsicht(p: { s: Sicht }) {
     });
     for (const i of sz.injects) {
       if (i.t_s === undefined) continue;
-      liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
+      const an = i.an.toLowerCase();
+      liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${an === "g1" || an === "g2" || an === "g3" ? ROLLEN_NAME[an] : i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
     }
     for (const h of sz.hintergrund?.ereignisse ?? []) {
       const art = h.art === "panzerabwehr" ? `eigene PzAbw → ${h.ziel}` : h.art === "feindartillerie" ? "Feindartillerie" : "Rauch";
@@ -264,7 +265,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                 return (
                   <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
                     <td class="zahl klein">{uhrzeit(start, x.t)}</td>
-                    <td style="white-space:nowrap">{x.art === "meldung" ? <><b>Ziel {zielNr(inh, z, x.id)}</b> <span class="sehr-leise klein">{x.id}</span></> : <b>{x.id}</b>}{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
+                    <td style="white-space:nowrap">{x.art === "meldung" ? (zielNr(inh, z, x.id) === x.id ? <b>{x.id}</b> : <><b>Ziel {zielNr(inh, z, x.id)}</b> <span class="sehr-leise klein">{x.id}</span></>) : <b>{x.id}</b>}{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
                     <td class="klein">{x.text}<div class="sehr-leise">{x.zusatz}</div></td>
                     <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
                     <td style="text-align:right">
