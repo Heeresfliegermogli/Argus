@@ -170,6 +170,22 @@ def main():
                    f"LM auf Z-02 im Bild von M12 (Einschlag {te:.1f} s): kurz vorher {sorted(gesehen['flug'][0])}, "
                    f"beim Einschlag {sorted(gesehen['einschlag'][0])}, 6 s danach {sorted(gesehen['wrack'][0])} – Z-02 Wrack: {gesehen['wrack'][1]}")
 
+            # ---------------------------------------------------------------- 2b. Feuer und Staub (Szenario 2.1, A8)
+            # Mörser Z-06 (M05) feuert nach Schussrhythmus ab 13:38 (818 s): kurz nach dem Schuss Mündungsblitz und
+            # Abschussrauch; M13: der Panzerzug fährt und wirbelt Staub auf.
+            oeffne(g1, "M05")
+            x = setze(818.3)
+            foto(g1, "M05_schuss")
+            pruefe("muendungsblitz_steil" in x["effekte"] and "abschussrauch" in x["effekte"],
+                   f"M05 Mörser Z-06 feuert (818,3 s, 0,3 s nach dem Schuss): {sorted(x['effekte'])}")
+            x = setze(830 + 4)
+            pruefe("muendungsblitz_steil" not in x["effekte"], f"M05 zwischen den Feuerstößen kein Blitz (834 s): {sorted(x['effekte'])}")
+            setze(880)
+            oeffne(g1, "M13")
+            x = setze(882)
+            foto(g1, "M13_staub")
+            pruefe("staub" in x["effekte"], f"M13 Panzerzug fährt und wirbelt Staub auf (882 s): {sorted(x['effekte'])}")
+
             # ---------------------------------------------------------------- 3. Schlüsselfälle mit Lupe
             def fall(mid, name, art, zid, farbe, mindest, t=None):
                 if t is not None:

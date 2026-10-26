@@ -24,8 +24,8 @@ import { STAUB_N, STAUB_TAKT_S } from "../kern/effekte";
 /** Mindestgröße auf dem Bildschirm (px, längste Seite), damit ein Effekt auch in der Gesamtansicht auffällt. */
 const MIN_PX: Record<string, number> = {
   explosion_mittel: 34, explosion_klein: 24, treffer_direkt: 20, einschlag_artillerie: 36, feuer: 12, rauch: 26,
-  krater: 7, lm_flug: 22, leuchtspur: 34, muendungsblitz: 16, muendungsblitz_steil: 14, nebel: 40,
-  abschussrauch: 16, staub: 9,
+  krater: 7, lm_flug: 22, leuchtspur: 34, muendungsblitz: 16, muendungsblitz_steil: 20, nebel: 40,
+  abschussrauch: 22, staub: 14,
 };
 /** Wie lange eine Schleife am Wrack läuft (Spielzeit, s); danach blendet sie aus. */
 const WRACK_DAUER: Record<string, number> = { feuer: 150, rauch: 420 };
@@ -359,7 +359,7 @@ export class EffektEbene {
         const q = bs([w.pos[0] + 0.6 * w.alter, w.pos[1] + 0.6 * w.alter]);
         sp.position.set(q[0], q[1]);
         sp.scale.set(this.massstab(a, s, 0.55 + 0.9 * f));
-        sp.alpha = 0.62 * (1 - f) * Math.min(1, w.alter / 0.4 + 0.3);
+        sp.alpha = 0.85 * (1 - f) * Math.min(1, w.alter / 0.4 + 0.3);
       }
     }
   }

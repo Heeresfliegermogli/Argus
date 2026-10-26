@@ -6,7 +6,9 @@ Teil A – ein Team im Direktaufruf (SL, G1, G2, G3, Plenum; lokaler Sync), Uhr 
   A2  Feindartillerie H-01 (10:05:04, angehalten): Einschläge am Westrand auf Kontrollkarte und Plenum.
   A3  Eine Meldung durch die Kette (G1 annehmen, G2 LM, G3 Freigabe) – über die Knöpfe; LM fliegt sichtbar vom
       Westrand zum vorausberechneten Einschlagort (G2, G3, SL), Warnung „Freigabe jetzt: Einschlag …“ bei G3.
-  A4  V-2 um 10:08:00 gesperrt (käme Schule/Sanität zu nahe): Knopf gesperrt, Grund im Text.
+  A4  V-2 um 10:07:00 gesperrt (käme Schule/Sanität zu nahe, Szenario 2.1): Knopf gesperrt, Grund im Text.
+  A4b Szenario 2.1 (A8): Mörser Z-06 feuert nach Schussrhythmus (Mündungsblitz, Abschussrauch), fahrende Fahrzeuge
+      wirbeln Staub auf (Kontrollkarte).
   A5  Leuchtspur der eigenen PzAbw auf Z-11 (H-02, 10:09:15,8, angehalten), danach Nebel H-03 und brennendes Wrack
       an der Brücke (10:10:00, Kontrollkarte gezoomt mit Sprites).
   A6  Bildrate: 10:13:30–10:14:20 bei Tempo ×1 (Feindartillerie H-04, Bewegung, Flug) in SL, G2, G3 und Plenum.
@@ -14,7 +16,7 @@ Teil A – ein Team im Direktaufruf (SL, G1, G2, G3, Plenum; lokaler Sync), Uhr 
   A8  E-01 (10:23:30,3, angehalten): Mündungsblitz am PT-91, Treffer auf Z-27; Auflösung im Plenum.
 Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung:
   B1  Menü „Verstärkung ▾“: V-1 „an alle“ → in beiden Protokollen; V-3 nur an Team B; Zeile zeigt „+n V“.
-  B2  V-2 um 10:08:00 für alle gesperrt.
+  B2  V-2 um 10:12:00 für alle gesperrt (Szenario 2.1: 10:11:15–10:17:15).
 Teil C – Bildrate der Kontrollkarte allein (wie am Rechner der Spielleitung), Tempo ×1 und ×10, gezoomt mit Sprites.
 Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 Karten mit WebGL über SwiftShader (Standard) oder im Rückfall Canvas (--renderer canvas).
@@ -198,12 +200,27 @@ def main():
         w = sl.evaluate(f"() => window.argus.stand.zustand.meldungen['{mid}'].wirkung")
         pruefe(w and abs(w["t_einschlag"] - einschlag["t"]) < 0.05 and w["pos"] == einschlag["pos"], f"A3 Einschlag wie vorausberechnet: {w and w['getroffen']}")
 
-        # A4 V-2 gesperrt
-        zeit("08:00", tempo=1)
+        # A4 V-2 gesperrt (Szenario 2.1: 10:06:30–10:07:15 und 10:11:15–10:17:15)
+        zeit("07:00", tempo=1)
         sl.wait_for_timeout(600)
         knopf2 = sl.locator("[data-verstaerkung-sl=V-2] button", has_text="einspielen")
         text2 = sl.locator("[data-verstaerkung-sl=V-2]").inner_text()
-        pruefe(knopf2.is_disabled() and "gesperrt" in text2, f"A4 V-2 um 10:08:00 gesperrt: „{text2.splitlines()[-2] if len(text2.splitlines()) > 1 else text2}“")
+        pruefe(knopf2.is_disabled() and "gesperrt" in text2, f"A4 V-2 um 10:07:00 gesperrt: „{text2.splitlines()[-2] if len(text2.splitlines()) > 1 else text2}“")
+
+        # A4b Feuer und Staub (Szenario 2.1, A8): Mörser Z-06 schießt um 10:07:08 (Feuerstoß 10:06:56–10:07:08 im Takt 4 s)
+        # Uhr direkt 0,2 s nach den Schuss um 428 s stellen (der Blitz dauert 0,44 s Echtzeit, beim Anhalten wäre er vorbei)
+        sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", 428.2)
+        warte(lambda: abs(zustand()["t"] - 428.2) < 0.05, 5, "Spielzeit 428,2 s")
+        sl.wait_for_timeout(300)
+        d = sl.evaluate(KARTE_JS, "kontrollkarte")
+        foto(sl, "A4b_sl_moerser_feuert")
+        pruefe(d and "muendungsblitz_steil" in d["gezeigt"] and "abschussrauch" in d["gezeigt"],
+               f"A4b Mörser Z-06 feuert: Mündungsblitz und Abschussrauch auf der Kontrollkarte ({d and d['gezeigt']})")
+        pruefe(d and d["staub"] > 0 and "staub" in d["gezeigt"], f"A4b fahrende Fahrzeuge wirbeln Staub auf ({d and d['staub']} Wolken)")
+        sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.zeigeAuf([860, 160], 3)")
+        sl.wait_for_timeout(1200)
+        foto(sl, "A4b_sl_feuer_staub_gezoomt")
+        sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.ganzeKarte()")
 
         # A5 Leuchtspur H-02, Nebel H-03, Wrack Z-11
         zeit("09:12", tempo=1)
@@ -314,13 +331,13 @@ def main():
         za = sl.locator("[data-team-zeile='Team A'] [data-verstaerkungen]").inner_text()
         zb = sl.locator("[data-team-zeile='Team B'] [data-verstaerkungen]").inner_text()
         pruefe("+1 V" in za and "+2 V" in zb, f"B1 Übersicht zeigt eingespielte Verstärkungen ({za.strip()} / {zb.strip()})")
-        sl.get_by_test_id("alle-zeit").fill("08:00")
+        sl.get_by_test_id("alle-zeit").fill("12:00")
         sl.get_by_role("button", name="Spielzeit setzen").click()
-        warte(lambda: all(x["uhr"]["t_s"] >= 480 for x in sl.evaluate("() => window.argusTeams()")), 10, "Spielzeit 08:00")
+        warte(lambda: all(x["uhr"]["t_s"] >= 720 for x in sl.evaluate("() => window.argusTeams()")), 10, "Spielzeit 12:00")
         sl.get_by_test_id("verstaerkung-menue").click()
         sl.wait_for_timeout(300)
         alle2 = sl.locator("[data-alle=V-2]")
-        pruefe(alle2.is_disabled() and "gesperrt" in (alle2.get_attribute("title") or ""), f"B2 V-2 um 10:08:00 gesperrt: „{alle2.get_attribute('title')}“")
+        pruefe(alle2.is_disabled() and "gesperrt" in (alle2.get_attribute("title") or ""), f"B2 V-2 um 10:12:00 gesperrt: „{alle2.get_attribute('title')}“")
         foto(sl, "B2_uebersicht_gesperrt")
         sl.keyboard.press("Escape")
         for x in [sl] + tt:

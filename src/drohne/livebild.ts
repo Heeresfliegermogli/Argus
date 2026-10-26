@@ -594,7 +594,7 @@ export class LiveDrohnenbild {
           if (!this.imBild(q, 60)) continue;
           const fa = Math.max(0, Math.min(1, w.alter / dauer));
           const groesse = (res.man.effekte.animationen[staub]?.groesse_m ?? 8) * (0.55 + 0.9 * fa);
-          this.effektBild(ctx, staub, w.nr, q, groesse, 0, 0.6 * (1 - fa) * Math.min(1, w.alter / 0.4 + 0.3));
+          this.effektBild(ctx, staub, w.nr, q, groesse, 0, 0.8 * (1 - fa) * Math.min(1, w.alter / 0.4 + 0.3));
         }
       }
     }

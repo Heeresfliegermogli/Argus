@@ -28,12 +28,12 @@ EFFEKTE = {
     "lm_flug": (8, 64, 3.2, 16, True),                 # Loitering Munition im Flug (Blick nach Osten)
     "leuchtspur": (6, 256, 24.0, 20, True),            # Leuchtspur der eigenen PzAbw, Kopf vorn (Osten)
     "muendungsblitz": (6, 120, 10.0, 24, False),       # Kanone/Maschinenkanone, Rohr nach Osten
-    "muendungsblitz_steil": (8, 72, 8.0, 18, False),   # Mörser (Steilfeuer), ringförmig
+    "muendungsblitz_steil": (8, 96, 12.0, 16, False),  # Mörser (Steilfeuer), ringförmig (2.1: größer, besser sichtbar)
     "einschlag_artillerie": (18, 224, 44.0, 14, False),  # Feindartillerie: Erdfontäne, Staub
     "nebel": (16, 256, 64.0, 6, True),                 # Rauch-/Nebelwand (Rückzug unter Rauch, H-03)
     # Szenario 2.1 (A8: dynamische Animationen)
-    "abschussrauch": (14, 96, 12.0, 7, False),         # Rauch nach dem Abschuss (Mörser, Kanone): quillt auf, zieht ab
-    "staub": (4, 64, 8.0, 0, False),                   # Staubwolke hinter fahrenden Fahrzeugen (4 Varianten)
+    "abschussrauch": (16, 128, 18.0, 6, False),        # Rauch nach dem Abschuss (Mörser, Kanone): quillt auf, zieht ab
+    "staub": (4, 96, 11.0, 0, False),                  # Staubwolke hinter fahrenden Fahrzeugen (4 Varianten)
 }
 
 # Abweichende Form und Anker (Anteil der Bildbreite/-höhe); sonst quadratisch, Anker Mitte.
@@ -319,7 +319,7 @@ def muendungsblitz_steil(n_bilder, n, groesse_m, rng):
         rgb = np.zeros((n, n, 3), np.float32)
         a = np.zeros((n, n), np.float32)
         rs = 0.8 + 2.8 * t                                           # Staubring
-        ring = np.exp(-((rr - rs) / (0.45 + 0.5 * t)) ** 2) * (0.75 * (1 - t) ** 0.8) * (0.7 + 0.6 * rausch)
+        ring = np.exp(-((rr - rs) / (0.45 + 0.5 * t)) ** 2) * (0.85 * (1 - t) ** 0.8) * (0.7 + 0.6 * rausch)
         rgb, a = _ueber(rgb, a, np.dstack([150 + 30 * rausch, 136 + 26 * rausch, 108 + 20 * rausch]), np.clip(ring, 0, 1))
         if t > 0.1:
             d = rr / (0.6 + 1.6 * t) - 0.5 * (rausch - 0.5)
@@ -404,11 +404,11 @@ def abschussrauch(n_bilder, n, groesse_m, rng):
     bilder = []
     for i in range(n_bilder):
         t = i / (n_bilder - 1)
-        cx = cy = 0.9 * groesse_m * 0.18 * t                       # Drift nach Südost
-        r = groesse_m * (0.12 + 0.3 * t ** 0.7)
+        cx = cy = groesse_m * 0.14 * t                             # Drift nach Südost
+        r = groesse_m * (0.16 + 0.27 * t ** 0.6)
         d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / r - 0.55 * (rausch[0] - 0.5)
-        a = glatt_stufe(-d, -1.0, -0.45) * (0.82 * (1 - t) ** 1.3) * min(1.0, 0.35 + t * 5)
-        g = (178 + 36 * rausch[1]) * (0.94 + 0.06 * t)
+        a = glatt_stufe(-d, -1.0, -0.4) * (0.97 * (1 - t) ** 1.1) * min(1.0, 0.55 + t * 6)
+        g = (206 + 32 * rausch[1]) * (0.96 + 0.04 * t)
         bilder.append(_rgba(np.dstack([g, g * 0.985, g * 0.96]), a))
     return bilder
 
@@ -422,9 +422,9 @@ def staub(n_var, n, groesse_m, rng):
         r2 = np.random.default_rng(int(rng.integers(1 << 30)))
         rausch = fraktal(n, n, r2, zelle=n / 5, oktaven=3)
         fein = fraktal(n, n, r2, zelle=n / 12, oktaven=2)
-        d = rr / 0.78 - 0.6 * (rausch - 0.5)
-        a = glatt_stufe(-d, -1.0, -0.2) * (0.55 + 0.25 * fein)
-        rgb = np.dstack([168 + 26 * fein, 150 + 22 * fein, 118 + 16 * fein])
+        d = rr / 0.8 - 0.6 * (rausch - 0.5)
+        a = glatt_stufe(-d, -1.0, -0.25) * (0.78 + 0.22 * fein)
+        rgb = np.dstack([206 + 24 * fein, 190 + 22 * fein, 156 + 18 * fein])
         bilder.append(_rgba(rgb, a))
     return bilder
 

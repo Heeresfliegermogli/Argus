@@ -17,7 +17,7 @@
   "karte_kacheln": 1312064,
   "karte_sonst": 479079,
   "fahrzeuge": 349320,
-  "effekte": 540523
+  "effekte": 555030
  },
  "karte": {
   "id": "raum_kraehe",
@@ -622,8 +622,8 @@
   "bild": "sprites/effekte.webp",
   "json": "sprites/effekte.json",
   "breite": 2048,
-  "hoehe": 1976,
-  "bytes": 540523,
+  "hoehe": 2040,
+  "bytes": 555030,
   "animationen": {
    "explosion_mittel": {
     "bilder": 16,
@@ -719,11 +719,11 @@
    },
    "muendungsblitz_steil": {
     "bilder": 8,
-    "px": 72,
-    "groesse_m": 8.0,
-    "fps": 18,
+    "px": 96,
+    "groesse_m": 12.0,
+    "fps": 16,
     "schleife": false,
-    "px_pro_m": 9.0
+    "px_pro_m": 8.0
    },
    "einschlag_artillerie": {
     "bilder": 18,
@@ -744,21 +744,21 @@
     "hinweis": "mehrere Instanzen über die Fläche (radius_m) verteilen, ein- und ausblenden"
    },
    "abschussrauch": {
-    "bilder": 14,
-    "px": 96,
-    "groesse_m": 12.0,
-    "fps": 7,
+    "bilder": 16,
+    "px": 128,
+    "groesse_m": 18.0,
+    "fps": 6,
     "schleife": false,
-    "px_pro_m": 8.0,
+    "px_pro_m": 7.111,
     "hinweis": "nach dem Mündungsblitz am selben Ort abspielen (Echtzeit); zieht nach Südost ab"
    },
    "staub": {
     "bilder": 4,
-    "px": 64,
-    "groesse_m": 8.0,
+    "px": 96,
+    "groesse_m": 11.0,
     "fps": 0,
     "schleife": false,
-    "px_pro_m": 8.0,
+    "px_pro_m": 8.727,
     "hinweis": "Varianten (fps 0): je Wolke eine, mit dem Alter größer und blasser zeichnen; Wind nach Südost"
    }
   },
