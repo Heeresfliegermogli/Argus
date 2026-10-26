@@ -7,8 +7,10 @@ Exit-Code 1 bei Fehlern.
 
 Seit 2.0 zusätzlich: Bewegung (Sensortext ↔ Route, realistische Geschwindigkeiten), Gruppen, Trefferregel nach der
 Lage beim Einschlag (Lösungshilfe mit Freigabe-Fenster), Hintergrundgefecht, Verstärkungen (für jeden Einspielzeitpunkt).
+Seit 2.1: Durchbruch (Gruppen, Routen über Brücke oder Furt, Lagemeldung), Feuer (Schussrhythmus), Zonen mit Kurznamen.
 
-Kopie aus dem Projekt PolBil (claude/tools/pruefe_szenario.py, Stand Schritt 2b); simuliere_durchlauf.py braucht sie.
+Gleich im Projekt PolBil (claude/tools/pruefe_szenario.py) und im Repository (tools/referenz/), Stand Szenario 2.1;
+simuliere_durchlauf.py und gen_drehbuch.py brauchen sie.
 """
 import json
 import statistics
@@ -377,6 +379,100 @@ def pruefe(d):
                     warn.append(f"{m['id']}: {r['wm']} bei Meldung zulässig, beim Einschlag {r['fenster']} (Vorhalt bei einer Routine-Verstärkung)")
             vinfo.append({"gruppe": g["id"], "meldung": m["id"], "zulaessig": zul, "nicht_einspielen": fenster})
 
+    # ---------------------------------------------------------------- Durchbruch (seit 2.1)
+    KEIN_DURCHBRUCH = ("spaehpz_brdm2", "gfz_tigr", "moerser_trupp", "lkw_ural", "eloka_lkw", "traktor", "san_rad", "attrappe_kpz")
+    bach = L.linie(karte, "bach_elster")
+    db_info = []
+    e01 = {w["ziel"]: w["t_s"] for e in sz.get("ereignisse", []) for w in e["wirkungen"]}
+    hg_ziele = {h["ziel"]: h["t_s"] for h in hg if h["art"] == "panzerabwehr"}
+
+    def pruefe_db(gid, ziele_map, gruppe, wer):
+        t_s = gruppe["t_s"]
+        for zid in gruppe["ziele"]:
+            z = ziele_map.get(zid)
+            if not z:
+                fehler.append(f"{wer}: Ziel {zid} unbekannt")
+                continue
+            if z["typ"] in KEIN_DURCHBRUCH:
+                fehler.append(f"{wer}: {zid} ({z['typ']}) bricht nicht durch (Späher, Unterstützung, geschützt)")
+            if not z["gt"].get("legitim", False) and not z["gt"].get("vorher"):
+                fehler.append(f"{wer}: {zid} ist kein Feind")
+            rt = (gruppe.get("routen") or {}).get(zid)
+            if not rt:
+                fehler.append(f"{wer}: Route für {zid} fehlt")
+                continue
+            if abs(rt[0][0] - t_s) > 0.05:
+                fehler.append(f"{wer}: Route {zid} beginnt bei {rt[0][0]}, nicht bei t_s {t_s}")
+            p = L.position(z, t_s)
+            if L.dist(p, (rt[0][1], rt[0][2])) > 2:
+                fehler.append(f"{wer}: Route {zid} beginnt bei {rt[0][1:]} statt an der Position zu t_s {tuple(round(v) for v in p)}")
+            if rt[-1][1] > 0:
+                fehler.append(f"{wer}: Route {zid} endet nicht am Westrand ({rt[-1][1]}, {rt[-1][2]})")
+            zz = L.durchbruch_ziel(z, rt)
+            pruefe_bewegung(zz, fz, linien, fehler, warn, wer=f"{wer} {zid}")
+            us = gruppe.get("ueber_s", {}).get(zid)
+            west = [t for t, x, y in rt if x < 380]
+            if us is None or not west or not (t_s <= us <= west[0]):
+                fehler.append(f"{wer}: ueber_s {us} von {zid} passt nicht zur Route")
+            if zid in e01 and t_s <= e01[zid] and not gruppe.get("verstaerkung"):
+                warn.append(f"{wer}: {zid} bricht um {L.mmss(t_s)} auf, vor seiner Wirkung durch E-01 ({L.mmss(e01[zid])})")
+            if zid in hg_ziele and t_s <= hg_ziele[zid]:
+                warn.append(f"{wer}: {zid} bricht vor dem Hintergrundgefecht auf ({L.mmss(hg_ziele[zid])})")
+        if t_s >= dauer:
+            fehler.append(f"{wer}: t_s nach Spielende")
+
+    dbg = (sz.get("durchbruch") or {}).get("gruppen", [])
+    gids = [g["id"] for g in dbg]
+    if len(set(gids)) != len(gids):
+        fehler.append("doppelte IDs bei den Durchbruch-Gruppen")
+    in_gruppe = {}
+    for g in dbg:
+        pruefe_db(g["id"], ziele, g, f"Durchbruch {g['id']}")
+        for zid in g["ziele"]:
+            if zid in in_gruppe:
+                fehler.append(f"{zid} steht in zwei Durchbruch-Gruppen ({in_gruppe[zid]}, {g['id']})")
+            in_gruppe[zid] = g["id"]
+        db_info.append({"gruppe": g["id"], "name": g["name"], "ziele": g["ziele"], "t_s": g["t_s"], "ueber": g["ueber"],
+                        "ueber_s": min(g["ueber_s"].values())})
+    for g in vg:
+        if g.get("durchbruch"):
+            vz = {z["id"]: z for z in g["ziele"]}
+            gg = dict(g["durchbruch"], ziele=list(g["durchbruch"]["routen"].keys()), verstaerkung=True)
+            pruefe_db(g["id"], vz, gg, f"Durchbruch {g['id']}")
+    for z in sz["ziele"]:
+        if z["typ"] in ("kpz_t72", "spz_bmp2", "spw_btr80") and z["gt"]["kategorie"] == "feind" and z["id"] not in in_gruppe \
+                and not z.get("bis_s") and (z.get("bewegung") or {}).get("route") and not z.get("kein_durchbruch") \
+                and z["id"] not in zerstoert_hg:
+            r = z["bewegung"]["route"]
+            if r[-1][1] > 380:
+                warn.append(f"{z['id']}: Kampffahrzeug bleibt bis zum Ende östlich des Bachs ohne Durchbruch")
+    i_db = [i for i in sz["injects"] if (i.get("bedingung") or {}).get("typ") == "durchbruch"]
+    if (dbg or any(g.get("durchbruch") for g in vg)) and not i_db:
+        fehler.append("Durchbruch ohne Lagemeldung (Inject mit bedingung.typ durchbruch)")
+
+    # ---------------------------------------------------------------- Feuer (seit 2.1)
+    for z in sz["ziele"] + [zz for g in vg for zz in g["ziele"]]:
+        for f in z.get("feuert") or []:
+            if f["bis_s"] <= f["von_s"] or f["takt_s"] <= 0:
+                fehler.append(f"{z['id']}: feuert mit unsinnigem Zeitfenster {f}")
+        if z.get("feuert") and z["id"] in ziele:
+            for t, _ in L.schuesse(z):
+                if not L.vorhanden(z, t):
+                    fehler.append(f"{z['id']}: feuert um {L.mmss(t)}, ist aber nicht im Raum")
+                    break
+                if L.geschwindigkeit(z, t) > 0.3:
+                    fehler.append(f"{z['id']}: feuert um {L.mmss(t)} während der Fahrt")
+                    break
+    for m in sz["meldungen"]:
+        if "feuert" in m["sensor"]["waerme"]:
+            z0 = ziele[m["ziele"][0]]
+            fenster = [f for f in z0.get("feuert") or [] if f["von_s"] <= m["t_s"] <= f["bis_s"]]
+            if not fenster:
+                warn.append(f"{m['id']}: Sensor sagt feuert, {z0['id']} hat dann kein Feuer (feuert)")
+    for zo in sz["zonen"]:
+        if not zo.get("kurz"):
+            warn.append(f"{zo['id']}: kein sichtbarer Kurzname (kurz)")
+
     # ---------------------------------------------------------------- Lösungshilfe
     hilfe = []
     for m in sz["meldungen"]:
@@ -429,6 +525,7 @@ def pruefe(d):
         "phasen": {p["nr"]: sum(1 for m in sz["meldungen"] if m.get("phase") == p["nr"]) for p in sz.get("phasen", [])},
         "hintergrund_zerstoert": zerstoert_hg,
         "verstaerkungen": vinfo,
+        "durchbruch": db_info,
     }
     kz["bestand"] = {w: wm[w]["bestand"] for w in wm}
     lm = sum(wm[w]["bestand"] or 0 for w in praez)
@@ -462,6 +559,9 @@ def main():
     print(f"Vorhalt (Zulässigkeit ändert sich während der Bearbeitung): {kz['vorhalt']}")
     print(f"Bestand {kz['bestand']}; Sicht gestört bei {len(kz['sicht_gestoert'])} Meldungen; "
           f"Hintergrund zerstört {kz['hintergrund_zerstoert']}")
+    for g in kz.get("durchbruch", []):
+        print(f"  Durchbruch {g['gruppe']} {g['name']}: ab {L.uhrzeit(sz['spieluhr']['start'], g['t_s'])} über {g['ueber']} "
+              f"(erstes Fahrzeug über dem Bach {L.uhrzeit(sz['spieluhr']['start'], g['ueber_s'])}), wenn nicht aufgehalten")
     for v in kz["verstaerkungen"]:
         print(f"  {v['gruppe']} {v['meldung']}: zulässig {v['zulaessig']}; nicht einspielen "
               f"{[L.uhrzeit(sz['spieluhr']['start'], a)[:5] + '–' + L.uhrzeit(sz['spieluhr']['start'], b)[:5] for a, b in v['nicht_einspielen']] or '–'}")

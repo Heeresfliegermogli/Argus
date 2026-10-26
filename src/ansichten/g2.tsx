@@ -8,7 +8,7 @@ import { bekannteZiele, effekte } from "../kern/effekte";
 import { TEXT_MAX } from "../kern/ereignisse";
 import { abstandZone, position } from "../kern/geometrie";
 import { lagebildZielmeldungen } from "../kern/lagebild";
-import { type Wirkungsergebnis, vorhersage } from "../kern/regeln";
+import { type Wirkungsergebnis, vorhersage, zonenName } from "../kern/regeln";
 import { warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { zielName } from "../kern/zielnummern";
@@ -54,7 +54,7 @@ export function Abstaende(p: { inh: Inhalte; pos: Punkt; titel?: string }) {
       {p.titel && <span class="abstaende-titel">{p.titel}</span>}
       {inh.szenario.zonen.map((z) => {
         const a = abstandZone(pos, z);
-        return <span>{z.id} {z.typ === "no_strike" ? "(No-Strike)" : `(≤ ${z.max_wirkradius_m} m)`} <b>{a === 0 ? "im Gebiet" : `${Math.round(a)} m`}</b></span>;
+        return <span>{zonenName(z)} {z.typ === "no_strike" ? "(No-Strike)" : `(≤ ${z.max_wirkradius_m} m)`} <b>{a === 0 ? "im Gebiet" : `${Math.round(a)} m`}</b></span>;
       })}
       {grenzen.map((w) => {
         const d = w.einsatzbereich!.x_max! - pos[0];

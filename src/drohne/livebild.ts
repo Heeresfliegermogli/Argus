@@ -24,7 +24,7 @@
 import { atlas, assetUrl, kachelnVerfuegbar } from "../assets/assets";
 import type { AssetManifest, BildZiel, Drohnenbild, EbenenFahrzeug, EbenenFigur } from "../assets/typen";
 import type { Inhalte, Punkt, Ziel } from "../inhalte/typen";
-import type { Effekt } from "../kern/effekte";
+import { type Effekt, STAUB_N, STAUB_TAKT_S, type StaubWolke, staubSpur } from "../kern/effekte";
 import { position, vorhanden } from "../kern/geometrie";
 import { ausserGefechtAb } from "../kern/lagebild";
 import type { Spielzustand } from "../kern/zustand";
@@ -195,8 +195,10 @@ interface SzeneFahrzeug {
   wrack: boolean;
   /** Rauchstärke über dem Wrack (0…1) */
   rauch: number;
-  /** feuert (Mündungsblitz in Abständen) */
+  /** feuert (Schussrhythmus aus den Daten läuft; Blitz und Abschussrauch kommen aus der Effektliste) */
   feuert: boolean;
+  /** Staubwolken hinter dem fahrenden Fahrzeug (seit 2.1) */
+  staub: StaubWolke[];
   unschaerfe?: { laenge_px: number; winkel: number };
 }
 
@@ -298,8 +300,6 @@ function drehe([lx, ly]: [number, number], mitte: Punkt, hdg: number): Punkt {
   return [mitte[0] + lx * c - ly * s, mitte[1] + lx * s + ly * c];
 }
 
-/** Wie lange ein Fahrzeug mit `feuert` nach der Meldezeit weiterschießt (Spielzeit, s), solange es steht. */
-const FEUERT_S = 90;
 
 export class LiveDrohnenbild {
   readonly breite: number;
@@ -425,7 +425,6 @@ export class LiveDrohnenbild {
     const { inh, z } = lage;
     this.kam = this.kamera(lage, t, tempo);
     const eb = this.db.ebenen;
-    const tMeldung = this.meldezeit(inh);
     const katalog = inh.fahrzeuge;
     const frames = this.res.fz.rahmen;
     // getroffene Personengruppen (Ziel:Art → Einschlagzeit): verschwinden ab dem Einschlag aus dem Bild
@@ -466,7 +465,8 @@ export class LiveDrohnenbild {
       fahrzeuge.push({
         id: ziel.id, sprite, px: q, hdg, wrack,
         rauch: this.rauchStaerke.get(ziel.id) ?? 1,
-        feuert: !!bek?.effekte?.some((n) => n.startsWith("muendungsblitz")) && !wrack && steht && t - tMeldung < FEUERT_S,
+        feuert: !wrack && steht && !!ziel.feuert?.some((fe) => fe.von_s <= t && t <= fe.bis_s),
+        staub: wrack ? [] : staubSpur(ziel.bewegung?.route, t, halt, undefined, ziel.bis_s),
         unschaerfe: eb?.unschaerfe?.ziel === ziel.id && !wrack ? { laenge_px: eb.unschaerfe.laenge_px, winkel: eb.unschaerfe.winkel } : undefined,
       });
       lagen.set(ziel.id, { px: q, da: true });
@@ -584,6 +584,21 @@ export class LiveDrohnenbild {
       }
     }
 
+    // Staub hinter fahrenden Fahrzeugen (seit 2.1): Wolken wachsen und ziehen nach Südost ab
+    const staub = zu.fahrt ?? "staub";
+    if (this.anim(staub)) {
+      const dauer = STAUB_TAKT_S * STAUB_N;
+      for (const f of sz.fahrzeuge) {
+        for (const w of f.staub) {
+          const q = this.px([w.pos[0] + 0.6 * w.alter, w.pos[1] + 0.6 * w.alter]);
+          if (!this.imBild(q, 60)) continue;
+          const fa = Math.max(0, Math.min(1, w.alter / dauer));
+          const groesse = (res.man.effekte.animationen[staub]?.groesse_m ?? 8) * (0.55 + 0.9 * fa);
+          this.effektBild(ctx, staub, w.nr, q, groesse, 0, 0.6 * (1 - fa) * Math.min(1, w.alter / 0.4 + 0.3));
+        }
+      }
+    }
+
     // Fahrzeuge mit Schatten (Schattenversatz gilt im Leinwandmaß, unabhängig von der Drehung)
     const sch = info.schatten;
     ctx.save();
@@ -606,19 +621,10 @@ export class LiveDrohnenbild {
     }
     ctx.restore();
 
-    // Feuer auf Wracks, Mündungsblitz feuernder Fahrzeuge
+    // Feuer auf Wracks (Mündungsblitz und Abschussrauch feuernder Fahrzeuge kommen seit 2.1 aus der Effektliste)
     const feuer = this.anim("feuer");
     for (const f of sz.fahrzeuge) {
       if (f.wrack && feuer) this.effektBild(ctx, "feuer", Math.floor((realMs / 1000) * feuer.fps), f.px, (res.man.effekte.animationen.feuer.groesse_m ?? 6) * 0.6, 0, 0.8);
-      if (f.feuert) {
-        const a = this.anim("muendungsblitz");
-        const periode = 4.5;
-        const phase = ((realMs / 1000 + (f.id.charCodeAt(f.id.length - 1) % 3)) % periode);
-        if (a && phase < a.bilder.length / a.fps) {
-          const mu = drehe([4.6, 0], [0, 0], f.hdg);
-          this.effektBild(ctx, "muendungsblitz", Math.floor(phase * a.fps), [f.px[0] + mu[0] * this.ppm, f.px[1] + mu[1] * this.ppm], null, f.hdg);
-        }
-      }
     }
 
     // Figuren: am Boden mit Schatten, dann auf Fahrzeugen
@@ -671,13 +677,22 @@ export class LiveDrohnenbild {
       switch (e.art) {
         case "einschlag":
         case "muendung": {
+          if (t < e.t) break;
+          const p = this.px(e.pos);
+          if (!this.imBild(p, 200)) break;
+          // Abschussrauch (seit 2.1): quillt nach dem Blitz auf und zieht ab
+          const rauch = e.art === "muendung" ? zu.abschuss?.[q.feuert ?? ""] : undefined;
+          const ra = rauch ? this.anim(rauch) : null;
+          if (rauch && ra) {
+            const rb = Math.floor(((t - e.t) / tp) * ra.fps);
+            if (rb < ra.bilder.length) this.effektBild(ctx, rauch, rb, p, (this.res.man.effekte.animationen[rauch]?.groesse_m ?? 10) * (q.feuert === "kanone" ? 0.7 : 1), 0, 0.9);
+          }
           const name = e.art === "muendung" ? zu.feuert[q.feuert ?? ""] ?? "muendungsblitz" : zwm?.einschlag ?? zhg?.einschlag ?? "explosion_mittel";
           const a = this.anim(name);
-          if (!a || t < e.t) break;
+          if (!a) break;
           const bild = Math.floor(((t - e.t) / tp) * a.fps);
           if (bild >= a.bilder.length) break;
-          const p = this.px(e.pos);
-          if (this.imBild(p, 200)) this.effektBild(ctx, name, bild, p, null, e.richtung ?? 0);
+          this.effektBild(ctx, name, bild, p, null, e.richtung ?? 0);
           break;
         }
         case "flug": {
@@ -919,6 +934,8 @@ export async function vergleicheMitStandbild(b: LiveDrohnenbild, lage: LiveLage)
   c.height = b.hoehe;
   const ctx = c.getContext("2d", { willReadFrequently: true })!;
   const sz = b.szene(lage, b.db.t_s);
+  // Standbilder zeigen keinen Staub (der kommt erst im Live-Bild dazu, seit 2.1)
+  for (const f of sz.fahrzeuge) f.staub = [];
   b.zeichne(ctx, sz, { ...lage, effekte: [] }, 1, 0, { s: 1, ox: 0, oy: 0 }, b.breite, b.hoehe);
   const a = ctx.getImageData(0, 0, b.breite, b.hoehe).data;
   const st = await ladeBild(b.db.datei);

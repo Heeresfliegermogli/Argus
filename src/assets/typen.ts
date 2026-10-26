@@ -183,6 +183,10 @@ export interface EffektZuordnung {
   hintergrund: Record<string, { flug?: string; einschlag?: string; danach?: string[]; flaeche?: string }>;
   wrack: Record<string, string[]>;
   feuert: Record<string, string>;
+  /** seit 2.1: Rauch nach dem Abschuss je Art (moerser, kanone) */
+  abschuss?: Record<string, string>;
+  /** seit 2.1: Staubwolke hinter fahrenden Fahrzeugen */
+  fahrt?: string;
 }
 
 export interface AssetManifest {

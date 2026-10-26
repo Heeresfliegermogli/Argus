@@ -54,6 +54,19 @@ export interface Ziel {
   bewegung?: Bewegung;
   personen?: Person[];
   gt: GroundTruth;
+  /** Seit Szenario 2.1: Schussrhythmus (Mündungsblitz, Abschussrauch), solange das Fahrzeug steht */
+  feuert?: Feuer[];
+  /** Seit 2.1: Kampffahrzeug ohne Durchbruch (Auftrag, z. B. Beobachtungsposten); nur Text für die Prüfung */
+  kein_durchbruch?: string;
+}
+
+/** Feuerstöße von von_s bis bis_s: je `salve` Schuss im Abstand takt_s, dann pause_s (Mörser: Rohre im Wechsel). */
+export interface Feuer {
+  von_s: number;
+  bis_s: number;
+  takt_s: number;
+  salve?: number;
+  pause_s?: number;
 }
 
 export type ArgusEmpfehlung = "BEKÄMPFEN" | "PRÜFEN" | "UNKLAR" | "NICHT BEKÄMPFEN";
@@ -127,6 +140,9 @@ export type Bedingung =
   | { typ: "freigabe_mit_zivil"; ziele: string[]; verzoegerung_s: number }
   | { typ: "keine_freigabe_bis"; ziele: string[]; t_s: number };
 
+/** Seit Szenario 2.1: Lagemeldung, wenn eine nicht aufgehaltene Feindgruppe über den Bach durchbricht (I-13). */
+export type BedingungDurchbruch = { typ: "durchbruch"; verzoegerung_s: number };
+
 export interface Inject {
   id: string;
   /** Feste Zeit. Fehlt sie, ist der Inject bedingt (bedingung). */
@@ -137,7 +153,7 @@ export interface Inject {
   zweck?: string;
   fall?: string;
   aktion?: string;
-  bedingung?: Bedingung;
+  bedingung?: Bedingung | BedingungDurchbruch;
 }
 
 export interface ReserveInject {
@@ -210,6 +226,24 @@ export interface Verstaerkung {
   /** Ziele mit Routen relativ zum Einspielen ([dt_s, x, y]) */
   ziele: Ziel[];
   meldungen: VerstaerkungsMeldung[];
+  /** Seit 2.1: Durchbruch, wenn der Zug nicht aufgehalten wird (Zeiten relativ zum Einspielen) */
+  durchbruch?: DurchbruchPlan;
+}
+
+/** Durchbruch einer Feindgruppe (seit Szenario 2.1): ab t_s fährt jedes Fahrzeug seine Route über Brücke oder Furt
+ * westlich aus dem Bild; ueber_s = Zeitpunkt über dem Bach. Nur, wenn bis t_s kein Fahrzeug zerstört oder außer Gefecht ist. */
+export interface DurchbruchPlan {
+  t_s: number;
+  ueber: string;
+  routen: Record<string, RoutenPunkt[]>;
+  ueber_s: Record<string, number>;
+}
+
+export interface DurchbruchGruppe extends DurchbruchPlan {
+  id: string;
+  name: string;
+  ziele: string[];
+  zweck?: string;
 }
 
 export type Geometrie =
@@ -227,6 +261,8 @@ export interface Zone {
   entstehung?: string;
   /** nur Darstellung: Lage der Beschriftung auf der Lagekarte (sonst berechnet) */
   beschriftung?: Punkt;
+  /** Seit 2.1: sichtbarer Name („Schule“, „Ortschaft“); die ID bleibt intern */
+  kurz?: string;
 }
 
 export interface Kraft {
@@ -298,6 +334,8 @@ export interface Szenario {
   ereignisse: Skriptereignis[];
   hintergrund?: { hinweis?: string; ereignisse: HintergrundEreignis[] };
   verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
+  /** Seit 2.1: Gruppen, die durchbrechen, wenn sie nicht aufgehalten werden */
+  durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[] };
   schluesselfaelle: Schluesselfall[];
   nebenfaelle: Nebenfall[];
   anforderungen_technik?: { schritt: string; text: string }[];
@@ -315,7 +353,8 @@ export interface Karte {
   raster: { zelle_m: number; spalten: string; zeilen_ab: number; regel?: string };
   /** Pfade relativ zu assets/ (alle Stufen im Asset-Manifest) */
   bilder: { hinweis?: string; luftbild: string; lagekarte: string; aufloesung_m_pro_px: number };
-  linien: { id: string; name: string; art: string; breite_m: number; glatt?: boolean; allee?: boolean; punkte: Punkt[] }[];
+  /** beschriftung_anteil: Lage des Namens entlang der Linie (Anteil der Länge, Standard 0,4) */
+  linien: { id: string; name: string; art: string; breite_m: number; glatt?: boolean; allee?: boolean; punkte: Punkt[]; beschriftung_anteil?: number }[];
   flaechen: { id: string; name: string; art: string; neu?: boolean; punkte: Punkt[] }[];
   gebaeude: { id: string; art: string; mitte: Punkt; laenge: number; breite: number; winkel: number }[];
   bebauung?: {
@@ -325,7 +364,8 @@ export interface Karte {
     schritt_m?: number;
   };
   einzelbaeume?: Punkt[];
-  namen: { text: string; pos: Punkt; neu?: boolean }[];
+  /** anker: Bezugspunkt des Textes ([0,0] links oben … [1,1] rechts unten), Standard Mitte */
+  namen: { text: string; pos: Punkt; neu?: boolean; anker?: Punkt }[];
   punkte: { id: string; name: string; pos: Punkt; art: string; neu?: boolean }[];
 }
 
@@ -392,7 +432,7 @@ export interface Regeln {
     verstoss: string;
     sicherheitsabstand_eigene_kraefte_m?: number;
   };
-  wirkung: { trefferregel: string; begruendung: string; bewegung_mvp: string; unbearbeitet: string };
+  wirkung: { trefferregel: string; begruendung: string; bewegung_mvp?: string; unbearbeitet: string; durchbruch?: string };
   kennzahlen: { id: string; text: string }[];
   eigene_kraefte?: string;
 }
@@ -413,4 +453,6 @@ export interface Inhalte {
   /** nur in der Welt eines Teams (src/kern/welt.ts): die Inhalte ohne Verstärkungen und was eingespielt ist */
   basis?: Inhalte;
   eingespielt?: { gruppe: string; t0: number }[];
+  /** nur in der Welt eines Teams: Durchbruch-Gruppen, deren Fahrzeuge ihre Durchbruch-Route fahren */
+  durchgebrochen?: string[];
 }

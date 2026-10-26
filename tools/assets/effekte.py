@@ -31,6 +31,9 @@ EFFEKTE = {
     "muendungsblitz_steil": (8, 72, 8.0, 18, False),   # Mörser (Steilfeuer), ringförmig
     "einschlag_artillerie": (18, 224, 44.0, 14, False),  # Feindartillerie: Erdfontäne, Staub
     "nebel": (16, 256, 64.0, 6, True),                 # Rauch-/Nebelwand (Rückzug unter Rauch, H-03)
+    # Szenario 2.1 (A8: dynamische Animationen)
+    "abschussrauch": (14, 96, 12.0, 7, False),         # Rauch nach dem Abschuss (Mörser, Kanone): quillt auf, zieht ab
+    "staub": (4, 64, 8.0, 0, False),                   # Staubwolke hinter fahrenden Fahrzeugen (4 Varianten)
 }
 
 # Abweichende Form und Anker (Anteil der Bildbreite/-höhe); sonst quadratisch, Anker Mitte.
@@ -43,6 +46,8 @@ FORM = {
                        "hinweis": "Anker = Mündung (Rohrende); um die Rohrrichtung drehen"},
     "einschlag_artillerie": {"hinweis": "danach krater; Staub zieht nach Südost"},
     "nebel": {"hinweis": "mehrere Instanzen über die Fläche (radius_m) verteilen, ein- und ausblenden"},
+    "abschussrauch": {"hinweis": "nach dem Mündungsblitz am selben Ort abspielen (Echtzeit); zieht nach Südost ab"},
+    "staub": {"hinweis": "Varianten (fps 0): je Wolke eine, mit dem Alter größer und blasser zeichnen; Wind nach Südost"},
 }
 
 # Welche Animation wofür (Oberfläche, Schritt 6b/7). Wirkmittel-IDs wie in katalog_wirkmittel.json,
@@ -60,6 +65,9 @@ ZUORDNUNG = {
     },
     "wrack": {"zerstoert": ["feuer", "rauch"], "ausser_gefecht": []},
     "feuert": {"kanone": "muendungsblitz", "moerser": "muendungsblitz_steil"},
+    # Szenario 2.1: Rauch nach dem Abschuss, Staub hinter fahrenden Fahrzeugen
+    "abschuss": {"kanone": "abschussrauch", "moerser": "abschussrauch"},
+    "fahrt": "staub",
 }
 
 
@@ -388,6 +396,39 @@ def nebel(n_bilder, n, rng):
     return bilder
 
 
+def abschussrauch(n_bilder, n, groesse_m, rng):
+    """Rauch nach dem Abschuss, von oben: dichter hellgrauer Ballen, quillt auf, zieht mit dem Wind nach Südost und
+    verblasst (folgt auf muendungsblitz bzw. muendungsblitz_steil)."""
+    xx, yy = _feld(n, n, groesse_m, groesse_m)
+    rausch = [fraktal(n, n, np.random.default_rng(int(rng.integers(1 << 30))), zelle=n / 6, oktaven=3) for _ in range(2)]
+    bilder = []
+    for i in range(n_bilder):
+        t = i / (n_bilder - 1)
+        cx = cy = 0.9 * groesse_m * 0.18 * t                       # Drift nach Südost
+        r = groesse_m * (0.12 + 0.3 * t ** 0.7)
+        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / r - 0.55 * (rausch[0] - 0.5)
+        a = glatt_stufe(-d, -1.0, -0.45) * (0.82 * (1 - t) ** 1.3) * min(1.0, 0.35 + t * 5)
+        g = (178 + 36 * rausch[1]) * (0.94 + 0.06 * t)
+        bilder.append(_rgba(np.dstack([g, g * 0.985, g * 0.96]), a))
+    return bilder
+
+
+def staub(n_var, n, groesse_m, rng):
+    """Staubwolke hinter einem fahrenden Fahrzeug (Draufsicht): weich, sandfarben, unregelmäßiger Rand; Varianten."""
+    xx, yy = _feld(n, n, groesse_m, groesse_m)
+    rr = np.sqrt(xx ** 2 + yy ** 2) / (groesse_m / 2)
+    bilder = []
+    for v in range(n_var):
+        r2 = np.random.default_rng(int(rng.integers(1 << 30)))
+        rausch = fraktal(n, n, r2, zelle=n / 5, oktaven=3)
+        fein = fraktal(n, n, r2, zelle=n / 12, oktaven=2)
+        d = rr / 0.78 - 0.6 * (rausch - 0.5)
+        a = glatt_stufe(-d, -1.0, -0.2) * (0.55 + 0.25 * fein)
+        rgb = np.dstack([168 + 26 * fein, 150 + 22 * fein, 118 + 16 * fein])
+        bilder.append(_rgba(rgb, a))
+    return bilder
+
+
 def alle(seed=11):
     rng = np.random.default_rng(seed)
     out = {}
@@ -418,6 +459,10 @@ def alle(seed=11):
             b = einschlag_artillerie(nb, px, neu)
         elif name == "nebel":
             b = nebel(nb, px, neu)
+        elif name == "abschussrauch":
+            b = abschussrauch(nb, px, gm, neu)
+        elif name == "staub":
+            b = staub(nb, px, gm, neu)
         else:
             raise ValueError(name)
         out[name] = b

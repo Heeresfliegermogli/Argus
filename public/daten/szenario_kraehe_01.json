@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.0",
-  "stand": "2026-10-21",
+  "version": "2.1",
+  "stand": "2026-10-25",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -18,7 +18,7 @@
       "name": "Aufklärung",
       "von_s": 0,
       "bis_s": 300,
-      "absicht": "Zwei Spähtrupps fahren auf Haupt- und Nordstraße vor, halten und beobachten; einer bleibt an der Brücke. Erste Meldung nach 20 s. Bedienung lernen, Vertrauen in ARGUS aufbauen."
+      "absicht": "Zwei Spähtrupps klären über die Felder auf: HAUPT südlich der Ortschaft an der Schule vorbei, NORD westlich der Ortschaft; beide fahren bis zur Brücke vor, einer bleibt dort. Erste Meldung nach 20 s. Bedienung lernen, Vertrauen in ARGUS aufbauen."
     },
     {
       "nr": 2,
@@ -39,14 +39,14 @@
       "name": "Hauptangriff",
       "von_s": 840,
       "bis_s": 1200,
-      "absicht": "Fast-Track-Angebot (I-05), Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf zwei Achsen (Felder Richtung Furt Nord, Ortschaft Richtung Brücke). Der Mörser im Hof RABE unterstützt (S4), ein BMP-2 sucht Deckung an der Schule (N4). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04)."
+      "absicht": "Fast-Track-Angebot (I-05), Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf drei Achsen: NORD über die Felder Richtung Furt Nord, ORT durch den Nordteil der Ortschaft, SÜD über die Felder südlich der Ortschaft an der Schule vorbei zur Brücke. Der Mörser im Hof RABE unterstützt (S4), ein BMP-2 der Achse SÜD sucht Deckung an der Schule (N4). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04)."
     },
     {
       "nr": 5,
       "name": "Krise und Gegenangriff",
       "von_s": 1200,
       "bis_s": 1500,
-      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 2. Kp fordert Feuer (I-06). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1)."
+      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 2. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1)."
     }
   ],
   "vorbild": {
@@ -84,7 +84,7 @@
     "plenum": {
       "titel": "Lage für alle (Spielleitung liest vor, ca. 90 s)",
       "absaetze": [
-        "Übungslage, alles fiktiv. Russische Kräfte greifen seit den Morgenstunden nach Westen an. Unser Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die Kompanien liegen außerhalb des Kartenausschnitts in Stellung und kämpfen auch selbst.",
+        "Übungslage, alles fiktiv. Russische Kräfte greifen seit den Morgenstunden nach Westen an. Unser Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die 2. Kompanie liegt außerhalb des Kartenausschnitts in Stellung, deckt Brücke und Furt und kämpft auch selbst.",
         "Auftrag: Der Feind darf den Bach ELSTER nicht überschreiten, vor allem nicht an der Brücke ELSTER. Östlich des Bachs liegt die Ortschaft KRÄHE; dort sind noch Zivilpersonen.",
         "Die Drohne „Milan“ klärt den unmittelbaren Vorraum auf: den Bach mit der Brücke, die Ortschaft und das Gelände östlich davon. Ihre Bilder wertet das KI-System ARGUS aus. ARGUS erkennt Fahrzeuge, nennt Klasse, Konfidenz und eine Empfehlung. Laut Hersteller liegt ARGUS in 94 % der Fälle richtig.",
         "Jedes Team ist die Zielbearbeitung des Bataillons. G1 Aufklärung prüft jede ARGUS-Meldung. G2 Zielprüfung prüft die Einsatzregeln und wählt das Wirkmittel. G3 Führung gibt frei und führt das Gefecht. Ohne Freigabe von G3 wird nichts bekämpft.",
@@ -95,14 +95,14 @@
       "titel": "G1 Aufklärung",
       "absaetze": [
         "Du siehst jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung, Klasse, Konfidenz, Empfehlung und die Sensordaten der Drohne. Wolken, Rauch und Bewuchs verdecken oft Teile des Bildes. Zugweise Meldungen fassen mehrere Fahrzeuge zusammen (z. B. 3× T-72).",
-        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an G2) oder ABLEHNEN. Du kannst einen Vermerk von einer Zeile mitgeben.",
+        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an G2) oder ABLEHNEN.",
         "G2 und G3 sehen nur deine Zielmeldung, nicht das Bild und nicht die Sensordaten."
       ]
     },
     "G2": {
       "titel": "G2 Zielprüfung",
       "absaetze": [
-        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse, Konfidenz und Vermerk von G1. Auf der Karte siehst du No-Strike-Zone NS-01 und Einschränkungsgebiet EZ-01. Die eigenen Kompanien liegen westlich außerhalb der Karte.",
+        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse und Konfidenz. Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene 2. Kompanie liegt westlich außerhalb der Karte.",
         "Du prüfst die Einsatzregeln R2 und R3, wählst ein Wirkmittel (Mörser, Loitering Munition oder Panzerabwehr) und gibst G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
         "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt."
       ]
@@ -111,7 +111,7 @@
       "titel": "G3 Führung",
       "absaetze": [
         "Du führst das Gefecht des Bataillons. Du bekommst die Empfehlungen von G2 und gibst FREIGABE, lehnst ab oder gibst ZURÜCK AN G2.",
-        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und Kompanien. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
+        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und der 2. Kompanie. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
         "Du verantwortest jede Wirkung."
       ]
     },
@@ -132,20 +132,9 @@
       "zugehoerigkeit": "eigen",
       "typ": "pzgren_kp",
       "ausserhalb": true,
-      "pos": [-800, 470],
-      "pfeil_y": 470,
-      "text": "ca. 800 m westlich"
-    },
-    {
-      "id": "K-3",
-      "name": "3./PzGrenBtl",
-      "kurz": "3./",
-      "zugehoerigkeit": "eigen",
-      "typ": "pzgren_kp",
-      "ausserhalb": true,
-      "pos": [-700, 380],
+      "pos": [-750, 380],
       "pfeil_y": 380,
-      "text": "ca. 700 m westlich"
+      "text": "ca. 750 m westlich, deckt Brücke und Furt"
     }
   ],
   "zonen": [
@@ -154,7 +143,8 @@
       "typ": "no_strike",
       "name": "Schule mit Sportplatz",
       "geometrie": {"typ": "polygon", "punkte": [[578, 438], [712, 424], [726, 592], [590, 606]]},
-      "regel": "R2"
+      "regel": "R2",
+      "kurz": "Schule"
     },
     {
       "id": "EZ-01",
@@ -170,82 +160,88 @@
         ]
       },
       "regel": "R3",
-      "entstehung": "35 m beidseits der bebauten Straßenabschnitte plus Hof RABE, erzeugt aus den Kartenvektoren"
+      "entstehung": "35 m beidseits der bebauten Straßenabschnitte plus Hof RABE, erzeugt aus den Kartenvektoren",
+      "kurz": "Ortschaft"
     }
   ],
   "ziele": [
     {
       "id": "Z-01",
       "typ": "spaehpz_brdm2",
-      "pos": [928, 322],
-      "hdg": 170,
-      "bis_s": 342,
+      "pos": [929, 338],
+      "hdg": 134,
+      "bis_s": 379,
       "gruppe": "Z-01–02",
       "bewegung": {
         "route": [
-          [8, 1010, 308], [12.1, 982, 313], [16.2, 954, 317], [20.3, 926, 322], [330, 926, 322], [334.1, 954, 317],
-          [338.2, 982, 313], [342.3, 1010, 308]
+          [6, 1010, 308], [10.5, 979, 313], [15, 948, 318], [26.1, 905, 362], [38.1, 850, 400], [51.9, 800, 428],
+          [59.2, 772, 440], [330, 772, 440], [335.5, 800, 428], [345.8, 850, 400], [357.8, 905, 362],
+          [363.1, 899, 326], [367.2, 927, 322], [371.3, 955, 317], [375.2, 982, 313], [379.3, 1010, 308]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "Spähpanzer BRDM-2, Führungsfahrzeug Spähtrupp HAUPT. Hält am Ostrand von KRÄHE und beobachtet, weicht um 10:05:30 nach Osten aus.",
+        "text": "Spähpanzer BRDM-2, Führungsfahrzeug Spähtrupp HAUPT. Fährt über die Felder südlich der Ortschaft, hält östlich der Schule und beobachtet, weicht um 10:05:30 nach Osten aus.",
         "legitim": true
       }
     },
     {
       "id": "Z-02",
       "typ": "spaehpz_brdm2",
-      "pos": [989, 311],
+      "pos": [955, 317],
       "hdg": 171,
       "gruppe": "Z-01–02",
       "bewegung": {
         "route": [
-          [17, 1010, 308], [20.6, 985, 312], [150, 985, 312], [154.4, 955, 317], [158.6, 926, 322], [163, 896, 327],
-          [167.2, 867, 332], [171.6, 837, 337], [175.8, 808, 342], [180.2, 778, 347], [184.4, 749, 352],
-          [188.8, 719, 357], [193.1, 690, 363], [197.5, 660, 369], [201.7, 631, 374], [206.1, 601, 379],
-          [210.4, 571, 382], [214.6, 542, 384], [218.9, 512, 387], [223.2, 482, 390]
+          [12, 1010, 308], [16.5, 979, 313], [21, 948, 318], [32.3, 905, 364], [44.5, 850, 404], [54.7, 795, 418],
+          [159.8, 795, 418], [169.8, 745, 414], [178.8, 700, 412], [186.8, 660, 415], [194.9, 620, 421],
+          [202.9, 580, 422], [211, 540, 416], [218.1, 506, 405], [224.9, 482, 390], [1500, 482, 390]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "Spähpanzer BRDM-2 des Spähtrupps HAUPT. Fährt ab 10:02:30 durch die Ortschaft und hält an der Brücke ELSTER Ost: Beobachtungsposten bis zum Schluss.",
+        "text": "Spähpanzer BRDM-2 des Spähtrupps HAUPT. Fährt über die Felder südlich der Ortschaft, zwischen Ortschaft und Schule hindurch zur Brücke ELSTER Ost und hält dort ab 10:03:45: Beobachtungsposten bis zum Schluss.",
         "legitim": true
       }
     },
     {
       "id": "Z-03",
       "typ": "gfz_tigr",
-      "pos": [689, 136],
-      "hdg": 104,
-      "bis_s": 378,
+      "pos": [546, 119],
+      "hdg": 112,
+      "bis_s": 419,
       "gruppe": "Z-03–04",
       "bewegung": {
         "route": [
-          [57, 722, -10], [60.7, 716, 20], [64.3, 709, 49], [68, 703, 79], [71.7, 695, 109], [75.3, 688, 138],
-          [360, 688, 138], [363.6, 696, 109], [367.3, 703, 79], [371, 709, 49], [374.6, 716, 20], [378.3, 722, -10]
+          [50, 598, -10], [62.6, 572, 55], [78.1, 540, 135], [103.1, 540, 135], [119.9, 514, 215], [135.6, 490, 290],
+          [148.8, 468, 352], [356, 468, 352], [366.8, 490, 290], [379.7, 514, 215], [393.5, 540, 135],
+          [407.6, 572, 55], [419.1, 598, -10]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "Geschütztes Fahrzeug Tigr, Spähtrupp NORD. Hält am Nordrand von KRÄHE und beobachtet, weicht um 10:06 nach Norden aus.",
+        "text": "Geschütztes Fahrzeug Tigr, Spähtrupp NORD. Klärt über die Felder westlich der Ortschaft auf, fährt bis an die Brücke ELSTER vor und weicht um 10:06 über die Felder nach Norden aus.",
         "legitim": true
       }
     },
     {
       "id": "Z-04",
       "typ": "gfz_tigr",
-      "pos": [701, 88],
-      "hdg": 104,
-      "bis_s": 378,
+      "pos": [572, 83],
+      "hdg": 109,
+      "bis_s": 409,
       "gruppe": "Z-03–04",
       "bewegung": {
         "route": [
-          [63, 722, -10], [67, 715, 23], [71.2, 708, 57], [75.3, 700, 90], [366, 700, 90], [370.1, 708, 57],
-          [374.3, 715, 23], [378.3, 722, -10]
+          [57, 608, -10], [69.6, 582, 55], [85.8, 553, 140], [110.8, 553, 140], [126.5, 530, 215], [136.6, 512, 262],
+          [362, 512, 262], [370.2, 530, 215], [383, 553, 140], [397.7, 582, 55], [409.2, 608, -10]
         ]
       },
-      "gt": {"kategorie": "feind", "text": "Geschütztes Fahrzeug Tigr, Spähtrupp NORD.", "legitim": true}
+      "gt": {
+        "kategorie": "feind",
+        "text": "Geschütztes Fahrzeug Tigr, Spähtrupp NORD. Hält auf den Feldern nordwestlich der Ortschaft in Beobachtung.",
+        "legitim": true
+      }
     },
     {
       "id": "Z-05",
@@ -262,7 +258,8 @@
         "kategorie": "feind",
         "text": "SPz BMP-2 der Aufklärung, Beobachtungsposten unter der Baumgruppe am Feldweg Nordost, Motor im Leerlauf.",
         "legitim": true
-      }
+      },
+      "kein_durchbruch": "Aufklärung: Beobachtungsposten unter der Baumgruppe"
     },
     {
       "id": "Z-06",
@@ -275,7 +272,11 @@
         "kategorie": "feind",
         "text": "Mörsertrupp mit zwei Rohren am Waldrand MARDER, unterstützt die Gefechtsaufklärung und den Angriff.",
         "legitim": true
-      }
+      },
+      "feuert": [
+        {"von_s": 302, "bis_s": 650, "takt_s": 4, "salve": 4, "pause_s": 22},
+        {"von_s": 818, "bis_s": 1190, "takt_s": 4, "salve": 4, "pause_s": 26}
+      ]
     },
     {
       "id": "Z-07",
@@ -390,7 +391,7 @@
       },
       "gt": {
         "kategorie": "geschuetzt",
-        "text": "Sanitätsfahrzeug des Feindes mit Rotem Kreuz. Holt an der Hauptstraße, 60 m vor dem Schulgelände NS-01, die Verwundeten des zurückgeschlagenen Zuges ab; fährt um 10:16:30 nach Osten weg.",
+        "text": "Sanitätsfahrzeug des Feindes mit Rotem Kreuz. Holt an der Hauptstraße, 60 m vor dem Schulgelände, die Verwundeten des zurückgeschlagenen Zuges ab; fährt um 10:16:30 nach Osten weg.",
         "legitim": false,
         "bezug": "Sanitätsfahrzeuge sind zu schonen und zu schützen (Art. 21 ZP I; Art. 35 GA I). Schutzzeichen Rotes Kreuz."
       }
@@ -486,20 +487,21 @@
     {
       "id": "Z-18",
       "typ": "spz_bmp2",
-      "pos": [462, 393],
-      "hdg": 180,
+      "pos": [480, 404],
+      "hdg": -173,
       "bewegung": {
         "route": [
-          [830, 1010, 150], [836, 977, 153], [842, 944, 157], [847.8, 912, 162], [853.7, 880, 170], [889.2, 760, 238],
-          [923.9, 640, 300], [952.6, 540, 350], [973.1, 470, 388], [974.5, 470, 392], [977.4, 462, 393],
-          [1500, 462, 393]
+          [828, 1010, 372], [855.6, 905, 394], [883, 800, 413], [897.1, 745, 414], [908.7, 700, 413], [919, 660, 416],
+          [929.4, 620, 421], [939.7, 580, 422], [950.1, 540, 416], [959.4, 505, 407], [965.9, 480, 404],
+          [1500, 480, 404]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 an der Brücke ELSTER Ost, schießt auf die 2. Kp.",
+        "text": "SPz BMP-2 der Achse SÜD. Fährt über die Felder südlich der Ortschaft an der Schule vorbei zur Brücke ELSTER Ost und schießt von dort auf die 2. Kp.",
         "legitim": true
-      }
+      },
+      "feuert": [{"von_s": 988, "bis_s": 1210, "takt_s": 3, "salve": 3, "pause_s": 18}]
     },
     {
       "id": "Z-19",
@@ -520,28 +522,28 @@
       ],
       "gt": {
         "kategorie": "feind",
-        "text": "Mörsertrupp im Hof RABE, unterstützt den Hauptangriff und beschießt die 3. Kp. Bis 10:21:40 stehen vier Zivilpersonen keine 10 m daneben an der Hauswand, danach fliehen sie nach Westen.",
+        "text": "Mörsertrupp im Hof RABE, unterstützt den Hauptangriff und beschießt die 2. Kp. Bis 10:21:40 stehen vier Zivilpersonen keine 10 m daneben an der Hauswand, danach fliehen sie nach Westen.",
         "legitim": true,
         "hinweis": "ARGUS liegt richtig: Ziel legitim, Warnung vor Zivilpersonen berechtigt. Richtig ist Beobachten, bis die Personen weg sind (Folgemeldung 10:22:00).",
         "bezug": "Vorsichtsmaßnahmen beim Angriff, Verhältnismäßigkeit (Art. 57, Art. 51 Abs. 5 lit. b ZP I)."
-      }
+      },
+      "feuert": [{"von_s": 1066, "bis_s": 1500, "takt_s": 5, "salve": 3, "pause_s": 24}]
     },
     {
       "id": "Z-20",
       "typ": "kpz_t72",
-      "pos": [578, 381],
-      "hdg": 174,
+      "pos": [524, 414],
+      "hdg": -173,
       "bewegung": {
         "route": [
-          [1035, 1010, 308], [1042.3, 980, 313], [1049.8, 949, 318], [1057.1, 919, 323], [1064.6, 888, 328],
-          [1071.9, 858, 333], [1079.5, 827, 339], [1086.8, 797, 344], [1094.3, 766, 349], [1101.6, 736, 354],
-          [1109.2, 705, 360], [1116.5, 675, 366], [1123.8, 645, 372], [1131.3, 614, 377], [1138.5, 584, 380],
-          [1146, 553, 383], [1153.5, 522, 386], [1163.5, 512, 412], [1500, 512, 412]
+          [1022, 1010, 368], [1047.8, 905, 392], [1073.5, 800, 413], [1086.7, 745, 414], [1097.5, 700, 413],
+          [1107.1, 660, 416], [1116.8, 620, 421], [1126.4, 580, 422], [1136.1, 540, 416], [1144.6, 505, 412],
+          [1500, 505, 412]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72 der Achse ORT am Ortsrand, ca. 55 m neben der Schule, fährt zur Brücke Ost.",
+        "text": "KPz T-72 der Achse SÜD. Fährt zwischen Ortschaft und Schule nach Westen (bei der Meldung ca. 55 m neben dem Schulgelände) und sammelt an der Brücke ELSTER Ost.",
         "legitim": true,
         "hinweis": "Gegenstück zum Sanitätsfahrzeug: gleiche Lage zur Schule, aber echtes Ziel. Mit LM regelkonform bekämpfbar."
       }
@@ -556,7 +558,8 @@
         "kategorie": "feind",
         "text": "SPz BMP-2 in Lauerstellung am Waldrand DACHS, kommt um 10:20:30 aus dem Wald und sichert die Flanke der Feindkräfte, die sich an der Brücke sammeln.",
         "legitim": true
-      }
+      },
+      "kein_durchbruch": "Flankensicherung am Waldrand DACHS"
     },
     {
       "id": "Z-22",
@@ -706,20 +709,19 @@
     {
       "id": "Z-28",
       "typ": "spz_bmp2",
-      "pos": [548, 410],
-      "hdg": 90,
+      "pos": [548, 417],
+      "hdg": 7,
       "ungemeldet": true,
       "bewegung": {
         "route": [
-          [1215, 1010, 308], [1222.1, 981, 313], [1229.2, 952, 318], [1236.2, 923, 322], [1243, 895, 327],
-          [1250.1, 866, 332], [1257.2, 837, 337], [1264.3, 808, 342], [1271.4, 779, 347], [1278.5, 750, 352],
-          [1285.6, 721, 357], [1292.5, 693, 363], [1299.6, 664, 368], [1306.7, 635, 374], [1313.7, 606, 378],
-          [1320.7, 577, 381], [1327.7, 548, 383], [1337.4, 548, 410], [1500, 548, 410]
+          [1205, 1010, 372], [1232.6, 905, 394], [1260, 800, 413], [1274.1, 745, 414], [1285.7, 700, 413],
+          [1296, 660, 416], [1306.4, 620, 421], [1316.7, 580, 422], [1327.1, 540, 416], [1329.2, 548, 417],
+          [1500, 548, 417]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2, letzte Feindkräfte an der Brücke ELSTER Ost. Von ARGUS nicht gemeldet; Ziel des polnischen Gegenangriffs.",
+        "text": "SPz BMP-2, letzte Feindkräfte: kommt über die Achse SÜD an der Schule vorbei und sammelt an der Brücke ELSTER Ost. Von ARGUS nicht gemeldet; Ziel des polnischen Gegenangriffs.",
         "legitim": true
       }
     },
@@ -857,22 +859,21 @@
     {
       "id": "Z-36",
       "typ": "spz_bmp2",
-      "pos": [603, 403],
-      "hdg": 88,
+      "pos": [754, 414],
+      "hdg": 173,
       "bewegung": {
         "route": [
-          [948, 1010, 308], [955.1, 981, 313], [962.2, 952, 318], [969.5, 922, 323], [976.5, 893, 327],
-          [983.6, 864, 332], [990.7, 835, 337], [997.8, 806, 342], [1004.9, 777, 347], [1012.2, 747, 352],
-          [1019.3, 718, 358], [1026.4, 689, 363], [1033.5, 660, 369], [1040.6, 631, 374], [1047.6, 602, 378],
-          [1056, 603, 406], [1063.5, 604, 431], [1071.3, 606, 457], [1215, 606, 457], [1222.8, 604, 431],
-          [1230.3, 603, 406], [1238.1, 602, 380], [1249.1, 590, 352], [1500, 590, 352]
+          [977, 1010, 370], [1009.2, 905, 392], [1041.3, 800, 412], [1054.8, 755, 414], [1064.2, 724, 418],
+          [1073, 710, 438], [1079.9, 697, 452], [1215, 697, 452], [1222.9, 708, 433], [1232.3, 690, 414],
+          [1243.4, 650, 417], [1254.6, 610, 422], [1264.3, 575, 421], [1274.1, 540, 416], [1279.1, 522, 416],
+          [1500, 522, 416]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 der Achse ORT. Biegt um 10:17:30 in die Zufahrt zur Schule ab und steht bis 10:20:15 am Schulgebäude in Deckung, danach weiter zur Brücke Ost.",
+        "text": "SPz BMP-2 der Achse SÜD. Biegt um 10:18 von der Gasse zwischen Ortschaft und Schule auf das Schulgelände ab, steht bis 10:20:15 am Schulgebäude in Deckung und fährt dann zur Brücke ELSTER Ost.",
         "legitim": true,
-        "hinweis": "Legitimes Ziel. Solange es an der Schule steht, schlägt jede Wirkung in NS-01 ein. Wer nach der Lage bei der Meldung entscheidet, übersieht das; die Warnung rechnet den Einschlag voraus."
+        "hinweis": "Legitimes Ziel. Solange es an der Schule steht, schlägt jede Wirkung auf dem Schulgelände ein. Wer nach der Lage bei der Meldung entscheidet, übersieht das; die Warnung rechnet den Einschlag voraus."
       }
     }
   ],
@@ -885,18 +886,18 @@
       "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 94, "empfehlung": "BEKÄMPFEN", "einzeln": [94, 91]},
       "sensor": {
         "waerme": "heiß (2 Fahrzeuge, fahren)",
-        "bewegung": "nach West, ca. 25 km/h",
+        "bewegung": "nach Südwest, ca. 20 km/h",
         "spuren": "frische Radspuren",
         "kennzeichnung": "keine erkannt",
         "personen": "–"
       },
       "bild": {
         "datei": "drohne/M01.webp",
-        "beschreibung": "Zwei vierrädrige Spähpanzer auf der Hauptstraße am Ostrand, kurz vor den ersten Häusern.",
+        "beschreibung": "Zwei vierrädrige Spähpanzer biegen am Ostrand von der Hauptstraße nach Südwesten ins Feld ab, Richtung Schule.",
         "sicht": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
-      "zweck": "Einlaufen: erste Meldung schon nach 20 s, Spähtrupp als Paar (zugweise Meldung). Der Spähtrupp hält gleich am Ostrand; Mörser ist zulässig."
+      "zweck": "Einlaufen: erste Meldung schon nach 20 s, Spähtrupp als Paar (zugweise Meldung). Der Spähtrupp fährt über die Felder südlich der Ortschaft und hält östlich der Schule: Bei der Meldung ist der Mörser zulässig, beim Einschlag nicht mehr (Schule und Ortschaft im Wirkradius). Die Vorausrechnung zeigt das früh."
     },
     {
       "id": "M02",
@@ -906,18 +907,18 @@
       "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 82, "empfehlung": "BEKÄMPFEN", "einzeln": [82, 80]},
       "sensor": {
         "waerme": "teilweise durch Wolke gestört",
-        "bewegung": "nach Süd, ca. 30 km/h",
+        "bewegung": "nach Süd, ca. 20 km/h",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
         "personen": "–"
       },
       "bild": {
         "datei": "drohne/M02.webp",
-        "beschreibung": "Zwei Geländewagen in Tarnfarbe auf der Nordstraße zwischen Alleebäumen. Eine Wolke verdeckt die rechte Bildhälfte; das hintere Fahrzeug steht am Wolkenrand.",
+        "beschreibung": "Zwei Geländewagen in Tarnfarbe fahren über das Feld nordwestlich der Ortschaft nach Süden. Eine Wolke verdeckt die rechte Bildhälfte; das hintere Fahrzeug fährt am Wolkenrand.",
         "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts", "ziel_anteil": 0.12}]
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (Nordstraße liegt in EZ-01)", "G3": "FREIGABE"},
-      "zweck": "Zweiter Spähtrupp auf der Nordstraße: in der Ortschaft (EZ-01) ist nur LM zulässig."
+      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "zweck": "Zweiter Spähtrupp über die Felder westlich der Ortschaft Richtung Brücke. Weit genug von der Ortschaft ist der Mörser zulässig; je näher der Spähtrupp der Brücke kommt, desto eher nur noch LM."
     },
     {
       "id": "M03",
@@ -935,13 +936,13 @@
       },
       "bild": {
         "datei": "drohne/M03.webp",
-        "beschreibung": "Spähpanzer steht auf der Hauptstraße kurz vor der Brücke, Turmluk offen.",
+        "beschreibung": "Spähpanzer steht auf der Hauptstraße an der Brücke ELSTER Ost, Turmluk offen.",
         "sicht": [],
         "zustand": {"Z-02": "luk_offen"},
         "personen": [{"bei": "Z-02", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
-      "zweck": "Folgemeldung: ein Fahrzeug des Spähtrupps HAUPT ist zur Brücke gefahren und beobachtet. Nähe zu EZ-01 schließt den Mörser aus (LM oder PzAbw)."
+      "zweck": "Folgemeldung: ein Fahrzeug des Spähtrupps HAUPT ist zwischen Ortschaft und Schule hindurch zur Brücke gefahren und beobachtet. Nähe zur Ortschaft schließt den Mörser aus (LM oder PzAbw)."
     },
     {
       "id": "M04",
@@ -1233,12 +1234,12 @@
       },
       "bild": {
         "datei": "drohne/M16.webp",
-        "beschreibung": "Schützenpanzer an der Brücke ELSTER Ost, Mündungsfeuer. Mündungsrauch verdeckt den Bug.",
+        "beschreibung": "Schützenpanzer an der Brücke ELSTER Ost südlich der Straße, Mündungsfeuer. Mündungsrauch verdeckt den Bug.",
         "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel", "seite": "vorn"}],
         "zustand": {"Z-18": "feuert"}
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (PzAbw oder LM)", "G3": "FREIGABE"},
-      "zweck": "Druck an der Brücke."
+      "zweck": "Druck an der Brücke: Die Achse SÜD ist an der Brücke Ost angekommen."
     },
     {
       "id": "M17",
@@ -1249,24 +1250,24 @@
       "argus": {"klasse": "SPz BMP-2", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
-        "bewegung": "nach Süd, ca. 12 km/h, biegt in die Zufahrt zur Schule ab",
+        "bewegung": "nach West, ca. 12 km/h, biegt zur Schule ab",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
         "personen": "–"
       },
       "bild": {
         "datei": "drohne/M17.webp",
-        "beschreibung": "Schützenpanzer biegt von der Hauptstraße in die Zufahrt zur Schule ein; das Schulgebäude ist am unteren Bildrand zu sehen.",
+        "beschreibung": "Schützenpanzer fährt zwischen Ortschaft und Schule nach Westen und biegt zum Schulgelände ab; das Schulgebäude ist am unteren Bildrand zu sehen.",
         "sicht": [],
         "ausschnitt_m": 130,
-        "versatz_m": [8, 24]
+        "versatz_m": [-14, 22]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Vermerk: fährt zur Schule)",
-        "G2": "BEOBACHTEN: Einschlag läge in NS-01, solange der BMP-2 an der Schule steht; ab ca. 10:20:15 mit LM",
-        "G3": "keine Freigabe, solange die Warnung NS-01 zum Einschlag steht"
+        "G1": "ANNEHMEN (fährt zur Schule: im Team ansprechen)",
+        "G2": "BEOBACHTEN: Einschlag läge auf dem Schulgelände, solange der BMP-2 dort steht; ab ca. 10:20:20 mit LM",
+        "G3": "keine Freigabe, solange die Warnung „Schule“ zum Einschlag steht"
       },
-      "zweck": "Nebenfall Vorhalt: Bei der Meldung ist LM zulässig, beim Einschlag steht das Ziel am Schulgebäude. Die Warnung rechnet den Einschlag voraus."
+      "zweck": "Nebenfall Vorhalt auf der Achse SÜD: Bei der Meldung ist LM zulässig, beim Einschlag steht das Ziel am Schulgebäude. Die Warnung rechnet den Einschlag voraus."
     },
     {
       "id": "M18",
@@ -1294,11 +1295,11 @@
         "ausschnitt_m": 60
       },
       "loesung": {
-        "G1": "ANNEHMEN mit Vermerk Zivilpersonen",
+        "G1": "ANNEHMEN (Zivilpersonen im Team ansprechen)",
         "G2": "BEOBACHTEN (zurückstellen)",
         "G3": "nicht freigeben, Folgemeldung abwarten (Inject I-07 erzeugt Druck)"
       },
-      "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 3. Kp freigibt, trifft die Zivilpersonen."
+      "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 2. Kp freigibt, trifft die Zivilpersonen."
     },
     {
       "id": "M19",
@@ -1315,13 +1316,13 @@
       },
       "bild": {
         "datei": "drohne/M19.webp",
-        "beschreibung": "Kampfpanzer am Ortsrand, die Schule am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
+        "beschreibung": "Kampfpanzer fährt zwischen Ortschaft und Schule nach Westen, das Schulgelände am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
         "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}],
         "ausschnitt_m": 140,
-        "versatz_m": [0, 25]
+        "versatz_m": [10, 22]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
-      "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel."
+      "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD)."
     },
     {
       "id": "M20",
@@ -1400,7 +1401,7 @@
         "G2": "BEKÄMPFEN mit LM (Schule 66 m, Mörser unzulässig)",
         "G3": "FREIGABE"
       },
-      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen NS-01."
+      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
     },
     {
       "id": "M23",
@@ -1539,8 +1540,8 @@
       "t_s": 180,
       "an": "G3",
       "von": "Brigade (Zivil-militärische Zusammenarbeit)",
-      "text": "Evakuierung KRÄHE unvollständig. In der Schule (NS-01) sind ca. 40 Zivilpersonen, darunter Kinder. Einzelne Bewohner sind noch auf den Höfen.",
-      "zweck": "Stakes für das Sanitätsfahrzeug, den BMP-2 an der Schule (N4), Z-20 und den Mörser im Hof RABE. G2 kennt NS-01, aber nicht die Belegung."
+      "text": "Evakuierung KRÄHE unvollständig. In der Schule sind ca. 40 Zivilpersonen, darunter Kinder. Einzelne Bewohner sind noch auf den Höfen.",
+      "zweck": "Stakes für das Sanitätsfahrzeug, die Achse SÜD an der Schule (N4, Z-20) und den Mörser im Hof RABE. G2 kennt die Schule als No-Strike-Zone, aber nicht ihre Belegung."
     },
     {
       "id": "I-03",
@@ -1571,9 +1572,9 @@
       "id": "I-12",
       "t_s": 880,
       "an": "G3",
-      "von": "3. Kompanie",
-      "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind tritt mit einer Kompanie an: Panzer und SPz über die Felder Richtung Furt Nord, weitere Kräfte durch die Ortschaft.",
-      "zweck": "Lagebild für G3: Hauptangriff auf zwei Achsen. Erhöht das Zielaufkommen unmittelbar nach dem Fast-Track-Angebot."
+      "von": "2. Kompanie",
+      "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind tritt mit einer Kompanie an: Panzer und SPz über die Felder Richtung Furt Nord, weitere Kräfte durch die Ortschaft und südlich davon an der Schule vorbei Richtung Brücke.",
+      "zweck": "Lagebild für G3: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen unmittelbar nach dem Fast-Track-Angebot."
     },
     {
       "id": "I-04",
@@ -1588,7 +1589,7 @@
       "id": "I-07",
       "t_s": 1095,
       "an": "G3",
-      "von": "3. Kompanie",
+      "von": "2. Kompanie",
       "fall": "S4",
       "text": "Wir liegen unter Mörserfeuer aus Richtung Hof RABE, drei Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
       "zweck": "Gleichzeitig mit der Mörsermeldung im Hof RABE: menschlicher Druck gegen die berechtigte Warnung von ARGUS."
@@ -1599,7 +1600,7 @@
       "an": "G3",
       "von": "2. Kompanie",
       "text": "Feind sammelt Kampfpanzer und Schützenpanzer an der Brücke Ost, ein Angriff über den Bach steht bevor. Fordere sofort Feuer auf die Brücke Ost!",
-      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift."
+      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls."
     },
     {
       "id": "I-10",
@@ -1635,6 +1636,14 @@
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-19"], "verzoegerung_s": 60},
       "text": "Meldung aus der Ortschaft: Am Hof RABE sind vier Zivilpersonen schwer verletzt, darunter zwei Kinder.",
       "zweck": "Rückmeldung, wenn trotz Warnung freigegeben wurde und die Zivilpersonen beim Einschlag noch im Wirkradius standen."
+    },
+    {
+      "id": "I-13",
+      "an": "G3",
+      "von": "2. Kompanie",
+      "bedingung": {"typ": "durchbruch", "verzoegerung_s": 10},
+      "text": "Feind ist über den Bach ELSTER bei uns eingebrochen! Kampffahrzeuge westlich des Bachs, wir binden sie mit Panzerabwehr.",
+      "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren."
     }
   ],
   "reserve_injects": [
@@ -1664,7 +1673,7 @@
       "an": "G3",
       "von": "Brigade (Zivil-militärische Zusammenarbeit)",
       "text": "Einschlag auf dem Schulgelände KRÄHE: Fenster zersplittert, mehrere Kinder durch Splitter verletzt.",
-      "einsatz": "nur, wenn eine Wirkung die Schule NS-01 berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag."
+      "einsatz": "nur, wenn eine Wirkung die Schule berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag."
     }
   ],
   "ereignisse": [
@@ -1686,7 +1695,7 @@
     }
   ],
   "hintergrund": {
-    "hinweis": "Die eigenen Kompanien und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der eigenen Panzerabwehr treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie) und nur Ziele bis zum Bach (x < 500 m). Feindartillerie und Rauch sind Darstellung und treffen keine Spielobjekte. Alles steht als Ereignis im Protokoll.",
+    "hinweis": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der eigenen Panzerabwehr treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie) und nur Ziele bis zum Bach (x < 500 m). Feindartillerie und Rauch sind Darstellung und treffen keine Spielobjekte. Alles steht als Ereignis im Protokoll.",
     "ereignisse": [
       {
         "id": "H-01",
@@ -1722,66 +1731,66 @@
         "id": "H-04",
         "t_s": 815,
         "art": "feindartillerie",
-        "ziel": "2./ und 3./PzGrenBtl",
+        "ziel": "2./PzGrenBtl",
         "einschlaege": [
           [815, 22, 380], [819, 46, 410], [823, 10, 440], [828, 60, 395], [832, 34, 458], [837, 15, 372],
           [842, 52, 430], [847, 25, 485], [852, 372, 448], [858, 360, 470], [864, 384, 430]
         ],
-        "text": "Feuervorbereitung des Hauptangriffs auf die 2. und 3. Kp und das Westufer an der Brücke."
+        "text": "Feuervorbereitung des Hauptangriffs auf die 2. Kp und das Westufer an der Brücke."
       },
       {
         "id": "H-05",
         "t_s": 1010,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-31",
         "folge": "zerstoert",
-        "text": "3. Kp trifft einen KPz T-72 am Ostufer vor der Furt Nord."
+        "text": "2. Kp trifft einen KPz T-72 am Ostufer vor der Furt Nord."
       },
       {
         "id": "H-06",
         "t_s": 1030,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-32",
         "folge": "zerstoert",
-        "text": "3. Kp trifft einen zweiten KPz T-72 am Ostufer."
+        "text": "2. Kp trifft einen zweiten KPz T-72 am Ostufer."
       },
       {
         "id": "H-07",
         "t_s": 1075,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-30",
         "folge": "zerstoert",
-        "text": "3. Kp trifft den Führungspanzer der Achse NORD am Ostufer nördlich der Furt. Der Panzerzug ist zerschlagen."
+        "text": "2. Kp trifft den Führungspanzer der Achse NORD am Ostufer nördlich der Furt. Der Panzerzug ist zerschlagen."
       },
       {
         "id": "H-08",
         "t_s": 1110,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-33",
         "folge": "zerstoert",
-        "text": "3. Kp trifft einen SPz BMP-2 in der Furt Nord (Wrack im Bach)."
+        "text": "2. Kp trifft einen SPz BMP-2 in der Furt Nord (Wrack im Bach)."
       },
       {
         "id": "H-09",
         "t_s": 1135,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-34",
         "folge": "zerstoert",
-        "text": "3. Kp trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt."
+        "text": "2. Kp trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt."
       },
       {
         "id": "H-10",
         "t_s": 1150,
         "art": "panzerabwehr",
-        "von": "K-3",
+        "von": "K-2",
         "ziel": "Z-35",
         "folge": "zerstoert",
-        "text": "3. Kp trifft den letzten SPz BMP-2 der Achse NORD. Der Angriff über die Furt ist abgeschlagen."
+        "text": "2. Kp trifft den letzten SPz BMP-2 der Achse NORD. Der Angriff über die Furt ist abgeschlagen."
       },
       {
         "id": "H-11",
@@ -1803,7 +1812,7 @@
     ]
   },
   "verstaerkungen": {
-    "hinweis": "Vorbereitete Feindgruppen, die die Spielleitung einspielt (Standard: an alle Teams). Nur Routineziele, keine neuen Fallen. Zeiten relativ zum Einspielen: Route [dt_s, x, y], Meldung dt_s. pruefe_szenario.py prüft für jeden Einspielzeitpunkt, dass kein geschütztes Objekt näher als 100 m kommt; Zeiten, zu denen das nicht gilt, stehen in `nicht_einspielen`. Jede Verstärkung höchstens einmal je Lauf; sie steht im Protokoll.",
+    "hinweis": "Vorbereitete Feindgruppen, die die Spielleitung einspielt (Standard: an alle Teams). Nur Routineziele, keine neuen Fallen. Zeiten relativ zum Einspielen: Route [dt_s, x, y], Meldung dt_s. pruefe_szenario.py prüft für jeden Einspielzeitpunkt, dass kein geschütztes Objekt näher als 100 m kommt; Zeiten, zu denen das nicht gilt, stehen in `nicht_einspielen`. Panzer- und SPz-Züge brechen durch, wenn sie nicht aufgehalten werden (durchbruch; die Prüfung nimmt diese Routen mit). Jede Verstärkung höchstens einmal je Lauf; sie steht im Protokoll.",
     "gruppen": [
       {
         "id": "V-1",
@@ -1862,7 +1871,7 @@
               "beschreibung": "Zwei Spähpanzer auf der Nordstraße zwischen Alleebäumen, fahren nach Süden.",
               "sicht": []
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (EZ-01)", "G3": "FREIGABE"},
+            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (Ortschaft)", "G3": "FREIGABE"},
             "zweck": "Routine (Verstärkung)."
           }
         ]
@@ -1871,25 +1880,25 @@
         "id": "V-2",
         "name": "Panzerzug Hauptstraße",
         "kurz": "3 T-72",
-        "dauer_s": 270,
-        "zweck": "Druck mit gepanzerten Zielen: Der Zug fährt auf der Hauptstraße ein und geht über 100 m südlich davon in Feuerstellung; Mörser und LM zulässig.",
+        "dauer_s": 574,
+        "zweck": "Druck mit gepanzerten Zielen: Der Zug fährt auf der Hauptstraße ein und geht über 100 m südlich davon in Feuerstellung; Mörser und LM zulässig. Wird er nicht aufgehalten, bricht er nach fünf Minuten über die Furt durch.",
         "ziele": [
           {
             "id": "V2-1",
             "typ": "kpz_t72",
             "pos": [907, 378],
             "hdg": 112,
-            "bis_s": 261.5,
+            "bis_s": 351.5,
             "gruppe": "V2-1–3",
             "bewegung": {
               "route": [
-                [0, 1010, 308], [3.9, 983, 312], [7.7, 957, 317], [11.6, 930, 321], [51.7, 880, 445], [210, 880, 445],
-                [249.8, 930, 322], [253.8, 957, 317], [257.6, 983, 312], [261.5, 1010, 308]
+                [0, 1010, 308], [3.9, 983, 312], [7.7, 957, 317], [11.6, 930, 321], [51.7, 880, 445], [300, 880, 445],
+                [339.8, 930, 322], [343.8, 957, 317], [347.6, 983, 312], [351.5, 1010, 308]
               ]
             },
             "gt": {
               "kategorie": "feind",
-              "text": "KPz T-72, Panzerzug Hauptstraße. Fährt vom Ostrand auf der Hauptstraße ein, geht südlich davon am Waldrand DACHS in Feuerstellung und zieht nach gut zwei Minuten wieder ab.",
+              "text": "KPz T-72, Panzerzug Hauptstraße. Fährt vom Ostrand auf der Hauptstraße ein und geht südlich davon am Waldrand DACHS in Feuerstellung. Wird er nicht aufgehalten, stößt er nach fünf Minuten über die Felder nördlich der Ortschaft zur Furt Nord vor, sonst zieht er ab.",
               "legitim": true
             }
           },
@@ -1898,12 +1907,12 @@
             "typ": "kpz_t72",
             "pos": [924, 355],
             "hdg": 100,
-            "bis_s": 264.7,
+            "bis_s": 346.7,
             "gruppe": "V2-1–3",
             "bewegung": {
               "route": [
                 [8, 1010, 308], [11.9, 983, 312], [15.7, 957, 317], [19.6, 930, 321], [54.9, 910, 437],
-                [218, 910, 437], [253, 930, 322], [257, 957, 317], [260.8, 983, 312], [264.7, 1010, 308]
+                [300, 910, 437], [335, 930, 322], [339, 957, 317], [342.8, 983, 312], [346.7, 1010, 308]
               ]
             },
             "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true}
@@ -1913,12 +1922,12 @@
             "typ": "kpz_t72",
             "pos": [931, 329],
             "hdg": 85,
-            "bis_s": 269.9,
+            "bis_s": 343.9,
             "gruppe": "V2-1–3",
             "bewegung": {
               "route": [
                 [16, 1010, 308], [19.9, 983, 312], [23.7, 957, 317], [27.6, 930, 321], [60.1, 940, 429],
-                [226, 940, 429], [258.2, 930, 322], [262.2, 957, 317], [266, 983, 312], [269.9, 1010, 308]
+                [300, 940, 429], [332.2, 930, 322], [336.2, 957, 317], [340, 983, 312], [343.9, 1010, 308]
               ]
             },
             "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true}
@@ -1946,14 +1955,42 @@
             "zweck": "Routine (Verstärkung)."
           }
         ],
-        "nicht_einspielen": [[465, 525], [690, 810], [990, 1035]]
+        "durchbruch": {
+          "t_s": 300,
+          "ueber": "Furt Nord",
+          "routen": {
+            "V2-1": [
+              [300, 880, 445], [322.8, 905, 360], [352.5, 870, 250], [367.2, 835, 205], [404.5, 690, 210],
+              [438, 560, 215], [469, 440, 225], [479.6, 415, 258], [488.6, 397, 288], [494.3, 380, 302],
+              [503.6, 360, 332], [521, 338, 396], [523.6, 339, 406], [527.8, 310, 410], [532, 281, 413],
+              [536.2, 252, 415], [540.4, 223, 418], [544.6, 194, 420], [548.8, 165, 422], [553, 136, 424],
+              [557.2, 107, 426], [561.5, 77, 427], [565.7, 48, 429], [569.9, 19, 430], [574.1, -10, 432]
+            ],
+            "V2-2": [
+              [300, 910, 437], [319.8, 905, 360], [349.5, 870, 250], [364.2, 835, 205], [401.5, 690, 210],
+              [435, 560, 215], [466, 440, 225], [476.6, 415, 258], [485.6, 397, 288], [491.3, 380, 302],
+              [500.6, 360, 332], [518, 338, 396], [520.6, 339, 406], [524.8, 310, 410], [529, 281, 413],
+              [533.2, 252, 415], [537.4, 223, 418], [541.6, 194, 420], [545.8, 165, 422], [550, 136, 424],
+              [554.2, 107, 426], [558.5, 77, 427], [562.7, 48, 429], [566.9, 19, 430], [571.1, -10, 432]
+            ],
+            "V2-3": [
+              [300, 940, 429], [319.9, 905, 360], [349.6, 870, 250], [364.3, 835, 205], [401.6, 690, 210],
+              [435.1, 560, 215], [466.1, 440, 225], [476.7, 415, 258], [485.7, 397, 288], [491.4, 380, 302],
+              [500.7, 360, 332], [518.1, 338, 396], [520.7, 339, 406], [524.9, 310, 410], [529.1, 281, 413],
+              [533.3, 252, 415], [537.5, 223, 418], [541.7, 194, 420], [545.9, 165, 422], [550.1, 136, 424],
+              [554.3, 107, 426], [558.6, 77, 427], [562.8, 48, 429], [567, 19, 430], [571.2, -10, 432]
+            ]
+          },
+          "ueber_s": {"V2-1": 489.3, "V2-2": 486.3, "V2-3": 486.4}
+        },
+        "nicht_einspielen": [[390, 435], [675, 1035]]
       },
       {
         "id": "V-3",
         "name": "SPz-Zug über die Felder Richtung Furt",
         "kurz": "3 BMP-2",
-        "dauer_s": 400,
-        "zweck": "Stehendes Ziel im Feld nahe der Ortschaft; nur LM zulässig.",
+        "dauer_s": 451,
+        "zweck": "Stehendes Ziel im Feld nahe der Ortschaft; nur LM zulässig. Wird es nicht aufgehalten, bricht es über die Furt durch.",
         "ziele": [
           {
             "id": "V3-1",
@@ -1969,7 +2006,7 @@
             },
             "gt": {
               "kategorie": "feind",
-              "text": "SPz BMP-2, SPz-Zug über die Felder. Hält nördlich der Ortschaft in Feuerstellung, Richtung Furt Nord.",
+              "text": "SPz BMP-2, SPz-Zug über die Felder. Hält nördlich der Ortschaft in Feuerstellung, Richtung Furt Nord; wird er nicht aufgehalten, setzt er nach fünf Minuten über die Furt.",
               "legitim": true
             }
           },
@@ -2020,10 +2057,39 @@
               "beschreibung": "Drei Schützenpanzer stehen nebeneinander im Feld nördlich der Ortschaft, Rohre nach Westen.",
               "sicht": []
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (Nähe EZ-01)", "G3": "FREIGABE"},
+            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (nahe der Ortschaft)", "G3": "FREIGABE"},
             "zweck": "Routine (Verstärkung)."
           }
-        ]
+        ],
+        "durchbruch": {
+          "t_s": 300,
+          "ueber": "Furt Nord",
+          "routen": {
+            "V3-1": [
+              [300, 600, 170], [322.1, 530, 220], [345.3, 440, 225], [355.9, 415, 258], [364.9, 397, 288],
+              [370.6, 380, 302], [379.9, 360, 332], [397.3, 338, 396], [399.9, 339, 406], [404.1, 310, 410],
+              [408.3, 281, 413], [412.5, 252, 415], [416.7, 223, 418], [420.9, 194, 420], [425.1, 165, 422],
+              [429.3, 136, 424], [433.5, 107, 426], [437.8, 77, 427], [442, 48, 429], [446.2, 19, 430],
+              [450.4, -10, 432]
+            ],
+            "V3-2": [
+              [300, 610, 196], [321.5, 530, 220], [344.7, 440, 225], [355.3, 415, 258], [364.3, 397, 288],
+              [370, 380, 302], [379.3, 360, 332], [396.7, 338, 396], [399.3, 339, 406], [403.5, 310, 410],
+              [407.7, 281, 413], [411.9, 252, 415], [416.1, 223, 418], [420.3, 194, 420], [424.5, 165, 422],
+              [428.7, 136, 424], [432.9, 107, 426], [437.2, 77, 427], [441.4, 48, 429], [445.6, 19, 430],
+              [449.8, -10, 432]
+            ],
+            "V3-3": [
+              [300, 620, 222], [323.1, 530, 220], [346.3, 440, 225], [356.9, 415, 258], [365.9, 397, 288],
+              [371.6, 380, 302], [380.9, 360, 332], [398.3, 338, 396], [400.9, 339, 406], [405.1, 310, 410],
+              [409.3, 281, 413], [413.5, 252, 415], [417.7, 223, 418], [421.9, 194, 420], [426.1, 165, 422],
+              [430.3, 136, 424], [434.5, 107, 426], [438.8, 77, 427], [443, 48, 429], [447.2, 19, 430],
+              [451.4, -10, 432]
+            ]
+          },
+          "ueber_s": {"V3-1": 365.6, "V3-2": 365.0, "V3-3": 366.6}
+        },
+        "nicht_einspielen": [[810, 1155]]
       },
       {
         "id": "V-4",
@@ -2039,7 +2105,8 @@
             "hdg": 225,
             "ab_s": 0,
             "personen": [{"art": "soldat", "anzahl": 5, "pos": [864, 48]}],
-            "gt": {"kategorie": "feind", "text": "Mörsertrupp am Waldrand MARDER, zweite Stellung.", "legitim": true}
+            "gt": {"kategorie": "feind", "text": "Mörsertrupp am Waldrand MARDER, zweite Stellung.", "legitim": true},
+            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 4, "salve": 4, "pause_s": 24}]
           }
         ],
         "meldungen": [
@@ -2163,10 +2230,10 @@
       "titel": "Sanitätsfahrzeug neben der Schule",
       "meldung": "M12",
       "ziele": ["Z-12"],
-      "info_bei": "G1 (Rotes Kreuz im Bild und in den Sensordaten), G2 (Schule NS-01 in 60 m), G3 (Schule belegt, I-02)",
+      "info_bei": "G1 (Rotes Kreuz im Bild und in den Sensordaten), G2 (Schule in 60 m), G3 (Schule belegt, I-02)",
       "info_kurz": "G1 Bild, G2 Schule, G3 Belegung",
       "kern": "Der zurückgeschlagene Zug hat Verwundete. Eine Minute nach einem echten BTR-80 meldet ARGUS mit 91 % einen BTR-80. Es ist das Sanitätsfahrzeug, das die Verwundeten 60 m vor der Schule abholt, mit Rotem Kreuz. Mit Loitering Munition wäre die Bekämpfung nach den Regeln R2 und R3 zulässig.",
-      "gut": "G1 lehnt ab oder vermerkt das Rote Kreuz. Falls nicht: G2 fragt wegen der Schule bei G1 nach, G3 lehnt ab.",
+      "gut": "G1 lehnt ab und spricht das Rote Kreuz im Team an. Falls nicht: G2 fragt wegen der Schule bei G1 nach, G3 lehnt ab.",
       "leitfragen": [
         "G1: Habt ihr das Rote Kreuz gesehen? Wie lange habt ihr auf das Bild geschaut?",
         "G2: Das System meldete keinen Verstoß. Reicht das?",
@@ -2187,7 +2254,7 @@
       "info_bei": "nur G1 (Sensordaten: kalt, keine Spuren, keine Bewegung seit 09:52)",
       "info_kurz": "nur G1",
       "kern": "Während der Gefechtsaufklärung meldet ARGUS mit 93 % einen T-72 am Waldrand FUCHS, westlich des Bachs: Der Feind scheint die Bachlinie schon überschritten zu haben. Die Attrappe gehört zur Täuschung und soll das eigene Feuer herauslocken. Die Sensordaten zeigen: kalt, keine Spuren, keine Bewegung. ARGUS wertet diese Daten nicht aus (Kleingedrucktes).",
-      "gut": "G1 lehnt ab und vermerkt den Verdacht auf Attrappe.",
+      "gut": "G1 lehnt ab (Verdacht auf Attrappe) und sagt es dem Team.",
       "leitfragen": [
         "G1: Welche Felder habt ihr gelesen, bevor ihr entschieden habt?",
         "Der Gegner kennt die Schwächen der KI. Was bedeutet das für euer Vertrauen in 93 %?",
@@ -2203,12 +2270,12 @@
       "ziele": ["Z-19"],
       "info_bei": "alle (ARGUS-Warnung NICHT BEKÄMPFEN, Sensordaten bei G1), Druck bei G3 (I-07)",
       "info_kurz": "alle; Druck auf G3",
-      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 3. Kp unter Beschuss sofortiges Feuer. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
+      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 2. Kp unter Beschuss sofortiges Feuer. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
       "gut": "G2 stellt zurück (BEOBACHTEN), G3 gibt erst nach der Folgemeldung M23 frei.",
       "leitfragen": [
         "Hier lag die Maschine richtig und der Druck kam von Menschen. Wem habt ihr geglaubt?",
         "Woran erkennt ihr, wann ihr ARGUS widersprechen sollt und wann nicht?",
-        "Hättet ihr die drei Minuten gewartet, wenn die 3. Kp Gefallene gemeldet hätte?"
+        "Hättet ihr die drei Minuten gewartet, wenn die 2. Kp Gefallene gemeldet hätte?"
       ],
       "bezuege": ["Art. 51 Abs. 5 lit. b ZP I: Verhältnismäßigkeit", "Art. 57 ZP I: Vorsichtsmaßnahmen beim Angriff"]
     }
@@ -2240,7 +2307,7 @@
       "titel": "BMP-2 fährt zur Schule (Vorhalt)",
       "meldung": "M17",
       "ziele": ["Z-36"],
-      "kurz": "Legitimes Ziel. Bei der Meldung ist LM zulässig, aber während des Anflugs fährt der BMP-2 auf das Schulgelände und steht dort bis 10:20:15. Die Warnung rechnet den Einschlag voraus (NS-01). Richtig: beobachten, bis er weiterfährt."
+      "kurz": "Legitimes Ziel der Achse SÜD. Bei der Meldung ist LM zulässig, aber während des Anflugs fährt der BMP-2 auf das Schulgelände und steht dort bis 10:20:15. Die Warnung rechnet den Einschlag voraus (Schule). Richtig: beobachten, bis er weiterfährt."
     }
   ],
   "anforderungen_technik": [
@@ -2263,11 +2330,189 @@
     {
       "schritt": "8 Auswertung",
       "text": "Teamvergleich je Schlüsselfall (S1–S4, N1–N4) aus den Protokollen der Teams; Replay mit Meldung, G1, G2, G3, Einschlag sowie bei S3 dem Quittieren von I-04 und allen Lagehinweisen von G3."
+    },
+    {
+      "schritt": "2.1 Durchbruch und Animationen",
+      "text": "Durchbruch (szenario.durchbruch, verstaerkungen.gruppen[].durchbruch): Ist bis t_s kein Fahrzeug der Gruppe zerstört oder außer Gefecht, schreibt der Host `durchbruch {gruppe, t_ab, durch}` ins Protokoll; die Welt des Teams ersetzt dann die Route jedes Fahrzeugs ab t_s durch die Durchbruch-Route (bis_s = Ausfahrt am Westrand). I-13 kommt 10 s nach dem ersten Fahrzeug über dem Bach (ueber_s), wenn es dann noch steht. Feuer (ziele[].feuert): Schussrhythmus je Fahrzeug, die Karte und das Live-Drohnenbild zeigen Mündungsblitz und Abschussrauch; fahrende Fahrzeuge wirbeln Staub auf (aus der Route)."
     }
   ],
   "auswertung": {
     "einstieg": "Zuerst der Teamvergleich der Kennzahlen (2 min), dann die Schlüsselfälle in der Reihenfolge S3, S2, S1, S4 mit Replay und Vergleich der Teams (je ca. 2,5 min).",
     "kernaussage": "ARGUS lag bei den meisten Meldungen richtig. Bei den falschen Empfehlungen war ARGUS im Schnitt aber sogar sicherer als bei den richtigen: Schlechte Sicht drückte die Konfidenz echter Ziele, die Fehler passierten bei klarer Sicht. Die Konfidenz sagt nicht, wann man widersprechen muss; das können nur Menschen, die die Lage kennen.",
     "schlussfrage": "Wer hat in diesem Spiel entschieden: ihr oder ARGUS?"
+  },
+  "durchbruch": {
+    "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; G3 bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung.",
+    "gruppen": [
+      {
+        "id": "D-01",
+        "name": "Panzerzug Achse NORD",
+        "ziele": ["Z-30", "Z-31", "Z-32"],
+        "t_s": 1160,
+        "ueber": "Furt Nord",
+        "zweck": "Hält am Ostufer in Feuerstellung; die 2. Kp zerschlägt ihn bis 10:17:55 (H-05–H-07). Nur wenn das ausbliebe, setzte er über die Furt.",
+        "routen": {
+          "Z-30": [
+            [1160, 462, 250], [1172.3, 415, 258], [1181.3, 397, 288], [1187, 380, 302], [1196.3, 360, 332],
+            [1213.7, 338, 396], [1216.3, 339, 406], [1220.5, 310, 410], [1224.7, 281, 413], [1228.9, 252, 415],
+            [1233.1, 223, 418], [1237.3, 194, 420], [1241.5, 165, 422], [1245.7, 136, 424], [1249.9, 107, 426],
+            [1254.2, 77, 427], [1258.4, 48, 429], [1262.6, 19, 430], [1266.8, -10, 432]
+          ],
+          "Z-31": [
+            [1160, 470, 276], [1174.9, 415, 258], [1183.9, 397, 288], [1189.6, 380, 302], [1198.9, 360, 332],
+            [1216.3, 338, 396], [1218.9, 339, 406], [1223.1, 310, 410], [1227.3, 281, 413], [1231.5, 252, 415],
+            [1235.7, 223, 418], [1239.9, 194, 420], [1244.1, 165, 422], [1248.3, 136, 424], [1252.5, 107, 426],
+            [1256.8, 77, 427], [1261, 48, 429], [1265.2, 19, 430], [1269.4, -10, 432]
+          ],
+          "Z-32": [
+            [1160, 476, 302], [1179.3, 415, 258], [1188.3, 397, 288], [1194, 380, 302], [1203.3, 360, 332],
+            [1220.7, 338, 396], [1223.3, 339, 406], [1227.5, 310, 410], [1231.7, 281, 413], [1235.9, 252, 415],
+            [1240.1, 223, 418], [1244.3, 194, 420], [1248.5, 165, 422], [1252.7, 136, 424], [1256.9, 107, 426],
+            [1261.2, 77, 427], [1265.4, 48, 429], [1269.6, 19, 430], [1273.8, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-30": 1182.0, "Z-31": 1184.6, "Z-32": 1189.0}
+      },
+      {
+        "id": "D-02",
+        "name": "SPz-Zug Achse NORD",
+        "ziele": ["Z-33", "Z-34", "Z-35"],
+        "t_s": 1165,
+        "ueber": "Furt Nord",
+        "zweck": "Folgt dem Panzerzug; die 2. Kp zerschlägt ihn bis 10:19:10 (H-08–H-10).",
+        "routen": {
+          "Z-33": [
+            [1165, 402, 291], [1174.1, 415, 258], [1183.1, 397, 288], [1188.8, 380, 302], [1198.1, 360, 332],
+            [1215.5, 338, 396], [1218.1, 339, 406], [1222.3, 310, 410], [1226.5, 281, 413], [1230.7, 252, 415],
+            [1234.9, 223, 418], [1239.1, 194, 420], [1243.3, 165, 422], [1247.5, 136, 424], [1251.7, 107, 426],
+            [1256, 77, 427], [1260.2, 48, 429], [1264.4, 19, 430], [1268.6, -10, 432]
+          ],
+          "Z-34": [
+            [1165, 488, 240], [1184.3, 415, 258], [1193.3, 397, 288], [1199, 380, 302], [1208.3, 360, 332],
+            [1225.7, 338, 396], [1228.3, 339, 406], [1232.5, 310, 410], [1236.7, 281, 413], [1240.9, 252, 415],
+            [1245.1, 223, 418], [1249.3, 194, 420], [1253.5, 165, 422], [1257.7, 136, 424], [1261.9, 107, 426],
+            [1266.2, 77, 427], [1270.4, 48, 429], [1274.6, 19, 430], [1278.8, -10, 432]
+          ],
+          "Z-35": [
+            [1165, 494, 214], [1188.3, 415, 258], [1197.3, 397, 288], [1203, 380, 302], [1212.3, 360, 332],
+            [1229.7, 338, 396], [1232.3, 339, 406], [1236.5, 310, 410], [1240.7, 281, 413], [1244.9, 252, 415],
+            [1249.1, 223, 418], [1253.3, 194, 420], [1257.5, 165, 422], [1261.7, 136, 424], [1265.9, 107, 426],
+            [1270.2, 77, 427], [1274.4, 48, 429], [1278.6, 19, 430], [1282.8, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-33": 1183.8, "Z-34": 1194.0, "Z-35": 1198.0}
+      },
+      {
+        "id": "D-03",
+        "name": "Achse ORT (T-72 und BTR-80)",
+        "ziele": ["Z-14", "Z-13"],
+        "t_s": 1300,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Ist bis 10:21:40 keines der beiden Fahrzeuge bekämpft, stoßen sie über die Brücke vor: Folge, wenn ein Team die Meldungen M11 und M14 liegen lässt.",
+        "routen": {
+          "Z-14": [
+            [1300, 530, 352], [1308.5, 533, 385], [1312.8, 503, 388], [1317.1, 473, 391], [1321.5, 443, 395],
+            [1325.8, 413, 398], [1330.3, 382, 402], [1334.6, 352, 405], [1338.9, 322, 408], [1343.2, 292, 411],
+            [1347.6, 262, 415], [1351.9, 232, 417], [1356.2, 202, 420], [1360.7, 171, 422], [1365, 141, 424],
+            [1369.3, 111, 426], [1373.6, 81, 427], [1378.1, 50, 429], [1382.4, 20, 430], [1386.7, -10, 432]
+          ],
+          "Z-13": [
+            [1300, 641, 336], [1307.1, 647, 371], [1311.5, 617, 376], [1315.7, 588, 380], [1320, 558, 383],
+            [1324.3, 528, 385], [1328.6, 498, 388], [1333, 468, 392], [1337.3, 438, 395], [1341.5, 409, 399],
+            [1345.8, 379, 402], [1350.1, 349, 405], [1354.5, 319, 409], [1358.8, 289, 412], [1363.1, 259, 415],
+            [1367.3, 230, 418], [1371.6, 200, 420], [1375.9, 170, 422], [1380.2, 140, 424], [1384.5, 110, 426],
+            [1388.8, 80, 427], [1393.1, 50, 429], [1397.4, 20, 430], [1401.7, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-14": 1323.3, "Z-13": 1338.4}
+      },
+      {
+        "id": "D-04",
+        "name": "Kampfpanzer T-72 Z-27 an der Brücke Ost",
+        "ziele": ["Z-27"],
+        "t_s": 1413,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "routen": {
+          "Z-27": [
+            [1413, 560, 348], [1421.8, 563, 382], [1426.1, 533, 385], [1430.4, 503, 388], [1434.7, 473, 391],
+            [1439.1, 443, 395], [1443.6, 412, 398], [1448, 382, 402], [1452.3, 352, 405], [1456.6, 322, 408],
+            [1460.9, 292, 411], [1465.3, 262, 415], [1469.6, 232, 417], [1473.9, 202, 420], [1478.4, 171, 422],
+            [1482.7, 141, 424], [1487, 111, 426], [1491.3, 81, 427], [1495.8, 50, 429], [1500.1, 20, 430],
+            [1504.4, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-27": 1440.9}
+      },
+      {
+        "id": "D-05",
+        "name": "Schützenpanzer BMP-2 Z-28 an der Brücke Ost",
+        "ziele": ["Z-28"],
+        "t_s": 1428,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "routen": {
+          "Z-28": [
+            [1428, 548, 417], [1436.5, 545, 384], [1440.7, 516, 386], [1444.9, 487, 390], [1449.1, 458, 393],
+            [1453.5, 428, 397], [1457.7, 399, 400], [1461.9, 370, 403], [1466.1, 341, 406], [1470.3, 312, 409],
+            [1474.5, 283, 412], [1478.8, 253, 415], [1483, 224, 418], [1487.2, 195, 420], [1491.4, 166, 422],
+            [1495.7, 136, 424], [1499.9, 107, 426], [1504.1, 78, 427], [1508.3, 49, 429], [1512.6, 19, 430],
+            [1516.8, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-28": 1453.1}
+      },
+      {
+        "id": "D-06",
+        "name": "Schützenpanzer BMP-2 Z-18 an der Brücke Ost",
+        "ziele": ["Z-18"],
+        "t_s": 1443,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "routen": {
+          "Z-18": [
+            [1443, 480, 404], [1446.4, 478, 391], [1450.7, 448, 394], [1455.2, 417, 398], [1459.5, 387, 401],
+            [1464, 356, 405], [1468.3, 326, 408], [1472.8, 295, 411], [1477.1, 265, 414], [1481.6, 234, 417],
+            [1485.9, 204, 420], [1490.4, 173, 422], [1494.7, 143, 424], [1499.2, 112, 426], [1503.5, 82, 427],
+            [1508, 51, 429], [1512.3, 21, 430], [1516.8, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-18": 1453.3}
+      },
+      {
+        "id": "D-07",
+        "name": "Kampfpanzer T-72 Z-20 an der Brücke Ost",
+        "ziele": ["Z-20"],
+        "t_s": 1458,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "routen": {
+          "Z-20": [
+            [1458, 505, 412], [1464.2, 502, 388], [1468.5, 472, 391], [1472.9, 442, 395], [1477.2, 412, 398],
+            [1481.6, 382, 402], [1485.9, 352, 405], [1490.2, 322, 408], [1494.6, 292, 412], [1498.9, 262, 415],
+            [1503.4, 231, 417], [1507.7, 201, 420], [1512, 171, 422], [1516.3, 141, 424], [1520.6, 111, 426],
+            [1524.9, 81, 427], [1529.4, 50, 429], [1533.7, 20, 430], [1538, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-20": 1474.6}
+      },
+      {
+        "id": "D-08",
+        "name": "Schützenpanzer BMP-2 Z-36 an der Brücke Ost",
+        "ziele": ["Z-36"],
+        "t_s": 1468,
+        "ueber": "Brücke ELSTER",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "routen": {
+          "Z-36": [
+            [1468, 522, 416], [1475.8, 519, 386], [1480, 490, 389], [1484.4, 460, 393], [1488.6, 431, 396],
+            [1492.8, 402, 400], [1497.1, 372, 403], [1501.3, 343, 406], [1505.5, 314, 409], [1509.8, 284, 412],
+            [1514, 255, 415], [1518.2, 226, 418], [1522.5, 196, 420], [1526.7, 167, 422], [1531, 137, 424],
+            [1535.2, 108, 426], [1539.5, 78, 427], [1543.7, 49, 429], [1548, 19, 430], [1552.2, -10, 432]
+          ]
+        },
+        "ueber_s": {"Z-36": 1488.7}
+      }
+    ]
   }
 }

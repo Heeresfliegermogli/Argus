@@ -14,7 +14,7 @@ import ms from "milsymbol";
 import { Application, CanvasTextMetrics, Container, Graphics, Sprite, Spritesheet, type SpritesheetData, Text, TextStyle, type TextStyleOptions, Texture } from "pixi.js";
 import { atlas, assetUrl, kachelnVerfuegbar, type AssetManifest } from "../assets/assets";
 import type { Inhalte, Punkt } from "../inhalte/typen";
-import type { Effekt } from "../kern/effekte";
+import { type Effekt, type StaubWolke, staubSpur } from "../kern/effekte";
 import type { Fahrweg } from "../kern/fahrwege";
 import type { KartenObjekt, Lagebild, PersonenMarke, WirkungsMarke } from "../kern/lagebild";
 import { LEER, bahnLage } from "../kern/lagebild";
@@ -147,6 +147,8 @@ export class Lagekarte {
   /** Wirkungen und Vorschau (unter den Zeichen, aber dynamisch) */
   private dynUnten = new Graphics();
   private effekte: EffektEbene;
+  /** Staubwolken fahrender Fahrzeuge im aktuellen Bild */
+  private staub: { id: string; wolken: StaubWolke[] }[] = [];
   private spriteEbene = new Container();
   private zeichenEbene = new Container();
   private ueber = new Graphics();
@@ -733,9 +735,10 @@ export class Lagekarte {
     this.bildPunkte = new Map();
     this.wirkungen(d, this.lb.wirkungen);
     this.vorschauZeichnen(d);
+    this.staub = [];
     this.objekte(u, this.lb.objekte, uhr?.t ?? null);
     this.personen(u, this.lb.personen, uhr?.t ?? null);
-    if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe);
+    if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe, this.staub);
     for (const [k, t] of this.texte) if (!this.benutzt.has(k) && !this.benutztStatisch.has(k)) t.visible = false;
     this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, breite: this.breite, hoehe: this.hoehe });
   }
@@ -801,7 +804,8 @@ export class Lagekarte {
       const pos = z.beschriftung ?? this.zonenBeschriftung(z.typ, teile);
       if (pos) {
         const [lx, ly] = this.bs(pos);
-        const kurz = z.typ === "no_strike" ? `${z.id} ${z.name.split(" ")[0]}` : `${z.id} ≤ ${z.max_wirkradius_m ?? "?"} m`;
+        // sichtbarer Name ohne Kürzel (seit 2.1): „Schule“, „Ortschaft ≤ 50 m“
+        const kurz = z.typ === "no_strike" ? (z.kurz ?? z.name.split(" ")[0]) : `${z.kurz ?? z.id} ≤ ${z.max_wirkradius_m ?? "?"} m`;
         this.belegen(this.text(`zone-${z.id}`, kurz, { ...this.stil(12.5, "700", farbe === FARBE.ns ? 0xb5281f : 0xb35f0a), stroke: { color: 0xfffbf2, width: 3.5, join: "round" } }, lx, ly));
       }
     }
@@ -866,7 +870,8 @@ export class Lagekarte {
     const gross = this.stil(13.5, "700");
     for (const n of k.namen) {
       const [x, y] = this.bs(n.pos);
-      this.belegen(this.text(`name-${n.text}`, n.text, gross, x, y));
+      // anker (seit Karte 1.2): z. B. „Brücke ELSTER“ links oberhalb der Brücke, damit der Name die Straße frei lässt
+      this.belegen(n.anker ? this.text(`name-${n.text}`, n.text, gross, x, y, n.anker[0], n.anker[1]) : this.text(`name-${n.text}`, n.text, gross, x, y));
     }
     const namenText = new Set(k.namen.map((n) => n.text));
     for (const p of k.punkte) {
@@ -877,19 +882,19 @@ export class Lagekarte {
     // Straßen- und Wegenamen entlang der Linie (z. B. „Feldweg Süd“ für den Lagehinweis von G3)
     for (const l of k.linien) {
       if (l.art !== "strasse" && l.art !== "feldweg") continue;
-      const lage = this.linienMitte(l.punkte);
+      const lage = this.linienMitte(l.punkte, l.beschriftung_anteil);
       if (!lage) continue;
       const [x, y] = this.bs(lage.p);
       this.text(`linie-${l.id}`, l.name, this.stil(11.5, "500", undefined, true), x, y, 0.5, 1.15, lage.winkel);
     }
   }
 
-  private linienMitte(pts: Punkt[]): { p: Punkt; winkel: number } | null {
+  private linienMitte(pts: Punkt[], anteil = 0.4): { p: Punkt; winkel: number } | null {
     if (pts.length < 2) return null;
     const laengen = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
     const gesamt = laengen.reduce((a, b) => a + b, 0);
-    // Beschriftung bei 40 % der Länge, aber nur innerhalb der Karte
-    let rest = gesamt * 0.4;
+    // Beschriftung bei 40 % der Länge (oder beschriftung_anteil), aber nur innerhalb der Karte
+    let rest = gesamt * anteil;
     for (let i = 0; i < laengen.length; i++) {
       if (rest <= laengen[i]) {
         const f = rest / laengen[i];
@@ -1064,6 +1069,11 @@ export class Lagekarte {
       this.posJetzt.set(o.id, pos);
       const [x, y] = this.bs(pos);
       if (x < -40 || y < -40 || x > this.breite + 40 || y > this.hoehe + 40) continue;
+      // fahrende Fahrzeuge wirbeln Staub auf (seit 2.1); die Wolken zeichnet die Effektebene unter den Fahrzeugen
+      if (o.bahn && t !== null) {
+        const wolken = staubSpur(o.bahn.route, t, o.bahn.halt, o.bahn.ab, o.bahn.bis);
+        if (wolken.length) this.staub.push({ id: o.id, wolken });
+      }
       const gew = istGewaehlt(o);
       const alpha = o.zustand === "erledigt" ? 0.42 : 1;
       const spriteName = o.sprite && t !== null ? spriteZur(o.sprite, t, this.atlasTexturen) : o.sprite?.name;

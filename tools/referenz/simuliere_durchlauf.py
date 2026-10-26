@@ -10,12 +10,14 @@ freigegeben ist, bleibt offen.
 
 Seit 2.0: Trefferregel nach der Lage beim Einschlag (argus_lib.wirkung), Hintergrundgefecht (eigene PzAbw), Ereignis E-01,
 Zugmeldungen (Meldung entfällt erst, wenn jedes Fahrzeug zerstört ist) und auf Wunsch Verstärkungen.
+Seit 2.1: Durchbruch nicht aufgehaltener Gruppen (Welt zur Zeit T, Lagemeldung I-13, Kennzahl durchgebrochen).
 Prüft: Reihenfolge und Zeitbedarf, Wirkmittelbestand, Treffer auf geschützte Objekte, bedingte Injects, ob jedes Team
 alle Schlüssel- und Nebenfälle erreicht.
 
 Aufruf: python3 simuliere_durchlauf.py [--verstaerkung]   (mit Verstärkungen und Robustheit gegen langsamere Teams)
 
-Kopie aus dem Projekt PolBil (claude/tools/simuliere_durchlauf.py, Stand Schritt 2b). Im Repository dient sie als
+Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.1.
+Im Repository dient sie als
 Referenz für die Engine: tools/referenz/erzeuge_referenz.py schreibt die Ergebnisse nach tests/referenz_durchlauf.json,
 tests/durchlauf.test.ts spielt dieselben Modellteams mit der echten Engine und vergleicht.
 """
@@ -98,15 +100,48 @@ def lauf(d, team, detail=None, einspielen=None):
                 z[w["ziel"]] = w["t_s"]
         return z
 
+    # Durchbruch (seit 2.1): Eine Gruppe, die bis t_s nicht aufgehalten ist, fährt ab t_s ihre Durchbruch-Route. Die Welt zur
+    # Zeit T enthält die Durchbrüche, die bis T entschieden sind (wie die Engine: Ereignis `durchbruch` erst nach t_s).
+    dbg = L.durchbruch_gruppen(sz, einspielen)
+    zmap0 = {x["id"]: x for x in sz["ziele"]}
+    ag = {h["ziel"]: h["t_s"] for h in (sz.get("hintergrund") or {}).get("ereignisse", [])
+          if h["art"] == "panzerabwehr" and h.get("folge") == "ausser_gefecht"}
+    welten = {}
+
+    def aktive(T):
+        z = zerstoert()
+        return tuple(g["id"] for g in dbg if g["t_s"] < T and L.durchbruch_stand(g, zmap0, z, ag)[0])
+
+    def welt(T):
+        akt = aktive(T)
+        if akt not in welten:
+            dd = dict(d)
+            dd["szenario"] = L.mit_durchbruch(sz, [g for g in dbg if g["id"] in akt]) if akt else sz
+            welten[akt] = dd
+        return welten[akt]
+
     def alle_weg(ziele, t):
         z = zerstoert()
-        zmap = {x["id"]: x for x in sz["ziele"]}
+        zmap = {x["id"]: x for x in welt(t)["szenario"]["ziele"]}
         return all(z.get(x, 1e9) <= t or not L.vorhanden(zmap[x], t) for x in ziele)
 
-    def waehle(m, t_freigabe):
+    def waehle(m, t_freigabe, t_jetzt):
         z = zerstoert()
+        dw = welt(t_jetzt)
         return [w for w in REIHENFOLGE if w in wm and bestand[w] > 0
-                and L.wirkung(d, m["ziele"], w, t_freigabe, z)["zulaessig"]]
+                and L.wirkung(dw, m["ziele"], w, t_freigabe, z)["zulaessig"]]
+
+    def wirkung_beim_einschlag(m, wahl, t):
+        """Einschlag nach der Welt bei der Freigabe (vorausberechnet), Treffer nach der Welt beim Einschlag."""
+        z = zerstoert()
+        t_e, pos, zid = L.einschlag(welt(t), m["ziele"], wahl, t, z)
+        de = welt(t_e)
+        ok, verst, getr = L.pruefe_wirkmittel(de, pos, wahl, t_s=t_e, zerstoert=z)
+        z0 = next(x for x in L.alle_ziele(de["szenario"]) if x["id"] == zid)
+        if L.vorhanden(z0, t_e) and z.get(zid, 1e9) > t_e and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
+            kat = L.gt_bei(z0, t_e)["kategorie"]
+            getr.append((zid, "Fahrzeug" if kat != "attrappe" else "Attrappe", kat))
+        return {"t": t_e, "pos": pos, "ziel": zid, "zulaessig": ok, "verstoesse": verst, "getroffen": getr}
 
     for m in sz["meldungen"]:
         a = m["argus"]
@@ -142,7 +177,7 @@ def lauf(d, team, detail=None, einspielen=None):
         t = max(t, frei["G2"]) + T_G2
         frei["G2"] = t
         ev["t_g2"] = t
-        zul = waehle(m, t + T_G3)
+        zul = waehle(m, t + T_G3, t)
         if team == "naiv":
             wahl = zul[0] if zul else next((w for w in ("LM", "MRS") if w in wm and bestand[w] > 0), None)
         else:
@@ -182,7 +217,7 @@ def lauf(d, team, detail=None, einspielen=None):
                 ev.update(g3="ABLEHNEN", ende="G3 lehnt ab")
                 log.append((m["id"], f"G3 lehnt ab {L.mmss(t)}"))
                 continue
-            jetzt = waehle(m, t)
+            jetzt = waehle(m, t, t)
             if wahl not in jetzt:
                 if not jetzt:
                     ev.update(g3="ZURÜCK AN G2", ende="G3: Warnung zum Einschlag")
@@ -191,7 +226,7 @@ def lauf(d, team, detail=None, einspielen=None):
                 wahl = jetzt[0]
                 ev["g2"] = wahl
         bestand[wahl] -= 1
-        w = L.wirkung(d, m["ziele"], wahl, t, zerstoert())
+        w = wirkung_beim_einschlag(m, wahl, t)
         for zid in m["ziele"]:
             freigabe_t[zid] = min(freigabe_t.get(zid, 1e9), t)
         schutz = []
@@ -207,7 +242,7 @@ def lauf(d, team, detail=None, einspielen=None):
                              f"{' – RoE: ' + '; '.join(w['verstoesse']) if w['verstoesse'] else ''}"))
         for i in sz["injects"]:
             b = i.get("bedingung")
-            if not b or not set(b["ziele"]) & set(m["ziele"]):
+            if not b or not set(b.get("ziele", [])) & set(m["ziele"]):
                 continue
             if b["typ"] == "freigabe" or (b["typ"] == "freigabe_mit_zivil" and any(g[2] == "zivil" for g in w["getroffen"])):
                 injects.append(f"{i['id']} um {L.mmss(t + b['verzoegerung_s'])}")
@@ -235,6 +270,30 @@ def lauf(d, team, detail=None, einspielen=None):
             if z_end.get(w["ziel"]) == w["t_s"]:
                 det.append({"ereignis": e["id"], "t": w["t_s"], "von": w["von"], "ziel": w["ziel"]})
                 log.append((e["id"], f"{w['von']} trifft {w['ziel']} um {L.mmss(w['t_s'])}"))
+    # Durchbruch: Ereignisse je Gruppe (nach t_s), Lagemeldung beim ersten Fahrzeug über dem Bach, Kennzahl
+    z_end = zerstoert()
+    erste_ueber = None
+    durch_ids = []
+    for g in dbg:
+        if g["t_s"] >= dauer:
+            continue
+        durch, grund = L.durchbruch_stand(g, zmap0, z_end, ag)
+        det.append({"durchbruch": g["id"], "t": g["t_s"], "durch": durch, "grund": grund})
+        if not durch:
+            log.append((g["id"], f"aufgehalten ({grund})"))
+            continue
+        for zid in g["ziele"]:
+            tc = g["ueber_s"].get(zid)
+            if tc is not None and tc <= dauer and z_end.get(zid, 1e9) > tc:
+                durch_ids.append(zid)
+                erste_ueber = tc if erste_ueber is None else min(erste_ueber, tc)
+        log.append((g["id"], f"bricht durch ab {L.mmss(g['t_s'])}"))
+    det.append({"durchgebrochen": sorted(durch_ids)})
+    for i in sz["injects"]:
+        b = i.get("bedingung")
+        if b and b["typ"] == "durchbruch" and erste_ueber is not None and erste_ueber + b["verzoegerung_s"] <= dauer:
+            injects.append(f"{i['id']} um {L.mmss(erste_ueber + b['verzoegerung_s'])}")
+            det.append({"inject": i["id"], "t": erste_ueber + b["verzoegerung_s"]})
     rest = {k: (v if v < 10 ** 5 else "∞") for k, v in bestand.items()}
     letzte = max([e["t_g3"] for e in det if "t_g3" in e] or [0])
     return log, treffer_schutz, injects, rest, letzte

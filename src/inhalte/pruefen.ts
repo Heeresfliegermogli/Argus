@@ -54,9 +54,20 @@ export function pruefeInhalte(inh: Inhalte): Pruefbericht {
   for (const i of sz.injects) {
     if (i.t_s === undefined && !i.bedingung) fehler.push(`${i.id}: weder Zeit noch Bedingung`);
     if (i.t_s !== undefined && i.t_s >= sz.spieluhr.dauer_s) fehler.push(`${i.id}: nach Spielende`);
-    for (const zid of i.bedingung?.ziele ?? []) {
+    const b = i.bedingung;
+    for (const zid of b && b.typ !== "durchbruch" ? b.ziele : []) {
       if (!inh.ziele[zid]) fehler.push(`${i.id}: Ziel ${zid} unbekannt`);
     }
+  }
+  // Durchbruch (seit 2.1): Gruppen mit bekannten Zielen und einer Route je Fahrzeug
+  for (const g of sz.durchbruch?.gruppen ?? []) {
+    for (const zid of g.ziele) {
+      if (!inh.ziele[zid]) fehler.push(`${g.id}: Ziel ${zid} unbekannt`);
+      if (!g.routen[zid]?.length) fehler.push(`${g.id}: Route für ${zid} fehlt`);
+    }
+  }
+  if ((sz.durchbruch?.gruppen.length ?? 0) > 0 && !sz.injects.some((i) => i.bedingung?.typ === "durchbruch")) {
+    warnungen.push("Durchbruch ohne Lagemeldung (Inject mit bedingung.typ durchbruch)");
   }
   for (const e of sz.ereignisse ?? []) {
     const ids = [...e.bedingung.ziele, ...e.wirkungen.flatMap((w) => [w.von, w.ziel])];

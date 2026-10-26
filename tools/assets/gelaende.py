@@ -493,6 +493,10 @@ class Gelaende:
         Yh = (Yh + 0.5) * 2 * self.res
         for x, y, r in self.frei:
             imp[(Xh - x) ** 2 + (Yh - y) ** 2 < r * r] = -60.0
+        # Brücken frei (Szenario 2.1, A7): keine Kronen des Ufergehölzes über Brücke und Straße
+        for p in d.karte.get("punkte", []):
+            if p["art"] == "bruecke":
+                imp[(Xh - p["pos"][0]) ** 2 + (Yh - p["pos"][1]) ** 2 < 15.0 ** 2] = -60.0
         weg = np.zeros((H, W), np.float32)
         for l, pts in d.linien():
             if l["art"] in ("strasse", "feldweg"):

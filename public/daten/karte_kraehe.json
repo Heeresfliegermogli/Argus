@@ -1,7 +1,7 @@
 {
   "id": "raum_kraehe",
   "titel": "Raum KRÄHE (fiktiv)",
-  "version": "1.1",
+  "version": "1.2",
   "hinweis": "Fiktives Gelände. Koordinaten in Metern, x nach Osten, y nach Süden, Ursprung oben links. Vektoren stammen aus claude/tools/gen_raum_kraehe.py; Linien mit glatt=true werden als Catmull-Rom-Kurve durch die Stützpunkte gezeichnet.",
   "ausdehnung_m": { "breite": 1000, "hoehe": 700 },
   "raster": {
@@ -18,7 +18,7 @@
   },
   "linien": [
     { "id": "hauptstrasse", "name": "Hauptstraße", "art": "strasse", "breite_m": 6, "glatt": true,
-      "punkte": [[-10, 432], [200, 420], [380, 402], [520, 386], [620, 376], [760, 350], [1010, 308]] },
+      "punkte": [[-10, 432], [200, 420], [380, 402], [520, 386], [620, 376], [760, 350], [1010, 308]], "beschriftung_anteil": 0.25 },
     { "id": "nordstrasse", "name": "Nordstraße", "art": "strasse", "breite_m": 5, "glatt": true, "allee": true,
       "punkte": [[640, 376], [648, 260], [690, 130], [722, -10]] },
     { "id": "schulweg", "name": "Zufahrt Schule", "art": "strasse", "breite_m": 4, "glatt": true,
@@ -72,7 +72,7 @@
     { "text": "Wald DACHS", "pos": [868, 520] },
     { "text": "Wald MARDER", "pos": [930, 40], "neu": true },
     { "text": "Hof RABE", "pos": [770, 255], "neu": true },
-    { "text": "Brücke ELSTER", "pos": [430, 396], "neu": true }
+    { "text": "Brücke ELSTER", "pos": [418, 386], "anker": [1, 1], "neu": true }
   ],
   "punkte": [
     { "id": "bruecke_elster", "name": "Brücke ELSTER", "pos": [430, 396], "art": "bruecke", "neu": true },

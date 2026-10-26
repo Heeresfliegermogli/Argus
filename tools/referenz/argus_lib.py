@@ -165,6 +165,11 @@ def in_zone(p, zone):
     return abstand_zone(p, zone) == 0.0
 
 
+def zonen_name(zone):
+    """Sichtbarer Name einer Zone (seit 2.1: „Schule“, „Ortschaft“); die ID (NS-01, EZ-01) bleibt intern."""
+    return zone.get("kurz") or zone["id"]
+
+
 # ----------------------------------------------------------------------------- Position und Bewegung zur Zeit t
 def position(ziel, t_s):
     """Position eines Ziels zur Spielzeit t (lineare Interpolation entlang der Route)."""
@@ -291,10 +296,11 @@ def pruefe_wirkmittel(d, ziel_pos, wm_id, t_s=0, ausgenommen=(), zerstoert=None)
     v = []
     for z in sz["zonen"]:
         a = abstand_zone(ziel_pos, z)
+        name = zonen_name(z)
         if z["typ"] == "no_strike" and a < r:
-            v.append(f"{z['id']} im Wirkradius ({a:.0f} m)")
+            v.append(f"{name} im Wirkradius ({a:.0f} m)")
         if z["typ"] == "einschraenkung" and a < r and r > z["max_wirkradius_m"]:
-            v.append(f"{z['id']}: Wirkradius > {z['max_wirkradius_m']} m ({a:.0f} m)")
+            v.append(f"{name}: Wirkradius > {z['max_wirkradius_m']} m ({a:.0f} m)")
     sab = regeln["einsatzregeln"].get("sicherheitsabstand_eigene_kraefte_m")
     for k in sz["kraefte"]:
         if sab is None or k["zugehoerigkeit"] != "eigen" or k.get("ausserhalb"):
@@ -380,6 +386,9 @@ def verstaerkung_ziel(z, t0):
         for k in ("ab_s", "bis_s"):
             if p.get(k) is not None:
                 p[k] += t0
+    for f in neu.get("feuert", []) or []:      # Schussrhythmus (seit 2.1)
+        f["von_s"] += t0
+        f["bis_s"] += t0
     if "ab_s" not in neu and not r:
         neu["ab_s"] = t0
     return neu
@@ -480,9 +489,13 @@ def verstaerkung_konflikte(sz, gruppe, abstand_m=100, schritt=15):
     Liefert die zusammengefassten Zeitfenster [[von, bis], ...] und Beispiele."""
     dauer = sz["spieluhr"]["dauer_s"]
     schlecht, beispiele = [], {}
+    db = gruppe.get("durchbruch")
     for t0 in range(0, dauer, schritt):
-        for zv in gruppe["ziele"]:
-            z = verstaerkung_ziel(zv, t0)
+        varianten = [verstaerkung_ziel(zv, t0) for zv in gruppe["ziele"]]
+        if db:      # Durchbruch, wenn die Gruppe nicht aufgehalten wird: die Prüfung nimmt beide Wege mit
+            varianten += [durchbruch_ziel(verstaerkung_ziel(zv, t0), [[t + t0, x, y] for t, x, y in db["routen"][zv["id"]]])
+                          for zv in gruppe["ziele"] if zv["id"] in db["routen"]]
+        for z in varianten:
             r = (z.get("bewegung") or {}).get("route")
             ende = min(dauer, (r[-1][0] if r else t0 + gruppe.get("dauer_s", 300)))
             for t in range(int(ab_s(z)), int(ende) + 1, 5):
@@ -504,3 +517,73 @@ def verstaerkung_konflikte(sz, gruppe, abstand_m=100, schritt=15):
         else:
             fenster.append([t0, t0])
     return fenster, beispiele
+
+
+# ----------------------------------------------------------------------------- Durchbruch (seit 2.1)
+def durchbruch_ziel(z, route_db):
+    """Ziel mit Durchbruch: Standardroute bis zum Beginn der Durchbruch-Route, danach diese; bis_s = Ausfahrt am Westrand."""
+    neu = json.loads(json.dumps(z))
+    t_s = route_db[0][0]
+    alt = (neu.get("bewegung") or {}).get("route") or [[ab_s(neu), neu["pos"][0], neu["pos"][1]]]
+    neu["bewegung"] = {"route": [list(p) for p in alt if p[0] < t_s] + [list(p) for p in route_db]}
+    neu["bis_s"] = route_db[-1][0]
+    return neu
+
+
+def durchbruch_gruppen(sz, einspielen=None):
+    """Durchbruch-Gruppen mit absoluten Zeiten: aus dem Szenario und aus eingespielten Verstärkungen ({gruppe: t0})."""
+    out = [dict(g) for g in (sz.get("durchbruch") or {}).get("gruppen", [])]
+    for g in (sz.get("verstaerkungen") or {}).get("gruppen", []):
+        db = g.get("durchbruch")
+        if not db or not einspielen or g["id"] not in einspielen:
+            continue
+        t0 = einspielen[g["id"]]
+        out.append({"id": g["id"], "name": g["name"], "ziele": [z["id"] for z in g["ziele"]], "t_s": db["t_s"] + t0, "ueber": db["ueber"],
+                    "routen": {k: [[t + t0, x, y] for t, x, y in r] for k, r in db["routen"].items()},
+                    "ueber_s": {k: v + t0 for k, v in db["ueber_s"].items()}, "verstaerkung": True})
+    return out
+
+
+def durchbruch_stand(gruppe, zmap, zerstoert, ausser_gefecht=None):
+    """Bricht die Gruppe zu ihrem Zeitpunkt t_s durch? (durch, grund). Aufgehalten, wenn bis t_s ein Fahrzeug zerstört oder
+    außer Gefecht ist; nichts zu tun, wenn keines mehr im Raum ist."""
+    t = gruppe["t_s"]
+    ag = ausser_gefecht or {}
+    for x in gruppe["ziele"]:
+        if zerstoert.get(x, 1e9) <= t:
+            return False, f"{x} zerstört"
+        if ag.get(x, 1e9) <= t:
+            return False, f"{x} außer Gefecht"
+    if not any(x in zmap and vorhanden(zmap[x], t) for x in gruppe["ziele"]):
+        return False, "nicht mehr im Raum"
+    return True, None
+
+
+def mit_durchbruch(sz, gruppen):
+    """Kopie des Szenarios, in der die Fahrzeuge der durchgebrochenen Gruppen ihren Durchbruch fahren."""
+    neu = dict(sz)
+    routen = {}
+    for g in gruppen:
+        routen.update(g["routen"])
+    neu["ziele"] = [durchbruch_ziel(z, routen[z["id"]]) if z["id"] in routen else z for z in sz["ziele"]]
+    if sz.get("_eingespielt"):
+        neu["_eingespielt"] = [durchbruch_ziel(z, routen[z["id"]]) if z["id"] in routen else z for z in sz["_eingespielt"]]
+    return neu
+
+
+# ----------------------------------------------------------------------------- Feuer (seit 2.1)
+def schuesse(ziel):
+    """Schusszeitpunkte eines feuernden Fahrzeugs (ziele[].feuert): Feuerstöße mit `salve` Schuss im Abstand takt_s, dann pause_s.
+    Liefert [(t, nr)], nr = laufende Nummer (bei Mörsern wechseln die Rohre)."""
+    out = []
+    for f in ziel.get("feuert") or []:
+        t = f["von_s"]
+        k = 0
+        while t < f["bis_s"]:
+            for i in range(f.get("salve", 1)):
+                ts = t + i * f["takt_s"]
+                if ts < f["bis_s"]:
+                    out.append((round(ts, 2), k))
+                    k += 1
+            t += f.get("salve", 1) * f["takt_s"] + f.get("pause_s", 0)
+    return out

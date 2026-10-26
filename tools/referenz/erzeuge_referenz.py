@@ -15,17 +15,22 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 ZIEL = os.path.join(HIER, "..", "..", "tests", "referenz_regeln.json")
 
 
+ZONEN = {}      # sichtbarer Name (seit 2.1 „Schule“, „Ortschaft“) → (Regel, ID)
+
+
 def regel_code(text):
     if text.startswith("außerhalb Einsatzbereich"):
         return "EB", None, None
     m = re.match(r"(\S+?)(?::| im) .*\((\d+) m\)", text)
-    zone = m.group(1)
-    return ("R2" if zone.startswith("NS") else "R3"), zone, int(m.group(2))
+    regel, zone = ZONEN[m.group(1)]
+    return regel, zone, int(m.group(2))
 
 
 def main():
     d = L.lade_alles()
     sz, karte = d["szenario"], d["karte"]
+    for zo in sz["zonen"]:
+        ZONEN[L.zonen_name(zo)] = ("R2" if zo["typ"] == "no_strike" else "R3", zo["id"])
     faelle = []
     for m in sz["meldungen"]:
         haupt = next(z for z in sz["ziele"] if z["id"] == m["ziele"][0])

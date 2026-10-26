@@ -4,6 +4,7 @@
 // mit tools/referenz/erzeuge_durchlauf.py.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { durchgebrochen } from "../src/kern/durchbruch";
 import { weltFuer } from "../src/kern/lage";
 import type { MeldungsStand } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
@@ -18,6 +19,7 @@ interface RefLauf {
   team: Team; einspielen: Record<string, number>; fast_track_ab: number | null; meldungen: RefMeldung[];
   injects: { inject: string; t: number }[]; hintergrund: { id: string; t: number; wirkt: boolean | null }[];
   e01: ({ entfaellt: true } | { t: number; von: string; ziel: string })[]; rest: Record<string, number | string>;
+  durchbruch: { gruppe: string; t: number; durch: boolean }[]; durchgebrochen: string[];
   treffer_schutz: string[]; faelle: Record<string, boolean>; log: string[];
 }
 const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
@@ -90,7 +92,8 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
         expect(ende(st, e), `${ort} Ausgang`).toBe(simEnde(s));
         expect(st.fastTrack, `${ort} Fast-Track`).toBe(s.ft);
         expect(st.erschienen.t_s, `${ort} Meldezeit`).toBeCloseTo(s.t_meld, 1);
-        if (s.t_g1 !== null && s.t_g1 <= 1500) expect(st.g1?.t_s, `${ort} G1`).toBeCloseTo(s.t_g1, 1);
+        // entfällt die Meldung während der Bearbeitung (letztes Fahrzeug weg), hat die Engine keine Entscheidung mehr
+        if (s.t_g1 !== null && s.t_g1 <= 1500 && simEnde(s) !== "entfällt") expect(st.g1?.t_s, `${ort} G1`).toBeCloseTo(s.t_g1, 1);
         if (s.g2 && s.t_g2 !== null && s.t_g2 <= 1500 && simEnde(s) !== "entfällt") expect(e?.g2?.t, `${ort} G2`).toBeCloseTo(s.t_g2, 1);
         if (s.ende === "Wirkung") {
           const w = st.wirkung!;
@@ -133,6 +136,14 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
       }
 
       for (const [wm, rest] of Object.entries(r.rest)) expect(z.bestand[wm] ?? "∞", `${name} Bestand ${wm}`).toBe(rest);
+
+      // Durchbruch (seit 2.1): jede Gruppe nach ihrem Angriffszeitpunkt entschieden wie in der Simulation
+      expect(Object.keys(z.durchbrueche).sort(), `${name} Durchbruch-Gruppen`).toEqual(r.durchbruch.map((d) => d.gruppe).sort());
+      for (const d of r.durchbruch) {
+        expect(z.durchbrueche[d.gruppe].durch, `${name} ${d.gruppe} bricht durch`).toBe(d.durch);
+        expect(z.durchbrueche[d.gruppe].t_ab, `${name} ${d.gruppe} t_ab`).toBeCloseTo(d.t, 1);
+      }
+      expect(durchgebrochen(weltFuer(m.inh, z), z.durchbrueche, z.zerstoert, z.verstaerkungen).fahrzeuge, `${name} durchgebrochen`).toEqual(r.durchgebrochen);
 
       const sz = weltFuer(m.inh, z).szenario;
       for (const f of [...sz.schluesselfaelle, ...sz.nebenfaelle]) {

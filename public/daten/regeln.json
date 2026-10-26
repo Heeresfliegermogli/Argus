@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -22,7 +22,6 @@
     {
       "stufe": "G1",
       "aktionen": ["ANNEHMEN", "ABLEHNEN"],
-      "zusatz": "Vermerk (1 Zeile)",
       "sieht": [
         "Drohnenbild mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung)",
         "ARGUS-Klasse, Konfidenz, Empfehlung",
@@ -35,7 +34,7 @@
       "aktionen": ["BEKÄMPFEN mit <Wirkmittel>", "BEOBACHTEN (zurückstellen)", "NICHT BEKÄMPFEN"],
       "zusatz": "Begründung (1 Zeile)",
       "sieht": [
-        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz, Vermerk G1",
+        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz",
         "Lagekarte mit Zonen, Spuren der gemeldeten Ziele, Wirkradius-Vorschau am vorausberechneten Einschlagort",
         "Wirkmittelbestand"
       ]
@@ -64,13 +63,13 @@
       },
       {
         "id": "R2",
-        "text": "Kein Wirkradius darf eine No-Strike-Zone (NS) berühren.",
+        "text": "Kein Wirkradius darf eine No-Strike-Zone berühren (Schule mit Sportplatz).",
         "prueft": "G2",
         "maschinell": true
       },
       {
         "id": "R3",
-        "text": "Berührt der Wirkradius das Einschränkungsgebiet EZ-01 (Ortschaft), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, PzAbw).",
+        "text": "Berührt der Wirkradius das Einschränkungsgebiet Ortschaft (KRÄHE mit Hof RABE), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, PzAbw).",
         "prueft": "G2",
         "maschinell": true
       },
@@ -88,17 +87,22 @@
     "begruendung": "Fahrzeuge bewegen sich während der Flugzeit weiter. Wer freigibt, verantwortet auch, wo die Wirkung tatsächlich einschlägt: Ein Ziel kann während des Anflugs an der Schule vorbeifahren oder Zivilpersonen können in den Wirkradius kommen.",
     "vorhersage": "Die Warnungen bei G2 und G3 rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
     "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
-    "hintergrund": "Die eigenen Kompanien und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
-    "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie."
+    "hintergrund": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
+    "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
+    "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren."
   },
   "kennzahlen": [
     {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},
     {"id": "k_feind", "text": "Feindziele bekämpft / gemeldet"},
     {"id": "k_fehl", "text": "Fehlbekämpfungen nach Art (verbündet, geschützt, zivil, Attrappe, außer Gefecht)"},
     {"id": "k_verstoss", "text": "Freigaben trotz RoE-Warnung (am vorausberechneten Einschlagort)"},
+    {
+      "id": "k_durchbruch",
+      "text": "Durchbruch: Feindfahrzeuge, die nicht aufgehalten wurden und über den Bach durchgebrochen sind (Kennzahl, keine Wertung)"
+    },
     {"id": "k_zeit", "text": "Durchlaufzeit je Stufe (Median), getrennt nach Konfidenz ≥ 90 % und < 90 %"},
     {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"},
     {"id": "k_vergleich", "text": "Teamvergleich je Schlüsselfall: richtig / falsch / nicht erreicht"}
   ],
-  "eigene_kraefte": "Die Kompanien liegen westlich außerhalb des Kartenausschnitts. Ein Sicherheitsabstand im Raum KRÄHE ist deshalb nicht zu prüfen."
+  "eigene_kraefte": "Die 2. Kompanie liegt westlich außerhalb des Kartenausschnitts (Pfeil am Westrand). Ein Sicherheitsabstand im Raum KRÄHE ist deshalb nicht zu prüfen."
 }

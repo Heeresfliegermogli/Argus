@@ -13,8 +13,13 @@
 //    E-01 nur auf Ziele, die diese Rolle aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes
 //    Ziel); der Mündungsblitz eines Schützen nur, wenn die Rolle auch den Schützen kennt.
 //  • Plenum während des Spiels („umgebung“): nur Feindartillerie und Rauch.
-import type { Inhalte, Punkt } from "../inhalte/typen";
-import { position, weg } from "./geometrie";
+//
+// Seit Szenario 2.1 (A8): Fahrzeuge mit `feuert` schießen nach ihrem Schussrhythmus (Mündungsblitz, danach
+// Abschussrauch), solange sie stehen und nicht zerstört sind – sichtbar für Rollen, die das Fahrzeug kennen. Fahrende
+// Fahrzeuge wirbeln Staub auf: staubSpur() liefert dafür je Fahrzeug die Staubwolken hinter ihm (Karte und
+// Live-Drohnenbild zeichnen sie, Aussehen aus dem Asset-Manifest, effekte.zuordnung.fahrt).
+import type { Feuer, Inhalte, Punkt, RoutenPunkt, Ziel } from "../inhalte/typen";
+import { geschwindigkeit, position, vorhanden, weg } from "./geometrie";
 import { einschlagVon } from "./lage";
 import type { Spielzustand } from "./zustand";
 
@@ -83,6 +88,64 @@ export function variante(id: string, n: number): number {
 
 function grad(von: Punkt, nach: Punkt): number {
   return (Math.atan2(nach[1] - von[1], nach[0] - von[0]) * 180) / Math.PI;
+}
+
+/**
+ * Schusszeitpunkte eines feuernden Fahrzeugs (ziele[].feuert, wie argus_lib.schuesse): Feuerstöße mit `salve` Schuss im
+ * Abstand takt_s, dann pause_s. Liefert [t, nr] mit laufender Nummer (bei Mörsern wechseln die Rohre).
+ */
+export function schuesse(feuert: Feuer[] | undefined): [number, number][] {
+  const out: [number, number][] = [];
+  for (const f of feuert ?? []) {
+    const salve = f.salve ?? 1;
+    let t = f.von_s;
+    let k = 0;
+    while (t < f.bis_s) {
+      for (let i = 0; i < salve; i++) {
+        const ts = t + i * f.takt_s;
+        if (ts < f.bis_s) out.push([Math.round(ts * 100) / 100, k++]);
+      }
+      t += salve * f.takt_s + (f.pause_s ?? 0);
+    }
+  }
+  return out;
+}
+
+/** Schießt das Fahrzeug im Steilfeuer (Mörser)? Sonst Kanone im direkten Feuer. */
+export function steilfeuer(ziel: Pick<Ziel, "typ">): boolean {
+  return ziel.typ.includes("moerser");
+}
+
+/** Staub hinter fahrenden Fahrzeugen: alle STAUB_TAKT_S Spielzeit eine Wolke, sichtbar STAUB_N Takte lang. */
+export const STAUB_TAKT_S = 1.2;
+export const STAUB_N = 6;
+/** ab dieser Geschwindigkeit (m/s) wirbelt ein Fahrzeug Staub auf */
+const STAUB_AB_MPS = 1.5;
+
+export interface StaubWolke {
+  pos: Punkt;
+  /** Alter in Spielzeit (s), 0 … STAUB_TAKT_S · STAUB_N */
+  alter: number;
+  /** Variante (fest je Wolke) */
+  nr: number;
+}
+
+/**
+ * Staubwolken hinter einem Fahrzeug zur Spielzeit t (reine Funktion der Route): Wolke k entstand zur Zeit
+ * floor(t/Δ)·Δ − k·Δ an der Position des Fahrzeugs, wenn es dann fuhr. halt: ab hier steht es (Zerstörung).
+ */
+export function staubSpur(route: RoutenPunkt[] | undefined, t: number, halt = Infinity, ab = -Infinity, bis = Infinity): StaubWolke[] {
+  if (!route || route.length < 2) return [];
+  const obj = { pos: [route[0][1], route[0][2]] as Punkt, bewegung: { route } };
+  const k0 = Math.floor(t / STAUB_TAKT_S);
+  const out: StaubWolke[] = [];
+  for (let k = 0; k < STAUB_N; k++) {
+    const te = (k0 - k) * STAUB_TAKT_S;
+    if (te < ab || te >= bis || te >= halt || te < route[0][0] || te > t) continue;
+    if (geschwindigkeit(obj, te) < STAUB_AB_MPS) continue;
+    out.push({ pos: position(obj, te), alter: t - te, nr: (k0 - k) & 3 });
+  }
+  return out;
 }
 
 /** Mündung vor dem Fahrzeug (halbe Länge plus Rohr, ca. 5 m) in Richtung des Ziels. */
@@ -157,6 +220,27 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
       if (kennt(w.von)) out.push({ id: `${e.id}-${nr}-s`, art: "flug", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz, von: muendung(pv, pz), echtzeit_s: LEUCHTSPUR_S / 2 });
       out.push({ id: `${e.id}-${nr}-x`, art: "einschlag", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz });
     });
+  }
+
+  // Feuer nach Schussrhythmus (seit 2.1): Mündungsblitz (danach Abschussrauch), solange das Fahrzeug steht
+  for (const ziel of inh.szenario.ziele) {
+    if (!ziel.feuert?.length || !kennt(ziel.id)) continue;
+    const tz = z.zerstoert[ziel.id] ?? Infinity;
+    const steil = steilfeuer(ziel);
+    for (const [ts, nr] of schuesse(ziel.feuert)) {
+      if (ts >= tz || !vorhanden(ziel, ts) || geschwindigkeit(ziel, ts) > 0.3) continue;
+      const pv = position(ziel, ts);
+      if (steil) {
+        // zwei Rohre im Wechsel, quer zur Ausrichtung
+        const w = (((ziel.hdg ?? 0) + 90) * Math.PI) / 180;
+        const o = nr % 2 ? 1.6 : -1.6;
+        out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "moerser" }, t: ts, pos: [pv[0] + Math.cos(w) * o, pv[1] + Math.sin(w) * o], nr });
+      } else {
+        // Kanone im direkten Feuer auf die eigene Kompanie am Westrand
+        const ziel2 = westrand(inh, undefined, pv[1]);
+        out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: ts, pos: muendung(pv, ziel2), richtung: grad(pv, ziel2), nr });
+      }
+    }
   }
 
   // Wracks: zerstört (brennt) oder außer Gefecht (Hintergrundgefecht, kein Brand) – am Ort des Treffers

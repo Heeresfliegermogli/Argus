@@ -8,13 +8,16 @@
 //   • Hintergrundgefecht (szenario.hintergrund): eigene Panzerabwehr wirkt nur, wenn das Ziel dann noch steht.
 //   • Skriptereignis E-01 (polnischer Gegenangriff) mit Abbruch durch eine Freigabe auf Z-15–17.
 //   • Verstärkungen: die Welt des Teams (kern/welt.ts) enthält ihre Ziele und Meldungen.
+//   • Seit Szenario 2.1: Durchbruch nicht aufgehaltener Gruppen (kern/durchbruch.ts) nach ihrem Angriffszeitpunkt,
+//     Lagemeldung I-13, sobald das erste Fahrzeug über dem Bach ist.
 //
 // Gleichzeitigkeit (deterministisch, wie simuliere_durchlauf.py): Zerstörungen zum Zeitpunkt T gelten für
 // Entscheidungen zum Zeitpunkt T schon. Was davon abhängt, dass bis T keine Freigabe kam (E-01, I-08b),
 // wird erst fällig, wenn die Uhr T überschritten hat – eine Freigabe genau um T zählt also noch.
 import type { HintergrundEreignis, Inhalte, Meldung } from "../inhalte/typen";
+import { durchbruchGruppen, durchbruchStand, durchgebrochen } from "../kern/durchbruch";
 import { gtBei, position, weg } from "../kern/geometrie";
-import { alleWeg, einschlagVon, freigaben, fruehesteFreigabe, wegAb, weltFuer } from "../kern/lage";
+import { alleWeg, ausserGefechtZeiten, einschlagVon, freigaben, fruehesteFreigabe, wegAb, weltFuer } from "../kern/lage";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
 import { uhrzeit } from "../kern/uhr";
 import type { Spielzustand } from "../kern/zustand";
@@ -127,6 +130,17 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     });
   }
 
+  // 3b Durchbruch (seit 2.1): nach dem Angriffszeitpunkt entschieden, damit Zerstörungen genau um t_s noch zählen
+  const gruppenDb = durchbruchGruppen(inh, z.verstaerkungen);
+  if (gruppenDb.length) {
+    const ag = ausserGefechtZeiten(inh, z);
+    for (const g of gruppenDb) {
+      if (z.durchbrueche[g.id] || !(t > g.t_s) || g.t_s >= dauer) continue;
+      const st = durchbruchStand(g, inh, z.zerstoert, ag);
+      liste.push(entwurf("durchbruch", { gruppe: g.id, t_ab: g.t_s, durch: st.durch, grund: st.grund }, { t_geplant: g.t_s }));
+    }
+  }
+
   // 4 Meldungen in der Kette, deren Fahrzeuge alle weg sind, entfallen
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
@@ -156,6 +170,14 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     }
     const b = i.bedingung;
     if (!b) continue;
+    if (b.typ === "durchbruch") {
+      // Lagemeldung verzoegerung_s nach dem ersten Fahrzeug über dem Bach (wenn es dann noch steht), nicht nach Spielende
+      const erst = durchgebrochen(inh, z.durchbrueche, z.zerstoert, z.verstaerkungen).erstesUeber;
+      if (erst !== null && erst + b.verzoegerung_s <= dauer && t >= erst + b.verzoegerung_s) {
+        liste.push(entwurf("inject", { inject: i.id }, { t_geplant: erst + b.verzoegerung_s }));
+      }
+      continue;
+    }
     if (b.typ === "keine_freigabe_bis") {
       const frueh = fruehesteFreigabe(frei, b.ziele);
       if (t > b.t_s && !(frueh && frueh.t <= b.t_s)) liste.push(entwurf("inject", { inject: i.id }, { t_geplant: b.t_s }));
@@ -206,10 +228,14 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
     k.push(e.bedingung.typ === "keine_freigabe_bis" ? e.bedingung.t_s + NACH : Infinity);
     e.wirkungen.forEach((w, nr) => { if (!z.ereignisse[e.id]?.wirkungen[nr]) k.push(w.t_s + NACH); });
   }
+  for (const g of durchbruchGruppen(inh, z.verstaerkungen)) if (!z.durchbrueche[g.id] && g.t_s < sz.spieluhr.dauer_s) k.push(g.t_s + NACH);
   for (const i of sz.injects) {
     const b = i.bedingung;
     if (z.injects[i.id] || !b) continue;
-    if (b.typ === "keine_freigabe_bis") k.push(b.t_s + NACH);
+    if (b.typ === "durchbruch") {
+      const erst = durchgebrochen(inh, z.durchbrueche, z.zerstoert, z.verstaerkungen).erstesUeber;
+      if (erst !== null) k.push(erst + b.verzoegerung_s);
+    } else if (b.typ === "keine_freigabe_bis") k.push(b.t_s + NACH);
     else {
       const erste = fruehesteFreigabe(frei, b.ziele);
       if (erste) k.push(erste.t + b.verzoegerung_s);
@@ -233,7 +259,7 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
 /** Stand eines bedingten Injects oder Skriptereignisses für die Spielleitung. */
 export interface BedingtStand {
   id: string;
-  art: "inject" | "ereignis";
+  art: "inject" | "ereignis" | "durchbruch";
   /** wartet: Bedingung offen · erfuellt: kommt zur Zeit t · ausgeloest · entfaellt */
   status: "wartet" | "erfuellt" | "ausgeloest" | "entfaellt";
   text: string;
@@ -243,6 +269,7 @@ export interface BedingtStand {
 type Bedingung = NonNullable<Inhalte["szenario"]["injects"][number]["bedingung"]>;
 
 function bedingungText(inh: Inhalte, b: Bedingung): string {
+  if (b.typ === "durchbruch") return `${b.verzoegerung_s} s nach dem ersten Fahrzeug einer nicht aufgehaltenen Feindgruppe über dem Bach`;
   const ziele = b.ziele.length > 1 ? `${b.ziele[0]}–${b.ziele[b.ziele.length - 1].slice(2)}` : b.ziele[0];
   const uhr = (t: number) => uhrzeit(inh.szenario.spieluhr.start, t);
   if (b.typ === "keine_freigabe_bis") return `wenn bis ${uhr(b.t_s)} keine Freigabe auf ${ziele}`;
@@ -267,6 +294,13 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
     const text = bedingungText(inh, b);
     if (z.injects[i.id]) {
       aus.push({ id: i.id, art: "inject", status: "ausgeloest", text: `${text} – ausgelöst ${uhr(z.injects[i.id].erschienen.t_s)}` });
+      continue;
+    }
+    if (b.typ === "durchbruch") {
+      const d = durchgebrochen(inh, z.durchbrueche, z.zerstoert, z.verstaerkungen);
+      aus.push(d.erstesUeber === null
+        ? { id: i.id, art: "inject", status: "wartet", text }
+        : { id: i.id, art: "inject", status: "erfuellt", text: `${text} – ${d.gruppen.join(", ")}`, t: d.erstesUeber + b.verzoegerung_s });
       continue;
     }
     const erste = fruehesteFreigabe(frei, b.ziele);
@@ -304,6 +338,15 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
     } else if (b.typ === "keine_freigabe_bis") {
       aus.push({ id: e.id, art: "ereignis", status: t >= b.t_s ? "erfuellt" : "wartet", text, t: b.t_s });
     }
+  }
+  // Durchbruch-Gruppen: wartet (bis t_s), aufgehalten (Grund) oder bricht durch
+  for (const g of durchbruchGruppen(inh, z.verstaerkungen)) {
+    if (g.t_s >= inh.szenario.spieluhr.dauer_s) continue;
+    const d = z.durchbrueche[g.id];
+    const name = `${g.name} (${g.ziele.length > 2 ? `${g.ziele[0]}–${g.ziele[g.ziele.length - 1].slice(2)}` : g.ziele.join(", ")})`;
+    if (!d) aus.push({ id: g.id, art: "durchbruch", status: "wartet", text: `${name}: bricht über ${g.ueber} durch, wenn bis dahin nicht aufgehalten`, t: g.t_s });
+    else if (d.durch) aus.push({ id: g.id, art: "durchbruch", status: "ausgeloest", text: `${name}: bricht durch über ${g.ueber} (${uhr(d.t_ab)})` });
+    else aus.push({ id: g.id, art: "durchbruch", status: "entfaellt", text: `${name}: aufgehalten (${d.grund ?? "?"})` });
   }
   return aus;
 }

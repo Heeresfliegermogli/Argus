@@ -7,6 +7,7 @@
 //               · rauch: Fläche aus mehreren nebel
 //   Wrack       zerstoert: feuer und rauch · ausser_gefecht: nichts
 //   feuert      kanone: muendungsblitz · moerser: muendungsblitz_steil
+//   abschuss    (seit 2.1) danach Abschussrauch: abschussrauch · fahrt: staub hinter fahrenden Fahrzeugen
 // Fehlt die Zuordnung (ältere Assets), gilt der Effekt aus katalog_wirkmittel.json (`effekt`) bzw. eine
 // eingebaute Vorgabe. Anker je Rahmen kommen aus dem Atlas (Leuchtspur: Kopf, Rauch: Quelle, Blitz: Mündung).
 //
@@ -17,12 +18,14 @@
 import { Container, Graphics, Sprite, type Texture } from "pixi.js";
 import type { AssetManifest, EffektZuordnung } from "../assets/typen";
 import type { Inhalte, Punkt } from "../inhalte/typen";
-import type { Effekt } from "../kern/effekte";
+import type { Effekt, StaubWolke } from "../kern/effekte";
+import { STAUB_N, STAUB_TAKT_S } from "../kern/effekte";
 
 /** Mindestgröße auf dem Bildschirm (px, längste Seite), damit ein Effekt auch in der Gesamtansicht auffällt. */
 const MIN_PX: Record<string, number> = {
   explosion_mittel: 34, explosion_klein: 24, treffer_direkt: 20, einschlag_artillerie: 36, feuer: 12, rauch: 26,
   krater: 7, lm_flug: 22, leuchtspur: 34, muendungsblitz: 16, muendungsblitz_steil: 14, nebel: 40,
+  abschussrauch: 16, staub: 9,
 };
 /** Wie lange eine Schleife am Wrack läuft (Spielzeit, s); danach blendet sie aus. */
 const WRACK_DAUER: Record<string, number> = { feuer: 150, rauch: 420 };
@@ -40,6 +43,7 @@ const VORGABE: EffektZuordnung = {
   },
   wrack: { zerstoert: ["feuer", "rauch"], ausser_gefecht: [] },
   feuert: {},
+  abschuss: {},
 };
 
 interface Anim {
@@ -57,6 +61,8 @@ interface Anim {
 interface Aufgeloest {
   e: Effekt;
   haupt?: Anim;
+  /** nach dem Mündungsblitz: Abschussrauch (seit 2.1) */
+  rauch?: Anim;
   danach: Anim[];
   /** Wrack-Schleifen mit Dauer */
   schleifen: { a: Anim; bis: number }[];
@@ -137,7 +143,8 @@ export class EffektEbene {
         }
         case "muendung": {
           const haupt = this.anim(this.zu.feuert[q.feuert ?? ""] ?? "muendungsblitz");
-          return { e, haupt, danach: [], schleifen: [], aktivAb: () => e.t - 0.1, aktivBis: (tp) => e.t + (kurz(haupt) + 0.1) * tp };
+          const rauch = this.anim(this.zu.abschuss?.[q.feuert ?? ""]);
+          return { e, haupt, rauch, danach: [], schleifen: [], aktivAb: () => e.t - 0.1, aktivBis: (tp) => e.t + (Math.max(kurz(haupt), kurz(rauch)) + 0.1) * tp };
         }
         case "nebel": {
           const haupt = this.anim(zhg?.flaeche ?? "nebel") ?? this.anim("rauch");
@@ -191,7 +198,8 @@ export class EffektEbene {
    * Zeichnet alle Effekte zur Spielzeit t. bs: Welt → Bildschirm, s: Bildpunkte je Meter, realMs: Echtzeit
    * für Schleifen; nur was im Bild liegt, wird gezeichnet.
    */
-  zeichnen(t: number, tempo: number, bs: (p: Punkt) => Punkt, s: number, realMs: number, breite: number, hoehe: number): void {
+  zeichnen(t: number, tempo: number, bs: (p: Punkt) => Punkt, s: number, realMs: number, breite: number, hoehe: number,
+    staub: { id: string; wolken: StaubWolke[] }[] = []): void {
     this.benutzt.clear();
     const g = this.linien;
     g.clear();
@@ -216,12 +224,24 @@ export class EffektEbene {
       switch (e.art) {
         case "einschlag":
         case "muendung": {
-          const a = x.haupt;
-          if (!a || t < e.t) break;
-          const bild = Math.floor(((t - e.t) / tp) * a.fps);
-          if (bild >= a.bilder.length) break;
+          if (t < e.t) break;
           const p = bs(e.pos);
           if (!imBild(p)) break;
+          // Abschussrauch unter dem Blitz: quillt auf und zieht ab (Echtzeit wie der Blitz)
+          const r = x.rauch;
+          if (r) {
+            const rb = Math.floor(((t - e.t) / tp) * r.fps);
+            if (rb < r.bilder.length) {
+              const sr = this.sprite(`${e.id}-r`, r.bilder[rb], this.oben);
+              sr.position.set(p[0], p[1]);
+              sr.scale.set(this.massstab(r, s, e.quelle.feuert === "kanone" ? 0.7 : 1));
+              sr.alpha = 0.9;
+            }
+          }
+          const a = x.haupt;
+          if (!a) break;
+          const bild = Math.floor(((t - e.t) / tp) * a.fps);
+          if (bild >= a.bilder.length) break;
           const sp = this.sprite(e.id, a.bilder[bild], this.oben);
           sp.position.set(p[0], p[1]);
           sp.scale.set(this.massstab(a, s));
@@ -311,7 +331,28 @@ export class EffektEbene {
         }
       }
     }
+    this.staubZeichnen(staub, bs, s, imBild);
     for (const [schl, sp] of this.pool) if (!this.benutzt.has(schl)) sp.visible = false;
+  }
+
+  /** Staub hinter fahrenden Fahrzeugen (seit 2.1): Wolken wachsen mit dem Alter und blenden aus, unter den Fahrzeugen. */
+  private staubZeichnen(staub: { id: string; wolken: StaubWolke[] }[], bs: (p: Punkt) => Punkt, s: number, imBild: (p: Punkt, rand?: number) => boolean): void {
+    const a = this.anim(this.zu.fahrt ?? "staub");
+    if (!a || !staub.length) return;
+    const dauer = STAUB_TAKT_S * STAUB_N;
+    for (const { id, wolken } of staub) {
+      for (const w of wolken) {
+        const p = bs(w.pos);
+        if (!imBild(p, 30)) continue;
+        const f = Math.max(0, Math.min(1, w.alter / dauer));
+        const sp = this.sprite(`staub-${id}-${Math.round((w.pos[0] + w.pos[1]) * 10)}`, a.bilder[w.nr % a.bilder.length], this.unten);
+        // Wind nach Südost: die Wolke zieht mit dem Alter ab
+        const q = bs([w.pos[0] + 0.6 * w.alter, w.pos[1] + 0.6 * w.alter]);
+        sp.position.set(q[0], q[1]);
+        sp.scale.set(this.massstab(a, s, 0.55 + 0.9 * f));
+        sp.alpha = 0.62 * (1 - f) * Math.min(1, w.alter / 0.4 + 0.3);
+      }
+    }
   }
 
   zerstoeren(): void {

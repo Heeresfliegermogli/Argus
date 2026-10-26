@@ -74,6 +74,8 @@ export interface Spielzustand {
   verstaerkungen: { gruppe: string; t0: number; seq: number }[];
   /** Hintergrundgefecht: abgearbeitete Ereignisse */
   hintergrund: Record<string, Schritt & { wirkt?: boolean; grund?: string }>;
+  /** Durchbruch-Gruppen (seit 2.1): entschieden nach ihrem Angriffszeitpunkt, durch = nicht aufgehalten */
+  durchbrueche: Record<string, Schritt & { t_ab: number; durch: boolean; grund?: string }>;
   /** Skriptereignisse: entfallen oder je Wirkung (nr) abgearbeitet */
   ereignisse: Record<string, { entfaellt?: Schritt & { grund?: string }; wirkungen: Record<number, Schritt & { wirkt: boolean; grund?: string }> }>;
   abgelehnt: (Schritt & { aktionstyp: string; grund: string; aktion?: string })[];
@@ -101,6 +103,7 @@ export function anfangsZustand(inh: Inhalte): Spielzustand {
     zerstoertDurch: {},
     verstaerkungen: [],
     hintergrund: {},
+    durchbrueche: {},
     ereignisse: {},
     abgelehnt: [],
     aktionen: {},
@@ -228,6 +231,12 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       if (d.wirkt && d.folge === "zerstoert" && d.ziel) zerstoeren(d.ziel, d.id, plan ?? e.t_s);
       break;
     }
+    case "durchbruch": {
+      const d = e.daten;
+      if (n.durchbrueche[d.gruppe]) break;
+      n.durchbrueche = { ...n.durchbrueche, [d.gruppe]: { ...s, t_ab: d.t_ab, durch: !!d.durch, grund: d.grund } };
+      break;
+    }
     case "ereignis": {
       const d = e.daten;
       const alt = n.ereignisse[d.ereignis] ?? { wirkungen: {} };
@@ -288,6 +297,7 @@ export function fingerabdruck(z: Spielzustand): string {
     Object.entries(z.bestand).map(([k, v]) => `${k}${v ?? "∞"}`).join(","),
     z.lagehinweise.length, z.notizen.length, z.abgelehnt.length,
     Object.keys(z.zerstoert).sort().join(","), z.verstaerkungen.map((v) => v.gruppe).join(","),
+    Object.entries(z.durchbrueche ?? {}).map(([k, v]) => `${k}${v.durch ? "!" : ""}`).sort().join(","),
   ];
   let h = 2166136261;
   for (const c of teile.join("|")) h = Math.imul(h ^ c.charCodeAt(0), 16777619);

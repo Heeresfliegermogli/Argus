@@ -80,6 +80,11 @@ export interface EreignisDaten {
    * wirkt nur, wenn das Ziel dann noch steht (wirkt=false mit grund, sonst folge zerstoert/ausser_gefecht).
    */
   hintergrund: { id: string; art: string; ziel?: string; wirkt?: boolean; folge?: string; grund?: string };
+  /**
+   * Durchbruch (seit Szenario 2.1): nach dem Angriffszeitpunkt t_ab einer Feindgruppe entschieden. durch: nicht
+   * aufgehalten, die Fahrzeuge fahren ab t_ab ihre Durchbruch-Route; sonst grund (z. B. „Z-14 zerstört“).
+   */
+  durchbruch: { gruppe: string; t_ab: number; durch: boolean; grund?: string };
   /** Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. */
   ereignis: { ereignis: string; nr?: number; von?: string; ziel?: string; wirkt?: boolean; entfaellt?: boolean; grund?: string };
   inject: { inject: string; manuell?: boolean };
@@ -97,6 +102,7 @@ export type EreignisTyp = keyof EreignisDaten;
 export const EREIGNIS_TYPEN: EreignisTyp[] = [
   "spiel_neu", "uhr", "meldung", "meldung_entfaellt", "g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "inject",
   "inject_quittiert", "lagehinweis", "fast_track", "notiz", "spielende", "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis",
+  "durchbruch",
 ];
 
 export type Ereignis = {

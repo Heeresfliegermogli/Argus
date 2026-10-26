@@ -6,9 +6,31 @@ import { einschlag } from "./regeln";
 import { welt } from "./welt";
 import type { Spielzustand } from "./zustand";
 
-/** Welt des Teams: Inhalte plus eingespielte Verstärkungen. */
+/** Welt des Teams: Inhalte plus eingespielte Verstärkungen und Durchbrüche (in Protokollreihenfolge). */
 export function weltFuer(inh: Inhalte, z: Spielzustand): Inhalte {
-  return welt(inh, z.verstaerkungen);
+  return welt(inh, z.verstaerkungen, durchIds(z));
+}
+
+const DURCH = new WeakMap<Spielzustand["durchbrueche"], string[]>();
+
+/** Kennungen der durchgebrochenen Gruppen in Protokollreihenfolge (gleiches Objekt ⇒ gleiche Liste, für den Cache). */
+export function durchIds(z: Spielzustand): string[] {
+  const d = z.durchbrueche ?? {};
+  let l = DURCH.get(d);
+  if (!l) {
+    l = Object.entries(d).filter(([, v]) => v.durch).sort((a, b) => a[1].seq - b[1].seq).map(([k]) => k);
+    DURCH.set(d, l);
+  }
+  return l;
+}
+
+/** Ab wann Fahrzeuge außer Gefecht sind (Hintergrundgefecht mit folge ausser_gefecht, wenn es gewirkt hat). */
+export function ausserGefechtZeiten(inh: Inhalte, z: Spielzustand): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
+    if (h.art === "panzerabwehr" && h.folge === "ausser_gefecht" && z.hintergrund[h.id]?.wirkt) out[h.ziel] = h.t_s;
+  }
+  return out;
 }
 
 /** Ist jedes Fahrzeug der Liste zur Zeit t weg (zerstört oder nicht im Raum)? */

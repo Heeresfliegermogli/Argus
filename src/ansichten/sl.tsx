@@ -67,6 +67,8 @@ function fensterRang(x: SichtTeilnehmer): number {
 }
 
 const STATUS_TEXT = { wartet: "wartet", erfuellt: "kommt", ausgeloest: "ausgelöst", entfaellt: "entfällt" } as const;
+/** Durchbruch-Gruppen (seit Szenario 2.1): wartet bis zum Angriffszeitpunkt, dann bricht durch oder aufgehalten */
+const DURCHBRUCH_TEXT = { wartet: "Durchbruch", erfuellt: "Durchbruch", ausgeloest: "bricht durch", entfaellt: "aufgehalten" } as const;
 
 export function SLAnsicht(p: { s: Sicht }) {
   const { s } = p;
@@ -169,15 +171,16 @@ export function SLAnsicht(p: { s: Sicht }) {
             )}
           </div>
         </Panel>
-        <Panel titel="Bedingte Injects, E-01, Reserve, Verstärkung" liste>
+        <Panel titel="Bedingte Injects, E-01, Durchbruch, Reserve, Verstärkung" liste>
           <div class="bedingt-liste" data-testid="bedingt">
             {bedingt.map((b) => {
               const inj = inh.injects[b.id];
               const ereignis = b.art === "ereignis" ? sz.ereignisse.find((e) => e.id === b.id) : undefined;
+              const titel = b.art === "durchbruch" ? `Durchbruch: ${b.text}` : ereignis?.name ?? `${inj?.von}: „${inj?.text}“`;
               return (
-                <div class={`bedingt ${b.status}`} key={b.id} data-bedingt={b.id} title={ereignis?.name ?? `${inj?.von}: „${inj?.text}“`}>
+                <div class={`bedingt ${b.status}`} key={b.id} data-bedingt={b.id} title={titel}>
                   <div>
-                    <div><b>{b.id}</b> <span class="status">· {STATUS_TEXT[b.status]}{b.t !== undefined && b.status !== "ausgeloest" ? ` ${uhrzeit(start, b.t)}` : ""}</span></div>
+                    <div><b>{b.id}</b> <span class="status">· {(b.art === "durchbruch" ? DURCHBRUCH_TEXT : STATUS_TEXT)[b.status]}{b.t !== undefined && b.status !== "ausgeloest" ? ` ${uhrzeit(start, b.t)}` : ""}</span></div>
                     <div class="status">{b.text}</div>
                   </div>
                   {b.art === "inject" && b.status !== "ausgeloest" && (

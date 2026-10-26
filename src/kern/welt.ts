@@ -3,10 +3,14 @@
 // (Route [dt_s, x, y], Meldung dt_s); eingespielt um t0 werden daraus gewöhnliche Ziele und Meldungen
 // mit absoluten Zeiten (wie argus_lib.verstaerkung_ziel und simuliere_durchlauf.mit_verstaerkung).
 //
+// Seit Szenario 2.1 (A4) kommen die Durchbrüche dazu: Fahrzeuge einer Gruppe, die nicht aufgehalten wurde, fahren ab
+// ihrem Angriffszeitpunkt die Durchbruch-Route (kern/durchbruch.ts).
+//
 // Die Welt hat dieselbe Form wie die Inhalte (Typ Inhalte). Engine, Lagebild und Ansichten rechnen
 // deshalb ohne Sonderfälle mit ihr: inh.meldungen["V1-M1"], inh.szenario.ziele usw. Reine Funktion,
 // je Inhalte und Liste nur einmal gebaut (gleiche Liste ⇒ dasselbe Objekt, damit useMemo greift).
 import type { Inhalte, Meldung, Verstaerkung, VerstaerkungsMeldung, Ziel } from "../inhalte/typen";
+import { durchbruchGruppen, durchbruchZiel } from "./durchbruch";
 
 export interface Eingespielt {
   gruppe: string;
@@ -23,6 +27,10 @@ export function verstaerkungZiel(z: Ziel, t0: number): Ziel {
   for (const p of neu.personen ?? []) {
     if (p.ab_s !== undefined && p.ab_s !== null) p.ab_s += t0;
     if (p.bis_s !== undefined && p.bis_s !== null) p.bis_s += t0;
+  }
+  for (const f of neu.feuert ?? []) {
+    f.von_s += t0;
+    f.bis_s += t0;
   }
   if (neu.ab_s === undefined && !r) neu.ab_s = t0;
   return neu;
@@ -42,11 +50,14 @@ export function verstaerkungen(inh: Inhalte): Verstaerkung[] {
 
 const CACHE = new WeakMap<Inhalte, Map<string, Inhalte>>();
 
-/** Welt aus den Inhalten und den eingespielten Verstärkungen (Reihenfolge wie im Protokoll). */
-export function welt(inh: Inhalte, eingespielt: readonly Eingespielt[]): Inhalte {
+/**
+ * Welt aus den Inhalten, den eingespielten Verstärkungen (Reihenfolge wie im Protokoll) und den Gruppen, die
+ * durchgebrochen sind (durch: Kennungen der Durchbruch-Gruppen, D-01 … oder V-2/V-3).
+ */
+export function welt(inh: Inhalte, eingespielt: readonly Eingespielt[], durch: readonly string[] = []): Inhalte {
   const basis = inh.basis ?? inh;
-  if (!eingespielt.length) return basis;
-  const schl = eingespielt.map((e) => `${e.gruppe}@${e.t0}`).join(",");
+  if (!eingespielt.length && !durch.length) return basis;
+  const schl = `${eingespielt.map((e) => `${e.gruppe}@${e.t0}`).join(",")}|${durch.join(",")}`;
   let cache = CACHE.get(basis);
   if (!cache) CACHE.set(basis, (cache = new Map()));
   const alt = cache.get(schl);
@@ -62,6 +73,17 @@ export function welt(inh: Inhalte, eingespielt: readonly Eingespielt[]): Inhalte
     meldungen.push(...g.meldungen.map((m) => verstaerkungMeldung(basis, g, m, e.t0)));
   }
   meldungen.sort((a, b) => a.t_s - b.t_s);
+  if (durch.length) {
+    const routen = new Map<string, NonNullable<Ziel["bewegung"]>["route"]>();
+    for (const g of durchbruchGruppen(basis, eingespielt)) {
+      if (!durch.includes(g.id)) continue;
+      for (const [zid, r] of Object.entries(g.routen)) routen.set(zid, r);
+    }
+    ziele.forEach((z, i) => {
+      const r = routen.get(z.id);
+      if (r) ziele[i] = durchbruchZiel(z, r);
+    });
+  }
   const neu: Inhalte = {
     ...basis,
     szenario: { ...basis.szenario, ziele, meldungen },
@@ -69,6 +91,7 @@ export function welt(inh: Inhalte, eingespielt: readonly Eingespielt[]): Inhalte
     meldungen: Object.fromEntries(meldungen.map((m) => [m.id, m])),
     basis,
     eingespielt: eingespielt.map((e) => ({ ...e })),
+    durchgebrochen: [...durch],
   };
   if (cache.size > 64) cache.clear();
   cache.set(schl, neu);

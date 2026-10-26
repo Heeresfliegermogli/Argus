@@ -74,6 +74,13 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
       if (!d.wirkt) return `Hintergrund ${d.id}: eigene PzAbw auf ${d.ziel} entfällt (${d.grund ?? "?"})`;
       return `Hintergrund ${d.id}: eigene PzAbw trifft ${d.ziel} – ${d.folge === "ausser_gefecht" ? "außer Gefecht" : "zerstört"}`;
     }
+    case "durchbruch": {
+      const d = e.daten;
+      const g = (inh.basis ?? inh).szenario.durchbruch?.gruppen.find((x) => x.id === d.gruppe)
+        ?? (inh.basis ?? inh).szenario.verstaerkungen?.gruppen.find((x) => x.id === d.gruppe);
+      return d.durch ? `Durchbruch ${d.gruppe}: ${g?.name ?? "?"} nicht aufgehalten – bricht über den Bach durch`
+        : `Durchbruch ${d.gruppe}: ${g?.name ?? "?"} aufgehalten (${d.grund ?? "?"})`;
+    }
     case "ereignis": {
       const d = e.daten;
       if (d.entfaellt) return `${d.ereignis} entfällt (${d.grund ?? "?"})`;

@@ -6,7 +6,7 @@
 // das bei der Freigabe noch steht, und schlägt an seinem Ort zum Einschlagzeitpunkt ein (Freigabe plus
 // Flugzeit). Getroffen ist alles im Wirkradius nach der Lage beim Einschlag; R2, R3 und Einsatzbereich
 // gelten am Einschlagort. Die Warnungen bei G2 und G3 rechnen den Einschlag mit derselben Funktion voraus.
-import type { Inhalte, Meldung, Punkt, Regeln, Wirkmittel } from "../inhalte/typen";
+import type { Inhalte, Meldung, Punkt, Regeln, Wirkmittel, Zone } from "../inhalte/typen";
 import { abstandZone, dist, gtBei, position, vorhanden } from "./geometrie";
 
 export type ArgusEmpfehlungSoll = "BEKÄMPFEN" | "PRÜFEN" | "UNKLAR";
@@ -67,13 +67,15 @@ export function pruefeWirkmittel(
   const verstoesse: Verstoss[] = [];
   for (const z of inh.szenario.zonen) {
     const a = abstandZone(zielPos, z);
+    // sichtbarer Name (seit 2.1 „Schule“, „Ortschaft“); zone bleibt die interne ID (Vorschau, Auswertung)
+    const name = zonenName(z);
     if (z.typ === "no_strike" && a < r) {
-      verstoesse.push({ regel: "R2", zone: z.id, abstand_m: a, text: `${z.id} im Wirkradius (${abstandText(a)})` });
+      verstoesse.push({ regel: "R2", zone: z.id, abstand_m: a, text: `${name} im Wirkradius (${abstandText(a)})` });
     }
     if (z.typ === "einschraenkung" && a < r && r > (z.max_wirkradius_m ?? Infinity)) {
       verstoesse.push({
         regel: "R3", zone: z.id, abstand_m: a,
-        text: `${z.id} im Wirkradius, dort nur bis ${z.max_wirkradius_m} m erlaubt (${abstandText(a)})`,
+        text: `${name} im Wirkradius, dort nur bis ${z.max_wirkradius_m} m erlaubt (${abstandText(a)})`,
       });
     }
   }
@@ -95,6 +97,11 @@ export function pruefeWirkmittel(
     }
   }
   return { zulaessig: verstoesse.length === 0, verstoesse, getroffen };
+}
+
+/** Sichtbarer Name einer Zone (seit Szenario 2.1 „Schule“, „Ortschaft“); ohne Kurznamen die ID. */
+export function zonenName(z: Pick<Zone, "id" | "kurz">): string {
+  return z.kurz ?? z.id;
 }
 
 /** Gemeldete Position einer Meldung: Hauptziel (erstes Ziel) zur Meldezeit. */

@@ -168,7 +168,7 @@ def beschriftet(d, welt, breite_px=1500):
             dr.line(pts + [pts[0]], fill=(235, 50, 50, 255), width=3)
             x0 = min(p[0] for p in pts)
             y1 = max(p[1] for p in pts)
-            dr.text((x0 + 6, y1 + 4), f"{zo['id']} {zo['name'].upper()}", font=f_lab, fill=(255, 110, 110, 255), stroke_width=3, stroke_fill=(0, 0, 0, 200))
+            dr.text((x0 + 6, y1 + 4), zo["name"].upper(), font=f_lab, fill=(255, 110, 110, 255), stroke_width=3, stroke_fill=(0, 0, 0, 200))
         else:
             for a, b in zip(pts, pts[1:] + pts[:1]):
                 seg = math.hypot(b[0] - a[0], b[1] - a[1])
@@ -176,7 +176,7 @@ def beschriftet(d, welt, breite_px=1500):
                 for k in range(0, n, 2):
                     dr.line([(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n),
                              (a[0] + (b[0] - a[0]) * (k + 1) / n, a[1] + (b[1] - a[1]) * (k + 1) / n)], fill=(255, 152, 0, 230), width=2)
-            dr.text(P((500, 440)), f"{zo['id']} ≤ {zo['max_wirkradius_m']} m", font=f_pq, fill=(255, 180, 60, 255), stroke_width=2, stroke_fill=(0, 0, 0, 200))
+            dr.text(P((500, 440)), f"{zo.get('kurz') or zo['id']} ≤ {zo['max_wirkradius_m']} m", font=f_pq, fill=(255, 180, 60, 255), stroke_width=2, stroke_fill=(0, 0, 0, 200))
     punktnamen = {p["name"] for p in d.karte.get("punkte", [])}
     for n in d.karte["namen"]:
         if n["text"] in punktnamen:          # steht schon am Punkt (Brücke, Furt)
