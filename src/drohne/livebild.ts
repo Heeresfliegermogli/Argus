@@ -588,6 +588,9 @@ export class LiveDrohnenbild {
     const staub = zu.fahrt ?? "staub";
     if (this.anim(staub)) {
       const dauer = STAUB_TAKT_S * STAUB_N;
+      // weiche Wolken: niedrige Glättungsqualität genügt und spart in Vergrößerung und Lupe viel Zeit (Software-Canvas)
+      ctx.save();
+      ctx.imageSmoothingQuality = "low";
       for (const f of sz.fahrzeuge) {
         for (const w of f.staub) {
           const q = this.px([w.pos[0] + 0.6 * w.alter, w.pos[1] + 0.6 * w.alter]);
@@ -597,6 +600,7 @@ export class LiveDrohnenbild {
           this.effektBild(ctx, staub, w.nr, q, groesse, 0, 0.8 * (1 - fa) * Math.min(1, w.alter / 0.4 + 0.3));
         }
       }
+      ctx.restore();
     }
 
     // Fahrzeuge mit Schatten (Schattenversatz gilt im Leinwandmaß, unabhängig von der Drehung)

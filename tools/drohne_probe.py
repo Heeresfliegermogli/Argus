@@ -312,6 +312,9 @@ def main():
                 g1.get_by_role("button", name="Drohnenbild vergrößern").click()
             sel = GROSS if gross else LIVE
             g1.evaluate("() => { window.__argusLiveMessen = true; }")
+            # Einschwingen abwarten: Das erste Bild nach dem Öffnen setzt den Grund im Maßstab der Anzeige zusammen (einmalig
+            # 100–200 ms, auch auf dem Stand vor 2.1); das gleitende Maximum (×0,98 je Bild) klingt erst nach ca. 4 s ab.
+            g1.wait_for_timeout(4000)
             werte_fps, werte_ms, karte = [], [], []
             for _ in range(5):
                 g1.wait_for_timeout(1100)
