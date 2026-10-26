@@ -83,6 +83,9 @@ export class EffektEbene {
   private roh: Effekt[] = [];
   private pool = new Map<string, Sprite>();
   private benutzt = new Set<string>();
+  /** Animationen, die das letzte Bild gezeigt hat, und Zahl der Staubwolken (Tests, Fehlersuche) */
+  gezeigt = new Set<string>();
+  staubWolken = 0;
 
   constructor(private readonly inh: Inhalte) {
     this.oben.addChild(this.linien);
@@ -201,6 +204,8 @@ export class EffektEbene {
   zeichnen(t: number, tempo: number, bs: (p: Punkt) => Punkt, s: number, realMs: number, breite: number, hoehe: number,
     staub: { id: string; wolken: StaubWolke[] }[] = []): void {
     this.benutzt.clear();
+    this.gezeigt = new Set();
+    this.staubWolken = 0;
     const g = this.linien;
     g.clear();
     const tp = Math.max(tempo, 0.25);
@@ -233,6 +238,7 @@ export class EffektEbene {
             const rb = Math.floor(((t - e.t) / tp) * r.fps);
             if (rb < r.bilder.length) {
               const sr = this.sprite(`${e.id}-r`, r.bilder[rb], this.oben);
+              this.gezeigt.add(r.name);
               sr.position.set(p[0], p[1]);
               sr.scale.set(this.massstab(r, s, e.quelle.feuert === "kanone" ? 0.7 : 1));
               sr.alpha = 0.9;
@@ -243,6 +249,7 @@ export class EffektEbene {
           const bild = Math.floor(((t - e.t) / tp) * a.fps);
           if (bild >= a.bilder.length) break;
           const sp = this.sprite(e.id, a.bilder[bild], this.oben);
+          this.gezeigt.add(a.name);
           sp.position.set(p[0], p[1]);
           sp.scale.set(this.massstab(a, s));
           if (e.richtung !== undefined) sp.rotation = (e.richtung * Math.PI) / 180;
@@ -346,6 +353,8 @@ export class EffektEbene {
         if (!imBild(p, 30)) continue;
         const f = Math.max(0, Math.min(1, w.alter / dauer));
         const sp = this.sprite(`staub-${id}-${Math.round((w.pos[0] + w.pos[1]) * 10)}`, a.bilder[w.nr % a.bilder.length], this.unten);
+        this.gezeigt.add(a.name);
+        this.staubWolken += 1;
         // Wind nach Südost: die Wolke zieht mit dem Alter ab
         const q = bs([w.pos[0] + 0.6 * w.alter, w.pos[1] + 0.6 * w.alter]);
         sp.position.set(q[0], q[1]);

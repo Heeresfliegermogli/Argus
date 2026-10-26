@@ -218,12 +218,15 @@ export class Lagekarte {
   /** Für Tests: Anzahl Effekte und ob die Atlanten geladen sind. */
   get diagnose(): {
     effekte: number; effektAtlas: boolean; spriteAtlas: boolean; renderer: string; fps: number; animationen: string[];
+    /** im letzten Bild gezeigte Animationen und Staubwolken (seit 2.1) */
+    gezeigt: string[]; staub: number;
     /** Zeichenzeit je Bild in ms (Mittel und Höchstwert der letzten Sekunde, mit Rendern) */
     bildMs: { mittel: number; max: number };
     } {
     return {
       effekte: this.effekte.anzahl, effektAtlas: !!this.effektTexturen, spriteAtlas: !!this.atlasTexturen, renderer: this.renderer,
       fps: this.bilderProSekunde, animationen: this.effekte.geladen, bildMs: this.bildMs,
+      gezeigt: [...this.effekte.gezeigt], staub: this.effekte.staubWolken,
     };
   }
 
