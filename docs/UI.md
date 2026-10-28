@@ -1,4 +1,4 @@
-# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b und B1–B12)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12 und C1–C9)
 
 Fünf Ansichten in 1530 × 800 ohne Rollbalken: Aufklärung, Zielprüfung, Führung, Spielleitung und Plenum.
 Jede Rolle hat eine Einweisung (im Spiel als Folien, als Druck A5 quer).
@@ -12,6 +12,17 @@ Meldung mit Buchstaben („8a“); die Spielleitung sieht die interne Kennung kl
 Texte des Szenarios (Lage, Injects, Fälle, Leitfragen) schreibt `src/kern/anzeige.ts` beim Laden um (Rollen mit
 Artikel, Uhrzeiten, M-Nummern) – Kennungen in Daten und Protokoll bleiben. Der **Vermerk** der Aufklärung entfällt.
 Weitere Punkte stehen bei den Abschnitten unten (Startseite, Einweisung, Drohnenbild, Fahrwege, Test ohne Lobby).
+
+**Änderungen C1–C9 (28.10.2026, nach dem 2. Solo-Durchlauf, Szenario 2.2):** Kein Fahrzeug taucht mehr mitten im Bild auf.
+Jedes Fahrzeug fährt vom Kartenrand ein und steht bei Aufklärung, Zielprüfung und Führung ab dort als **Kontakt** auf der Karte
+(gelbes Zeichen „unbekannt“ nach APP-6, ohne Nummer, Zeigen: „Kontakt – Bewegung erkannt, (noch) keine Meldung bei dir“), bis eine
+Meldung, die bei der Rolle angekommen ist, es zum „Ziel n“ macht. Kontakte im Wald sind nicht zu sehen (die Drohne sieht nicht
+durch die Kronen). **Neue Meldung (C4):** Ring blinkt am Ort, die Marke leuchtet 5 s, am Eingang steht 6 s „neu: Ziel n“, liegt das
+Ziel außerhalb des Ausschnitts, zeigt ein Pfeil am Kartenrand dorthin (Klick fährt hin); Ton nur auf Wunsch (`?ton=1`, im Browser
+gemerkt; im Hörsaal mit 15 Rechnern sonst zu laut). **Zugweise Meldungen (C7, C8):** Zeichen mit Größenangabe nach APP-6
+(●● ab 2, ●●● ab 3 Fahrzeugen, aus `katalog_fahrzeuge.json` `groesse_nach_anzahl`) und „n Fz“; das Zeichen folgt den noch
+stehenden Fahrzeugen; ein getroffenes bekommt am Einschlagort ein eigenes durchgestrichenes Zeichen; fährt ein Fahrzeug mehr
+als 40 m vom Zug weg, hat es ein eigenes kleines Zeichen mit derselben Nummer. Legende neu: „Zug“ (Zeichen mit ●●●) und „Kontakt“.
 Seit Schritt 7 bewegt sich die Lage (Routen, Tracking, Effekte; siehe [`ENGINE.md`](ENGINE.md)). Seit
 Schritt 6b ist die **Karte die Arbeitsfläche für Aufklärung, Zielprüfung und Führung** (Konzept v2, Abschnitt 6): Meldungen als
 Marken am Ziel, kein Verlauf, der Eingang nur als Zahl, bei der Aufklärung das Drohnenbild live am Ort. Seit Schritt 8 die
@@ -150,9 +161,12 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
 (`src/kern/lagebild.ts`) liefert – die Informationsverteilung steht damit an einer Stelle und ist getestet:
 
 * **Aufklärung, Zielprüfung, Führung:** Zielmeldungen mit dem Zeichen der ARGUS-Klasse (milsymbol, APP-6/MIL-STD-2525C), nie
-  Ground Truth, keine Personen, keine ungemeldeten Ziele. Seit Schritt 7 **folgt das Zeichen dem Ziel**
+  Ground Truth, keine Personen. Seit Schritt 7 **folgt das Zeichen dem Ziel**
   (erstes noch stehendes Fahrzeug der Meldung, Zahl = noch stehende Fahrzeuge); nach der Wirkung bleibt es
-  durchgestrichen am Wrack, abgezogene Ziele verschwinden. Folgemeldungen zum selben Ziel ergeben ein
+  durchgestrichen am Wrack, abgezogene Ziele verschwinden. Seit C1–C9 (Szenario 2.2): Fahrzeuge ohne Meldung bei der Rolle
+  als **Kontakt** (Zeichen „unbekannt“, keine Klasse, keine Nummer; nicht im Wald; ungemeldete Ziele wie Z-27/Z-28 bleiben
+  unsichtbar); Zug-Zeichen mit Größenangabe (●●/●●●) und „n Fz“, Teilzeichen für Fahrzeuge > 40 m vom Zug, eigenes
+  Wrackzeichen je getroffenem Fahrzeug (`src/kern/lagebild.ts`: `kontakt`, `teil`, `wrack`). Folgemeldungen zum selben Ziel ergeben ein
   Zeichen (z. B. „M18/M23“). Gewählt = gelb umrandet, erledigt = blass, bekämpft = Kreuz, freigegeben =
   roter gestrichelter Kreis am vorausberechneten Einschlagort mit Uhrzeit. Effekte nur zu Zielen, die die
   Rolle kennt (eigene Wirkungen, LM im Flug, Leuchtspur, Wracks), Feindartillerie und Nebel für alle.
@@ -207,6 +221,7 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 | Prüfung | Ergebnis |
 |---|---|
+| **C1–C9 (28.10.2026, Szenario 2.2)** `npm test`, `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `drohne_probe.py`, `livelage_probe.py`, `auswertung_probe.py` | 140 Tests (neu `tests/szenario22.test.ts`, Kontakte, Teil- und Wrackzeichen in `tests/lagebild.test.ts`); 29 und 22 Bilder in 1530 × 800 ohne Rollbalken (gelbe Kontakte, Zug-Zeichen mit ●●●, eigene Wrackzeichen, Legende einzeilig); Bedientest 18/18 (Ziel 3 ist jetzt der Tigr aus M28, das Drohnenfenster wird zur Kartenmitte gezogen); Lobby 20/20; Live-Drohnenbild 43 Prüfpunkte (alle 30 Meldungen wie das Standbild, M25 mit starker Bildstörung, Rotes Kreuz, Kinder, weißes Tuch, Bildrate 28–30 Bilder/s); Live-Lage und Auswertung bestanden |
 | **B1–B12 (25./26.10.2026)** `npm test` | 122 Tests, neu u. a. `tests/anzeige.test.ts` (Rollen mit Artikel, Spieluhr, Zielnummern mit Verstärkung „1a“, Protokolltexte), kurze Codes in `teams.test.ts` und den Firebase-Regeln |
 | **B12** `tools/lobby_probe.py` | 20/20 nur über sichtbare Beschriftungen: erste Seite nur zwei Knöpfe, Mitspieler sehen nur das Codefeld, falsches Format und unbekannter Code, Code klein mit Leerzeichen, Rollen Aufklärung/Zielprüfung/Führung, Folien durchblättern, Einweisung wieder aufrufen, zuletzt genutzte Sitzung fortsetzen |
 | **B12** `tools/bedientest_probe.py` | 18/18: Folien bzw. Überspringen, „Ziel 3“ über die Marke, Lupe, Drohnenbild an der Kopfleiste schieben, ✕ und über die Marke wieder öffnen, „Ziel 3 · zurückgestellt“, „Einschlag mm:ss“, Hinweis nur an die Zielprüfung, ZURÜCK an die Zielprüfung; „Allein testen (ein Fenster)“: Aufklärung bedienbar, Ziel kommt bei der Zielprüfung an |
@@ -227,6 +242,6 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 ## Offen
 
-* Bedientest mit Menschen (Teil A Start und Lobby, Teil B Ansichten); dabei „◌ AUSRICHTUNG …“ (ab Ziel 15) und die Kinder in Ziel 18 beobachten.
+* Bedientest mit Menschen (Teil A Start und Lobby, Teil B Ansichten); dabei „◌ AUSRICHTUNG …“ (ab Ziel 18), die Kinder in Ziel 21 und die gelben Kontakte (seit Szenario 2.2) beobachten.
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
 * Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).
