@@ -86,7 +86,7 @@ Z["Z-06"]["gt"]["text"] = ("Mörsertrupp mit zwei Rohren (auf Lkw), fährt um 10
                           "Gefechtsaufklärung und den Angriff.")
 
 # Mörser Z-19: auf Lkw vom Ostrand über die Hauptstraße in den Hof RABE (hinter Z-14, vor allen anderen auf der Straße)
-f = F(930, (1010, 308)).strasse("hauptstrasse", (758, 350), 25).gelaende([(760, 328), (768, 305)], 12)
+f = F(930, (1010, 308)).strasse("hauptstrasse", (758, 350), 25).gelaende([(758, 315), (768, 305)], 12)
 setze_route("Z-19", f)
 Z["Z-19"].pop("ab_s", None)
 ankunft_19 = rt("Z-19")[-1][0]

@@ -7,7 +7,7 @@ import type { Punkt } from "../src/inhalte/typen";
 import { inhalte } from "./hilfen";
 
 interface Referenz {
-  faelle: { meldung: string; pos: Punkt; t: number; wm: string; zulaessig: boolean; verstoesse: [string, string | null, number | null][]; getroffen: string[] }[];
+  faelle: { meldung: string; ziel: string; pos: Punkt; t: number; wm: string; zulaessig: boolean; verstoesse: [string, string | null, number | null][]; getroffen: string[] }[];
   positionen: { ziel: string; t: number; pos: Punkt; vorhanden: boolean }[];
   raster: { p: Punkt; pq: string }[];
   zonen: { p: Punkt; zone: string; abstand: number }[];
@@ -50,7 +50,7 @@ describe("Einsatzregeln wie argus_lib.py", () => {
   it(`alle ${ref.faelle.length} Fälle (Meldung × Wirkmittel × Zeit)`, async () => {
     const inh = await inhalte();
     for (const f of ref.faelle) {
-      const p = pruefeWirkmittel(inh, f.pos, f.wm, f.t);
+      const p = pruefeWirkmittel(inh, f.pos, f.wm, f.t, [], {}, f.ziel);
       const ort = `${f.meldung} ${f.wm} t=${f.t}`;
       expect(p.zulaessig, ort).toBe(f.zulaessig);
       expect(p.verstoesse.map((v) => v.regel), ort).toEqual(f.verstoesse.map((v) => v[0]));
@@ -85,9 +85,9 @@ describe("Einsatzregeln wie argus_lib.py", () => {
     expect(gtBei(z24, 1100).kategorie).toBe("feind");
     expect(gtBei(z24, 1170).kategorie).toBe("ausser_gefecht");
     const p = position(z24, 1100);
-    expect(pruefeWirkmittel(inh, p, "LM", 1100).getroffen.find((g) => g.ziel === "Z-24")?.kategorie).toBe("feind");
+    expect(pruefeWirkmittel(inh, p, "LM", 1100, [], {}, "Z-24").getroffen.find((g) => g.ziel === "Z-24")?.kategorie).toBe("feind");
     const q = position(z24, 1250);
-    expect(pruefeWirkmittel(inh, q, "LM", 1250).getroffen.map((g) => g.kategorie)).toEqual(
+    expect(pruefeWirkmittel(inh, q, "LM", 1250, [], {}, "Z-24").getroffen.map((g) => g.kategorie)).toEqual(
       expect.arrayContaining(["ausser_gefecht", "besatzung_ergibt_sich"]));
   });
 

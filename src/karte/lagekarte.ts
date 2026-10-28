@@ -131,6 +131,8 @@ interface ZeichenTextur {
 /** Sprite zur Spielzeit t: Wrack ab der Zerstörung, Zustand (z. B. Kette ab) ab dem Treffer, sonst intakt. */
 function spriteZur(sp: NonNullable<KartenObjekt["sprite"]>, t: number, atlas: Record<string, Texture> | null): string {
   if (sp.wrack && sp.wrackAb !== undefined && t >= sp.wrackAb) return sp.wrack;
+  // seit Katalog 1.3: eigener Sprite während der Fahrt (Mörsertrupp auf Lkw), bis das Fahrzeug in Stellung ist
+  if (sp.fahrt && sp.fahrtBis !== undefined && t < sp.fahrtBis && (!atlas || atlas[sp.fahrt])) return sp.fahrt;
   if (sp.zustand && sp.zustandAb !== undefined && t >= sp.zustandAb) {
     const name = sp.name.replace(/\.png$/, `_${sp.zustand}.png`);
     if (!atlas || atlas[name]) return name;
@@ -1010,7 +1012,8 @@ export class Lagekarte {
     let z = this.zeichenCache.get(schl);
     if (!z) {
       const faktor = 2;
-      const sym = new ms.Symbol(code, { size: groesse, colorMode: "Medium", outlineColor: "rgba(255,255,255,0.85)", outlineWidth: 3, quantity: menge ? String(menge) : undefined, infoColor: "#1d252c", ...(grau ? { monoColor: grau } : {}) });
+      // Zahl der Fahrzeuge rechts neben dem Zeichen („3 Fz“); oben steht seit 2.2 die Größenangabe nach APP-6 (C7)
+      const sym = new ms.Symbol(code, { size: groesse, colorMode: "Medium", outlineColor: "rgba(255,255,255,0.85)", outlineWidth: 3, additionalInformation: menge ? `${menge} Fz` : undefined, infoColor: "#1d252c", ...(grau ? { monoColor: grau } : {}) });
       const canvas = sym.asCanvas(faktor);
       const a = sym.getAnchor();
       const sz = sym.getSize();
@@ -1078,7 +1081,8 @@ export class Lagekarte {
         if (wolken.length) this.staub.push({ id: o.id, wolken });
       }
       const gew = istGewaehlt(o);
-      const alpha = o.zustand === "erledigt" ? 0.42 : 1;
+      // seit 2.2: Kontakte, Teil- und Wrackzeichen kleiner; Kontakte kräftig genug, um das Einfahren zu sehen
+      const alpha = o.art === "kontakt" ? 0.9 : o.art === "wrack" ? 0.8 : o.zustand === "erledigt" ? 0.42 : 1;
       const spriteName = o.sprite && t !== null ? spriteZur(o.sprite, t, this.atlasTexturen) : o.sprite?.name;
       if (spritesZeigen && o.sprite && spriteName && this.atlasTexturen?.[spriteName]) {
         const tex = this.atlasTexturen[spriteName];
@@ -1118,10 +1122,11 @@ export class Lagekarte {
         marken.push({ o, x, y, links: h, rechts: h, oben: h, unten: h, gew, alpha });
         continue;
       }
-      if (gew) u.circle(x, y, groesse * 0.95).fill({ color: FARBE.auswahl, alpha: 0.25 }).stroke({ width: 3, color: FARBE.auswahl });
-      const z = this.zeichenSprite(`obj-${o.id}`, o.sidc, groesse, x, y, alpha, o.menge);
+      const gr = o.art ? Math.round(groesse * (o.art === "kontakt" ? 0.7 : 0.78)) : groesse;
+      if (gew) u.circle(x, y, gr * 0.95).fill({ color: FARBE.auswahl, alpha: 0.25 }).stroke({ width: 3, color: FARBE.auswahl });
+      const z = this.zeichenSprite(`obj-${o.id}`, o.sidc, gr, x, y, alpha, o.menge);
       if (o.zustand === "bekaempft") {
-        const d = groesse * 0.55;
+        const d = gr * 0.55;
         u.moveTo(x - d, y - d).lineTo(x + d, y + d).moveTo(x + d, y - d).lineTo(x - d, y + d).stroke({ width: 3, color: 0x7a1b14, alpha: 0.9 });
       }
       if (o.ungemeldet) u.circle(x, y, groesse * 0.95).stroke({ width: 2, color: 0x7c3aed, alpha: 0.9 });
@@ -1134,8 +1139,10 @@ export class Lagekarte {
       // Marken als HTML (Schritt 6b): Platz freihalten, Beschriftung unsichtbar. Mehrere offene Meldungen zum selben
       // Ziel (Folgemeldung) stehen nebeneinander.
       const ids = (m.o.meldungen ?? [m.o.id]).filter((id) => this.marken.has(id));
+      if (!ids.length && !m.o.text) continue; // Kontakt, Wrack: ohne Beschriftung (Tooltip)
       const st = ids.length ? this.markenStil()
-        : m.gew ? { ...this.stil(12.5, "700", 0x5a3a00), stroke: { color: 0xffe2a0, width: 4, join: "round" as const } } : this.stil(11.5, m.o.zustand === "erledigt" ? "500" : "700");
+        : m.gew ? { ...this.stil(12.5, "700", 0x5a3a00), stroke: { color: 0xffe2a0, width: 4, join: "round" as const } }
+          : this.stil(m.o.art ? 10.5 : 11.5, m.o.zustand === "erledigt" || m.o.art ? "500" : "700");
       const t = this.beschriften(`obj-${m.o.id}`, ids.length ? ids.map((id) => this.marken.get(id)!).join(MARKEN_ABSTAND) : m.o.text, st, [
         [m.x, m.y + m.unten + 1, 0.5, 0],
         [m.x, m.y - m.oben - 1, 0.5, 1],

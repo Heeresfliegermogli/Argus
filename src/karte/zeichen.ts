@@ -38,12 +38,30 @@ export const GT_ZUGEHOERIGKEIT: Record<GtKategorie, Zugehoerigkeit> = {
  * Zeichen einer ARGUS-Meldung, wie G2 und G3 sie auf der Karte sehen: ARGUS nennt eine
  * militärische Klasse → Feind mit dem Zeichen des ersten Katalogtyps dieser Klasse. Liegt die
  * Konfidenz unter der Schwelle für PRÜFEN (UNKLAR), weiß ARGUS es nicht → unbekanntes Fahrzeug.
+ * Seit 2.2 (C7): Stehen noch mindestens zwei Fahrzeuge der Meldung, zeigt die Karte das Zeichen der Einheit
+ * (Katalog symbol.einheit) mit Größenangabe nach APP-6 (●● Halbzug/Trupp, ●●● Zug; Katalog groesse_nach_anzahl).
  */
-export function zeichenArgus(inh: Inhalte, klasse: string, konfidenz: number, status: ZeichenStatus = "P"): string {
+export function zeichenArgus(inh: Inhalte, klasse: string, konfidenz: number, status: ZeichenStatus = "P", anzahl = 1): string {
   if (konfidenz < inh.regeln.argus.schwellen.pruefen) return sidc("U", FUNKTION_ALLGEMEIN, { status });
   const typ = Object.values(inh.fahrzeuge).find((f) => f.argus_klasse === klasse);
+  const einheit = typ?.symbol?.einheit;
+  if (anzahl >= 2 && einheit) return sidc("H", einheit, { status, groesse: groesseNachAnzahl(inh, anzahl) });
   return sidc("H", funktionVon(typ), { status });
 }
+
+/** Größenangabe (APP-6) für n Fahrzeuge: aus dem Katalog, sonst 2 → C (●●), ab 3 → D (●●●). */
+export function groesseNachAnzahl(inh: Pick<Inhalte, "groessen">, anzahl: number): string | undefined {
+  if (anzahl < 2) return undefined;
+  const g = inh.groessen ?? {};
+  const schluessel = Object.keys(g).map(Number).filter((n) => n <= anzahl).sort((a, b) => b - a)[0];
+  return schluessel !== undefined ? g[String(schluessel)] : anzahl >= 3 ? "D" : "C";
+}
+
+/**
+ * Kontakt (seit 2.2, C1): Bewegung erkannt, (noch) keine Meldung bei dieser Rolle – unbekannte Zugehörigkeit ohne
+ * Funktion (APP-6: leerer Vierpass). Fährt sichtbar vom Kartenrand ein.
+ */
+export const ZEICHEN_KONTAKT = "SUGP-----------";
 
 /** Zeichen eines Ziels nach Ground Truth (Kontrollkarte der Spielleitung, Auflösung im Plenum). */
 export function zeichenZiel(inh: Inhalte, ziel: Ziel, zerstoert: boolean): string {

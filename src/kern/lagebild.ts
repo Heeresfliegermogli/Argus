@@ -17,8 +17,8 @@
 // eigenen Wirkung bleibt es beim bekämpften Fahrzeug am Einschlagort (Rest eines Zuges meldet ARGUS neu).
 // Zieht ein Ziel ab, verschwindet seine Spur, sobald die Meldung bei dieser Rolle erledigt ist.
 import type { GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
-import { zeichenArgus, zeichenZiel } from "../karte/zeichen";
-import { ausrichtung, feinlage, gtBei, position, vorhanden } from "./geometrie";
+import { ZEICHEN_KONTAKT, zeichenArgus, zeichenZiel } from "../karte/zeichen";
+import { ausrichtung, dist, feinlage, gtBei, imPolygon, position, vorhanden } from "./geometrie";
 import { einschlagVon } from "./lage";
 import { gemeldetePosition } from "./regeln";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
@@ -76,11 +76,17 @@ export interface KartenObjekt {
    * Sprite (Kontrollkarte beim Hineinzoomen): name intakt; ab `wrackAb` das Wrack, ab `zustandAb` der
    * Zustands-Sprite (z. B. `kpz_t72_kette_ab.png` für außer Gefecht). Die Karte wählt je Bild nach der Spielzeit.
    */
-  sprite?: { name: string; hdg: number; wrack?: string; wrackAb?: number; zustand?: string; zustandAb?: number };
+  sprite?: { name: string; hdg: number; wrack?: string; wrackAb?: number; zustand?: string; zustandAb?: number; fahrt?: string; fahrtBis?: number };
   /** Bewegung (die Karte rechnet die Position je Bild); fehlt bei stehenden Objekten */
   bahn?: Bahn;
   /** alle Fahrzeuge zerstört (Zeichen durchgestrichen), auch wenn nicht von diesem Team bekämpft */
   zerstoert?: boolean;
+  /**
+   * Seit 2.2 (Aufklärung, Zielprüfung, Führung): „kontakt“ = Bewegung erkannt, keine Meldung bei der Rolle (C1);
+   * „teil“ = Fahrzeug einer Meldung, das sich vom Zeichen entfernt hat; „wrack“ = getroffenes Fahrzeug einer
+   * zugweisen Meldung am Einschlagort (C8). Kleiner gezeichnet, ohne Marke, nicht anklickbar.
+   */
+  art?: "kontakt" | "teil" | "wrack";
 }
 
 export interface PersonenMarke {
@@ -191,19 +197,32 @@ function standText(st: MeldungsStand): string {
   return STUFE_TEXT[st.stufe];
 }
 
-/** Das Fahrzeug, dem die Spur folgt: das erste noch stehende der Meldung, sonst das erste (Wrack). */
-function spurFahrzeug(inh: Inhalte, z: Spielzustand, m: Meldung, t: number): { id: string; zerstoert: boolean; da: boolean } {
-  const stehend = m.ziele.find((id) => inh.ziele[id] && z.zerstoert[id] === undefined && vorhanden(inh.ziele[id], t));
-  if (stehend) return { id: stehend, zerstoert: false, da: true };
-  const wrack = m.ziele.find((id) => z.zerstoert[id] !== undefined && z.zerstoert[id] <= t);
-  if (wrack) return { id: wrack, zerstoert: m.ziele.every((id) => z.zerstoert[id] !== undefined && z.zerstoert[id] <= t), da: true };
-  return { id: m.ziele[0], zerstoert: false, da: false };
+/** Bis zu diesem Abstand vom Zeichen gehört ein Fahrzeug der Meldung zum Zeichen (Zahl, Größenangabe); weiter weg
+ *  bekommt es ein eigenes kleines Zeichen (seit 2.2). */
+export const GRUPPE_RADIUS_M = 40;
+
+/** Liegt die Position im Wald? Dort sieht die Drohne keine Bewegung (kein Kontakt, seit 2.2). */
+export function imWald(inh: Inhalte, p: Punkt): boolean {
+  return inh.karte.flaechen.some((f) => f.art === "wald" && imPolygon(p, f.punkte as Punkt[]));
+}
+
+function stehtNoch(inh: Inhalte, z: Spielzustand, id: string, t: number): boolean {
+  const ziel = inh.ziele[id];
+  return !!ziel && !(z.zerstoert[id] !== undefined && z.zerstoert[id] <= t + 1e-6) && vorhanden(ziel, t);
 }
 
 /**
  * Zielmeldungen für G1, G2 oder G3. Mehrere Meldungen zum selben Ziel (Folgemeldung) ergeben ein
  * Zeichen; ein Klick wählt die Meldung, die bei dieser Rolle offen ist, sonst die neueste.
  * Mit tLage folgt das Zeichen dem Ziel (Tracking, `bahn`); ohne steht es an der gemeldeten Position.
+ *
+ * Seit 2.2 (Änderungen C1, C7, C8 nach dem 2. Solo-Durchlauf), nur mit tLage:
+ *  • Das Zeichen folgt den noch stehenden Fahrzeugen der Meldung (Zahl und Größenangabe nach APP-6 verringern sich);
+ *    jedes getroffene Fahrzeug einer zugweisen Meldung bekommt ein eigenes durchgestrichenes Zeichen am Wrack.
+ *  • Entfernt sich ein Fahrzeug der Meldung weiter als GRUPPE_RADIUS_M vom Zeichen, bekommt es ein eigenes kleines
+ *    Zeichen („teil“), bis ARGUS es neu meldet.
+ *  • Jedes andere Fahrzeug, das die Drohne sieht (nicht im Wald, nicht ungemeldet, mit Route), steht ab der Einfahrt
+ *    als Kontakt auf der Karte, bis eine Meldung dazu bei der Rolle ankommt. So erscheint kein Fahrzeug mitten im Bild.
  */
 export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1" | "g2" | "g3", tLage?: number): Lagebild {
   const start = inh.szenario.spieluhr.start;
@@ -218,6 +237,8 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
   }
   const objekte: KartenObjekt[] = [];
   const wirkungen: WirkungsMarke[] = [];
+  /** je Zeichen: Fahrzeug, dem es folgt, und alle Fahrzeuge seiner Meldungen (für Teil-, Wrack- und Kontaktzeichen) */
+  const zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[] }[] = [];
   for (const [nr, liste] of proZiel) {
     const sortiert = [...liste].sort((a, b) => RANG[zustandFuer(b.st, rolle)] - RANG[zustandFuer(a.st, rolle)]
       || b.st.erschienen.seq - a.st.erschienen.seq);
@@ -229,36 +250,52 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
     let pos = gemeldet;
     let bahn: Bahn | undefined;
     let zerstoert = false;
+    let fuehrer: string | null = null;
     let menge = m.ziele.length > 1 ? m.ziele.length : undefined;
+    let anzahl = m.ziele.length;
     const wirkung = bekaempft ? liste.map((x) => x.st.wirkung).find((w) => !!w) : undefined;
-    if (tLage !== undefined && wirkung) {
-      // bekämpft: Das Zeichen bleibt beim bekämpften Fahrzeug am Ort des Einschlags (Wrack), durchgestrichen.
-      // Was von einem Zug übrig ist, meldet ARGUS neu (eigene Meldung, eigenes Zeichen).
-      const id = wirkung.ziel ?? m.ziele[0];
-      const b = zielBahn(inh, z, id);
-      bahn = b ? { ...b, halt: z.zerstoert[id] ?? wirkung.t_einschlag } : undefined;
-      pos = (bahn && bahnLage(bahn, tLage)?.pos) ?? wirkung.pos;
-      zerstoert = true;
-      const weg = m.ziele.filter((x) => z.zerstoert[x] !== undefined && z.zerstoert[x] <= tLage).length;
-      menge = weg > 1 ? weg : undefined;
-    } else if (tLage !== undefined) {
-      const spur = spurFahrzeug(inh, z, m, tLage);
-      if (!spur.da && zustand === "erledigt") continue; // abgezogen: keine Spur mehr
-      zerstoert = spur.zerstoert;
-      bahn = zielBahn(inh, z, spur.id);
-      const lage = bahn && bahnLage(bahn, tLage);
-      if (lage) pos = lage.pos;
-      if (bahn && !spur.da) bahn = { ...bahn, halt: bahn.halt ?? tLage };
-      const stehend = m.ziele.filter((id) => z.zerstoert[id] === undefined && inh.ziele[id] && vorhanden(inh.ziele[id], tLage)).length;
-      menge = m.ziele.length > 1 ? Math.max(stehend, zerstoert ? m.ziele.length : 1) : undefined;
+    if (tLage !== undefined) {
+      const stehend = m.ziele.filter((id) => stehtNoch(inh, z, id, tLage));
+      const wracks = m.ziele.filter((id) => z.zerstoert[id] !== undefined && z.zerstoert[id] <= tLage + 1e-6);
+      if (stehend.length) {
+        // C8: Das Zeichen folgt dem ersten noch stehenden Fahrzeug; Zahl = noch stehende Fahrzeuge in seiner Nähe
+        fuehrer = stehend[0];
+        bahn = zielBahn(inh, z, fuehrer);
+        const lage = bahn && bahnLage(bahn, tLage);
+        if (lage) pos = lage.pos;
+        const dabei = stehend.filter((id) => id === fuehrer || dist(position(inh.ziele[id], tLage), pos) <= GRUPPE_RADIUS_M);
+        anzahl = dabei.length;
+        menge = anzahl > 1 ? anzahl : undefined;
+      } else if (wracks.length) {
+        // kein Fahrzeug steht mehr: das Zeichen bleibt beim bekämpften (sonst ersten) Fahrzeug am Wrack, durchgestrichen
+        const id = wirkung?.ziel && wracks.includes(wirkung.ziel) ? wirkung.ziel : wracks[0];
+        const b = zielBahn(inh, z, id);
+        bahn = b ? { ...b, halt: z.zerstoert[id] } : undefined;
+        pos = (bahn && bahnLage(bahn, tLage)?.pos) ?? wirkung?.pos ?? gemeldet;
+        zerstoert = true;
+        fuehrer = id;
+        anzahl = 1;
+        menge = undefined;
+      } else {
+        if (zustand === "erledigt" || zustand === "bekaempft") continue; // abgezogen: keine Spur mehr
+        // abgezogen, aber noch offen bei der Rolle: das Zeichen bleibt an der letzten Stelle
+        const b = zielBahn(inh, z, m.ziele[0]);
+        bahn = b ? { ...b, halt: b.halt ?? tLage } : undefined;
+        const lage = bahn && bahnLage(bahn, tLage);
+        if (lage) pos = lage.pos;
+        anzahl = 1;
+        menge = undefined;
+      }
     }
-    const zeichenStatus = bekaempft || zerstoert ? "X" : "P";
+    const zeichenStatus = zerstoert || (bekaempft && tLage === undefined) ? "X" : "P";
     // Spieler sehen „Ziel 7“ (B7), nie die Kennung M07 oder Z-07
     const nummern = ids.map((id) => zielNr(inh, z, id));
-    objekte.push({
+    // bekämpft, aber Fahrzeuge stehen noch: das Zeichen der übrigen ist erledigt (blass), das Wrack trägt das Kreuz (C8)
+    const objZustand: ObjektZustand = zerstoert && bekaempft ? "bekaempft" : zustand === "bekaempft" ? "erledigt" : zustand;
+    const o: KartenObjekt = {
       id: nr,
       pos,
-      sidc: zeichenArgus(inh, m.argus.klasse, m.argus.konfidenz, zeichenStatus),
+      sidc: zeichenArgus(inh, m.argus.klasse, m.argus.konfidenz, zeichenStatus, anzahl),
       menge,
       text: `Ziel ${nummern.join("/")}`,
       titel: `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
@@ -266,13 +303,16 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
         `gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
         ...liste.map((x) => `Ziel ${zielNr(inh, z, x.m.id)}: ${standText(x.st)}`),
         ...(zerstoert && !bekaempft ? ["Ziel zerstört"] : []),
+        ...(menge ? [`${menge} Fahrzeuge${anzahl < m.ziele.length ? ` (von ${m.ziele.length})` : ""}`] : []),
       ],
-      zustand: bekaempft ? "bekaempft" : zustand,
+      zustand: tLage === undefined && bekaempft ? "bekaempft" : objZustand,
       meldung: m.id,
       meldungen: ids,
       bahn,
-      zerstoert: zerstoert || bekaempft,
-    });
+      zerstoert: zerstoert || (bekaempft && tLage === undefined),
+    };
+    objekte.push(o);
+    zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern });
     for (const x of liste) {
       const geplant = geplanteWirkung(inh, z, x.m, x.st);
       if (geplant) wirkungen.push(geplant);
@@ -288,7 +328,81 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
       });
     }
   }
+  if (tLage !== undefined) objekte.push(...weitereZeichen(inh, z, tLage, zeichen));
   return { objekte, personen: [], wirkungen };
+}
+
+/** Wrack-, Teil- und Kontaktzeichen zu den Meldungszeichen einer Rolle (seit 2.2, C1/C8). */
+function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
+  zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[] }[]): KartenObjekt[] {
+  const out: KartenObjekt[] = [];
+  const fuehrer = new Set(zeichen.map((x) => x.fuehrer).filter((x): x is string => !!x));
+  const erledigt = new Set<string>(fuehrer);
+  const bekannt = new Set(zeichen.flatMap((x) => x.fahrzeuge));
+  for (const x of zeichen) {
+    const zpos = x.o.bahn ? bahnLage(x.o.bahn, t)?.pos ?? x.o.pos : x.o.pos;
+    for (const id of x.fahrzeuge) {
+      if (erledigt.has(id) || !inh.ziele[id]) continue;
+      const ziel = inh.ziele[id];
+      const tz = z.zerstoert[id];
+      if (tz !== undefined && tz <= t + 1e-6) {
+        // C8: getroffenes Fahrzeug einer zugweisen Meldung – eigenes durchgestrichenes Zeichen am Wrack
+        erledigt.add(id);
+        const durch = z.zerstoertDurch[id];
+        const eigen = durch !== undefined && !!inh.meldungen[durch];
+        out.push({
+          id: `${x.o.id}~${id}`,
+          pos: position(ziel, tz),
+          sidc: zeichenArgus(inh, x.m.argus.klasse, x.m.argus.konfidenz, "X", 1),
+          text: "",
+          titel: `Ziel ${x.nummern.join(", ")} · Fahrzeug zerstört`,
+          zeilen: [`${eigen ? `getroffen bei Ziel ${zielNr(inh, z, durch!)}` : "zerstört"} (${uhrzeit(inh.szenario.spieluhr.start, tz)})`],
+          zustand: eigen ? "bekaempft" : "erledigt",
+          bahn: { ...(zielBahn(inh, z, id) as Bahn), halt: tz },
+          zerstoert: true,
+          art: "wrack",
+        });
+        continue;
+      }
+      if (!vorhanden(ziel, t)) continue;
+      if (dist(position(ziel, t), zpos) <= GRUPPE_RADIUS_M) {
+        erledigt.add(id);
+        continue;
+      }
+      // entfernt sich vom Zeichen: eigenes kleines Zeichen, bis ARGUS es neu meldet
+      erledigt.add(id);
+      out.push({
+        id: `${x.o.id}+${id}`,
+        pos: position(ziel, t),
+        sidc: zeichenArgus(inh, x.m.argus.klasse, x.m.argus.konfidenz, "P", 1),
+        text: x.o.text,
+        titel: `${x.o.text} · ein Fahrzeug der Meldung`,
+        zeilen: ["Fahrzeug dieser Meldung, hat sich vom Zeichen entfernt"],
+        zustand: x.o.zustand === "bekaempft" ? "erledigt" : x.o.zustand === "offen" || x.o.zustand === "zurueckgestellt" ? "offen" : "erledigt",
+        bahn: zielBahn(inh, z, id),
+        art: "teil",
+      });
+    }
+  }
+  // C1: Kontakte – was die Drohne fahren sieht, ohne dass eine Meldung dazu bei der Rolle ist
+  for (const ziel of inh.szenario.ziele) {
+    if (ziel.ungemeldet || bekannt.has(ziel.id) || !ziel.bewegung?.route?.length) continue;
+    if (!stehtNoch(inh, z, ziel.id, t)) continue;
+    const p = position(ziel, t);
+    if (imWald(inh, p)) continue;
+    out.push({
+      id: `?${ziel.id}`,
+      pos: p,
+      sidc: ZEICHEN_KONTAKT,
+      text: "",
+      titel: "Kontakt",
+      zeilen: ["Bewegung erkannt – (noch) keine Meldung bei dir"],
+      zustand: "erledigt",
+      bahn: zielBahn(inh, z, ziel.id),
+      art: "kontakt",
+    });
+  }
+  return out;
 }
 
 /**
@@ -356,6 +470,8 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
       sprite: f?.sprite ? {
         name: f.sprite, hdg: ausrichtung(ziel, tt), wrack: f.sprite_wrack ?? undefined, wrackAb: tZerst,
         ...(ag ? { zustand: "kette_ab", zustandAb: ag } : {}),
+        // Mörsertrupp auf Lkw: Lkw-Sprite, bis er in Stellung ist (seit Katalog 1.3)
+        ...(f.sprite_fahrt && ziel.bewegung?.route?.length ? { fahrt: f.sprite_fahrt, fahrtBis: ziel.bewegung.route[ziel.bewegung.route.length - 1][0] } : {}),
       } : undefined,
       bahn: zielBahn(inh, z, ziel.id),
       zerstoert,

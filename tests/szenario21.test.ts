@@ -29,7 +29,7 @@ describe("Szenario 2.1: Daten", () => {
   it("nur noch die 2. Kompanie, Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
     const inh = await inhalte();
     const sz = inh.szenario;
-    expect(sz.version).toBe("2.1");
+    expect(Number(sz.version)).toBeGreaterThanOrEqual(2.1); // 2.2 baut auf 2.1 auf
     expect(sz.kraefte.map((k) => k.id)).toEqual(["K-2"]);
     expect(sz.zonen.map((z) => z.kurz)).toEqual(["Schule", "Ortschaft"]);
     expect(sz.durchbruch?.gruppen.length).toBeGreaterThanOrEqual(8);

@@ -5,7 +5,7 @@ Erzeugt aus den Spieldaten (public/daten) alle Bilder für das Spiel und legt si
 Manifest in public/assets/ ab:
 
   karte/      Luftbild in zwei Stufen + Kacheln, Topo-Karte, beschriftete Vorschau, Häuser
-  drohne/     ein Drohnenbild je ARGUS-Meldung (M01 … M27) und je Verstärkung (V1-M1 … V5-M1),
+  drohne/     ein Drohnenbild je ARGUS-Meldung (M01 … M30) und je Verstärkung (V1-M1 … V5-M1),
               Bilder ungemeldeter Ziele (SL); drohne/ebenen/ dieselben Bilder als Ebenen (Boden, Kronen,
               Störung) für das Live-Drohnenbild (Schritt 5b)
   sprites/    Fahrzeug-Atlas (intakt, Wrack, Personen, Luftfahrzeuge) und Effekt-Atlas

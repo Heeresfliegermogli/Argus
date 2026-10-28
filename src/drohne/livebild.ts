@@ -458,6 +458,7 @@ export class LiveDrohnenbild {
       const bek = this.bekannt.get(ziel.id);
       let sprite = f?.sprite ?? "";
       if (wrack && f?.sprite_wrack) sprite = f.sprite_wrack;
+      else if (f?.sprite_fahrt && faehrt(ziel, t) && frames[f.sprite_fahrt]) sprite = f.sprite_fahrt; // Mörsertrupp auf Lkw (seit 1.3)
       else if (bek && (bek.darstellung === "luk_offen" || bek.darstellung === "kette_ab") && frames[bek.sprite]) sprite = bek.sprite;
       else if (ag !== undefined && ag <= t && frames[sprite.replace(/\.png$/, "_kette_ab.png")]) sprite = sprite.replace(/\.png$/, "_kette_ab.png");
       if (!frames[sprite]) continue;

@@ -154,7 +154,10 @@ def bildstoerung(img, staerke, rng):
     """Gestörter Datenlink: Rauschen, Streifen, versetzte Zeilenblöcke, Farbversatz (auf das fertige Bild)."""
     a = np.asarray(img).astype(np.float32)
     h, w = a.shape[:2]
-    a += rng.normal(0, 34 * staerke, a.shape)
+    # Rauschen in Blöcken zu 2 × 2 Bildpunkten (Kompressionsartefakte des Datenlinks; bleibt bei starker Störung im
+    # Größenbudget des Standbilds, seit 2.2)
+    n = rng.normal(0, 34 * staerke, ((h + 1) // 2, (w + 1) // 2, a.shape[2]))
+    a += np.repeat(np.repeat(n, 2, axis=0), 2, axis=1)[:h, :w]
     for _ in range(int(22 * staerke)):
         y, hh = int(rng.integers(0, h - 6)), int(rng.integers(1, 5))
         a[y:y + hh] = a[y:y + hh] * 0.35 + rng.uniform(120, 200)
@@ -172,7 +175,7 @@ def bildstoerung_ebene(w, h, staerke, rng):
     """Bildstörung als Ebene (RGBA) für das Live-Drohnenbild: dieselben hellen Streifen und das graue Band
     wie bildstoerung() (gleiche Zufallsfolge), aber ohne Rauschen und Zeilenversatz – die macht die
     Oberfläche (Wackeln, Körnung), weil sie sich bewegen sollen."""
-    rng.normal(0, 34 * staerke, (h, w, 3))                      # gleiche Folge wie bildstoerung()
+    rng.normal(0, 34 * staerke, ((h + 1) // 2, (w + 1) // 2, 3))  # gleiche Folge wie bildstoerung()
     P = np.zeros((h, w, 3), np.float32)                         # vormultiplizierte Farbe
     a = np.zeros((h, w), np.float32)
 

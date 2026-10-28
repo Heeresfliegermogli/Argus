@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Absender, Ereignis } from "../src/kern/ereignisse";
 import { lagebildKontrolle, lagebildZielmeldungen } from "../src/kern/lagebild";
 import { zustandAus } from "../src/kern/zustand";
-import { sidc, zeichenArgus, zeichenKraft, zeichenZiel } from "../src/karte/zeichen";
+import { ZEICHEN_KONTAKT, sidc, zeichenArgus, zeichenKraft, zeichenZiel } from "../src/karte/zeichen";
 import { inhalte } from "./hilfen";
 
 const SYS: Absender = { rolle: "system" };
@@ -34,6 +34,12 @@ describe("Taktische Zeichen", () => {
     expect(zeichenArgus(inh, "KPz T-72", 96)).toBe("SHGPEVAT-------");
     expect(zeichenArgus(inh, "Fahrzeug unbekannt", 54)).toBe("SUGPEV---------");
     expect(zeichenArgus(inh, "SPW BTR-80", 91, "X")).toBe("SHGXEVAA-------");
+    // C7 (2.2): zugweise Meldung → Zeichen der Einheit mit Größenangabe nach APP-6 (●● Halbzug/Trupp, ●●● Zug)
+    expect(zeichenArgus(inh, "KPz T-72", 91, "P", 3)).toBe("SHGPUCA----D---");
+    expect(zeichenArgus(inh, "SPz BMP-2", 87, "P", 2)).toBe("SHGPUCIZ---C---");
+    expect(zeichenArgus(inh, "Spähpanzer BRDM-2", 94, "P", 2)).toBe("SHGPUCRVA--C---");
+    expect(zeichenArgus(inh, "Fahrzeug unbekannt", 54, "P", 2)).toBe("SUGPEV---------");
+    for (const code of ["SHGPUCA----D---", "SHGPUCIZ---C---", ZEICHEN_KONTAKT]) expect(new ms.Symbol(code).isValid(), code).toBe(true);
     expect(zeichenZiel(inh, inh.ziele["Z-15"], false)).toBe("SFGPEVAT-------"); // PT-91 verbündet
     expect(zeichenZiel(inh, inh.ziele["Z-12"], false)).toBe("SHGPEVUA-------"); // Sanität
     expect(zeichenZiel(inh, inh.ziele["Z-22"], false)).toBe("SNGPEVCF-------"); // Traktor zivil
@@ -62,7 +68,7 @@ describe("Lagebild G2/G3", () => {
     expect(lb.objekte.map((o) => o.id).sort()).toEqual(["Z-01–02", "Z-15–17"]);
     expect(lb.personen).toEqual([]);
     const pt = lb.objekte.find((o) => o.id === "Z-15–17")!;
-    expect(pt.sidc).toBe("SHGPEVAT-------"); // ARGUS meint T-72 – G2 sieht keinen Verbündeten
+    expect(pt.sidc).toBe("SHGPUCA----D---"); // ARGUS meint drei T-72 (Panzerzug, C7) – G2 sieht keinen Verbündeten
     expect(pt.menge).toBe(3);
     expect(pt.zustand).toBe("offen");
     expect(pt.pos.map(Math.round)).toEqual([477, 617]);
@@ -86,7 +92,7 @@ describe("Lagebild G2/G3", () => {
     ]), inh);
     const g2 = lagebildZielmeldungen(inh, z, "g2");
     expect(g2.objekte).toHaveLength(1);
-    expect(g2.objekte[0].text).toBe("Ziel 18/23"); // Zielnummern statt M18/M23 (B7)
+    expect(g2.objekte[0].text).toBe("Ziel 21/26"); // Zielnummern statt M18/M23 (B7; seit 2.2 drei Meldungen mehr davor)
     expect(g2.objekte[0].zustand).toBe("bekaempft");
     expect(g2.objekte[0].sidc[3]).toBe("X");
     expect(g2.wirkungen.map((w) => w.id)).toEqual(["W-M23"]);
@@ -110,9 +116,9 @@ describe("Tracking (Schritt 7)", () => {
     expect(o.pos).toEqual([772, 440]); // Z-01 hält östlich der Schule (Spähtrupp HAUPT, seit 2.1)
     expect(o.sidc).toBe(lagebildZielmeldungen(inh, vorher, "g2").objekte.find((x) => x.meldung === "M01")!.sidc); // ARGUS-Klasse, nicht Ground Truth
     expect(o.menge).toBe(2);
-    expect(lagebildZielmeldungen(inh, vorher, "g1", 100).objekte.map((x) => x.meldung)).toEqual(["M01"]); // auch G1 (Karte ab 6b)
+    expect(lagebildZielmeldungen(inh, vorher, "g1", 100).objekte.filter((x) => !x.art).map((x) => x.meldung)).toEqual(["M01"]); // auch G1 (Karte ab 6b)
 
-    // Mörser auf M01: trifft Z-01 um 175 am Einschlagort; Z-02 fährt weiter, die Spur bleibt am Wrack
+    // Mörser auf M01: trifft Z-01 um 175 am Einschlagort; Z-02 steht 32 m daneben – der Mörser (80 m) trifft beide
     const nachher = zustandAus(protokoll([
       ...START,
       ["meldung", { meldung: "M01" }, 20],
@@ -122,11 +128,19 @@ describe("Tracking (Schritt 7)", () => {
       ["wirkung", { meldung: "M01", wirkmittel: "MRS", pos: [772, 440], t_freigabe: 140, t_einschlag: 175, ziel: "Z-01",
         getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 175],
     ]), inh);
-    const w = lagebildZielmeldungen(inh, nachher, "g2", 230).objekte.find((x) => x.meldung === "M01")!;
-    expect(w.zerstoert).toBe(true);
-    expect(w.sidc[3]).toBe("X");
-    expect(w.bahn?.halt).toBe(175);
-    expect(w.pos).toEqual([772, 440]);
+    // (hier trifft das Protokoll nur Z-01): C8 – das Zeichen folgt dem noch stehenden Z-02, Z-01 bekommt ein eigenes Wrackzeichen
+    const lb2 = lagebildZielmeldungen(inh, nachher, "g2", 230);
+    const w = lb2.objekte.find((x) => x.meldung === "M01")!;
+    expect(w.zerstoert).toBe(false);
+    expect(w.sidc).toBe(zeichenArgus(inh, "Spähpanzer BRDM-2", inh.meldungen.M01.argus.konfidenz)); // ein Fahrzeug: ohne Größenangabe
+    expect(w.menge).toBeUndefined();
+    expect(w.zustand).toBe("erledigt");
+    const wrack = lb2.objekte.find((x) => x.art === "wrack")!;
+    expect(wrack.id).toBe("Z-01–02~Z-01");
+    expect(wrack.sidc[3]).toBe("X");
+    expect(wrack.zustand).toBe("bekaempft");
+    expect(wrack.bahn?.halt).toBe(175);
+    expect(wrack.pos).toEqual([772, 440]);
     // geplante Wirkung vor dem Einschlag: am vorausberechneten Ort
     const geplant = zustandAus(protokoll([
       ...START,
@@ -218,5 +232,45 @@ describe("Freigegebene Wirkung (Vorlaufzeit läuft)", () => {
     ]), inh);
     const lb = lagebildKontrolle(inh, nach, 190);
     expect(lb.wirkungen.map((w) => !!w.geplant)).toEqual([false]);
+  });
+});
+
+describe("Kontakte, Teil- und Wrackzeichen (2.2, C1/C8)", () => {
+  it("jedes fahrende Fahrzeug ist ab der Einfahrt ein Kontakt, bis seine Meldung bei der Rolle ankommt", async () => {
+    const inh = await inhalte();
+    const leer = zustandAus(protokoll([...START]), inh);
+    const k = lagebildZielmeldungen(inh, leer, "g1", 15).objekte;
+    expect(k.map((o) => o.id).sort()).toEqual(["?Z-01", "?Z-02"]); // Spähtrupp HAUPT fährt um 00:06/00:12 vom Ostrand ein
+    expect(k.every((o) => o.art === "kontakt" && o.sidc === ZEICHEN_KONTAKT && !o.meldung && o.bahn)).toBe(true);
+    expect(k.find((o) => o.id === "?Z-01")!.bahn!.ab).toBe(6);
+    // die Attrappe (steht seit Spielbeginn) und ungemeldete Ziele sind nie Kontakte
+    expect(lagebildZielmeldungen(inh, leer, "g1", 1450).objekte.some((o) => o.id === "?Z-07" || o.id === "?Z-27" || o.id === "?Z-28")).toBe(false);
+    // M01 erscheint: bei der Aufklärung wird der Kontakt zur Zielmeldung, bei der Zielprüfung erst nach ANNEHMEN
+    const z = zustandAus(protokoll([...START, ["meldung", { meldung: "M01" }, 20]]), inh);
+    expect(lagebildZielmeldungen(inh, z, "g1", 30).objekte.filter((o) => o.art === "kontakt").map((o) => o.id)).toEqual([]);
+    expect(lagebildZielmeldungen(inh, z, "g2", 30).objekte.map((o) => o.id).sort()).toEqual(["?Z-01", "?Z-02"]);
+  });
+
+  it("im Wald sieht die Drohne keine Bewegung (Z-21 in der Lauerstellung)", async () => {
+    const inh = await inhalte();
+    const z = zustandAus(protokoll([...START]), inh);
+    expect(lagebildZielmeldungen(inh, z, "g1", 1200).objekte.some((o) => o.id === "?Z-21")).toBe(false);
+    expect(lagebildZielmeldungen(inh, z, "g1", 1250).objekte.some((o) => o.id === "?Z-21")).toBe(true);
+  });
+
+  it("ein Fahrzeug, das sich vom Zeichen seiner Meldung entfernt, bekommt ein eigenes kleines Zeichen", async () => {
+    const inh = await inhalte();
+    const z = zustandAus(protokoll([...START, ["meldung", { meldung: "M01" }, 20]]), inh);
+    const lb = lagebildZielmeldungen(inh, z, "g1", 200);
+    const haupt = lb.objekte.find((o) => o.meldung === "M01")!;
+    expect(haupt.menge).toBeUndefined(); // Z-02 ist schon zur Brücke unterwegs
+    const teil = lb.objekte.find((o) => o.id === "Z-01–02+Z-02")!;
+    expect(teil.art).toBe("teil");
+    expect(teil.text).toBe("Ziel 1");
+    expect(teil.meldung).toBeUndefined();
+    // gemeinsam: Zahl und Größenangabe
+    const zusammen = lagebildZielmeldungen(inh, z, "g1", 100).objekte.find((o) => o.meldung === "M01")!;
+    expect(zusammen.menge).toBe(2);
+    expect(zusammen.sidc).toBe("SHGPUCRVA--C---");
   });
 });

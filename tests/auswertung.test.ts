@@ -54,7 +54,7 @@ describe("Auswertung: Fälle", () => {
     expect(s3.zeilen).toEqual(["FREIGABE 22:15 (PzAbw)", "→ Verbündete getroffen"]);
     const s4 = a.teams[1].faelle.S4;
     expect(s4.kette.glieder[1].zeichen).toBe("◷");
-    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:10", "Ziel 23 FREIGABE 24:25"]);
+    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:05", "Ziel 26 FREIGABE 24:25"]); // seit 2.2: M23 ist „Ziel 26“
     expect(a.teams[1].faelle.S1.text).toBe("Aufklärung lehnt ab 09:10");
   });
 });
@@ -88,7 +88,7 @@ describe("Auswertung: Kennzahlen", () => {
 
   it("Fast-Track wann, I-04 gelesen wann, Lagehinweise", () => {
     const naiv = a.teams[0].kennzahlen;
-    expect(naiv.fastTrack).toMatchObject({ an: true, seit: 870, angebot: 840, meldungen: 3 });
+    expect(naiv.fastTrack).toMatchObject({ an: true, seit: 870, angebot: 840, meldungen: 2 }); // seit 2.2 kommt M13 schon um 14:15, vor Fast-Track
     expect(naiv.lagemeldungen[0]).toEqual({ id: "I-04", fall: "S3", erschienen: 1020, gelesen: 1290 });
     expect(naiv.lagehinweise.anzahl).toBe(0);
     const ideal = a.teams[1].kennzahlen;
@@ -103,9 +103,9 @@ describe("Auswertung: Kennzahlen", () => {
 });
 
 describe("Auswertung: Konfidenz", () => {
-  it("ARGUS-Bilanz wie pruefe_szenario.py: 23 richtig, 4 falsch, Ø 93,5 % gegen 88,3 %", () => {
+  it("ARGUS-Bilanz wie pruefe_szenario.py: 26 richtig, 4 falsch, Ø 93,5 % gegen 88,1 %", () => {
     const k = a.konfidenz;
-    expect([k.richtig, k.falsch, k.mittelFalsch, k.mittelRichtig]).toEqual([23, 4, 93.5, 88.3]);
+    expect([k.richtig, k.falsch, k.mittelFalsch, k.mittelRichtig]).toEqual([26, 4, 93.5, 88.1]);
     expect(k.punkte.filter((p) => p.falsch).map((p) => p.meldung)).toEqual(["M08", "M12", "M20", "M21"]);
     // Die Teams folgten den falschen Empfehlungen nur bei hoher Konfidenz
     expect(k.fehl.min).toBeGreaterThanOrEqual(91);
@@ -120,7 +120,7 @@ describe("Replay", () => {
     expect(von).toBeLessThanOrEqual(1000);
     expect(bis).toBeGreaterThanOrEqual(1435);
     const ideal = zeitleiste(inh, a.teams[1], f).map((m) => m.zeichen);
-    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "20", "A✓", "Z✓", "F✕", "✎"]));
+    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "23", "A✓", "Z✓", "F✕", "✎"])); // M20 ist seit 2.2 „Ziel 23“
     const naiv = zeitleiste(inh, a.teams[0], f);
     expect(naiv.find((m) => m.art === "einschlag")?.klasse).toBe("fehl");
     expect(naiv.find((m) => m.art === "meldung")?.klasse).toBe("ft");

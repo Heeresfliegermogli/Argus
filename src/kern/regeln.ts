@@ -57,9 +57,12 @@ export const SCHUTZ_KATEGORIEN = ["zivil", "geschuetzt", "verbuendet", "besatzun
 /**
  * Prüft ein Wirkmittel an einer Zielposition gegen R2, R3 und den Einsatzbereich und ermittelt,
  * was zur Zeit t im Wirkradius liegt. Ob das Ziel selbst geschützt ist, prüft der Mensch.
+ * Seit 2.2 (C6): Ein Wirkmittel mit `nur_zielfahrzeug` (LM) trifft von den Fahrzeugen nur `zielFz` (das bekämpfte);
+ * andere Fahrzeuge im Wirkradius bleiben stehen, Personen im Wirkradius sind betroffen.
  */
 export function pruefeWirkmittel(
   inh: Inhalte, zielPos: Punkt, wmId: string, t: number, ausgenommen: string[] = [], zerstoert: Record<string, number> = {},
+  zielFz?: string,
 ): Pruefung {
   const wm = inh.wirkmittel[wmId];
   if (!wm) throw new Error(`Wirkmittel ${wmId} unbekannt`);
@@ -84,9 +87,11 @@ export function pruefeWirkmittel(
     verstoesse.push({ regel: "EB", text: `außerhalb des Einsatzbereichs (${wm.einsatzbereich!.text.split(",")[0]})` });
   }
   const getroffen: Treffer[] = [];
+  const nurZiel = !!wm.nur_zielfahrzeug;
   for (const z of inh.szenario.ziele) {
     if (ausgenommen.includes(z.id)) continue;
-    if (vorhanden(z, t) && !((zerstoert[z.id] ?? Infinity) <= t) && dist(zielPos, position(z, t)) <= r) {
+    const fahrzeugTrifft = !nurZiel || z.id === zielFz;
+    if (fahrzeugTrifft && vorhanden(z, t) && !((zerstoert[z.id] ?? Infinity) <= t) && dist(zielPos, position(z, t)) <= r) {
       const kat = gtBei(z, t).kategorie;
       getroffen.push({ ziel: z.id, was: kat === "attrappe" ? "attrappe" : "fahrzeug", kategorie: kat });
     }
@@ -149,7 +154,7 @@ export interface Wirkungsergebnis {
 
 /** Was eine Wirkung beim Einschlag trifft (wie argus_lib.wirkung, ab dem berechneten Einschlag). */
 export function wirkungBeimEinschlag(inh: Inhalte, e: Einschlag, wmId: string, zerstoert: Record<string, number> = {}): Wirkungsergebnis {
-  const pruefung = pruefeWirkmittel(inh, e.pos, wmId, e.t, [], zerstoert);
+  const pruefung = pruefeWirkmittel(inh, e.pos, wmId, e.t, [], zerstoert, e.ziel);
   const getroffen = [...pruefung.getroffen];
   const z0 = inh.ziele[e.ziel];
   if (z0 && vorhanden(z0, e.t) && !((zerstoert[z0.id] ?? Infinity) <= e.t) && !getroffen.some((g) => g.ziel === z0.id && g.was !== "personen")) {

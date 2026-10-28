@@ -42,7 +42,8 @@ describe("Zielnummern (B7)", () => {
   it("Meldungen des Szenarios: Platz in der Zeitleiste, für alle Teams gleich", async () => {
     const inh = await inhalte();
     expect(zielNr(inh, null, "M01")).toBe("1");
-    expect(zielNr(inh, null, "M20")).toBe("20");
+    expect(zielNr(inh, null, "M20")).toBe("23"); // seit 2.2 kommen M28, M29 und M30 vorher (Platz in der Zeitleiste)
+    expect(zielNr(inh, null, "M28")).toBe("3");
     expect(zielName(inh, null, "M01")).toBe(`Ziel 1${inh.meldungen.M01.ziele.length > 1 ? ` (${inh.meldungen.M01.ziele.length} Fz)` : ""}`);
     expect(zielName(inh, null, "M01", false)).toBe("Ziel 1");
   });
@@ -73,9 +74,9 @@ describe("Protokoll der Spielleitung (B3, B7)", () => {
     const inh = await inhalte();
     seq = 0;
     const m = e("meldung", { meldung: "M03" }, 240);
-    expect(beschreibe(m, inh)).toMatch(/^ARGUS Ziel 3 \(M03\): /);
+    expect(beschreibe(m, inh)).toMatch(/^ARGUS Ziel 5 \(M03\): /); // seit 2.2: M28 und M29 davor
     const g1 = e("g1_entscheid", { meldung: "M03", entscheid: "annehmen" }, 250);
-    expect(beschreibe(g1, inh)).toMatch(/^Ziel 3 \(M03\) /);
+    expect(beschreibe(g1, inh)).toMatch(/^Ziel 5 \(M03\) /);
     const i = inh.szenario.injects.find((x) => x.an === "G3")!;
     const inj = e("inject", { inject: i.id }, i.t_s ?? 30);
     expect(beschreibe(inj, inh)).toContain(`Inject ${i.id} an Führung`);

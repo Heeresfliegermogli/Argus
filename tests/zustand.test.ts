@@ -18,8 +18,8 @@ describe("Inhalte", () => {
     const inh = await inhalte();
     const b = pruefeInhalte(inh);
     expect(b.fehler).toEqual([]);
-    expect(inh.szenario.meldungen).toHaveLength(27);
-    expect(Object.keys(inh.ziele)).toHaveLength(36);
+    expect(inh.szenario.meldungen).toHaveLength(30); // seit 2.2: M28–M30 (C3)
+    expect(Object.keys(inh.ziele)).toHaveLength(37); // seit 2.2: Z-37
   });
 });
 

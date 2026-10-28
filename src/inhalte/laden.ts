@@ -35,6 +35,7 @@ export function baueInhalte(
     karte,
     regeln,
     fahrzeuge: nachId(fahrzeuge.fahrzeuge),
+    groessen: Object.fromEntries(Object.entries(fahrzeuge.groesse_nach_anzahl ?? {}).filter(([k]) => /^\d+$/.test(k))) as Record<string, string>,
     wirkmittel: nachId(wirkmittel.wirkmittel),
     ziele: nachId(szenario.ziele),
     meldungen: nachId(szenario.meldungen),

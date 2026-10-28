@@ -101,6 +101,8 @@ export interface Meldung {
   fall?: string;
   /** Folgemeldung zu einer früheren Meldung (z. B. M21 zu M16). */
   folge_von?: string;
+  /** Seit 2.2 (C3): Die Pause vor dieser Meldung ist länger als 60 s und gewollt (Grund) */
+  pause_gewollt?: string;
   argus: {
     klasse: string;
     konfidenz: number;
@@ -320,7 +322,7 @@ export interface Szenario {
   stand: string;
   fiktiv: string;
   kataloge: { karte: string; fahrzeuge: string; wirkmittel: string; regeln: string };
-  spieluhr: { start: string; dauer_s: number; tempo: number };
+  spieluhr: { start: string; dauer_s: number; tempo: number; pause_gewollt_ende?: string };
   phasen: Phase[];
   ablauf_unterricht: { phase: string; dauer_min: number; inhalt: string }[];
   argus_system: { name: string; beschreibung: string; herstellerangabe: string; kleingedrucktes: string };
@@ -381,10 +383,12 @@ export interface Fahrzeug {
    * Taktisches Zeichen: sidc = Funktionsteil nach MIL-STD-2525C/APP-6 (z. B. „EVAT“ Kampfpanzer),
    * groesse = Größenangabe (z. B. „E“ Kompanie). Zugehörigkeit und Status setzt die Oberfläche.
    */
-  symbol: { art: string; sidc?: string; groesse?: string };
+  symbol: { art: string; sidc?: string; groesse?: string; einheit?: string };
   generator: string | null;
   sprite: string | null;
   sprite_wrack: string | null;
+  /** Seit Katalog 1.3: Sprite während der Fahrt (Mörsertrupp auf Lkw); im Stand `sprite` */
+  sprite_fahrt?: string | null;
   farbe?: string;
   hinweis?: string;
 }
@@ -392,6 +396,8 @@ export interface Fahrzeug {
 export interface KatalogFahrzeuge {
   version: string;
   hinweis?: string;
+  /** Seit 1.3 (C7): Größenangabe nach APP-6 je Anzahl noch stehender Fahrzeuge einer zugweisen Meldung („2“ → „C“) */
+  groesse_nach_anzahl?: Record<string, string>;
   fahrzeuge: Fahrzeug[];
   personen: { id: string; name: string; darstellung: string; sprite?: string; sprite_tuch?: string }[];
 }
@@ -410,6 +416,8 @@ export interface Wirkmittel {
   bestand: number | null;
   einsatzbereich: { x_max?: number; text: string } | null;
   effekt: string;
+  /** Seit 2.2 (C6): trifft von den Fahrzeugen nur das bekämpfte (LM); Personen im Wirkradius schon */
+  nur_zielfahrzeug?: boolean;
 }
 
 export interface KatalogWirkmittel {
@@ -444,6 +452,8 @@ export interface Inhalte {
   szenario: Szenario;
   karte: Karte;
   fahrzeuge: Record<string, Fahrzeug>;
+  /** Größenangabe je Anzahl (Katalog groesse_nach_anzahl, C7) */
+  groessen?: Record<string, string>;
   wirkmittel: Record<string, Wirkmittel>;
   regeln: Regeln;
   ziele: Record<string, Ziel>;
