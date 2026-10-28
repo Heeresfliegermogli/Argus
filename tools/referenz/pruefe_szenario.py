@@ -8,8 +8,10 @@ Exit-Code 1 bei Fehlern.
 Seit 2.0 zusätzlich: Bewegung (Sensortext ↔ Route, realistische Geschwindigkeiten), Gruppen, Trefferregel nach der
 Lage beim Einschlag (Lösungshilfe mit Freigabe-Fenster), Hintergrundgefecht, Verstärkungen (für jeden Einspielzeitpunkt).
 Seit 2.1: Durchbruch (Gruppen, Routen über Brücke oder Furt, Lagemeldung), Feuer (Schussrhythmus), Zonen mit Kurznamen.
+Seit 2.2: Kein Fahrzeug erscheint oder verschwindet mitten im Bild (auch Verstärkungen), Abstände der Fahrzeuge (Meldung/Gruppe
+≥ 15 m, sonst ≥ 10 m, auch mit Durchbruch), keine Meldelücke über 60 s ohne Absicht (pause_gewollt).
 
-Gleich im Projekt PolBil (claude/tools/pruefe_szenario.py) und im Repository (tools/referenz/), Stand Szenario 2.1;
+Gleich im Projekt PolBil (claude/tools/pruefe_szenario.py) und im Repository (tools/referenz/), Stand Szenario 2.2;
 simuliere_durchlauf.py und gen_drehbuch.py brauchen sie.
 """
 import json
@@ -20,6 +22,10 @@ import argus_lib as L
 
 FREIGABE_RICHTWERT_S = 120      # Meldung bis Freigabe bei zügiger Bearbeitung (G1 40 s, G2 50 s, G3 30 s)
 FENSTER_S = (30, 300)           # Freigabe frühestens/spätestens so viele Sekunden nach der Meldung (Lösungshilfe)
+LUECKE_MAX_S = 60               # längste Pause ohne neue Meldung (seit 2.2, C3)
+RAND_M = 20                     # so nah am Kartenrand erscheint und verschwindet ein Fahrzeug (seit 2.2, C1)
+ABSTAND_GRUPPE_M = 15           # Abstand der Fahrzeuge einer Meldung oder Gruppe (seit 2.2, C6)
+ABSTAND_M = 10                  # Abstand aller anderen Fahrzeuge (Sprites dürfen sich nicht überlappen)
 KETTE = ("kpz_t72", "kpz_pt91", "spz_bmp2", "attrappe_kpz")
 
 
@@ -90,7 +96,7 @@ def loesung_meldung(d, m, ziele, t0=None, zerstoert=None):
     zonen = {z["id"]: round(L.abstand_zone(p, z)) for z in sz["zonen"]}
     res = []
     for wid in wm:
-        ok_m, verst_m, getr_m = L.pruefe_wirkmittel(d, p, wid, t_s=t_m, zerstoert=zerstoert)
+        ok_m, verst_m, getr_m = L.pruefe_wirkmittel(d, p, wid, t_s=t_m, zerstoert=zerstoert, ziel=m["ziele"][0])
         w = L.wirkung(d, m["ziele"], wid, t_m + FREIGABE_RICHTWERT_S, zerstoert)
         werte, schutz = [], {}
         for dt in range(FENSTER_S[0], FENSTER_S[1] + 1, 5):
@@ -181,6 +187,17 @@ def pruefe(d):
         warn.append(f"Meldungsabstand unter 30 s ({min(abst)} s)")
     if ts[0] > 30:
         warn.append(f"erste Meldung erst nach {ts[0]} s (Soll ca. 20 s)")
+    # Meldedichte (seit 2.2, C3): ca. eine Meldung pro Minute, keine Pause über LUECKE_MAX_S ohne Absicht (pause_gewollt an der
+    # Meldung nach der Pause; am Ende spieluhr.pause_gewollt_ende)
+    luecken = []
+    vorher_t = 0
+    for m in sz["meldungen"] + [{"id": "Spielende", "t_s": dauer, "pause_gewollt": sz["spieluhr"].get("pause_gewollt_ende")}]:
+        luecke = m["t_s"] - vorher_t
+        luecken.append((luecke, vorher_t, m["id"]))
+        if luecke > LUECKE_MAX_S and not m.get("pause_gewollt"):
+            fehler.append(f"Meldelücke {luecke:.0f} s von {L.mmss(vorher_t)} bis {L.mmss(m['t_s'])} ({m['id']}) ohne Absicht "
+                          f"(höchstens {LUECKE_MAX_S} s, sonst pause_gewollt)")
+        vorher_t = m["t_s"]
     feste = [i for i in sz["injects"] if "t_s" in i]
     if any(i["t_s"] >= dauer for i in feste):
         fehler.append("Inject nach Spielende")
@@ -209,7 +226,7 @@ def pruefe(d):
             warn.append(f"{m['id']}: Zugmeldung ohne Einzelkonfidenzen")
         for zid in m["ziele"]:
             k = fz[ziele[zid]["typ"]]["argus_klasse"]
-            if k != a["klasse"]:
+            if k != a["klasse"] and not (a["klasse"].endswith("unbekannt") and a["empfehlung"] == "UNKLAR"):
                 warn.append(f"{m['id']}: ARGUS-Klasse '{a['klasse']}' ≠ Katalog '{k}' für {zid}")
 
     # ---------------------------------------------------------------- Positionen und Bewegung
@@ -221,17 +238,34 @@ def pruefe(d):
             for t, x, y in r:
                 if not (-15 <= x <= W + 15 and -15 <= y <= H + 15):
                     fehler.append(f"{z['id']}: Routenpunkt außerhalb der Karte ({x}, {y})")
-    for z in sz["ziele"]:
+    # Erscheinen und Verschwinden (seit 2.2, C1): Jedes Fahrzeug fährt sichtbar vom Kartenrand ein und am Rand hinaus (die
+    # Spieler sehen es ab der Einfahrt als Kontakt). Nur was bei Spielbeginn schon dasteht, darf mitten im Bild stehen.
+    def am_rand(p):
+        return min(p[0], W - p[0], p[1], H - p[1]) <= RAND_M
+
+    def pruefe_rand(z, wer, relativ=False):
         r = (z.get("bewegung") or {}).get("route")
-        if not r or len(r) < 2:
-            continue
-        for wo, (t, x, y) in (("taucht", r[0]), ("verschwindet", r[-1])):
-            if wo == "verschwindet" and z.get("bis_s") is None:
-                continue
-            rand = min(x, W - x, y, H - y)
-            wald = min(L.abstand_polygon((x, y), w["punkte"]) for w in waelder)
-            if rand > 20 and wald > 0:
-                warn.append(f"{z['id']}: {wo} bei ({x}, {y}) mitten in der Karte {'auf' if wo == 'taucht' else ''} (t={t:.0f})".replace("  ", " "))
+        a = L.ab_s(z)
+        schon_da = a <= 0 and not relativ
+        if not r:
+            if not schon_da:
+                fehler.append(f"{wer}: erscheint um {L.mmss(a)}{' nach dem Einspielen' if relativ else ''} bei ({z['pos'][0]}, "
+                              f"{z['pos'][1]}) mitten im Bild (keine Route vom Kartenrand)")
+            return
+        p0 = L.position(z, a)
+        if not schon_da and not am_rand(p0):
+            fehler.append(f"{wer}: erscheint um {L.mmss(a)}{' nach dem Einspielen' if relativ else ''} bei ({p0[0]:.0f}, {p0[1]:.0f}) "
+                          f"mitten im Bild statt am Kartenrand")
+        if z.get("bis_s") is not None:
+            p1 = L.position(z, z["bis_s"])
+            if not am_rand(p1):
+                fehler.append(f"{wer}: verschwindet um {L.mmss(z['bis_s'])} bei ({p1[0]:.0f}, {p1[1]:.0f}) mitten im Bild statt am Kartenrand")
+
+    for z in sz["ziele"]:
+        pruefe_rand(z, z["id"])
+    for g in (sz.get("verstaerkungen") or {}).get("gruppen", []):
+        for z in g["ziele"]:
+            pruefe_rand(z, f"{g['id']} {z['id']}", relativ=True)
     for m in sz["meldungen"]:
         for i, zid in enumerate(m["ziele"]):
             z = ziele[zid]
@@ -450,6 +484,38 @@ def pruefe(d):
     if (dbg or any(g.get("durchbruch") for g in vg)) and not i_db:
         fehler.append("Durchbruch ohne Lagemeldung (Inject mit bedingung.typ durchbruch)")
 
+    # ---------------------------------------------------------------- Abstände (seit 2.2, C6)
+    # Fahrzeuge einer Meldung, einer Gruppe oder einer Durchbruch-Gruppe halten mindestens ABSTAND_GRUPPE_M, alle anderen
+    # ABSTAND_M (Wracks bleiben an der Trefferstelle). Geprüft: Lage ohne Eingriff der Spieler (Hintergrundgefecht wirkt), dazu
+    # jede Gruppe, die dann durchbräche, mit allen anderen (Gegenangriff E-01 bleibt aus), und jede Verstärkung in sich.
+    zusammen = set()
+    for m in sz["meldungen"]:
+        zusammen |= {tuple(sorted((a, b))) for a in m["ziele"] for b in m["ziele"] if a != b}
+    for g in list(gruppen.values()) + [g["ziele"] for g in dbg]:
+        zusammen |= {tuple(sorted((a, b))) for a in g for b in g if a != b}
+    ag_hg = {h["ziel"]: h["t_s"] for h in hg if h["art"] == "panzerabwehr" and h.get("folge") == "ausser_gefecht"}
+    durch_ohne_eingriff = [g for g in dbg if L.durchbruch_stand(g, ziele, zerstoert_hg, ag_hg)[0]]
+    varianten = [("ohne Eingriff", sz["ziele"])]
+    if durch_ohne_eingriff:
+        varianten.append((f"mit Durchbruch {', '.join(g['id'] for g in durch_ohne_eingriff)}",
+                          L.mit_durchbruch(sz, durch_ohne_eingriff)["ziele"]))
+    gemeldete_paare = set()
+    for name, liste in varianten:
+        for a, b, d_min, t_min in L.zu_nah(liste, dauer, zerstoert_hg, ABSTAND_GRUPPE_M):
+            soll = ABSTAND_GRUPPE_M if tuple(sorted((a, b))) in zusammen else ABSTAND_M
+            if d_min < soll and (a, b) not in gemeldete_paare:
+                gemeldete_paare.add((a, b))
+                fehler.append(f"{a} und {b} nur {d_min:.1f} m auseinander um {L.mmss(t_min)} ({name}; Soll ≥ {soll} m)")
+    for g in vg:
+        vliste = [dict(z) for z in g["ziele"]]
+        db = g.get("durchbruch")
+        for vname, vl in [("", vliste)] + ([(" mit Durchbruch", [L.durchbruch_ziel(z, db["routen"][z["id"]]) if z["id"] in db["routen"] else z
+                                                                for z in vliste])] if db else []):
+            for a, b, d_min, t_min in L.zu_nah(vl, max(dauer, g.get("dauer_s", 0) + 600), {}, ABSTAND_GRUPPE_M):
+                if d_min < ABSTAND_GRUPPE_M:
+                    fehler.append(f"{g['id']}{vname}: {a} und {b} nur {d_min:.1f} m auseinander (+{L.mmss(t_min)} nach dem Einspielen; "
+                                  f"Soll ≥ {ABSTAND_GRUPPE_M} m)")
+
     # ---------------------------------------------------------------- Feuer (seit 2.1)
     for z in sz["ziele"] + [zz for g in vg for zz in g["ziele"]]:
         for f in z.get("feuert") or []:
@@ -523,6 +589,7 @@ def pruefe(d):
         "sicht_gestoert": [m["id"] for m in sz["meldungen"] if m["bild"].get("sicht")],
         "zugmeldungen": [m["id"] for m in sz["meldungen"] if len(m["ziele"]) > 1],
         "phasen": {p["nr"]: sum(1 for m in sz["meldungen"] if m.get("phase") == p["nr"]) for p in sz.get("phasen", [])},
+        "groesste_luecken": [{"s": l, "von": L.mmss(v), "bis": mid} for l, v, mid in sorted(luecken, reverse=True)[:3]],
         "hintergrund_zerstoert": zerstoert_hg,
         "verstaerkungen": vinfo,
         "durchbruch": db_info,
@@ -554,6 +621,7 @@ def main():
     print(f"ARGUS richtig {kz['argus_richtig']}, falsch {kz['argus_falsch']} {kz['falsch_meldungen']}; "
           f"Ø Konfidenz falsch {kz['konfidenz_falsch_mittel']} % / richtig (BEKÄMPFEN) {kz['konfidenz_richtig_bekaempfen_mittel']} %")
     print(f"Phasen {kz['phasen']}; Fast-Track-fähig nach Angebot: {kz['fast_track_nach_angebot']}")
+    print("Größte Meldelücken: " + ", ".join(f"{g['s']:.0f} s ab {g['von']} (bis {g['bis']})" for g in kz["groesste_luecken"]))
     print(f"{kz['steilfeuer']} zulässig (Einschlag bei Freigabe +{FREIGABE_RICHTWERT_S} s) bei {kz['steilfeuer_zulaessig']}")
     print(f"nur Präzision zulässig bei {len(kz['nur_praezision'])}: {kz['nur_praezision']}; ohne zulässiges Wirkmittel: {kz['ohne_zulaessiges_wm']}")
     print(f"Vorhalt (Zulässigkeit ändert sich während der Bearbeitung): {kz['vorhalt']}")

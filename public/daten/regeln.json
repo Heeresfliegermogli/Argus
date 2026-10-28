@@ -1,5 +1,5 @@
 {
-  "version": "2.1",
+  "version": "2.2",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -8,7 +8,8 @@
       "UNKLAR": "Konfidenz < 60 %",
       "NICHT BEKÄMPFEN": "ARGUS erkennt Personen ohne Uniform oder Schutzzeichen im Umkreis des Ziels (Warnung, unabhängig von der Konfidenz)"
     },
-    "klassifiziert_nur": "Tagsichtbild (EO). Sensordaten der Drohne (Wärmebild, Bewegungsverlauf, Spuren) fließen nicht in Klasse und Konfidenz ein."
+    "klassifiziert_nur": "Tagsichtbild (EO). Sensordaten der Drohne (Wärmebild, Bewegungsverlauf, Spuren) fließen nicht in Klasse und Konfidenz ein.",
+    "unbekannt": "Erkennt ARGUS nichts (z. B. Bildstörung), meldet es „Ziel unbekannt“ oder „Fahrzeug unbekannt“ mit niedriger Konfidenz (UNKLAR)."
   },
   "fast_track": {
     "schwelle": 90,
@@ -89,7 +90,8 @@
     "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
     "hintergrund": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
     "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
-    "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren."
+    "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren.",
+    "praezision": "Präzisionswirkmittel (Loitering Munition, katalog_wirkmittel: nur_zielfahrzeug) treffen genau das bekämpfte Fahrzeug: Andere Fahrzeuge im Wirkradius bleiben stehen. Personen im Wirkradius sind betroffen; R2, R3 und die Warnungen gelten wie bei jedem Wirkmittel. Der Mörser trifft weiter alles im Wirkradius."
   },
   "kennzahlen": [
     {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},

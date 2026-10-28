@@ -1,6 +1,6 @@
 {
-  "version": "2.0",
-  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung).",
+  "version": "2.2",
+  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung). Seit 2.2: nur_zielfahrzeug (LM) – das Wirkmittel trifft nur das bekämpfte Fahrzeug, andere Fahrzeuge im Wirkradius nicht; Personen im Wirkradius schon.",
   "wirkmittel": [
     {
       "id": "MRS",
@@ -23,7 +23,8 @@
       "flug": {"start": [-300, 380], "geschwindigkeit_mps": 30, "vorbereitung_s": 5},
       "bestand": 11,
       "einsatzbereich": null,
-      "effekt": "explosion_klein"
+      "effekt": "explosion_klein",
+      "nur_zielfahrzeug": true
     },
     {
       "id": "PZA",

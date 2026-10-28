@@ -136,7 +136,7 @@ def lauf(d, team, detail=None, einspielen=None):
         z = zerstoert()
         t_e, pos, zid = L.einschlag(welt(t), m["ziele"], wahl, t, z)
         de = welt(t_e)
-        ok, verst, getr = L.pruefe_wirkmittel(de, pos, wahl, t_s=t_e, zerstoert=z)
+        ok, verst, getr = L.pruefe_wirkmittel(de, pos, wahl, t_s=t_e, zerstoert=z, ziel=zid)
         z0 = next(x for x in L.alle_ziele(de["szenario"]) if x["id"] == zid)
         if L.vorhanden(z0, t_e) and z.get(zid, 1e9) > t_e and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
             kat = L.gt_bei(z0, t_e)["kategorie"]

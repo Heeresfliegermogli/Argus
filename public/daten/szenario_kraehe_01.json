@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.1",
-  "stand": "2026-10-25",
+  "version": "2.2",
+  "stand": "2026-10-28",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -195,7 +195,7 @@
         "route": [
           [12, 1010, 308], [16.5, 979, 313], [21, 948, 318], [32.3, 905, 364], [44.5, 850, 404], [54.7, 795, 418],
           [159.8, 795, 418], [169.8, 745, 414], [178.8, 700, 412], [186.8, 660, 415], [194.9, 620, 421],
-          [202.9, 580, 422], [211, 540, 416], [218.1, 506, 405], [224.9, 482, 390], [1500, 482, 390]
+          [202.9, 580, 422], [211, 540, 416], [218.1, 506, 405], [227.6, 476, 375], [1500, 476, 375]
         ]
       },
       "gt": {
@@ -227,14 +227,14 @@
     {
       "id": "Z-04",
       "typ": "gfz_tigr",
-      "pos": [572, 83],
-      "hdg": 109,
+      "pos": [575, 87],
+      "hdg": 103,
       "bis_s": 409,
       "gruppe": "Z-03–04",
       "bewegung": {
         "route": [
-          [57, 608, -10], [69.6, 582, 55], [85.8, 553, 140], [110.8, 553, 140], [126.5, 530, 215], [136.6, 512, 262],
-          [362, 512, 262], [370.2, 530, 215], [383, 553, 140], [397.7, 582, 55], [409.2, 608, -10]
+          [57, 608, -10], [69.6, 582, 55], [85.8, 560, 150], [110.8, 560, 150], [126.5, 530, 215], [136.6, 512, 262],
+          [362, 512, 262], [370.2, 530, 215], [383, 560, 150], [397.7, 582, 55], [409.2, 608, -10]
         ]
       },
       "gt": {
@@ -246,12 +246,12 @@
     {
       "id": "Z-05",
       "typ": "spz_bmp2",
-      "pos": [812, 214],
-      "hdg": 200,
+      "pos": [824, 238],
+      "hdg": 103,
       "bewegung": {
         "route": [
           [150, 1010, 150], [155.4, 980, 153], [161, 949, 156], [166.5, 919, 161], [172, 889, 167], [177.6, 860, 178],
-          [183.1, 834, 194], [193.8, 812, 214]
+          [183.1, 834, 194], [189.5, 828, 220], [193.9, 824, 238]
         ]
       },
       "gt": {
@@ -265,18 +265,18 @@
       "id": "Z-06",
       "typ": "moerser_trupp",
       "pos": [920, 105],
-      "hdg": 225,
-      "ab_s": 280,
-      "personen": [{"art": "soldat", "anzahl": 6, "pos": [922, 108]}],
+      "hdg": 179,
+      "personen": [{"art": "soldat", "anzahl": 6, "pos": [922, 108], "ab_s": 282}],
       "gt": {
         "kategorie": "feind",
-        "text": "Mörsertrupp mit zwei Rohren am Waldrand MARDER, unterstützt die Gefechtsaufklärung und den Angriff.",
+        "text": "Mörsertrupp mit zwei Rohren (auf Lkw), fährt um 10:04:10 durch den Wald MARDER an den Waldrand, unterstützt die Gefechtsaufklärung und den Angriff.",
         "legitim": true
       },
       "feuert": [
         {"von_s": 302, "bis_s": 650, "takt_s": 4, "salve": 4, "pause_s": 22},
         {"von_s": 818, "bis_s": 1190, "takt_s": 4, "salve": 4, "pause_s": 26}
-      ]
+      ],
+      "bewegung": {"route": [[250, 1010, 100], [268, 960, 104], [282, 920, 105]]}
     },
     {
       "id": "Z-07",
@@ -294,8 +294,8 @@
     {
       "id": "Z-08",
       "typ": "kpz_t72",
-      "pos": [708, 223],
-      "hdg": 162,
+      "pos": [819, 188],
+      "hdg": 163,
       "bis_s": 803,
       "bewegung": {
         "route": [
@@ -316,14 +316,14 @@
       "typ": "spz_bmp2",
       "pos": [690, 254],
       "hdg": 161,
-      "bis_s": 814,
+      "bis_s": 824,
       "gruppe": "Z-09–11",
       "bewegung": {
         "route": [
           [372, 1010, 150], [378, 977, 153], [384, 944, 157], [389.8, 912, 162], [395.7, 880, 170], [423.5, 785, 222],
-          [449.3, 690, 254], [469.3, 690, 254], [494.9, 610, 300], [512.9, 562, 344], [592, 562, 344],
-          [609.5, 620, 300], [633.2, 705, 250], [658.9, 805, 212], [687.9, 922, 182], [794, 922, 182],
-          [797.8, 918, 161], [803.5, 949, 156], [808.9, 979, 153], [814.5, 1010, 150]
+          [444, 690, 254], [469.3, 690, 254], [494.9, 610, 300], [512.9, 562, 344], [592, 562, 344], [609.5, 620, 300],
+          [633.2, 705, 250], [658.9, 805, 212], [682, 895, 222], [794, 895, 222], [802, 905, 190], [808, 925, 165],
+          [814, 955, 156], [819, 985, 153], [824, 1010, 150]
         ]
       },
       "gt": {
@@ -337,14 +337,14 @@
       "typ": "spz_bmp2",
       "pos": [700, 214],
       "hdg": 165,
-      "bis_s": 825,
+      "bis_s": 820,
       "gruppe": "Z-09–11",
       "bewegung": {
         "route": [
           [380, 1010, 150], [386, 977, 153], [392, 944, 157], [397.8, 912, 162], [403.7, 880, 170], [427.4, 790, 190],
-          [451.4, 700, 214], [471.4, 700, 214], [496.3, 620, 255], [513.9, 575, 300], [596, 575, 300],
-          [614.1, 640, 262], [635.3, 720, 225], [658.1, 810, 195], [677.3, 890, 190], [798, 890, 190], [802, 883, 169],
-          [807.8, 914, 161], [813.6, 946, 157], [819.4, 978, 153], [825.2, 1010, 150]
+          [446, 700, 214], [471.4, 700, 214], [496.3, 620, 255], [513.9, 575, 300], [596, 575, 300], [614.1, 640, 262],
+          [635.3, 720, 225], [658.1, 810, 195], [687, 925, 198], [798, 925, 198], [804, 935, 175], [810, 962, 160],
+          [815, 985, 153], [820, 1010, 150]
         ]
       },
       "gt": {
@@ -356,14 +356,13 @@
     {
       "id": "Z-11",
       "typ": "spz_bmp2",
-      "pos": [740, 261],
+      "pos": [759, 254],
       "hdg": 159,
       "gruppe": "Z-09–11",
       "bewegung": {
         "route": [
           [388, 1010, 150], [394, 977, 153], [400, 944, 157], [405.8, 912, 162], [411.7, 880, 170], [440, 795, 240],
-          [464.7, 705, 274], [484.7, 705, 274], [517.7, 600, 330], [541.1, 535, 384], [551.7, 497, 389],
-          [1500, 497, 389]
+          [464.7, 705, 274], [484.7, 705, 274], [517.7, 600, 330], [538, 560, 385], [552, 497, 377], [1500, 497, 377]
         ]
       },
       "gt": {
@@ -425,7 +424,7 @@
         "route": [
           [880, 1010, 308], [887.5, 979, 313], [895, 948, 318], [902.6, 917, 324], [910.1, 886, 329],
           [917.6, 855, 334], [925.1, 824, 339], [932.6, 793, 344], [940.2, 762, 350], [947.7, 731, 355],
-          [955.3, 700, 361], [975.3, 700, 361], [983.6, 666, 368], [991.9, 632, 374], [1000, 632, 374],
+          [955.3, 700, 361], [975.3, 700, 361], [983.6, 666, 368], [991.9, 632, 360], [1000, 632, 360],
           [1007, 603, 378], [1014, 574, 381], [1021, 545, 384], [1033.7, 530, 352], [1500, 530, 352]
         ]
       },
@@ -507,10 +506,9 @@
       "id": "Z-19",
       "typ": "moerser_trupp",
       "pos": [768, 305],
-      "hdg": 200,
-      "ab_s": 1050,
+      "hdg": 289,
       "personen": [
-        {"art": "soldat", "anzahl": 5, "pos": [770, 302]},
+        {"art": "soldat", "anzahl": 5, "pos": [770, 302], "ab_s": 980.8},
         {
           "art": "zivil",
           "anzahl": 4,
@@ -522,18 +520,25 @@
       ],
       "gt": {
         "kategorie": "feind",
-        "text": "Mörsertrupp im Hof RABE, unterstützt den Hauptangriff und beschießt die 2. Kp. Bis 10:21:40 stehen vier Zivilpersonen keine 10 m daneben an der Hauswand, danach fliehen sie nach Westen.",
+        "text": "Mörsertrupp (auf Lkw), fährt um 10:15:30 über die Hauptstraße in den Hof RABE, unterstützt den Hauptangriff und beschießt die 2. Kp. Bis 10:21:40 stehen vier Zivilpersonen keine 10 m daneben an der Hauswand, danach fliehen sie nach Westen.",
         "legitim": true,
         "hinweis": "ARGUS liegt richtig: Ziel legitim, Warnung vor Zivilpersonen berechtigt. Richtig ist Beobachten, bis die Personen weg sind (Folgemeldung 10:22:00).",
         "bezug": "Vorsichtsmaßnahmen beim Angriff, Verhältnismäßigkeit (Art. 57, Art. 51 Abs. 5 lit. b ZP I)."
       },
-      "feuert": [{"von_s": 1066, "bis_s": 1500, "takt_s": 5, "salve": 3, "pause_s": 24}]
+      "feuert": [{"von_s": 1066, "bis_s": 1500, "takt_s": 5, "salve": 3, "pause_s": 24}],
+      "bewegung": {
+        "route": [
+          [930, 1010, 308], [934.1, 982, 313], [938.2, 954, 317], [942.3, 926, 322], [946.4, 898, 327],
+          [950.5, 870, 331], [954.6, 842, 336], [958.7, 814, 341], [962.8, 786, 346], [966.9, 758, 350],
+          [973.5, 760, 328], [980.8, 768, 305]
+        ]
+      }
     },
     {
       "id": "Z-20",
       "typ": "kpz_t72",
-      "pos": [524, 414],
-      "hdg": -173,
+      "pos": [505, 412],
+      "hdg": 187,
       "bewegung": {
         "route": [
           [1022, 1010, 368], [1047.8, 905, 392], [1073.5, 800, 413], [1086.7, 745, 414], [1097.5, 700, 413],
@@ -543,7 +548,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72 der Achse SÜD. Fährt zwischen Ortschaft und Schule nach Westen (bei der Meldung ca. 55 m neben dem Schulgelände) und sammelt an der Brücke ELSTER Ost.",
+        "text": "KPz T-72 der Achse SÜD. Fährt zwischen Ortschaft und Schule nach Westen und sammelt ab 10:19:05 an der Brücke ELSTER Ost (bei der Meldung ca. 75 m vom Schulgelände).",
         "legitim": true,
         "hinweis": "Gegenstück zum Sanitätsfahrzeug: gleiche Lage zur Schule, aber echtes Ziel. Mit LM regelkonform bekämpfbar."
       }
@@ -552,11 +557,11 @@
       "id": "Z-21",
       "typ": "spz_bmp2",
       "pos": [790, 560],
-      "hdg": 180,
-      "bewegung": {"route": [[1230, 842, 576], [1249.6, 790, 560]]},
+      "hdg": 197,
+      "bewegung": {"route": [[1118, 1010, 585], [1170, 880, 580], [1185, 842, 576], [1230, 842, 576], [1250, 790, 560]]},
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 in Lauerstellung am Waldrand DACHS, kommt um 10:20:30 aus dem Wald und sichert die Flanke der Feindkräfte, die sich an der Brücke sammeln.",
+        "text": "SPz BMP-2, fährt um 10:18:40 durch den Wald DACHS in eine Lauerstellung am Waldrand, kommt um 10:20:30 heraus und sichert die Flanke der Feindkräfte, die sich an der Brücke sammeln.",
         "legitim": true
       },
       "kein_durchbruch": "Flankensicherung am Waldrand DACHS"
@@ -614,12 +619,12 @@
       "id": "Z-24",
       "typ": "kpz_t72",
       "pos": [492, 330],
-      "hdg": -172,
+      "hdg": 188,
       "bewegung": {
         "route": [
-          [1027, 1010, 308], [1034.1, 981, 313], [1041.4, 951, 318], [1048.5, 922, 323], [1055.6, 893, 328],
-          [1062.9, 863, 332], [1070, 834, 337], [1077.1, 805, 342], [1084.4, 775, 347], [1091.5, 746, 352],
-          [1098.6, 717, 358], [1105.7, 688, 364], [1112.8, 659, 369], [1120.1, 629, 375], [1127.1, 600, 379],
+          [1048.0, 1010, 308], [1053.6, 981, 313], [1059.4, 951, 318], [1065.0, 922, 323], [1070.6, 893, 328],
+          [1076.4, 863, 332], [1082.0, 834, 337], [1087.6, 805, 342], [1093.3, 775, 347], [1099.0, 746, 352],
+          [1104.6, 717, 358], [1110.2, 688, 364], [1115.8, 659, 369], [1121.5, 629, 375], [1127.1, 600, 379],
           [1142.5, 560, 347], [1155.1, 520, 334], [1163.6, 492, 330], [1500, 492, 330]
         ]
       },
@@ -669,20 +674,18 @@
       "id": "Z-26",
       "typ": "spaehpz_brdm2",
       "pos": [701, 87],
-      "hdg": -78,
+      "hdg": 282,
       "bewegung": {
         "route": [
-          [970, 1010, 308], [974.1, 982, 313], [978.3, 953, 317], [982.4, 925, 322], [986.6, 896, 327],
-          [990.7, 868, 332], [994.9, 839, 337], [999, 811, 341], [1003.2, 782, 346], [1007.3, 754, 351],
-          [1011.5, 725, 356], [1015.6, 697, 362], [1019.7, 669, 367], [1024, 640, 373], [1029, 641, 345],
-          [1034, 642, 317], [1038.9, 644, 290], [1044, 648, 262], [1438, 648, 262], [1441.5, 655, 234],
-          [1445, 664, 206], [1448.5, 674, 179], [1451.9, 683, 152], [1455.4, 692, 124], [1458.9, 699, 96],
-          [1462.3, 705, 68], [1465.7, 711, 40], [1500, 711, 40]
+          [1003, 722, -10], [1007.6, 715, 21], [1012, 709, 51], [1016.6, 702, 82], [1021, 695, 112],
+          [1025.6, 686, 143], [1030, 676, 172], [1034.6, 666, 202], [1039.2, 655, 232], [1043.6, 648, 262],
+          [1438, 648, 262], [1441.5, 655, 234], [1445, 664, 206], [1448.5, 674, 179], [1451.9, 683, 152],
+          [1455.4, 692, 124], [1458.9, 699, 96], [1462.3, 705, 68], [1465.7, 711, 40], [1500, 711, 40]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "Spähpanzer BRDM-2, Beobachtungsposten an der Nordstraße in der Ortschaft ab 10:17, weicht um 10:23:58 nach Norden aus.",
+        "text": "Spähpanzer BRDM-2, kommt um 10:16:43 über die Nordstraße, Beobachtungsposten an der Nordstraße in der Ortschaft, weicht um 10:23:58 nach Norden aus.",
         "legitim": true
       }
     },
@@ -745,8 +748,8 @@
     {
       "id": "Z-30",
       "typ": "kpz_t72",
-      "pos": [816, 152],
-      "hdg": -165,
+      "pos": [869, 167],
+      "hdg": 195,
       "gruppe": "Z-30–32",
       "bewegung": {
         "route": [
@@ -764,8 +767,8 @@
     {
       "id": "Z-31",
       "typ": "kpz_t72",
-      "pos": [836, 174],
-      "hdg": 174,
+      "pos": [895, 166],
+      "hdg": 166,
       "gruppe": "Z-30–32",
       "bewegung": {
         "route": [
@@ -783,8 +786,8 @@
     {
       "id": "Z-32",
       "typ": "kpz_t72",
-      "pos": [859, 180],
-      "hdg": 155,
+      "pos": [927, 160],
+      "hdg": 171,
       "gruppe": "Z-30–32",
       "bewegung": {
         "route": [
@@ -808,7 +811,7 @@
       "bewegung": {
         "route": [
           [905, 1010, 150], [911, 977, 153], [917, 944, 157], [922.8, 912, 162], [928.7, 880, 170], [949.3, 800, 172],
-          [975.3, 700, 186], [1001.9, 600, 212], [1026.9, 600, 212], [1046.1, 530, 238], [1063.3, 470, 268],
+          [975.3, 700, 186], [1001.9, 600, 212], [1026.9, 600, 212], [1046.1, 530, 238], [1063.3, 472, 256],
           [1073.9, 432, 284], [1081.8, 402, 291], [1500, 402, 291]
         ]
       },
@@ -875,6 +878,25 @@
         "legitim": true,
         "hinweis": "Legitimes Ziel. Solange es an der Schule steht, schlägt jede Wirkung auf dem Schulgelände ein. Wer nach der Lage bei der Meldung entscheidet, übersieht das; die Warnung rechnet den Einschlag voraus."
       }
+    },
+    {
+      "id": "Z-37",
+      "typ": "spaehpz_brdm2",
+      "pos": [699, 95],
+      "hdg": 103,
+      "bis_s": 615.4,
+      "bewegung": {
+        "route": [
+          [525, 722, -10], [528.8, 716, 16], [532.8, 711, 43], [536.6, 705, 69], [540.4, 699, 95], [600, 699, 95],
+          [603.8, 705, 69], [607.6, 711, 43], [611.6, 716, 16], [615.4, 722, -10]
+        ]
+      },
+      "personen": [],
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "Spähpanzer BRDM-2 mit vorgeschobenem Beobachter: kommt um 10:08:45 über die Nordstraße, lenkt vom Nordrand der Ortschaft das Feuer der Feindartillerie auf die 2. Kp und zieht sich um 10:10 mit dem Rückzug des verstärkten Zuges nach Norden zurück."
+      }
     }
   ],
   "meldungen": [
@@ -921,6 +943,55 @@
       "zweck": "Zweiter Spähtrupp über die Felder westlich der Ortschaft Richtung Brücke. Weit genug von der Ortschaft ist der Mörser zulässig; je näher der Spähtrupp der Brücke kommt, desto eher nur noch LM."
     },
     {
+      "id": "M28",
+      "t_s": 130,
+      "ziele": ["Z-03"],
+      "phase": 1,
+      "folge_von": "M02",
+      "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "heiß (Motor, fährt)",
+        "bewegung": "nach Süd, ca. 20 km/h",
+        "spuren": "Radspuren von Norden",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–"
+      },
+      "bild": {
+        "datei": "drohne/M28.webp",
+        "beschreibung": "Geländewagen in Tarnfarbe fährt über das Feld westlich der Ortschaft nach Süden, Richtung Brücke ELSTER.",
+        "sicht": []
+      },
+      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "zweck": "Folgemeldung: Der Spähtrupp NORD teilt sich, ein Fahrzeug fährt über die Felder an die Brücke vor. Füllt die Pause nach den ersten Meldungen; je näher es der Brücke kommt, desto eher nur LM oder PzAbw."
+    },
+    {
+      "id": "M29",
+      "t_s": 185,
+      "ziele": ["Z-04"],
+      "phase": 1,
+      "folge_von": "M02",
+      "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 58, "empfehlung": "UNKLAR", "hinweis": "teilverdeckt"},
+      "sensor": {
+        "waerme": "warm (Motor im Leerlauf)",
+        "bewegung": "steht seit 50 s",
+        "spuren": "Radspuren von Norden",
+        "kennzeichnung": "keine erkannt",
+        "personen": "2 Personen in Uniform mit Fernglas"
+      },
+      "bild": {
+        "datei": "drohne/M29.webp",
+        "beschreibung": "Geländewagen hält am Rand einer Baumgruppe auf dem Feld nordwestlich der Ortschaft, zwei Soldaten beobachten mit Fernglas nach Westen.",
+        "sicht": [{"art": "baeume", "anteil": 0.5, "lage": "Ziel", "seite": "hinten"}],
+        "personen": [{"bei": "Z-04", "art": "soldat", "anzahl": 2, "versatz_m": [-4.6, 2.2]}]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN (ARGUS unsicher, Sensordaten und Ziel 2 bestätigen)",
+        "G2": "BEKÄMPFEN",
+        "G3": "FREIGABE"
+      },
+      "zweck": "Folgemeldung: Der zweite Tigr des Spähtrupps NORD hält unter Bäumen in Beobachtung. ARGUS ist so unsicher, dass es nichts empfiehlt (UNKLAR) – das Ziel ist trotzdem echt; Sensordaten und die erste Meldung des Spähtrupps bestätigen es. Gegenstück zum Traktor (N1): UNKLAR heißt weder harmlos noch gefährlich."
+    },
+    {
       "id": "M03",
       "t_s": 240,
       "ziele": ["Z-02"],
@@ -929,7 +1000,7 @@
       "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "warm (Motor im Leerlauf)",
-        "bewegung": "steht seit 15 s",
+        "bewegung": "steht seit 10 s",
         "spuren": "Radspuren von Osten",
         "kennzeichnung": "keine erkannt",
         "personen": "1 Person im Turmluk, Fernglas"
@@ -989,7 +1060,7 @@
     },
     {
       "id": "M06",
-      "t_s": 420,
+      "t_s": 390,
       "ziele": ["Z-08"],
       "phase": 2,
       "argus": {"klasse": "KPz T-72", "konfidenz": 91, "empfehlung": "BEKÄMPFEN"},
@@ -1002,7 +1073,7 @@
       },
       "bild": {
         "datei": "drohne/M06.webp",
-        "beschreibung": "Kampfpanzer im Feld nördlich der Ortschaft, fährt nach Westen auf die Brücke zu.",
+        "beschreibung": "Kampfpanzer im Feld nordöstlich der Ortschaft, fährt nach Westen auf die Brücke zu.",
         "sicht": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
@@ -1010,7 +1081,7 @@
     },
     {
       "id": "M07",
-      "t_s": 455,
+      "t_s": 450,
       "ziele": ["Z-09", "Z-10", "Z-11"],
       "phase": 2,
       "argus": {"klasse": "SPz BMP-2", "konfidenz": 87, "empfehlung": "BEKÄMPFEN", "einzeln": [87, 85, 82]},
@@ -1023,7 +1094,7 @@
       },
       "bild": {
         "datei": "drohne/M07.webp",
-        "beschreibung": "Drei Schützenpanzer halten gestaffelt im Feld hinter dem Kampfpanzer.",
+        "beschreibung": "Zwei Schützenpanzer halten gestaffelt im Feld hinter dem Kampfpanzer, ein dritter schließt auf.",
         "sicht": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
@@ -1056,8 +1127,35 @@
       "zweck": "Schlüsselfall Attrappe. Sie gehört zur Täuschung der Gefechtsaufklärung: Ein Feindpanzer westlich des Bachs, also scheinbar schon durchgebrochen, soll das eigene Feuer herauslocken. Die Information liegt nur bei G1 in den Sensordaten."
     },
     {
+      "id": "M30",
+      "t_s": 560,
+      "ziele": ["Z-37"],
+      "phase": 2,
+      "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 86, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "warm (Motor im Leerlauf)",
+        "bewegung": "steht seit 20 s",
+        "spuren": "Radspuren von Norden",
+        "kennzeichnung": "keine erkannt",
+        "personen": "1 Person im Turmluk, Fernglas"
+      },
+      "bild": {
+        "datei": "drohne/M30.webp",
+        "beschreibung": "Spähpanzer steht an der Nordstraße am Nordrand der Ortschaft zwischen zwei Häusern, Turmluk offen, Blick nach Westen.",
+        "sicht": [],
+        "zustand": {"Z-37": "luk_offen"},
+        "personen": [{"bei": "Z-37", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN",
+        "G2": "BEKÄMPFEN (LM: Ortschaft, PzAbw außerhalb des Einsatzbereichs)",
+        "G3": "FREIGABE"
+      },
+      "zweck": "Vorgeschobener Beobachter der Feindartillerie am Nordrand der Ortschaft: echtes Ziel, wegen der Ortschaft nur LM (R3), die PzAbw reicht nicht so weit. Füllt die Pause zwischen Attrappe und Rückzug."
+    },
+    {
       "id": "M09",
-      "t_s": 600,
+      "t_s": 615,
       "ziele": ["Z-09", "Z-10"],
       "phase": 2,
       "folge_von": "M07",
@@ -1158,7 +1256,7 @@
     },
     {
       "id": "M13",
-      "t_s": 870,
+      "t_s": 855,
       "ziele": ["Z-30", "Z-31", "Z-32"],
       "phase": 4,
       "argus": {"klasse": "KPz T-72", "konfidenz": 91, "empfehlung": "BEKÄMPFEN", "einzeln": [91, 90, 88]},
@@ -1171,7 +1269,7 @@
       },
       "bild": {
         "datei": "drohne/M13.webp",
-        "beschreibung": "Drei Kampfpanzer gestaffelt im offenen Feld nordöstlich der Ortschaft, fahren nach Westen.",
+        "beschreibung": "Drei Kampfpanzer fahren gestaffelt vom Feldweg Nordost ins offene Feld, Richtung Westen.",
         "sicht": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
@@ -1303,20 +1401,20 @@
     },
     {
       "id": "M19",
-      "t_s": 1140,
+      "t_s": 1155,
       "ziele": ["Z-20"],
       "phase": 4,
       "argus": {"klasse": "KPz T-72", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
-        "waerme": "heiß (Motor, fährt)",
-        "bewegung": "nach West, ca. 15 km/h",
+        "waerme": "heiß (Motor läuft)",
+        "bewegung": "steht seit 10 s",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
         "personen": "–"
       },
       "bild": {
         "datei": "drohne/M19.webp",
-        "beschreibung": "Kampfpanzer fährt zwischen Ortschaft und Schule nach Westen, das Schulgelände am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
+        "beschreibung": "Kampfpanzer steht an der Brücke ELSTER Ost südlich der Straße, das Schulgelände am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
         "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}],
         "ausschnitt_m": 140,
         "versatz_m": [10, 22]
@@ -1359,7 +1457,7 @@
       "argus": {"klasse": "KPz T-72", "konfidenz": 94, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "Motor aus, Turm warm",
-        "bewegung": "Fahrzeug steht; 3 Personen stehen daneben",
+        "bewegung": "steht seit 80 s",
         "spuren": "rechte Kette abgesprungen",
         "kennzeichnung": "weißes Tuch (Person)",
         "personen": "3 ohne Waffen neben dem Fahrzeug, Hände erhoben, eine schwenkt ein weißes Tuch"
@@ -1458,26 +1556,26 @@
       "t_s": 1390,
       "ziele": ["Z-23"],
       "phase": 5,
-      "argus": {"klasse": "EloKa-Fahrzeug", "konfidenz": 74, "empfehlung": "PRÜFEN", "hinweis": "teilverdeckt"},
+      "argus": {"klasse": "Ziel unbekannt", "konfidenz": 38, "empfehlung": "UNKLAR", "hinweis": "Bildstörung"},
       "sensor": {
-        "waerme": "warm (Generator)",
+        "waerme": "warm (Generator läuft, Mast mit Sendeteil warm)",
         "bewegung": "keine",
         "spuren": "Radspuren",
         "kennzeichnung": "keine erkannt",
         "personen": "–",
-        "bildalter_s": 6
+        "bildalter_s": 18
       },
       "bild": {
         "datei": "drohne/M25.webp",
-        "beschreibung": "Lkw mit Antennenmast im Feld östlich der Ortschaft. Bildrauschen und Streifen: Der Datenlink ist gestört.",
-        "sicht": [{"art": "stoerung", "anteil": 0.5, "lage": "ganzes Bild"}]
+        "beschreibung": "Kaum zu erkennen: ein Fahrzeug mit Mast im Feld östlich der Ortschaft. Starkes Bildrauschen und Streifen, das Bild ist 18 s alt: Der Datenlink ist stark gestört.",
+        "sicht": [{"art": "stoerung", "anteil": 0.85, "lage": "ganzes Bild"}]
       },
       "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)",
+        "G1": "ANNEHMEN (ARGUS weiß es nicht; Wärmebild zeigt Generator und warmen Sendemast: EloKa)",
         "G2": "BEKÄMPFEN (Mörser zulässig)",
         "G3": "FREIGABE"
       },
-      "zweck": "Bildstörung durch den Störsender selbst: ARGUS wird unsicher, das Ziel ist echt."
+      "zweck": "Der Störsender stört den Datenlink so stark, dass ARGUS nichts mehr erkennt: „Ziel unbekannt“ mit niedriger Konfidenz. Das Ziel ist echt; nur die Sensordaten der Aufklärung zeigen, was dort steht."
     },
     {
       "id": "M26",
@@ -1826,12 +1924,12 @@
             "typ": "spaehpz_brdm2",
             "pos": [707, 58],
             "hdg": 102,
-            "bis_s": 186.2,
+            "bis_s": 194.2,
             "gruppe": "V1-1–2",
             "bewegung": {
               "route": [
-                [0, 722, -10], [4.1, 716, 18], [8.1, 710, 45], [12.2, 704, 73], [16.2, 698, 100], [170, 698, 100],
-                [174, 704, 73], [178.1, 710, 45], [182.1, 716, 18], [186.2, 722, -10]
+                [0, 722, -10], [4.1, 716, 18], [8.1, 710, 45], [12.2, 704, 73], [16.2, 698, 100], [178, 698, 100],
+                [182, 704, 73], [186.1, 710, 45], [190.1, 716, 18], [194.2, 722, -10]
               ]
             },
             "gt": {
@@ -1845,10 +1943,10 @@
             "typ": "spaehpz_brdm2",
             "pos": [718, 10],
             "hdg": 102,
-            "bis_s": 186,
+            "bis_s": 180,
             "gruppe": "V1-1–2",
             "bewegung": {
-              "route": [[7, 722, -10], [12, 715, 24], [17, 707, 58], [176, 707, 58], [181, 715, 24], [186, 722, -10]]
+              "route": [[7, 722, -10], [12, 715, 24], [17, 707, 58], [170, 707, 58], [175, 715, 24], [180, 722, -10]]
             },
             "gt": {"kategorie": "feind", "text": "Spähpanzer BRDM-2, Spähtrupp Nordstraße.", "legitim": true}
           }
@@ -1880,7 +1978,7 @@
         "id": "V-2",
         "name": "Panzerzug Hauptstraße",
         "kurz": "3 T-72",
-        "dauer_s": 574,
+        "dauer_s": 585,
         "zweck": "Druck mit gepanzerten Zielen: Der Zug fährt auf der Hauptstraße ein und geht über 100 m südlich davon in Feuerstellung; Mörser und LM zulässig. Wird er nicht aufgehalten, bricht er nach fünf Minuten über die Furt durch.",
         "ziele": [
           {
@@ -1888,12 +1986,12 @@
             "typ": "kpz_t72",
             "pos": [907, 378],
             "hdg": 112,
-            "bis_s": 351.5,
+            "bis_s": 363.5,
             "gruppe": "V2-1–3",
             "bewegung": {
               "route": [
-                [0, 1010, 308], [3.9, 983, 312], [7.7, 957, 317], [11.6, 930, 321], [51.7, 880, 445], [300, 880, 445],
-                [339.8, 930, 322], [343.8, 957, 317], [347.6, 983, 312], [351.5, 1010, 308]
+                [0, 1010, 308], [3.9, 983, 312], [7.7, 957, 317], [11.6, 930, 321], [51.7, 880, 445], [312, 880, 445],
+                [351.8, 930, 322], [355.8, 957, 317], [359.6, 983, 312], [363.5, 1010, 308]
               ]
             },
             "gt": {
@@ -1907,12 +2005,12 @@
             "typ": "kpz_t72",
             "pos": [924, 355],
             "hdg": 100,
-            "bis_s": 346.7,
+            "bis_s": 352.7,
             "gruppe": "V2-1–3",
             "bewegung": {
               "route": [
                 [8, 1010, 308], [11.9, 983, 312], [15.7, 957, 317], [19.6, 930, 321], [54.9, 910, 437],
-                [300, 910, 437], [335, 930, 322], [339, 957, 317], [342.8, 983, 312], [346.7, 1010, 308]
+                [306, 910, 437], [341, 930, 322], [345, 957, 317], [348.8, 983, 312], [352.7, 1010, 308]
               ]
             },
             "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true}
@@ -1967,29 +2065,31 @@
               [557.2, 107, 426], [561.5, 77, 427], [565.7, 48, 429], [569.9, 19, 430], [574.1, -10, 432]
             ],
             "V2-2": [
-              [300, 910, 437], [319.8, 905, 360], [349.5, 870, 250], [364.2, 835, 205], [401.5, 690, 210],
-              [435, 560, 215], [466, 440, 225], [476.6, 415, 258], [485.6, 397, 288], [491.3, 380, 302],
-              [500.6, 360, 332], [518, 338, 396], [520.6, 339, 406], [524.8, 310, 410], [529, 281, 413],
-              [533.2, 252, 415], [537.4, 223, 418], [541.6, 194, 420], [545.8, 165, 422], [550, 136, 424],
-              [554.2, 107, 426], [558.5, 77, 427], [562.7, 48, 429], [566.9, 19, 430], [571.1, -10, 432]
+              [300, 910, 437], [308.0, 910, 437], [327.8, 905, 360], [357.5, 870, 250], [372.2, 835, 205],
+              [409.5, 690, 210], [443.0, 560, 215], [474.0, 440, 225], [484.6, 415, 258], [493.6, 397, 288],
+              [499.3, 380, 302], [508.6, 360, 332], [526.0, 338, 396], [528.6, 339, 406], [532.8, 310, 410],
+              [537.0, 281, 413], [541.2, 252, 415], [545.4, 223, 418], [549.6, 194, 420], [553.8, 165, 422],
+              [558.0, 136, 424], [562.2, 107, 426], [566.5, 77, 427], [570.7, 48, 429], [574.9, 19, 430],
+              [579.1, -10, 432]
             ],
             "V2-3": [
-              [300, 940, 429], [319.9, 905, 360], [349.6, 870, 250], [364.3, 835, 205], [401.6, 690, 210],
-              [435.1, 560, 215], [466.1, 440, 225], [476.7, 415, 258], [485.7, 397, 288], [491.4, 380, 302],
-              [500.7, 360, 332], [518.1, 338, 396], [520.7, 339, 406], [524.9, 310, 410], [529.1, 281, 413],
-              [533.3, 252, 415], [537.5, 223, 418], [541.7, 194, 420], [545.9, 165, 422], [550.1, 136, 424],
-              [554.3, 107, 426], [558.6, 77, 427], [562.8, 48, 429], [567, 19, 430], [571.2, -10, 432]
+              [300, 940, 429], [314.0, 940, 429], [333.9, 905, 360], [363.6, 870, 250], [378.3, 835, 205],
+              [415.6, 690, 210], [449.1, 560, 215], [480.1, 440, 225], [490.7, 415, 258], [499.7, 397, 288],
+              [505.4, 380, 302], [514.7, 360, 332], [532.1, 338, 396], [534.7, 339, 406], [538.9, 310, 410],
+              [543.1, 281, 413], [547.3, 252, 415], [551.5, 223, 418], [555.7, 194, 420], [559.9, 165, 422],
+              [564.1, 136, 424], [568.3, 107, 426], [572.6, 77, 427], [576.8, 48, 429], [581.0, 19, 430],
+              [585.2, -10, 432]
             ]
           },
-          "ueber_s": {"V2-1": 489.3, "V2-2": 486.3, "V2-3": 486.4}
+          "ueber_s": {"V2-1": 489.3, "V2-2": 494.3, "V2-3": 500.4}
         },
-        "nicht_einspielen": [[390, 435], [675, 1035]]
+        "nicht_einspielen": [[375, 435], [660, 1035]]
       },
       {
         "id": "V-3",
         "name": "SPz-Zug über die Felder Richtung Furt",
         "kurz": "3 BMP-2",
-        "dauer_s": 451,
+        "dauer_s": 461,
         "zweck": "Stehendes Ziel im Feld nahe der Ortschaft; nur LM zulässig. Wird es nicht aufgehalten, bricht es über die Furt durch.",
         "ziele": [
           {
@@ -2073,23 +2173,23 @@
               [450.4, -10, 432]
             ],
             "V3-2": [
-              [300, 610, 196], [321.5, 530, 220], [344.7, 440, 225], [355.3, 415, 258], [364.3, 397, 288],
-              [370, 380, 302], [379.3, 360, 332], [396.7, 338, 396], [399.3, 339, 406], [403.5, 310, 410],
-              [407.7, 281, 413], [411.9, 252, 415], [416.1, 223, 418], [420.3, 194, 420], [424.5, 165, 422],
-              [428.7, 136, 424], [432.9, 107, 426], [437.2, 77, 427], [441.4, 48, 429], [445.6, 19, 430],
-              [449.8, -10, 432]
+              [300, 610, 196], [306.0, 610, 196], [327.5, 530, 220], [350.7, 440, 225], [361.3, 415, 258],
+              [370.3, 397, 288], [376.0, 380, 302], [385.3, 360, 332], [402.7, 338, 396], [405.3, 339, 406],
+              [409.5, 310, 410], [413.7, 281, 413], [417.9, 252, 415], [422.1, 223, 418], [426.3, 194, 420],
+              [430.5, 165, 422], [434.7, 136, 424], [438.9, 107, 426], [443.2, 77, 427], [447.4, 48, 429],
+              [451.6, 19, 430], [455.8, -10, 432]
             ],
             "V3-3": [
-              [300, 620, 222], [323.1, 530, 220], [346.3, 440, 225], [356.9, 415, 258], [365.9, 397, 288],
-              [371.6, 380, 302], [380.9, 360, 332], [398.3, 338, 396], [400.9, 339, 406], [405.1, 310, 410],
-              [409.3, 281, 413], [413.5, 252, 415], [417.7, 223, 418], [421.9, 194, 420], [426.1, 165, 422],
-              [430.3, 136, 424], [434.5, 107, 426], [438.8, 77, 427], [443, 48, 429], [447.2, 19, 430],
-              [451.4, -10, 432]
+              [300, 620, 222], [310.0, 620, 222], [333.1, 530, 220], [356.3, 440, 225], [366.9, 415, 258],
+              [375.9, 397, 288], [381.6, 380, 302], [390.9, 360, 332], [408.3, 338, 396], [410.9, 339, 406],
+              [415.1, 310, 410], [419.3, 281, 413], [423.5, 252, 415], [427.7, 223, 418], [431.9, 194, 420],
+              [436.1, 165, 422], [440.3, 136, 424], [444.5, 107, 426], [448.8, 77, 427], [453.0, 48, 429],
+              [457.2, 19, 430], [461.4, -10, 432]
             ]
           },
-          "ueber_s": {"V3-1": 365.6, "V3-2": 365.0, "V3-3": 366.6}
+          "ueber_s": {"V3-1": 365.6, "V3-2": 371.0, "V3-3": 376.6}
         },
-        "nicht_einspielen": [[810, 1155]]
+        "nicht_einspielen": [[795, 1155]]
       },
       {
         "id": "V-4",
@@ -2103,10 +2203,10 @@
             "typ": "moerser_trupp",
             "pos": [862, 45],
             "hdg": 225,
-            "ab_s": 0,
-            "personen": [{"art": "soldat", "anzahl": 5, "pos": [864, 48]}],
+            "personen": [{"art": "soldat", "anzahl": 5, "pos": [864, 48], "ab_s": 14}],
             "gt": {"kategorie": "feind", "text": "Mörsertrupp am Waldrand MARDER, zweite Stellung.", "legitim": true},
-            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 4, "salve": 4, "pause_s": 24}]
+            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 4, "salve": 4, "pause_s": 24}],
+            "bewegung": {"route": [[0, 862, -10], [14, 862, 45]]}
           }
         ],
         "meldungen": [
@@ -2144,12 +2244,12 @@
             "typ": "lkw_ural",
             "pos": [905, 163],
             "hdg": 171,
-            "bis_s": 212.7,
+            "bis_s": 218.7,
             "gruppe": "V5-1–2",
             "bewegung": {
               "route": [
-                [0, 1010, 150], [3.1, 984, 153], [6.3, 957, 155], [9.5, 931, 159], [12.7, 905, 163], [200, 905, 163],
-                [203.2, 931, 159], [206.4, 957, 155], [209.6, 984, 153], [212.7, 1010, 150]
+                [0, 1010, 150], [3.1, 984, 153], [6.3, 957, 155], [9.5, 931, 159], [12.7, 905, 163], [206, 905, 163],
+                [209.2, 931, 159], [212.4, 957, 155], [215.6, 984, 153], [218.7, 1010, 150]
               ]
             },
             "gt": {
@@ -2163,12 +2263,12 @@
             "typ": "lkw_ural",
             "pos": [933, 158],
             "hdg": 173,
-            "bis_s": 215.2,
+            "bis_s": 209.2,
             "gruppe": "V5-1–2",
             "bewegung": {
               "route": [
-                [6, 1010, 150], [9.1, 984, 153], [12.2, 958, 155], [15.2, 933, 158], [206, 933, 158],
-                [209.1, 959, 155], [212.1, 984, 153], [215.2, 1010, 150]
+                [6, 1010, 150], [9.1, 984, 153], [12.2, 958, 155], [15.2, 933, 158], [200, 933, 158],
+                [203.1, 959, 155], [206.1, 984, 153], [209.2, 1010, 150]
               ]
             },
             "gt": {"kategorie": "feind", "text": "Lkw Ural mit Munition.", "legitim": true}
@@ -2334,6 +2434,10 @@
     {
       "schritt": "2.1 Durchbruch und Animationen",
       "text": "Durchbruch (szenario.durchbruch, verstaerkungen.gruppen[].durchbruch): Ist bis t_s kein Fahrzeug der Gruppe zerstört oder außer Gefecht, schreibt der Host `durchbruch {gruppe, t_ab, durch}` ins Protokoll; die Welt des Teams ersetzt dann die Route jedes Fahrzeugs ab t_s durch die Durchbruch-Route (bis_s = Ausfahrt am Westrand). I-13 kommt 10 s nach dem ersten Fahrzeug über dem Bach (ueber_s), wenn es dann noch steht. Feuer (ziele[].feuert): Schussrhythmus je Fahrzeug, die Karte und das Live-Drohnenbild zeigen Mündungsblitz und Abschussrauch; fahrende Fahrzeuge wirbeln Staub auf (aus der Route)."
+    },
+    {
+      "schritt": "2.2 Kontakte, Abstände, Meldedichte",
+      "text": "Kontakt (C1): Jedes Fahrzeug, das ARGUS (noch) nicht gemeldet hat oder dessen Meldung bei der Rolle (noch) nicht angekommen ist, steht auf den Karten von Aufklärung, Zielprüfung und Führung ab der Einfahrt als unklassifizierter Kontakt (APP-6 unbekannt), nicht im Wald und nie bei ungemeldeten Zielen. Fahrzeuge einer Meldung, die sich vom Zeichen entfernen, bekommen ein eigenes kleines Zeichen; getroffene ein eigenes durchgestrichenes am Wrack (C8). Meldelücken höchstens 60 s (C3), sonst `pause_gewollt` an der folgenden Meldung. LM trifft nur das bekämpfte Fahrzeug (C6)."
     }
   ],
   "auswertung": {
@@ -2353,25 +2457,25 @@
         "zweck": "Hält am Ostufer in Feuerstellung; die 2. Kp zerschlägt ihn bis 10:17:55 (H-05–H-07). Nur wenn das ausbliebe, setzte er über die Furt.",
         "routen": {
           "Z-30": [
-            [1160, 462, 250], [1172.3, 415, 258], [1181.3, 397, 288], [1187, 380, 302], [1196.3, 360, 332],
-            [1213.7, 338, 396], [1216.3, 339, 406], [1220.5, 310, 410], [1224.7, 281, 413], [1228.9, 252, 415],
-            [1233.1, 223, 418], [1237.3, 194, 420], [1241.5, 165, 422], [1245.7, 136, 424], [1249.9, 107, 426],
-            [1254.2, 77, 427], [1258.4, 48, 429], [1262.6, 19, 430], [1266.8, -10, 432]
+            [1160, 462, 250], [1280.0, 462, 250], [1292.3, 415, 258], [1301.3, 397, 288], [1307.0, 380, 302],
+            [1316.3, 360, 332], [1333.7, 338, 396], [1336.3, 339, 406], [1340.5, 310, 410], [1344.7, 281, 413],
+            [1348.9, 252, 415], [1353.1, 223, 418], [1357.3, 194, 420], [1361.5, 165, 422], [1365.7, 136, 424],
+            [1369.9, 107, 426], [1374.2, 77, 427], [1378.4, 48, 429], [1382.6, 19, 430], [1386.8, -10, 432]
           ],
           "Z-31": [
-            [1160, 470, 276], [1174.9, 415, 258], [1183.9, 397, 288], [1189.6, 380, 302], [1198.9, 360, 332],
-            [1216.3, 338, 396], [1218.9, 339, 406], [1223.1, 310, 410], [1227.3, 281, 413], [1231.5, 252, 415],
-            [1235.7, 223, 418], [1239.9, 194, 420], [1244.1, 165, 422], [1248.3, 136, 424], [1252.5, 107, 426],
-            [1256.8, 77, 427], [1261, 48, 429], [1265.2, 19, 430], [1269.4, -10, 432]
+            [1160, 470, 276], [1280.0, 470, 276], [1294.9, 415, 258], [1303.9, 397, 288], [1309.6, 380, 302],
+            [1318.9, 360, 332], [1336.3, 338, 396], [1338.9, 339, 406], [1343.1, 310, 410], [1347.3, 281, 413],
+            [1351.5, 252, 415], [1355.7, 223, 418], [1359.9, 194, 420], [1364.1, 165, 422], [1368.3, 136, 424],
+            [1372.5, 107, 426], [1376.8, 77, 427], [1381.0, 48, 429], [1385.2, 19, 430], [1389.4, -10, 432]
           ],
           "Z-32": [
-            [1160, 476, 302], [1179.3, 415, 258], [1188.3, 397, 288], [1194, 380, 302], [1203.3, 360, 332],
-            [1220.7, 338, 396], [1223.3, 339, 406], [1227.5, 310, 410], [1231.7, 281, 413], [1235.9, 252, 415],
-            [1240.1, 223, 418], [1244.3, 194, 420], [1248.5, 165, 422], [1252.7, 136, 424], [1256.9, 107, 426],
-            [1261.2, 77, 427], [1265.4, 48, 429], [1269.6, 19, 430], [1273.8, -10, 432]
+            [1160, 476, 302], [1280.0, 476, 302], [1299.3, 415, 258], [1308.3, 397, 288], [1314.0, 380, 302],
+            [1323.3, 360, 332], [1340.7, 338, 396], [1343.3, 339, 406], [1347.5, 310, 410], [1351.7, 281, 413],
+            [1355.9, 252, 415], [1360.1, 223, 418], [1364.3, 194, 420], [1368.5, 165, 422], [1372.7, 136, 424],
+            [1376.9, 107, 426], [1381.2, 77, 427], [1385.4, 48, 429], [1389.6, 19, 430], [1393.8, -10, 432]
           ]
         },
-        "ueber_s": {"Z-30": 1182.0, "Z-31": 1184.6, "Z-32": 1189.0}
+        "ueber_s": {"Z-30": 1302.0, "Z-31": 1304.6, "Z-32": 1309.0}
       },
       {
         "id": "D-02",
@@ -2382,25 +2486,25 @@
         "zweck": "Folgt dem Panzerzug; die 2. Kp zerschlägt ihn bis 10:19:10 (H-08–H-10).",
         "routen": {
           "Z-33": [
-            [1165, 402, 291], [1174.1, 415, 258], [1183.1, 397, 288], [1188.8, 380, 302], [1198.1, 360, 332],
-            [1215.5, 338, 396], [1218.1, 339, 406], [1222.3, 310, 410], [1226.5, 281, 413], [1230.7, 252, 415],
-            [1234.9, 223, 418], [1239.1, 194, 420], [1243.3, 165, 422], [1247.5, 136, 424], [1251.7, 107, 426],
-            [1256, 77, 427], [1260.2, 48, 429], [1264.4, 19, 430], [1268.6, -10, 432]
+            [1165, 402, 291], [1285.0, 402, 291], [1294.1, 415, 258], [1303.1, 397, 288], [1308.8, 380, 302],
+            [1318.1, 360, 332], [1335.5, 338, 396], [1338.1, 339, 406], [1342.3, 310, 410], [1346.5, 281, 413],
+            [1350.7, 252, 415], [1354.9, 223, 418], [1359.1, 194, 420], [1363.3, 165, 422], [1367.5, 136, 424],
+            [1371.7, 107, 426], [1376.0, 77, 427], [1380.2, 48, 429], [1384.4, 19, 430], [1388.6, -10, 432]
           ],
           "Z-34": [
-            [1165, 488, 240], [1184.3, 415, 258], [1193.3, 397, 288], [1199, 380, 302], [1208.3, 360, 332],
-            [1225.7, 338, 396], [1228.3, 339, 406], [1232.5, 310, 410], [1236.7, 281, 413], [1240.9, 252, 415],
-            [1245.1, 223, 418], [1249.3, 194, 420], [1253.5, 165, 422], [1257.7, 136, 424], [1261.9, 107, 426],
-            [1266.2, 77, 427], [1270.4, 48, 429], [1274.6, 19, 430], [1278.8, -10, 432]
+            [1165, 488, 240], [1285.0, 488, 240], [1304.3, 415, 258], [1313.3, 397, 288], [1319.0, 380, 302],
+            [1328.3, 360, 332], [1345.7, 338, 396], [1348.3, 339, 406], [1352.5, 310, 410], [1356.7, 281, 413],
+            [1360.9, 252, 415], [1365.1, 223, 418], [1369.3, 194, 420], [1373.5, 165, 422], [1377.7, 136, 424],
+            [1381.9, 107, 426], [1386.2, 77, 427], [1390.4, 48, 429], [1394.6, 19, 430], [1398.8, -10, 432]
           ],
           "Z-35": [
-            [1165, 494, 214], [1188.3, 415, 258], [1197.3, 397, 288], [1203, 380, 302], [1212.3, 360, 332],
-            [1229.7, 338, 396], [1232.3, 339, 406], [1236.5, 310, 410], [1240.7, 281, 413], [1244.9, 252, 415],
-            [1249.1, 223, 418], [1253.3, 194, 420], [1257.5, 165, 422], [1261.7, 136, 424], [1265.9, 107, 426],
-            [1270.2, 77, 427], [1274.4, 48, 429], [1278.6, 19, 430], [1282.8, -10, 432]
+            [1165, 494, 214], [1285.0, 494, 214], [1308.3, 415, 258], [1317.3, 397, 288], [1323.0, 380, 302],
+            [1332.3, 360, 332], [1349.7, 338, 396], [1352.3, 339, 406], [1356.5, 310, 410], [1360.7, 281, 413],
+            [1364.9, 252, 415], [1369.1, 223, 418], [1373.3, 194, 420], [1377.5, 165, 422], [1381.7, 136, 424],
+            [1385.9, 107, 426], [1390.2, 77, 427], [1394.4, 48, 429], [1398.6, 19, 430], [1402.8, -10, 432]
           ]
         },
-        "ueber_s": {"Z-33": 1183.8, "Z-34": 1194.0, "Z-35": 1198.0}
+        "ueber_s": {"Z-33": 1303.8, "Z-34": 1314.0, "Z-35": 1318.0}
       },
       {
         "id": "D-03",
@@ -2411,20 +2515,21 @@
         "zweck": "Ist bis 10:21:40 keines der beiden Fahrzeuge bekämpft, stoßen sie über die Brücke vor: Folge, wenn ein Team die Meldungen M11 und M14 liegen lässt.",
         "routen": {
           "Z-14": [
-            [1300, 530, 352], [1308.5, 533, 385], [1312.8, 503, 388], [1317.1, 473, 391], [1321.5, 443, 395],
-            [1325.8, 413, 398], [1330.3, 382, 402], [1334.6, 352, 405], [1338.9, 322, 408], [1343.2, 292, 411],
-            [1347.6, 262, 415], [1351.9, 232, 417], [1356.2, 202, 420], [1360.7, 171, 422], [1365, 141, 424],
-            [1369.3, 111, 426], [1373.6, 81, 427], [1378.1, 50, 429], [1382.4, 20, 430], [1386.7, -10, 432]
+            [1300, 530, 352], [1318.0, 530, 352], [1326.5, 533, 385], [1330.8, 503, 388], [1335.1, 473, 391],
+            [1339.5, 443, 395], [1343.8, 413, 398], [1348.3, 382, 402], [1352.6, 352, 405], [1356.9, 322, 408],
+            [1361.2, 292, 411], [1365.6, 262, 415], [1369.9, 232, 417], [1374.2, 202, 420], [1378.7, 171, 422],
+            [1383.0, 141, 424], [1387.3, 111, 426], [1391.6, 81, 427], [1396.1, 50, 429], [1400.4, 20, 430],
+            [1404.7, -10, 432]
           ],
           "Z-13": [
-            [1300, 641, 336], [1307.1, 647, 371], [1311.5, 617, 376], [1315.7, 588, 380], [1320, 558, 383],
-            [1324.3, 528, 385], [1328.6, 498, 388], [1333, 468, 392], [1337.3, 438, 395], [1341.5, 409, 399],
-            [1345.8, 379, 402], [1350.1, 349, 405], [1354.5, 319, 409], [1358.8, 289, 412], [1363.1, 259, 415],
-            [1367.3, 230, 418], [1371.6, 200, 420], [1375.9, 170, 422], [1380.2, 140, 424], [1384.5, 110, 426],
-            [1388.8, 80, 427], [1393.1, 50, 429], [1397.4, 20, 430], [1401.7, -10, 432]
+            [1300, 641, 336], [1306.0, 641, 336], [1313.1, 647, 371], [1317.5, 617, 376], [1321.7, 588, 380],
+            [1326.0, 558, 383], [1330.3, 528, 385], [1334.6, 498, 388], [1339.0, 468, 392], [1343.3, 438, 395],
+            [1347.5, 409, 399], [1351.8, 379, 402], [1356.1, 349, 405], [1360.5, 319, 409], [1364.8, 289, 412],
+            [1369.1, 259, 415], [1373.3, 230, 418], [1377.6, 200, 420], [1381.9, 170, 422], [1386.2, 140, 424],
+            [1390.5, 110, 426], [1394.8, 80, 427], [1399.1, 50, 429], [1403.4, 20, 430], [1407.7, -10, 432]
           ]
         },
-        "ueber_s": {"Z-14": 1323.3, "Z-13": 1338.4}
+        "ueber_s": {"Z-14": 1341.3, "Z-13": 1344.4}
       },
       {
         "id": "D-04",
@@ -2471,13 +2576,13 @@
         "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-18": [
-            [1443, 480, 404], [1446.4, 478, 391], [1450.7, 448, 394], [1455.2, 417, 398], [1459.5, 387, 401],
-            [1464, 356, 405], [1468.3, 326, 408], [1472.8, 295, 411], [1477.1, 265, 414], [1481.6, 234, 417],
-            [1485.9, 204, 420], [1490.4, 173, 422], [1494.7, 143, 424], [1499.2, 112, 426], [1503.5, 82, 427],
-            [1508, 51, 429], [1512.3, 21, 430], [1516.8, -10, 432]
+            [1443, 480, 404], [1447.0, 480, 404], [1450.4, 478, 391], [1454.7, 448, 394], [1459.2, 417, 398],
+            [1463.5, 387, 401], [1468.0, 356, 405], [1472.3, 326, 408], [1476.8, 295, 411], [1481.1, 265, 414],
+            [1485.6, 234, 417], [1489.9, 204, 420], [1494.4, 173, 422], [1498.7, 143, 424], [1503.2, 112, 426],
+            [1507.5, 82, 427], [1512.0, 51, 429], [1516.3, 21, 430], [1520.8, -10, 432]
           ]
         },
-        "ueber_s": {"Z-18": 1453.3}
+        "ueber_s": {"Z-18": 1457.3}
       },
       {
         "id": "D-07",

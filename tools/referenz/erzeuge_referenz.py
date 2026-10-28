@@ -37,9 +37,9 @@ def main():
         p = L.position(haupt, m["t_s"])
         for t in (m["t_s"], m["t_s"] + 60, m["t_s"] + 150):
             for wid in d["wirkmittel"]:
-                ok, verst, getr = L.pruefe_wirkmittel(d, p, wid, t_s=t)
+                ok, verst, getr = L.pruefe_wirkmittel(d, p, wid, t_s=t, ziel=haupt["id"])
                 faelle.append({
-                    "meldung": m["id"], "pos": list(p), "t": t, "wm": wid, "zulaessig": ok,
+                    "meldung": m["id"], "ziel": haupt["id"], "pos": list(p), "t": t, "wm": wid, "zulaessig": ok,
                     "verstoesse": [list(regel_code(v)) for v in verst],
                     "getroffen": sorted(f"{g[0]}|{g[2]}" for g in getr),
                 })

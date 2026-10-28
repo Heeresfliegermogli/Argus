@@ -375,9 +375,12 @@ GT_TEXT = {"feind": "Feind", "verbuendet": "verbündet", "zivil": "zivil", "gesc
 SCHUTZ = ("zivil", "geschuetzt", "verbuendet", "besatzung_ergibt_sich", "ausser_gefecht", "sanitaet")
 
 
-def pruefe_wirkmittel(d, ziel_pos, wm_id, t_s=0, ausgenommen=(), zerstoert=None):
+def pruefe_wirkmittel(d, ziel_pos, wm_id, t_s=0, ausgenommen=(), zerstoert=None, ziel=None):
     """Prüft ein Wirkmittel gegen die Einsatzregeln an einer Position und ermittelt, was dort zur Zeit t
     im Wirkradius liegt.
+
+    Seit 2.2 (C6): Ein Wirkmittel mit `nur_zielfahrzeug` (LM) trifft von den Fahrzeugen nur das bekämpfte (ziel); andere
+    Fahrzeuge im Wirkradius bleiben stehen, Personen im Wirkradius sind betroffen.
 
     Liefert (zulaessig: bool, verstoesse: [str], getroffen: [(ziel-id, was, kategorie)]).
     Geprüft werden nur Regeln, die die Karte kennt (Zonen, eigene Kräfte, Einsatzbereich,
@@ -408,10 +411,12 @@ def pruefe_wirkmittel(d, ziel_pos, wm_id, t_s=0, ausgenommen=(), zerstoert=None)
         v.append(f"außerhalb Einsatzbereich ({b['text']})")
     getroffen = []
     zerstoert = zerstoert or {}
+    nur_ziel = bool(wm.get("nur_zielfahrzeug"))
     for z in alle_ziele(sz):
         if z["id"] in ausgenommen:
             continue
-        if vorhanden(z, t_s) and zerstoert.get(z["id"], 1e9) > t_s and dist(ziel_pos, position(z, t_s)) <= r:
+        fahrzeug_trifft = not nur_ziel or z["id"] == ziel
+        if fahrzeug_trifft and vorhanden(z, t_s) and zerstoert.get(z["id"], 1e9) > t_s and dist(ziel_pos, position(z, t_s)) <= r:
             kat = gt_bei(z, t_s)["kategorie"]
             getroffen.append((z["id"], "Fahrzeug" if kat != "attrappe" else "Attrappe", kat))
         for p in z.get("personen", []) or []:
@@ -458,7 +463,7 @@ def wirkung(d, ziele_ids, wm_id, t_freigabe, zerstoert=None):
     dazu das bekämpfte Fahrzeug selbst, wenn es dann noch im Raum ist. Verstöße (R2, R3, Einsatzbereich) gelten am
     Einschlagort. Liefert dict(t, pos, ziel, zulaessig, verstoesse, getroffen)."""
     t_e, pos, zid = einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)
-    ok, verst, getr = pruefe_wirkmittel(d, pos, wm_id, t_s=t_e, zerstoert=zerstoert)
+    ok, verst, getr = pruefe_wirkmittel(d, pos, wm_id, t_s=t_e, zerstoert=zerstoert, ziel=zid)
     z0 = next(z for z in alle_ziele(d["szenario"]) if z["id"] == zid)
     if vorhanden(z0, t_e) and (zerstoert or {}).get(zid, 1e9) > t_e \
             and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
@@ -681,4 +686,44 @@ def schuesse(ziel):
                     out.append((round(ts, 2), k))
                     k += 1
             t += f.get("salve", 1) * f["takt_s"] + f.get("pause_s", 0)
+    return out
+
+
+# ----------------------------------------------------------------------------- Abstände (seit 2.2)
+def zu_nah(ziele, dauer, halt=None, schwelle=15.0, schritt=1.0):
+    """Paare von Fahrzeugen, die sich näher als `schwelle` kommen: [(a, b, kleinster Abstand, Zeitpunkt)].
+
+    Positionen im Raster `schritt` (Spielzeit 0 … dauer); halt = {ziel: Zeit der Zerstörung} – ein Wrack bleibt an der
+    Trefferstelle. Zwei Wracks zählen nicht. Mit numpy, damit die Szenario-Prüfung schnell bleibt."""
+    import numpy as np
+    halt = halt or {}
+    ts = np.arange(0, dauer + 1e-9, schritt)
+    daten = []
+    for z in ziele:
+        h = halt.get(z["id"])
+        xs = np.full(len(ts), np.nan)
+        ys = np.full(len(ts), np.nan)
+        wrack = np.zeros(len(ts), dtype=bool)
+        for i, t in enumerate(ts):
+            if h is not None and t >= h:
+                p = position(z, h)
+                wrack[i] = True
+            elif vorhanden(z, t):
+                p = position(z, t)
+            else:
+                continue
+            xs[i], ys[i] = p
+        daten.append((z["id"], xs, ys, wrack))
+    out = []
+    for i in range(len(daten)):
+        a, xa, ya, wa = daten[i]
+        for j in range(i + 1, len(daten)):
+            b, xb, yb, wb = daten[j]
+            d = np.hypot(xa - xb, ya - yb)
+            d[wa & wb] = np.nan
+            if np.all(np.isnan(d)):
+                continue
+            k = int(np.nanargmin(d))
+            if d[k] < schwelle:
+                out.append((a, b, float(d[k]), float(ts[k])))
     return out
