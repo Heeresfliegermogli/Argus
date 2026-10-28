@@ -552,6 +552,23 @@ label.wahl.klein input { margin-top: 0; }
 .kmarke.zurueck { border-style: dashed; background: #e6edf5; color: #1f3d5c; }
 .kmarke.wirkung { background: #fffbf2; color: #b5281f; border-color: #b5281f; cursor: default; font-size: 12.5px; padding: 0 6px; }
 @keyframes kmarke-neu { 0% { box-shadow: 0 0 0 0 rgba(233, 170, 59, .95); } 100% { box-shadow: 0 0 0 11px rgba(233, 170, 59, 0); } }
+/* C4 (2.2): neue Meldung – Marke leuchtet länger, Ring am Zeichen, Pfeil am Rand, wenn das Zeichen außerhalb liegt */
+.kmarke.frisch { animation: kmarke-neu 1s ease-out 5; box-shadow: 0 0 0 2px var(--argus); }
+.karte-pulse { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+.karte-puls { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--argus);
+  animation: karte-puls 1.25s ease-out 4; opacity: 0; }
+@keyframes karte-puls { 0% { width: 18px; height: 18px; opacity: 1; } 100% { width: 92px; height: 92px; opacity: 0; } }
+.karte-pfeile { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+.karte-pfeil { position: absolute; left: 0; top: 0; pointer-events: auto; display: inline-flex; align-items: center; gap: 5px;
+  font: 700 12.5px/1.2 var(--schrift); padding: 2px 8px 2px 6px; border-radius: 12px; border: 1.5px solid #1d252c;
+  background: #fffaf0; color: #1d252c; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+.karte-pfeil.frisch { background: var(--argus); animation: kmarke-neu 1s ease-out 5; }
+.karte-pfeil-spitze { width: 0; height: 0; border-left: 9px solid #1d252c; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+  transform: rotate(var(--winkel, 0rad)); }
+.eingang-neu { font-weight: 700; color: #2a1d05; background: var(--argus); border-radius: 10px; padding: 2px 9px; font-size: 14px;
+  white-space: nowrap; animation: eingang-neu .9s ease-out 3; }
+@keyframes eingang-neu { 0% { box-shadow: 0 0 0 0 rgba(233, 170, 59, .95); } 100% { box-shadow: 0 0 0 9px rgba(233, 170, 59, 0); } }
+.eingang-zahl.puls { animation: eingang-neu .9s ease-out 3; }
 
 /* Fenster am Ort (G1: Drohnenbild) mit Linie zum Ziel */
 .karte-fenster { position: absolute; left: 0; top: 0; z-index: 3; border: 2px solid var(--rollenfarbe); border-radius: 6px; overflow: hidden;

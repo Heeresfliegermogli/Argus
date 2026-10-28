@@ -69,6 +69,8 @@ export interface KartenBild {
   rechtecke: Map<string, Rechteck>;
   /** Bildschirmpunkt des Zeichens je Marke und der gewählten Meldung */
   punkte: Map<string, Punkt>;
+  /** Seit 2.2 (C4): Bildschirmpunkt der Marken, deren Zeichen außerhalb des Ausschnitts liegt (Pfeil am Rand) */
+  aussen: Map<string, Punkt>;
   breite: number;
   hoehe: number;
 }
@@ -164,6 +166,7 @@ export class Lagekarte {
   private marken = new Map<string, string>();
   private bildRechtecke = new Map<string, Rechteck>();
   private bildPunkte = new Map<string, Punkt>();
+  private bildAussen = new Map<string, Punkt>();
   private hintergrund: Hintergrund;
   private grundStufe = -1;
 
@@ -415,6 +418,15 @@ export class Lagekarte {
 
   /** Fokus, der wartet, bis die Leinwand ihre Größe hat (Replay der Auswertung öffnet die Karte mit Ausschnitt). */
   private fokusAusstehend: { pos: Punkt; faktor: number } | null = null;
+
+  /** Ausschnitt auf die Marke einer Meldung verschieben, Zoom bleibt (C4: neue Meldung außerhalb des Ausschnitts). */
+  zeigeMarke(meldung: string): boolean {
+    const o = this.lb.objekte.find((x) => x.meldung === meldung || x.meldungen?.includes(meldung));
+    const pos = o && (this.posJetzt.get(o.id) ?? o.pos);
+    if (!pos) return false;
+    this.zeigeAuf(pos, this.zoomFaktor);
+    return true;
+  }
 
   /** Auf einen Punkt zoomen (z. B. gewählte Meldung). Hat die Leinwand noch keine Größe, gilt der Fokus ab der ersten. */
   zeigeAuf(pos: Punkt, faktor = 3): void {
@@ -738,6 +750,7 @@ export class Lagekarte {
     const uhr = this.uhr?.() ?? null;
     this.bildRechtecke = new Map();
     this.bildPunkte = new Map();
+    this.bildAussen = new Map();
     this.wirkungen(d, this.lb.wirkungen);
     this.vorschauZeichnen(d);
     this.staub = [];
@@ -745,7 +758,7 @@ export class Lagekarte {
     this.personen(u, this.lb.personen, uhr?.t ?? null);
     if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe, this.staub);
     for (const [k, t] of this.texte) if (!this.benutzt.has(k) && !this.benutztStatisch.has(k)) t.visible = false;
-    this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, breite: this.breite, hoehe: this.hoehe });
+    this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, aussen: this.bildAussen, breite: this.breite, hoehe: this.hoehe });
   }
 
   /** Stil einer Marke (Platzhalter in der Größe des HTML-Knopfs, unsichtbar). */
@@ -1074,6 +1087,10 @@ export class Lagekarte {
       if (pos[0] < -5 || pos[1] < -5 || pos[0] > k.breite + 5 || pos[1] > k.hoehe + 5) continue;
       this.posJetzt.set(o.id, pos);
       const [x, y] = this.bs(pos);
+      if (x < 0 || y < 0 || x > this.breite || y > this.hoehe) {
+        // Marke außerhalb des Ausschnitts (hineingezoomt): Pfeil am Rand (C4)
+        for (const id of o.meldungen ?? []) if (this.marken.has(id)) this.bildAussen.set(id, [x, y]);
+      }
       if (x < -40 || y < -40 || x > this.breite + 40 || y > this.hoehe + 40) continue;
       // fahrende Fahrzeuge wirbeln Staub auf (seit 2.1); die Wolken zeichnet die Effektebene unter den Fahrzeugen
       if (o.bahn && t !== null) {

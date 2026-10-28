@@ -18,7 +18,7 @@ const NOTIZEN: Record<number, { t: number; fall?: string; text: string }[]> = {
   0: [
     { t: 650, fall: "S1", text: "G1 hat Sensordaten nicht aufgeklappt, nur auf die 93 % geschaut." },
     { t: 1240, fall: "S4", text: "G3: „Die 3. Kp stirbt, wir müssen schießen.“ ARGUS-Warnung vorgelesen, trotzdem frei." },
-    { t: 1340, fall: "S3", text: "Fast-Track an seit 10:14:30, G3 hat I-04 erst nach dem Einschlag gelesen." },
+    { t: 1340, fall: "S3", text: "Fast-Track an seit 14:30, G3 hat I-04 erst nach dem Einschlag gelesen." },
   ],
   1: [
     { t: 560, fall: "S1", text: "G1 laut: „Kalt und keine Spuren – das ist eine Attrappe.“" },

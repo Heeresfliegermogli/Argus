@@ -97,7 +97,7 @@ function texte(inh: Inhalte): Record<KartenRolle, RollenText> {
       folien: [
         {
           titel: "Meldung auswählen",
-          text: <>Jede ARGUS-Meldung steht als Marke auf der Karte, z. B. <M>Ziel 3</M>. Die älteste öffnet sich von selbst; ein Klick auf eine andere Marke öffnet diese. Oben rechts steht, wie viele warten.</>,
+          text: <>Jede ARGUS-Meldung steht als Marke auf der Karte, z. B. <M>Ziel 3</M>. Die älteste öffnet sich von selbst; ein Klick auf eine andere Marke öffnet diese. Oben rechts steht, wie viele warten. Gelbe Kontakte: Bewegung ohne Meldung bei dir.</>,
           bild: <div class="mini-reihe"><MiniKarte marke="Ziel 3" /><MiniEingang n={2} /></div>,
         },
         {
@@ -128,7 +128,7 @@ function texte(inh: Inhalte): Record<KartenRolle, RollenText> {
       folien: [
         {
           titel: "Zielmeldung auswählen",
-          text: <>Ziele, die die Aufklärung angenommen hat, stehen als Marke auf der Karte, z. B. <M>Ziel 3</M>. Die älteste öffnet sich von selbst; oben rechts steht, wie viele warten.</>,
+          text: <>Ziele, die die Aufklärung angenommen hat, stehen als Marke auf der Karte, z. B. <M>Ziel 3</M>. Die älteste öffnet sich von selbst; oben rechts steht, wie viele warten. Gelbe Kontakte: Bewegung ohne Meldung bei dir.</>,
           bild: <div class="mini-reihe"><MiniKarte marke="Ziel 3" /><MiniEingang n={1} /></div>,
         },
         {
@@ -162,7 +162,7 @@ function texte(inh: Inhalte): Record<KartenRolle, RollenText> {
       folien: [
         {
           titel: "Empfehlung auswählen",
-          text: <>Empfehlungen der Zielprüfung stehen als Marke auf der Karte (<M>Ziel 3 · ⚠</M> = mit Regelwarnung). Die älteste öffnet sich von selbst; oben rechts steht, wie viele warten.</>,
+          text: <>Empfehlungen der Zielprüfung stehen als Marke auf der Karte (<M>Ziel 3 · ⚠</M> = mit Regelwarnung). Die älteste öffnet sich von selbst; oben rechts steht, wie viele warten. Gelbe Kontakte: Bewegung ohne Meldung bei dir.</>,
           bild: <div class="mini-reihe"><MiniKarte marke="Ziel 3 · ⚠" /><MiniEingang n={1} /></div>,
         },
         {

@@ -17,6 +17,16 @@ Pfeiltext der 2. Kompanie; im Umkreis von 15 m um die Brücke wachsen keine Baum
 Neue Effekte `abschussrauch` und `staub`, `muendungsblitz_steil` größer (feindliche Mörser feuern sichtbar, fahrende
 Fahrzeuge wirbeln Staub auf). Die Häuser lassen auch die Durchbruch-Routen über Brücke und Furt frei.
 
+Szenario 2.2 (28.10.2026, Änderungen C1, C3, C9): Kartenpaket und alle Drohnenbilder neu erzeugt. Neu die Bilder **M28** (Tigr
+fährt zur Brücke), **M29** (Tigr unter Bäumen, 2 Soldaten mit Fernglas) und **M30** (BRDM-2 Z-37 an der Nordstraße in der
+Ortschaft); neue Lage der Meldungen M06, M07, M09, M13 und M19 (gleichmäßigere Meldedichte) und geänderte Halte (Z-02 nördlich
+der Straße an der Brücke, Z-04, Z-05 unter der Baumgruppe östlich des Feldwegs, Wrack Z-11 nördlich der Fahrbahn). **M25** mit
+85 % Bildstörung; das Rauschen der Bildstörung liegt jetzt in Blöcken zu 2 × 2 Bildpunkten (wie Kompressionsartefakte), damit
+das Standbild im Budget von 150 KB bleibt (139 KB). Die Mörsertrupps fahren auf Lkw ein: Katalog `sprite_fahrt`
+(`lkw_ural.png`) – Kontrollkarte und Live-Drohnenbild zeigen während der Fahrt den Lkw, in Stellung die Stellung. Die Häuser
+lassen die neuen Routen frei (Z-19 über die Hauptstraße in den Hof RABE, Z-26 und Z-37 über die Nordstraße); keine Route
+streift mehr ein Gebäude der Kartendatei.
+
 ## Inhalt von `public/assets/`
 
 | Pfad | Inhalt | Größe |
@@ -28,7 +38,7 @@ Fahrzeuge wirbeln Staub auf). Die Häuser lassen auch die Durchbruch-Routen übe
 | `karte/topo_050.webp` | schematische Karte (Wald, Wege, Bach, Gebäude), ruhiger Hintergrund für G2/G3 | 103 KB |
 | `karte/lagekarte_beschriftet.webp` | Luftbild mit Raster, PQ, Zonen „Schule“ und „Ortschaft“ (seit 2.1 ohne Kürzel), allen Namen (Vorschau, Plenum, Druck) | 353 KB |
 | `karte/gelaende.json` | erzeugte Einzelhäuser als Vektoren | 3 KB |
-| `drohne/M01.webp … M27.webp` | Standbild je ARGUS-Meldung, 1024 × 640, mit Sichtstörungen und Wracks | 14–141 KB |
+| `drohne/M01.webp … M30.webp` | Standbild je ARGUS-Meldung, 1024 × 640, mit Sichtstörungen und Wracks | 15–143 KB |
 | `drohne/V1-M1.webp … V5-M1.webp` | Standbild je Verstärkung, nur mit deren Fahrzeugen | 23–54 KB |
 | `drohne/ebenen/<Meldung>-boden/-kronen/-stoerung.webp` | Ebenen des Live-Drohnenbilds je Meldung und Verstärkung (Kronen und Störung mit Alphakanal, fehlen, wenn leer) | 15–88 KB je Meldung |
 | `drohne/ebenen/kamera.webp` | gemeinsame Kamera-Ebene (Vignette) für alle Live-Drohnenbilder | 8 KB |
@@ -49,9 +59,9 @@ Größenbudget (Leitplanke „schnell ladbar am Dienst-PC“, geprüft in `tests
 `gen_assets.py` prüft am Ende (Exit-Code 1, wenn etwas fehlt), `tests/assets.test.ts` (Schritt 5) und
 `tests/assets_ebenen.test.ts` (Schritt 5b) prüfen in jedem Build (GitHub Actions):
 
-- **Schritt 5:** jedes Ziel im Drehbuch hat Bild und Sprite (jetzt 47 Ziele einschließlich der
+- **Schritt 5:** jedes Ziel im Drehbuch hat Bild und Sprite (seit 2.2 48 Ziele einschließlich der
   Verstärkungen), jede Meldung ein Drohnenbild, Sichtstörungen gemessen, Schlüsselfälle frei.
-- **Schritt 5b – jede Meldung und Verstärkung hat ihre Ebenen:** 27 Meldungen und 5 Verstärkungen mit
+- **Schritt 5b – jede Meldung und Verstärkung hat ihre Ebenen:** 30 Meldungen und 5 Verstärkungen mit
   Standbild, Boden, Kronen und Störung (wo vorhanden); jedes Hauptziel steht in der Fahrzeugliste, jeder
   Sprite und jede Figur liegt im Atlas. Die Ebenen messen dieselbe Verdeckung wie das Standbild (≤ 5 Prozentpunkte).
 - **Schlüsselfälle bleiben erkennbar** – im Standbild und in den Ebenen: S2 Rotes Kreuz 0 % verdeckt,
@@ -101,7 +111,7 @@ Live-Vorschauen (`Live_M12.webp` …) ab.
   (`drohne[M].wracks[].staerke` wird kleiner, wenn der Rauch ein Ziel, das Rote Kreuz oder Personen verdecken würde).
   In der Live-Lage zeichnet die Oberfläche `feuer` und `rauch` (Zuordnung `effekte.zuordnung.wrack`).
 - `folge: ausser_gefecht` → Sprite mit abgesprungener Kette, kein Brand (Z-24 ab 19:30).
-- Betroffene Bilder: M12, M16 und M19 (Z-11), M21 (Z-32, Z-24 (Kette ab)).
+- Betroffene Bilder: M12 und M16 (Z-11), M21 (Z-32, Z-24 (Kette ab)).
 - `manifest.ziele[Z].hintergrund` nennt Zeit und Folge, `objekte[].zustand` den Zustand im Bild.
 
 ## Verstärkungen
@@ -144,38 +154,41 @@ Wracks und Zustände im Bild, Standbild, Ebenen (Boden/Kronen/Störung).
 
 | Meldung | Fall | Ziel | Uhr | Ausschnitt | Sicht | Ziel verdeckt | Personen / Prüfung | Wrack | Standbild | Ebenen (B/K/S) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| M01 |  | Z-01, Z-02 | 00:20 | 120 m | – | 0/0 % |  | – | 41 KB | 30/16/– KB |
-| M02 |  | Z-03, Z-04 | 01:15 | 120 m | Wolke rechts 45 → 44 % (Ziel 12 → 12 %) | 0/12 % |  | – | 29 KB | 25/18/30 KB |
-| M03 |  | Z-02 | 04:00 | 110 m | – | 0 % | 1 Soldat | – | 35 KB | 25/11/– KB |
-| M04 | N3 | Z-05 | 04:45 | 110 m | Bäume Ziel 60 → 60 % | 60 % |  | – | 37 KB | 27/11/2 KB |
-| M05 |  | Z-06 | 05:30 | 110 m | Rauch Ziel 25 → 25 % | 25 % | 6 Soldat | – | 59 KB | 12/46/6 KB |
-| M06 |  | Z-08 | 07:00 | 110 m | – | 0 % |  | – | 48 KB | 31/25/– KB |
-| M07 |  | Z-09–11 | 07:35 | 120 m | – | 0/0/0 % |  | – | 51 KB | 33/23/– KB |
-| M08 | S1 | Z-07 | 08:30 | 110 m | – | 0 % |  | – | 41 KB | 14/44/– KB |
-| M09 |  | Z-09, Z-10 | 10:00 | 120 m | Rauch links 55 → 55 % (Ziel 40 → 41 %) | 41/14 % |  | – | 23 KB | 30/9/32 KB |
-| M10 |  | Z-29 | 11:15 | 110 m | Tarnnetz Ziel 70 → 72 % | 72 % | 2 Soldat | – | 43 KB | 21/22/3 KB |
-| M11 |  | Z-13 | 12:15 | 110 m | – | 0 % |  | – | 33 KB | 24/8/– KB |
-| M12 | S2 | Z-12 | 13:15 | 130 m | Dunst links 20 → 20 % | 0 % | Rotes Kreuz verdeckt 0 %, 2 Sanitäter | Z-11 | 34 KB | 25/31/15 KB |
-| M13 |  | Z-30–32 | 14:30 | 120 m | – | 0/0/0 % |  | – | 37 KB | 27/3/– KB |
-| M14 |  | Z-14 | 15:15 | 110 m | Rauch links 40 → 40 % | 0 % |  | – | 25 KB | 28/–/21 KB |
-| M15 |  | Z-33–35 | 16:00 | 122 m | – | 0/0/0 % |  | – | 43 KB | 30/17/– KB |
-| M16 |  | Z-18 | 16:45 | 110 m | Rauch Ziel 30 → 30 % | 30 % |  | Z-11 | 39 KB | 25/30/3 KB |
-| M17 | N4 | Z-36 | 17:35 | 130 m | – | 0 % |  | – | 29 KB | 20/3/– KB |
-| M18 | S4 | Z-19 | 18:15 | 60 m | Rauch Ziel 15 → 13 % | 13 % | 5 Soldat, 4 Zivil | – | 14 KB | 8/–/6 KB |
-| M19 |  | Z-20 | 19:00 | 140 m | Rauch rechts 35 → 35 % | 0 % |  | Z-11 | 29 KB | 26/28/31 KB |
-| M20 | S3 | Z-15–17 | 20:15 | 120 m | – | 0/0/0 % |  | – | 38 KB | 29/5/– KB |
-| M21 | N2 | Z-24 | 20:45 | 70 m | – | 0 % | 3 Besatzung (Tuch) | Z-32, Z-24 (Kette ab) | 27 KB | 21/–/– KB |
-| M22 |  | Z-21 | 21:20 | 110 m | Bäume Ziel 55 → 59 % | 59 % |  | – | 51 KB | 12/53/3 KB |
-| M23 | S4 | Z-19 | 22:00 | 125 m | Rauch Ziel 20 → 19 % | 19 % | 5 Soldat, 4 Zivil | – | 31 KB | 22/10/5 KB |
-| M24 | N1 | Z-22 | 22:30 | 110 m | Wolke oben links 30 → 30 % | 0 % | 3 Zivil | – | 24 KB | 15/2/44 KB |
-| M25 |  | Z-23 | 23:10 | 110 m | Bildstörung ganzes Bild 50 → 50 % | 0 % |  | – | 141 KB | 17/29/2 KB |
-| M26 |  | Z-25 | 23:45 | 110 m | Unschärfe Ziel 30 → 30 % | 0 % | 5 Soldat, 4 Zivil | – | 34 KB | 25/–/– KB |
-| M27 |  | Z-26 | 24:20 | 110 m | Wolke Mitte 60 → 59 % (Ziel 80 → 80 %) | 80 % |  | – | 26 KB | 19/34/35 KB |
-| V1-M1 |  | V1-1, V1-2 | +10 s | 120 m | – | 0/0 % |  | – | 35 KB | 19/34/– KB |
-| V2-M1 |  | V2-1–3 | +30 s | 120 m | – | 0/0/0 % |  | – | 42 KB | 30/13/– KB |
-| V3-M1 |  | V3-1–3 | +130 s | 120 m | – | 0/0/0 % |  | – | 49 KB | 33/10/– KB |
-| V4-M1 |  | V4-1 | +30 s | 110 m | Rauch Ziel 20 → 20 % | 20 % | 5 Soldat | – | 54 KB | 14/43/5 KB |
-| V5-M1 |  | V5-1, V5-2 | +35 s | 120 m | Dunst oben 20 → 20 % | 0/0 % | 4 Soldat | – | 23 KB | 17/15/17 KB |
+| M01 |  | Z-01, Z-02 | 00:20 | 120 m | – | 0/0 % |  | – | 39 KB | 30/3/– KB |
+| M02 |  | Z-03, Z-04 | 01:15 | 120 m | Wolke rechts 45 → 44 % (Ziel 12 → 12 %) | 0/12 % |  | – | 28 KB | 26/10/31 KB |
+| M28 |  | Z-03 | 02:10 | 110 m | – | 0 % |  | – | 40 KB | 28/19/– KB |
+| M29 |  | Z-04 | 03:05 | 110 m | Bäume Ziel 50 → 48 % | 48 % | 2 Soldat | – | 42 KB | 29/27/2 KB |
+| M03 |  | Z-02 | 04:00 | 110 m | – | 0 % | 1 Soldat | – | 37 KB | 26/11/– KB |
+| M04 | N3 | Z-05 | 04:45 | 110 m | Bäume Ziel 60 → 58 % | 58 % |  | – | 40 KB | 27/23/2 KB |
+| M05 |  | Z-06 | 05:30 | 110 m | Rauch Ziel 25 → 23 % | 23 % | 6 Soldat | – | 56 KB | 12/41/6 KB |
+| M06 |  | Z-08 | 06:30 | 110 m | – | 0 % |  | – | 38 KB | 28/–/– KB |
+| M07 |  | Z-09–11 | 07:30 | 120 m | – | 0/0/0 % |  | – | 56 KB | 34/36/– KB |
+| M08 | S1 | Z-07 | 08:30 | 110 m | – | 0 % |  | – | 43 KB | 15/43/– KB |
+| M30 |  | Z-37 | 09:20 | 110 m | – | 0 % | 1 Soldat | – | 34 KB | 19/31/– KB |
+| M09 |  | Z-09, Z-10 | 10:15 | 120 m | Rauch links 55 → 55 % (Ziel 40 → 40 %) | 40/29 % |  | – | 28 KB | 32/31/33 KB |
+| M10 |  | Z-29 | 11:15 | 110 m | Tarnnetz Ziel 70 → 72 % | 72 % | 2 Soldat | – | 45 KB | 21/25/3 KB |
+| M11 |  | Z-13 | 12:15 | 110 m | – | 0 % |  | – | 35 KB | 25/8/– KB |
+| M12 | S2 | Z-12 | 13:15 | 130 m | Dunst links 20 → 20 % | 0 % | Rotes Kreuz verdeckt 0 %, 2 Sanitäter | Z-11 | 38 KB | 25/44/15 KB |
+| M13 |  | Z-30–32 | 14:15 | 120 m | – | 0/0/0 % |  | – | 28 KB | 20/–/– KB |
+| M14 |  | Z-14 | 15:15 | 110 m | Rauch links 40 → 40 % | 0 % |  | – | 26 KB | 29/–/22 KB |
+| M15 |  | Z-33–35 | 16:00 | 122 m | – | 0/0/0 % |  | – | 43 KB | 31/14/– KB |
+| M16 |  | Z-18 | 16:45 | 110 m | Rauch Ziel 30 → 30 % | 30 % |  | Z-11 | 40 KB | 26/29/3 KB |
+| M17 | N4 | Z-36 | 17:35 | 130 m | – | 0 % |  | – | 33 KB | 21/17/– KB |
+| M18 | S4 | Z-19 | 18:15 | 60 m | Rauch Ziel 15 → 14 % | 14 % | 5 Soldat, 4 Zivil | – | 15 KB | 9/3/8 KB |
+| M19 |  | Z-20 | 19:15 | 140 m | Rauch rechts 35 → 35 % | 0 % |  | – | 30 KB | 27/29/32 KB |
+| M20 | S3 | Z-15–17 | 20:15 | 120 m | – | 0/0/0 % |  | – | 39 KB | 29/3/– KB |
+| M21 | N2 | Z-24 | 20:45 | 70 m | – | 0 % | 3 Besatzung (Tuch) | Z-32, Z-24 (Kette ab) | 28 KB | 22/–/– KB |
+| M22 |  | Z-21 | 21:20 | 110 m | Bäume Ziel 55 → 59 % | 59 % |  | – | 54 KB | 12/59/3 KB |
+| M23 | S4 | Z-19 | 22:00 | 125 m | Rauch Ziel 20 → 19 % | 19 % | 5 Soldat, 4 Zivil | – | 38 KB | 23/25/4 KB |
+| M24 | N1 | Z-22 | 22:30 | 110 m | Wolke oben links 30 → 30 % | 0 % | 3 Zivil | – | 30 KB | 16/24/45 KB |
+| M25 |  | Z-23 | 23:10 | 110 m | Bildstörung ganzes Bild 85 → 85 % | 0 % |  | – | 143 KB | 18/3/2 KB |
+| M26 |  | Z-25 | 23:45 | 110 m | Unschärfe Ziel 30 → 30 % | 0 % | 5 Soldat, 4 Zivil | – | 35 KB | 26/2/– KB |
+| M27 |  | Z-26 | 24:20 | 110 m | Wolke Mitte 60 → 59 % (Ziel 80 → 80 %) | 80 % |  | – | 27 KB | 20/35/36 KB |
+| V1-M1 |  | V1-1, V1-2 | +10 s | 120 m | – | 0/0 % |  | – | 36 KB | 20/32/– KB |
+| V2-M1 |  | V2-1–3 | +30 s | 120 m | – | 0/0/0 % |  | – | 41 KB | 31/–/– KB |
+| V3-M1 |  | V3-1–3 | +130 s | 120 m | – | 0/0/0 % |  | – | 50 KB | 34/10/– KB |
+| V4-M1 |  | V4-1 | +30 s | 110 m | Rauch Ziel 20 → 18 % | 18 % | 5 Soldat | – | 55 KB | 15/45/5 KB |
+| V5-M1 |  | V5-1, V5-2 | +35 s | 120 m | Dunst oben 20 → 20 % | 0/0 % | 4 Soldat | – | 20 KB | 17/–/17 KB |
 
 Bildzeitstempel = Spielzeit t_s als Spieluhr mm:ss (seit B4, 26.10.; Feld `uhr` im Manifest). Positionen und Fahrtrichtung sind die Lage zur Meldezeit (Route aus
 dem Szenario, nach einem Treffer an der Trefferstelle). Andere Fahrzeuge, die zur selben Zeit im

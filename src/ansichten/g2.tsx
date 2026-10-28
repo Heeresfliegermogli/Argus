@@ -125,7 +125,7 @@ export function G2Ansicht(p: { s: Sicht }) {
       </section>
 
       <aside class="stapel meldungsfeld">
-        <EingangLeiste anzahl={neu.length} zurueck={offen.length - neu.length} testid="g2-offen" />
+        <EingangLeiste anzahl={neu.length} zurueck={offen.length - neu.length} testid="g2-offen" offen={neu.map((x) => x.id)} name={(id) => zielName(inh, z, id, false)} />
         <Panel titel={m && ms ? <>Zielmeldung <span class="leise" style="font-weight:500">· {uhrzeit(start, ms.erschienen.t_s)}{m.folge_von ? ` · Folgemeldung zu ${zielName(inh, z, m.folge_von, false)}` : ""}</span></> : "Zielmeldung"}
           klasse="flach" testid="offene-meldung" meldung={ms?.id}
           rechts={ms?.beobachten ? <span class="badge info">zurückgestellt</span> : ms?.fastTrack ? <span class="badge warn">Fast-Track</span> : null}>

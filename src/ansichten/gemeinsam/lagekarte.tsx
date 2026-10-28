@@ -19,7 +19,7 @@ import { type Lagebild, lagebildSchluessel } from "../../kern/lagebild";
 import type { MeldungsStand } from "../../kern/zustand";
 // Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt.
 import type { Hintergrund, KartenBild, KartenInfo, KartenUhr, Lagekarte, Rechteck, Vorschau } from "../../karte/lagekarte";
-import { MODIFIKATOR_ATTRAPPE, sidc } from "../../karte/zeichen";
+import { MODIFIKATOR_ATTRAPPE, ZEICHEN_KONTAKT, sidc } from "../../karte/zeichen";
 
 /** Marke über der Karte: Meldung (Knopf) oder geplante Wirkung (Uhrzeit des Einschlags). */
 export interface KartenMarke {
@@ -185,7 +185,9 @@ function LegendeLeiste(p: { art: Legende }) {
     return (
       <div class="karte-legende">
         <span><MiniZeichen code={sidc("H", "EVAT")} />Zielmeldung (ARGUS-Klasse)</span>
+        <span><MiniZeichen code={sidc("H", "UCA", { groesse: "D" })} />Zug</span>
         <span><MiniZeichen code={sidc("U", "EV")} />ARGUS unsicher</span>
+        <span title="Bewegung erkannt, (noch) keine Meldung bei dir"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
         <span style="opacity:.5"><MiniZeichen code={sidc("H", "EVAI")} />erledigt</span>
         <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />freigegeben, Einschlag folgt</span>
         <span><b style="color:#7a1b14">✕</b>bekämpft</span>
@@ -249,6 +251,12 @@ export function LagekarteAnsicht(p: {
 
   // Marken und Fenster: nach jedem Bild der Karte direkt verschieben (kein Neuzeichnen der Ansicht)
   const markenEl = useRef(new Map<string, HTMLElement>());
+  // C4 (2.2): neue Meldungen deutlich ankündigen – Ring am Zeichen, Pfeil am Rand, wenn das Zeichen außerhalb liegt
+  const pulsEl = useRef(new Map<string, HTMLElement>());
+  const pfeilEl = useRef(new Map<string, HTMLElement>());
+  const gesehenRef = useRef<Set<string> | null>(null);
+  const [frisch, setFrisch] = useState<string[]>([]);
+  const zeitgeber = useRef<ReturnType<typeof setTimeout>[]>([]);
   const fensterEl = useRef<HTMLDivElement>(null);
   const eckeEl = useRef<HTMLDivElement>(null);
   const linieEl = useRef<SVGLineElement>(null);
@@ -271,6 +279,26 @@ export function LagekarteAnsicht(p: {
         el.style.transform = stil;
         el.style.visibility = r ? "visible" : "hidden";
       }
+    }
+    for (const [id, el] of pulsEl.current) {
+      const q = b.punkte.get(id);
+      el.style.visibility = q ? "visible" : "hidden";
+      if (q) el.style.transform = `translate(${Math.round(q[0])}px, ${Math.round(q[1])}px) translate(-50%, -50%)`;
+    }
+    for (const [id, el] of pfeilEl.current) {
+      const q = b.aussen.get(id);
+      if (!q || b.rechtecke.has(id)) {
+        if (el.style.visibility !== "hidden") el.style.visibility = "hidden";
+        continue;
+      }
+      // Pfeil am Kartenrand in Richtung des Zeichens (Mitte → Punkt, an den Rand geklemmt)
+      const cx = b.breite / 2, cy = b.hoehe / 2;
+      const dx = q[0] - cx, dy = q[1] - cy;
+      const f = Math.min((b.breite / 2 - 34) / Math.max(1e-6, Math.abs(dx)), (b.hoehe / 2 - 34) / Math.max(1e-6, Math.abs(dy)));
+      const x = cx + dx * Math.min(1, f), y = cy + dy * Math.min(1, f);
+      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -50%)`;
+      el.style.setProperty("--winkel", `${Math.atan2(dy, dx)}rad`);
+      el.style.visibility = "visible";
     }
     const f = fensterRef.current;
     const fe = fensterEl.current;
@@ -387,6 +415,27 @@ export function LagekarteAnsicht(p: {
   useEffect(() => {
     if (bereit) karte.current?.setzeMarken(new Map((p.marken ?? []).map((m) => [m.id, m.mass])));
   }, [bereit, mSchl]);
+  // neue Meldungen (C4): was beim ersten Bild schon da ist, gilt als gesehen; jede spätere neue Marke leuchtet 5 s auf
+  useEffect(() => {
+    const ids = (p.marken ?? []).filter((m) => m.art !== "wirkung").map((m) => m.id);
+    if (!bereit) return;
+    if (!gesehenRef.current) {
+      gesehenRef.current = new Set(ids);
+      return;
+    }
+    const neu = ids.filter((id) => !gesehenRef.current!.has(id));
+    for (const id of neu) gesehenRef.current.add(id);
+    if (!neu.length) return;
+    setFrisch((alt) => [...alt.filter((x) => !neu.includes(x)), ...neu]);
+    zeitgeber.current.push(setTimeout(() => setFrisch((alt) => alt.filter((x) => !neu.includes(x))), 5000));
+  }, [bereit, mSchl]);
+  useEffect(() => () => zeitgeber.current.forEach(clearTimeout), []);
+  // die gewählte Meldung liegt außerhalb des Ausschnitts (hineingezoomt): Karte dorthin schieben (C4)
+  useEffect(() => {
+    const g = p.gewaehlt;
+    const b = letztesBild.current;
+    if (bereit && g && b && !b.punkte.has(g) && b.aussen.has(g)) karte.current?.zeigeMarke(g);
+  }, [bereit, p.gewaehlt]);
   const wege = (p.fahrwege ?? []).filter((w) => wegeAn || w.vorschau);
   const wSchl = wege.map((w) => `${w.id}:${w.art}:${w.punkte.length}`).join("|");
   useEffect(() => {
@@ -466,6 +515,26 @@ export function LagekarteAnsicht(p: {
           <circle ref={punktEl} r="5" style="visibility:hidden" />
         </svg>
       )}
+      {frisch.length > 0 && (
+        <div class="karte-pulse" aria-hidden="true">
+          {frisch.map((id) => (
+            <span key={id} class="karte-puls" data-puls={id} style="visibility:hidden"
+              ref={(el) => { if (el) pulsEl.current.set(id, el); else pulsEl.current.delete(id); }} />
+          ))}
+        </div>
+      )}
+      {(p.marken?.length ?? 0) > 0 && (
+        <div class="karte-pfeile">
+          {p.marken!.filter((m) => m.art !== "wirkung").map((m) => (
+            <button type="button" key={m.id} class={`karte-pfeil ${frisch.includes(m.id) ? "frisch" : ""}`} data-pfeil={m.id} style="visibility:hidden"
+              title={`${m.mass} liegt außerhalb des Ausschnitts – hinschieben`}
+              ref={(el) => { if (el) pfeilEl.current.set(m.id, el); else pfeilEl.current.delete(m.id); }}
+              onClick={() => { karte.current?.zeigeMarke(m.id); m.onClick?.(); }}>
+              <i class="karte-pfeil-spitze" aria-hidden="true" />{m.mass}
+            </button>
+          ))}
+        </div>
+      )}
       {(p.marken?.length ?? 0) > 0 && (
         <div class="karte-marken" data-testid="karten-marken">
           {p.marken!.map((m) => {
@@ -488,7 +557,7 @@ export function LagekarteAnsicht(p: {
             // Lage setzt aufBild direkt; das style-Attribut bleibt gleich, damit Preact sie nicht zurücksetzt
             const stil = "visibility:hidden";
             return m.onClick
-              ? <button type="button" key={m.id} ref={reg} class={`kmarke ${m.art}`} style={stil} data-meldung={m.id} title={m.titel}
+              ? <button type="button" key={m.id} ref={reg} class={`kmarke ${m.art}${frisch.includes(m.id) ? " frisch" : ""}`} style={stil} data-meldung={m.id} title={m.titel}
                 aria-pressed={m.art === "gewaehlt"} onClick={m.onClick}>{m.text}</button>
               : <span key={m.id} ref={reg} class={`kmarke ${m.art}`} style={stil} data-marke={m.id} title={m.titel}>{m.text}</span>;
           })}

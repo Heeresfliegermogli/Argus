@@ -205,6 +205,8 @@ describe("Firebase-Regeln: echter Testlauf mit zwei Teams", () => {
     const slv = new Sicht(sl, sl.spiel(id0)!, "sl");
     await bis(() => g1.stand.geladen && g2.stand.geladen);
     const sende = (x: Sicht, ...args: Parameters<Sicht["senden"]>) => ids.push(x.senden(...args));
+    // Spielzeit wie im Drehbuch (seit 2.2 fährt der Mörser Z-19 erst später vom Kartenrand in den Hof RABE)
+    sende(slv, "uhr", { befehl: "setzen", t_s: 1095 });
     for (const m of ["M18", "M20"]) sende(slv, "meldung_ausloesen", { meldung: m });
     sende(slv, "inject_ausloesen", { inject: "I-04" });
     sende(slv, "uhr", { befehl: "tempo", tempo: 5 });

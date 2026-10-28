@@ -62,10 +62,10 @@ Je Durchgang:
 
 1. **3 min Einweisung:** Die Person blättert die Folien ihrer Rolle durch (oder überspringt sie) und schaut sich die
    Ansicht an. SL startet gleichzeitig die Uhr (▶ Start, Tempo ×1). Um 00:20 kommt Ziel 1, um 00:30 I-01 an die
-   Führung, um 01:15 Ziel 2, um 04:00 Ziel 3.
-2. **Aufgaben** (unten) vorlesen, eine nach der anderen; Aufklärung ab 04:00 (dann liegen Ziel 1–3 vor). Keine
-   Hilfe. Zeit und Auffälligkeiten notieren.
-3. Um ca. 07:00 anhalten (❚❚ Anhalten).
+   Führung, um 01:15 Ziel 2, um 02:10 Ziel 3 (seit Szenario 2.2 etwa eine Meldung pro Minute).
+2. **Aufgaben** (unten) vorlesen, eine nach der anderen; Aufklärung ab 02:10 (dann liegen Ziel 1–3 vor), die SL hält
+   die Uhr dafür an. Keine Hilfe. Zeit und Auffälligkeiten notieren.
+3. Um ca. 05:00 anhalten (❚❚ Anhalten).
 
 ## Aufgaben
 
@@ -110,9 +110,12 @@ Zusätzlich beim Bedientest beobachten (ohne Aufgabe):
 - Findet die Aufklärung neue Meldungen auf der Karte, wenn das Drohnenbild offen ist? Verschiebt sie es von selbst?
 - Versteht die Aufklärung, dass die Drohne dem Ziel folgt? Wird ein Fahrzeug einer Gruppe zerstört, schwenkt das
   Bild nach ca. 0,5 s mit kurzem Rauschen („◌ AUSRICHTUNG …“) zum nächsten – in Phase 1 kommt das nicht vor, erst
-  ab ca. 18:30 (Ziel 15).
+  ab ca. 18:30 (Ziel 18).
+- Seit 2.2: Erkennen die Personen die gelben **Kontakte** (Bewegung ohne Meldung bei der Rolle) und dass ein Kontakt
+  zur Zielmeldung wird, sobald die Meldung bei ihnen ankommt? Fällt ihnen die Ankündigung neuer Meldungen auf
+  („neu: Ziel n“ im Eingang, Ring am Zeichen)?
 - Nach den Aufgaben, nur mit Unbeteiligten, die nicht am Lehrgang teilnehmen: SL setzt die Spielzeit auf 18:20, die
-  Aufklärung öffnet Ziel 18 (S4) – erkennt sie mit der Lupe die zwei Kinder? Im Live-Bild sind sie kleinere Figuren
+  Aufklärung öffnet Ziel 21 (S4) – erkennt sie mit der Lupe die zwei Kinder? Im Live-Bild sind sie kleinere Figuren
   in Draufsicht.
 
 ## Bewertung

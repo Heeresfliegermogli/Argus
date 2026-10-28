@@ -80,16 +80,76 @@ export function Konfidenz(p: { wert: number }) {
  * Kopf des Meldungsfelds (Schritt 6b): Eingang nur als Zahl – keine Liste, kein Verlauf. Die Meldungen selbst
  * stehen als Marken auf der Karte.
  */
-export function EingangLeiste(p: { anzahl: number; zurueck?: number; testid: string; titel?: string; children?: ComponentChildren }) {
+export function EingangLeiste(p: {
+  anzahl: number; zurueck?: number; testid: string; titel?: string; children?: ComponentChildren;
+  /** Seit 2.2 (C4): offene Meldungen in Eingangsreihenfolge – kommt eine neue dazu, steht 6 s „neu: Ziel n“ statt „Eingang“ */
+  offen?: string[];
+  name?: (id: string) => string;
+}) {
+  const neu = useNeueMeldung(p.offen);
   return (
     <div class="eingang-leiste">
       <Schritt nr={1} />
-      <span class="eingang-titel">{p.titel ?? "Eingang"}</span>
-      <span class={`eingang-zahl ${p.anzahl ? "neu" : ""}`} data-testid={p.testid} title="offene Meldungen bei dir">{p.anzahl}</span>
+      {neu && p.name ? <span class="eingang-neu" data-testid="eingang-neu" role="status">neu: {p.name(neu)}</span>
+        : <span class="eingang-titel">{p.titel ?? "Eingang"}</span>}
+      <span class={`eingang-zahl ${p.anzahl ? "neu" : ""} ${neu ? "puls" : ""}`} data-testid={p.testid} title="offene Meldungen bei dir">{p.anzahl}</span>
       {!!p.zurueck && <span class="klein leise" data-testid="zurueck-zahl">+ {p.zurueck} zurückgestellt</span>}
       <span class="eingang-rechts">{p.children}</span>
     </div>
   );
+}
+
+/** Ton bei neuer Meldung nur auf Wunsch (?ton=1, im Browser gemerkt) – im Hörsaal mit 15 Rechnern sonst zu laut. */
+function tonAn(): boolean {
+  try {
+    const q = new URLSearchParams(location.search).get("ton");
+    if (q !== null) localStorage.setItem("argus:einst:ton", q === "1" ? "1" : "0");
+    return localStorage.getItem("argus:einst:ton") === "1";
+  } catch {
+    return false;
+  }
+}
+
+let tonKontext: AudioContext | null = null;
+function ton(): void {
+  try {
+    tonKontext ??= new AudioContext();
+    const o = tonKontext.createOscillator();
+    const g = tonKontext.createGain();
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.08, tonKontext.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, tonKontext.currentTime + 0.18);
+    o.connect(g).connect(tonKontext.destination);
+    o.start();
+    o.stop(tonKontext.currentTime + 0.2);
+  } catch {
+    /* ohne Ton */
+  }
+}
+
+/** Neueste neu eingegangene Meldung der letzten 6 s (was beim ersten Bild schon da ist, gilt als gesehen). */
+function useNeueMeldung(offen?: string[]): string | null {
+  const gesehen = useRef<Set<string> | null>(null);
+  const zaehler = useRef(0);
+  const [neu, setNeu] = useState<string | null>(null);
+  const schl = (offen ?? []).join(",");
+  useEffect(() => {
+    if (!offen) return;
+    if (!gesehen.current) {
+      gesehen.current = new Set(offen);
+      return;
+    }
+    const dazu = offen.filter((id) => !gesehen.current!.has(id));
+    for (const id of dazu) gesehen.current.add(id);
+    if (!dazu.length) return;
+    setNeu(dazu[dazu.length - 1]);
+    if (tonAn()) ton();
+    const nr = ++zaehler.current;
+    setTimeout(() => {
+      if (zaehler.current === nr) setNeu(null);
+    }, 6000);
+  }, [schl]);
+  return neu && offen?.includes(neu) ? neu : null;
 }
 
 /** Die Zielmeldung, wie Zielprüfung und Führung sie sehen (kein Bild, keine Sensordaten) – kompakt im Meldungsfeld. */

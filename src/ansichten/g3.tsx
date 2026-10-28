@@ -133,7 +133,7 @@ export function G3Ansicht(p: { s: Sicht }) {
       </section>
 
       <aside class="stapel meldungsfeld">
-        <EingangLeiste anzahl={offen.length} testid="g3-offen">
+        <EingangLeiste anzahl={offen.length} testid="g3-offen" offen={offen.map((x) => x.id)} name={(id) => zielName(inh, z, id, false)}>
           <span class="fasttrack" title={`Fast-Track: Meldungen ab ${inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne Prüfung durch die Aufklärung direkt an die Zielprüfung`}>
             Fast-Track <span class={`badge ${z.fastTrack ? "warn" : ""}`} data-testid="fasttrack-status">{z.fastTrack ? "EIN" : "AUS"}</span>
           </span>

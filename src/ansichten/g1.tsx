@@ -89,7 +89,7 @@ export function G1Ansicht(p: { s: Sicht }) {
       </section>
 
       <aside class="stapel meldungsfeld">
-        <EingangLeiste anzahl={offen.length} testid="g1-offen" />
+        <EingangLeiste anzahl={offen.length} testid="g1-offen" offen={offen.map((x) => x.id)} name={name} />
         {!m || !ms ? (
           <Panel titel="Meldung" klasse="flach">
             <div class="hinweistext" style="padding:6px 0" data-testid="g1-warten">

@@ -5,7 +5,14 @@ drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen
 ARGUS: Aufklärung, Zielprüfung, Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Änderungen B1–B12 nach dem Solo-Durchlauf (25.10.2026) – Startseite mit zwei Knöpfen, Codes aus drei
+Stand: Änderungen C1–C9 nach dem 2. Solo-Durchlauf (28.10.2026, Szenario 2.2) – Fahrzeuge fahren vom Kartenrand ein und
+sind ab dort als gelber **Kontakt** auf der Karte, bis eine Meldung sie zum „Ziel n“ macht; keine Meldelücke über 60 s (neue
+Meldungen M28–M30); neue Meldungen blinken am Ort, „neu: Ziel n“ am Eingang, Pfeil am Kartenrand, Ton auf Wunsch (`?ton=1`);
+Loitering Munition trifft genau ein Fahrzeug; Zug-Zeichen mit Größenangabe nach APP-6, das Zeichen folgt den
+verbliebenen Fahrzeugen, getroffene bekommen ein eigenes durchgestrichenes Zeichen; EloKa-Meldung M25 „Ziel unbekannt“.
+Offen: C2 (Lagemeldung) – nach dem Test am 29.10. Überblick: [`docs/ENGINE.md`](docs/ENGINE.md), [`docs/UI.md`](docs/UI.md).
+Davor Szenario 2.1 (A1–A9, 26.10.2026: Durchbruch über Brücke und Furt, Feuer, Zonennamen) und
+Änderungen B1–B12 nach dem Solo-Durchlauf (25.10.2026) – Startseite mit zwei Knöpfen, Codes aus drei
 Zeichen, Rollen ohne G-Nummern, Spieluhr 00:00–25:00, „Ziel 1, 2, 3 …“, Einweisung als Folien, Drohnenbild
 verschiebbar und schließbar, Drohne verfolgt das Ziel, Fahrwege und Vorschau der Verstärkung für die Spielleitung,
 im Test ohne Lobby alle Rollen bedienbar (Eintrag in `claude/Entscheidungen.md`; intern heißen die Rollen weiter
@@ -20,8 +27,8 @@ Effekte auf der Karte (Einschlag, LM-Flug, Leuchtspur, Feindartillerie, Wrack, R
 [`docs/ENGINE.md`](docs/ENGINE.md). Davor Schritt 4b „Sitzung, Lobby und Teams“
 ([`docs/SITZUNG.md`](docs/SITZUNG.md)), Ansichten: [`docs/UI.md`](docs/UI.md).
 
-Inhalte: Szenario KRÄHE-01 **v2.0** (Schritt 2b, Konzept v2): russischer Angriff in fünf Phasen,
-27 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
+Inhalte: Szenario KRÄHE-01 **v2.2** (Schritt 2b, Konzept v2, geändert mit A1–A9 und C1–C9): russischer Angriff in fünf Phasen,
+30 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
 Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`)
 und `tools/referenz/simuliere_durchlauf.py`.
 

@@ -6,6 +6,8 @@ Engine dieselbe Logik nutzen können. Koordinaten in Metern, x Ost, y Süd. Wink
 
 Seit Szenario 2.0: Trefferregel nach der Lage beim Einschlag (einschlag, wirkung), Bewegung
 (geschwindigkeit, richtung) und Verstärkungen mit relativer Zeit (verstaerkung_ziel).
+Seit Szenario 2.2: pruefe_wirkmittel/wirkung mit dem bekämpften Fahrzeug (ziel=…; Wirkmittel mit nur_zielfahrzeug treffen
+von den Fahrzeugen nur dieses) und zu_nah (Abstände der Fahrzeuge; braucht als einzige Funktion numpy, nur die Szenario-Prüfung).
 """
 import json
 import math

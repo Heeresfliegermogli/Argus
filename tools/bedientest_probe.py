@@ -82,8 +82,8 @@ def main():
 
         aufgabe("E-0 Einweisung: Folien oder überspringen", e0)
 
-        # Uhr bis kurz vor Ziel 3 vorstellen (der echte Test läuft in Echtzeit)
-        sl.get_by_placeholder("00:00").fill("03:55")
+        # Uhr bis kurz vor Ziel 3 vorstellen (der echte Test läuft in Echtzeit; seit 2.2 ist Ziel 3 M28 um 02:10)
+        sl.get_by_placeholder("00:00").fill("02:05")
         sl.get_by_role("button", name="Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
         sl.get_by_role("button", name="×10").click()
@@ -102,14 +102,14 @@ def main():
 
         def a_3():
             marke(g1, "Ziel 3").click()
-            warte(lambda: offen(g1) == "M03", 10, "Ziel 3 offen")
+            warte(lambda: offen(g1) == "M28", 10, "Ziel 3 offen")
             box = g1.locator("[data-testid=argus-box]").inner_text()
             assert "%" in box and "Ziel 3" in box, box
             zeile = g1.get_by_role("row", name=re.compile("^Bewegung"))   # Sensordaten: Zeile „Bewegung“
             assert zeile.count() == 1 and zeile.inner_text().strip() != "Bewegung", zeile.all_inner_texts()
 
         def a_4():
-            warte(lambda: g1.locator("[data-fenster=M03]").is_visible(), 10, "Drohnenbild am Ort")
+            warte(lambda: g1.locator("[data-fenster=M28]").is_visible(), 10, "Drohnenbild am Ort")
             # Klick auf das Bild dort, wo der sichtbare Hinweis „Klick: groß mit Lupe“ steht
             klick(g1, g1.get_by_text("Klick: groß mit Lupe"))
             r = g1.locator("[data-testid=vergroesserung] .argus-rahmen").first
@@ -120,13 +120,14 @@ def main():
             g1.get_by_role("button", name="Schließen (Esc)").click()
 
         def a_5():
-            fenster = g1.locator("[data-fenster=M03]")
+            fenster = g1.locator("[data-fenster=M28]")
             vorher = fenster.bounding_box()
             # an der Kopfleiste ziehen (Hinweis beim Zeigen: „Kopfleiste ziehen: verschieben“)
             kopf = fenster.get_by_text(re.compile("UAV-2"))
             kb = kopf.bounding_box()
-            # Richtung nach dem freien Platz: Das Fenster öffnet neben dem Ziel (seit 2.1 liegt Ziel 3 weiter östlich)
-            sx = -1 if vorher["x"] + vorher["width"] / 2 > g1.viewport_size["width"] / 2 else 1
+            # Richtung nach dem freien Platz auf der Karte: Das Fenster öffnet neben dem Ziel (seit 2.2 ist Ziel 3 der Tigr Z-03)
+            kt = g1.get_by_test_id("lagekarte").bounding_box()
+            sx = -1 if vorher["x"] + vorher["width"] / 2 > kt["x"] + kt["width"] / 2 else 1
             g1.mouse.move(kb["x"] + 40, kb["y"] + kb["height"] / 2)
             g1.mouse.down()
             for i in range(1, 11):
@@ -168,7 +169,7 @@ def main():
 
         def z_2():
             marke(g2, "Ziel 3").click()
-            warte(lambda: offen(g2) == "M03", 10, "Ziel 3 offen")
+            warte(lambda: offen(g2) == "M28", 10, "Ziel 3 offen")
             g2.get_by_text("Mörser 120 mm (Steilfeuer)").click()
             assert "R3" in g2.locator("[data-testid=karte-banner]").inner_text()
 
@@ -176,7 +177,7 @@ def main():
             g2.get_by_role("button", name="BEOBACHTEN").click()
             warte(lambda: marke(g2, "Ziel 3 · zurückgestellt").count() == 1, 10, "Marke „zurückgestellt“")
             marke(g2, "Ziel 3 · zurückgestellt").click()
-            warte(lambda: offen(g2) == "M03" and "zurückgestellt" in g2.get_by_test_id("offene-meldung").inner_text(), 10, "Ziel 3 wieder offen")
+            warte(lambda: offen(g2) == "M28" and "zurückgestellt" in g2.get_by_test_id("offene-meldung").inner_text(), 10, "Ziel 3 wieder offen")
 
         def z_4():
             kat = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "daten", "katalog_wirkmittel.json"),
@@ -217,7 +218,7 @@ def main():
         def f_4():
             warte(lambda: marke(g3, "Ziel 3").count() == 1, 10, "Marke Ziel 3 bei der Führung")
             marke(g3, "Ziel 3").click()
-            warte(lambda: offen_g3() == "M03", 10, "Ziel 3 offen")
+            warte(lambda: offen_g3() == "M28", 10, "Ziel 3 offen")
             g3.get_by_role("button", name="ZURÜCK").click()
             warte(lambda: marke(g2, "Ziel 3").count() == 1, 10, "Ziel 3 wieder bei der Zielprüfung")
 
