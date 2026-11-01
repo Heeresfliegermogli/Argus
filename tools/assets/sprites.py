@@ -55,11 +55,12 @@ def fahrzeug_atlas(d):
     for fid, f in d.fahrzeuge.items():
         if not f.get("sprite"):
             continue
+        ppm = F.SPRITE_PX_PRO_M.get(fid, PX_PRO_M)
         for wrack, name in ((False, f["sprite"]), (True, f["sprite_wrack"])):
-            img = F.fahrzeug(fid, f["groesse_m"], PX_PRO_M, wrack=wrack, seed=7)
+            img = F.fahrzeug(fid, f["groesse_m"], ppm, wrack=wrack, seed=7)
             bilder[name] = img
-            info[name] = {"typ": fid, "wrack": wrack, "px_pro_m": PX_PRO_M,
-                          "groesse_m": [round(img.width / PX_PRO_M, 2), round(img.height / PX_PRO_M, 2)]}
+            info[name] = {"typ": fid, "wrack": wrack, "px_pro_m": ppm,
+                          "groesse_m": [round(img.width / ppm, 2), round(img.height / ppm, 2)]}
     rng = np.random.default_rng(5)
     for p in d.katalog_personen.values():
         for key, kw in (("sprite", {"haende_hoch": p["id"] == "besatzung_ergibt_sich"}),

@@ -129,7 +129,8 @@ def drohnenbilder(d, g, aus, log):
     kamera = "drohne/ebenen/kamera.webp"
     nk, _ = webp_begrenzt(kamera_ebene(), os.path.join(aus, kamera), q=80, alpha_q=60)
     # Ziele, die ARGUS nie meldet: ein Bild für Spielleitung und Plenum (Lage zum Ende ihrer Route)
-    ungemeldet = [z for z in d.szenario["ziele"] if z.get("ungemeldet")]
+    # seit 2.4 auch Fahrzeuge, die nur als Kontakt erscheinen (S8: Pkw der Familie, Lage an der Schule)
+    ungemeldet = [z for z in d.szenario["ziele"] if z.get("ungemeldet") or z.get("nur_kontakt")]
     gruppen = []
     for z in ungemeldet:
         r = (z.get("bewegung") or {}).get("route")
@@ -242,7 +243,7 @@ def ziel_index(d, man):
                  if any(x["id"] == z["id"] for x in e.get("objekte", []))]
         idx[z["id"]] = {"typ": z["typ"], "sprite": f.get("sprite"), "sprite_wrack": f.get("sprite_wrack"),
                         "bilder": bilder + sl, "auch_in": sonst}
-        if z.get("ungemeldet"):
+        if z.get("ungemeldet") or z.get("nur_kontakt"):
             idx[z["id"]]["nur_spielleitung"] = True
         if z["id"] in d.v_gruppe:
             idx[z["id"]]["verstaerkung"] = d.v_gruppe[z["id"]]

@@ -30,6 +30,8 @@ export interface Person {
   bewegung?: Bewegung;
   /** Seit 2.4 (S8): sitzen im Fahrzeug – zählen für die Trefferregel, im Drohnenbild nicht als Figuren */
   im_fahrzeug?: boolean;
+  /** Seit 2.4 (S5): im Drohnenbild in einer Reihe (Richtung in Grad, 0 = Osten), z. B. an einer Hauswand */
+  reihe?: number;
 }
 
 export interface GroundTruth {

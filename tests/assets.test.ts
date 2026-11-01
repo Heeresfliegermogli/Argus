@@ -106,6 +106,31 @@ describe("Assets Raum KRÄHE", () => {
     }
     const n2 = man.drohne[inh.szenario.nebenfaelle.find((f) => f.id === "N2")!.meldung];
     expect(n2.personen.find((p) => p.art === "besatzung_ergibt_sich")?.anzahl).toBe(3);
+    // seit 2.4 (E5, E6.3): die neuen Fälle – Merkmale frei im Bild (Lupe: tools/drohne_probe.py, Teil 6)
+    const frei = (mid: string, zid: string, max = 0.05) => expect(man.drohne[mid].ziele.find((z) => z.id === zid)!.verdeckt, `${mid} ${zid}`).toBeLessThan(max);
+    frei("M32", "Z-41");
+    const s5 = man.drohne.M32.personen.find((p) => p.art === "zivil")!;
+    expect([s5.anzahl, s5.verdeckt < 0.1]).toEqual([5, true]);                             // fünf Bewohner vor dem Haus
+    frei("M35", "Z-45", 0.1);                                                              // Verwundete (Rauch des Wracks daneben)
+    frei("M31", "Z-42");                                                                   // Beobachter auf dem Kirchturm
+    frei("M33", "Z-43");                                                                   // PRESS
+    expect(man.drohne.M33.personen.find((p) => p.art === "zivil")?.anzahl).toBe(2);         // Kamerateam
+    // die Familie im Pkw (S8) sitzt im Fahrzeug: keine Figuren
+    expect(Object.values(man.drohne).every((b) => !b.personen.some((p) => p.bei === "Z-44"))).toBe(true);
+  });
+
+  it("EloKa (2.4, E4): die Standbilder zur EloKa-Zeit sind gestört (Manifest eloka), die Ebenen nicht", async () => {
+    const inh = await inhalte();
+    const { elokaAktiv } = await import("../src/kern/eloka");
+    for (const m of inh.szenario.meldungen) {
+      const b = man.drohne[m.id];
+      expect(!!b.eloka, m.id).toBe(elokaAktiv(inh, {}, m.t_s));
+      if (b.eloka) {
+        expect(b.eloka).toBe(inh.szenario.eloka!.bildstoerung);
+        expect(b.ebenen?.bildstoerung).toBeUndefined();                                    // das Rauschen macht die Oberfläche nach dem Stand des Teams
+      }
+    }
+    expect(Object.entries(man.drohne).filter(([, b]) => b.eloka).map(([id]) => id)).toEqual(["M09", "M25", "M10", "M11"]);
   });
 
   it("ungemeldete Ziele erscheinen nur in Bildern der Spielleitung", async () => {

@@ -102,7 +102,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
       }
       const ctx = lw.getContext("2d");
       if (!ctx) return;
-      schleifen = !aufnahme && (!!b.db.ebenen?.bildstoerung || sz.fahrzeuge.some((f) => f.wrack || f.feuert)
+      schleifen = !aufnahme && (!!b.db.ebenen?.bildstoerung || sz.eloka > 0 || sz.fahrzeuge.some((f) => f.wrack || f.feuert)
         || lage.effekte.some((f) => f.art === "nebel" && f.t <= u.t && u.t <= (f.bis ?? f.t)));
       const tr: LiveTransform = { s: bw / b.breite, ox: 0, oy: 0 };
       if (malen) {
@@ -156,7 +156,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
         meldung: b.id, t: u.t, fps: Number(lw.dataset.fps ?? 0), bildMs: { ...b.bildMs }, grundBau: { ...b.grundBau },
         fahrzeuge: sz.fahrzeuge.map((f) => ({ id: f.id, sprite: f.sprite, px: f.px.map((v) => Math.round(v)), wrack: f.wrack })),
         figuren: sz.figuren.map((f) => ({ bei: f.fg.bei, art: f.fg.art, sprite: f.fg.sprite, px: f.px.map((v) => Math.round(v)) })),
-        marken: marken.map((m) => m.id), zielImBild: sz.zielImBild, aufnahme, effekte: aufnahme ? [] : [...b.gezeigt], kamera: { ...sz.kamera },
+        marken: marken.map((m) => m.id), zielImBild: sz.zielImBild, aufnahme, effekte: aufnahme ? [] : [...b.gezeigt], kamera: { ...sz.kamera }, eloka: sz.eloka,
         vergleich: () => vergleicheMitStandbild(b, opt.current.lage()),
       };
     };

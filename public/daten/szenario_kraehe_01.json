@@ -1000,6 +1000,7 @@
           "anzahl": 5,
           "klein": 2,
           "text": "Bewohner, vom Feind vor das Haus gezwungen",
+          "reihe": -10,
           "pos": [703, 379],
           "ab_s": 925,
           "bis_s": 1230,

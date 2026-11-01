@@ -148,6 +148,18 @@ class Daten:
         s = self.schaden.get(z["id"])
         return fahrtrichtung(z, min(t_s, s[0] - 0.01) if s else t_s)
 
+    def eloka_staerke(self, t_s):
+        """Seit 2.4 (E4): Stärke der Bildstörung durch das EloKa-Fahrzeug zur Zeit t (0 = ungestört), ohne Bekämpfung
+        durch die Teams – nur das Hintergrundgefecht zählt. Wie src/kern/eloka.ts elokaStoerung."""
+        e = self.szenario.get("eloka")
+        z = self.ziele.get(e["ziel"]) if e else None
+        if not z or not vorhanden(z, t_s):
+            return 0.0
+        s = self.schaden.get(z["id"])
+        if s and t_s >= s[0]:
+            return 0.0
+        return float(e["bildstoerung"])
+
     def da(self, z, t_s):
         """Im Bild: vorhanden – oder als Wrack/außer Gefecht liegen geblieben (bleibt auch nach bis_s)."""
         s = self.schaden.get(z["id"])

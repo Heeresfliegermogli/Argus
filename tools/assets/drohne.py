@@ -187,7 +187,7 @@ class Drohnenbilder:
             p, h = self._p(z), self._h(z)
             noetig += drehe(rechteck(-L / 2 - 1, L / 2 + 1, -B / 2 - 1, B / 2 + 1), p, h)
             for pe in z.get("personen") or []:
-                if vorhanden(pe, t, z):
+                if vorhanden(pe, t, z) and not pe.get("im_fahrzeug"):
                     q = position(pe, t)
                     noetig += [(q[0] - 3, q[1] - 3), (q[0] + 3, q[1] + 3)]
         hw = max(breite / 2, max(abs(x - c[0]) for x, _ in noetig) + 6)
@@ -229,7 +229,7 @@ class Drohnenbilder:
             out.append(dict(x=x, y=y, art=art, klein=klein, hoch=hoch, tuch=tuch, oben=oben, bezug=bezug, gruppe=gruppe,
                             versatz=[round(float(versatz[0]), 2), round(float(versatz[1]), 2)]))
         for gi, pe in enumerate(z.get("personen") or []):
-            if not vorhanden(pe, t, z):
+            if not vorhanden(pe, t, z) or pe.get("im_fahrzeug"):     # seit 2.4: Insassen sieht man von oben nicht (S8)
                 continue
             q = position(pe, t)
             n = pe["anzahl"]
@@ -259,6 +259,13 @@ class Drohnenbilder:
                     a = 2 * math.pi * k / n + rng.uniform(-0.4, 0.4)
                     r = rng.uniform(1.0, 3.4)
                     fig(q[0] + r * math.cos(a), q[1] + r * math.sin(a), art, gruppe=gi, versatz=(r * math.cos(a), r * math.sin(a)))
+            elif pe.get("reihe") is not None:
+                # seit 2.4 (S5): in einer Reihe (Richtung „reihe“ in Grad, 0 = Osten), z. B. an einer Hauswand
+                ca, sa = math.cos(math.radians(pe["reihe"])), math.sin(math.radians(pe["reihe"]))
+                for k in range(n):
+                    f = (k - (n - 1) / 2) * 0.95 + rng.normal(0, 0.08)
+                    dx, dy = f * ca + rng.normal(0, 0.1), f * sa + rng.normal(0, 0.1)
+                    fig(q[0] + dx, q[1] + dy, art, klein=k >= n - klein, gruppe=gi, versatz=(dx, dy))
             else:
                 for k in range(n):
                     a = 2 * math.pi * k / n + rng.uniform(-0.3, 0.3)
@@ -632,6 +639,12 @@ class Drohnenbilder:
                 meta_sicht[k] = {"anteil_ist": sv["anteil"], "bezug": "Stärke"}
                 bildstoerung = sv["anteil"]
 
+        # Seit 2.4 (E4): EloKa stört den Datenlink global – das Standbild zeigt den Stand der Daten (EloKa nicht bekämpft);
+        # die Ebenen bleiben ungestört, das Live-Bild rauscht nach dem Stand des Teams (src/drohne/livebild.ts).
+        eloka = 0.0 if sp.get("gruppe") or sp["spielleitung"] else d.eloka_staerke(t)
+        if eloka > 0:
+            img = S.bildstoerung(img, eloka, np.random.default_rng(saat(sp["id"], "eloka")))
+
         # ---------------------------------------------------- Ebenen für das Live-Drohnenbild
         ebenen = {"boden": verkleinere(ebene_boden, None)}
         kP, kA = ebene_kronen
@@ -692,6 +705,8 @@ class Drohnenbilder:
             "personen": list(pers_eintraege.values()),
             "sicht": sicht_meta,
         }
+        if eloka > 0:
+            meta["eloka"] = eloka
         if sp.get("gruppe"):
             meta["relativ"] = True
             meta["verstaerkung"] = sp["gruppe"]

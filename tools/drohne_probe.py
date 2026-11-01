@@ -15,6 +15,11 @@ Prüft im Browser (SL steuert die Uhr, G1 öffnet die Meldungen über ihre Marke
 4. Effekte und Wracks: Eine LM auf Z-02 (über M03, Freigabe durch G3) schlägt im Bild von M12 ein –
    Flug, Einschlag, danach Wrack mit Feuer.
 5. Bildrate bei laufender Uhr (×1 und ×10, M17 – das Ziel fährt im Bild): Fenster am Ort und Vergrößerung, dazu die Karte.
+6. Seit Szenario 2.4 (E6.3): Merkmale im Bild statt Sensordaten – für jedes `bild.merkmale` der Meldungen eines Falls
+   (und der übrigen Meldungen mit Merkmalen) Lupe auf das Ziel, Merkmal im Bild gezählt (Figuren, Schrift PRESS,
+   Verbände, Holz des Rohrs, Fernglas und Funkgerät), Fotos merkmal_<Meldung>_<Art>.png zum Ansehen.
+7. Seit Szenario 2.4 (E4): EloKa stört global – solange das EloKa-Fahrzeug steht, rauscht jedes Live-Bild (M09–M11, M25);
+   bekämpft (Kette G1 → G2 Mörser → G3), ist das nächste Bild (M11) klar und ARGUS meldet ungestört.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne
@@ -43,15 +48,19 @@ LUPE_ZAEHLEN = """
   if (!c) return null;
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   const r = c.width / 2;
-  let rot = 0, weiss = 0;
+  let rot = 0, weiss = 0, hell = 0, blau = 0, holz = 0, dunkel = 0;
   for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
     if ((x - r) ** 2 + (y - r) ** 2 > (r - 2) ** 2) continue;
     const i = (y * c.width + x) * 4;
     const [R, G, B] = [d[i], d[i + 1], d[i + 2]];
     if (R > 150 && G < 90 && B < 90) rot++;
     if (R > 205 && G > 205 && B > 205) weiss++;
+    if (R > 170 && G > 170 && B > 170 && Math.max(R, G, B) - Math.min(R, G, B) < 45) hell++;
+    if (B > 70 && B > R + 35 && B > G + 15) blau++;
+    if (R > 150 && G > 115 && B < 120 && R - B > 50) holz++;
+    if (R < 38 && G < 38 && B < 38) dunkel++;
   }
-  return { rot, weiss, px: c.width * c.height };
+  return { rot, weiss, hell, blau, holz, dunkel, px: c.width * c.height };
 }
 """
 
@@ -64,6 +73,7 @@ def main():
     ap.add_argument("--max-abweichung", type=float, default=6.0)
     ap.add_argument("--ohne-ebenen", action="store_true", help="Vergleich mit den Standbildern überspringen (schneller)")
     ap.add_argument("--nur-bildrate", action="store_true", help="nur Teil 5 (Bildrate)")
+    ap.add_argument("--nur-merkmale", action="store_true", help="nur Teil 6 und 7 (Merkmale im Bild, EloKa; seit 2.4)")
     a = ap.parse_args()
     os.makedirs(a.bilder, exist_ok=True)
     man = json.load(open(MANIFEST, encoding="utf-8"))
@@ -109,10 +119,75 @@ def main():
             g1.locator(f".kmarke[data-meldung={mid}]").click()
             warte(lambda: g1.evaluate(f"() => {LIVE}?.argusLive?.meldung") == mid, 20, f"Live-Bild {mid}")
 
+        # Merkmal → (Farbklasse in der Lupe, Mindestzahl Bildpunkte); Figuren-Merkmale zählen die Figuren am Ziel
+        # Schrift und Verbände: „hell“ (fast weiß, Kamerafarbe und Dunst dämpfen das Weiß), Tuch und Kreuz wie in Teil 3
+        MERKMAL_PIXEL = {"rotes_kreuz": ("rot", 40), "weisses_tuch": ("weiss", 40), "press": ("hell", 60), "verwundete": ("hell", 12),
+                         "attrappe": ("holz", 15), "beobachter": ("dunkel", 6)}
+        MERKMAL_FIGUR = {"zivilpersonen": "zivil", "sanitaeter": "sanitaet"}
+
+        def merkmal(sl, g1, m, mk):
+            """Lupe auf das Ziel des Merkmals; zählt Figuren bzw. Bildpunkte der Merkmalsfarbe."""
+            mid, art, zid = m["id"], mk["art"], mk.get("ziel")
+            zeit(sl, man["drohne"][mid]["t_s"] + 1)
+            oeffne(g1, mid)
+            g1.wait_for_timeout(500)
+            g1.get_by_role("button", name="Drohnenbild vergrößern").click()
+            warte(lambda: g1.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
+            g1.wait_for_timeout(400)
+            info = live(g1, GROSS)
+            cv = g1.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
+            k = cv["width"] / man["drohne"][mid]["breite"]
+            fz = next((f for f in info["fahrzeuge"] if f["id"] == zid), None)
+            figs = [f for f in info["figuren"] if f["bei"] == zid]
+            text, ok = "", fz is not None
+            if art in MERKMAL_FIGUR:
+                passend = [f for f in figs if MERKMAL_FIGUR[art] in f["sprite"]]
+                ziel = [sum(f["px"][0] for f in passend) / len(passend), sum(f["px"][1] for f in passend) / len(passend)] if passend else (fz or {"px": [512, 320]})["px"]
+                kinder = len([f for f in passend if "_kind" in f["sprite"]])
+                # aufgesessen (Traktor N1): ein Teil sitzt verdeckt – Soll ist, was das Standbild zeigt (Manifest)
+                im_bild = len([f for f in man["drohne"][mid]["ebenen"]["figuren"] if f["bei"] == zid and MERKMAL_FIGUR[art] in f["sprite"]])
+                soll = min(mk.get("anzahl", 1), im_bild) if im_bild else mk.get("anzahl", 1)
+                ok = len(passend) >= soll and kinder >= mk.get("klein", 0)
+                text = (f"{len(passend)}/{soll} Figuren „{MERKMAL_FIGUR[art]}“{' (von ' + str(mk.get('anzahl', 1)) + ', Rest verdeckt)' if soll < mk.get('anzahl', 1) else ''}"
+                        + (f", davon {kinder} Kinder (Soll {mk['klein']})" if mk.get("klein") else ""))
+            elif art == "weisses_tuch":
+                tuch = [f for f in figs if "_tuch" in f["sprite"]]
+                ziel = tuch[0]["px"] if tuch else (fz or {"px": [512, 320]})["px"]
+                ok = ok and len(tuch) == 1
+                text = f"{len(tuch)} Figur mit weißem Tuch"
+            else:
+                ziel = fz["px"] if fz else [512, 320]
+                if art == "kette_ab":
+                    ok = ok and "kette_ab" in fz["sprite"]
+                    text = f"Sprite {fz['sprite'] if fz else '–'}"
+                else:
+                    text = f"{zid} im Bild{' (' + fz['sprite'] + ')' if fz else ' FEHLT'}"
+            g1.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
+            for _ in range(4):
+                g1.mouse.wheel(0, -100)
+                g1.wait_for_timeout(100)
+            g1.wait_for_timeout(500)
+            z = g1.evaluate(LUPE_ZAEHLEN)
+            if art in MERKMAL_PIXEL:
+                farbe, mindest = MERKMAL_PIXEL[art]
+                n = z[farbe] if z else 0
+                ok = ok and n >= mindest
+                text += f", Lupe: {n} Bildpunkte „{farbe}“ (≥ {mindest})"
+                if art == "press":
+                    ok = ok and z["blau"] >= 150
+                    text += f", {z['blau']} blaue"
+            verdeckt = man["drohne"][mid]["ebenen"]["verdeckt"].get(zid)
+            if verdeckt is not None:
+                text += f", verdeckt {round(verdeckt * 100)} %"
+            pruefe(ok, f"{mid} Merkmal „{art}“ ({mk['text']}): {text}")
+            g1.screenshot(path=os.path.join(a.bilder, f"merkmal_{mid}_{art}.png"),
+                          clip={"x": max(0, cv["x"] + ziel[0] * k - 260), "y": max(0, cv["y"] + ziel[1] * k - 260), "width": 520, "height": 520})
+            g1.keyboard.press("Escape")
+
         def live(g1, sel=LIVE):
             return g1.evaluate(f"() => {{ const x = {sel}?.argusLive; return x && {{ ...x, vergleich: undefined }}; }}")
 
-        if not a.nur_bildrate:
+        if not a.nur_bildrate and not a.nur_merkmale:
             # ---------------------------------------------------------------- 1. Zusammensetzen je Meldung
             ctx, sl, g1, g2, g3 = raum("ebenen")
             meldungen = [] if a.ohne_ebenen else sorted([k for k, d in man["drohne"].items() if not d.get("relativ") and d.get("ebenen")], key=lambda k: man["drohne"][k]["t_s"])
@@ -124,12 +199,17 @@ def main():
                 lage = max([0.0] + [abs(f["soll"][0] - f["ist"][0]) + abs(f["soll"][1] - f["ist"][1]) for f in v["fahrzeuge"] + v["figuren"]])
                 soll_n = len(man["drohne"][mid]["ebenen"]["figuren"])
                 werte[mid] = v["abweichung"]
-                ok = lage <= 1.5 and (mid == "M25" or v["abweichung"] <= a.max_abweichung) and len(v["figuren"]) == soll_n
-                pruefe(ok, f"{mid}: Abweichung zum Standbild {v['abweichung']} Graustufen{' (Rauschen live)' if mid == 'M25' else ''}, "
-                           f"Lage ±{lage:.1f} px, {len(v['fahrzeuge'])} Fahrzeuge, {len(v['figuren'])}/{soll_n} Figuren")
-            ohne25 = [v for k, v in werte.items() if k != "M25"] or [0]
+                # Rauschen (M25 bis 2.3; seit 2.4 alle Bilder, solange EloKa steht: Manifest „eloka“) – dort zählt nur die Lage
+                rauscht = bool(man["drohne"][mid].get("eloka") or man["drohne"][mid]["ebenen"].get("bildstoerung"))
+                el = live(g1)["eloka"]
+                ok = lage <= 1.5 and (rauscht or v["abweichung"] <= a.max_abweichung) and len(v["figuren"]) == soll_n
+                ok = ok and (el > 0) == bool(man["drohne"][mid].get("eloka"))
+                pruefe(ok, f"{mid}: Abweichung zum Standbild {v['abweichung']} Graustufen{' (Rauschen live)' if rauscht else ''}, "
+                           f"Lage ±{lage:.1f} px, {len(v['fahrzeuge'])} Fahrzeuge, {len(v['figuren'])}/{soll_n} Figuren"
+                           f"{f', EloKa-Störung live {el}' if el else ''}")
+            ohne25 = [v for k, v in werte.items() if not man["drohne"][k].get("eloka") and not man["drohne"][k]["ebenen"].get("bildstoerung")] or [0]
             if werte:
-                pruefe(True, f"Abweichung ohne M25: {min(ohne25)}–{max(ohne25)} Graustufen (Referenz tools/assets/live.py: 2,5–4,2)")
+                pruefe(True, f"Abweichung ohne gestörte Bilder: {min(ohne25)}–{max(ohne25)} Graustufen (Referenz tools/assets/live.py: 2,5–4,2)")
             ctx.close()
 
             ctx, sl, g1, g2, g3 = raum("lage")
@@ -281,6 +361,47 @@ def main():
             fall("M18", "S4 Kinder", "kind", None, None, 0, man["drohne"]["M18"]["t_s"] + 5)
             fall("M21", "N2 weißes Tuch", "tuch", None, "weiss", 40, man["drohne"]["M21"]["t_s"] + 5)
             ctx.close()
+
+        if not a.nur_bildrate:
+            # ---------------------------------------------------------------- 6. Merkmale im Bild (2.4, E6.3)
+            sz = json.load(open(os.path.join(HIER, "..", "public", "daten", "szenario_kraehe_01.json"), encoding="utf-8"))
+            ctx, sl, g1, g2, g3 = raum("merkmale")
+            for m in sorted(sz["meldungen"], key=lambda m: m["t_s"]):
+                for mk in m["bild"].get("merkmale") or []:
+                    merkmal(sl, g1, m, mk)
+            ctx.close()
+
+            # ---------------------------------------------------------------- 7. EloKa global (2.4, E4)
+            ctx, sl, g1, g2, g3 = raum("eloka")
+            t25 = man["drohne"]["M25"]["t_s"]
+            zeit(sl, t25 + 2)
+            oeffne(g1, "M25")
+            foto(g1, "eloka_M25_gestoert")
+            vorher = live(g1)["eloka"]
+            g1.get_by_role("button", name="ANNEHMEN").click()
+            warte(lambda: g2.locator(".kmarke[data-meldung=M25]").count() == 1, 15, "M25 bei G2")
+            g2.locator(".kmarke[data-meldung=M25]").click()
+            g2.get_by_text("Mörser 120 mm (Steilfeuer)").click()
+            g2.get_by_role("button", name="BEKÄMPFEN mit Mrs").click()
+            warte(lambda: g3.locator(".kmarke[data-meldung=M25]").count() == 1, 15, "M25 bei G3")
+            g3.locator(".kmarke[data-meldung=M25]").click()
+            g3.get_by_role("button", name="FREIGABE").click()
+            warte(lambda: g3.evaluate("() => window.argus.stand.zustand.meldungen.M25.g3?.einschlag?.t ?? null") is not None, 15, "Einschlag M25 geplant")
+            te = g3.evaluate("() => window.argus.stand.zustand.meldungen.M25.g3.einschlag.t")
+            sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", te + 3)
+            warte(lambda: sl.evaluate("() => window.argus.stand.zustand.zerstoert['Z-23'] ?? null") is not None, 20, "EloKa zerstört")
+            nachher = live(g1)["eloka"] if g1.evaluate(f"() => {LIVE}?.argusLive?.meldung") == "M25" else None
+            t11 = man["drohne"]["M11"]["t_s"]
+            zeit(sl, t11 + 2)
+            oeffne(g1, "M11")
+            g1.wait_for_timeout(400)
+            foto(g1, "eloka_M11_klar")
+            m11 = live(g1)["eloka"]
+            gestoert = sl.evaluate("() => window.argus.stand.zustand.meldungen.M11?.gestoert ?? false")
+            pruefe(vorher > 0 and m11 == 0 and not gestoert and (nachher in (None, 0)),
+                   f"EloKa: M25 live gestört ({vorher}); Mörser-Einschlag {te:.0f} s, Z-23 zerstört; M11 ({t11} s) danach klar "
+                   f"(EloKa {m11}), ARGUS ungestört (gestoert={gestoert})")
+            ctx.close()
         browser.close()
 
         # ---------------------------------------------------------------- 5. Bildrate bei laufender Uhr
@@ -292,7 +413,7 @@ def main():
         browser = p.chromium.launch(args=["--disable-gpu", "--disable-software-rasterizer"])
         ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
         proben = []
-        for nr, (tempo, gross) in enumerate([(1, False), (10, False), (1, True)]):
+        for nr, (tempo, gross) in enumerate([] if a.nur_merkmale else [(1, False), (10, False), (1, True)]):
             raumname = f"{a.raum}-fps{nr}"
             sl = ctx.new_page()
             sl.goto(adresse(a.basis, "sl", raumname))

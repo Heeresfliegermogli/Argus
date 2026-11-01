@@ -104,8 +104,11 @@ describe("Effekte (kern/effekte.ts)", () => {
       const inh = weltFuer(m.inh, m.z);
       const fx = effekte(inh, m.z, "alle");
       const wracks = art(fx, "wrack");
-      expect(wracks.filter((e) => e.quelle.folge === "zerstoert").map((e) => e.id.slice(0, -2)).sort()).toEqual(Object.keys(m.z.zerstoert).sort());
-      for (const w of wracks) if (w.quelle.folge === "zerstoert") expect(w.t).toBe(m.z.zerstoert[w.id.slice(0, -2)]);
+      // seit 2.4: Personen-Gruppen (Beobachter Z-42, Verwundete Z-45; feuer_effekt „keiner“) brennen nicht
+      const brennt = (id: string) => inh.fahrzeuge[inh.ziele[id].typ]?.feuer_effekt !== "keiner";
+      expect(wracks.filter((e) => e.quelle.folge === "zerstoert").map((e) => e.id.slice(0, -2)).sort()).toEqual(Object.keys(m.z.zerstoert).filter(brennt).sort());
+      for (const w of wracks) if (w.quelle.folge === "zerstoert" || brennt(w.id.slice(0, -2)) === false) expect(w.t).toBe(m.z.zerstoert[w.id.slice(0, -2)] ?? w.t);
+      for (const id of Object.keys(m.z.zerstoert).filter((x) => !brennt(x))) expect(wracks.find((e) => e.id === `${id}-w`)?.quelle.folge).toBe("ausser_gefecht");
       const ag = ausserGefechtAb(inh, m.z, "Z-24");
       if (m.z.zerstoert["Z-24"] === undefined && ag !== undefined) {
         expect(wracks.find((e) => e.id === "Z-24-w")?.quelle.folge).toBe("ausser_gefecht");

@@ -296,7 +296,7 @@ SPZ_HALT = f.t
 z41 = {
     "id": "Z-41", "typ": "spz_bmp2", "pos": [703, 372], "hdg": 180,
     "bewegung": {"route": f.route()},
-    "personen": [{"art": "zivil", "anzahl": 5, "klein": 2, "text": "Bewohner, vom Feind vor das Haus gezwungen",
+    "personen": [{"art": "zivil", "anzahl": 5, "klein": 2, "text": "Bewohner, vom Feind vor das Haus gezwungen", "reihe": -10,
                   "pos": [703, 379], "ab_s": 925, "bis_s": 1230,
                   "bewegung": {"route": [[925, 703, 379], [1170, 703, 379], [1182, 690, 382], [1222, 640, 389]]}}],
     "gt": {"kategorie": "feind", "legitim": True,

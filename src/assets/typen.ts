@@ -137,6 +137,8 @@ export interface Drohnenbild {
   ebenen?: DrohnenEbenen;
   relativ?: boolean;
   verstaerkung?: string;
+  /** Seit 2.4 (E4): Stärke der EloKa-Störung, die ins Standbild eingebrannt ist (EloKa zur Bildzeit nicht bekämpft) */
+  eloka?: number;
   /** Wracks mit Rauchfahne im Standbild (staerke 0…1, weniger, wenn sie ein Ziel verdecken würde) */
   wracks?: { id: string; staerke: number }[];
 }

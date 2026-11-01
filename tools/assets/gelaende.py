@@ -566,6 +566,41 @@ class Gelaende:
             prims.append(("linie", drehe([(-w / 2, 0), (w / 2, 0)], (cx, cy), ang), farbton(dach, 0.6), 0.45))
             if rng.random() < 0.4:
                 prims.append(("poly", drehe(rechteck(-0.6, 0.6, -0.6, 0.6), (cx + rng.uniform(-2, 2), cy), ang), (60, 50, 45, 255)))
+        # Seit 2.4 (S7): Kirche mit Satteldach aus Schiefer und Chor im Osten, westlich davor der Turm mit flacher
+        # Plattform und Brüstung (dort steht der Beobachter Z-42).
+        for g in d.gebaeude("kirche"):
+            w, t, c, ang = g["laenge"], g["breite"], g["mitte"], g["winkel"]
+            schiefer = (78, 84, 96)
+            fp = drehe(rechteck(-w / 2, w / 2, -t / 2, t / 2), c, ang)
+            chor = drehe([(w / 2 + 4.2 * math.cos(a), 4.6 * math.sin(a)) for a in np.linspace(-math.pi / 2, math.pi / 2, 9)]
+                         + [(w / 2, 4.6), (w / 2, -4.6)], c, ang)
+            schatten_polys += [(fp, 11), (chor, 9)]
+            nx1, ny1 = -math.sin(math.radians(ang)), math.cos(math.radians(ang))
+            hell2 = (nx1 * -1 + ny1 * -1) > 0
+            prims.append(("poly", chor, farbton(schiefer, 0.9)))
+            for k in range(8):                                     # Chordach: Grate zum Scheitel
+                a0 = -math.pi / 2 + k * math.pi / 8
+                prims.append(("linie", drehe([(w / 2, 0), (w / 2 + 4.2 * math.cos(a0), 4.6 * math.sin(a0))], c, ang), farbton(schiefer, 0.7), 0.15))
+            prims.append(("poly", drehe(rechteck(-w / 2, w / 2, -t / 2, 0), c, ang), farbton(schiefer, 0.74 if hell2 else 1.18)))
+            prims.append(("poly", drehe(rechteck(-w / 2, w / 2, 0, t / 2), c, ang), farbton(schiefer, 1.18 if hell2 else 0.74)))
+            for k in range(1, 6):
+                for sgn in (-1, 1):
+                    y = sgn * t / 2 * k / 6
+                    prims.append(("linie", drehe([(-w / 2 + 0.2, y), (w / 2 - 0.2, y)], c, ang), farbton(schiefer, 0.82), 0.1))
+            prims.append(("linie", drehe([(-w / 2, 0), (w / 2, 0)], c, ang), farbton(schiefer, 0.55), 0.5))
+            prims.append(("linie", drehe([(w / 2 - 1.6, 0), (w / 2 - 0.2, 0)], c, ang), (196, 170, 96, 255), 0.25))   # Kreuz auf dem First
+            prims.append(("linie", drehe([(w / 2 - 0.9, -0.6), (w / 2 - 0.9, 0.6)], c, ang), (196, 170, 96, 255), 0.25))
+        for g in d.gebaeude("kirchturm"):
+            w, t, c, ang = g["laenge"], g["breite"], g["mitte"], g["winkel"]
+            stein = (178, 170, 152)
+            fp = drehe(rechteck(-w / 2, w / 2, -t / 2, t / 2), c, ang)
+            schatten_polys.append((fp, 26))
+            prims.append(("poly", fp, farbton(stein, 0.86)))
+            prims.append(("poly", drehe(rechteck(-w / 2 + 0.55, w / 2 - 0.55, -t / 2 + 0.55, t / 2 - 0.55), c, ang), farbton(stein, 0.72)))   # Plattform
+            for sx in (-1, 1):
+                for sy in (-1, 1):                                # Eckpfeiler der Brüstung
+                    prims.append(("poly", drehe(rechteck(sx * w / 2 - 0.7 * (sx > 0), sx * w / 2 + 0.7 * (sx < 0), sy * t / 2 - 0.7 * (sy > 0), sy * t / 2 + 0.7 * (sy < 0)), c, ang), farbton(stein, 1.12)))
+            prims.append(("poly", drehe(rechteck(1.4, 2.4, 1.4, 2.4), c, ang), (70, 64, 56, 255)))   # Luke zur Treppe
         for g in d.gebaeude("schule"):
             w, t = g["laenge"], g["breite"]
             fp = drehe(rechteck(-w / 2, w / 2, -t / 2, t / 2), g["mitte"], g["winkel"])

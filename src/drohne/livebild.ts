@@ -26,6 +26,7 @@ import type { AssetManifest, BildZiel, Drohnenbild, EbenenFahrzeug, EbenenFigur 
 import type { Inhalte, Punkt, Ziel } from "../inhalte/typen";
 import { type Effekt, STAUB_N, STAUB_TAKT_S, type StaubWolke, staubSpur } from "../kern/effekte";
 import { position, vorhanden } from "../kern/geometrie";
+import { elokaStoerung } from "../kern/eloka";
 import { ausserGefechtAb } from "../kern/lagebild";
 import type { Spielzustand } from "../kern/zustand";
 
@@ -195,6 +196,8 @@ interface SzeneFahrzeug {
   wrack: boolean;
   /** Rauchstärke über dem Wrack (0…1) */
   rauch: number;
+  /** Wrack brennt (seit 2.4 nicht bei Personen-Gruppen: Katalog feuer_effekt „keiner“) */
+  brennt: boolean;
   /** feuert (Schussrhythmus aus den Daten läuft; Blitz und Abschussrauch kommen aus der Effektliste) */
   feuert: boolean;
   /** Staubwolken hinter dem fahrenden Fahrzeug (seit 2.1) */
@@ -222,6 +225,8 @@ export interface Szene {
   zielImBild: boolean;
   /** Kamera zur Spielzeit (Versatz gegenüber dem Standbild, verfolgtes Fahrzeug, Ausrichtung) */
   kamera: LiveKamera;
+  /** Seit 2.4 (E4): Bildstörung durch das EloKa-Fahrzeug nach dem Stand des Teams (0 = ungestört, sonst Stärke) */
+  eloka: number;
 }
 
 /** Kamera: Versatz des Ausschnitts in m gegenüber der Meldezeit, verfolgtes Fahrzeug, Bildrauschen beim Schwenk (0…1). */
@@ -465,7 +470,8 @@ export class LiveDrohnenbild {
       const steht = !faehrt(ziel, t) || liegt;
       fahrzeuge.push({
         id: ziel.id, sprite, px: q, hdg, wrack,
-        rauch: this.rauchStaerke.get(ziel.id) ?? 1,
+        rauch: f?.feuer_effekt === "keiner" ? 0 : this.rauchStaerke.get(ziel.id) ?? 1,
+        brennt: wrack && f?.feuer_effekt !== "keiner",
         feuert: !wrack && steht && !!ziel.feuert?.some((fe) => fe.von_s <= t && t <= fe.bis_s),
         staub: wrack ? [] : staubSpur(ziel.bewegung?.route, t, halt, undefined, ziel.bis_s),
         unschaerfe: eb?.unschaerfe?.ziel === ziel.id && !wrack ? { laenge_px: eb.unschaerfe.laenge_px, winkel: eb.unschaerfe.winkel } : undefined,
@@ -504,7 +510,7 @@ export class LiveDrohnenbild {
       zielImBild = true;
       marken.push({ id: bz.id, box: [x, y, bw, bh] });
     }
-    return { t, fahrzeuge, figuren, marken, zielImBild, kamera: this.kam };
+    return { t, fahrzeuge, figuren, marken, zielImBild, kamera: this.kam, eloka: elokaStoerung(inh, z.zerstoert, t) };
   }
 
   // ---------------------------------------------------------------- Zeichnen
@@ -629,7 +635,7 @@ export class LiveDrohnenbild {
     // Feuer auf Wracks (Mündungsblitz und Abschussrauch feuernder Fahrzeuge kommen seit 2.1 aus der Effektliste)
     const feuer = this.anim("feuer");
     for (const f of sz.fahrzeuge) {
-      if (f.wrack && feuer) this.effektBild(ctx, "feuer", Math.floor((realMs / 1000) * feuer.fps), f.px, (res.man.effekte.animationen.feuer.groesse_m ?? 6) * 0.6, 0, 0.8);
+      if (f.brennt && feuer) this.effektBild(ctx, "feuer", Math.floor((realMs / 1000) * feuer.fps), f.px, (res.man.effekte.animationen.feuer.groesse_m ?? 6) * 0.6, 0, 0.8);
     }
 
     // Figuren: am Boden mit Schatten, dann auf Fahrzeugen
@@ -658,7 +664,8 @@ export class LiveDrohnenbild {
     ctx.drawImage(res.kamera, 0, 0, this.breite, this.hoehe);
     ctx.restore();
 
-    const stoerung = this.db.ebenen?.bildstoerung;
+    // Bildstörung der Meldung (Daten) und seit 2.4 die globale EloKa-Störung (solange das EloKa-Fahrzeug steht)
+    const stoerung = Math.max(this.db.ebenen?.bildstoerung ?? 0, sz.eloka);
     if (stoerung) this.bildstoerung(ctx, stoerung, realMs, tr, w, h);
     // Schwenk zum nächsten Ziel: kurzes, starkes Bildrauschen (Ausrichtung)
     if (sz.kamera.rauschen > 0) this.bildstoerung(ctx, 1.5 + 2 * sz.kamera.rauschen, realMs, tr, w, h, sz.kamera.rauschen);
@@ -939,8 +946,10 @@ export async function vergleicheMitStandbild(b: LiveDrohnenbild, lage: LiveLage)
   c.height = b.hoehe;
   const ctx = c.getContext("2d", { willReadFrequently: true })!;
   const sz = b.szene(lage, b.db.t_s);
-  // Standbilder zeigen keinen Staub (der kommt erst im Live-Bild dazu, seit 2.1)
+  // Standbilder zeigen keinen Staub (der kommt erst im Live-Bild dazu, seit 2.1); das EloKa-Rauschen ist zufällig
+  // (Standbild mit eingebranntem Rauschen: Manifest `eloka`, der Vergleich zählt dort nur die Lage)
   for (const f of sz.fahrzeuge) f.staub = [];
+  sz.eloka = 0;
   b.zeichne(ctx, sz, { ...lage, effekte: [] }, 1, 0, { s: 1, ox: 0, oy: 0 }, b.breite, b.hoehe);
   const a = ctx.getImageData(0, 0, b.breite, b.hoehe).data;
   const st = await ladeBild(b.db.datei);

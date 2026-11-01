@@ -93,7 +93,10 @@ class Live:
         img = self._ebene(eb["boden"])
         schatten = Image.new("RGBA", img.size, (0, 0, 0, 0))
         fahrzeuge, feuer, rauch, figuren = [], [], [], []
-        k_fz = (1 / mpp) / self.man["fahrzeuge"]["px_pro_m"]
+        rahmen = self.man["fahrzeuge"].get("rahmen", {})
+
+        def k_von(name):                                     # seit 2.4: px_pro_m je Rahmen (feine Sprites doppelt aufgelöst)
+            return (1 / mpp) / (rahmen.get(name, {}).get("px_pro_m") or self.man["fahrzeuge"]["px_pro_m"])
         for z in kand:
             if not d.da(z, t):
                 continue
@@ -105,8 +108,9 @@ class Live:
             sch = d.zustand_bei(z, t) if z["id"] in d.ziele else "intakt"
             if sch == "zerstoert":
                 name = f["sprite_wrack"]
-                feuer.append(q)
-                rauch.append(q)
+                if f.get("feuer_effekt") != "keiner":        # seit 2.4: Personen-Gruppen brennen nicht
+                    feuer.append(q)
+                    rauch.append(q)
             elif z["id"] in bekannt and bekannt[z["id"]].get("darstellung") in ("luk_offen", "kette_ab"):
                 name = bekannt[z["id"]]["sprite"]
             elif sch == "ausser_gefecht" and f["sprite"].replace(".png", "_kette_ab.png") in self.fz.j["frames"]:
@@ -114,6 +118,7 @@ class Live:
             else:
                 name = f["sprite"]
             spr = _faerben(self.fz.rahmen(name), mat)
+            k_fz = k_von(name)
             fahrzeuge.append((spr, q, h, k_fz))
             sh = Image.new("RGBA", spr.size, (0, 0, 0, 255))
             sh.putalpha(spr.split()[3])
@@ -183,8 +188,8 @@ def pruefe_ebenen(d, aus, man, ids=None):
             continue
         a = np.asarray(live.bild(mid, e["t_s"]), np.float32)
         b = np.asarray(Image.open(os.path.join(aus, e["datei"])).convert("RGB"), np.float32)
-        if e["ebenen"].get("bildstoerung"):
-            out[mid] = None                                  # Rauschen und Zeilenversatz macht die Oberfläche
+        if e["ebenen"].get("bildstoerung") or e.get("eloka"):
+            out[mid] = None                                  # Rauschen und Zeilenversatz macht die Oberfläche (seit 2.4 auch EloKa)
             continue
         out[mid] = round(float(np.abs(a - b).mean()), 1)
     return out

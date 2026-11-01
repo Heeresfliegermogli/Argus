@@ -14,9 +14,8 @@ import { einschlaege, einschlag, pruefeWirkmittel, stehende, vorhersage, wirkung
 import { stand, zeitlinie } from "../src/kern/verluste";
 import { anwenden, zustandAus } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
-import type { DrehbuchReferenz } from "./modellteam";
 
-const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as DrehbuchReferenz & {
+const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
   laeufe: { team: string; einspielen: Record<string, number>; faelle: Record<string, boolean>; verluste: { zuege: Record<string, { kampfkraft: number }>; kompanie: { kampfkraft: number } } }[];
 };
 
@@ -227,9 +226,9 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
   it("die Spitze hat mehr Sonderfälle als die Routine; die Simulation erreicht alle alten und neuen Fälle (naiv und ideal)", async () => {
     const inh = await inhalte();
     const phasen = inh.szenario.phasen;
-    const routine = phasen.filter((p) => p.bis_s <= 840).map((p) => p.nr ?? p.id);
+    const routine = phasen.filter((p) => p.bis_s <= 840).map((p) => p.nr);
     const fallIn = (ids: unknown[]) => inh.szenario.meldungen.filter((m) => m.fall && ids.includes(m.phase)).length;
-    const spitze = phasen.filter((p) => p.von_s >= 840).map((p) => p.nr ?? p.id);
+    const spitze = phasen.filter((p) => p.von_s >= 840).map((p) => p.nr);
     expect(fallIn(spitze)).toBeGreaterThan(2 * fallIn(routine));
     for (const l of ref.laeufe.filter((x) => Object.keys(x.einspielen ?? {}).length === 0)) {
       expect(Object.entries(l.faelle).filter(([, ok]) => !ok).map(([f]) => f), l.team).toEqual([]);
@@ -314,7 +313,7 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
       meldung: "M33", wirkmittel: "MRS", pos: inh.ziele["Z-43"].pos, t_freigabe: 1260, t_einschlag: 1300, ziel: "Z-43",
       getroffen: [{ ziel: "Z-43", was: "fahrzeug", kategorie: "zivil" }],
     }, 1300)], inh);
-    const v = i15.bedingung!.verzoegerung_s ?? 0;
+    const v = (i15.bedingung as { verzoegerung_s?: number }).verzoegerung_s ?? 0;
     expect(faellig(inh, z, 1300 + v - 1).some((x) => x.typ === "inject" && (x.daten as { inject: string }).inject === "I-15")).toBe(false);
     expect(faellig(inh, z, 1300 + v).some((x) => x.typ === "inject" && (x.daten as { inject: string }).inject === "I-15")).toBe(true);
   });

@@ -286,7 +286,9 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   for (const [id, tz] of Object.entries(z.zerstoert)) {
     const ziel = inh.ziele[id];
     if (!ziel || !kennt(id)) continue;
-    out.push({ id: `${id}-w`, art: "wrack", quelle: { folge: "zerstoert" }, t: tz, pos: position(ziel, tz), nr: variante(id, 4) });
+    // seit 2.4: Personen-Gruppen (Beobachter, Verwundete; Katalog feuer_effekt „keiner“) brennen nicht
+    const folge = inh.fahrzeuge[ziel.typ]?.feuer_effekt === "keiner" ? "ausser_gefecht" : "zerstoert";
+    out.push({ id: `${id}-w`, art: "wrack", quelle: { folge }, t: tz, pos: position(ziel, tz), nr: variante(id, 4) });
   }
   for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
     if (h.art !== "panzerabwehr" || h.folge === "zerstoert" || !z.hintergrund[h.id]?.wirkt || !kennt(h.ziel)) continue;

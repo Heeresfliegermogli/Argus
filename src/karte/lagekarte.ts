@@ -1209,7 +1209,8 @@ export class Lagekarte {
           this.spriteEbene.addChild(sp);
         }
         sp.texture = tex;
-        sp.scale.set(this.s / (this.man?.fahrzeuge.px_pro_m ?? 12));
+        // seit 2.4: Maßstab je Rahmen (feine Sprites wie PRESS, Verbände in doppelter Auflösung)
+        sp.scale.set(this.s / (this.man?.fahrzeuge.rahmen[spriteName]?.px_pro_m ?? this.man?.fahrzeuge.px_pro_m ?? 12));
         sp.rotation = ((o.bahn && t !== null ? lage.hdg : o.sprite.hdg) * Math.PI) / 180;
         sp.position.set(x, y);
         sp.visible = true;

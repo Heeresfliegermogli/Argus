@@ -502,8 +502,33 @@ def attrappe_kpz(lw, L, B, zustand=None):
             continue
         c = [(58, 66, 44), (104, 98, 66), (70, 78, 50), (92, 94, 60), (120, 108, 72)][r.integers(5)]
         lw.ell(x, y, r.uniform(0.15, 0.45), r.uniform(0.12, 0.3), c, n=7)
-    lw.ell(0.0, -0.4, 1.3, 0.9, (104, 106, 72))
-    lw.linie([(rx - 0.2, 0.0), (rx + 1.8, 0.0)], (52, 54, 40), 0.18)           # Rohr ragt heraus
+    # Seit 2.4 (E6.3, S1): das Netz hängt zwischen den Stangen durch (helle Stangenköpfe, dunkle Mulden dazwischen,
+    # Maschen sichtbar) – ein echter Panzer spannt das Netz über Turm und Wanne. Das Rohr ist ein heller Holzbalken.
+    stangen = [(-rx * 0.6, -ry * 0.48), (-rx * 0.6, ry * 0.48), (rx * 0.08, -ry * 0.52), (rx * 0.08, ry * 0.52), (rx * 0.6, 0.0)]
+    ov = Image.new("RGBA", (lw.w, lw.h), (0, 0, 0, 0))
+    do = ImageDraw.Draw(ov)
+    for i, (xa, ya) in enumerate(stangen):                                     # Mulden zwischen benachbarten Stangen
+        for (xb, yb) in stangen[i + 1:]:
+            if math.hypot(xb - xa, yb - ya) > rx * 0.8:
+                continue
+            mx, my = (xa + xb) / 2, (ya + yb) / 2
+            do.ellipse(lw.P([(mx - 0.75, my - 0.6)]) + lw.P([(mx + 0.75, my + 0.6)]), fill=(26, 30, 20, 120))
+    ov = ov.filter(ImageFilter.GaussianBlur(0.45 * lw.s))
+    do = ImageDraw.Draw(ov)
+    for (x, y) in stangen:                                                     # Netz spannt über den Stangenköpfen
+        for a_ in np.linspace(0, 2 * math.pi, 9)[:-1]:
+            do.line(lw.P([(x, y), (x + 1.1 * math.cos(a_), y + 0.9 * math.sin(a_))]), fill=(150, 146, 106, 110), width=max(1, int(0.05 * lw.s)))
+        do.ellipse(lw.P([(x - 0.3, y - 0.28)]) + lw.P([(x + 0.3, y + 0.28)]), fill=(150, 146, 108, 200))
+        do.ellipse(lw.P([(x - 0.13, y - 0.12)]) + lw.P([(x + 0.09, y + 0.08)]), fill=(178, 172, 128, 220))
+    for k in np.arange(-rx - ry, rx + ry, 0.55):                               # Maschen (diagonal, beide Richtungen)
+        for sgn in (-1, 1):
+            do.line(lw.P([(k - ry, -sgn * ry), (k + ry, sgn * ry)]), fill=(40, 44, 30, 60), width=max(1, int(0.03 * lw.s)))
+    lw.img.paste(ov, (0, 0), Image.fromarray(np.minimum(np.asarray(ov)[..., 3], np.asarray(lw.koerper))))
+    holz = (194, 160, 104)
+    lw.linie([(rx * 0.45, 0.0), (rx + 1.8, 0.0)], holz, 0.22)                  # Rohr: Holzbalken ragt heraus
+    lw.linie([(rx * 0.5, -0.04), (rx + 1.75, -0.04)], hell(holz, 1.12), 0.06)  # Maserung im Licht
+    lw.linie([(rx * 0.5, 0.06), (rx + 1.75, 0.06)], hell(holz, 0.78), 0.04)
+    lw.kasten(rx + 1.62, rx + 1.82, -0.14, 0.14, hell(holz, 0.86))            # gesägtes Ende
 
 
 @zeichner("traktor")
@@ -532,6 +557,185 @@ def traktor(lw, L, B, zustand=None):
             y = r.uniform(-0.75, 0.6)
             c = [(196, 188, 160), (90, 70, 50), (60, 80, 120), (150, 60, 50), (200, 200, 196)][k % 5]
             lw.kasten(x, x + r.uniform(0.4, 0.8), y, y + r.uniform(0.3, 0.5), c)
+
+
+# ====================================================================== Zivile Fahrzeuge, Beobachter, Verwundete (seit 2.4)
+FONT_FETT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+
+def _schrift(lw, text, x0, x1, y0, y1, farbe, alpha=255):
+    """Text in Fahrzeugkoordinaten in das Rechteck x0..x1 (vorwärts), y0..y1 (rechts) einpassen, lesbar bei Blick nach Osten."""
+    from PIL import ImageFont
+    w, h = int((x1 - x0) * lw.s), int((y1 - y0) * lw.s)
+    groesse = h
+    font = ImageFont.truetype(FONT_FETT, groesse)
+    while groesse > 6:
+        font = ImageFont.truetype(FONT_FETT, groesse)
+        bb = font.getbbox(text)
+        if bb[2] - bb[0] <= w:
+            break
+        groesse -= 2
+    bb = font.getbbox(text)
+    maske = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(maske).text(((w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]), text, font=font, fill=alpha)
+    farbe_img = Image.new("RGBA", (w, h), lw.farbe(farbe))
+    lw.img.paste(farbe_img, (int(lw.cx + x0 * lw.s), int(lw.cy + y0 * lw.s)), maske)
+
+
+def _pkw(lw, L, B, lack, dach=None):
+    """Pkw in Draufsicht: Räder, Karosserie, Motorhaube, Scheiben, Dach (Farbe dach)."""
+    for x in (L / 2 - 0.85, -L / 2 + 0.9):
+        for sy in (-1, 1):
+            lw.kasten(x - 0.33, x + 0.33, sy * (B / 2 - 0.02) - 0.12, sy * (B / 2 - 0.02) + 0.12, REIFEN if not lw.wrack else (24, 22, 20))
+    b = B / 2 - 0.08
+    umriss = [(L / 2, -b + 0.3), (L / 2 - 0.25, -b), (-L / 2 + 0.2, -b), (-L / 2, -b + 0.2), (-L / 2, b - 0.2), (-L / 2 + 0.2, b), (L / 2 - 0.25, b), (L / 2, b - 0.3)]
+    lw.poly(umriss, lack, koerper=True)
+    lw.poly([(L / 2 - 0.05, -b + 0.32), (L / 2 - 1.15, -b + 0.12), (L / 2 - 1.15, b - 0.12), (L / 2 - 0.05, b - 0.32)], hell(lack, 1.12), koerper=True)  # Haube
+    glas = (36, 44, 52) if not lw.wrack else (22, 20, 18)
+    lw.poly([(L / 2 - 1.15, -b + 0.14), (L / 2 - 1.75, -b + 0.2), (L / 2 - 1.75, b - 0.2), (L / 2 - 1.15, b - 0.14)], glas)        # Frontscheibe
+    lw.kasten(-L / 2 + 0.12, -L / 2 + 0.45, -b + 0.22, b - 0.22, glas)                                                           # Heckscheibe
+    for sy in (-1, 1):
+        ya, yb = sorted((sy * (b - 0.02), sy * (b - 0.17)))
+        lw.kasten(-L / 2 + 0.6, L / 2 - 1.8, ya, yb, glas)                                                                    # Seitenscheiben
+        lw.ell(L / 2 - 1.2, sy * (b + 0.08), 0.1, 0.07, hell(lack, 0.7))                                                        # Spiegel
+    lw.kasten(-L / 2 + 0.45, L / 2 - 1.75, -b + 0.18, b - 0.18, dach or hell(lack, 0.96), koerper=True)                       # Dach
+    return b
+
+
+@zeichner("pkw_zivil")
+def pkw_zivil(lw, L, B, zustand=None):
+    """Kombi einer Familie auf der Flucht: Dachträger mit Koffern und zusammengerollter Matratze (S8)."""
+    b = _pkw(lw, L, B, (164, 46, 40))
+    x0, x1 = -L / 2 + 0.55, L / 2 - 1.85
+    for sy in (-1, 1):
+        lw.linie([(x0, sy * (b - 0.25)), (x1, sy * (b - 0.25))], (40, 40, 40), 0.06)                                        # Dachreling
+    if lw.wrack:
+        for k in range(4):
+            lw.ell(x0 + 0.4 + k * 0.55, (-1) ** k * 0.2, 0.3, 0.22, (30, 26, 22))                                            # verbrannte Ladung
+        return
+    lw.kasten(x0 + 0.05, x0 + 1.05, -b + 0.3, b - 0.3, (214, 206, 182))                                                        # Matratze
+    for k in range(5):
+        lw.linie([(x0 + 0.1 + k * 0.2, -b + 0.32), (x0 + 0.1 + k * 0.2, b - 0.32)], (170, 150, 130), 0.05)
+    lw.kasten(x0 + 1.15, x0 + 1.75, -b + 0.28, -0.02, (58, 92, 150))                                                           # Koffer blau
+    lw.kasten(x0 + 1.15, x0 + 1.75, 0.04, b - 0.3, (110, 76, 50))                                                              # Koffer braun
+    lw.kasten(x1 - 0.42, x1 - 0.02, -0.35, 0.3, (60, 120, 70))                                                                 # Tasche
+    for xg in (x0 + 0.5, x0 + 1.45):
+        lw.linie([(xg, -b + 0.2), (xg, b - 0.2)], (28, 28, 28), 0.06)                                                          # Spanngurte
+
+
+@zeichner("pkw_presse")
+def pkw_presse(lw, L, B, zustand=None):
+    """Geländewagen der Presse: dunkelblau, auf dem Dach groß PRESS (weiß), dazu klein auf der Haube (S8)."""
+    blau = (30, 52, 108)
+    b = _pkw(lw, L, B, blau, dach=hell(blau, 0.9))
+    a = 255 if not lw.wrack else 70
+    _schrift(lw, "PRESS", -L / 2 + 0.5, L / 2 - 1.8, -b + 0.2, b - 0.2, (248, 248, 244), a)
+    _schrift(lw, "PRESS", L / 2 - 1.1, L / 2 - 0.15, -0.38, 0.38, (248, 248, 244), a)
+    if not lw.wrack:
+        lw.ell(-L / 2 + 0.35, 0.55, 0.16, 0.16, (200, 200, 196))                                                               # Satellitenantenne am Heck
+
+
+def _ell_um(lw, x, y, rx, ry, c, hdg=0.0, n=20):
+    """Ellipse um ihren eigenen Mittelpunkt gedreht (Leinwand.ell dreht um die Fahrzeugmitte)."""
+    ca, sa = math.cos(math.radians(hdg)), math.sin(math.radians(hdg))
+    lw.poly([(x + rx * math.cos(t) * ca - ry * math.sin(t) * sa, y + rx * math.cos(t) * sa + ry * math.sin(t) * ca)
+             for t in (2 * math.pi * k / n for k in range(n))], c)
+
+
+def _kasten_um(lw, x0, x1, y0, y1, c, hdg=0.0):
+    """Rechteck um seinen Mittelpunkt gedreht."""
+    mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+    ca, sa = math.cos(math.radians(hdg)), math.sin(math.radians(hdg))
+    lw.poly([(mx + (px - mx) * ca - (py - my) * sa, my + (px - mx) * sa + (py - my) * ca) for px, py in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))], c)
+
+
+def _soldat_oben(lw, x, y, hdg, k=1.7, helm=(64, 70, 44), uniform=(104, 110, 76), verband=None, liegt=False, sitzt=False):
+    """Person in Draufsicht direkt auf der Leinwand (Meter, k = Überhöhung wie die Figuren im Drohnenbild)."""
+    r = math.radians(hdg)
+    ca, sa = math.cos(r), math.sin(r)
+
+    def W(px, py):
+        return (x + px * ca - py * sa, y + px * sa + py * ca)
+    if liegt:                                       # liegt auf dem Rücken: Rumpf, Beine, Arme
+        for sy in (-1, 1):
+            lw.linie([W(-0.2 * k, sy * 0.11 * k), W(-0.95 * k, sy * 0.14 * k)], hell(uniform, 0.85), 0.16 * k)               # Beine
+        _ell_um(lw, *W(0.05 * k, 0), 0.34 * k, 0.21 * k, uniform, hdg)
+        for sy in (-1, 1):
+            lw.linie([W(0.25 * k, sy * 0.2 * k), W(-0.05 * k, sy * 0.3 * k)], hell(uniform, 0.92), 0.1 * k)
+        lw.ell(*W(0.5 * k, 0), 0.13 * k, 0.12 * k, (206, 176, 146))                                                          # Kopf (ohne Helm)
+    else:
+        if sitzt:
+            for sy in (-1, 1):
+                lw.linie([W(0.0, sy * 0.1 * k), W(0.5 * k, sy * 0.12 * k)], hell(uniform, 0.85), 0.15 * k)                    # Knie
+        _ell_um(lw, *W(0, 0), 0.2 * k, 0.3 * k, uniform, hdg)                                                                 # Schultern
+        lw.ell(*W(0, 0), 0.14 * k, 0.14 * k, helm if helm else (206, 176, 146))
+    if verband == "kopf":
+        kx, ky = W(0.5 * k, 0) if liegt else W(0, 0)
+        lw.ell(kx, ky, 0.12 * k, 0.11 * k, (246, 246, 240))
+    elif verband == "arm":
+        lw.linie([W(0.05 * k, 0.24 * k), W(0.28 * k, 0.12 * k)], (246, 246, 240), 0.12 * k)                                   # Armschlinge
+    elif verband == "bein":
+        lw.linie([W(-0.45 * k, 0.12 * k), W(-0.8 * k, 0.14 * k)], (246, 246, 240), 0.17 * k)
+    elif verband == "brust":
+        q = W(0.02 * k, 0)
+        _kasten_um(lw, q[0] - 0.13 * k, q[0] + 0.13 * k, q[1] - 0.17 * k, q[1] + 0.17 * k, (246, 246, 240), hdg)
+
+
+@zeichner("beobachter_trupp")
+def beobachter_trupp(lw, L, B, zustand=None):
+    """Zwei Soldaten auf der Turmplattform (Blick nach vorn = Osten im Sprite): einer mit Fernglas, einer mit Funkgerät
+    und Antenne, dazu Spektiv auf Dreibein und Karte. Getroffen (Wrack): nur zurückgelassenes Gerät, keine Personen."""
+    funk = (52, 62, 44)
+    if lw.wrack:
+        _kasten_um(lw, -0.9, -0.4, 0.2, 0.62, funk, 35)                                                                        # Funkgerät umgestürzt
+        lw.linie([(-0.6, 0.4), (0.4, 1.0)], (30, 30, 28), 0.04)                                                               # Antenne abgeknickt
+        lw.kasten(0.3, 0.55, -0.6, -0.42, (30, 32, 30))                                                                        # Fernglas am Boden
+        _kasten_um(lw, -0.2, 0.3, -0.2, 0.15, (200, 196, 176), -20)                                                            # Karte
+        return
+    # Spektiv auf Dreibein, an der Brüstung (vorn)
+    for a in (0, 120, 240):
+        q = math.radians(a)
+        lw.linie([(0.95, 0.55), (0.95 + 0.38 * math.cos(q), 0.55 + 0.38 * math.sin(q))], (36, 36, 34), 0.04)
+    lw.linie([(0.85, 0.55), (1.3, 0.55)], (44, 46, 42), 0.11)
+    # Soldat 1 mit Fernglas (vorn links)
+    _soldat_oben(lw, 0.45, -0.5, 0)
+    for sy in (-0.66, -0.34):
+        lw.linie([(0.45, -0.5 + (sy + 0.5) * 2.2), (0.95, sy)], (104, 110, 76), 0.13)                                          # Arme nach vorn
+    lw.kasten(0.92, 1.22, -0.72, -0.56, (20, 20, 18))                                                                          # Fernglas: zwei Tuben
+    lw.kasten(0.92, 1.22, -0.44, -0.28, (20, 20, 18))
+    lw.kasten(0.98, 1.12, -0.56, -0.44, (20, 20, 18))
+    # Soldat 2 mit Funkgerät (hinten rechts), Hörer am Ohr, Antenne nach hinten
+    _soldat_oben(lw, -0.35, 0.45, 10)
+    lw.kasten(-0.98, -0.62, 0.22, 0.68, funk)                                                                                  # Funkgerät (Tornister)
+    lw.kasten(-0.92, -0.68, 0.28, 0.4, hell(funk, 1.3))
+    lw.linie([(-0.9, 0.3), (-1.45, -0.55)], (24, 24, 22), 0.035)                                                               # Antenne (Stab)
+    lw.ell(-1.45, -0.55, 0.05, 0.05, (24, 24, 22))
+    lw.linie([(-0.75, 0.45), (-0.25, 0.62)], (24, 24, 22), 0.03)                                                               # Hörerkabel
+    _kasten_um(lw, -0.15, 0.3, -1.05, -0.72, (206, 200, 176), -12)                                                             # Karte auf der Brüstung
+
+
+@zeichner("verwundete")
+def verwundete(lw, L, B, zustand=None):
+    """Vier verwundete Soldaten ohne Waffen neben dem Wrack (S6): zwei liegen (einer auf einer Trage), zwei sitzen,
+    alle mit weißen Verbänden; Verbandstasche offen. Getroffen: nur Trage und Verbandszeug, keine Personen."""
+    weiss = (246, 246, 240)
+    if lw.wrack:
+        lw.kasten(-1.6, 0.6, 0.55, 1.15, (96, 100, 72))                                                                        # Trage, leer
+        for k in range(5):
+            lw.ell(-1.8 + k * 0.8, -1.0 + (k % 2) * 0.4, 0.12, 0.08, weiss)                                                   # Verbandsreste
+        lw.kasten(1.2, 1.7, -0.5, -0.1, (74, 80, 54))
+        return
+    lw.kasten(-1.75, 0.75, 0.48, 1.22, (96, 100, 72))                                                                          # Trage
+    for sy in (0.5, 1.2):
+        lw.linie([(-1.95, sy), (0.95, sy)], (60, 58, 46), 0.06)                                                                 # Holme
+    _soldat_oben(lw, -0.45, 0.85, 180, verband="brust", liegt=True, helm=None)
+    _soldat_oben(lw, -0.6, -0.95, 165, verband="bein", liegt=True, helm=None)
+    _soldat_oben(lw, 1.35, 0.95, 200, verband="kopf", sitzt=True, helm=None)
+    _soldat_oben(lw, 1.45, -0.55, 150, verband="arm", sitzt=True)
+    lw.kasten(0.55, 1.0, -1.45, -1.12, (74, 80, 54))                                                                           # Verbandstasche offen
+    lw.kasten(0.62, 0.93, -1.4, -1.17, weiss)
+    for (x, y) in ((0.25, -1.6), (2.05, 0.2), (-2.2, -0.2)):
+        lw.ell(x, y, 0.1, 0.07, weiss)                                                                                         # Verbandspäckchen
 
 
 # ====================================================================== Personen
@@ -587,6 +791,10 @@ def person_varianten():
     return out
 
 
+# Sprites mit feinen Merkmalen (Schrift PRESS, Verbände, Fernglas) in doppelter Auflösung im Atlas (seit 2.4); Karte
+# und Live-Drohnenbild skalieren je Rahmen mit dessen px_pro_m.
+SPRITE_PX_PRO_M = {"pkw_zivil": 24, "pkw_presse": 24, "beobachter_trupp": 24, "verwundete": 24}
+
 # Zustände, die das Fahrzeug selbst verändern (eigene Sprites); „feuert“ ist ein Effekt (muendungsblitz),
 # „kisten“ liegt am Boden, „furt“ ist Gischt im Standbild.
 ZUSTAND_SPRITES = {"kpz_t72": ("luk_offen", "kette_ab"), "kpz_pt91": ("luk_offen", "kette_ab"), "spaehpz_brdm2": ("luk_offen",)}
@@ -605,6 +813,8 @@ def ausdehnung(typ, L, B, wrack=False):
     hy = B / 2 + (1.3 if typ in ("kpz_t72", "kpz_pt91") else 0.1)
     if typ == "eloka_lkw":
         vorn, hy = max(vorn, 3.6), max(hy, 3.3)
+    if typ in ("verwundete", "beobachter_trupp"):
+        vorn, hinten, hy = vorn + 0.6, hinten + 0.6, hy + 0.5
     hx = max(vorn, hinten) + 0.3
     hy += 0.3
     if wrack:
@@ -621,7 +831,7 @@ def fahrzeug(typ, groesse, s, wrack=False, zustand=None, seed=0, licht=(-0.7, -0
     if wrack:
         _brandfleck(lw, L, B, rng)
     ZEICHNER[typ](lw, L, B, zustand=zustand)
-    if wrack:
+    if wrack and typ not in ("verwundete", "beobachter_trupp"):      # Personen-Gruppen: nur liegengebliebenes Gerät
         _truemmer(lw, L, B, rng)
     return lw.ergebnis()
 
