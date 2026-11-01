@@ -25,6 +25,16 @@ dieselbe Ansicht in ihrer Übersicht über **Auswertung ›**.
 
 Oben rechts läuft das **Zeitbudget** (Kapitel / gesamt, bei Überschreitung bernsteinfarben; Klick setzt zurück).
 
+**Seit Szenario 2.4 (E5, Logik Teil E-a):** Der Teamvergleich zeigt alle Fälle (S1–S8, N1–N4). Das Replay zeigt standardmäßig S3, S2, S1, S4
+(`szenario.auswertung.replay.standard`); die Spielleitung kann S5–S8 zuschalten (`zuschaltbar`) und die Reihenfolge ändern. Das Budget von
+12 min bleibt: `replayPlan(inh, auswahl, mitPreis)` in `src/kern/auswertung.ts` zieht die festen Kapitel (2:00) und den Preis des Abwartens
+(1:00) ab und teilt den Rest gleich auf die gewählten Fälle (auf 5 s abgerundet): vier Fälle je 2:15, sechs je 1:30, acht je 1:05 (`knapp`
+unter 1:30). Unbekannte, doppelte und Nebenfälle in der Auswahl fallen weg. `kapitelListe(a, inh, auswahl)` nimmt den Plan; die Auswahl
+in der Oberfläche baut Teil E-b. Weitere Änderungen der Logik: „Freigabe trotz Warnung“ zählt nur Regelwarnungen (`regelWarnung`: nicht
+„Bestand … aufgebraucht“ und nicht „nur k von n Fahrzeugen – Bestand reicht nicht“); Fehlbekämpfung „außer Gefecht“ heißt jetzt
+„Wehrlose“ (Besatzung, die sich ergibt, und Verwundete am Wrack, S6); im Konfidenzbild tragen die Meldungen zur EloKa-Zeit `eloka: true`
+und als Sichtstörung die EloKa-Stärke (die Bilanz bleibt bei den Werten der Daten: 30 richtig, 6 falsch, Ø 92,3 % gegen 88,2 %).
+
 ### Replay je Schlüsselfall
 
 * **Zeitleiste** (unter der Karte): je Team eine Zeile mit Ausgang, darauf die Marken der Meldung (◆ ARGUS, schraffiert
@@ -130,6 +140,7 @@ Firebase-Regeln lassen das ohne Änderung zu.
 | Bedienung mit wenigen Klicks | 11 Bedienschritte für die ganze Auflösung (7 × weiter, 4 × ▶), alles auch mit Presenter (Bild ↓/↑); Zelle → Replay, Ziffer oder Zeile → Team, Marke → Zeitpunkt |
 | Ethik | Teams statt Namen, keine Rangliste, keine Punkte; Export Team A–E ohne Namen, Kennungen und Uhrzeit, Freitexte nur auf Wunsch (Test und Probe prüfen das) |
 | **D5 (01.11.2026, Szenario 2.3)** | Kapitel „Preis des Abwartens“ mit den fünf Drehbuch-Teams (`tests/szenario23.test.ts`, `tools/verluste_probe.py` auf `?auswertung=demo`): Kurven aller Teams, Marken S4/N4/S3, Leitfragen, Offenlegung, 1530 × 800 ohne Rollbalken; Budget 0:45 + 0:45 + 0:30 + 4 × 2:15 + 1:00 = 12:00; Export mit Kampfkraft und Verwundeten, weiter ohne Namen |
+| **E5 (01.11.2026, Szenario 2.4, Logik)** | `tests/auswertung.test.ts` mit allen zwölf Fällen der fünf Drehbuch-Teams (naiv trifft S5, S6, S8; ideal stoppt richtig: S5 an der Zielprüfung, S6 und die Presse in S8 bei der Aufklärung), Replay-Plan (Standard, sechs, acht Fälle, Budget ≤ 12:00), Regelwarnung ohne Bestandshinweis |
 | automatisch | 114 Tests (12 neu in `tests/auswertung.test.ts`), Build; `tools/auswertung_probe.py` auf `?auswertung=demo`, `ui_faelle.py` (22 Bilder), `bedientest_probe.py` 15/15, `lobby_probe.py` 19/19 |
 
 Prüfen: `python3 tools/auswertung_probe.py http://localhost:4173/` (Beispiel) bzw. mit `--erwartet plan.json` und der

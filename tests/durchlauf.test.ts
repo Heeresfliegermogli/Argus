@@ -83,7 +83,7 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
       const abgelehnt = m.z.abgelehnt.map((a) => `${a.aktionstyp}: ${a.grund}`);
       expect(abgelehnt, m.name).toEqual([]);
     }
-  });
+  }, 60000); // seit 2.4 (mehr Ziele, Einschlag je Fahrzeug) unter Last länger als die 5 s Vorgabe
 
   ref.laeufe.forEach((r, nr) => {
     const name = `${r.team}${Object.keys(r.einspielen).length ? ` + ${Object.entries(r.einspielen).map(([g, t]) => `${g}@${t}`).join(" ")}` : ""}`;

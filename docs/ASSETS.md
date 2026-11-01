@@ -33,6 +33,22 @@ Fahrzeug-Atlas, Katalog 1.4 (`spz_eigen`, nie Ziel, nie gemeldet). Die Stellung 
 Sprite). Die beschriftete Lagekarte (`karte/lagekarte_beschriftet.webp`, Einweisung) zeigt die drei Züge mit Zeichen (●●●) und
 Fahrzeugpunkten und den Gefechtsstand „Kp-Chef“. Alles andere unverändert (Drohnenbilder byte-gleich neu erzeugt).
 
+Szenario 2.4 (01.11.2026, Änderungen E4, E5, E6.3 – Teil E-a): Kartenpaket und alle Drohnenbilder neu erzeugt. **Neue Sprites**
+(Katalog 1.5, frei gestaltet, ohne Kennungen): `pkw_zivil` (Kombi mit Dachträger, Koffern und Matratze – die Familie sitzt im Auto und ist
+von oben nicht zu sehen, `im_fahrzeug`), `pkw_presse` (dunkelblau, auf dem Dach groß **PRESS** in Weiß, klein auf der Haube),
+`beobachter_trupp` (zwei Soldaten mit Fernglas, Funkgerät mit Antenne, Spektiv und Karte – steht auf der Turmplattform),
+`verwundete` (vier Soldaten ohne Waffen mit weißen Verbänden, zwei liegen, einer auf der Trage, zwei sitzen; alle sichtbar am Leben). Diese
+vier liegen in doppelter Auflösung im Atlas (24 px/m, `px_pro_m` je Rahmen; Karte und Live-Bild skalieren je Rahmen). Getroffen zeigen
+Beobachter und Verwundete nur liegengebliebenes Gerät (Trage, Verbandszeug, Funkgerät) ohne Trümmer und brennen nicht (Katalog
+`feuer_effekt: keiner`, auch auf der Karte). **Attrappe** (S1, E6.3): Rohr aus hellem Holz mit Maserung und gesägtem Ende, das Netz hängt
+zwischen den Stangen durch (Stangenköpfe hell, Mulden dunkel, Maschen). **Kirche mit Turm** (S7): Schieferdach mit Chor im Osten und Kreuz
+auf dem First, westlich der Turm mit flacher Plattform, Brüstung und Eckpfeilern, langer Schatten. **Merkmale im Bild statt Sensordaten**
+(`bild.merkmale`, E6.3): S5 fünf Bewohner in einer Reihe vor der Hauswand (`personen[].reihe`), zwei Kinder; S8 Kamerateam neben dem
+Pressefahrzeug. **EloKa** (E4): Die Standbilder zur EloKa-Zeit (M09, M25, M10, M11) tragen das Rauschen der Daten (Stärke 0,45, Manifest
+`eloka`); die Ebenen bleiben ungestört, das Live-Bild rauscht nach dem Stand des Teams und ist klar, sobald Z-23 zerstört ist. Neues Bild
+`SL-Z44` (Pkw der Familie, nur Kontakt, Lage an der Schule; nur Spielleitung). Geprüft mit `tools/drohne_probe.py` Teil 6 (alle Merkmale
+mit Lupe) und Teil 7 (EloKa).
+
 ## Inhalt von `public/assets/`
 
 | Pfad | Inhalt | Größe |
@@ -44,11 +60,11 @@ Fahrzeugpunkten und den Gefechtsstand „Kp-Chef“. Alles andere unverändert (
 | `karte/topo_050.webp` | schematische Karte (Wald, Wege, Bach, Gebäude), ruhiger Hintergrund für G2/G3 | 103 KB |
 | `karte/lagekarte_beschriftet.webp` | Luftbild mit Raster, PQ, Zonen „Schule“ und „Ortschaft“ (seit 2.1 ohne Kürzel), allen Namen (Vorschau, Plenum, Druck) | 353 KB |
 | `karte/gelaende.json` | erzeugte Einzelhäuser als Vektoren | 3 KB |
-| `drohne/M01.webp … M30.webp` | Standbild je ARGUS-Meldung, 1024 × 640, mit Sichtstörungen und Wracks | 15–143 KB |
+| `drohne/M01.webp … M36.webp` | Standbild je ARGUS-Meldung, 1024 × 640, mit Sichtstörungen und Wracks (seit 2.4 M31–M36; zur EloKa-Zeit mit Rauschen) | 15–143 KB |
 | `drohne/V1-M1.webp … V5-M1.webp` | Standbild je Verstärkung, nur mit deren Fahrzeugen | 23–54 KB |
 | `drohne/ebenen/<Meldung>-boden/-kronen/-stoerung.webp` | Ebenen des Live-Drohnenbilds je Meldung und Verstärkung (Kronen und Störung mit Alphakanal, fehlen, wenn leer) | 15–88 KB je Meldung |
 | `drohne/ebenen/kamera.webp` | gemeinsame Kamera-Ebene (Vignette) für alle Live-Drohnenbilder | 8 KB |
-| `drohne/SL-Z27.webp`, `SL-Z28.webp` | ungemeldete Ziele Z-27 und Z-28 an der Brücke Ost (Lage bei Spielende), nur Spielleitung/Plenum | 35–38 KB |
+| `drohne/SL-Z27.webp`, `SL-Z28.webp`, `SL-Z44.webp` | ungemeldete Ziele Z-27 und Z-28 an der Brücke Ost (Lage bei Spielende), seit 2.4 der Pkw der Familie (nur Kontakt), nur Spielleitung/Plenum | 22–39 KB |
 | `sprites/fahrzeuge.png/.json` | Sprite-Atlas (PixiJS-Format): 12 Fahrzeugtypen intakt und Wrack, Zustände (Kette ab, Luk offen), Personen mit Varianten (Kleidung, Kind, weißes Tuch), Drohne, Loitering Munition | 341 KB |
 | `sprites/effekte.webp/.json` | Effekt-Atlas mit Animationen (seit 5b WebP mit Alphakanal statt PNG) | 512 KB |
 

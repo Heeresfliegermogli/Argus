@@ -1,7 +1,8 @@
 # ARGUS – Engine und Live-Lage (Schritt 7)
 
-Stand 01.11.2026 (Szenario 2.3, Änderungen D1–D5 „mehr Druck“: eigene Truppe, Verlustmodell, Druckmeldungen; davor 2.2 mit
-C1–C9 und 2.1 mit A1–A9). Grundlage: Konzept v2 (§4–§6), Szenario KRÄHE-01 v2.3 (`anforderungen_technik`),
+Stand 01.11.2026 (Szenario 2.4, Änderungen E1–E8 „Ethik“, Teil E-a: Zug-Bekämpfung, EloKa global, drei ARGUS-Klassen, Merkmale im
+Bild, Fälle S5–S8; davor 2.3 mit D1–D5 „mehr Druck“, 2.2 mit C1–C9 und 2.1 mit A1–A9). Grundlage: Konzept v2 (§4–§6), Szenario
+KRÄHE-01 v2.4 (`anforderungen_technik`),
 Referenz `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`), `tools/referenz/verluste.py` (Verlustmodell) und
 `tools/referenz/simuliere_durchlauf.py`. Alles ist eine reine Funktion von Inhalten, Protokoll und Spielzeit:
 gleiches Protokoll ⇒ gleicher Stand, gleiche Karte, gleiche Effekte in jedem Fenster.
@@ -161,6 +162,30 @@ Lagemeldungen ≤ 140 Zeichen, Empfehlungskarte der Führung kompakt, Auswertung
 | `ui_bilder.py` (29), `ui_faelle.py` (22), `bedientest_probe.py` (18/18), `lobby_probe.py` (20/20), `drohne_probe.py` (43 Prüfpunkte, Bildrate 30 Bilder/s), `auswertung_probe.py` (jetzt mit Kapitel „Preis“, Werte wie im Prozess) | bestanden, alle Ansichten in 1530 × 800 ohne Rollbalken |
 | `tools/e2e_drehbuch.py` (18 Fenster, ×5, zwei Läufe) | alle fünf Teams bis Spielende, 18 Fenster in 1530 × 800 ohne Layout- und Konsolenfehler, Auswertung im Plenum wie im Prozess (Teamvergleich, Kennzahlen, Kapitel „Preis“), Klick → Protokoll Median 14–42 ms, höchstens 0,48 s. Ausgänge, Wirkmittel, bekämpfte Fahrzeuge, Treffer, Bestände und zerstörte Fahrzeuge wie die Engine im Prozess; Abweichungen nur bei Zeiten aus Klicks und was daraus folgt (M25/M26 erst nach Spielende, N4-Warnung mit anderem Abstand, einmal trifft H-09 Z-34 vor dem verspäteten eigenen Einschlag). **Druckmeldungen:** bei Team 2 genau wie im Prozess (15, Zug, Stufe und Zeit), bei den übrigen gleich viele oder eine mehr mit einzelnen Verschiebungen – sie hängen über die Einschlagzeiten von den Klicks ab, der Vergleich meldet sie deshalb als Hinweis (exakt prüft das `durchlauf.test.ts`). **Befund Last:** Die Modellpersonen der Aufklärung klickten in dieser Testumgebung (18 Fenster, 2 Kerne, keine Grafikkarte) 19–90 s Spielzeit zu spät, auf main df526d8 im selben Vergleichslauf 9–19 s; Zielprüfung 3–8 s, Führung 4–18 s (main 1–6 s). Gemessen mit vier Fenstern (CDP): Hunderte dauerhaft stehende Krater an den Stellungen kosteten jedes Kartenbild rund 40 % mehr Zeichenzeit – sie bleiben jetzt 90 s (danach +15 % gegenüber main, der Rest ist die zusätzliche Darstellung der Züge und Treffer). Ein Fenster allein bleibt im Budget (`drohne_probe.py`: Live-Drohnenbild 30 Bilder/s, höchstens 5,1 ms je Bild, Karte daneben 29 Bilder/s). Am Dienst-PC bestätigen |
 | Gesamt | 150 automatische Tests (mit der Firebase-Nachbildung) |
+
+## Szenario 2.4 (01.11.2026, Änderungen E1–E8 „Ethik“, Teil E-a): Nachweis
+
+Was sich geändert hat (Einzelheiten im Eintrag in `claude/Entscheidungen.md`, Werte im Drehbuch, Bau in
+`tools/referenz/bau_szenario_v24.py`; die Oberfläche macht Teil E-b):
+
+| Teil | Umsetzung | Modul |
+|---|---|---|
+| E1 Verstärkungsmenü aus | Schalter `regeln.spielleitung.verstaerkung_menue: false` (Daten bleiben, `true` blendet wieder ein). Die Oberfläche liest ihn (E-b) | `public/daten/regeln.json` |
+| E2 mehr Druck | 49 statt 37 Ziele (+32 %, alle neuen ab dem Hauptangriff), 36 statt 30 Meldungen, im Hauptangriff alle 30 s eine. Verlustmodell neu kalibriert (Mörser 7 ‰, Feindartillerie 4 ‰, Beobachter 5 ‰; S5 und S7 feuern bzw. lenken Feuer auf den 2. Zug, solange sie stehen) | Daten, `src/kern/verluste.ts` (Art `beobachter`) |
+| E3 BEKÄMPFEN auf den Zug | Wirkmittel `zug`: LM und PzAbw `je_fahrzeug` (ein Einschlag je bei der Freigabe noch stehendem Fahrzeug, der i-te startet `abstand_s · i` später; Bestand begrenzt die Zahl, Warnung „nur k von n Fahrzeugen – Bestand LM reicht nicht“), Mörser `flaeche` (ein Einschlag wie bisher). Die Freigabe schreibt alle Einschläge (`g3_entscheid.einschlaege`, flache Liste `{t, x, y, ziel}` wegen der Firebase-Regeln), der Bestand sinkt je Einschlag, der Host schreibt je Einschlag ein `wirkung`-Ereignis (`nr`, `anzahl`); die Meldung ist erledigt, wenn alle da sind (vereinte Treffer). Warnungen gelten je Einschlag. Wie `argus_lib.einschlaege`/`wirkung`, geprüft mit `tests/regeln.test.ts` (324 Fälle mit Teilen) | `src/kern/regeln.ts` (`einschlaege`, `vorhersage` mit `teile`, `n`, `k`), `src/engine/aktionen.ts`, `src/engine/ablauf.ts`, `src/kern/zustand.ts`, `src/kern/effekte.ts`, `src/kern/lagebild.ts` |
+| E4 EloKa global | Solange `szenario.eloka.ziel` (Z-23) im Raum steht und nicht zerstört ist: ARGUS-Konfidenz − 20, unter 60 % „unbekannt“, Empfehlung nach den Schwellen (NICHT BEKÄMPFEN bleibt), Bildalter + 12 s, jedes Live-Bild rauscht (Stärke 0,45). Für ARGUS gilt der Stand zur Meldezeit (`meldung.gestoert` im Protokoll), für das Bild der Augenblick. Fast-Track und Zeichen nehmen die gestörte Ausgabe. E4.2: zeitlich zwischen S1 und S2 gelegt – gestört sind nur M09, M25, M10, M11 | `src/kern/eloka.ts` (`elokaAktiv`, `argusBei`, `bildalter`, `elokaStoerung`), `src/drohne/livebild.ts` |
+| E5 Fälle S5–S8 | neue Ziele Z-41–Z-45 und Meldungen M31–M36; Inject-Bedingung `treffer` (I-15/I-16: 60 s nach dem ersten Treffer auf die Presse bzw. den Pkw der Familie); Ziele mit `herkunft` (Verwundete aus dem Wrack), `im_gebaeude` (Beobachter im Kirchturm, ab 14:00), `nur_kontakt` (Pkw der Familie, nie gemeldet); Personen `im_fahrzeug` zählen für die Trefferregel, sind im Bild nicht zu sehen | Daten, `src/engine/ablauf.ts` (`ersterTreffer`) |
+| E6.2 Klassen | Katalog 1.5: `argus_klasse` Panzer / Fahrzeug / Infanterie, `klassen` mit Zeichen je Klasse (EVAT, EVU, UCI; Einheit UCA/UCI mit Größenangabe); S3 bleibt „Panzer · Feind 96 %“ | `src/karte/zeichen.ts` (`zeichenArgus`) |
+| E8 Simulation | Modellteams 35/40/30 s (vorher 40/50/30), *ideal* nimmt das Wirkmittel der Lösung (`loesung.wirkmittel`) und gibt nicht frei, wenn im Bild Geschütztes steht; *naiv* folgt der gestörten ARGUS-Ausgabe | `tools/referenz/simuliere_durchlauf.py`, `tests/modellteam.ts` |
+
+| Prüfung | Ergebnis |
+|---|---|
+| `pruefe_szenario.py` (neu: `herkunft` ≤ 25 m vom Wrack, `im_gebaeude` im Gebäude der Karte, `nur_kontakt` ohne Meldung) | OK, keine Fehler, keine Warnung |
+| `simuliere_durchlauf.py` | naiv und ideal erreichen alle alten und neuen Fälle (S1–S8, N1–N4). **Kalibrierung:** Kompanie bei Spielende naiv 66 %, ideal 57 % (2.3: 75/67), naiv + V-1…V-4 60 %, ideal + V-1…V-4 49 %, naiv + V-1…V-5 60 %; niedrigster Zug 46 % (ungedeckelt), Untergrenze 40 % hält in allen fünf Läufen. Robustheit: alle Fälle bis 40/45/30 s; ab Zielprüfung 50 s verpasst naiv N2 |
+| `tests/durchlauf.test.ts` (fünf Teams an einem Taktgeber; Referenz mit `erzeuge_durchlauf.py` neu) | Engine = Simulation: Ausgänge, Einschläge je Fahrzeug eines Zuges, Bestände, Treffer, Injects (auch `treffer`), Verluste und Druckmeldungen |
+| `tests/szenario24.test.ts` (neu, 18) | E1-Schalter, E2 Mengen und Dichte, E6.2 Klassen, E6.3 Merkmale statt Sensordaten, E3 LM/PzAbw/Mörser und „nur k von n“, Engine-Kette mit drei Einschlägen, E4 EloKa (Konfidenz, Protokoll, E4.2), E5 Fälle mit Lösung und Bezügen, Spitze mit mehr Sonderfällen, S5–S8 im Einzelnen, Dauerverluste S5/S7, Kalibrierung |
+| `tools/drohne_probe.py` (neu Teil 6 und 7) | alle Merkmale aller Meldungen mit Lupe im Live-Bild erkennbar (PRESS, Verbände, Beobachter mit Fernglas, Rotes Kreuz, Kinder, weißes Tuch, Holzrohr der Attrappe …), EloKa: M09–M11 und M25 rauschen live, nach dem Mörser auf Z-23 ist M11 klar und ARGUS ungestört |
+| Gesamt | 171 automatische Tests |
 
 ## Oberfläche (Schritt 6b, umgesetzt)
 

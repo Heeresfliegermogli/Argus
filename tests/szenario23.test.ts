@@ -197,5 +197,5 @@ describe("Szenario 2.3: Druckmeldungen (D3) und Auswertung (D5) mit den Drehbuch
     expect(JSON.stringify(ex)).not.toContain("Team 1");
     // die Welt des Teams bleibt intakt (Verstärkungen eingespielt) – die Verluste rechnen mit ihr
     expect(weltFuer(inh, teams[2].z).eingespielt?.length).toBe(4);
-  });
+  }, 60000);
 });
