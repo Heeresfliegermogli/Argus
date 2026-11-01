@@ -12,6 +12,7 @@ import { injectsFuer, warteschlange, zielmeldung } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { zielName } from "../kern/zielnummern";
 import { ROLLEN_NAME } from "../kern/sichten";
+import { injectAnzeige } from "../kern/verluste";
 import type { InjectStand } from "../kern/zustand";
 import type { Sicht } from "../sitzung/sicht";
 import { AktionsKnopf, EingangLeiste, Panel, ZielmeldungKompakt } from "./gemeinsam/bausteine";
@@ -31,20 +32,22 @@ function Postfach(p: { s: Sicht; injects: InjectStand[] }) {
       {p.injects.length === 0 ? <div class="hinweistext">Meldungen von Brigade, Nachbarn und Kompanien erscheinen hier. Nur du bekommst sie.</div> : (
         <div class="stapel" style="gap:6px">
           {[...p.injects].reverse().map((i) => {
-            const inj = inh.injects[i.id];
+            // seit 2.3: Druckmeldungen der Kompanie und gefüllte Platzhalter tragen ihren Text im Protokoll
+            const inj = injectAnzeige(inh, i);
+            const dringend = (i.stufe ?? 0) >= 2;
             const aufgeklappt = !i.quittiert || offenId === i.id;
             if (!aufgeklappt) {
               return (
-                <div key={i.id} class="inject zu" data-inject={i.id} onClick={() => setOffenId(i.id)} title="Klick: ganzen Text zeigen">
-                  <div class="kopfzeile" style="margin:0"><span>{uhrzeit(start, i.erschienen.t_s)} · {inj?.von}</span><span>gelesen ✓</span></div>
-                  <div class="einzeilig">{inj?.text}</div>
+                <div key={i.id} class={`inject zu ${dringend ? "dringend" : ""}`} data-inject={i.id} onClick={() => setOffenId(i.id)} title="Klick: ganzen Text zeigen">
+                  <div class="kopfzeile" style="margin:0"><span>{uhrzeit(start, i.erschienen.t_s)} · {inj.von}</span><span>gelesen ✓</span></div>
+                  <div class="einzeilig">{inj.text}</div>
                 </div>
               );
             }
             return (
-              <div key={i.id} class={`inject ${i.quittiert ? "" : "neu"}`} data-inject={i.id} onClick={() => i.quittiert && setOffenId(null)}>
-                <div class="kopfzeile"><span>{uhrzeit(start, i.erschienen.t_s)} · {inj?.von}</span><span class="mono">{i.id}</span></div>
-                <div class="text">{inj?.text}</div>
+              <div key={i.id} class={`inject ${i.quittiert ? "" : "neu"} ${dringend ? "dringend" : ""}`} data-inject={i.id} onClick={() => i.quittiert && setOffenId(null)}>
+                <div class="kopfzeile"><span>{uhrzeit(start, i.erschienen.t_s)} · {inj.von}</span><span class="mono">{i.id}</span></div>
+                <div class="text">{inj.text}</div>
                 {!i.quittiert && (
                   <div class="zeile zwischen" style="margin-top:7px">
                     <span class="klein sehr-leise">Bestätigt der Spielleitung, dass du die Meldung gelesen hast.</span>
@@ -98,7 +101,7 @@ export function G3Ansicht(p: { s: Sicht }) {
     if (!st.geladen) return;
     if (bekannt.current !== null && injects.length > bekannt.current) {
       const neu = injects[injects.length - 1];
-      s.hinweis("info", `Neue Lagemeldung von ${inh.injects[neu.id]?.von ?? "Brigade"} – siehe rechts`);
+      s.hinweis("info", `Neue Lagemeldung von ${injectAnzeige(inh, neu).von} – siehe rechts`);
     }
     bekannt.current = injects.length;
   }, [injects.length, st.geladen]);

@@ -170,6 +170,12 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 .inject.zu { padding: 5px 10px; cursor: pointer; }
 .inject.zu .einzeilig { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); font-size: 14px; }
 .inject .text { font-size: 15px; }
+/* seit 2.3 (D3): dringende Druckmeldung der Kompanie (Stufe ≥ 2) */
+.inject.dringend { border-left-color: var(--schlecht); }
+.inject.dringend.neu { background: var(--schlecht-flaeche); }
+/* seit 2.3 (D2.1): Zustand der eigenen Kompanie in der Kopfzeile */
+.badge.kp-stand { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.badge.kp-stand.eigen { color: #d6e6ff; background: #1d3a66; }
 
 .hinweise { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 40; max-width: 440px; }
 .hinweis { padding: 9px 12px; border-radius: 6px; background: #234467; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 14px; }

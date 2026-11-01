@@ -1,4 +1,5 @@
-// Drehbuch für fünf Teams mit der echten Engine, verglichen mit tools/referenz/simuliere_durchlauf.py.
+// Drehbuch für fünf Teams mit der echten Engine, verglichen mit tools/referenz/simuliere_durchlauf.py (seit 2.3 mit den
+// Verlusten der eigenen Kompanie und ihren Druckmeldungen).
 // Die fünf Läufe der Simulation (naiv, ideal, beide mit vier Verstärkungen, naiv mit fünf) laufen als fünf
 // Teams parallel an einem Taktgeber (tests/modellteam.ts). Referenz: tests/referenz_durchlauf.json, erzeugt
 // mit tools/referenz/erzeuge_durchlauf.py.
@@ -6,7 +7,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { durchgebrochen } from "../src/kern/durchbruch";
 import { weltFuer } from "../src/kern/lage";
-import type { MeldungsStand } from "../src/kern/zustand";
+import { verlustLage, verlustStand, verlustVerlauf } from "../src/kern/verluste";
+import { type MeldungsStand, zustandAus } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
 import { type Entscheidung, type Modellteam, spieleDurch, type Team } from "./modellteam";
 
@@ -21,6 +23,11 @@ interface RefLauf {
   e01: ({ entfaellt: true } | { t: number; von: string; ziel: string })[]; rest: Record<string, number | string>;
   durchbruch: { gruppe: string; t: number; durch: boolean }[]; durchgebrochen: string[];
   treffer_schutz: string[]; faelle: Record<string, boolean>; log: string[];
+  verluste: {
+    zuege: Record<string, { verlust: number; kampfkraft: number; verwundete: number }>; kompanie: { kampfkraft: number; verwundete: number };
+    ereignisse: number; meldungen: { inject: string; t: number; zug: string; stufe: number; text: string }[];
+    texte: Record<string, string>; verlauf: [number, number, number][];
+  } | null;
 }
 const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
   zeiten: { G1: number; G2: number; G3: number; ft_nach_angebot: number }; reihenfolge_wirkmittel: string[]; laeufe: RefLauf[];
@@ -144,6 +151,30 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
         expect(z.durchbrueche[d.gruppe].t_ab, `${name} ${d.gruppe} t_ab`).toBeCloseTo(d.t, 1);
       }
       expect(durchgebrochen(weltFuer(m.inh, z), z.durchbrueche, z.zerstoert, z.verstaerkungen).fahrzeuge, `${name} durchgebrochen`).toEqual(r.durchgebrochen);
+
+      // Verluste der eigenen Kompanie (seit 2.3, D2/D3): gleiche Zeitlinie, gleicher Stand je Zug, gleiche Druckmeldungen mit
+      // Text und Stufe, gleiche Texte der Lagemeldungen mit Platzhaltern; deterministisch und nie unter der Untergrenze
+      if (r.verluste) {
+        const v = r.verluste;
+        const lage = verlustLage(m.inh, z);
+        expect(lage.ereignisse.length, `${name} Schadensereignisse`).toBe(v.ereignisse);
+        const st = verlustStand(m.inh, z, 1500)!;
+        for (const [zug, soll] of Object.entries(v.zuege)) {
+          expect(st.zuege[zug].verlust, `${name} ${zug} Verlust`).toBe(soll.verlust);
+          expect(st.zuege[zug].kampfkraft, `${name} ${zug} Kampfkraft`).toBe(soll.kampfkraft);
+          expect(st.zuege[zug].verwundete, `${name} ${zug} Verwundete`).toBe(soll.verwundete);
+          expect(st.zuege[zug].kampfkraft, `${name} ${zug} Untergrenze`).toBeGreaterThanOrEqual(m.inh.regeln.verluste!.untergrenze_prozent);
+        }
+        expect(st.kompanie, `${name} Kompanie`).toEqual(v.kompanie);
+        const km = z.injectReihenfolge.map((id) => z.injects[id]).filter((i) => i.stufe !== undefined);
+        expect(km.map((i) => [i.id, i.zug, i.stufe, i.text]), `${name} Druckmeldungen`).toEqual(v.meldungen.map((k) => [k.inject, k.zug, k.stufe, k.text]));
+        km.forEach((i, k) => expect(i.erschienen.t_s, `${name} ${i.id}`).toBeCloseTo(v.meldungen[k].t, 1));
+        for (const [id, text] of Object.entries(v.texte)) expect(z.injects[id]?.text, `${name} ${id} Text`).toBe(text);
+        expect(verlustVerlauf(m.inh, z), `${name} Verlauf`).toEqual(v.verlauf);
+        // deterministisch: aus dem Protokoll neu gerechnet dasselbe
+        const neu = zustandAus(m.kanal.protokoll, m.inh);
+        expect(verlustStand(m.inh, neu, 1500), `${name} neu gerechnet`).toEqual(st);
+      }
 
       const sz = weltFuer(m.inh, z).szenario;
       for (const f of [...sz.schluesselfaelle, ...sz.nebenfaelle]) {

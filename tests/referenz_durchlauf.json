@@ -1,6 +1,6 @@
 {
- "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.2). Nicht von Hand ändern.",
- "szenario": "2.2",
+ "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.3). Nicht von Hand ändern.",
+ "szenario": "2.3",
  "zeiten": {
   "G1": 40,
   "G2": 50,
@@ -688,6 +688,10 @@
      "t": 180.0
     },
     {
+     "inject": "K-01",
+     "t": 406.0
+    },
+    {
      "inject": "I-03",
      "t": 420.0
     },
@@ -696,28 +700,64 @@
      "t": 560.0
     },
     {
+     "inject": "K-02",
+     "t": 680.0
+    },
+    {
      "inject": "I-05",
      "t": 840.0
+    },
+    {
+     "inject": "K-03",
+     "t": 864.0
     },
     {
      "inject": "I-12",
      "t": 880.0
     },
     {
+     "inject": "K-04",
+     "t": 954.0
+    },
+    {
      "inject": "I-04",
      "t": 1020.0
+    },
+    {
+     "inject": "K-05",
+     "t": 1081.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-06",
+     "t": 1126.0
+    },
+    {
+     "inject": "K-07",
+     "t": 1171.0
+    },
+    {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-08",
+     "t": 1204.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1256.0
+    },
+    {
      "inject": "I-09",
      "t": 1295.0
+    },
+    {
+     "inject": "K-10",
+     "t": 1351.0
     },
     {
      "inject": "I-08a",
@@ -726,6 +766,14 @@
     {
      "inject": "I-10",
      "t": 1440.0
+    },
+    {
+     "inject": "K-11",
+     "t": 1440.9
+    },
+    {
+     "inject": "K-12",
+     "t": 1441.0
     },
     {
      "inject": "I-13",
@@ -909,7 +957,629 @@
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
     "D-08: aufgehalten (Z-36 zerstört)"
-   ]
+   ],
+   "verluste": {
+    "zuege": {
+     "zug1": {
+      "verlust": 288,
+      "kampfkraft": 71,
+      "verwundete": 9
+     },
+     "zug2": {
+      "verlust": 180,
+      "kampfkraft": 82,
+      "verwundete": 6
+     },
+     "zug3": {
+      "verlust": 256,
+      "kampfkraft": 74,
+      "verwundete": 8
+     }
+    },
+    "kompanie": {
+     "kampfkraft": 75,
+     "verwundete": 23
+    },
+    "ereignisse": 195,
+    "meldungen": [
+     {
+      "inject": "K-01",
+      "t": 406.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-02",
+      "t": 680.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Artilleriefeuer, 3 Verwundete. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-03",
+      "t": 864.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+     },
+     {
+      "inject": "K-04",
+      "t": 954.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-05",
+      "t": 1081.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-06",
+      "t": 1126.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1171.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1204.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1256.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1351.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Panzerfeuer vom Waldrand DACHS, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-11",
+      "t": 1440.9,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 73 %, 8 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+     },
+     {
+      "inject": "K-12",
+      "t": 1441.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer vom Waldrand DACHS hält an. Panzer bekämpfen!"
+     }
+    ],
+    "texte": {
+     "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 82 %. Sofort Feuer auf Brücke Ost!",
+     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 76 %, 22 Verwundete. Wir binden ihn mit Panzerabwehr."
+    },
+    "verlauf": [
+     [
+      0,
+      100,
+      0
+     ],
+     [
+      15,
+      100,
+      0
+     ],
+     [
+      30,
+      100,
+      0
+     ],
+     [
+      45,
+      100,
+      0
+     ],
+     [
+      60,
+      100,
+      0
+     ],
+     [
+      75,
+      100,
+      0
+     ],
+     [
+      90,
+      100,
+      0
+     ],
+     [
+      105,
+      100,
+      0
+     ],
+     [
+      120,
+      100,
+      0
+     ],
+     [
+      135,
+      100,
+      0
+     ],
+     [
+      150,
+      100,
+      0
+     ],
+     [
+      165,
+      100,
+      0
+     ],
+     [
+      180,
+      100,
+      0
+     ],
+     [
+      195,
+      100,
+      0
+     ],
+     [
+      210,
+      100,
+      0
+     ],
+     [
+      225,
+      99,
+      0
+     ],
+     [
+      240,
+      99,
+      0
+     ],
+     [
+      255,
+      99,
+      0
+     ],
+     [
+      270,
+      99,
+      0
+     ],
+     [
+      285,
+      99,
+      0
+     ],
+     [
+      300,
+      99,
+      0
+     ],
+     [
+      315,
+      99,
+      0
+     ],
+     [
+      330,
+      98,
+      1
+     ],
+     [
+      345,
+      98,
+      1
+     ],
+     [
+      360,
+      98,
+      1
+     ],
+     [
+      375,
+      98,
+      1
+     ],
+     [
+      390,
+      97,
+      1
+     ],
+     [
+      405,
+      97,
+      1
+     ],
+     [
+      420,
+      97,
+      2
+     ],
+     [
+      435,
+      97,
+      2
+     ],
+     [
+      450,
+      97,
+      2
+     ],
+     [
+      465,
+      97,
+      2
+     ],
+     [
+      480,
+      96,
+      2
+     ],
+     [
+      495,
+      96,
+      3
+     ],
+     [
+      510,
+      96,
+      3
+     ],
+     [
+      525,
+      96,
+      3
+     ],
+     [
+      540,
+      96,
+      3
+     ],
+     [
+      555,
+      96,
+      3
+     ],
+     [
+      570,
+      96,
+      3
+     ],
+     [
+      585,
+      95,
+      3
+     ],
+     [
+      600,
+      95,
+      3
+     ],
+     [
+      615,
+      95,
+      3
+     ],
+     [
+      630,
+      95,
+      3
+     ],
+     [
+      645,
+      95,
+      3
+     ],
+     [
+      660,
+      95,
+      3
+     ],
+     [
+      675,
+      95,
+      3
+     ],
+     [
+      690,
+      95,
+      4
+     ],
+     [
+      705,
+      94,
+      4
+     ],
+     [
+      720,
+      94,
+      4
+     ],
+     [
+      735,
+      94,
+      5
+     ],
+     [
+      750,
+      94,
+      5
+     ],
+     [
+      765,
+      94,
+      5
+     ],
+     [
+      780,
+      94,
+      5
+     ],
+     [
+      795,
+      94,
+      5
+     ],
+     [
+      810,
+      94,
+      5
+     ],
+     [
+      825,
+      93,
+      5
+     ],
+     [
+      840,
+      93,
+      5
+     ],
+     [
+      855,
+      93,
+      5
+     ],
+     [
+      870,
+      92,
+      6
+     ],
+     [
+      885,
+      92,
+      6
+     ],
+     [
+      900,
+      92,
+      6
+     ],
+     [
+      915,
+      92,
+      6
+     ],
+     [
+      930,
+      92,
+      6
+     ],
+     [
+      945,
+      92,
+      6
+     ],
+     [
+      960,
+      92,
+      7
+     ],
+     [
+      975,
+      92,
+      7
+     ],
+     [
+      990,
+      92,
+      7
+     ],
+     [
+      1005,
+      92,
+      7
+     ],
+     [
+      1020,
+      92,
+      7
+     ],
+     [
+      1035,
+      91,
+      7
+     ],
+     [
+      1050,
+      90,
+      8
+     ],
+     [
+      1065,
+      90,
+      8
+     ],
+     [
+      1080,
+      89,
+      9
+     ],
+     [
+      1095,
+      89,
+      10
+     ],
+     [
+      1110,
+      88,
+      10
+     ],
+     [
+      1125,
+      87,
+      10
+     ],
+     [
+      1140,
+      86,
+      12
+     ],
+     [
+      1155,
+      86,
+      13
+     ],
+     [
+      1170,
+      85,
+      13
+     ],
+     [
+      1185,
+      84,
+      15
+     ],
+     [
+      1200,
+      84,
+      15
+     ],
+     [
+      1215,
+      82,
+      17
+     ],
+     [
+      1230,
+      81,
+      17
+     ],
+     [
+      1245,
+      81,
+      17
+     ],
+     [
+      1260,
+      81,
+      18
+     ],
+     [
+      1275,
+      80,
+      18
+     ],
+     [
+      1290,
+      79,
+      19
+     ],
+     [
+      1305,
+      79,
+      20
+     ],
+     [
+      1320,
+      79,
+      20
+     ],
+     [
+      1335,
+      79,
+      20
+     ],
+     [
+      1350,
+      78,
+      20
+     ],
+     [
+      1365,
+      78,
+      21
+     ],
+     [
+      1380,
+      78,
+      21
+     ],
+     [
+      1395,
+      78,
+      21
+     ],
+     [
+      1410,
+      78,
+      21
+     ],
+     [
+      1425,
+      77,
+      21
+     ],
+     [
+      1440,
+      77,
+      21
+     ],
+     [
+      1455,
+      76,
+      23
+     ],
+     [
+      1470,
+      75,
+      23
+     ],
+     [
+      1485,
+      75,
+      23
+     ],
+     [
+      1500,
+      75,
+      23
+     ]
+    ]
+   }
   },
   {
    "team": "ideal",
@@ -1560,6 +2230,10 @@
      "t": 180.0
     },
     {
+     "inject": "K-01",
+     "t": 406.0
+    },
+    {
      "inject": "I-03",
      "t": 420.0
     },
@@ -1572,24 +2246,80 @@
      "t": 840.0
     },
     {
+     "inject": "K-02",
+     "t": 864.0
+    },
+    {
      "inject": "I-12",
      "t": 880.0
+    },
+    {
+     "inject": "K-03",
+     "t": 968.0
     },
     {
      "inject": "I-04",
      "t": 1020.0
     },
     {
+     "inject": "K-04",
+     "t": 1081.0
+    },
+    {
      "inject": "I-07",
      "t": 1095.0
+    },
+    {
+     "inject": "K-05",
+     "t": 1126.0
+    },
+    {
+     "inject": "K-06",
+     "t": 1171.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-07",
+     "t": 1204.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1256.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1320.0
+    },
+    {
+     "inject": "K-10",
+     "t": 1351.0
+    },
+    {
+     "inject": "K-11",
+     "t": 1355.0
+    },
+    {
+     "inject": "K-12",
+     "t": 1381.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1415.0
+    },
+    {
      "inject": "I-10",
      "t": 1440.0
+    },
+    {
+     "inject": "K-14",
+     "t": 1441.0
+    },
+    {
+     "inject": "K-15",
+     "t": 1464.0
     },
     {
      "inject": "I-08b",
@@ -1777,7 +2507,649 @@
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
     "D-08: aufgehalten (Z-36 zerstört)"
-   ]
+   ],
+   "verluste": {
+    "zuege": {
+     "zug1": {
+      "verlust": 324,
+      "kampfkraft": 67,
+      "verwundete": 10
+     },
+     "zug2": {
+      "verlust": 144,
+      "kampfkraft": 85,
+      "verwundete": 4
+     },
+     "zug3": {
+      "verlust": 494,
+      "kampfkraft": 50,
+      "verwundete": 16
+     }
+    },
+    "kompanie": {
+     "kampfkraft": 67,
+     "verwundete": 30
+    },
+    "ereignisse": 220,
+    "meldungen": [
+     {
+      "inject": "K-01",
+      "t": 406.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-02",
+      "t": 864.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+     },
+     {
+      "inject": "K-03",
+      "t": 968.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-04",
+      "t": 1081.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-05",
+      "t": 1126.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-06",
+      "t": 1171.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1204.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1256.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1320.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1351.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-11",
+      "t": 1355.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-12",
+      "t": 1381.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-13",
+      "t": 1415.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-14",
+      "t": 1441.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 57 %, 14 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1464.0,
+      "zug": "zug3",
+      "stufe": 2,
+      "text": "DRINGEND: 3. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Mörser bekämpfen!"
+     }
+    ],
+    "texte": {
+     "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 82 %. Sofort Feuer auf Brücke Ost!"
+    },
+    "verlauf": [
+     [
+      0,
+      100,
+      0
+     ],
+     [
+      15,
+      100,
+      0
+     ],
+     [
+      30,
+      100,
+      0
+     ],
+     [
+      45,
+      100,
+      0
+     ],
+     [
+      60,
+      100,
+      0
+     ],
+     [
+      75,
+      100,
+      0
+     ],
+     [
+      90,
+      100,
+      0
+     ],
+     [
+      105,
+      100,
+      0
+     ],
+     [
+      120,
+      100,
+      0
+     ],
+     [
+      135,
+      100,
+      0
+     ],
+     [
+      150,
+      100,
+      0
+     ],
+     [
+      165,
+      100,
+      0
+     ],
+     [
+      180,
+      100,
+      0
+     ],
+     [
+      195,
+      100,
+      0
+     ],
+     [
+      210,
+      100,
+      0
+     ],
+     [
+      225,
+      99,
+      0
+     ],
+     [
+      240,
+      99,
+      0
+     ],
+     [
+      255,
+      99,
+      0
+     ],
+     [
+      270,
+      99,
+      0
+     ],
+     [
+      285,
+      99,
+      0
+     ],
+     [
+      300,
+      99,
+      0
+     ],
+     [
+      315,
+      99,
+      0
+     ],
+     [
+      330,
+      98,
+      1
+     ],
+     [
+      345,
+      98,
+      1
+     ],
+     [
+      360,
+      98,
+      1
+     ],
+     [
+      375,
+      98,
+      1
+     ],
+     [
+      390,
+      97,
+      1
+     ],
+     [
+      405,
+      97,
+      1
+     ],
+     [
+      420,
+      97,
+      2
+     ],
+     [
+      435,
+      97,
+      2
+     ],
+     [
+      450,
+      97,
+      2
+     ],
+     [
+      465,
+      97,
+      2
+     ],
+     [
+      480,
+      96,
+      2
+     ],
+     [
+      495,
+      96,
+      3
+     ],
+     [
+      510,
+      96,
+      3
+     ],
+     [
+      525,
+      96,
+      3
+     ],
+     [
+      540,
+      96,
+      3
+     ],
+     [
+      555,
+      96,
+      3
+     ],
+     [
+      570,
+      96,
+      3
+     ],
+     [
+      585,
+      95,
+      3
+     ],
+     [
+      600,
+      95,
+      3
+     ],
+     [
+      615,
+      95,
+      3
+     ],
+     [
+      630,
+      95,
+      3
+     ],
+     [
+      645,
+      95,
+      3
+     ],
+     [
+      660,
+      95,
+      3
+     ],
+     [
+      675,
+      95,
+      3
+     ],
+     [
+      690,
+      95,
+      3
+     ],
+     [
+      705,
+      95,
+      3
+     ],
+     [
+      720,
+      95,
+      3
+     ],
+     [
+      735,
+      95,
+      4
+     ],
+     [
+      750,
+      95,
+      4
+     ],
+     [
+      765,
+      95,
+      4
+     ],
+     [
+      780,
+      95,
+      4
+     ],
+     [
+      795,
+      95,
+      4
+     ],
+     [
+      810,
+      95,
+      4
+     ],
+     [
+      825,
+      95,
+      4
+     ],
+     [
+      840,
+      94,
+      4
+     ],
+     [
+      855,
+      94,
+      4
+     ],
+     [
+      870,
+      94,
+      5
+     ],
+     [
+      885,
+      93,
+      5
+     ],
+     [
+      900,
+      93,
+      5
+     ],
+     [
+      915,
+      93,
+      5
+     ],
+     [
+      930,
+      93,
+      5
+     ],
+     [
+      945,
+      93,
+      5
+     ],
+     [
+      960,
+      93,
+      5
+     ],
+     [
+      975,
+      93,
+      6
+     ],
+     [
+      990,
+      93,
+      6
+     ],
+     [
+      1005,
+      93,
+      6
+     ],
+     [
+      1020,
+      93,
+      6
+     ],
+     [
+      1035,
+      92,
+      6
+     ],
+     [
+      1050,
+      91,
+      7
+     ],
+     [
+      1065,
+      91,
+      7
+     ],
+     [
+      1080,
+      90,
+      8
+     ],
+     [
+      1095,
+      90,
+      9
+     ],
+     [
+      1110,
+      89,
+      9
+     ],
+     [
+      1125,
+      88,
+      9
+     ],
+     [
+      1140,
+      87,
+      11
+     ],
+     [
+      1155,
+      87,
+      11
+     ],
+     [
+      1170,
+      86,
+      11
+     ],
+     [
+      1185,
+      85,
+      13
+     ],
+     [
+      1200,
+      85,
+      13
+     ],
+     [
+      1215,
+      84,
+      15
+     ],
+     [
+      1230,
+      83,
+      15
+     ],
+     [
+      1245,
+      82,
+      15
+     ],
+     [
+      1260,
+      82,
+      16
+     ],
+     [
+      1275,
+      81,
+      16
+     ],
+     [
+      1290,
+      80,
+      17
+     ],
+     [
+      1305,
+      80,
+      19
+     ],
+     [
+      1320,
+      79,
+      19
+     ],
+     [
+      1335,
+      78,
+      20
+     ],
+     [
+      1350,
+      77,
+      20
+     ],
+     [
+      1365,
+      76,
+      22
+     ],
+     [
+      1380,
+      75,
+      23
+     ],
+     [
+      1395,
+      74,
+      24
+     ],
+     [
+      1410,
+      73,
+      25
+     ],
+     [
+      1425,
+      72,
+      26
+     ],
+     [
+      1440,
+      70,
+      28
+     ],
+     [
+      1455,
+      70,
+      28
+     ],
+     [
+      1470,
+      68,
+      29
+     ],
+     [
+      1485,
+      68,
+      29
+     ],
+     [
+      1500,
+      67,
+      30
+     ]
+    ]
+   }
   },
   {
    "team": "naiv",
@@ -2543,12 +3915,32 @@
      "t": 180.0
     },
     {
+     "inject": "K-01",
+     "t": 406.0
+    },
+    {
      "inject": "I-03",
      "t": 420.0
     },
     {
      "inject": "I-11",
      "t": 560.0
+    },
+    {
+     "inject": "K-02",
+     "t": 569.0
+    },
+    {
+     "inject": "K-03",
+     "t": 645.0
+    },
+    {
+     "inject": "K-04",
+     "t": 710.0
+    },
+    {
+     "inject": "K-05",
+     "t": 837.0
     },
     {
      "inject": "I-05",
@@ -2559,20 +3951,76 @@
      "t": 880.0
     },
     {
+     "inject": "K-06",
+     "t": 888.0
+    },
+    {
      "inject": "I-04",
      "t": 1020.0
+    },
+    {
+     "inject": "K-07",
+     "t": 1038.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1046.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1081.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-10",
+     "t": 1106.0
+    },
+    {
+     "inject": "K-11",
+     "t": 1134.0
+    },
+    {
+     "inject": "K-12",
+     "t": 1171.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1186.0
+    },
+    {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-14",
+     "t": 1256.0
+    },
+    {
+     "inject": "K-15",
+     "t": 1284.0
+    },
+    {
+     "inject": "K-16",
+     "t": 1320.0
+    },
+    {
+     "inject": "K-17",
+     "t": 1345.0
+    },
+    {
+     "inject": "K-18",
+     "t": 1381.0
+    },
+    {
      "inject": "I-10",
      "t": 1440.0
+    },
+    {
+     "inject": "K-19",
+     "t": 1440.9
     },
     {
      "inject": "I-13",
@@ -2771,7 +4219,678 @@
     "D-08: aufgehalten (Z-36 zerstört)",
     "V-2: aufgehalten (V2-1 zerstört)",
     "V-3: aufgehalten (V3-1 zerstört)"
-   ]
+   ],
+   "verluste": {
+    "zuege": {
+     "zug1": {
+      "verlust": 374,
+      "kampfkraft": 62,
+      "verwundete": 12
+     },
+     "zug2": {
+      "verlust": 382,
+      "kampfkraft": 61,
+      "verwundete": 12
+     },
+     "zug3": {
+      "verlust": 348,
+      "kampfkraft": 65,
+      "verwundete": 11
+     }
+    },
+    "kompanie": {
+     "kampfkraft": 63,
+     "verwundete": 35
+    },
+    "ereignisse": 390,
+    "meldungen": [
+     {
+      "inject": "K-01",
+      "t": 406.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-02",
+      "t": 569.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-03",
+      "t": 645.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-04",
+      "t": 710.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Artilleriefeuer, 4 Verwundete. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-05",
+      "t": 837.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+     },
+     {
+      "inject": "K-06",
+      "t": 888.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1038.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1046.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1081.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1106.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-11",
+      "t": 1134.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 69 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-12",
+      "t": 1171.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-13",
+      "t": 1186.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-14",
+      "t": 1256.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1284.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-16",
+      "t": 1320.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-17",
+      "t": 1345.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-18",
+      "t": 1381.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-19",
+      "t": 1440.9,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 62 %, 12 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+     }
+    ],
+    "texte": {
+     "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 74 %. Sofort Feuer auf Brücke Ost!",
+     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 63 %, 35 Verwundete. Wir binden ihn mit Panzerabwehr."
+    },
+    "verlauf": [
+     [
+      0,
+      100,
+      0
+     ],
+     [
+      15,
+      100,
+      0
+     ],
+     [
+      30,
+      100,
+      0
+     ],
+     [
+      45,
+      100,
+      0
+     ],
+     [
+      60,
+      100,
+      0
+     ],
+     [
+      75,
+      100,
+      0
+     ],
+     [
+      90,
+      100,
+      0
+     ],
+     [
+      105,
+      100,
+      0
+     ],
+     [
+      120,
+      100,
+      0
+     ],
+     [
+      135,
+      100,
+      0
+     ],
+     [
+      150,
+      100,
+      0
+     ],
+     [
+      165,
+      100,
+      0
+     ],
+     [
+      180,
+      100,
+      0
+     ],
+     [
+      195,
+      100,
+      0
+     ],
+     [
+      210,
+      100,
+      0
+     ],
+     [
+      225,
+      99,
+      0
+     ],
+     [
+      240,
+      99,
+      0
+     ],
+     [
+      255,
+      99,
+      0
+     ],
+     [
+      270,
+      99,
+      0
+     ],
+     [
+      285,
+      99,
+      0
+     ],
+     [
+      300,
+      99,
+      0
+     ],
+     [
+      315,
+      99,
+      0
+     ],
+     [
+      330,
+      98,
+      1
+     ],
+     [
+      345,
+      98,
+      1
+     ],
+     [
+      360,
+      98,
+      1
+     ],
+     [
+      375,
+      98,
+      1
+     ],
+     [
+      390,
+      97,
+      1
+     ],
+     [
+      405,
+      97,
+      1
+     ],
+     [
+      420,
+      97,
+      2
+     ],
+     [
+      435,
+      97,
+      2
+     ],
+     [
+      450,
+      97,
+      2
+     ],
+     [
+      465,
+      97,
+      2
+     ],
+     [
+      480,
+      96,
+      2
+     ],
+     [
+      495,
+      96,
+      3
+     ],
+     [
+      510,
+      96,
+      3
+     ],
+     [
+      525,
+      96,
+      3
+     ],
+     [
+      540,
+      95,
+      3
+     ],
+     [
+      555,
+      95,
+      3
+     ],
+     [
+      570,
+      95,
+      5
+     ],
+     [
+      585,
+      94,
+      5
+     ],
+     [
+      600,
+      94,
+      5
+     ],
+     [
+      615,
+      94,
+      5
+     ],
+     [
+      630,
+      94,
+      5
+     ],
+     [
+      645,
+      93,
+      6
+     ],
+     [
+      660,
+      93,
+      6
+     ],
+     [
+      675,
+      93,
+      6
+     ],
+     [
+      690,
+      93,
+      6
+     ],
+     [
+      705,
+      93,
+      6
+     ],
+     [
+      720,
+      92,
+      6
+     ],
+     [
+      735,
+      91,
+      8
+     ],
+     [
+      750,
+      91,
+      8
+     ],
+     [
+      765,
+      91,
+      8
+     ],
+     [
+      780,
+      91,
+      8
+     ],
+     [
+      795,
+      91,
+      8
+     ],
+     [
+      810,
+      91,
+      8
+     ],
+     [
+      825,
+      90,
+      8
+     ],
+     [
+      840,
+      90,
+      9
+     ],
+     [
+      855,
+      89,
+      9
+     ],
+     [
+      870,
+      89,
+      9
+     ],
+     [
+      885,
+      89,
+      9
+     ],
+     [
+      900,
+      89,
+      10
+     ],
+     [
+      915,
+      89,
+      10
+     ],
+     [
+      930,
+      88,
+      10
+     ],
+     [
+      945,
+      88,
+      10
+     ],
+     [
+      960,
+      88,
+      10
+     ],
+     [
+      975,
+      88,
+      10
+     ],
+     [
+      990,
+      88,
+      10
+     ],
+     [
+      1005,
+      87,
+      11
+     ],
+     [
+      1020,
+      87,
+      11
+     ],
+     [
+      1035,
+      86,
+      11
+     ],
+     [
+      1050,
+      85,
+      14
+     ],
+     [
+      1065,
+      85,
+      14
+     ],
+     [
+      1080,
+      83,
+      14
+     ],
+     [
+      1095,
+      83,
+      16
+     ],
+     [
+      1110,
+      82,
+      17
+     ],
+     [
+      1125,
+      80,
+      17
+     ],
+     [
+      1140,
+      79,
+      19
+     ],
+     [
+      1155,
+      79,
+      20
+     ],
+     [
+      1170,
+      77,
+      20
+     ],
+     [
+      1185,
+      76,
+      22
+     ],
+     [
+      1200,
+      75,
+      23
+     ],
+     [
+      1215,
+      74,
+      25
+     ],
+     [
+      1230,
+      73,
+      25
+     ],
+     [
+      1245,
+      73,
+      25
+     ],
+     [
+      1260,
+      72,
+      26
+     ],
+     [
+      1275,
+      71,
+      26
+     ],
+     [
+      1290,
+      70,
+      28
+     ],
+     [
+      1305,
+      69,
+      29
+     ],
+     [
+      1320,
+      69,
+      29
+     ],
+     [
+      1335,
+      67,
+      31
+     ],
+     [
+      1350,
+      67,
+      31
+     ],
+     [
+      1365,
+      66,
+      32
+     ],
+     [
+      1380,
+      65,
+      34
+     ],
+     [
+      1395,
+      65,
+      34
+     ],
+     [
+      1410,
+      64,
+      34
+     ],
+     [
+      1425,
+      64,
+      34
+     ],
+     [
+      1440,
+      64,
+      34
+     ],
+     [
+      1455,
+      63,
+      35
+     ],
+     [
+      1470,
+      63,
+      35
+     ],
+     [
+      1485,
+      63,
+      35
+     ],
+     [
+      1500,
+      63,
+      35
+     ]
+    ]
+   }
   },
   {
    "team": "ideal",
@@ -3509,12 +5628,24 @@
      "t": 180.0
     },
     {
+     "inject": "K-01",
+     "t": 406.0
+    },
+    {
      "inject": "I-03",
      "t": 420.0
     },
     {
      "inject": "I-11",
      "t": 560.0
+    },
+    {
+     "inject": "K-02",
+     "t": 569.0
+    },
+    {
+     "inject": "K-03",
+     "t": 645.0
     },
     {
      "inject": "I-05",
@@ -3525,20 +5656,84 @@
      "t": 880.0
     },
     {
+     "inject": "K-04",
+     "t": 890.0
+    },
+    {
+     "inject": "K-05",
+     "t": 1002.0
+    },
+    {
      "inject": "I-04",
      "t": 1020.0
+    },
+    {
+     "inject": "K-06",
+     "t": 1081.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-07",
+     "t": 1112.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1113.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1141.0
+    },
+    {
+     "inject": "K-10",
+     "t": 1171.0
+    },
+    {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-11",
+     "t": 1201.0
+    },
+    {
+     "inject": "K-12",
+     "t": 1233.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1261.0
+    },
+    {
+     "inject": "K-14",
+     "t": 1320.0
+    },
+    {
+     "inject": "K-15",
+     "t": 1351.0
+    },
+    {
+     "inject": "K-16",
+     "t": 1381.0
+    },
+    {
+     "inject": "K-17",
+     "t": 1413.0
+    },
+    {
      "inject": "I-10",
      "t": 1440.0
+    },
+    {
+     "inject": "K-18",
+     "t": 1441.0
+    },
+    {
+     "inject": "K-19",
+     "t": 1464.0
     },
     {
      "inject": "I-08b",
@@ -3742,7 +5937,677 @@
     "D-08: aufgehalten (Z-36 zerstört)",
     "V-2: aufgehalten (V2-1 zerstört)",
     "V-3: aufgehalten (V3-1 zerstört)"
-   ]
+   ],
+   "verluste": {
+    "zuege": {
+     "zug1": {
+      "verlust": 417,
+      "kampfkraft": 58,
+      "verwundete": 13
+     },
+     "zug2": {
+      "verlust": 346,
+      "kampfkraft": 65,
+      "verwundete": 11
+     },
+     "zug3": {
+      "verlust": 498,
+      "kampfkraft": 50,
+      "verwundete": 16
+     }
+    },
+    "kompanie": {
+     "kampfkraft": 57,
+     "verwundete": 40
+    },
+    "ereignisse": 402,
+    "meldungen": [
+     {
+      "inject": "K-01",
+      "t": 406.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-02",
+      "t": 569.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-03",
+      "t": 645.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-04",
+      "t": 890.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-05",
+      "t": 1002.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-06",
+      "t": 1081.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1112.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer vom Ostufer an der Furt, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1113.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer vom Ostufer an der Furt hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1141.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1171.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-11",
+      "t": 1201.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-12",
+      "t": 1233.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 68 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-13",
+      "t": 1261.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-14",
+      "t": 1320.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1351.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 67 %, 11 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-16",
+      "t": 1381.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-17",
+      "t": 1413.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 60 %, 13 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-18",
+      "t": 1441.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 57 %, 14 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-19",
+      "t": 1464.0,
+      "zug": "zug3",
+      "stufe": 2,
+      "text": "DRINGEND: 3. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Mörser bekämpfen!"
+     }
+    ],
+    "texte": {
+     "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 75 %. Sofort Feuer auf Brücke Ost!"
+    },
+    "verlauf": [
+     [
+      0,
+      100,
+      0
+     ],
+     [
+      15,
+      100,
+      0
+     ],
+     [
+      30,
+      100,
+      0
+     ],
+     [
+      45,
+      100,
+      0
+     ],
+     [
+      60,
+      100,
+      0
+     ],
+     [
+      75,
+      100,
+      0
+     ],
+     [
+      90,
+      100,
+      0
+     ],
+     [
+      105,
+      100,
+      0
+     ],
+     [
+      120,
+      100,
+      0
+     ],
+     [
+      135,
+      100,
+      0
+     ],
+     [
+      150,
+      100,
+      0
+     ],
+     [
+      165,
+      100,
+      0
+     ],
+     [
+      180,
+      100,
+      0
+     ],
+     [
+      195,
+      100,
+      0
+     ],
+     [
+      210,
+      100,
+      0
+     ],
+     [
+      225,
+      99,
+      0
+     ],
+     [
+      240,
+      99,
+      0
+     ],
+     [
+      255,
+      99,
+      0
+     ],
+     [
+      270,
+      99,
+      0
+     ],
+     [
+      285,
+      99,
+      0
+     ],
+     [
+      300,
+      99,
+      0
+     ],
+     [
+      315,
+      99,
+      0
+     ],
+     [
+      330,
+      98,
+      1
+     ],
+     [
+      345,
+      98,
+      1
+     ],
+     [
+      360,
+      98,
+      1
+     ],
+     [
+      375,
+      98,
+      1
+     ],
+     [
+      390,
+      97,
+      1
+     ],
+     [
+      405,
+      97,
+      1
+     ],
+     [
+      420,
+      97,
+      2
+     ],
+     [
+      435,
+      97,
+      2
+     ],
+     [
+      450,
+      97,
+      2
+     ],
+     [
+      465,
+      97,
+      2
+     ],
+     [
+      480,
+      96,
+      2
+     ],
+     [
+      495,
+      96,
+      3
+     ],
+     [
+      510,
+      96,
+      3
+     ],
+     [
+      525,
+      96,
+      3
+     ],
+     [
+      540,
+      95,
+      3
+     ],
+     [
+      555,
+      95,
+      3
+     ],
+     [
+      570,
+      95,
+      5
+     ],
+     [
+      585,
+      94,
+      5
+     ],
+     [
+      600,
+      94,
+      5
+     ],
+     [
+      615,
+      94,
+      5
+     ],
+     [
+      630,
+      94,
+      5
+     ],
+     [
+      645,
+      93,
+      6
+     ],
+     [
+      660,
+      93,
+      6
+     ],
+     [
+      675,
+      93,
+      6
+     ],
+     [
+      690,
+      93,
+      6
+     ],
+     [
+      705,
+      93,
+      6
+     ],
+     [
+      720,
+      93,
+      6
+     ],
+     [
+      735,
+      93,
+      6
+     ],
+     [
+      750,
+      92,
+      6
+     ],
+     [
+      765,
+      92,
+      6
+     ],
+     [
+      780,
+      92,
+      7
+     ],
+     [
+      795,
+      92,
+      7
+     ],
+     [
+      810,
+      92,
+      7
+     ],
+     [
+      825,
+      92,
+      7
+     ],
+     [
+      840,
+      92,
+      7
+     ],
+     [
+      855,
+      91,
+      7
+     ],
+     [
+      870,
+      91,
+      7
+     ],
+     [
+      885,
+      91,
+      7
+     ],
+     [
+      900,
+      90,
+      8
+     ],
+     [
+      915,
+      90,
+      8
+     ],
+     [
+      930,
+      90,
+      9
+     ],
+     [
+      945,
+      90,
+      9
+     ],
+     [
+      960,
+      90,
+      9
+     ],
+     [
+      975,
+      90,
+      9
+     ],
+     [
+      990,
+      89,
+      9
+     ],
+     [
+      1005,
+      89,
+      10
+     ],
+     [
+      1020,
+      89,
+      10
+     ],
+     [
+      1035,
+      87,
+      10
+     ],
+     [
+      1050,
+      86,
+      12
+     ],
+     [
+      1065,
+      86,
+      12
+     ],
+     [
+      1080,
+      85,
+      12
+     ],
+     [
+      1095,
+      84,
+      15
+     ],
+     [
+      1110,
+      83,
+      15
+     ],
+     [
+      1125,
+      82,
+      15
+     ],
+     [
+      1140,
+      81,
+      18
+     ],
+     [
+      1155,
+      80,
+      18
+     ],
+     [
+      1170,
+      79,
+      19
+     ],
+     [
+      1185,
+      78,
+      20
+     ],
+     [
+      1200,
+      77,
+      21
+     ],
+     [
+      1215,
+      75,
+      23
+     ],
+     [
+      1230,
+      74,
+      24
+     ],
+     [
+      1245,
+      74,
+      24
+     ],
+     [
+      1260,
+      73,
+      25
+     ],
+     [
+      1275,
+      73,
+      25
+     ],
+     [
+      1290,
+      72,
+      26
+     ],
+     [
+      1305,
+      71,
+      27
+     ],
+     [
+      1320,
+      70,
+      27
+     ],
+     [
+      1335,
+      69,
+      29
+     ],
+     [
+      1350,
+      68,
+      29
+     ],
+     [
+      1365,
+      67,
+      31
+     ],
+     [
+      1380,
+      66,
+      33
+     ],
+     [
+      1395,
+      64,
+      34
+     ],
+     [
+      1410,
+      63,
+      35
+     ],
+     [
+      1425,
+      62,
+      36
+     ],
+     [
+      1440,
+      61,
+      38
+     ],
+     [
+      1455,
+      60,
+      38
+     ],
+     [
+      1470,
+      59,
+      39
+     ],
+     [
+      1485,
+      59,
+      39
+     ],
+     [
+      1500,
+      57,
+      40
+     ]
+    ]
+   }
   },
   {
    "team": "naiv",
@@ -4521,12 +7386,32 @@
      "t": 180.0
     },
     {
+     "inject": "K-01",
+     "t": 406.0
+    },
+    {
      "inject": "I-03",
      "t": 420.0
     },
     {
      "inject": "I-11",
      "t": 560.0
+    },
+    {
+     "inject": "K-02",
+     "t": 569.0
+    },
+    {
+     "inject": "K-03",
+     "t": 645.0
+    },
+    {
+     "inject": "K-04",
+     "t": 710.0
+    },
+    {
+     "inject": "K-05",
+     "t": 837.0
     },
     {
      "inject": "I-05",
@@ -4537,20 +7422,76 @@
      "t": 880.0
     },
     {
+     "inject": "K-06",
+     "t": 888.0
+    },
+    {
      "inject": "I-04",
      "t": 1020.0
+    },
+    {
+     "inject": "K-07",
+     "t": 1038.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1046.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1081.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-10",
+     "t": 1106.0
+    },
+    {
+     "inject": "K-11",
+     "t": 1134.0
+    },
+    {
+     "inject": "K-12",
+     "t": 1171.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1186.0
+    },
+    {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-14",
+     "t": 1256.0
+    },
+    {
+     "inject": "K-15",
+     "t": 1284.0
+    },
+    {
+     "inject": "K-16",
+     "t": 1320.0
+    },
+    {
+     "inject": "K-17",
+     "t": 1345.0
+    },
+    {
+     "inject": "K-18",
+     "t": 1381.0
+    },
+    {
      "inject": "I-10",
      "t": 1440.0
+    },
+    {
+     "inject": "K-19",
+     "t": 1440.9
     },
     {
      "inject": "I-13",
@@ -4748,7 +7689,678 @@
     "D-08: aufgehalten (Z-36 zerstört)",
     "V-2: aufgehalten (V2-1 zerstört)",
     "V-3: aufgehalten (V3-1 zerstört)"
-   ]
+   ],
+   "verluste": {
+    "zuege": {
+     "zug1": {
+      "verlust": 374,
+      "kampfkraft": 62,
+      "verwundete": 12
+     },
+     "zug2": {
+      "verlust": 382,
+      "kampfkraft": 61,
+      "verwundete": 12
+     },
+     "zug3": {
+      "verlust": 348,
+      "kampfkraft": 65,
+      "verwundete": 11
+     }
+    },
+    "kompanie": {
+     "kampfkraft": 63,
+     "verwundete": 35
+    },
+    "ereignisse": 390,
+    "meldungen": [
+     {
+      "inject": "K-01",
+      "t": 406.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-02",
+      "t": 569.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-03",
+      "t": 645.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-04",
+      "t": 710.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Artilleriefeuer, 4 Verwundete. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-05",
+      "t": 837.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+     },
+     {
+      "inject": "K-06",
+      "t": 888.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1038.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1046.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1081.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1106.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-11",
+      "t": 1134.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 69 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-12",
+      "t": 1171.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-13",
+      "t": 1186.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-14",
+      "t": 1256.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1284.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-16",
+      "t": 1320.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-17",
+      "t": 1345.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-18",
+      "t": 1381.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-19",
+      "t": 1440.9,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 62 %, 12 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+     }
+    ],
+    "texte": {
+     "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 74 %. Sofort Feuer auf Brücke Ost!",
+     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 63 %, 35 Verwundete. Wir binden ihn mit Panzerabwehr."
+    },
+    "verlauf": [
+     [
+      0,
+      100,
+      0
+     ],
+     [
+      15,
+      100,
+      0
+     ],
+     [
+      30,
+      100,
+      0
+     ],
+     [
+      45,
+      100,
+      0
+     ],
+     [
+      60,
+      100,
+      0
+     ],
+     [
+      75,
+      100,
+      0
+     ],
+     [
+      90,
+      100,
+      0
+     ],
+     [
+      105,
+      100,
+      0
+     ],
+     [
+      120,
+      100,
+      0
+     ],
+     [
+      135,
+      100,
+      0
+     ],
+     [
+      150,
+      100,
+      0
+     ],
+     [
+      165,
+      100,
+      0
+     ],
+     [
+      180,
+      100,
+      0
+     ],
+     [
+      195,
+      100,
+      0
+     ],
+     [
+      210,
+      100,
+      0
+     ],
+     [
+      225,
+      99,
+      0
+     ],
+     [
+      240,
+      99,
+      0
+     ],
+     [
+      255,
+      99,
+      0
+     ],
+     [
+      270,
+      99,
+      0
+     ],
+     [
+      285,
+      99,
+      0
+     ],
+     [
+      300,
+      99,
+      0
+     ],
+     [
+      315,
+      99,
+      0
+     ],
+     [
+      330,
+      98,
+      1
+     ],
+     [
+      345,
+      98,
+      1
+     ],
+     [
+      360,
+      98,
+      1
+     ],
+     [
+      375,
+      98,
+      1
+     ],
+     [
+      390,
+      97,
+      1
+     ],
+     [
+      405,
+      97,
+      1
+     ],
+     [
+      420,
+      97,
+      2
+     ],
+     [
+      435,
+      97,
+      2
+     ],
+     [
+      450,
+      97,
+      2
+     ],
+     [
+      465,
+      97,
+      2
+     ],
+     [
+      480,
+      96,
+      2
+     ],
+     [
+      495,
+      96,
+      3
+     ],
+     [
+      510,
+      96,
+      3
+     ],
+     [
+      525,
+      96,
+      3
+     ],
+     [
+      540,
+      95,
+      3
+     ],
+     [
+      555,
+      95,
+      3
+     ],
+     [
+      570,
+      95,
+      5
+     ],
+     [
+      585,
+      94,
+      5
+     ],
+     [
+      600,
+      94,
+      5
+     ],
+     [
+      615,
+      94,
+      5
+     ],
+     [
+      630,
+      94,
+      5
+     ],
+     [
+      645,
+      93,
+      6
+     ],
+     [
+      660,
+      93,
+      6
+     ],
+     [
+      675,
+      93,
+      6
+     ],
+     [
+      690,
+      93,
+      6
+     ],
+     [
+      705,
+      93,
+      6
+     ],
+     [
+      720,
+      92,
+      6
+     ],
+     [
+      735,
+      91,
+      8
+     ],
+     [
+      750,
+      91,
+      8
+     ],
+     [
+      765,
+      91,
+      8
+     ],
+     [
+      780,
+      91,
+      8
+     ],
+     [
+      795,
+      91,
+      8
+     ],
+     [
+      810,
+      91,
+      8
+     ],
+     [
+      825,
+      90,
+      8
+     ],
+     [
+      840,
+      90,
+      9
+     ],
+     [
+      855,
+      89,
+      9
+     ],
+     [
+      870,
+      89,
+      9
+     ],
+     [
+      885,
+      89,
+      9
+     ],
+     [
+      900,
+      89,
+      10
+     ],
+     [
+      915,
+      89,
+      10
+     ],
+     [
+      930,
+      88,
+      10
+     ],
+     [
+      945,
+      88,
+      10
+     ],
+     [
+      960,
+      88,
+      10
+     ],
+     [
+      975,
+      88,
+      10
+     ],
+     [
+      990,
+      88,
+      10
+     ],
+     [
+      1005,
+      87,
+      11
+     ],
+     [
+      1020,
+      87,
+      11
+     ],
+     [
+      1035,
+      86,
+      11
+     ],
+     [
+      1050,
+      85,
+      14
+     ],
+     [
+      1065,
+      85,
+      14
+     ],
+     [
+      1080,
+      83,
+      14
+     ],
+     [
+      1095,
+      83,
+      16
+     ],
+     [
+      1110,
+      82,
+      17
+     ],
+     [
+      1125,
+      80,
+      17
+     ],
+     [
+      1140,
+      79,
+      19
+     ],
+     [
+      1155,
+      79,
+      20
+     ],
+     [
+      1170,
+      77,
+      20
+     ],
+     [
+      1185,
+      76,
+      22
+     ],
+     [
+      1200,
+      75,
+      23
+     ],
+     [
+      1215,
+      74,
+      25
+     ],
+     [
+      1230,
+      73,
+      25
+     ],
+     [
+      1245,
+      73,
+      25
+     ],
+     [
+      1260,
+      72,
+      26
+     ],
+     [
+      1275,
+      71,
+      26
+     ],
+     [
+      1290,
+      70,
+      28
+     ],
+     [
+      1305,
+      69,
+      29
+     ],
+     [
+      1320,
+      69,
+      29
+     ],
+     [
+      1335,
+      67,
+      31
+     ],
+     [
+      1350,
+      67,
+      31
+     ],
+     [
+      1365,
+      66,
+      32
+     ],
+     [
+      1380,
+      65,
+      34
+     ],
+     [
+      1395,
+      65,
+      34
+     ],
+     [
+      1410,
+      64,
+      34
+     ],
+     [
+      1425,
+      64,
+      34
+     ],
+     [
+      1440,
+      64,
+      34
+     ],
+     [
+      1455,
+      63,
+      35
+     ],
+     [
+      1470,
+      63,
+      35
+     ],
+     [
+      1485,
+      63,
+      35
+     ],
+     [
+      1500,
+      63,
+      35
+     ]
+    ]
+   }
   }
  ]
 }

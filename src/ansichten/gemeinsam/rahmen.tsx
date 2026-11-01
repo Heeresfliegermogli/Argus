@@ -8,6 +8,7 @@ import type { Inhalte } from "../../inhalte/typen";
 import { DIREKT_TEAM } from "../../kern/sitzungen";
 import { ROLLEN_NAME } from "../../kern/sichten";
 import { mmss, phaseZu, uhrzeit } from "../../kern/uhr";
+import { verlustStand, verwText, zuege } from "../../kern/verluste";
 import { type Spielzustand, fingerabdruck } from "../../kern/zustand";
 import type { Sicht } from "../../sitzung/sicht";
 import { istVeraltet } from "../../sync/adapter";
@@ -43,6 +44,26 @@ export function UhrAnzeige(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: 
       <span class="uhr-zeit" data-testid="uhr">{uhrzeit(sz.spieluhr.start, tAnzeige)}</span>
       <span class="uhr-info">{uhrText}{!p.kurz && <><br />Phase {phase.nr}: {phase.name}</>}</span>
     </div>
+  );
+}
+
+/**
+ * Zustand der eigenen Kompanie (seit 2.3, D2.1): „2. Kp 87 % · 4 Verwundete“, Bernstein unter der ersten, Rot unter der zweiten
+ * Schwelle; beim Zeigen je Zug. Für alle Rollen gleich (Verlustmodell aus kern/verluste.ts, keine Punkte).
+ */
+export function KompanieStand(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: string | null }) {
+  const et = p.inh.szenario.eigene_truppe ?? p.inh.basis?.szenario.eigene_truppe;
+  const vr = p.inh.regeln.verluste;
+  if (!et || !vr || !p.lauf) return null;
+  const v = verlustStand(p.inh, p.z, Math.min(p.t, p.inh.szenario.spieluhr.dauer_s));
+  if (!v) return null;
+  const kk = v.kompanie.kampfkraft;
+  const kl = kk < vr.schwellen_prozent[1] ? "schlecht" : kk < vr.schwellen_prozent[0] ? "warn" : "eigen";
+  const titel = zuege(p.inh).map((zug) => `${zug.name} (${zug.ort}): ${v.zuege[zug.id].kampfkraft} %, ${verwText(v.zuege[zug.id].verwundete)}`).join("\n");
+  return (
+    <span class={`badge kp-stand ${kl}`} data-testid="kp-stand" data-kampfkraft={kk} data-verwundete={v.kompanie.verwundete} title={`Eigene Kompanie – Kampfkraft und Verwundete\n${titel}`}>
+      {et.name} {kk} % · {verwText(v.kompanie.verwundete)}
+    </span>
   );
 }
 
@@ -109,6 +130,7 @@ export function Rahmen(p: {
         </div>
         <UhrAnzeige inh={p.s.inh} z={z} t={t} lauf={st.lauf} />
         <div class="kopf-rechts">
+          <KompanieStand inh={p.s.inh} z={z} t={t} lauf={st.lauf} />
           {st.nurLesen && <span class="badge zuschauen" data-testid="nur-lesen" title="Die Spielleitung sieht die Ansicht dieser Rolle; Eingaben sind gesperrt.">◉ Zuschauen – nur lesen</span>}
           {z.fastTrack && <span class="badge warn" title={`Meldungen ab ${p.s.inh.regeln.fast_track.schwelle} % mit BEKÄMPFEN gehen ohne die Aufklärung an die Zielprüfung`}>Fast-Track EIN</span>}
           {rolle !== "sl" && !hostDa && <span class="badge schlecht">Spielleitung fehlt</span>}

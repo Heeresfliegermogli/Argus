@@ -120,6 +120,13 @@ def loesung_meldung(d, m, ziele, t0=None, zerstoert=None):
     return p, zonen, res
 
 
+def lagemeldung_laengste(sz, inject):
+    """Längste mögliche Anzeige einer Lagemeldung „Absender: Text“ (Platzhalter mit den längsten Werten, seit 2.3)."""
+    text = L.anzeige_text(inject["text"], sz)
+    text = text.format(zug="3. Zug", kk=100, verw="33 Verwundete", kp_kk=100, kp_verw="99 Verwundete") if "{" in text else text
+    return f"{inject['von']}: {text}"
+
+
 def pruefe(d):
     """Prüft das Szenario und rechnet Lösungshilfe und Kennzahlen. Gibt ein dict zurück."""
     sz, karte, fz, wm, regeln = d["szenario"], d["karte"], d["fahrzeuge"], d["wirkmittel"], d["regeln"]
@@ -560,6 +567,97 @@ def pruefe(d):
             "argus_falsch": m["argus"]["empfehlung"] == "BEKÄMPFEN" and not legitim,
             "fall": m.get("fall"),
         })
+
+    # ---------------------------------------------------------------- Eigene Truppe und Verlustmodell (seit 2.3, D1/D2)
+    et, vr, vs = sz.get("eigene_truppe"), regeln.get("verluste"), sz.get("verluste")
+    if et:
+        bach = next((l["punkte"] for l in karte["linien"] if l.get("art") == "gewaesser"), None)
+
+        def bach_x(y):
+            for (x0, y0), (x1, y1) in zip(bach, bach[1:]):
+                if y0 <= y <= y1:
+                    return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+            return bach[-1][0]
+        zids = [z["id"] for z in et["zuege"]]
+        if len(set(zids)) != len(zids):
+            fehler.append("eigene_truppe: doppelte Zug-IDs")
+        fz_alle = [(z["id"], p) for z in et["zuege"] for p in z["fahrzeuge"]]
+        for zid, p in fz_alle + [("Gefechtsstand", et["gefechtsstand"]["pos"])]:
+            if not (0 <= p[0] <= W and 0 <= p[1] <= H):
+                fehler.append(f"eigene_truppe {zid}: Position außerhalb der Karte {p}")
+            elif bach and p[0] > bach_x(p[1]) - 30:
+                fehler.append(f"eigene_truppe {zid}: nicht westlich des Bachs {p}")
+        for i in range(len(fz_alle)):
+            for j in range(i + 1, len(fz_alle)):
+                if L.dist(fz_alle[i][1], fz_alle[j][1]) < 15:
+                    fehler.append(f"eigene_truppe: Fahrzeuge {fz_alle[i][0]} und {fz_alle[j][0]} näher als 15 m")
+        # kein Feind- oder Zivilfahrzeug fährt durch eine Stellung (auch Durchbruch-Routen und Verstärkungen)
+        routen = [(z["id"], z) for z in sz["ziele"]]
+        routen += [(f"{g['id']}/{z['id']}", z) for g in (sz.get("verstaerkungen") or {}).get("gruppen", []) for z in g["ziele"]]
+        for g in L.durchbruch_gruppen(sz) + [dict(gg["durchbruch"], id=gg["id"]) for gg in (sz.get("verstaerkungen") or {}).get("gruppen", []) if gg.get("durchbruch")]:
+            for zid, r in g["routen"].items():
+                routen.append((f"{g['id']}/{zid}", {"pos": r[0][1:], "bewegung": {"route": r}}))
+        for wer, z in routen:
+            r = (z.get("bewegung") or {}).get("route") or [[0] + list(z["pos"])]
+            pts = [(p[1], p[2]) for p in r]
+            for zid, p in fz_alle:
+                dmin = min(L.dist(p, a) for a in pts) if len(pts) == 1 else min(L.dist_segment(p, a, b) for a, b in zip(pts, pts[1:]))
+                if dmin < 25:
+                    fehler.append(f"{wer}: fährt {dmin:.0f} m an einem Fahrzeug des {zid} vorbei (Stellung, Soll ≥ 25 m)")
+                    break
+        if vr:
+            for t in vr["waffen"]:
+                if t not in fz:
+                    fehler.append(f"verluste.waffen: Typ {t} fehlt im Katalog")
+            for z in L.alle_ziele(sz) + [z for g in (sz.get("verstaerkungen") or {}).get("gruppen", []) for z in g["ziele"]]:
+                for f in z.get("feuert") or []:
+                    if f.get("auf") and f["auf"] not in zids:
+                        fehler.append(f"{z['id']}: feuert auf unbekannten Zug {f['auf']}")
+                    if z["typ"] in vr["waffen"] and vr["waffen"][z["typ"]]["art"] == "steil" and not f.get("auf"):
+                        warn.append(f"{z['id']}: Mörser ohne feuert.auf (schießt auf den nächsten Zug)")
+                vp = z.get("verlust_promille")
+                if vp is not None and (not isinstance(vp, int) or vp <= 0):
+                    fehler.append(f"{z['id']}: verlust_promille muss eine positive ganze Zahl sein")
+            for h in (sz.get("hintergrund") or {}).get("ereignisse", []):
+                if h["art"] == "feindartillerie":
+                    for t, x, y in h["einschlaege"]:
+                        if not any(L.dist((x, y), (sum(p[0] for p in zz["fahrzeuge"]) / len(zz["fahrzeuge"]),
+                                                    sum(p[1] for p in zz["fahrzeuge"]) / len(zz["fahrzeuge"]))) <= vr["feindartillerie"]["radius_m"]
+                                   for zz in et["zuege"]):
+                            warn.append(f"{h['id']}: Einschlag ({x}, {y}) trifft keinen Zug")
+                elif h["art"] == "panzerabwehr" and h.get("von") not in zids:
+                    fehler.append(f"{h['id']}: von {h.get('von')} ist kein Zug der eigenen Truppe")
+            if not (0 < vr["untergrenze_prozent"] < min(vr["schwellen_prozent"])):
+                fehler.append("verluste: Untergrenze muss unter den Schwellen liegen")
+        if vs:
+            at = vs.get("attrappe")
+            if at:
+                za = next((z for z in sz["ziele"] if z["id"] == at["ziel"]), None)
+                if not za or za["gt"]["kategorie"] != "attrappe":
+                    fehler.append(f"verluste.attrappe: {at['ziel']} ist keine Attrappe")
+                if at["zug"] not in zids:
+                    fehler.append(f"verluste.attrappe: Zug {at['zug']} unbekannt")
+            ueber = {g["ueber"] for g in (sz.get("durchbruch") or {}).get("gruppen", [])}
+            ueber |= {g["durchbruch"]["ueber"] for g in (sz.get("verstaerkungen") or {}).get("gruppen", []) if g.get("durchbruch")}
+            for u in sorted(ueber):
+                if (vs.get("durchbruch") or {}).get(u) not in zids:
+                    fehler.append(f"verluste.durchbruch: kein Zug für den Übergang „{u}“")
+
+    # ---------------------------------------------------------------- Lagemeldungen ≤ 140 Zeichen mit Absender (seit 2.3, D4)
+    MAX_LAGE = 140
+    for i in sz["injects"] + sz.get("reserve_injects", []):
+        lang = lagemeldung_laengste(sz, i)
+        if len(lang) > MAX_LAGE:
+            fehler.append(f"{i['id']}: Lagemeldung {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
+    vm = (vs or {}).get("meldungen")
+    if vm:
+        for st, vorlage in vm["texte"].items():
+            for art in vm["waffe"]:
+                lang = f"{vm['von']}: " + vorlage.format(zug="3. Zug", kk=100, verw="33 Verwundete", neu="33 neue Verwundete",
+                                                          waffe=vm["waffe"][art], forderung=vm["forderung"][art],
+                                                          ort=" " + max((o["text"] for o in vs.get("orte", [])), key=len, default=""))
+                if len(lang) > MAX_LAGE:
+                    fehler.append(f"Druckmeldung Stufe {st} ({art}) bis {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
 
     # ---------------------------------------------------------------- Kennzahlen
     falsch = [h for h in hilfe if h["argus_falsch"]]

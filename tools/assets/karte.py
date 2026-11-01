@@ -193,6 +193,37 @@ def beschriftet(d, welt, breite_px=1500):
         tw = dr.textlength(p["name"], font=f_pq)
         dr.text((x - tw - 9, y - 22 if p["art"] == "bruecke" else y - 8), p["name"], font=f_pq, fill=(255, 255, 255, 240),
                 stroke_width=2, stroke_fill=(0, 0, 0, 180))
+    et = d.szenario.get("eigene_truppe")
+    if et:
+        # Seit Szenario 2.3 (D1): eigene Züge in Stellung am Westrand – Zeichen Panzergrenadiere (Zug, ●●●) und Gefechtsstand
+        blau, weiss = (30, 100, 210, 235), (255, 255, 255, 255)
+
+        def zeichen(x, y, w, gs=False):
+            h = w * 0.66
+            dr.rectangle([x - w / 2, y - h / 2, x + w / 2, y + h / 2], fill=(128, 196, 255, 235), outline=(0, 0, 0, 255), width=2)
+            dr.line([(x - w / 2, y - h / 2), (x + w / 2, y + h / 2)], fill=(0, 0, 0, 255), width=2)
+            dr.line([(x - w / 2, y + h / 2), (x + w / 2, y - h / 2)], fill=(0, 0, 0, 255), width=2)
+            dr.ellipse([x - w * 0.3, y - h * 0.26, x + w * 0.3, y + h * 0.26], outline=(0, 0, 0, 255), width=2)
+            if gs:
+                dr.line([(x - w / 2, y + h / 2), (x - w / 2, y + h / 2 + w * 0.55)], fill=(0, 0, 0, 255), width=2)
+                dr.text((x - 5, y - h / 2 - 18), "I", font=f_pq, fill=weiss, stroke_width=2, stroke_fill=(0, 0, 0, 220))
+            else:
+                for k in (-1, 0, 1):
+                    dr.ellipse([x + k * 8 - 2.5, y - h / 2 - 9, x + k * 8 + 2.5, y - h / 2 - 4], fill=(0, 0, 0, 255))
+        for zug in et["zuege"]:
+            for fx, fy in zug["fahrzeuge"]:
+                X, Y = P((fx, fy))
+                dr.ellipse([X - 3, Y - 3, X + 3, Y + 3], fill=blau, outline=weiss)
+            mx = sum(p[0] for p in zug["fahrzeuge"]) / len(zug["fahrzeuge"])
+            my = sum(p[1] for p in zug["fahrzeuge"]) / len(zug["fahrzeuge"])
+            X, Y = P((mx, my - 26))
+            zeichen(X, Y, 30)
+            tw = dr.textlength(zug["name"], font=f_pq)
+            dr.text((X - tw / 2, Y + 14), zug["name"], font=f_pq, fill=weiss, stroke_width=2, stroke_fill=(0, 0, 0, 220))
+        gx, gy = P(et["gefechtsstand"]["pos"])
+        zeichen(gx, gy, 26, gs=True)
+        tw = dr.textlength("Kp-Chef", font=f_pq)
+        dr.text((gx - tw / 2, gy + 12), "Kp-Chef", font=f_pq, fill=weiss, stroke_width=2, stroke_fill=(0, 0, 0, 220))
     aussen = [k for k in d.szenario["kraefte"] if k.get("ausserhalb")]
     if aussen:
         ym = sum(k["pfeil_y"] for k in aussen) / len(aussen) * sc

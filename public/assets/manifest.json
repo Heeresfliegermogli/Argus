@@ -1,11 +1,11 @@
 {
  "version": 1,
- "erzeugt": "2026-10-28",
+ "erzeugt": "2026-11-01",
  "generator": "tools/assets/gen_assets.py",
  "hinweis": "Alle Pfade relativ zu assets/. Übungslage, alles fiktiv und prozedural erzeugt. Drohnenbilder ohne HUD und ohne ARGUS-Markierung: Die Oberfläche zeichnet Rahmen (ziele[].box, Pixel im Bild), Klasse, Konfidenz und Uhrzeit aus Szenario und Manifest.",
  "szenario": {
   "id": "kraehe-01",
-  "version": "2.2",
+  "version": "2.3",
   "datei": "szenario_kraehe_01.json"
  },
  "koordinaten": "Meter, x nach Osten, y nach Süden, Ursprung oben links; hdg in Grad, 0 = Osten, im Uhrzeigersinn",
@@ -15,8 +15,8 @@
   "drohne_ebenen": 1778856,
   "karte_start": 656884,
   "karte_kacheln": 1296314,
-  "karte_sonst": 473353,
-  "fahrzeuge": 347868,
+  "karte_sonst": 471621,
+  "fahrzeuge": 367795,
   "effekte": 555030
  },
  "karte": {
@@ -64,7 +64,7 @@
    "m_pro_px": 0.6667,
    "breite": 1500,
    "hoehe": 1050,
-   "bytes": 366026,
+   "bytes": 364294,
    "hinweis": "Vorschau/Rückfall mit eingebrannter Schrift; im Spiel zeichnet die Karte Raster, Zonen und Namen selbst."
   },
   "gelaende": {
@@ -76,8 +76,8 @@
   "bild": "sprites/fahrzeuge.png",
   "json": "sprites/fahrzeuge.json",
   "breite": 1024,
-  "hoehe": 520,
-  "bytes": 347868,
+  "hoehe": 524,
+  "bytes": 367795,
   "px_pro_m": 12,
   "ausrichtung": "Blick nach Osten (hdg 0), Anker Bildmitte = Fahrzeugmitte; um hdg im Uhrzeigersinn drehen",
   "schatten": "nicht eingebrannt: denselben Rahmen schwarz (Alpha ca. 0,45) um 1,2 m nach Südost versetzt darunter zeichnen",
@@ -296,6 +296,24 @@
     "groesse_m": [
      13.67,
      6.92
+    ]
+   },
+   "spz_eigen.png": {
+    "typ": "spz_eigen",
+    "wrack": false,
+    "px_pro_m": 12,
+    "groesse_m": [
+     10.5,
+     4.42
+    ]
+   },
+   "spz_eigen_wrack.png": {
+    "typ": "spz_eigen",
+    "wrack": true,
+    "px_pro_m": 12,
+    "groesse_m": [
+     14.08,
+     8.0
     ]
    },
    "person_zivil.png": {

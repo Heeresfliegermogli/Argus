@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.2",
-  "stand": "2026-10-28",
+  "version": "2.3",
+  "stand": "2026-11-01",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -84,7 +84,7 @@
     "plenum": {
       "titel": "Lage für alle (Spielleitung liest vor, ca. 90 s)",
       "absaetze": [
-        "Übungslage, alles fiktiv. Russische Kräfte greifen seit den Morgenstunden nach Westen an. Unser Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die 2. Kompanie deckt außerhalb der Karte Brücke und Furt und kämpft auch selbst.",
+        "Übungslage, alles fiktiv. Russische Kräfte greifen seit den Morgenstunden nach Westen an. Unser Panzergrenadierbataillon verteidigt westlich des Raums KRÄHE; die 2. Kompanie liegt mit drei Zügen am Westrand der Karte an Brücke und Furt.",
         "Auftrag: Der Feind darf den Bach ELSTER nicht überschreiten, vor allem nicht an der Brücke ELSTER. Östlich des Bachs liegt die Ortschaft KRÄHE; dort sind noch Zivilpersonen.",
         "Die Drohne „Milan“ klärt den unmittelbaren Vorraum auf: den Bach mit der Brücke, die Ortschaft und das Gelände östlich davon. Ihre Bilder wertet das KI-System ARGUS aus. ARGUS erkennt Fahrzeuge, nennt Klasse, Konfidenz und eine Empfehlung. Laut Hersteller liegt ARGUS in 94 % der Fälle richtig.",
         "Jedes Team ist die Zielbearbeitung des Bataillons. G1 Aufklärung prüft jede ARGUS-Meldung. G2 Zielprüfung prüft die Einsatzregeln und wählt das Wirkmittel. G3 Führung gibt frei und führt das Gefecht. Ohne Freigabe von G3 wird nichts bekämpft.",
@@ -102,7 +102,7 @@
     "G2": {
       "titel": "G2 Zielprüfung",
       "absaetze": [
-        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse und Konfidenz. Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene 2. Kompanie liegt westlich außerhalb der Karte.",
+        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse und Konfidenz. Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene 2. Kompanie liegt mit drei Zügen am Westrand der Karte (blau).",
         "Du prüfst die Einsatzregeln R2 und R3, wählst ein Wirkmittel (Mörser, Loitering Munition oder Panzerabwehr) und gibst G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
         "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt."
       ]
@@ -111,7 +111,7 @@
       "titel": "G3 Führung",
       "absaetze": [
         "Du führst das Gefecht des Bataillons. Du bekommst die Empfehlungen von G2 und gibst FREIGABE, lehnst ab oder gibst ZURÜCK AN G2.",
-        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und der 2. Kompanie. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
+        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und der 2. Kompanie; sie meldet auch ihre Verluste. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
         "Du verantwortest jede Wirkung."
       ]
     },
@@ -131,10 +131,8 @@
       "kurz": "2./",
       "zugehoerigkeit": "eigen",
       "typ": "pzgren_kp",
-      "ausserhalb": true,
-      "pos": [-750, 380],
-      "pfeil_y": 380,
-      "text": "ca. 750 m westlich, deckt Brücke und Furt"
+      "pos": [62, 484],
+      "text": "am Westrand: 1. Zug Brücke West, 2. Zug Furt Nord West, 3. Zug Süd, Gefechtsstand dahinter"
     }
   ],
   "zonen": [
@@ -273,10 +271,11 @@
         "legitim": true
       },
       "feuert": [
-        {"von_s": 302, "bis_s": 650, "takt_s": 4, "salve": 4, "pause_s": 22},
-        {"von_s": 818, "bis_s": 1190, "takt_s": 4, "salve": 4, "pause_s": 26}
+        {"von_s": 302, "bis_s": 650, "takt_s": 4, "salve": 4, "pause_s": 22, "auf": "zug2"},
+        {"von_s": 818, "bis_s": 1190, "takt_s": 4, "salve": 4, "pause_s": 26, "auf": "zug2"}
       ],
-      "bewegung": {"route": [[250, 1010, 100], [268, 960, 104], [282, 920, 105]]}
+      "bewegung": {"route": [[250, 1010, 100], [268, 960, 104], [282, 920, 105]]},
+      "verlust_promille": 2
     },
     {
       "id": "Z-07",
@@ -525,14 +524,18 @@
         "hinweis": "ARGUS liegt richtig: Ziel legitim, Warnung vor Zivilpersonen berechtigt. Richtig ist Beobachten, bis die Personen weg sind (Folgemeldung 10:22:00).",
         "bezug": "Vorsichtsmaßnahmen beim Angriff, Verhältnismäßigkeit (Art. 57, Art. 51 Abs. 5 lit. b ZP I)."
       },
-      "feuert": [{"von_s": 1066, "bis_s": 1500, "takt_s": 5, "salve": 3, "pause_s": 24}],
+      "feuert": [
+        {"von_s": 1006, "bis_s": 1266, "takt_s": 5, "salve": 3, "pause_s": 30, "auf": "zug3"},
+        {"von_s": 1266, "bis_s": 1500, "takt_s": 4, "salve": 4, "pause_s": 18, "auf": "zug3"}
+      ],
       "bewegung": {
         "route": [
           [930, 1010, 308], [934.1, 982, 313], [938.2, 954, 317], [942.3, 926, 322], [946.4, 898, 327],
           [950.5, 870, 331], [954.6, 842, 336], [958.7, 814, 341], [962.8, 786, 346], [966.9, 758, 350],
           [977.4, 758, 315], [981.6, 768, 305]
         ]
-      }
+      },
+      "verlust_promille": 10
     },
     {
       "id": "Z-20",
@@ -877,7 +880,8 @@
         "text": "SPz BMP-2 der Achse SÜD. Biegt um 10:18 von der Gasse zwischen Ortschaft und Schule auf das Schulgelände ab, steht bis 10:20:15 am Schulgebäude in Deckung und fährt dann zur Brücke ELSTER Ost.",
         "legitim": true,
         "hinweis": "Legitimes Ziel. Solange es an der Schule steht, schlägt jede Wirkung auf dem Schulgelände ein. Wer nach der Lage bei der Meldung entscheidet, übersieht das; die Warnung rechnet den Einschlag voraus."
-      }
+      },
+      "verlust_promille": 8
     },
     {
       "id": "Z-37",
@@ -1630,15 +1634,15 @@
       "t_s": 30,
       "an": "G3",
       "von": "Brigade",
-      "text": "Halten Sie die Brücke ELSTER. Feind versucht vermutlich, mit der Masse über KRÄHE nach Westen durchzustoßen. ARGUS ist für Ihren Abschnitt freigeschaltet.",
+      "text": "Brücke ELSTER halten. Feind will mit der Masse über KRÄHE nach Westen durchstoßen. ARGUS für Ihren Abschnitt frei.",
       "zweck": "Einstieg, Auftrag bestätigen."
     },
     {
       "id": "I-02",
       "t_s": 180,
       "an": "G3",
-      "von": "Brigade (Zivil-militärische Zusammenarbeit)",
-      "text": "Evakuierung KRÄHE unvollständig. In der Schule sind ca. 40 Zivilpersonen, darunter Kinder. Einzelne Bewohner sind noch auf den Höfen.",
+      "von": "Brigade (ZMZ)",
+      "text": "Evakuierung KRÄHE unvollständig: In der Schule ca. 40 Zivilpersonen, darunter Kinder. Einzelne Bewohner noch auf den Höfen.",
       "zweck": "Stakes für das Sanitätsfahrzeug, die Achse SÜD an der Schule (N4, Z-20) und den Mörser im Hof RABE. G2 kennt die Schule als No-Strike-Zone, aber nicht ihre Belegung."
     },
     {
@@ -1646,15 +1650,15 @@
       "t_s": 420,
       "an": "G3",
       "von": "Brigade",
-      "text": "Ihre Zielbearbeitung dauert im Schnitt über drei Minuten. Ziel sind 90 Sekunden je Ziel. Sonst gewinnt der Feind die Brücke.",
+      "text": "Zielbearbeitung dauert im Schnitt über 3 min, Ziel sind 90 s je Ziel. Sonst nimmt der Feind die Brücke.",
       "zweck": "Zeitdruck aufbauen."
     },
     {
       "id": "I-11",
       "t_s": 560,
       "an": "G3",
-      "von": "2. Kompanie",
-      "text": "Feind greift mit verstärktem Zug über die Felder Richtung Brücke an, ein SPz brennt an der Brücke Ost. Feind nebelt ein, vermutlich Rückzug.",
+      "von": "2. Kp",
+      "text": "Feind greift mit verstärktem Zug Richtung Brücke an, ein SPz brennt an der Brücke Ost. Feind nebelt ein, zieht sich zurück.",
       "zweck": "Lagebild für G3: Gefechtsaufklärung erkennbar (Angriff, Verluste, Rückzug unter Rauch). Die Verwundeten des Zuges sind der Anlass für die Bergung (S2)."
     },
     {
@@ -1662,7 +1666,7 @@
       "t_s": 840,
       "an": "G3",
       "von": "Brigade",
-      "text": "Wegen des hohen Zielaufkommens ist Fast-Track für ARGUS genehmigt: Meldungen ab 90 % gehen ohne Prüfung durch G1 direkt an G2. Entscheiden Sie, ob Sie einschalten, und melden Sie es der Spielleitung.",
+      "text": "Fast-Track genehmigt: Meldungen ab 90 % gehen ohne Aufklärung direkt an die Zielprüfung. Sie entscheiden, ob Sie einschalten.",
       "zweck": "Entscheidung über die Delegation an die Maschine, zu Beginn des Hauptangriffs und vor S3 (96 %) und N2 (94 %).",
       "aktion": "fast_track_angebot"
     },
@@ -1670,35 +1674,37 @@
       "id": "I-12",
       "t_s": 880,
       "an": "G3",
-      "von": "2. Kompanie",
-      "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind tritt mit einer Kompanie an: Panzer und SPz über die Felder Richtung Furt Nord, weitere Kräfte durch die Ortschaft und südlich davon an der Schule vorbei Richtung Brücke.",
+      "von": "2. Kp",
+      "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind greift mit einer Kp an: Richtung Furt, durch KRÄHE und an der Schule vorbei.",
       "zweck": "Lagebild für G3: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen unmittelbar nach dem Fast-Track-Angebot."
     },
     {
       "id": "I-04",
       "t_s": 1020,
       "an": "G3",
-      "von": "Brigade (nachrichtlich)",
+      "von": "Brigade",
       "fall": "S3",
-      "text": "Die polnische Nachbarbrigade tritt um 10:19 mit einer Panzerkompanie PT-91 aus dem Raum südlich KRÄHE entlang Feldweg Süd nach Norden zum Gegenangriff an. Auftrag: die Feindkräfte an der Brücke ELSTER Ost zerschlagen. Feuerkoordinierung folgt.",
+      "text": "PL-PzKp (PT-91) greift ab 10:19 entlang Feldweg Süd nach Norden an. Auftrag: Feind Brücke Ost zerschlagen.",
       "zweck": "Die entscheidende Information für S3, gut drei Minuten vor der Meldung und mitten im Hauptangriff, kurz vor S4. Nur G3 erhält sie. Ideal: G3 gibt sofort einen Lagehinweis bzw. ein Feuerverbot für Feldweg Süd an G1 und G2."
     },
     {
       "id": "I-07",
       "t_s": 1095,
       "an": "G3",
-      "von": "2. Kompanie",
+      "von": "2. Kp",
       "fall": "S4",
-      "text": "Wir liegen unter Mörserfeuer aus Richtung Hof RABE, drei Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-      "zweck": "Gleichzeitig mit der Mörsermeldung im Hof RABE: menschlicher Druck gegen die berechtigte Warnung von ARGUS."
+      "text": "{zug} unter Mörserfeuer aus Hof RABE, {verw}. Fordere sofortige Bekämpfung des Mörsers!",
+      "zweck": "Gleichzeitig mit der Mörsermeldung im Hof RABE: menschlicher Druck gegen die berechtigte Warnung von ARGUS. Seit 2.3 nennt sie die tatsächlichen Verwundeten des 3. Zuges (Mörser Z-19 schießt auf ihn); solange der Mörser steht, folgen Druckmeldungen der Kompanie (K-…).",
+      "verluste_zug": "zug3"
     },
     {
       "id": "I-06",
       "t_s": 1200,
       "an": "G3",
-      "von": "2. Kompanie",
-      "text": "Feind sammelt Kampfpanzer und Schützenpanzer an der Brücke Ost, ein Angriff über den Bach steht bevor. Fordere sofort Feuer auf die Brücke Ost!",
-      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls."
+      "von": "2. Kp",
+      "text": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. {zug} {kk} %. Sofort Feuer auf Brücke Ost!",
+      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls. Seit 2.3 nennt sie die Kampfkraft des 1. Zuges, der unter dem Feuer von der Brücke Ost liegt.",
+      "verluste_zug": "zug1"
     },
     {
       "id": "I-10",
@@ -1711,19 +1717,19 @@
     {
       "id": "I-08a",
       "an": "G3",
-      "von": "Polnische Panzerkompanie (über Brigade)",
+      "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "freigabe", "ziele": ["Z-15", "Z-16", "Z-17"], "verzoegerung_s": 60},
-      "text": "Wir werden von eigener Seite beschossen! Panzer ausgefallen, Besatzung verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!",
+      "text": "Eigenbeschuss! Ein Panzer ausgefallen, Besatzung verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!",
       "zweck": "Rückmeldung zum Eigenbeschuss noch im Spiel. Der Gegenangriff bricht ab, die letzten Feindkräfte an der Brücke bleiben stehen."
     },
     {
       "id": "I-08b",
       "an": "G3",
-      "von": "Polnische Panzerkompanie (über Brigade)",
+      "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1480},
-      "text": "Gegenangriff erfolgreich: Brücke ELSTER Ost genommen, die letzten Feindkräfte dort sind zerschlagen. Feind weicht nach Osten aus.",
+      "text": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen. Feind weicht nach Osten aus.",
       "zweck": "Rückmeldung, wenn S3 richtig gelöst wurde: Der Gegenangriff entscheidet das Gefecht."
     },
     {
@@ -1732,16 +1738,16 @@
       "von": "Brigade",
       "fall": "S4",
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-19"], "verzoegerung_s": 60},
-      "text": "Meldung aus der Ortschaft: Am Hof RABE sind vier Zivilpersonen schwer verletzt, darunter zwei Kinder.",
+      "text": "Meldung aus KRÄHE: Am Hof RABE vier Zivilpersonen schwer verletzt, darunter zwei Kinder.",
       "zweck": "Rückmeldung, wenn trotz Warnung freigegeben wurde und die Zivilpersonen beim Einschlag noch im Wirkradius standen."
     },
     {
       "id": "I-13",
       "an": "G3",
-      "von": "2. Kompanie",
+      "von": "2. Kp",
       "bedingung": {"typ": "durchbruch", "verzoegerung_s": 10},
-      "text": "Feind ist über den Bach ELSTER bei uns eingebrochen! Kampffahrzeuge westlich des Bachs, wir binden sie mit Panzerabwehr.",
-      "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren."
+      "text": "Feind über den Bach ELSTER eingebrochen! Kp {kp_kk} %, {kp_verw}. Wir binden ihn mit Panzerabwehr.",
+      "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren. Seit 2.3 mit Kampfkraft und Verwundeten der Kompanie; der Übergang trifft den Zug an Brücke bzw. Furt."
     }
   ],
   "reserve_injects": [
@@ -1763,13 +1769,13 @@
       "id": "R-03",
       "an": "G3",
       "von": "Brigade (Presse)",
-      "text": "In sozialen Medien kursiert ein Video: ein brennendes Fahrzeug mit Rotem Kreuz vor einer Schule in KRÄHE.",
+      "text": "Video in sozialen Medien: brennendes Fahrzeug mit Rotem Kreuz vor einer Schule in KRÄHE.",
       "einsatz": "nur, wenn das Sanitätsfahrzeug Z-12 bekämpft wurde (60 s nach Freigabe)."
     },
     {
       "id": "R-04",
       "an": "G3",
-      "von": "Brigade (Zivil-militärische Zusammenarbeit)",
+      "von": "Brigade (ZMZ)",
       "text": "Einschlag auf dem Schulgelände KRÄHE: Fenster zersplittert, mehrere Kinder durch Splitter verletzt.",
       "einsatz": "nur, wenn eine Wirkung die Schule berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag."
     }
@@ -1793,7 +1799,7 @@
     }
   ],
   "hintergrund": {
-    "hinweis": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der eigenen Panzerabwehr treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie) und nur Ziele bis zum Bach (x < 500 m). Feindartillerie und Rauch sind Darstellung und treffen keine Spielobjekte. Alles steht als Ereignis im Protokoll.",
+    "hinweis": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der eigenen Panzerabwehr kommen aus den Stellungen der Züge (von) und treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie), und nur Ziele bis zum Bach (x < 500 m). Seit 2.3 liegt die Feindartillerie auf den Stellungen und verursacht eigene Verluste (Verlustmodell); Spielobjekte trifft sie nicht. Rauch ist Darstellung. Alles steht als Ereignis im Protokoll.",
     "ereignisse": [
       {
         "id": "H-01",
@@ -1801,19 +1807,19 @@
         "art": "feindartillerie",
         "ziel": "2./PzGrenBtl",
         "einschlaege": [
-          [300, 18, 452], [304, 42, 470], [309, 8, 488], [313, 55, 440], [318, 30, 500], [324, 12, 462],
-          [330, 48, 484]
+          [300, 121, 372], [304, 147, 353], [309, 296, 448], [313, 153, 375], [318, 280, 458], [324, 141, 381],
+          [330, 324, 460]
         ],
-        "text": "Feuervorbereitung der Gefechtsaufklärung: Feindartillerie liegt auf der 2. Kp (Einschläge am Westrand)."
+        "text": "Feuervorbereitung der Gefechtsaufklärung: Feindartillerie liegt auf dem 1. und 2. Zug der 2. Kp."
       },
       {
         "id": "H-02",
         "t_s": 556,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug1",
         "ziel": "Z-11",
         "folge": "zerstoert",
-        "text": "2. Kp trifft einen SPz BMP-2 an der Brücke ELSTER Ost (Leuchtspur vom Westrand). Das Wrack brennt, die Besatzung ist verwundet."
+        "text": "1. Zug trifft einen SPz BMP-2 an der Brücke ELSTER Ost (Leuchtspur aus der Stellung). Das Wrack brennt, die Besatzung ist verwundet."
       },
       {
         "id": "H-03",
@@ -1831,81 +1837,81 @@
         "art": "feindartillerie",
         "ziel": "2./PzGrenBtl",
         "einschlaege": [
-          [815, 22, 380], [819, 46, 410], [823, 10, 440], [828, 60, 395], [832, 34, 458], [837, 15, 372],
-          [842, 52, 430], [847, 25, 485], [852, 372, 448], [858, 360, 470], [864, 384, 430]
+          [815, 286, 473], [819, 147, 353], [823, 307, 555], [828, 318, 476], [832, 115, 357], [837, 306, 482],
+          [842, 335, 567], [847, 125, 385], [852, 302, 438], [858, 285, 585], [864, 316, 488]
         ],
-        "text": "Feuervorbereitung des Hauptangriffs auf die 2. Kp und das Westufer an der Brücke."
+        "text": "Feuervorbereitung des Hauptangriffs auf alle drei Züge der 2. Kp."
       },
       {
         "id": "H-05",
         "t_s": 1010,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-31",
         "folge": "zerstoert",
-        "text": "2. Kp trifft einen KPz T-72 am Ostufer vor der Furt Nord."
+        "text": "2. Zug trifft einen KPz T-72 am Ostufer vor der Furt Nord."
       },
       {
         "id": "H-06",
         "t_s": 1030,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-32",
         "folge": "zerstoert",
-        "text": "2. Kp trifft einen zweiten KPz T-72 am Ostufer."
+        "text": "2. Zug trifft einen zweiten KPz T-72 am Ostufer."
       },
       {
         "id": "H-07",
         "t_s": 1075,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-30",
         "folge": "zerstoert",
-        "text": "2. Kp trifft den Führungspanzer der Achse NORD am Ostufer nördlich der Furt. Der Panzerzug ist zerschlagen."
+        "text": "2. Zug trifft den Führungspanzer der Achse NORD am Ostufer nördlich der Furt. Der Panzerzug ist zerschlagen."
       },
       {
         "id": "H-08",
         "t_s": 1110,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-33",
         "folge": "zerstoert",
-        "text": "2. Kp trifft einen SPz BMP-2 in der Furt Nord (Wrack im Bach)."
+        "text": "2. Zug trifft einen SPz BMP-2 in der Furt Nord (Wrack im Bach)."
       },
       {
         "id": "H-09",
         "t_s": 1135,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-34",
         "folge": "zerstoert",
-        "text": "2. Kp trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt."
+        "text": "2. Zug trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt."
       },
       {
         "id": "H-10",
         "t_s": 1150,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug2",
         "ziel": "Z-35",
         "folge": "zerstoert",
-        "text": "2. Kp trifft den letzten SPz BMP-2 der Achse NORD. Der Angriff über die Furt ist abgeschlagen."
+        "text": "2. Zug trifft den letzten SPz BMP-2 der Achse NORD. Der Angriff über die Furt ist abgeschlagen."
       },
       {
         "id": "H-11",
         "t_s": 1170,
         "art": "panzerabwehr",
-        "von": "K-2",
+        "von": "zug1",
         "ziel": "Z-24",
         "folge": "ausser_gefecht",
-        "text": "2. Kp trifft einen KPz T-72 nördlich der Brücke: Kette abgesprungen, kein Brand. Die Besatzung steigt um 10:20:30 aus und ergibt sich."
+        "text": "1. Zug trifft einen KPz T-72 nördlich der Brücke: Kette abgesprungen, kein Brand. Die Besatzung steigt um 10:20:30 aus und ergibt sich."
       },
       {
         "id": "H-12",
         "t_s": 1190,
         "art": "feindartillerie",
         "ziel": "2./PzGrenBtl",
-        "einschlaege": [[1190, 30, 450], [1198, 14, 476], [1207, 50, 462], [1216, 22, 494], [1226, 44, 438]],
-        "text": "Feindartillerie auf die 2. Kp: Der Feind will die Brücke noch nehmen."
+        "einschlaege": [[1190, 286, 473], [1198, 312, 454], [1207, 307, 555], [1216, 318, 476], [1226, 280, 458]],
+        "text": "Feindartillerie auf den 1. Zug an der Brücke: Der Feind will die Brücke noch nehmen."
       }
     ]
   },
@@ -1998,7 +2004,8 @@
               "kategorie": "feind",
               "text": "KPz T-72, Panzerzug Hauptstraße. Fährt vom Ostrand auf der Hauptstraße ein und geht südlich davon am Waldrand DACHS in Feuerstellung. Wird er nicht aufgehalten, stößt er nach fünf Minuten über die Felder nördlich der Ortschaft zur Furt Nord vor, sonst zieht er ab.",
               "legitim": true
-            }
+            },
+            "verlust_promille": 2
           },
           {
             "id": "V2-2",
@@ -2013,7 +2020,8 @@
                 [306, 910, 437], [341, 930, 322], [345, 957, 317], [348.8, 983, 312], [352.7, 1010, 308]
               ]
             },
-            "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true}
+            "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true},
+            "verlust_promille": 2
           },
           {
             "id": "V2-3",
@@ -2028,7 +2036,8 @@
                 [300, 940, 429], [332.2, 930, 322], [336.2, 957, 317], [340, 983, 312], [343.9, 1010, 308]
               ]
             },
-            "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true}
+            "gt": {"kategorie": "feind", "text": "KPz T-72, Panzerzug Hauptstraße.", "legitim": true},
+            "verlust_promille": 2
           }
         ],
         "meldungen": [
@@ -2108,7 +2117,8 @@
               "kategorie": "feind",
               "text": "SPz BMP-2, SPz-Zug über die Felder. Hält nördlich der Ortschaft in Feuerstellung, Richtung Furt Nord; wird er nicht aufgehalten, setzt er nach fünf Minuten über die Furt.",
               "legitim": true
-            }
+            },
+            "verlust_promille": 1
           },
           {
             "id": "V3-2",
@@ -2122,7 +2132,8 @@
                 [80.9, 690, 172], [102.4, 610, 196], [400, 610, 196]
               ]
             },
-            "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true}
+            "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true},
+            "verlust_promille": 1
           },
           {
             "id": "V3-3",
@@ -2136,7 +2147,8 @@
                 [89.1, 690, 198], [108.1, 620, 222], [400, 620, 222]
               ]
             },
-            "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true}
+            "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true},
+            "verlust_promille": 1
           }
         ],
         "meldungen": [
@@ -2205,8 +2217,9 @@
             "hdg": 225,
             "personen": [{"art": "soldat", "anzahl": 5, "pos": [864, 48], "ab_s": 14}],
             "gt": {"kategorie": "feind", "text": "Mörsertrupp am Waldrand MARDER, zweite Stellung.", "legitim": true},
-            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 4, "salve": 4, "pause_s": 24}],
-            "bewegung": {"route": [[0, 862, -10], [14, 862, 45]]}
+            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 4, "salve": 4, "pause_s": 24, "auf": "zug2"}],
+            "bewegung": {"route": [[0, 862, -10], [14, 862, 45]]},
+            "verlust_promille": 3
           }
         ],
         "meldungen": [
@@ -2370,12 +2383,12 @@
       "ziele": ["Z-19"],
       "info_bei": "alle (ARGUS-Warnung NICHT BEKÄMPFEN, Sensordaten bei G1), Druck bei G3 (I-07)",
       "info_kurz": "alle; Druck auf G3",
-      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 2. Kp unter Beschuss sofortiges Feuer. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
+      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 2. Kp unter Beschuss sofortiges Feuer, und solange der Mörser steht, steigen beim 3. Zug die Verwundeten. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
       "gut": "G2 stellt zurück (BEOBACHTEN), G3 gibt erst nach der Folgemeldung M23 frei.",
       "leitfragen": [
         "Hier lag die Maschine richtig und der Druck kam von Menschen. Wem habt ihr geglaubt?",
         "Woran erkennt ihr, wann ihr ARGUS widersprechen sollt und wann nicht?",
-        "Hättet ihr die drei Minuten gewartet, wenn die 2. Kp Gefallene gemeldet hätte?"
+        "Ihr habt gewartet und der 3. Zug hatte Verwundete. Hättet ihr auch gewartet, wenn er Gefallene gemeldet hätte?"
       ],
       "bezuege": ["Art. 51 Abs. 5 lit. b ZP I: Verhältnismäßigkeit", "Art. 57 ZP I: Vorsichtsmaßnahmen beim Angriff"]
     }
@@ -2619,5 +2632,100 @@
         "ueber_s": {"Z-36": 1488.7}
       }
     ]
+  },
+  "eigene_truppe": {
+    "hinweis": "Seit 2.3 (D1): Die 2. Kompanie steht sichtbar am Westrand. Drei Züge in Stellungen westlich des Bachs, der Gefechtsstand des Kompaniechefs dahinter. Alle Rollen sehen die Züge und ihren Zustand (Kampfkraft, Verwundete; Verlustmodell in `verluste` und regeln.json). Fahrzeugpositionen in Metern; hdg = Blickrichtung (0 = Osten).",
+    "kompanie": "K-2",
+    "name": "2. Kp",
+    "fahrzeug": "spz_eigen",
+    "gefechtsstand": {"name": "Gefechtsstand Kompaniechef", "pos": [62, 484]},
+    "zuege": [
+      {
+        "id": "zug1",
+        "name": "1. Zug",
+        "kurz": "1./2",
+        "ort": "Brücke West",
+        "fahrzeuge": [[275, 458], [300, 464], [325, 470]],
+        "hdg": -28,
+        "streifen": [320, 470]
+      },
+      {
+        "id": "zug2",
+        "name": "2. Zug",
+        "kurz": "2./2",
+        "ort": "Furt Nord West",
+        "fahrzeuge": [[110, 370], [135, 363], [160, 356]],
+        "hdg": -16,
+        "streifen": [-100, 320]
+      },
+      {
+        "id": "zug3",
+        "name": "3. Zug",
+        "kurz": "3./2",
+        "ort": "Süd",
+        "fahrzeuge": [[292, 556], [311, 571], [330, 586]],
+        "hdg": -8,
+        "streifen": [470, 800]
+      }
+    ]
+  },
+  "verluste": {
+    "hinweis": "Seit 2.3 (D2, D3, D5): Was das Verlustmodell (regeln.json, Abschnitt verluste) in diesem Szenario braucht. Die Attrappe verrät beim Treffer die Stellung des 2. Zuges (zusätzliche Feindartillerie, Einschläge relativ zur Zugmitte [dt_s, dx, dy] ab Einschlag + verzoegerung_s). Durchbruch über die Brücke trifft den 1. Zug, über die Furt den 2. Zug. orte benennt die Herkunft des Feuers in den Meldungen. meldungen: Druckmeldungen der Kompanie an die Führung, je Stufe (0 neue Verwundete, 1 unter 75 %, 2 unter 55 %, 3 Untergrenze, sofort: erster Treffer einer Art aus regeln.verluste.meldungen.sofort); Platzhalter {zug} {kk} {verw} {neu} {waffe} {ort} {forderung}. Keine Darstellung getöteter Menschen: nur Kampfkraft und Verwundete.",
+    "attrappe": {
+      "ziel": "Z-07",
+      "zug": "zug2",
+      "verzoegerung_s": 40,
+      "einschlaege": [[0, -14, 9], [4, 12, -8], [8, -3, -14], [12, 16, 11], [17, -18, -4], [22, 5, 16]]
+    },
+    "durchbruch": {"Brücke ELSTER": "zug1", "Furt Nord": "zug2"},
+    "orte": [
+      {"text": "aus Hof RABE", "pos": [765, 300], "radius_m": 90},
+      {"text": "vom Waldrand MARDER", "pos": [905, 100], "radius_m": 130},
+      {"text": "von der Brücke Ost", "pos": [505, 395], "radius_m": 110},
+      {"text": "vom Ostufer an der Furt", "pos": [455, 270], "radius_m": 120},
+      {"text": "aus der Ortschaft", "pos": [665, 360], "radius_m": 150},
+      {"text": "von der Schule", "pos": [650, 515], "radius_m": 120},
+      {"text": "vom Waldrand DACHS", "pos": [820, 540], "radius_m": 130},
+      {"text": "von den Feldern Nord", "pos": [790, 190], "radius_m": 170}
+    ],
+    "meldungen": {
+      "von": "2. Kp",
+      "kennung": "K-",
+      "texte": {
+        "0": "{zug} unter {waffe}{ort}, {neu}. {forderung}",
+        "1": "{zug} nur noch {kk} %, {verw}. {waffe}{ort} hält an. {forderung}",
+        "2": "DRINGEND: {zug} {kk} %, {verw}. Bergung unter Feuer kaum möglich. {forderung}",
+        "3": "{zug} am Limit ({kk} %), hält nur noch mit Mühe. Brauchen sofort Feuer!",
+        "sofort": "{zug} unter {waffe}{ort}, {verw}. {forderung}"
+      },
+      "waffe": {
+        "steil": "Mörserfeuer",
+        "direkt": "Panzerfeuer",
+        "artillerie": "Artilleriefeuer",
+        "attrappe": "Artilleriefeuer",
+        "durchbruch": "Feuer eingebrochener Kampffahrzeuge"
+      },
+      "forderung": {
+        "steil": "Mörser bekämpfen!",
+        "direkt": "Panzer bekämpfen!",
+        "artillerie": "Halten Stellung.",
+        "attrappe": "Stellung offenbar aufgeklärt!",
+        "durchbruch": "Binden mit Panzerabwehr."
+      }
+    },
+    "auswertung": {
+      "titel": "Preis des Abwartens",
+      "leitfragen": {
+        "weniger": "Ihr hattet weniger eigene Verluste – um welchen Preis?",
+        "mehr": "Ihr habt gewartet und Verwundete gehabt – war das richtig?"
+      },
+      "offenlegung": "Der Druck war gebaut: Verlustmeldungen, Zeit und Forderungen der Kompanie sollten euch zu schnellen Freigaben verleiten. Wer bei S4, N4 oder S3 wartete, sah eigene Verluste steigen – und lag trotzdem richtig.",
+      "bezuege": [
+        "Militärische Notwendigkeit gegen Verhältnismäßigkeit: Art. 51 Abs. 5 lit. b ZP I",
+        "Vorsichtsmaßnahmen beim Angriff: Art. 57 ZP I",
+        "Fürsorge für die eigenen Soldaten – und ihre Grenze im Recht",
+        "Innere Führung: Gewissen und Verantwortung unter Druck"
+      ]
+    }
   }
 }

@@ -266,6 +266,41 @@ def spz_bmp2(lw, L, B, zustand=None):
         _muendungsfeuer(lw, L / 2 + 1.0, -0.1, 0.55)
 
 
+EIGEN_BASIS = (78, 88, 62)
+EIGEN_TARN = [(52, 66, 40), (96, 84, 58), (34, 36, 30), (88, 102, 66)]
+
+
+@zeichner("spz_eigen")
+def spz_eigen(lw, L, B, zustand=None):
+    """Eigener Schützenpanzer (seit Szenario 2.3, D1; fiktiv gestaltet): kantige Wanne mit Seitenschürzen, flacher
+    unbemannter Turm mit Kanone, Flecktarn. Steht in Stellung am Westrand, ist nie Ziel."""
+    rng = lw.rng
+    _ketten(lw, L, B, breite=0.55, unterbrochen=(1, (-1.0, 0.4)) if lw.wrack else None)
+    b = B / 2 - 0.08
+    lw.poly([(-L / 2 + 0.05, -b), (L / 2 - 1.1, -b), (L / 2 - 0.05, -b + 0.45), (L / 2 - 0.05, b - 0.45), (L / 2 - 1.1, b),
+             (-L / 2 + 0.05, b)], hell(EIGEN_BASIS, 0.86), koerper=True)                                   # Schürzen
+    lw.poly([(-L / 2 + 0.25, -b + 0.5), (L / 2 - 1.2, -b + 0.5), (L / 2 - 0.3, -b + 0.85), (L / 2 - 0.3, b - 0.85),
+             (L / 2 - 1.2, b - 0.5), (-L / 2 + 0.25, b - 0.5)], EIGEN_BASIS, koerper=True)                 # Wannendach
+    lw.kasten(L / 2 - 1.15, L / 2 - 0.55, -b + 0.55, -b + 1.15, hell(EIGEN_BASIS, 0.72))                  # Fahrerluke
+    for k in range(3):                                                                                     # Lüftergitter
+        x = -L / 2 + 0.5 + k * 0.3
+        lw.linie([(x, -b + 0.7), (x, b - 0.7)], hell(EIGEN_BASIS, 0.55), 0.05)
+    lw.kasten(-L / 2 + 0.05, -L / 2 + 0.45, -0.9, 0.9, hell(EIGEN_BASIS, 0.78))                           # Heckklappe
+    lw.tarnung(EIGEN_TARN, flecken=34, groesse=(0.3, 0.7))
+    tdx, tdy, trot = (0.0, 0.0, 0.0)
+    if lw.wrack:
+        tdx, tdy, trot = rng.uniform(-0.8, -0.2), rng.uniform(0.5, 1.0) * rng.choice([-1, 1]), rng.uniform(20, 55)
+    kw = dict(dx=tdx, dy=tdy, rot=trot)
+    lw.linie([(0.9, 0.0), (L / 2 + (1.15 if not lw.wrack else 0.2), 0.0)], hell(EIGEN_BASIS, 0.5), 0.13, **kw)  # Kanone
+    turm = [(1.05, -0.62), (0.75, -0.95), (-0.7, -0.95), (-0.95, -0.7), (-0.95, 0.7), (-0.7, 0.95), (0.75, 0.95), (1.05, 0.62)]
+    lw.poly(turm, hell(EIGEN_BASIS, 0.8), koerper=True, **kw)
+    lw.poly([(x * 0.84, y * 0.84) for x, y in turm], hell(EIGEN_BASIS, 1.05), koerper=True, **kw)
+    lw.kasten(-0.55, 0.2, 0.55, 0.85, hell(EIGEN_BASIS, 0.7), **kw)                                       # Lenkflugkörper-Starter
+    lw.ell(-0.4, -0.45, 0.22, 0.22, hell(EIGEN_BASIS, 0.68), **kw)                                         # Optik
+    if zustand == "feuert":
+        _muendungsfeuer(lw, L / 2 + 1.15, 0.0, 0.6)
+
+
 # ====================================================================== Radfahrzeuge
 def _raeder(lw, xs, B, breite=0.38, laenge=1.0, c=REIFEN):
     for x in xs:
@@ -565,7 +600,7 @@ def zustand_sprite(sprite, zustand):
 def ausdehnung(typ, L, B, wrack=False):
     """Halbe Leinwandgröße in Metern (vorn/hinten symmetrisch), inkl. Rohr und Rand."""
     vorn = L / 2 + {"kpz_t72": 2.7, "kpz_pt91": 2.7, "spz_bmp2": 1.1, "spw_btr80": 0.95, "attrappe_kpz": 1.9,
-                    "spaehpz_brdm2": 0.1}.get(typ, 0.0)
+                    "spaehpz_brdm2": 0.1, "spz_eigen": 1.25}.get(typ, 0.0)
     hinten = L / 2 + (0.6 if typ in ("kpz_t72", "kpz_pt91") else 0.0)
     hy = B / 2 + (1.3 if typ in ("kpz_t72", "kpz_pt91") else 0.1)
     if typ == "eloka_lkw":

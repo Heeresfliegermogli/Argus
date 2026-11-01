@@ -10,6 +10,9 @@
 //   • Verstärkungen: die Welt des Teams (kern/welt.ts) enthält ihre Ziele und Meldungen.
 //   • Seit Szenario 2.1: Durchbruch nicht aufgehaltener Gruppen (kern/durchbruch.ts) nach ihrem Angriffszeitpunkt,
 //     Lagemeldung I-13, sobald das erste Fahrzeug über dem Bach ist.
+//   • Seit Szenario 2.3 (D2/D3): Druckmeldungen der Kompanie (K-01 …) aus dem Verlustmodell (kern/verluste.ts) als
+//     Lagemeldung an die Führung mit Text, Zug und Stufe; Lagemeldungen mit Platzhaltern (I-07, I-06, I-13) nennen den
+//     Stand dieses Teams zur Zeit der Meldung. Die Verluste selbst stehen nicht im Protokoll, jedes Fenster rechnet sie.
 //
 // Gleichzeitigkeit (deterministisch, wie simuliere_durchlauf.py): Zerstörungen zum Zeitpunkt T gelten für
 // Entscheidungen zum Zeitpunkt T schon. Was davon abhängt, dass bis T keine Freigabe kam (E-01, I-08b),
@@ -20,6 +23,7 @@ import { gtBei, position, weg } from "../kern/geometrie";
 import { alleWeg, ausserGefechtZeiten, einschlagVon, freigaben, fruehesteFreigabe, wegAb, weltFuer } from "../kern/lage";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
 import { uhrzeit } from "../kern/uhr";
+import { fuelle, stand, verlustLage } from "../kern/verluste";
 import type { Spielzustand } from "../kern/zustand";
 
 export { alleWeg, einschlagVon, freigaben, wegAb, weltFuer };
@@ -161,11 +165,17 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     if (!z.meldungen[m.id]) liste.push(meldungEntwurf(inh, z, m));
   }
 
-  // 6 Injects: fest und bedingt
+  // 6 Injects: fest und bedingt (Platzhalter mit dem Stand dieses Teams zur Zeit der Meldung, seit 2.3)
+  const vl = verlustLage(basis, z);
+  const mitText = (id: string, tI: number) => {
+    const plan = inh.injects[id];
+    if (!plan || !plan.text.includes("{") || !vl.ereignisse) return { inject: id };
+    return { inject: id, text: fuelle(vl.welt, plan.text, stand(vl.welt, vl.ereignisse, tI), "verluste_zug" in plan ? plan.verluste_zug : undefined) };
+  };
   for (const i of sz.injects) {
     if (z.injects[i.id]) continue;
     if (i.t_s !== undefined) {
-      if (i.t_s <= t) liste.push(entwurf("inject", { inject: i.id }, { t_geplant: i.t_s }));
+      if (i.t_s <= t) liste.push(entwurf("inject", mitText(i.id, i.t_s), { t_geplant: i.t_s }));
       continue;
     }
     const b = i.bedingung;
@@ -174,18 +184,18 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
       // Lagemeldung verzoegerung_s nach dem ersten Fahrzeug über dem Bach (wenn es dann noch steht), nicht nach Spielende
       const erst = durchgebrochen(inh, z.durchbrueche, z.zerstoert, z.verstaerkungen).erstesUeber;
       if (erst !== null && erst + b.verzoegerung_s <= dauer && t >= erst + b.verzoegerung_s) {
-        liste.push(entwurf("inject", { inject: i.id }, { t_geplant: erst + b.verzoegerung_s }));
+        liste.push(entwurf("inject", mitText(i.id, erst + b.verzoegerung_s), { t_geplant: erst + b.verzoegerung_s }));
       }
       continue;
     }
     if (b.typ === "keine_freigabe_bis") {
       const frueh = fruehesteFreigabe(frei, b.ziele);
-      if (t > b.t_s && !(frueh && frueh.t <= b.t_s)) liste.push(entwurf("inject", { inject: i.id }, { t_geplant: b.t_s }));
+      if (t > b.t_s && !(frueh && frueh.t <= b.t_s)) liste.push(entwurf("inject", mitText(i.id, b.t_s), { t_geplant: b.t_s }));
       continue;
     }
     if (b.typ === "freigabe") {
       const erste = fruehesteFreigabe(frei, b.ziele);
-      if (erste && t >= erste.t + b.verzoegerung_s) liste.push(entwurf("inject", { inject: i.id }, { t_geplant: erste.t + b.verzoegerung_s }));
+      if (erste && t >= erste.t + b.verzoegerung_s) liste.push(entwurf("inject", mitText(i.id, erste.t + b.verzoegerung_s), { t_geplant: erste.t + b.verzoegerung_s }));
       continue;
     }
     // freigabe_mit_zivil: zählt die Zivilpersonen beim Einschlag (frühestmöglich, sobald die Wirkung da ist)
@@ -196,7 +206,14 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
       const tz = wirkungMitZivil(z, id);
       if (tz !== null) tInject = Math.min(tInject, Math.max(st.g3.t_s + b.verzoegerung_s, tz));
     }
-    if (t >= tInject) liste.push(entwurf("inject", { inject: i.id }, { t_geplant: tInject }));
+    if (t >= tInject) liste.push(entwurf("inject", mitText(i.id, tInject), { t_geplant: tInject }));
+  }
+
+  // 6b Druckmeldungen der Kompanie (seit 2.3, D3): aus der Zeitlinie der Verluste bis jetzt, in ihrer Reihenfolge
+  for (const k of vl.meldungen) {
+    if (k.t > t) break;
+    if (z.injects[k.id]) continue;
+    liste.push(entwurf("inject", { inject: k.id, text: k.text, zug: k.zug, stufe: k.stufe }, { t_geplant: k.t }));
   }
 
   // 7 Spielende
@@ -241,6 +258,7 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
       if (erste) k.push(erste.t + b.verzoegerung_s);
     }
   }
+  for (const dm of verlustLage(basis, z).meldungen) if (!z.injects[dm.id]) k.push(dm.t);
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
     const m = inh.meldungen[id];

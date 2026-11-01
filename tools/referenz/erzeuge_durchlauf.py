@@ -4,7 +4,8 @@
 tests/durchlauf.test.ts spielt dieselben fünf Läufe (= fünf Teams einer Sitzung) mit der echten Engine
 (Host, Zeitplan, Trefferregel beim Einschlag, Hintergrundgefecht, E-01, Verstärkungen, seit 2.1 Durchbruch) und vergleicht
 je Meldung Ausgang und Zeitpunkte, Wirkmittel, Einschlag und Treffer, dazu bedingte Injects, Restbestand,
-Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle.
+Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle; seit 2.3 auch die Verluste der eigenen Kompanie
+(Kampfkraft und Verwundete je Zug, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem Stand des Teams).
 
 Aufruf (im Repo-Wurzelordner): python3 tools/referenz/erzeuge_durchlauf.py
 """
@@ -59,10 +60,20 @@ def lauf_export(d, team, ein):
     durchbruch = [{"gruppe": e["durchbruch"], "t": e["t"], "durch": e["durch"]} for e in det if "durchbruch" in e]
     durchgebrochen = next((e["durchgebrochen"] for e in det if "durchgebrochen" in e), [])
     faelle = {k: ok for k, (ok, _) in S.faelle_erreicht(d, team, ein).items()}
+    v = next((e for e in det if "verluste" in e), None)
+    verluste = None if v is None else {
+        "zuege": {z: {"verlust": s["verlust"], "kampfkraft": s["kampfkraft"], "verwundete": s["verwundete"]} for z, s in v["verluste"].items()},
+        "kompanie": v["kompanie"],
+        "ereignisse": v["ereignisse"],
+        "meldungen": [{"inject": e["inject"], "t": zahl(e["t"]), "zug": e["zug"], "stufe": e["stufe"], "text": e["text"]}
+                      for e in det if "inject" in e and "stufe" in e],
+        "texte": {e["inject"]: e["text"] for e in det if "inject" in e and "text" in e and "stufe" not in e},
+        "verlauf": v["verlauf"],
+    }
     return {
         "team": team, "einspielen": ein or {}, "fast_track_ab": ft, "meldungen": meldungen, "injects": inj,
         "hintergrund": hg, "e01": e01, "durchbruch": durchbruch, "durchgebrochen": durchgebrochen, "rest": rest, "treffer_schutz": schutz, "faelle": faelle,
-        "letzte_freigabe": letzte, "log": [f"{a}: {b}" for a, b in log],
+        "letzte_freigabe": letzte, "log": [f"{a}: {b}" for a, b in log], "verluste": verluste,
     }
 
 

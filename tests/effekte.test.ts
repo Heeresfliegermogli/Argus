@@ -1,5 +1,6 @@
 // Effekte auf der Karte (Schritt 7): was wann wo zu sehen ist, wer es sehen darf, und dass jede Quelle eine
 // Animation im Asset-Manifest hat (effekte.zuordnung aus Schritt 5b). Gespielt mit den Modellteams naiv und ideal.
+import { verlustLage } from "../src/kern/verluste";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -48,7 +49,9 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(f!.echtzeit_s).toBeUndefined();
       } else if (wm.einsatzbereich) {
         expect(f?.echtzeit_s).toBeGreaterThan(0);
-        expect(f!.von![0]).toBeLessThan(0);
+        // seit 2.3 (D1.2): aus der Stellung eines eigenen Zuges (westlich des Bachs), vorher vom Westrand
+        const vonZug = inh.szenario.eigene_truppe!.zuege.some((z) => z.fahrzeuge.some((p) => Math.hypot(p[0] - f!.von![0], p[1] - f!.von![1]) < 6));
+        expect(vonZug, id).toBe(true);
       } else {
         expect(f).toBeUndefined();
       }
@@ -59,7 +62,8 @@ describe("Effekte (kern/effekte.ts)", () => {
     const [naiv] = await lauf();
     const inh = weltFuer(naiv.inh, naiv.z);
     const fx = effekte(inh, naiv.z, "alle");
-    const ari = art(fx, "einschlag").filter((e) => e.quelle.hintergrund === "feindartillerie");
+    // ohne die Treffer des Verlustmodells an den Stellungen (V-…, seit 2.3)
+    const ari = art(fx, "einschlag").filter((e) => e.quelle.hintergrund === "feindartillerie" && !e.id.startsWith("V-"));
     const soll = inh.szenario.hintergrund!.ereignisse.flatMap((h) => (h.art === "feindartillerie" ? h.einschlaege : []));
     expect(ari.length).toBe(soll.length);
     expect(ari.every((e) => e.pos[0] < 400)).toBe(true); // Westrand und Westufer
@@ -70,8 +74,27 @@ describe("Effekte (kern/effekte.ts)", () => {
       const spur = fx.find((e) => e.id === `${h.id}-s`);
       expect(!!spur, h.id).toBe(!!naiv.z.hintergrund[h.id]?.wirkt);
       if (spur) {
-        expect(spur.von![0]).toBeLessThan(0);
-        expect(spur.von![1]).toBe(inh.szenario.kraefte.find((k) => k.id === h.von)!.pfeil_y);
+        // seit 2.3 (D1.2): Leuchtspur aus der Stellung des schießenden Zuges (≤ 6 m vor einem seiner Fahrzeuge)
+        const zug = inh.szenario.eigene_truppe!.zuege.find((z) => z.id === h.von)!;
+        expect(zug, h.id).toBeDefined();
+        expect(Math.min(...zug.fahrzeuge.map((f) => Math.hypot(f[0] - spur.von![0], f[1] - spur.von![1]))), h.id).toBeLessThan(6);
+      }
+    }
+  });
+
+  it("Treffer an den Stellungen der eigenen Züge (seit 2.3, D3.3): je Schadensereignis ein Einschlag am Zug, Feindartillerie nur einmal", async () => {
+    for (const m of await lauf()) {
+      const inh = weltFuer(m.inh, m.z);
+      const v = verlustLage(m.inh, m.z).ereignisse;
+      expect(v.length).toBeGreaterThan(20);
+      for (const sicht of ["alle", "umgebung", new Set<string>()] as const) {
+        const fx = effekte(inh, m.z, sicht);
+        const eigen = fx.filter((e) => e.id.startsWith("V-"));
+        expect(eigen.length, String(sicht)).toBe(v.filter((e) => e.art !== "artillerie").length);
+        for (const e of eigen) {
+          const zug = inh.szenario.eigene_truppe!.zuege.find((z) => z.fahrzeuge.some((f) => Math.hypot(f[0] - e.pos[0], f[1] - e.pos[1]) < 40));
+          expect(zug, e.id).toBeDefined();
+        }
       }
     }
   });
@@ -108,7 +131,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie und Nebel", async () => {
+  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Treffer an den eigenen Stellungen", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id));
@@ -124,7 +147,8 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(fx.some((e) => e.id.startsWith("E-01-0-") && e.art !== "muendung")).toBe(false);
       }
       const pl = effekte(inh, m.z, "umgebung");
-      expect(pl.every((e) => e.quelle.hintergrund === "feindartillerie" || e.art === "nebel")).toBe(true);
+      // seit 2.3 auch Treffer an den Stellungen der eigenen Züge (V-…): eigene Truppe, verrät kein Ziel
+      expect(pl.every((e) => e.quelle.hintergrund === "feindartillerie" || e.art === "nebel" || e.id.startsWith("V-"))).toBe(true);
     }
   });
 

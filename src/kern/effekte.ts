@@ -18,6 +18,7 @@
 // Abschussrauch), solange sie stehen und nicht zerstört sind – sichtbar für Rollen, die das Fahrzeug kennen. Fahrende
 // Fahrzeuge wirbeln Staub auf: staubSpur() liefert dafür je Fahrzeug die Staubwolken hinter ihm (Karte und
 // Live-Drohnenbild zeichnen sie, Aussehen aus dem Asset-Manifest, effekte.zuordnung.fahrt).
+import { verlustLage, zielZug, zuege, zugMitte } from "./verluste";
 import type { Feuer, Inhalte, Punkt, RoutenPunkt, Ziel } from "../inhalte/typen";
 import { geschwindigkeit, position, vorhanden, weg } from "./geometrie";
 import { einschlagVon } from "./lage";
@@ -71,7 +72,20 @@ export const LEUCHTSPUR_S = 0.6;
 /** Eigene Panzerabwehr schießt aus Stellungen westlich des Kartenrands (Pfeil der Kompanie). */
 const WESTRAND_X = -40;
 
-/** Startpunkt der eigenen Panzerabwehr: Westrand auf Höhe der schießenden Kompanie, sonst der nächsten. */
+/**
+ * Startpunkt der eigenen Panzerabwehr. Seit 2.3 (D1.2) aus der Stellung: das Fahrzeug des schießenden Zuges (kraft = Zug)
+ * bzw. des Zuges im Gefechtsstreifen des Ziels, das dem Ziel am nächsten steht (Mündung ca. 5 m vor dem Fahrzeug).
+ * Ohne eigene Truppe im Szenario wie bisher vom Westrand auf Höhe der Kompanie.
+ */
+export function abschussOrt(inh: Inhalte, kraft: string | undefined, ziel: Punkt): Punkt {
+  const zl = zuege(inh);
+  if (!zl.length) return westrand(inh, kraft, ziel[1]);
+  const zug = zl.find((x) => x.id === kraft) ?? zielZug(zl, ziel) ?? zl[0];
+  const fz = [...zug.fahrzeuge].sort((a, b) => Math.hypot(a[0] - ziel[0], a[1] - ziel[1]) - Math.hypot(b[0] - ziel[0], b[1] - ziel[1]))[0];
+  return muendung(fz, ziel);
+}
+
+/** Startpunkt der eigenen Panzerabwehr ohne eigene Truppe: Westrand auf Höhe der schießenden Kompanie, sonst der nächsten. */
 export function westrand(inh: Inhalte, kraft: string | undefined, y: number): Punkt {
   const eigene = inh.szenario.kraefte.filter((x) => x.zugehoerigkeit === "eigen");
   const k = eigene.find((x) => x.id === kraft)
@@ -178,9 +192,17 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
       const wirkt = stand ? !!stand.wirkt : !weg(ziel, h.t_s, z.zerstoert);
       if (!wirkt) continue;
       const pos = position(ziel, h.t_s);
-      out.push({ id: `${h.id}-s`, art: "flug", quelle: { hintergrund: h.art }, t: h.t_s, pos, von: westrand(inh, h.von, pos[1]), echtzeit_s: LEUCHTSPUR_S });
+      out.push({ id: `${h.id}-s`, art: "flug", quelle: { hintergrund: h.art }, t: h.t_s, pos, von: abschussOrt(inh, h.von, pos), echtzeit_s: LEUCHTSPUR_S });
       out.push({ id: `${h.id}-x`, art: "einschlag", quelle: { hintergrund: h.art }, t: h.t_s, pos, nr: variante(h.id, 3) });
     }
+  }
+
+  // Treffer an den Stellungen der eigenen Züge (seit 2.3, D3.3): für alle sichtbar – eigene Truppe, verrät kein Ziel.
+  // Feindartillerie steht schon oben (Hintergrundgefecht); hier Mörser, direktes Feuer, Attrappe und Durchbruch.
+  for (const v of verlustLage(inh, z).ereignisse) {
+    if (v.art === "artillerie") continue;
+    const q = v.art === "direkt" || v.art === "durchbruch" ? { hintergrund: "panzerabwehr" } : { hintergrund: "feindartillerie" };
+    out.push({ id: `V-${v.art}-${v.quelle}-${v.nr}`, art: "einschlag", quelle: q, t: v.t, pos: v.pos, nr: variante(`${v.quelle}${v.nr}`, 3) });
   }
 
   if (sichtbar === "umgebung") return out;
@@ -197,8 +219,8 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     if (wm.flug) {
       out.push({ id: `${id}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
     } else if (wm.einsatzbereich) {
-      // direktes Feuer aus Stellungen westlich des Kartenrands
-      out.push({ id: `${id}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: westrand(inh, undefined, e.pos[1]), echtzeit_s: LEUCHTSPUR_S });
+      // direktes Feuer aus den Stellungen der eigenen Züge (seit 2.3; vorher vom Westrand)
+      out.push({ id: `${id}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
     }
     out.push({ id: `${id}-x`, art: "einschlag", quelle: q, t: e.t, pos: e.pos, nr: variante(id, 3) });
   }
@@ -236,8 +258,9 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
         const o = nr % 2 ? 1.6 : -1.6;
         out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "moerser" }, t: ts, pos: [pv[0] + Math.cos(w) * o, pv[1] + Math.sin(w) * o], nr });
       } else {
-        // Kanone im direkten Feuer auf die eigene Kompanie am Westrand
-        const ziel2 = westrand(inh, undefined, pv[1]);
+        // Kanone im direkten Feuer auf den eigenen Zug im Gefechtsstreifen (seit 2.3; vorher Richtung Westrand)
+        const zug = zielZug(zuege(inh), pv);
+        const ziel2 = zug ? zugMitte(zug) : westrand(inh, undefined, pv[1]);
         out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: ts, pos: muendung(pv, ziel2), richtung: grad(pv, ziel2), nr });
       }
     }

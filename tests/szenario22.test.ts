@@ -24,7 +24,7 @@ describe("Szenario 2.2: Daten", () => {
   it("C1: jedes Fahrzeug erscheint am Kartenrand (nur was bei Spielbeginn dasteht, steht mitten im Bild)", async () => {
     const inh = await inhalte();
     const { breite: w, hoehe: h } = inh.karte.ausdehnung_m;
-    expect(inh.szenario.version).toBe("2.2");
+    expect(["2.2", "2.3"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5)
     for (const z of inh.szenario.ziele) {
       const a = abS(z);
       if (a <= 0 && !z.bewegung?.route?.length) continue; // Attrappe Z-07 steht seit Spielbeginn

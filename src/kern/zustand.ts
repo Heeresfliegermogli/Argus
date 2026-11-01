@@ -46,6 +46,11 @@ export interface InjectStand {
   erschienen: Schritt;
   manuell: boolean;
   quittiert?: Schritt;
+  /** seit 2.3: Text aus dem Protokoll (Druckmeldung K-… oder gefüllte Platzhalter) */
+  text?: string;
+  /** seit 2.3: Druckmeldung – Zug und Stufe der Dringlichkeit (0–3) */
+  zug?: string;
+  stufe?: number;
 }
 
 export interface Spielzustand {
@@ -253,7 +258,11 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     case "inject": {
       const id = e.daten.inject;
       if (n.injects[id]) break;
-      n.injects = { ...n.injects, [id]: { id, erschienen: s, manuell: !!e.daten.manuell } };
+      const d = e.daten;
+      n.injects = {
+        ...n.injects,
+        [id]: { id, erschienen: s, manuell: !!d.manuell, ...(d.text ? { text: d.text } : {}), ...(d.zug ? { zug: d.zug } : {}), ...(d.stufe !== undefined ? { stufe: d.stufe } : {}) },
+      };
       n.injectReihenfolge = [...n.injectReihenfolge, id];
       break;
     }

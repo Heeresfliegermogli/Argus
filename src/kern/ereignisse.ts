@@ -87,7 +87,11 @@ export interface EreignisDaten {
   durchbruch: { gruppe: string; t_ab: number; durch: boolean; grund?: string };
   /** Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. */
   ereignis: { ereignis: string; nr?: number; von?: string; ziel?: string; wirkt?: boolean; entfaellt?: boolean; grund?: string };
-  inject: { inject: string; manuell?: boolean };
+  /**
+   * Lagemeldung an die Führung. Seit 2.3 (D3): Druckmeldungen der Kompanie (K-01 …) und Lagemeldungen mit Platzhaltern
+   * (I-07, I-06, I-13) tragen den Text mit dem Stand dieses Teams, Druckmeldungen dazu Zug und Stufe der Dringlichkeit.
+   */
+  inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number };
   inject_quittiert: { inject: string };
   lagehinweis: { text: string; an: Rolle[] };
   fast_track: { an: boolean };

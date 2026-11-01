@@ -39,7 +39,8 @@ describe("Spielende", () => {
     expect(typen.filter((x) => x === "uhr")).toHaveLength(1);
     expect(typen.filter((x) => x === "spielende")).toHaveLength(1);
     // ohne Entscheidungen bis 10:24:57 nachgeholt: Meldungen, Injects, Hintergrundgefecht, E-01 – aber kein Strom
-    expect(typen.length).toBeLessThan(100);
+    // seit 2.3 kommen ohne jede Entscheidung auch die Druckmeldungen der Kompanie dazu (Verlustmodell)
+    expect(typen.length).toBeLessThan(160);
     expect(faellig(inh, z, 1500)).toEqual([]);
   });
 

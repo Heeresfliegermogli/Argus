@@ -88,6 +88,8 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
     }
     case "inject": {
       const i = inh.injects[e.daten.inject];
+      // seit 2.3: Druckmeldung der Kompanie (K-…) mit Text und Stufe aus dem Protokoll
+      if (!i && e.daten.text) return `Druckmeldung ${e.daten.inject} der Kompanie an ${empfaenger("G3")}${e.daten.stufe ? ` (Stufe ${e.daten.stufe})` : ""}: „${e.daten.text}“`;
       return `Inject ${e.daten.inject} an ${empfaenger(i?.an)} (${i?.von ?? "?"})${e.daten.manuell ? " – manuell" : ""}`;
     }
     case "inject_quittiert":

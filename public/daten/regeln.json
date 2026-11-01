@@ -1,5 +1,5 @@
 {
-  "version": "2.2",
+  "version": "2.3",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -106,5 +106,30 @@
     {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"},
     {"id": "k_vergleich", "text": "Teamvergleich je Schlüsselfall: richtig / falsch / nicht erreicht"}
   ],
-  "eigene_kraefte": "Die 2. Kompanie liegt westlich außerhalb des Kartenausschnitts (Pfeil am Westrand). Ein Sicherheitsabstand im Raum KRÄHE ist deshalb nicht zu prüfen."
+  "eigene_kraefte": "Seit 2.3 steht die 2. Kompanie mit drei Zügen am Westrand der Karte (szenario.eigene_truppe). Ein Sicherheitsabstand wird nicht geprüft; Wirkungen liegen alle östlich des Bachs.",
+  "verluste": {
+    "hinweis": "Verlustmodell der eigenen Kompanie (seit 2.3, D2). Ganzzahlig in Promille Kampfkraft je Zug. Ein Schuss zählt, wenn der Schütze dann noch steht (im Raum, nicht zerstört, Feind und legitim); der Schaden kommt verzug_s später an der Stellung an. waffen je Fahrzeugtyp: art steil (Mörser, nur nach feuert, Zug aus feuert[].auf) oder direkt (im Halt seit feuerbereit_s, alle takt_s auf den nächsten Zug in reichweite_m; Fahrzeuge mit feuert nur nach feuert). Feindartillerie je Einschlag auf den nächsten Zug in radius_m. Attrappe und Durchbruch siehe szenario.verluste. Untergrenze je Zug (die Kompanie hält immer), Verwundete = Verlust / promille_je_verwundeter. Meldungen: Regeln der Druckmeldungen (D3).",
+    "untergrenze_prozent": 40,
+    "promille_je_verwundeter": 30,
+    "schwellen_prozent": [75, 55],
+    "verzug_s": {"direkt": 4, "steil": 20},
+    "waffen": {
+      "kpz_t72": {"art": "direkt", "promille": 3, "takt_s": 20, "feuerbereit_s": 10, "reichweite_m": 800},
+      "spz_bmp2": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 800},
+      "spw_btr80": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 600},
+      "moerser_trupp": {"art": "steil", "promille": 6, "reichweite_m": 3000}
+    },
+    "feindartillerie": {"promille": 3, "radius_m": 70},
+    "attrappe": {"promille": 6},
+    "durchbruch": {"promille": 25},
+    "versatz_m": [[0, 0], [8, -6], [-7, 5], [5, 9], [-9, -7], [11, 3], [-4, 11], [3, -10]],
+    "meldungen": {
+      "je_verwundete": 2,
+      "abstand_zug_s": 60,
+      "abstand_alle_s": 25,
+      "abstand_limit_s": 120,
+      "fenster_s": 60,
+      "sofort": ["attrappe"]
+    }
+  }
 }

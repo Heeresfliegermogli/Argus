@@ -23,6 +23,7 @@ import { einschlagVon } from "./lage";
 import { gemeldetePosition } from "./regeln";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
+import { stand as verlustZugStand, stufeFuer, verlustLage, zuege as eigeneZuege, zugMitte } from "./verluste";
 import { zielNr } from "./zielnummern";
 import type { MeldungsStand, Spielzustand } from "./zustand";
 
@@ -112,10 +113,60 @@ export interface WirkungsMarke {
   geplant?: boolean;
 }
 
+/** Seit 2.3 (D1): ein Zug der eigenen Kompanie auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
+export interface EigenerZugMarke {
+  id: string;
+  name: string;
+  /** Mitte des Zuges (Zeichen) */
+  pos: Punkt;
+  fahrzeuge: Punkt[];
+  hdg: number;
+  sidc: string;
+  kampfkraft: number;
+  verwundete: number;
+  /** 0 normal, 1 unter erster Schwelle, 2 unter zweiter, 3 Untergrenze */
+  stufe: number;
+  /** Spielzeiten von Treffern um die Lagezeit (das Zeichen flackert kurz) */
+  treffer: number[];
+  titel: string;
+  zeilen: string[];
+}
+
+export interface EigeneLage {
+  zuege: EigenerZugMarke[];
+  gefechtsstand?: { pos: Punkt; sidc: string; titel: string };
+}
+
 export interface Lagebild {
   objekte: KartenObjekt[];
   personen: PersonenMarke[];
   wirkungen: WirkungsMarke[];
+  /** seit 2.3: eigene Züge mit Zustand (fehlt ohne eigene Truppe) */
+  eigene?: EigeneLage;
+}
+
+/** Zeichen eines eigenen Zuges: Panzergrenadiere, Zug (●●●); Gefechtsstand mit Stab (APP-6 Modifikator A, Kompanie). */
+export const ZEICHEN_EIGENER_ZUG = "SFGPUCIZ---D---";
+export const ZEICHEN_GEFECHTSSTAND = "SFGPUCIZ--AE---";
+
+/** Eigene Züge zur Lagezeit t (D1): Stellung, Kampfkraft und Verwundete aus dem Verlustmodell (kern/verluste.ts). */
+export function eigeneLage(inh: Inhalte, z: Spielzustand, t: number): EigeneLage | undefined {
+  const et = (inh.basis ?? inh).szenario.eigene_truppe;
+  if (!et) return undefined;
+  const vr = inh.regeln.verluste;
+  const l = vr ? verlustLage(inh, z) : null;
+  const st = l ? verlustZugStand(l.welt, l.ereignisse, t) : {};
+  const zuege = eigeneZuege(inh).map((zug) => {
+    const s = st[zug.id] ?? { verlust: 0, kampfkraft: 100, verwundete: 0 };
+    const treffer = (l?.ereignisse ?? []).filter((e) => e.zug === zug.id && e.t > t - 3 && e.t <= t + 2).map((e) => e.t);
+    return {
+      id: zug.id, name: zug.name, pos: zugMitte(zug), fahrzeuge: zug.fahrzeuge, hdg: zug.hdg, sidc: ZEICHEN_EIGENER_ZUG,
+      kampfkraft: s.kampfkraft, verwundete: s.verwundete, stufe: vr ? stufeFuer(vr, s.verlust) : 0, treffer,
+      titel: `${zug.name} (eigen) · ${zug.ort}`,
+      zeilen: [`Kampfkraft ${s.kampfkraft} % · ${s.verwundete === 1 ? "1 Verwundeter" : `${s.verwundete} Verwundete`}`],
+    };
+  });
+  return { zuege, gefechtsstand: { pos: et.gefechtsstand.pos, sidc: ZEICHEN_GEFECHTSSTAND, titel: `${et.gefechtsstand.name} (${et.name})` } };
 }
 
 export const LEER: Lagebild = { objekte: [], personen: [], wirkungen: [] };
@@ -329,7 +380,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
     }
   }
   if (tLage !== undefined) objekte.push(...weitereZeichen(inh, z, tLage, zeichen));
-  return { objekte, personen: [], wirkungen };
+  return { objekte, personen: [], wirkungen, eigene: tLage !== undefined ? eigeneLage(inh, z, tLage) : undefined };
 }
 
 /** Wrack-, Teil- und Kontaktzeichen zu den Meldungszeichen einer Rolle (seit 2.2, C1/C8). */
@@ -490,7 +541,7 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
       });
     });
   }
-  return { objekte, personen, wirkungen };
+  return { objekte, personen, wirkungen, eigene: eigeneLage(inh, z, tLage) };
 }
 
 /** Kurzer Schlüssel, damit die Karte nur neu zeichnet, wenn sich das Lagebild ändert. */
@@ -501,5 +552,6 @@ export function lagebildSchluessel(lb: Lagebild): string {
     lb.objekte.map((o) => `${o.id}@${ort(o)}:${o.sidc}:${o.zustand}:${o.text}:${o.menge ?? ""}:${o.sprite ? `${o.sprite.name}${o.sprite.wrackAb ?? ""}${o.sprite.zustandAb ?? ""}` : ""}:${o.zeilen.join("/")}`).join(";"),
     lb.personen.map((p) => `${p.id}@${ort(p)}:${p.getroffen ? 1 : 0}`).join(";"),
     lb.wirkungen.map((w) => `${w.id}${w.geplant ? "?" : ""}`).join(";"),
+    (lb.eigene?.zuege ?? []).map((e) => `${e.id}:${e.kampfkraft}:${e.verwundete}:${e.treffer.join(",")}`).join(";"),
   ].join("|");
 }

@@ -58,6 +58,8 @@ export interface Ziel {
   feuert?: Feuer[];
   /** Seit 2.1: Kampffahrzeug ohne Durchbruch (Auftrag, z. B. Beobachtungsposten); nur Text für die Prüfung */
   kein_durchbruch?: string;
+  /** Seit 2.3 (D2): Schaden je Schuss an den eigenen Zügen in Promille, abweichend vom Typ (regeln.verluste.waffen) */
+  verlust_promille?: number;
 }
 
 /** Feuerstöße von von_s bis bis_s: je `salve` Schuss im Abstand takt_s, dann pause_s (Mörser: Rohre im Wechsel). */
@@ -67,6 +69,8 @@ export interface Feuer {
   takt_s: number;
   salve?: number;
   pause_s?: number;
+  /** Seit 2.3 (D2): Zug der eigenen Truppe, auf den das Feuer liegt (Mörser); sonst der Zug im Gefechtsstreifen */
+  auf?: string;
 }
 
 export type ArgusEmpfehlung = "BEKÄMPFEN" | "PRÜFEN" | "UNKLAR" | "NICHT BEKÄMPFEN";
@@ -156,6 +160,8 @@ export interface Inject {
   fall?: string;
   aktion?: string;
   bedingung?: Bedingung | BedingungDurchbruch;
+  /** Seit 2.3 (D3.2): Der Text nennt den Stand dieses Zuges ({zug}, {kk}, {verw}); {kp_kk}, {kp_verw} für die Kompanie */
+  verluste_zug?: string;
 }
 
 export interface ReserveInject {
@@ -193,7 +199,7 @@ export interface HgPanzerabwehr {
   id: string;
   t_s: number;
   art: "panzerabwehr";
-  /** schießende Kraft (kraefte[].id), Leuchtspur vom Westrand */
+  /** schießende Kraft: seit 2.3 ein Zug der eigenen Truppe (Leuchtspur aus seiner Stellung), früher kraefte[].id (Westrand) */
   von: string;
   ziel: string;
   folge: "zerstoert" | "ausser_gefecht";
@@ -267,6 +273,49 @@ export interface Zone {
   kurz?: string;
 }
 
+/** Seit 2.3 (D1): Zug der eigenen 2. Kompanie in Stellung am Westrand. */
+export interface EigenerZug {
+  id: string;
+  name: string;
+  kurz: string;
+  ort: string;
+  /** Fahrzeugpositionen in Metern */
+  fahrzeuge: Punkt[];
+  /** Blickrichtung in Grad (0 = Osten) */
+  hdg: number;
+  /** Gefechtsstreifen [y_von, y_bis): Feinde darin schießen auf diesen Zug */
+  streifen?: [number, number];
+}
+
+export interface EigeneTruppe {
+  hinweis?: string;
+  kompanie: string;
+  name: string;
+  /** Fahrzeugtyp im Katalog (Sprite in Stellung) */
+  fahrzeug: string;
+  gefechtsstand: { name: string; pos: Punkt };
+  zuege: EigenerZug[];
+}
+
+/** Seit 2.3 (D2, D3, D5): szenariobezogene Teile des Verlustmodells. */
+export interface SzenarioVerluste {
+  hinweis?: string;
+  /** Wirkung auf die Attrappe verrät die Stellung: Einschläge [dt_s, dx, dy] relativ zur Zugmitte ab Einschlag + verzoegerung_s */
+  attrappe?: { ziel: string; zug: string; verzoegerung_s: number; einschlaege: RoutenPunkt[] };
+  /** Übergang (Brücke ELSTER, Furt Nord) → Zug, den ein Durchbruch trifft */
+  durchbruch?: Record<string, string>;
+  /** Herkunft des Feuers in den Meldungen („aus Hof RABE“) */
+  orte?: { text: string; pos: Punkt; radius_m?: number }[];
+  meldungen?: {
+    von: string;
+    kennung: string;
+    texte: Record<string, string>;
+    waffe: Record<string, string>;
+    forderung: Record<string, string>;
+  };
+  auswertung?: { titel: string; leitfragen: { weniger: string; mehr: string }; offenlegung: string; bezuege: string[] };
+}
+
 export interface Kraft {
   id: string;
   name: string;
@@ -338,6 +387,10 @@ export interface Szenario {
   verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
   /** Seit 2.1: Gruppen, die durchbrechen, wenn sie nicht aufgehalten werden */
   durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[] };
+  /** Seit 2.3 (D1): eigene 2. Kompanie mit drei Zügen am Westrand */
+  eigene_truppe?: EigeneTruppe;
+  /** Seit 2.3 (D2): szenariobezogene Teile des Verlustmodells */
+  verluste?: SzenarioVerluste;
   schluesselfaelle: Schluesselfall[];
   nebenfaelle: Nebenfall[];
   anforderungen_technik?: { schritt: string; text: string }[];
@@ -443,6 +496,24 @@ export interface Regeln {
   wirkung: { trefferregel: string; begruendung: string; bewegung_mvp?: string; unbearbeitet: string; durchbruch?: string };
   kennzahlen: { id: string; text: string }[];
   eigene_kraefte?: string;
+  /** Seit 2.3 (D2): Verlustmodell der eigenen Kompanie */
+  verluste?: RegelnVerluste;
+}
+
+export type VerlustArt = "direkt" | "steil" | "artillerie" | "attrappe" | "durchbruch";
+
+export interface RegelnVerluste {
+  hinweis?: string;
+  untergrenze_prozent: number;
+  promille_je_verwundeter: number;
+  schwellen_prozent: number[];
+  verzug_s: { direkt: number; steil: number };
+  waffen: Record<string, { art: "direkt" | "steil"; promille: number; takt_s?: number; feuerbereit_s?: number; reichweite_m?: number }>;
+  feindartillerie: { promille: number; radius_m: number };
+  attrappe: { promille: number };
+  durchbruch: { promille: number };
+  versatz_m: Punkt[];
+  meldungen: { je_verwundete: number; abstand_zug_s: number; abstand_alle_s: number; abstand_limit_s: number; fenster_s: number; sofort?: string[] };
 }
 
 // ---------------------------------------------------------------- Geladene Inhalte
