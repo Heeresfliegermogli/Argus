@@ -645,8 +645,10 @@ def pruefe(d):
 
     # ---------------------------------------------------------------- Lagemeldungen ≤ 140 Zeichen mit Absender (seit 2.3, D4)
     MAX_LAGE = 140
+    lage_max = 0
     for i in sz["injects"] + sz.get("reserve_injects", []):
         lang = lagemeldung_laengste(sz, i)
+        lage_max = max(lage_max, len(lang))
         if len(lang) > MAX_LAGE:
             fehler.append(f"{i['id']}: Lagemeldung {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
     vm = (vs or {}).get("meldungen")
@@ -656,6 +658,7 @@ def pruefe(d):
                 lang = f"{vm['von']}: " + vorlage.format(zug="3. Zug", kk=100, verw="33 Verwundete", neu="33 neue Verwundete",
                                                           waffe=vm["waffe"][art], forderung=vm["forderung"][art],
                                                           ort=" " + max((o["text"] for o in vs.get("orte", [])), key=len, default=""))
+                lage_max = max(lage_max, len(lang))
                 if len(lang) > MAX_LAGE:
                     fehler.append(f"Druckmeldung Stufe {st} ({art}) bis {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
 
@@ -669,6 +672,7 @@ def pruefe(d):
     praez = [w for w in wm if wm[w]["wirkradius_m"] <= 50 and not wm[w].get("einsatzbereich")]
     i05 = next((i["t_s"] for i in sz["injects"] if i.get("aktion") == "fast_track_angebot"), 0)
     kz = {
+        "lagemeldung_max": lage_max, "eigene_zuege": len((sz.get("eigene_truppe") or {}).get("zuege", [])),
         "meldungen": len(sz["meldungen"]), "zielobjekte": len(ziele),
         "fahrzeuge_gemeldet": len(gemeldet),
         "argus_richtig": len(hilfe) - len(falsch), "argus_falsch": len(falsch),
@@ -725,6 +729,10 @@ def main():
     print(f"Vorhalt (Zulässigkeit ändert sich während der Bearbeitung): {kz['vorhalt']}")
     print(f"Bestand {kz['bestand']}; Sicht gestört bei {len(kz['sicht_gestoert'])} Meldungen; "
           f"Hintergrund zerstört {kz['hintergrund_zerstoert']}")
+    if kz["eigene_zuege"]:
+        vr = d["regeln"].get("verluste") or {}
+        print(f"Eigene Truppe: {kz['eigene_zuege']} Züge, Verlustmodell mit Untergrenze {vr.get('untergrenze_prozent')} %; "
+              f"längste Lagemeldung (mit Absender, Platzhalter mit den längsten Werten) {kz['lagemeldung_max']} Zeichen (höchstens 140)")
     for g in kz.get("durchbruch", []):
         print(f"  Durchbruch {g['gruppe']} {g['name']}: ab {L.uhrzeit(sz['spieluhr']['start'], g['t_s'])} über {g['ueber']} "
               f"(erstes Fahrzeug über dem Bach {L.uhrzeit(sz['spieluhr']['start'], g['ueber_s'])}), wenn nicht aufgehalten")

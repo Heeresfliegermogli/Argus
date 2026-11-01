@@ -227,11 +227,14 @@ export class Lagekarte {
     gezeigt: string[]; staub: number;
     /** Zeichenzeit je Bild in ms (Mittel und Höchstwert der letzten Sekunde, mit Rendern) */
     bildMs: { mittel: number; max: number };
+    /** seit 2.3 (D1, D3.3): im letzten Bild gezeichnete eigene Züge (Zeichen bzw. Fahrzeuge in Stellung), flackernde Züge, Beschriftungen */
+    eigene: { zeichen: number; sprites: number; flackern: string[]; texte: string[] };
     } {
     return {
       effekte: this.effekte.anzahl, effektAtlas: !!this.effektTexturen, spriteAtlas: !!this.atlasTexturen, renderer: this.renderer,
       fps: this.bilderProSekunde, animationen: this.effekte.geladen, bildMs: this.bildMs,
       gezeigt: [...this.effekte.gezeigt], staub: this.effekte.staubWolken,
+      eigene: { ...this.eigenGezeigt, flackern: [...this.eigenGezeigt.flackern], texte: [...this.eigenGezeigt.texte] },
     };
   }
 
@@ -1088,8 +1091,11 @@ export class Lagekarte {
    * Stellung (Sprite mit Erdwall). Bei einem Treffer flackert das Zeichen kurz (D3.3); die Beschriftung färbt sich ab den
    * Schwellen (Bernstein, Rot). Der Gefechtsstand des Kompaniechefs dahinter.
    */
+  private eigenGezeigt: { zeichen: number; sprites: number; flackern: string[]; texte: string[] } = { zeichen: 0, sprites: 0, flackern: [], texte: [] };
+
   private eigeneZeichnen(d: Graphics, t: number | null): void {
     const e = this.lb.eigene;
+    this.eigenGezeigt = { zeichen: 0, sprites: 0, flackern: [], texte: [] };
     if (!e) return;
     const groesse = this.opt.zeichenGroesse ?? 20;
     const fzTyp = this.inh.szenario.eigene_truppe?.fahrzeug;
@@ -1106,6 +1112,7 @@ export class Lagekarte {
       const [x, y] = this.bs(zug.pos);
       const flackern = t !== null && zug.treffer.some((h) => t >= h && t - h < 1.4);
       const alpha = flackern ? 0.3 + 0.7 * Math.abs(Math.sin(performance.now() / 65)) : 1;
+      if (flackern) this.eigenGezeigt.flackern.push(zug.id);
       let oben = groesse * 0.6;
       let unten = groesse * 0.6;
       if (spritesZeigen && tex) {
@@ -1143,15 +1150,18 @@ export class Lagekarte {
           sch.position.set(fx + 1.2 * this.s, fy + 1.2 * this.s);
           sch.visible = true;
           this.benutzt.add(`fs:${schl}`);
+          this.eigenGezeigt.sprites++;
         });
         oben = unten = 8 * this.s;
       } else {
         const z = this.zeichenSprite(`eigen-${zug.id}`, zug.sidc, groesse, x, y, alpha);
+        this.eigenGezeigt.zeichen++;
         oben = z.hoehe * z.ay;
         unten = z.hoehe * (1 - z.ay);
         this.belegt.push([x - z.breite * z.ax, y - oben, x + z.breite * (1 - z.ax), y + unten]);
       }
       const farbe = zug.stufe >= 2 ? (hell ? 0xb5281f : 0xff8a80) : zug.stufe === 1 ? (hell ? 0x9a5b00 : 0xffc56b) : (hell ? 0x1f4f99 : 0xb9d4ff);
+      this.eigenGezeigt.texte.push(`${zug.name} ${zug.kampfkraft} %`);
       this.beschriften(`eigen-${zug.id}`, `${zug.name} ${zug.kampfkraft} %`, this.stil(11.5, "700", farbe), [
         [x, y + unten + 1, 0.5, 0], [x, y - oben - 1, 0.5, 1], [x + groesse * 0.8, y, 0, 0.5],
       ]);

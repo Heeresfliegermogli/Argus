@@ -113,6 +113,11 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
             fehler.append(f"{name}: kleinste Schrift {lay['schrift']['min']} px")
         return lay
 
+    # Seit Szenario 2.3 (D5): Kapitel „Preis des Abwartens“ nach den Fällen, die Fälle dafür je 2:15
+    if s.locator("button[data-kapitel=preis]").count() == 1 and "preis" not in KAPITEL:
+        KAPITEL.insert(KAPITEL.index("schluss"), "preis")
+        BUDGET.update({"S3": 135, "S2": 135, "S1": 135, "S4": 135, "preis": 60})
+
     for nr, k in enumerate(KAPITEL):
         if nr:
             t1 = time.time()
@@ -216,13 +221,35 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                 fehler.append(f"{k}: Replay dauert {replay_s:.0f} s (Budget je Fall 150 s)")
             if fragen < 3:
                 fehler.append(f"{k}: nur {fragen} Leitfragen")
+        elif k == "preis":
+            n_teams = len(teams)
+            n_kurven = s.locator(".preis-kurve").count()
+            n_marken = s.locator(".preis-marke").count()
+            n_zeilen = s.locator(".preis-tabelle tbody tr").count()
+            fragen = s.get_by_test_id("preis-leitfragen").inner_text() if s.get_by_test_id("preis-leitfragen").count() else ""
+            offen = s.get_by_test_id("offenlegung").inner_text() if s.get_by_test_id("offenlegung").count() else ""
+            if n_kurven != n_teams or n_zeilen != n_teams:
+                fehler.append(f"Preis des Abwartens: {n_kurven} Kurven, {n_zeilen} Zeilen für {n_teams} Teams")
+            if n_marken == 0:
+                fehler.append("Preis des Abwartens: keine Marken der Entscheidungen bei S4/N4/S3")
+            if "um welchen Preis" not in fragen and "war das richtig" not in fragen:
+                fehler.append(f"Preis des Abwartens: Leitfragen fehlen ({fragen[:80]})")
+            if "Druck war gebaut" not in offen:
+                fehler.append("Preis des Abwartens: Offenlegung fehlt")
+            if plan and all("auswertung" in t and (t["auswertung"].get("kennzahlen") or {}).get("verluste") for t in plan["teams"]):
+                ist = s.eval_on_selector_all(".preis-tabelle tbody tr", "rs => rs.map(r => [...r.querySelectorAll('td.zahl')].slice(0, 2).map(c => parseInt(c.textContent)))")
+                soll = sorted([t["auswertung"]["kennzahlen"]["verluste"]["kampfkraft"], t["auswertung"]["kennzahlen"]["verluste"]["verwundete"]] for t in plan["teams"])
+                protokoll.append(("preis Werte", 0, {"ist": sorted(ist), "soll": soll}))
+                if demo and sorted(ist) != soll:          # im Beispiel exakt wie im Prozess; nach einem Lauf im Browser verschieben Klickzeiten die Verluste
+                    fehler.append(f"Preis des Abwartens: Kampfkraft/Verwundete {sorted(ist)} / im Prozess {soll}")
+            print(f"  preis: {n_kurven} Kurven, {n_marken} Marken (S4/N4/S3), Leitfragen und Offenlegung da")
         elif k == "schluss":
             if "ihr oder ARGUS" not in s.get_by_test_id("schluss").inner_text():
                 fehler.append("Schlussfrage fehlt")
 
     # ---------------------------------------------------------------- Navigation zurück
     s.keyboard.press("PageUp")
-    warte(lambda: s.locator("[data-testid=auswertung][data-kapitel='S4']").count() == 1, 5, "Bild ↑ zurück zu S4")
+    warte(lambda: s.locator(f"[data-testid=auswertung][data-kapitel='{KAPITEL[-2]}']").count() == 1, 5, f"Bild ↑ zurück zu {KAPITEL[-2]}")
     s.keyboard.press("Home")
     warte(lambda: s.locator("[data-testid=auswertung][data-kapitel='teams']").count() == 1, 5, "Pos1 zum Teamvergleich")
     # Klick auf eine Zelle im Teamvergleich öffnet das Replay dieses Falls für dieses Team

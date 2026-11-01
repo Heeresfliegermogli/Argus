@@ -187,6 +187,8 @@ def schluessel(protokoll):
         typ, d = e["typ"], e["daten"]
         if typ in ("uhr", "spiel_neu", "notiz"):
             continue
+        if typ == "inject" and "stufe" in d:      # Druckmeldung der Kompanie (seit 2.3): eigener Vergleich, siehe druckmeldungen()
+            continue
         if typ in ("g1_entscheid", "g2_empfehlung", "g3_entscheid"):
             k0 = (typ, d["meldung"])
             zaehler[k0] = zaehler.get(k0, 0) + 1
@@ -227,6 +229,20 @@ def nah(a, b, tol):
 # Verstärkungen, bedingte Injects (I-08a, I-09) und Meldungen, die entfallen, weil eine Wirkung das letzte Fahrzeug traf
 AUS_AKTION = ("g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "fast_track", "verstaerkung", "inject", "meldung_entfaellt",
               "inject_quittiert", "lagehinweis")
+
+
+def druckmeldungen(name, soll, ist):
+    """Druckmeldungen der Kompanie (seit 2.3, D3): Zeit, Zug und Stufe im Prozess und im Browser. Sie hängen vom Verlustmodell
+    ab, also von den Einschlagzeiten – klickt eine Modellperson im Browser später, schießt ein Feind länger und die Meldungen
+    verschieben sich oder kommen dazu. Unterschiede sind deshalb Hinweise, keine Fehler (die Logik prüft
+    tests/durchlauf.test.ts mit fünf Teams an einem Taktgeber exakt)."""
+    km = lambda p: [(e["t_s"], e["daten"]["zug"], e["daten"]["stufe"]) for e in p if e["typ"] == "inject" and "stufe" in e["daten"]]  # noqa: E731
+    a, b = km(soll), km(ist)
+    if [(z, st) for _, z, st in a] == [(z, st) for _, z, st in b]:
+        dt = max((abs(x[0] - y[0]) for x, y in zip(a, b)), default=0.0)
+        return [], f"{name}: {len(b)} Druckmeldungen wie im Prozess (Zug und Stufe), größte Zeitabweichung {dt:.1f} s"
+    return [f"{name}: Druckmeldungen im Prozess {len(a)}, im Browser {len(b)} – "
+            f"Prozess {[(round(t), z, st) for t, z, st in a]} / Browser {[(round(t), z, st) for t, z, st in b]}"], None
 
 
 def vergleiche(name, soll, ist, tol_t, tol_klick):
@@ -281,7 +297,8 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
                 f.append(f"{name}: {k} Einschlag {ea} / {eb}")
         elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "g1_entscheid", "verstaerkung", "inject_quittiert", "lagehinweis"):
             # t_ab der Verstärkung ist die Klickzeit der Spielleitung (geprüft über t_s mit tol_klick)
-            ohne = lambda d: {x: y for x, y in d.items() if x not in ("t_ab", "grund", "manuell")}  # noqa: E731
+            # Texte von Lagemeldungen mit dem Stand der Kompanie (I-07, I-06, I-13, seit 2.3) hängen über die Verluste von Klickzeiten ab
+            ohne = lambda d: {x: y for x, y in d.items() if x not in ("t_ab", "grund", "manuell", "text")}  # noqa: E731
             if ohne(da) != ohne(db):
                 f.append(f"{name}: {k} Daten {da} / {db}")
     return f, (max(dt) if dt else 0.0)
@@ -544,6 +561,17 @@ def main():
                 json.dump(ist, f, ensure_ascii=False, indent=0)
             unterschiede, maxdt[k] = vergleiche(f"Team {k + 1}", t["plan"]["protokoll"], ist, tol_t, tol_klick)
             fehler += unterschiede
+            dm_hinweis, dm_ok = druckmeldungen(f"Team {k + 1}", t["plan"]["protokoll"], ist)
+            for h in dm_hinweis:
+                print("  Hinweis:", h)
+            if dm_ok:
+                print("  " + dm_ok)
+            # Lagemeldungen mit Stand der Kompanie: Text im Browser wie im Prozess?
+            txt = lambda p: {e["daten"]["inject"]: e["daten"].get("text") for e in p if e["typ"] == "inject" and "stufe" not in e["daten"] and e["daten"].get("text")}  # noqa: E731
+            ts, ti = txt(t["plan"]["protokoll"]), txt(ist)
+            for iid in sorted(set(ts) & set(ti)):
+                if ts[iid] != ti[iid]:
+                    print(f"  Hinweis: Team {k + 1} {iid} Prozess „{ts[iid]}“ / Browser „{ti[iid]}“")
             z = sl.evaluate("(id) => { const z = window.argusSitzung.spiel(id).stand.zustand; return { bestand: z.bestand, zerstoert: z.zerstoert, abgelehnt: z.abgelehnt, ende: z.ende } }", t["id"])
             if z["bestand"] != t["plan"]["ende"]["bestand"]:
                 fehler.append(f"Team {k + 1}: Bestand {z['bestand']} / im Prozess {t['plan']['ende']['bestand']}")
