@@ -1,4 +1,4 @@
-# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12 und C1–C9)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9 und D1–D5)
 
 Fünf Ansichten in 1530 × 800 ohne Rollbalken: Aufklärung, Zielprüfung, Führung, Spielleitung und Plenum.
 Jede Rolle hat eine Einweisung (im Spiel als Folien, als Druck A5 quer).
@@ -23,6 +23,18 @@ gemerkt; im Hörsaal mit 15 Rechnern sonst zu laut). **Zugweise Meldungen (C7, C
 (●● ab 2, ●●● ab 3 Fahrzeugen, aus `katalog_fahrzeuge.json` `groesse_nach_anzahl`) und „n Fz“; das Zeichen folgt den noch
 stehenden Fahrzeugen; ein getroffenes bekommt am Einschlagort ein eigenes durchgestrichenes Zeichen; fährt ein Fahrzeug mehr
 als 40 m vom Zug weg, hat es ein eigenes kleines Zeichen mit derselben Nummer. Legende neu: „Zug“ (Zeichen mit ●●●) und „Kontakt“.
+**Änderungen D1–D5 (01.11.2026, Szenario 2.3, „mehr Druck“):** Die **2. Kompanie steht sichtbar am Westrand**: drei Züge
+(1. Zug Brücke West, 2. Zug Furt Nord West, 3. Zug Süd) als blaue Zeichen nach APP-6 (eigen, Panzergrenadiere, ●●●) mit „1. Zug 87 %“
+darunter, beim Hineinzoomen die Schützenpanzer in Stellung (Sprite mit Erdwall), dahinter der Gefechtsstand – bei allen Rollen, auf
+der Kontrollkarte und im Plenum (D1.3). Die eigene Panzerabwehr schießt aus diesen Stellungen (D1.2). Feindliches Feuer schlägt an der
+Stellung ein (Einschlag, Rauch), das Zeichen des getroffenen Zuges **flackert** kurz (D3.3); die Beschriftung färbt sich ab den Schwellen.
+**Kopfzeile aller Rollen:** „2. Kp 87 % · 4 Verwundete“ (blau, Bernstein unter 75 %, Rot unter 55 %; Zeigen: Stand je Zug) – Lage,
+keine Punkte. **Führung:** Die Kompanie meldet ihre Verluste ins Postfach (Lagemeldungen K-01 …, „2. Kp: 3. Zug unter Mörserfeuer aus
+Hof RABE, 2 neue Verwundete. Mörser bekämpfen!“), ab Stufe 2 („DRINGEND …“) und an der Untergrenze rot umrandet; I-07, I-06 und
+I-13 nennen den Stand dieses Teams. Alle Lagemeldungen höchstens 140 Zeichen (D4.1). **Empfehlungskarte der Führung kompakt** (D4.3):
+zwei Zeilen „Ziel n · Klasse · Konfidenz · ARGUS-Empfehlung“ und „Zielprüfung BEKÄMPFEN mit …“, die Begründung höchstens zwei Zeilen
+(ganzer Text beim Zeigen), darunter „Freigabe jetzt: Einschlag …“ mit den Warnungen. **Auswertung:** Kapitel „Preis des Abwartens“
+(siehe [`AUSWERTUNG.md`](AUSWERTUNG.md)).
 Seit Schritt 7 bewegt sich die Lage (Routen, Tracking, Effekte; siehe [`ENGINE.md`](ENGINE.md)). Seit
 Schritt 6b ist die **Karte die Arbeitsfläche für Aufklärung, Zielprüfung und Führung** (Konzept v2, Abschnitt 6): Meldungen als
 Marken am Ziel, kein Verlauf, der Eingang nur als Zahl, bei der Aufklärung das Drohnenbild live am Ort. Seit Schritt 8 die
@@ -174,7 +186,11 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
   Sprite mit Fahrtrichtung, ab der Zerstörung Wrack, Z-24 ab 10:19:30 mit abgesprungener Kette), alle Effekte, Feind/verbündet/zivil/außer Gefecht, Attrappe mit Täuschungszeichen, Sanitätsfahrzeug mit
   Rotem Kreuz, ungemeldete Ziele violett umrandet, Personen (Zivil weiß, Soldaten rot, Besatzung mit
   weißem Tuch blau umrandet, getroffen = Kreuz), Wirkungen grau bzw. rot bei Fehltreffer.
-* Raster, Planquadrate, Zonen, Gelände- und Wegenamen, eigene Kräfte als Pfeil am Westrand kommen aus
+* **Eigene Züge (seit 2.3, D1):** bei allen Rollen und auf der Kontrollkarte – Zeichen `SFGPUCIZ---D---` (Zug) und
+  `SFGPUCIZ--AE---` (Gefechtsstand) mit Kampfkraft, ab 2,6 px/m (wie die Sprites der Kontrollkarte) die drei Schützenpanzer je Zug in Stellung
+  (`spz_eigen`), Treffer lassen das Zeichen flackern; Zustand aus `src/kern/verluste.ts` (`eigeneLage` im Lagebild).
+  Die Karte meldet an `argusKarte.diagnose.eigene` Zeichen, Sprites, flackernde Züge und Beschriftungen (für die Proben).
+* Raster, Planquadrate, Zonen, Gelände- und Wegenamen, eigene Kräfte (bis 2.2 als Pfeil am Westrand) kommen aus
   `karte_kraehe.json` und dem Szenario. Hintergrund topografische Karte oder Luftbild (Knopf), ab 2 px/m
   Luftbild-Kacheln (nur Webseite). Zoom mit Mausrad, Doppelklick, Knöpfen; Zeigen öffnet einen Tooltip.
 * Takt (seit Schritt 7): höchstens 30 Bilder/s, solange die Uhr läuft oder ein Einschlag, eine LM oder eine
@@ -221,6 +237,7 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 | Prüfung | Ergebnis |
 |---|---|
+| **D1–D5 (01.11.2026, Szenario 2.3)** `npm test`, `verluste_probe.py` (neu), `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `drohne_probe.py`, `auswertung_probe.py` | 150 Tests (neu `tests/szenario23.test.ts`); eigene Züge mit Kampfkraft bei allen Rollen, Kopfzeile in allen Fenstern gleich, Druckmeldungen im Postfach ≤ 140 Zeichen, Flackern bei Treffer, Empfehlungskarte 89 px hoch, Kapitel „Preis des Abwartens“; 29 und 22 Bilder in 1530 × 800 ohne Rollbalken; Bedientest 18/18, Lobby 20/20, Live-Drohnenbild 43 Prüfpunkte; Auswertung mit Preis-Kapitel (12:00 min) |
 | **C1–C9 (28.10.2026, Szenario 2.2)** `npm test`, `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `drohne_probe.py`, `livelage_probe.py`, `auswertung_probe.py` | 140 Tests (neu `tests/szenario22.test.ts`, Kontakte, Teil- und Wrackzeichen in `tests/lagebild.test.ts`); 29 und 22 Bilder in 1530 × 800 ohne Rollbalken (gelbe Kontakte, Zug-Zeichen mit ●●●, eigene Wrackzeichen, Legende einzeilig); Bedientest 18/18 (Ziel 3 ist jetzt der Tigr aus M28, das Drohnenfenster wird zur Kartenmitte gezogen); Lobby 20/20; Live-Drohnenbild 43 Prüfpunkte (alle 30 Meldungen wie das Standbild, M25 mit starker Bildstörung, Rotes Kreuz, Kinder, weißes Tuch, Bildrate 28–30 Bilder/s); Live-Lage und Auswertung bestanden |
 | **B1–B12 (25./26.10.2026)** `npm test` | 122 Tests, neu u. a. `tests/anzeige.test.ts` (Rollen mit Artikel, Spieluhr, Zielnummern mit Verstärkung „1a“, Protokolltexte), kurze Codes in `teams.test.ts` und den Firebase-Regeln |
 | **B12** `tools/lobby_probe.py` | 20/20 nur über sichtbare Beschriftungen: erste Seite nur zwei Knöpfe, Mitspieler sehen nur das Codefeld, falsches Format und unbekannter Code, Code klein mit Leerzeichen, Rollen Aufklärung/Zielprüfung/Führung, Folien durchblättern, Einweisung wieder aufrufen, zuletzt genutzte Sitzung fortsetzen |

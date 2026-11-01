@@ -3,7 +3,8 @@
 Stand 22.10.2026, Anzeige angepasst am 25.10.2026 (B3, B4, B6, B7, B9): Rollen heißen Aufklärung, Zielprüfung,
 Führung (in der Kette **A → Z → F**), Zeiten in Spielzeit 00:00–25:00, Ziele „Ziel n“ wie im Spiel (die Spielleitung
 sieht die interne Kennung klein daneben), kein Vermerk mehr, das Drohnenbild im Replay verfolgt das Ziel wie im
-Spiel. Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen. Gesteuert von der
+Spiel. Seit 01.11.2026 (Szenario 2.3, D5) mit dem Kapitel **„Preis des Abwartens“** (eigene Verluste je Team, Offenlegung des
+gebauten Drucks). Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen. Gesteuert von der
 Spielleitung mit wenigen Klicks (oder einem Presenter). Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**, nie
 Namen von Personen, keine Rangliste und keine Punkte.
 
@@ -18,7 +19,8 @@ dieselbe Ansicht in ihrer Übersicht über **Auswertung ›**.
 | 1 Teams | 0:45 | Teamvergleich: Teams × S3, S2, S1, S4 und N1–N4. Je Zelle der Ausgang (✓ richtig, ✕ falsch, ◐ zu Unrecht abgelehnt, … offen/entfallen), die Kette **A → Z → F → ✸** (Aufklärung, Zielprüfung, Führung) (✓ weiter, ✕ gestoppt, ◷ zurückgestellt, ↩ zurück an die Zielprüfung, FT Fast-Track) mit der **entscheidenden Stufe umrandet**, darunter zwei Zeilen („FREIGABE 10:22:15 (PzAbw)“ / „→ Verbündete getroffen“). Unten je Fall: wie viele Teams richtig/falsch. Klick auf eine Zelle öffnet das Replay dieses Falls für dieses Team. |
 | 2 Kennzahlen | 0:45 | je Team: Fehlbekämpfungen (Zahl und Art), Freigabe trotz Regelwarnung, Widerspruch gegen ARGUS (zu Recht / zu Unrecht), Bearbeitungszeit je Stufe (Median, dazu ≥ 90 % und darunter), Fast-Track (wann ein, Meldungen ohne Aufklärung), I-04 gelesen (Spielzeit, wie lange nach Eingang), Lagehinweise an G1/G2 (erster nach I-04) |
 | 3 Konfidenz | 0:30 | Kernaussage: Streudiagramm Konfidenz × Sichtstörung je Meldung; die vier falschen Empfehlungen (M08, M12, M20, M21) rot mit „n von 5 Teams bekämpft“; Ø 93,5 % (falsch) gegen 88,1 % (richtig BEKÄMPFEN; Szenario 2.2, vorher 88,3 %); alle vier über der Fast-Track-Schwelle; Kernaussage aus dem Szenario |
-| S3, S2, S1, S4 | je 2:30 | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild, wie die Aufklärung es sah, Leitfragen und Bezüge, Notizen der SL 2 |
+| S3, S2, S1, S4 | je 2:30 (mit Verlustmodell je 2:15) | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild, wie die Aufklärung es sah, Leitfragen und Bezüge, Notizen der SL 2 |
+| Preis des Abwartens (seit 2.3) | 1:00 | Kampfkraft der eigenen 2. Kp je Team über die Spielzeit (Kurve in der Teamfarbe, Linie „Untergrenze – die Kompanie hält“), darauf die Entscheidungen bei S4, N4 und S3 (● richtig, ◆ falsch) am Zeitpunkt der Entscheidung; rechts je Team Kampfkraft und Verwundete bei Spielende und die Fehlbekämpfungen. Leitfragen an das Team mit den wenigsten Verlusten („Ihr hattet weniger eigene Verluste – um welchen Preis?“) und an das mit den meisten („Ihr habt gewartet und Verwundete gehabt – war das richtig?“), darunter die **Offenlegung**: Der Druck war gebaut (Verlustmeldungen, Zeit, Forderungen der Kompanie); wer bei S4, N4 oder S3 wartete, sah eigene Verluste steigen – und lag trotzdem richtig. Bezüge: Art. 51 Abs. 5 lit. b und Art. 57 ZP I, Fürsorge, Innere Führung. Keine Rangliste, keine Punkte |
 | Schluss | – | „Wer hat in diesem Spiel entschieden: ihr oder ARGUS?“ mit vier Zahlen über alle Teams (Freigaben, davon auf BEKÄMPFEN von ARGUS, Meldungen per Fast-Track ohne Aufklärung, Widerspruch) |
 
 Oben rechts läuft das **Zeitbudget** (Kapitel / gesamt, bei Überschreitung bernsteinfarben; Klick setzt zurück).
@@ -88,6 +90,7 @@ Protokoll steht.
 | Fast-Track | Zeitpunkt des letzten Einschaltens, Meldungen, die ohne Aufklärung an die Zielprüfung gingen |
 | I-04 gelesen | Quittung der Führung („gelesen“) der ersten festen Lagemeldung zu einem Fall (Reihenfolge der Fälle: I-04 zu S3; I-07 zu S4 erscheint im Replay) |
 | Lagehinweise | Anzahl, erster nach I-04 |
+| Eigene Verluste (seit 2.3) | Kampfkraft der Kompanie (Mittel der Züge) und Verwundete bei Spielende, je Zug, Verlauf alle 15 s und Zahl der Druckmeldungen (K-…) – aus dem Verlustmodell (`src/kern/verluste.ts`), gleiche Entscheidungen ⇒ gleiche Werte. Lage, keine Wertung: Sie stehen neben den Fehlbekämpfungen, nie als Punkte |
 | ARGUS falsch | BEKÄMPFEN, aber das Ziel war zur Meldezeit nicht legitim (wie `pruefe_szenario.py`): M08, M12, M20, M21 |
 
 ## Export (anonym, für die Seminarauswertung)
@@ -99,7 +102,9 @@ Rollen (`rollen`: g1 Aufklärung, g2 Zielprüfung, g3 Führung), je Meldung die 
 `median_aufklaerung_s`, `median_zielpruefung_s`, `median_fuehrung_s`. Freitexte (Begründung, Bemerkung,
 Lagehinweise, Notizen der SL; Vermerke nur aus älteren Läufen) nur auf Wunsch, weil sie Namen enthalten können. Inhalt: Fälle, ARGUS-Bilanz je Meldung
 (Konfidenz, Sichtstörung, wie viele Teams bekämpft), je Team Kennzahlen, Fälle mit Kette und Einschlag, alle Meldungen
-mit Entscheidungen, Wirkungen und entfallenen Meldungen, Lagehinweise, Verstärkungen.
+mit Entscheidungen, Wirkungen und entfallenen Meldungen, Lagehinweise, Verstärkungen. Seit 2.3 (D5.3) je Team `verluste`
+(`kampfkraft_ende`, `verwundete_ende`, `druckmeldungen`, `kampfkraft_zuege` je Zug, `kampfkraft_verlauf` je Minute), in der CSV die
+Spalten `kampfkraft_ende` und `verwundete_ende`.
 
 ## Technik
 
@@ -124,6 +129,7 @@ Firebase-Regeln lassen das ohne Änderung zu.
 | am Smartboard lesbar | 1530 × 800 ohne Rollbalken, nichts abgeschnitten; kleinste Schrift 13 px (Beschriftungen), Werte 20–28 px, Kernaussage und Schlussfrage groß (Schlussfrage 52 px); Diagramm mit Form und Beschriftung, nicht nur Farbe |
 | Bedienung mit wenigen Klicks | 11 Bedienschritte für die ganze Auflösung (7 × weiter, 4 × ▶), alles auch mit Presenter (Bild ↓/↑); Zelle → Replay, Ziffer oder Zeile → Team, Marke → Zeitpunkt |
 | Ethik | Teams statt Namen, keine Rangliste, keine Punkte; Export Team A–E ohne Namen, Kennungen und Uhrzeit, Freitexte nur auf Wunsch (Test und Probe prüfen das) |
+| **D5 (01.11.2026, Szenario 2.3)** | Kapitel „Preis des Abwartens“ mit den fünf Drehbuch-Teams (`tests/szenario23.test.ts`, `tools/verluste_probe.py` auf `?auswertung=demo`): Kurven aller Teams, Marken S4/N4/S3, Leitfragen, Offenlegung, 1530 × 800 ohne Rollbalken; Budget 0:45 + 0:45 + 0:30 + 4 × 2:15 + 1:00 = 12:00; Export mit Kampfkraft und Verwundeten, weiter ohne Namen |
 | automatisch | 114 Tests (12 neu in `tests/auswertung.test.ts`), Build; `tools/auswertung_probe.py` auf `?auswertung=demo`, `ui_faelle.py` (22 Bilder), `bedientest_probe.py` 15/15, `lobby_probe.py` 19/19 |
 
 Prüfen: `python3 tools/auswertung_probe.py http://localhost:4173/` (Beispiel) bzw. mit `--erwartet plan.json` und der

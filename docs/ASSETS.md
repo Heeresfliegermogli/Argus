@@ -27,6 +27,12 @@ das Standbild im Budget von 150 KB bleibt (139 KB). Die Mörsertrupps fahren auf
 lassen die neuen Routen frei (Z-19 über die Hauptstraße in den Hof RABE, Z-26 und Z-37 über die Nordstraße); keine Route
 streift mehr ein Gebäude der Kartendatei.
 
+Szenario 2.3 (01.11.2026, Änderung D1): neuer Sprite **`spz_eigen.png`** (eigener Schützenpanzer, fiktiv gestaltet: kantige Wanne
+mit Seitenschürzen, flacher unbemannter Turm, Flecktarn; dazu Wrack-Variante, wird nicht gebraucht – die Kompanie hält immer) im
+Fahrzeug-Atlas, Katalog 1.4 (`spz_eigen`, nie Ziel, nie gemeldet). Die Stellung zeichnet die Karte selbst (Erdwall unter dem
+Sprite). Die beschriftete Lagekarte (`karte/lagekarte_beschriftet.webp`, Einweisung) zeigt die drei Züge mit Zeichen (●●●) und
+Fahrzeugpunkten und den Gefechtsstand „Kp-Chef“. Alles andere unverändert (Drohnenbilder byte-gleich neu erzeugt).
+
 ## Inhalt von `public/assets/`
 
 | Pfad | Inhalt | Größe |
