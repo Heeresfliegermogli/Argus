@@ -20,6 +20,7 @@
 //    oder NICHT BEKÄMPFEN, aber das Team hat bekämpft. Zu Recht, wenn die Lösung im Szenario das Stoppen verlangt
 //    bzw. die Wirkung ohne Fehltreffer und ohne Regelverstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man
 //    widersprechen könnte.
+import { mitVerlusten, verlustStand, verlustVerlauf, zuege } from "./verluste";
 import type { Inhalte, Meldung, Nebenfall, Schluesselfall } from "../inhalte/typen";
 import type { Ereignis } from "./ereignisse";
 import { gtBei } from "./geometrie";
@@ -426,6 +427,14 @@ export interface Kennzahlen {
   lagehinweise: { anzahl: number; liste: { t: number; an: string[]; text: string }[]; ersterNach?: number };
   /** Seit 2.1: Feindfahrzeuge, die nicht aufgehalten wurden und über den Bach durchbrachen (Kennzahl, keine Wertung) */
   durchbruch: { fahrzeuge: string[]; gruppen: string[]; erstesUeber: number | null };
+  /**
+   * Seit 2.3 (D5): Verluste der eigenen Kompanie – Lage, keine Wertung. Kampfkraft und Verwundete bei Spielende (bzw. jetzt),
+   * je Zug, Verlauf der Kampfkraft über die Spielzeit, Zahl der Druckmeldungen. Fehlt ohne Verlustmodell.
+   */
+  verluste?: {
+    kampfkraft: number; verwundete: number; zuege: { id: string; name: string; kampfkraft: number; verwundete: number }[];
+    verlauf: [number, number, number][]; druckmeldungen: number;
+  };
 }
 
 function median(werte: number[]): number | null {
@@ -546,6 +555,21 @@ export function kennzahlen(basis: Inhalte, team: TeamLauf, verlaeufe = meldungsV
     lagemeldungen: lm,
     lagehinweise: { anzahl: hinweise.length, liste: hinweise, ersterNach: ersteLm !== undefined ? hinweise.find((h) => h.t >= ersteLm)?.t : undefined },
     durchbruch: durchgebrochen(inh, z.durchbrueche ?? {}, z.zerstoert, z.verstaerkungen),
+    verluste: verlusteKennzahl(basis, z),
+  };
+}
+
+/** Verluste der eigenen Kompanie für die Auswertung (D5): bei Spielende, sonst bis zur Spielzeit des letzten Ereignisses. */
+function verlusteKennzahl(basis: Inhalte, z: Spielzustand): Kennzahlen["verluste"] {
+  if (!mitVerlusten(basis)) return undefined;
+  const dauer = (basis.basis ?? basis).szenario.spieluhr.dauer_s;
+  const bis = z.ende ? dauer : Math.min(dauer, z.uhr.t_s);
+  const st = verlustStand(basis, z, bis)!;
+  const verlauf = verlustVerlauf(basis, z, 15).filter(([t]) => t <= bis + 1e-6);
+  return {
+    kampfkraft: st.kompanie.kampfkraft, verwundete: st.kompanie.verwundete,
+    zuege: zuege(basis).map((zug) => ({ id: zug.id, name: zug.name, kampfkraft: st.zuege[zug.id].kampfkraft, verwundete: st.zuege[zug.id].verwundete })),
+    verlauf, druckmeldungen: z.injectReihenfolge.filter((id) => z.injects[id].stufe !== undefined).length,
   };
 }
 
@@ -801,6 +825,12 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
           lagemeldungen: k.lagemeldungen.map((l) => ({ inject: l.id, fall: l.fall, erschienen: r1(l.erschienen), gelesen: r1(l.gelesen) })),
           lagehinweise: k.lagehinweise.anzahl, lagehinweis_erster_nach_lagemeldung: r1(k.lagehinweise.ersterNach),
           durchgebrochen: k.durchbruch.fahrzeuge.length, durchbruch_gruppen: k.durchbruch.gruppen, durchbruch_erstes_ueber_bach: r1(k.durchbruch.erstesUeber),
+          // seit 2.3 (D5.3): eigene Verluste (Kampfkraft in %, Verwundete), je Zug und als Verlauf je Minute
+          ...(k.verluste ? {
+            kampfkraft_ende: k.verluste.kampfkraft, verwundete_ende: k.verluste.verwundete, druckmeldungen: k.verluste.druckmeldungen,
+            kampfkraft_zuege: Object.fromEntries(k.verluste.zuege.map((x) => [x.name, { kampfkraft: x.kampfkraft, verwundete: x.verwundete }])),
+            kampfkraft_verlauf: k.verluste.verlauf.filter(([t]) => t % 60 === 0).map(([t, kk, vw]) => ({ t, kampfkraft: kk, verwundete: vw })),
+          } : {}),
         },
         faelle: Object.fromEntries(a.faelle.map((f) => {
           const e = t.faelle[f.id];
@@ -831,7 +861,7 @@ export function exportCsv(a: Auswertung): string {
   const kopf = [
     "team", "meldungen_bearbeitet", "meldungen_erschienen", "fehlbekaempfungen", "fehl_arten", "freigaben_trotz_warnung",
     "widerspruch", "zu_recht", "zu_unrecht", "median_aufklaerung_s", "median_zielpruefung_s", "median_fuehrung_s", "fast_track_seit_s", "lagemeldung", "gelesen_s",
-    "lagehinweise", "durchgebrochen", ...a.faelle.map((f) => f.id),
+    "lagehinweise", "durchgebrochen", "kampfkraft_ende", "verwundete_ende", ...a.faelle.map((f) => f.id),
   ];
   const zelle = (v: unknown) => {
     const s = v === null || v === undefined ? "" : typeof v === "number" ? String(Math.round(v * 10) / 10).replace(".", ",") : String(v);
@@ -843,7 +873,8 @@ export function exportCsv(a: Auswertung): string {
     return [
       teamKennung(i), k.meldungen.bearbeitet, k.meldungen.erschienen, k.fehl.wirkungen, k.fehl.arten.map((x) => `${x.art} ${x.anzahl}`).join(", "),
       k.trotzWarnung, k.widerspruch.gesamt, k.widerspruch.zuRecht, k.widerspruch.zuUnrecht, k.zeiten.alle.g1, k.zeiten.alle.g2, k.zeiten.alle.g3,
-      k.fastTrack.seit ?? null, lm?.id ?? null, lm?.gelesen ?? null, k.lagehinweise.anzahl, k.durchbruch.fahrzeuge.length, ...a.faelle.map((f) => t.faelle[f.id].ausgang),
+      k.fastTrack.seit ?? null, lm?.id ?? null, lm?.gelesen ?? null, k.lagehinweise.anzahl, k.durchbruch.fahrzeuge.length,
+      k.verluste?.kampfkraft ?? null, k.verluste?.verwundete ?? null, ...a.faelle.map((f) => t.faelle[f.id].ausgang),
     ].map(zelle).join(";");
   });
   return `﻿${[kopf.join(";"), ...zeilen].join("\r\n")}\r\n`;

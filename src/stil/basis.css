@@ -595,6 +595,11 @@ label.wahl.klein input { margin-top: 0; }
 .drohne-fuss .nur-aufnahme { display: none; color: #f6d48a; }
 .drohne.live.aufnahme .drohne-fuss .nur-aufnahme { display: inline; }
 .g2-warnung { font-size: 13.5px; color: #ffb4ad; line-height: 1.35; }
+/* seit 2.3 (D4.3): Empfehlungskarte der Führung kompakt */
+.g3-karte .g3-zeile { display: flex; flex-wrap: wrap; gap: 0 7px; align-items: center; font-size: 14.5px; }
+.g3-karte .g3-zeile .feldname { font-size: 13px; color: var(--text-3); white-space: nowrap; }
+.g3-karte .g3-konfidenz { min-width: 130px; flex: 0 1 150px; }
+.warnung.kompakt { padding: 5px 8px; font-size: 13.5px; line-height: 1.3; }
 canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 
 /* ---------------------------------------------------------------- Auswertung (Schritt 8)
@@ -743,6 +748,34 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .aussage-zahlen span { font-size: 16px; color: var(--text-2); }
 .aussage-punkte { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; line-height: 1.3; }
 .kernaussage { margin: 0; font-size: 21px; line-height: 1.38; border-left: 4px solid var(--plenum); padding: 4px 0 4px 14px; color: #f2eee2; }
+
+/* Kapitel „Preis des Abwartens“ (seit 2.3, D5) */
+.tafel-preis { display: grid; grid-template-columns: minmax(0, 1fr) 560px; gap: 18px; }
+.preis-diagramm { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.preis-diagramm h1 { font-size: 24px; font-weight: 700; }
+.preis-diagramm svg { flex: 1; min-height: 0; width: 100%; }
+.kd-gitter.untergrenze { stroke: #ff8f86; stroke-dasharray: 6 5; }
+.preis-kurve { fill: none; stroke-width: 3.5; stroke-linejoin: round; }
+.preis-marke circle, .preis-marke rect { stroke-width: 3; }
+.preis-marke.richtig circle { fill: #1f4a30; }
+.preis-marke.falsch rect { fill: #ff6b5e; }
+.preis-marke-text { fill: var(--text); font-size: 14px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+.preis-ende { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.preis-legende.richtig { fill: #1f4a30; stroke: #c9f1d5; stroke-width: 2; }
+.preis-legende.falsch { fill: #ff6b5e; stroke: #1c232a; stroke-width: 2; }
+.preis-aussage { display: flex; flex-direction: column; gap: 14px; min-height: 0; padding-top: 4px; }
+.preis-tabelle { width: 100%; border-collapse: collapse; font-size: 16px; }
+.preis-tabelle th { font-size: 13.5px; color: var(--text-3); font-weight: 600; text-align: left; padding: 2px 6px 6px; border-bottom: 1px solid var(--linie); }
+.preis-tabelle td { padding: 6px 6px; border-bottom: 1px solid var(--linie); }
+.preis-tabelle td.zahl { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.preis-tabelle td.zahl.rot { color: #ff8f86; }
+.preis-tabelle .ausgang-zelle { font-size: 19px; font-weight: 700; text-align: center; }
+.preis-tabelle .ausgang-zelle.richtig { color: #8fdcab; }
+.preis-tabelle .ausgang-zelle.falsch { color: #ff8f86; }
+.preis-fragen p { margin: 0 0 8px; font-size: 18px; line-height: 1.32; }
+.preis-offenlegung { border-left: 4px solid var(--plenum); padding: 4px 0 4px 14px; }
+.preis-offenlegung p { margin: 0 0 6px; font-size: 17.5px; line-height: 1.35; color: #f2eee2; }
+.preis-offenlegung ul { margin: 0; padding-left: 18px; font-size: 15px; color: var(--text-2); line-height: 1.35; }
 
 /* Kapitel S3, S2, S1, S4: Replay */
 .replay { --zl-name: 196px; display: grid; grid-template-columns: minmax(0, 1fr) 560px; gap: 12px; min-height: 0; }

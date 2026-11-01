@@ -15,7 +15,7 @@ import { ROLLEN_NAME } from "../kern/sichten";
 import { injectAnzeige } from "../kern/verluste";
 import type { InjectStand } from "../kern/zustand";
 import type { Sicht } from "../sitzung/sicht";
-import { AktionsKnopf, EingangLeiste, Panel, ZielmeldungKompakt } from "./gemeinsam/bausteine";
+import { AktionsKnopf, EingangLeiste, Empfehlung, Konfidenz, Panel } from "./gemeinsam/bausteine";
 import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht, meldungsMarken, wirkungsMarken } from "./gemeinsam/lagekarte";
 import { vorschauFuer } from "./g2";
@@ -149,22 +149,29 @@ export function G3Ansicht(p: { s: Sicht }) {
           {!ms || !zm ? (
             <div class="hinweistext" style="padding:2px 0 4px" data-testid="g3-warten">Warten auf Empfehlungen der Zielprüfung … Sie erscheinen als Marke auf der Karte und öffnen sich hier. Ohne deine FREIGABE wird nichts bekämpft.</div>
           ) : (
-            <div class="stapel" style="gap:7px">
-              <ZielmeldungKompakt zm={zm} />
-              <div class="g2-zeile">
-                <span class="feldname">Zielprüfung empfiehlt</span>
-                <span><b class="rot">BEKÄMPFEN</b> mit {inh.wirkmittel[wm ?? ""]?.name ?? "?"}</span>
-                {ms.g2?.begruendung && <span class="zwei-zeilen leise" title={ms.g2.begruendung}>„{ms.g2.begruendung}“</span>}
+            // Empfehlungskarte kompakt (seit 2.3, D4.3): Ziel, Klasse, Konfidenz, ARGUS · Empfehlung mit Wirkmittel und Begründung
+            // (höchstens zwei Zeilen) · Einschlag bei Freigabe jetzt mit Warnung. Die Lage zeigt die Karte.
+            <div class="stapel g3-karte" style="gap:5px" data-testid="zielmeldung">
+              <div class="g3-zeile">
+                <b>{zm.zielNr}</b><span class="leise">·</span><b>{zm.klasse}</b>
+                <span class="g3-konfidenz"><Konfidenz wert={zm.konfidenz} /></span>
+                <span class="feldname">ARGUS</span><Empfehlung wert={zm.argusEmpfehlung} />
+                {zm.fastTrack && <span class="badge warn" title="Fast-Track: kam ohne Prüfung durch die Aufklärung">FT</span>}
               </div>
+              <div class="g3-zeile">
+                <span class="feldname">Zielprüfung</span>
+                <span><b class="rot">BEKÄMPFEN</b> mit {inh.wirkmittel[wm ?? ""]?.name ?? "?"}</span>
+              </div>
+              {ms.g2?.begruendung && <div class="zwei-zeilen leise klein" title={ms.g2.begruendung}>„{ms.g2.begruendung}“</div>}
               {/* Warnungen der Zielprüfung (zu ihrer Zeit gerechnet) nur, soweit die Prüfung jetzt sie nicht ohnehin zeigt */}
               {g2Extra.length > 0 && (
                 <div class="g2-warnung" data-testid="g3-warnungen">{g2Extra.map((w) => <div>⚠ bei der Zielprüfung: {w}</div>)}</div>
               )}
               {vs && (
-                <div class={vs.v.pruefung.zulaessig ? "wm-status ok" : "warnung"} data-testid="g3-jetzt">
+                <div class={vs.v.pruefung.zulaessig ? "wm-status ok" : "warnung kompakt"} data-testid="g3-jetzt">
                   Freigabe jetzt: Einschlag {uhrzeit(start, vs.v.einschlag.t)}{vs.v.pruefung.zulaessig ? " – keine Regelwarnung" : ""}
                   {vs.v.pruefung.verstoesse.map((x) => <div>⚠ {x.regel}: {x.text}</div>)}
-                  {!vs.v.pruefung.zulaessig && <div class="klein" style="opacity:.8">{ms.g2?.warnungen.length ? "Die Zielprüfung hat dazu gewarnt. " : ""}Freigabe möglich, der Verstoß wird protokolliert.</div>}
+                  {!vs.v.pruefung.zulaessig && <div class="klein" style="opacity:.8">{ms.g2?.warnungen.length ? "Von der Zielprüfung gewarnt. " : ""}Freigabe möglich, Verstoß wird protokolliert.</div>}
                 </div>
               )}
               {bestandLeer && <div class="warnung">{inh.wirkmittel[wm!].kurz} aufgebraucht – ZURÜCK AN ZIELPRÜFUNG</div>}
