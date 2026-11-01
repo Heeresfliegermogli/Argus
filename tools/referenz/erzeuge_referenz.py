@@ -3,6 +3,7 @@
 
 Der Vergleichstest (tests/regeln.test.ts) prüft damit, dass die TypeScript-Portierung von
 Geometrie und Einsatzregeln dieselben Ergebnisse liefert wie die Python-Werkzeuge aus Schritt 2.
+Seit 2.4 (E3) mit den Einschlägen je Fahrzeug einer Zug-Bekämpfung (teile).
 Aufruf (im Repo-Wurzelordner): python3 tools/referenz/erzeuge_referenz.py
 """
 import json
@@ -60,6 +61,8 @@ def main():
                     "meldung": m["id"], "t_freigabe": m["t_s"] + dt, "wm": wid, "t": w["t"], "pos": list(w["pos"]), "ziel": w["ziel"],
                     "zulaessig": w["zulaessig"], "verstoesse": [list(regel_code(v)) for v in w["verstoesse"]],
                     "getroffen": sorted(f"{g[0]}|{g[2]}" for g in w["getroffen"]),
+                    # seit 2.4 (E3): je Einschlag eines Zuges (LM und PzAbw je Fahrzeug)
+                    "teile": [[x["t"], x["pos"][0], x["pos"][1], x["ziel"]] for x in w["einschlaege"]],
                 })
     raster = [{"p": [x, y], "pq": L.pq((x, y), karte)} for x in (0, 99.9, 100, 476, 999) for y in (0, 99, 612, 699)]
     zonen = []

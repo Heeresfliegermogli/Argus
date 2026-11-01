@@ -18,8 +18,8 @@ describe("Inhalte", () => {
     const inh = await inhalte();
     const b = pruefeInhalte(inh);
     expect(b.fehler).toEqual([]);
-    expect(inh.szenario.meldungen).toHaveLength(30); // seit 2.2: M28–M30 (C3)
-    expect(Object.keys(inh.ziele)).toHaveLength(37); // seit 2.2: Z-37
+    expect(inh.szenario.meldungen).toHaveLength(36); // seit 2.4: M31–M36 (E5)
+    expect(Object.keys(inh.ziele)).toHaveLength(49); // seit 2.4: Z-38–Z-49 (E2, E5)
   });
 });
 
@@ -39,7 +39,7 @@ describe("Spielstand aus dem Protokoll", () => {
     const z = zustandAus(p, inh);
     expect(z.meldungen.M01.stufe).toBe("erledigt");
     expect(z.meldungen.M01.ergebnis).toBe("bekaempft");
-    expect(z.bestand.LM).toBe(10);
+    expect(z.bestand.LM).toBe(inh.wirkmittel.LM.bestand! - 1); // ein Einschlag im Protokoll (ohne einschlaege): eine LM
     expect(z.zerstoert["Z-01"]).toBe(220);
     expect(z.aktionen).toEqual({ a1: 4, a2: 5, a3: 6 });
     expect(z.meldungen.M01.verlauf).toEqual([3, 4, 5, 6, 7]);
@@ -47,6 +47,35 @@ describe("Spielstand aus dem Protokoll", () => {
     expect(z.meldungen.M01.g1?.vermerk).toBe("heiß, fährt");
     expect(zielmeldung(inh, z, "M01").zielNr).toBe("Ziel 1 (2 Fz)");
     expect(fingerabdruck(z)).toBe(fingerabdruck(zustandAus(p, inh)));
+  });
+
+  it("Zug-Bekämpfung (2.4, E3): eine LM je Einschlag, die Wirkung steht fest, wenn alle Einschläge da sind", async () => {
+    const inh = await inhalte();
+    seq = 0;
+    const p: Ereignis[] = [
+      e("spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "2.4", titel: "x" }),
+      e("meldung", { meldung: "M01" }, 20),
+      e("g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60, { aktion: "a1" }),
+      e("g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "LM" }, 90, { aktion: "a2" }),
+      e("g3_entscheid", {
+        meldung: "M01", entscheid: "freigabe", wirkmittel: "LM", einschlag: { t: 140, pos: [900, 380], ziel: "Z-01" },
+        einschlaege: [{ t: 140, x: 900, y: 380, ziel: "Z-01" }, { t: 143, x: 880, y: 390, ziel: "Z-02" }],
+      }, 100, { aktion: "a3" }),
+      e("wirkung", { meldung: "M01", wirkmittel: "LM", pos: [900, 380], t_freigabe: 100, t_einschlag: 140, ziel: "Z-01", nr: 0, anzahl: 2, getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 140),
+    ];
+    const halb = zustandAus(p, inh);
+    expect(halb.bestand.LM).toBe(inh.wirkmittel.LM.bestand! - 2);
+    expect(halb.meldungen.M01.stufe).toBe("wirkung");
+    expect(halb.meldungen.M01.wirkung).toBeUndefined();
+    expect(halb.zerstoert).toEqual({ "Z-01": 140 });
+    const z = zustandAus([...p, e("wirkung", {
+      meldung: "M01", wirkmittel: "LM", pos: [880, 390], t_freigabe: 100, t_einschlag: 143, ziel: "Z-02", nr: 1, anzahl: 2,
+      getroffen: [{ ziel: "Z-02", was: "fahrzeug", kategorie: "feind" }],
+    }, 143)], inh);
+    expect(z.meldungen.M01.stufe).toBe("erledigt");
+    expect(z.meldungen.M01.wirkung?.getroffen.map((g) => g.ziel)).toEqual(["Z-01", "Z-02"]);
+    expect(z.meldungen.M01.wirkung?.t_einschlag).toBe(140);
+    expect(z.zerstoert).toEqual({ "Z-01": 140, "Z-02": 143 });
   });
 
   it("Lücke im Protokoll wird erkannt", async () => {
@@ -86,7 +115,7 @@ describe("Spielstand aus dem Protokoll", () => {
 });
 
 describe("Zeitplan und Aktionen", () => {
-  it("Fast-Track schickt M20 (96 %) an G1 vorbei, M19 (89 %) nicht", async () => {
+  it("Fast-Track schickt M20 (96 %) an G1 vorbei, M16 (88 %) nicht", async () => {
     const inh = await inhalte();
     seq = 0;
     const z = zustandAus([
@@ -94,9 +123,9 @@ describe("Zeitplan und Aktionen", () => {
       e("fast_track", { an: true }, 870),
     ], inh);
     const f = faellig(inh, z, 1216).filter((x) => x.typ === "meldung");
-    const m19 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M19")!;
+    const m16 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M16")!;
     const m20 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M20")!;
-    expect(m19.daten).toEqual({ meldung: "M19" });
+    expect(m16.daten).toEqual({ meldung: "M16" });
     expect(m20.daten).toEqual({ meldung: "M20", fast_track: true });
   });
 

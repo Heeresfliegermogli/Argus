@@ -42,6 +42,17 @@ export interface EinschlagDaten {
   ziel: string;
 }
 
+/**
+ * Einschlag einer Zug-Bekämpfung (seit 2.4, E3): flach, weil die Firebase-Regeln unter `daten` nur drei Ebenen zulassen
+ * (einschlaege → Index → Feld).
+ */
+export interface EinschlagFlach {
+  t: number;
+  x: number;
+  y: number;
+  ziel: string;
+}
+
 // ---------------------------------------------------------------- Ereignisse
 
 export interface EreignisDaten {
@@ -49,8 +60,11 @@ export interface EreignisDaten {
   spiel_neu: { lauf: string; szenario: string; version: string; titel: string };
   /** Neuer Uhrstand: ab ts gilt Spielzeit t_s, läuft mit tempo. */
   uhr: { befehl: UhrBefehl; laeuft: boolean; t_s: number; tempo: number };
-  /** ARGUS-Meldung erscheint. fast_track: geht ohne G1 direkt an G2. entfaellt: jedes Fahrzeug schon zerstört oder weg. */
-  meldung: { meldung: string; fast_track?: boolean; manuell?: boolean; entfaellt?: boolean };
+  /**
+   * ARGUS-Meldung erscheint. fast_track: geht ohne G1 direkt an G2. entfaellt: jedes Fahrzeug schon zerstört oder weg.
+   * gestoert (seit 2.4, E4): der Datenlink war zur Meldezeit gestört (EloKa) – ARGUS meldet unsicherer (kern/eloka.ts).
+   */
+  meldung: { meldung: string; fast_track?: boolean; manuell?: boolean; entfaellt?: boolean; gestoert?: boolean };
   /** Meldung entfällt in der Kette (bei G1, G2 oder G3), weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist. */
   meldung_entfaellt: { meldung: string; stufe: "g1" | "g2" | "g3"; grund: string };
   g1_entscheid: { meldung: string; entscheid: G1Entscheid; vermerk?: string };
@@ -61,6 +75,8 @@ export interface EreignisDaten {
   /** Bei Freigabe: wirkmittel aus der G2-Empfehlung, warnungen und einschlag am vorausberechneten Einschlagort. */
   g3_entscheid: {
     meldung: string; entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen?: string[]; einschlag?: EinschlagDaten;
+    /** seit 2.4 (E3): alle Einschläge einer Zug-Bekämpfung (der erste = einschlag); fehlt bei einem einzigen Einschlag */
+    einschlaege?: EinschlagFlach[];
   };
   /**
    * Einschlag (Trefferregel seit 2.0): pos/ziel/t_einschlag wie bei der Freigabe vorausberechnet, getroffen nach der
@@ -69,6 +85,8 @@ export interface EreignisDaten {
   wirkung: {
     meldung: string; wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen?: TrefferDaten[];
     t_einschlag?: number; ziel?: string; verstoesse?: string[];
+    /** seit 2.4 (E3): Nummer des Einschlags einer Zug-Bekämpfung (0 …) und Anzahl aller Einschläge dieser Freigabe */
+    nr?: number; anzahl?: number;
   };
   /**
    * Verstärkung eingespielt (Spielleitung): Ziele und Meldungen der Gruppe mit Zeiten ab t_ab. Feldnamen in daten nur

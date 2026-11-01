@@ -21,7 +21,7 @@
 import { verlustLage, zielZug, zuege, zugMitte } from "./verluste";
 import type { Feuer, Inhalte, Punkt, RoutenPunkt, Ziel } from "../inhalte/typen";
 import { geschwindigkeit, position, vorhanden, weg } from "./geometrie";
-import { einschlagVon } from "./lage";
+import { einschlaegeVon } from "./lage";
 import type { Spielzustand } from "./zustand";
 
 export type EffektArt = "einschlag" | "flug" | "muendung" | "nebel" | "wrack";
@@ -222,16 +222,22 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     const wmId = st.g3?.entscheid === "freigabe" ? st.g3.wirkmittel : undefined;
     if (!wmId) continue;
     const wm = inh.wirkmittel[wmId];
-    const e = st.wirkung ? { t: st.wirkung.t_einschlag, pos: st.wirkung.pos } : einschlagVon(inh, z, id);
-    if (!wm || !e) continue;
+    if (!wm) continue;
     const q = { wirkmittel: wmId };
-    if (wm.flug) {
-      out.push({ id: `${id}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
-    } else if (wm.einsatzbereich) {
-      // direktes Feuer aus den Stellungen der eigenen Züge (seit 2.3; vorher vom Westrand)
-      out.push({ id: `${id}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
-    }
-    out.push({ id: `${id}-x`, art: "einschlag", quelle: q, t: e.t, pos: e.pos, nr: variante(id, 3) });
+    // seit 2.4 (E3): je Einschlag eines Zuges (LM und PzAbw je Fahrzeug, nacheinander gestartet); Ort und Zeit aus dem Protokoll
+    const abstand = wm.zug?.abstand_s ?? 0;
+    einschlaegeVon(inh, z, id).forEach((plan, nr) => {
+      const da = st.wirkungen?.find((w) => w.nr === nr);
+      const e = da ? { t: da.t_einschlag, pos: da.pos } : plan;
+      const k = nr ? `${id}~${nr}` : id;
+      if (wm.flug) {
+        out.push({ id: `${k}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + nr * abstand + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
+      } else if (wm.einsatzbereich) {
+        // direktes Feuer aus den Stellungen der eigenen Züge (seit 2.3; vorher vom Westrand)
+        out.push({ id: `${k}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
+      }
+      out.push({ id: `${k}-x`, art: "einschlag", quelle: q, t: e.t, pos: e.pos, nr: variante(k, 3) });
+    });
   }
 
   // Skriptereignisse (E-01): polnische Panzer schießen auf die letzten Feindkräfte (Kanone, direktes Feuer)
@@ -256,6 +262,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   // Feuer nach Schussrhythmus (seit 2.1): Mündungsblitz (danach Abschussrauch), solange das Fahrzeug steht
   for (const ziel of inh.szenario.ziele) {
     if (!ziel.feuert?.length || !kennt(ziel.id)) continue;
+    if (inh.fahrzeuge[ziel.typ]?.feuer_effekt === "keiner") continue; // seit 2.4: Beobachter lenkt Feuer, schießt nicht selbst
     const tz = z.zerstoert[ziel.id] ?? Infinity;
     const steil = steilfeuer(ziel);
     for (const [ts, nr] of schuesse(ziel.feuert)) {

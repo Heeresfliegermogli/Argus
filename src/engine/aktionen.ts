@@ -5,7 +5,7 @@ import type { Inhalte } from "../inhalte/typen";
 import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
 } from "../kern/ereignisse";
-import { einschlag, vorhersage } from "../kern/regeln";
+import { einschlaege, vorhersage } from "../kern/regeln";
 import { ROLLEN_DATIV } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { einspielSperre, verstaerkungen } from "../kern/welt";
@@ -32,10 +32,18 @@ function text(wert: unknown, max: number, pflicht = false): string | undefined |
  */
 export function warnungen(inh: Inhalte, z: Spielzustand, meldung: string, wm: string, t: number): string[] {
   const m = inh.meldungen[meldung];
-  const v = vorhersage(inh, m, wm, t, z.zerstoert);
-  const uhr = uhrzeit(inh.szenario.spieluhr.start, v.einschlag.t);
-  const w = v.pruefung.verstoesse.map((x) => `${x.regel}: ${x.text} – beim Einschlag ${uhr}`);
+  const v = vorhersage(inh, m, wm, t, z.zerstoert, z.bestand[wm] ?? null);
+  const start = inh.szenario.spieluhr.start;
+  // seit 2.4 (E3): je Einschlag eines Zuges; dieselbe Warnung nur einmal (mit der Zeit des ersten Einschlags, für den sie gilt)
+  const w: string[] = [];
+  for (const teil of v.teile) {
+    const uhr = uhrzeit(start, teil.einschlag.t);
+    for (const x of teil.pruefung.verstoesse) {
+      if (!w.some((alt) => alt.startsWith(`${x.regel}: ${x.text} `))) w.push(`${x.regel}: ${x.text} – beim Einschlag ${uhr}`);
+    }
+  }
   if (z.bestand[wm] === 0) w.push(`Bestand ${inh.wirkmittel[wm].kurz} aufgebraucht`);
+  else if (v.k < v.n) w.push(`nur ${v.k} von ${v.n} Fahrzeugen – Bestand ${inh.wirkmittel[wm].kurz} reicht nicht`);
   return w;
 }
 
@@ -92,10 +100,14 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       const wm = z.meldungen[dd.meldung].g2?.wirkmittel;
       if (!wm) return nein("Empfehlung ohne Wirkmittel");
       if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – zurück an die Zielprüfung`);
-      const e = einschlag(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert);
+      // seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug – je Fahrzeug ein Einschlag (LM, PzAbw), höchstens so viele wie Bestand
+      const liste = einschlaege(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert, z.bestand[wm] ?? null)
+        .map((e) => ({ t: Math.round(e.t * 100) / 100, x: Math.round(e.pos[0] * 10) / 10, y: Math.round(e.pos[1] * 10) / 10, ziel: e.ziel }));
+      const e = liste[0];
       return ja(entwurf("g3_entscheid", {
         meldung: dd.meldung, entscheid: "freigabe", bemerkung, wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),
-        einschlag: { t: Math.round(e.t * 100) / 100, pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], ziel: e.ziel },
+        einschlag: { t: e.t, pos: [e.x, e.y], ziel: e.ziel },
+        ...(liste.length > 1 ? { einschlaege: liste } : {}),
       }));
     }
     case "inject_quittiert": {

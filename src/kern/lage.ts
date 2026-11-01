@@ -1,8 +1,8 @@
 // Lage eines Teams: Welt (Inhalte plus Verstärkungen), welche Fahrzeuge weg sind, Freigaben und Einschläge.
 // Reine Funktionen von Inhalten und Spielstand; Engine (Zeitplan), Lagebild und Übersicht nutzen sie gemeinsam.
-import type { Inhalte } from "../inhalte/typen";
+import type { Inhalte, Punkt } from "../inhalte/typen";
 import { weg } from "./geometrie";
-import { einschlag } from "./regeln";
+import { type Einschlag, einschlag } from "./regeln";
 import { welt } from "./welt";
 import type { Spielzustand } from "./zustand";
 
@@ -68,12 +68,28 @@ export function fruehesteFreigabe(frei: ReturnType<typeof freigaben>, ziele: str
   return ziele.map((zid) => frei.get(zid)).filter((f) => f !== undefined).sort((a, b) => a.t - b.t)[0];
 }
 
-/** Einschlag einer freigegebenen Meldung (aus dem Protokoll; ältere Läufe ohne einschlag: neu gerechnet). */
+/** Einschlag einer freigegebenen Meldung (aus dem Protokoll; ältere Läufe ohne einschlag: neu gerechnet). Bei einem Zug der erste. */
 export function einschlagVon(inh: Inhalte, z: Spielzustand, id: string) {
   const g3 = z.meldungen[id]?.g3;
   if (!g3?.wirkmittel || g3.entscheid !== "freigabe") return null;
   if (g3.einschlag) return { t: g3.einschlag.t, pos: g3.einschlag.pos, ziel: g3.einschlag.ziel };
   const m = inh.meldungen[id];
   return m ? einschlag(inh, m.ziele, g3.wirkmittel, g3.t_s, z.zerstoert) : null;
+}
+
+/** Alle Einschläge einer freigegebenen Meldung (seit 2.4, E3: bei einer Zug-Bekämpfung je Fahrzeug einer), in Reihenfolge. */
+export function einschlaegeVon(inh: Inhalte, z: Spielzustand, id: string): Einschlag[] {
+  const g3 = z.meldungen[id]?.g3;
+  if (g3?.einschlaege?.length) return g3.einschlaege.map((e) => ({ t: e.t, pos: [e.x, e.y] as Punkt, ziel: e.ziel }));
+  const e = einschlagVon(inh, z, id);
+  return e ? [e] : [];
+}
+
+/** Einschläge einer Freigabe, die noch ausstehen (Nummer und Einschlag). */
+export function offeneEinschlaege(inh: Inhalte, z: Spielzustand, id: string): { nr: number; e: Einschlag }[] {
+  const st = z.meldungen[id];
+  if (!st || st.stufe !== "wirkung") return [];
+  const da = new Set((st.wirkungen ?? []).map((w) => w.nr));
+  return einschlaegeVon(inh, z, id).map((e, nr) => ({ nr, e })).filter((x) => !da.has(x.nr));
 }
 

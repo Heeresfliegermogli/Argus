@@ -3,7 +3,7 @@
 // Ereignisse haben. Keine Zufälle, keine Uhrzeit-Abfragen hier drin.
 import type { Inhalte } from "../inhalte/typen";
 import type {
-  Absender, EinschlagDaten, Ereignis, G1Entscheid, G2Empfehlung, G3Entscheid, Rolle, TrefferDaten,
+  Absender, EinschlagDaten, EinschlagFlach, Ereignis, G1Entscheid, G2Empfehlung, G3Entscheid, Rolle, TrefferDaten,
 } from "./ereignisse";
 import { UHR_START, type UhrStand } from "./uhr";
 
@@ -18,18 +18,33 @@ export interface Schritt {
   von: Absender;
 }
 
+/** Ein Einschlag einer Freigabe (seit 2.4: bei einer Zug-Bekämpfung je Fahrzeug einer). */
+export interface EinzelWirkung {
+  nr: number;
+  t_einschlag: number;
+  pos: [number, number];
+  ziel?: string;
+  getroffen: TrefferDaten[];
+  verstoesse: string[];
+  seq: number;
+}
+
 export interface MeldungsStand {
   id: string;
   erschienen: Schritt;
   fastTrack: boolean;
   manuell: boolean;
+  /** seit 2.4 (E4): Datenlink zur Meldezeit gestört (EloKa) – ARGUS meldete unsicherer (kern/eloka.ts, argusBei) */
+  gestoert?: boolean;
   stufe: Stufe;
   ergebnis?: Ergebnis;
   /** von G2 zurückgestellt (BEOBACHTEN), bleibt bei G2 sichtbar */
   beobachten: boolean;
   g1?: Schritt & { entscheid: G1Entscheid; vermerk?: string };
   g2?: Schritt & { empfehlung: G2Empfehlung; wirkmittel?: string; begruendung?: string; warnungen: string[] };
-  g3?: Schritt & { entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen: string[]; einschlag?: EinschlagDaten };
+  g3?: Schritt & { entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen: string[]; einschlag?: EinschlagDaten; einschlaege?: EinschlagFlach[] };
+  /** seit 2.4 (E3): die Einschläge, die schon da sind (je Fahrzeug eines Zuges einer); `wirkung` fasst sie zusammen, sobald alle da sind */
+  wirkungen?: EinzelWirkung[];
   wirkung?: Schritt & {
     wirkmittel: string; pos: [number, number]; t_freigabe: number; getroffen: TrefferDaten[];
     /** Einschlagzeit (bei Abrechnung zum Spielende nach t_s) */
@@ -160,6 +175,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
         erschienen: s,
         fastTrack: !!d.fast_track,
         manuell: !!d.manuell,
+        ...(d.gestoert ? { gestoert: true } : {}),
         stufe: d.entfaellt ? "entfallen" : d.fast_track ? "g2" : "g1",
         beobachten: false,
         verlauf: [e.seq],
@@ -190,27 +206,45 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     case "g3_entscheid": {
       const d = e.daten;
       meldungAendern(d.meldung, () => ({
-        g3: { ...s, entscheid: d.entscheid, bemerkung: d.bemerkung, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [], einschlag: d.einschlag },
+        g3: {
+          ...s, entscheid: d.entscheid, bemerkung: d.bemerkung, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [], einschlag: d.einschlag,
+          ...(d.einschlaege ? { einschlaege: d.einschlaege } : {}),
+        },
+        wirkungen: undefined,
         stufe: d.entscheid === "freigabe" ? "wirkung" : d.entscheid === "zurueck" ? "g2" : "erledigt",
         beobachten: false,
         ergebnis: d.entscheid === "ablehnen" ? "abgelehnt_g3" : undefined,
       }));
       if (d.entscheid === "freigabe" && d.wirkmittel) {
+        // seit 2.4 (E3): eine LM je bekämpftem Fahrzeug eines Zuges
         const alt = n.bestand[d.wirkmittel];
-        if (typeof alt === "number") n.bestand = { ...n.bestand, [d.wirkmittel]: Math.max(0, alt - 1) };
+        if (typeof alt === "number") n.bestand = { ...n.bestand, [d.wirkmittel]: Math.max(0, alt - (d.einschlaege?.length ?? 1)) };
       }
       break;
     }
     case "wirkung": {
       const d = e.daten;
       const getroffen = d.getroffen ?? [];
+      const nr = d.nr ?? 0;
+      const st0 = n.meldungen[d.meldung];
+      if (!st0 || st0.wirkung || st0.wirkungen?.some((w) => w.nr === nr)) break;
+      const einzeln: EinzelWirkung = {
+        nr, t_einschlag: d.t_einschlag ?? e.t_s, pos: d.pos, ziel: d.ziel, getroffen, verstoesse: d.verstoesse ?? [], seq: e.seq,
+      };
+      const alle = [...(st0.wirkungen ?? []), einzeln].sort((a, b) => a.nr - b.nr);
+      const anzahl = d.anzahl ?? st0.g3?.einschlaege?.length ?? 1;
+      // seit 2.4 (E3): die Wirkung der Meldung steht fest, sobald alle Einschläge da sind (ein Zug: je Fahrzeug einer)
+      const fertig = alle.length >= anzahl;
       meldungAendern(d.meldung, () => ({
-        wirkung: {
-          ...s, wirkmittel: d.wirkmittel, pos: d.pos, t_freigabe: d.t_freigabe, getroffen,
-          t_einschlag: d.t_einschlag ?? e.t_s, ziel: d.ziel, verstoesse: d.verstoesse ?? [],
-        },
-        stufe: "erledigt",
-        ergebnis: "bekaempft",
+        wirkungen: alle,
+        ...(fertig ? {
+          wirkung: {
+            ...s, wirkmittel: d.wirkmittel, pos: alle[0].pos, t_freigabe: d.t_freigabe, getroffen: vereint(alle.flatMap((w) => w.getroffen)),
+            t_einschlag: alle[0].t_einschlag, ziel: alle[0].ziel, verstoesse: [...new Set(alle.flatMap((w) => w.verstoesse))],
+          },
+          stufe: "erledigt" as const,
+          ergebnis: "bekaempft" as const,
+        } : {}),
       }));
       for (const g of getroffen) if (g.was !== "personen") zerstoeren(g.ziel, d.meldung, d.t_einschlag ?? e.t_s);
       break;
@@ -291,6 +325,20 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       break;
   }
   return n;
+}
+
+/** Treffer mehrerer Einschläge: ein Eintrag je Ziel und Art (wie regeln.trefferVereint). */
+function vereint(liste: TrefferDaten[]): TrefferDaten[] {
+  const out: TrefferDaten[] = [];
+  const gesehen = new Set<string>();
+  for (const g of liste) {
+    const k = `${g.ziel}|${g.was === "personen" ? "p" : "f"}|${g.kategorie}`;
+    if (!gesehen.has(k)) {
+      gesehen.add(k);
+      out.push(g);
+    }
+  }
+  return out;
 }
 
 export function zustandAus(protokoll: Ereignis[], inh: Inhalte): Spielzustand {

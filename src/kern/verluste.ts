@@ -166,7 +166,7 @@ export function zeitlinie(inh: Inhalte, zerstoertRoh: Record<string, number>, at
         const p = position(ziel, ts);
         const zug = (f.auf ? zmap.get(f.auf) : undefined) ?? zielZug(zl, p, w.reichweite_m);
         if (!zug) continue;
-        ev.push({ t: r2(ts + vr.verzug_s[w.art]), zug: zug.id, promille, art: w.art, quelle: ziel.id, nr, ort: ortText(inh, p) });
+        ev.push({ t: r2(ts + (vr.verzug_s[w.art] ?? 0)), zug: zug.id, promille, art: w.art, quelle: ziel.id, nr, ort: ortText(inh, p) });
       }
       continue;
     }
@@ -363,21 +363,27 @@ function zerstoertMitEinschlag(z: Spielzustand): { zer: Record<string, number>; 
   const teile: string[] = [];
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
-    const e = st.stufe === "wirkung" ? st.g3?.einschlag : undefined;
-    if (!e || (zer[e.ziel] ?? Infinity) <= e.t) continue;
-    if (zer === z.zerstoert) zer = { ...zer };
-    zer[e.ziel] = e.t;
-    teile.push(`${e.ziel}@${e.t}`);
+    if (st.stufe !== "wirkung" || !st.g3) continue;
+    // seit 2.4 (E3): je Einschlag eines Zuges, der noch aussteht
+    const da = new Set((st.wirkungen ?? []).map((w) => w.nr));
+    const liste = st.g3.einschlaege?.length ? st.g3.einschlaege.map((e) => ({ t: e.t, ziel: e.ziel })) : st.g3.einschlag ? [st.g3.einschlag] : [];
+    liste.forEach((e, nr) => {
+      if (da.has(nr) || (zer[e.ziel] ?? Infinity) <= e.t) return;
+      if (zer === z.zerstoert) zer = { ...zer };
+      zer[e.ziel] = e.t;
+      teile.push(`${e.ziel}@${e.t}`);
+    });
   }
   return { zer, schl: teile.join(",") };
 }
 
-/** Einschlag der ersten eigenen Wirkung, die die Attrappe traf (oder null). */
+/** Einschlag der ersten eigenen Wirkung, die die Attrappe traf (oder null); seit 2.4 je Einschlag eines Zuges. */
 export function attrappeTreffer(z: Spielzustand): number | null {
   let t: number | null = null;
   for (const id of z.reihenfolge) {
-    const w = z.meldungen[id].wirkung;
-    if (w?.getroffen.some((g) => g.kategorie === "attrappe" && g.was !== "personen")) t = t === null ? w.t_einschlag : Math.min(t, w.t_einschlag);
+    for (const w of z.meldungen[id].wirkungen ?? []) {
+      if (w.getroffen.some((g) => g.kategorie === "attrappe" && g.was !== "personen")) t = t === null ? w.t_einschlag : Math.min(t, w.t_einschlag);
+    }
   }
   return t === null ? null : r2(t);
 }

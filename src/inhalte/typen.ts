@@ -28,6 +28,8 @@ export interface Person {
   bis_s?: number;
   text?: string;
   bewegung?: Bewegung;
+  /** Seit 2.4 (S8): sitzen im Fahrzeug – zählen für die Trefferregel, im Drohnenbild nicht als Figuren */
+  im_fahrzeug?: boolean;
 }
 
 export interface GroundTruth {
@@ -60,6 +62,19 @@ export interface Ziel {
   kein_durchbruch?: string;
   /** Seit 2.3 (D2): Schaden je Schuss an den eigenen Zügen in Promille, abweichend vom Typ (regeln.verluste.waffen) */
   verlust_promille?: number;
+  /** Seit 2.4 (S6): Personen, die aus einem Fahrzeug kommen (abgesessene Schützen) – erscheinen dort, nicht am Kartenrand */
+  herkunft?: string;
+  /** Seit 2.4 (S8): von ARGUS nie gemeldet, aber kein ungemeldetes Ziel – steht als Kontakt auf den Karten (Grund) */
+  nur_kontakt?: string;
+}
+
+/** Seit 2.4 (E6.3): was im Drohnenbild erkennbar sein muss (statt Sensordaten), geprüft mit tools/drohne_probe.py */
+export interface BildMerkmal {
+  art: "attrappe" | "rotes_kreuz" | "sanitaeter" | "zivilpersonen" | "weisses_tuch" | "kette_ab" | "verwundete" | "press" | "beobachter" | "mast" | "heck" | "tarnung" | string;
+  ziel: string;
+  anzahl?: number;
+  klein?: number;
+  text: string;
 }
 
 /** Feuerstöße von von_s bis bis_s: je `salve` Schuss im Abstand takt_s, dann pause_s (Mörser: Rohre im Wechsel). */
@@ -107,13 +122,8 @@ export interface Meldung {
   folge_von?: string;
   /** Seit 2.2 (C3): Die Pause vor dieser Meldung ist länger als 60 s und gewollt (Grund) */
   pause_gewollt?: string;
-  argus: {
-    klasse: string;
-    konfidenz: number;
-    empfehlung: ArgusEmpfehlung;
-    hinweis?: string;
-    einzeln?: number[];
-  };
+  argus: ArgusAusgabe;
+  /** Seit 2.4 (E6.3): nur noch für Spielleitung und Drehbuch; die Spieler sehen keine Sensordaten */
   sensor: {
     waerme: string;
     bewegung: string;
@@ -121,6 +131,7 @@ export interface Meldung {
     kennzeichnung: string;
     personen: string;
     bildalter_s?: number;
+    hinweis?: string;
   };
   bild: {
     /** Drohnenbild relativ zu assets/ (Manifest assets/manifest.json → drohne[Meldung]) */
@@ -134,17 +145,35 @@ export interface Meldung {
     /** Darstellung je Ziel: luk_offen, feuert, furt, kette_ab, kisten */
     zustand?: Record<string, string>;
     personen?: BildPerson[];
+    /** Seit 2.4 (E6.3): Merkmale, die im Bild erkennbar sind (Attrappe, Rotes Kreuz, Kinder, Verwundete, PRESS …) */
+    merkmale?: BildMerkmal[];
   };
-  loesung: { G1: string; G2: string; G3: string };
+  /** wirkmittel (seit 2.4): Wirkmittel der Lösung (Modellteam „ideal“ nimmt nur diese) */
+  loesung: { G1: string; G2: string; G3: string; wirkmittel?: string[] };
   zweck: string;
   /** nur Meldungen einer Verstärkung: Gruppe (V-1 …), gesetzt beim Einspielen (src/kern/welt.ts) */
   verstaerkung?: string;
 }
 
+/** ARGUS-Ausgabe einer Meldung (seit 2.4: Klasse Panzer/Fahrzeug/Infanterie oder „unbekannt“, Zugehörigkeit Feind/unbekannt). */
+export interface ArgusAusgabe {
+  klasse: string;
+  /** Seit 2.4 (E6.2): Zugehörigkeit laut ARGUS („Feind“, „unbekannt“) */
+  zugehoerigkeit?: string;
+  konfidenz: number;
+  empfehlung: ArgusEmpfehlung;
+  hinweis?: string;
+  einzeln?: number[];
+  /** Seit 2.4 (E4): Ausgabe bei gestörtem Datenlink (EloKa) – siehe kern/eloka.ts */
+  gestoert?: boolean;
+}
+
 export type Bedingung =
   | { typ: "freigabe"; ziele: string[]; verzoegerung_s: number }
   | { typ: "freigabe_mit_zivil"; ziele: string[]; verzoegerung_s: number }
-  | { typ: "keine_freigabe_bis"; ziele: string[]; t_s: number };
+  | { typ: "keine_freigabe_bis"; ziele: string[]; t_s: number }
+  /** Seit 2.4 (S8): eine eigene Wirkung trifft eines der Ziele oder Personen bei ihm – verzoegerung_s nach diesem Einschlag */
+  | { typ: "treffer"; ziele: string[]; verzoegerung_s: number };
 
 /** Seit Szenario 2.1: Lagemeldung, wenn eine nicht aufgehaltene Feindgruppe über den Bach durchbricht (I-13). */
 export type BedingungDurchbruch = { typ: "durchbruch"; verzoegerung_s: number };
@@ -344,6 +373,8 @@ export interface Lagetext {
 export interface Schluesselfall {
   id: string;
   reihenfolge: number;
+  /** Seit 2.4 (E5): im Replay der Auswertung nur, wenn die Spielleitung den Fall zuschaltet */
+  zuschaltbar?: boolean;
   titel: string;
   meldung: string;
   ziele: string[];
@@ -374,7 +405,7 @@ export interface Szenario {
   spieluhr: { start: string; dauer_s: number; tempo: number; pause_gewollt_ende?: string };
   phasen: Phase[];
   ablauf_unterricht: { phase: string; dauer_min: number; inhalt: string }[];
-  argus_system: { name: string; beschreibung: string; herstellerangabe: string; kleingedrucktes: string };
+  argus_system: { name: string; beschreibung: string; herstellerangabe: string; kleingedrucktes: string; kleingedrucktes_kurz?: string };
   lage: Record<string, Lagetext>;
   kraefte: Kraft[];
   zonen: Zone[];
@@ -391,10 +422,30 @@ export interface Szenario {
   eigene_truppe?: EigeneTruppe;
   /** Seit 2.3 (D2): szenariobezogene Teile des Verlustmodells */
   verluste?: SzenarioVerluste;
+  /** Seit 2.4 (E4): EloKa-Fahrzeug, das den Datenlink stört (alle Bilder, ARGUS unsicherer) */
+  eloka?: EloKa;
   schluesselfaelle: Schluesselfall[];
   nebenfaelle: Nebenfall[];
   anforderungen_technik?: { schritt: string; text: string }[];
-  auswertung: { einstieg: string; kernaussage: string; schlussfrage: string };
+  auswertung: {
+    einstieg: string; kernaussage: string; schlussfrage: string;
+    /** Seit 2.4 (E5): Replay-Reihenfolge (Standard) und zuschaltbare Fälle, Zeitbudget in s */
+    replay?: { standard: string[]; zuschaltbar: string[]; budget_s: number; hinweis?: string };
+  };
+}
+
+/** Seit 2.4 (E4): Solange das Ziel im Raum steht und nicht zerstört ist, ist der Datenlink gestört. */
+export interface EloKa {
+  hinweis?: string;
+  ziel: string;
+  /** ARGUS: Konfidenz sinkt um diesen Wert … */
+  konfidenz_minus: number;
+  /** … darunter Klasse und Zugehörigkeit „unbekannt“ */
+  unbekannt_unter: number;
+  /** Stärke der Bildstörung (Rauschen, Streifen) im Live-Drohnenbild, 0–1 */
+  bildstoerung: number;
+  /** so viel älter ist jedes Bild */
+  bildalter_plus_s: number;
 }
 
 // ---------------------------------------------------------------- Karte
@@ -442,6 +493,8 @@ export interface Fahrzeug {
   sprite_wrack: string | null;
   /** Seit Katalog 1.3: Sprite während der Fahrt (Mörsertrupp auf Lkw); im Stand `sprite` */
   sprite_fahrt?: string | null;
+  /** Seit Katalog 1.5: „keiner“ – das Ziel feuert nicht selbst (Beobachter lenkt Artillerie): kein Mündungsblitz */
+  feuer_effekt?: string;
   farbe?: string;
   hinweis?: string;
 }
@@ -451,8 +504,16 @@ export interface KatalogFahrzeuge {
   hinweis?: string;
   /** Seit 1.3 (C7): Größenangabe nach APP-6 je Anzahl noch stehender Fahrzeuge einer zugweisen Meldung („2“ → „C“) */
   groesse_nach_anzahl?: Record<string, string>;
+  /** Seit 1.5 (E6.2): die drei ARGUS-Klassen mit taktischem Zeichen (sidc) und Zeichen der Einheit für Zugmeldungen */
+  klassen?: Record<string, ArgusKlasse>;
   fahrzeuge: Fahrzeug[];
   personen: { id: string; name: string; darstellung: string; sprite?: string; sprite_tuch?: string }[];
+}
+
+export interface ArgusKlasse {
+  text: string;
+  sidc: string;
+  einheit?: string;
 }
 
 export interface Wirkmittel {
@@ -471,6 +532,8 @@ export interface Wirkmittel {
   effekt: string;
   /** Seit 2.2 (C6): trifft von den Fahrzeugen nur das bekämpfte (LM); Personen im Wirkradius schon */
   nur_zielfahrzeug?: boolean;
+  /** Seit 2.3 (Szenario 2.4, E3): Wirkung auf einen Zug – je_fahrzeug (ein Schuss je Fahrzeug im Abstand abstand_s) oder flaeche */
+  zug?: { art: "je_fahrzeug" | "flaeche"; abstand_s?: number };
 }
 
 export interface KatalogWirkmittel {
@@ -485,7 +548,13 @@ export interface Regeln {
     schwellen: { bekaempfen: number; pruefen: number };
     empfehlungen: Record<string, string>;
     klassifiziert_nur: string;
+    /** Seit 2.4: Bildalter ohne Störung (s) */
+    bildalter_s?: number;
+    klassen?: string;
+    eloka?: string;
   };
+  /** Seit 2.4 (E1): Schalter der Spielleitung */
+  spielleitung?: { verstaerkung_menue: boolean; hinweis?: string };
   fast_track: { schwelle: number; standard: boolean; schaltet: string; wirkung: string; mvp?: string };
   ablauf: unknown[];
   einsatzregeln: {
@@ -500,15 +569,15 @@ export interface Regeln {
   verluste?: RegelnVerluste;
 }
 
-export type VerlustArt = "direkt" | "steil" | "artillerie" | "attrappe" | "durchbruch";
+export type VerlustArt = "direkt" | "steil" | "artillerie" | "attrappe" | "durchbruch" | "beobachter";
 
 export interface RegelnVerluste {
   hinweis?: string;
   untergrenze_prozent: number;
   promille_je_verwundeter: number;
   schwellen_prozent: number[];
-  verzug_s: { direkt: number; steil: number };
-  waffen: Record<string, { art: "direkt" | "steil"; promille: number; takt_s?: number; feuerbereit_s?: number; reichweite_m?: number }>;
+  verzug_s: { direkt: number; steil: number; beobachter?: number };
+  waffen: Record<string, { art: "direkt" | "steil" | "beobachter"; promille: number; takt_s?: number; feuerbereit_s?: number; reichweite_m?: number }>;
   feindartillerie: { promille: number; radius_m: number };
   attrappe: { promille: number };
   durchbruch: { promille: number };
@@ -525,6 +594,8 @@ export interface Inhalte {
   fahrzeuge: Record<string, Fahrzeug>;
   /** Größenangabe je Anzahl (Katalog groesse_nach_anzahl, C7) */
   groessen?: Record<string, string>;
+  /** Seit 2.4 (E6.2): ARGUS-Klassen mit Zeichen (Katalog klassen) */
+  klassen?: Record<string, ArgusKlasse>;
   wirkmittel: Record<string, Wirkmittel>;
   regeln: Regeln;
   ziele: Record<string, Ziel>;

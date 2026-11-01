@@ -1,9 +1,9 @@
 {
- "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.3). Nicht von Hand ändern.",
- "szenario": "2.3",
+ "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.4). Nicht von Hand ändern.",
+ "szenario": "2.4",
  "zeiten": {
-  "G1": 40,
-  "G2": 50,
+  "G1": 35,
+  "G2": 40,
   "G3": 30,
   "ft_nach_angebot": 30
  },
@@ -25,21 +25,22 @@
      "t_meld": 20,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 60.0,
+     "t_g1": 55.0,
      "g1": "ANNEHMEN",
-     "t_g2": 110.0,
+     "t_g2": 95.0,
      "g2": "LM",
-     "t_g3": 140.0,
+     "t_g3": 125.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 180.789,
+     "t_wirkung": 165.789,
      "ziel": "Z-01",
      "pos": [
       772.0,
       440.0
      ],
      "getroffen": [
-      "Z-01|feind"
+      "Z-01|feind",
+      "Z-02|feind"
      ],
      "verstoesse": []
     },
@@ -48,21 +49,22 @@
      "t_meld": 75,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 115.0,
+     "t_g1": 110.0,
      "g1": "ANNEHMEN",
-     "t_g2": 165.0,
-     "g2": "PZA",
-     "t_g3": 195.0,
+     "t_g2": 150.0,
+     "g2": "LM",
+     "t_g3": 180.0,
      "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 205.0,
+     "wm": "LM",
+     "t_wirkung": 210.617,
      "ziel": "Z-03",
      "pos": [
       468.0,
       352.0
      ],
      "getroffen": [
-      "Z-03|feind"
+      "Z-03|feind",
+      "Z-04|feind"
      ],
      "verstoesse": []
     },
@@ -71,11 +73,11 @@
      "t_meld": 130,
      "ft": false,
      "ende": "entfällt (G3)",
-     "t_g1": 170.0,
+     "t_g1": 165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 220.0,
+     "t_g2": 205.0,
      "g2": "PZA",
-     "t_g3": null,
+     "t_g3": 235.0,
      "g3": "ENTFÄLLT",
      "wm": null,
      "t_wirkung": null,
@@ -88,9 +90,9 @@
      "meldung": "M29",
      "t_meld": 185,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 225.0,
-     "g1": "ABLEHNEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -106,23 +108,18 @@
      "meldung": "M03",
      "t_meld": 240,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 280.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 330.0,
-     "g2": "PZA",
-     "t_g3": 360.0,
-     "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 370.0,
-     "ziel": "Z-02",
-     "pos": [
-      476.0,
-      375.0
-     ],
-     "getroffen": [
-      "Z-02|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -130,14 +127,14 @@
      "t_meld": 285,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 325.0,
+     "t_g1": 320.0,
      "g1": "ANNEHMEN",
-     "t_g2": 380.0,
+     "t_g2": 360.0,
      "g2": "LM",
-     "t_g3": 410.0,
+     "t_g3": 390.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 452.764,
+     "t_wirkung": 432.764,
      "ziel": "Z-05",
      "pos": [
       824.0,
@@ -153,14 +150,14 @@
      "t_meld": 330,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 370.0,
+     "t_g1": 365.0,
      "g1": "ANNEHMEN",
-     "t_g2": 430.0,
+     "t_g2": 405.0,
      "g2": "MRS",
-     "t_g3": 460.0,
+     "t_g3": 435.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 495.0,
+     "t_wirkung": 470.0,
      "ziel": "Z-06",
      "pos": [
       920.0,
@@ -177,14 +174,14 @@
      "t_meld": 390,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 430.0,
+     "t_g1": 425.0,
      "g1": "ANNEHMEN",
-     "t_g2": 480.0,
+     "t_g2": 465.0,
      "g2": "LM",
-     "t_g3": 510.0,
+     "t_g3": 495.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 542.717,
+     "t_wirkung": 527.717,
      "ziel": "Z-08",
      "pos": [
       530.0,
@@ -200,21 +197,22 @@
      "t_meld": 450,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 490.0,
+     "t_g1": 485.0,
      "g1": "ANNEHMEN",
-     "t_g2": 540.0,
+     "t_g2": 525.0,
      "g2": "LM",
-     "t_g3": 570.0,
+     "t_g3": 555.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 605.29,
+     "t_wirkung": 588.758,
      "ziel": "Z-09",
      "pos": [
-      606.046,
-      310.586
+      562.0,
+      344.0
      ],
      "getroffen": [
-      "Z-09|feind"
+      "Z-09|feind",
+      "Z-10|feind"
      ],
      "verstoesse": []
     },
@@ -223,14 +221,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 550.0,
+     "t_g1": 545.0,
      "g1": "ANNEHMEN",
-     "t_g2": 600.0,
+     "t_g2": 585.0,
      "g2": "PZA",
-     "t_g3": 630.0,
+     "t_g3": 615.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 640.0,
+     "t_wirkung": 625.0,
      "ziel": "Z-07",
      "pos": [
       268.0,
@@ -245,13 +243,13 @@
      "meldung": "M30",
      "t_meld": 560,
      "ft": false,
-     "ende": "entfällt (G3)",
-     "t_g1": 600.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 595.0,
      "g1": "ANNEHMEN",
-     "t_g2": 650.0,
-     "g2": "LM",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
-     "g3": "ENTFÄLLT",
+     "g3": null,
      "wm": null,
      "t_wirkung": null,
      "ziel": null,
@@ -263,46 +261,54 @@
      "meldung": "M09",
      "t_meld": 615,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 655.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 705.0,
-     "g2": "MRS",
-     "t_g3": 735.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 770.0,
-     "ziel": "Z-10",
-     "pos": [
-      925.0,
-      198.0
-     ],
-     "getroffen": [
-      "Z-10|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 645,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 680.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M10",
      "t_meld": 675,
      "ft": false,
-     "ende": "Wirkung",
+     "ende": "G1 lehnt ab",
      "t_g1": 715.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 765.0,
-     "g2": "MRS",
-     "t_g3": 795.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 830.0,
-     "ziel": "Z-29",
-     "pos": [
-      830.0,
-      455.0
-     ],
-     "getroffen": [
-      "Z-29|feind"
-     ],
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -310,14 +316,14 @@
      "t_meld": 735,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 775.0,
+     "t_g1": 770.0,
      "g1": "ANNEHMEN",
-     "t_g2": 825.0,
+     "t_g2": 810.0,
      "g2": "LM",
-     "t_g3": 855.0,
+     "t_g3": 840.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 891.401,
+     "t_wirkung": 876.401,
      "ziel": "Z-13",
      "pos": [
       641.0,
@@ -333,14 +339,14 @@
      "t_meld": 795,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 835.0,
+     "t_g1": 830.0,
      "g1": "ANNEHMEN",
-     "t_g2": 885.0,
+     "t_g2": 870.0,
      "g2": "LM",
-     "t_g3": 915.0,
+     "t_g3": 900.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 948.267,
+     "t_wirkung": 933.267,
      "ziel": "Z-12",
      "pos": [
       548.0,
@@ -356,22 +362,46 @@
      "t_meld": 855,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 895.0,
+     "t_g1": 890.0,
      "g1": "ANNEHMEN",
-     "t_g2": 945.0,
+     "t_g2": 930.0,
      "g2": "MRS",
-     "t_g3": 975.0,
+     "t_g3": 960.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 1010.0,
+     "t_wirkung": 995.0,
      "ziel": "Z-30",
      "pos": [
-      462.0,
-      250.0
+      472.535,
+      244.423
      ],
      "getroffen": [
       "Z-30|feind",
+      "Z-31|feind",
       "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M31",
+     "t_meld": 885,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 925.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 970.0,
+     "g2": "LM",
+     "t_g3": 1000.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1040.368,
+     "ziel": "Z-42",
+     "pos": [
+      761.0,
+      370.0
+     ],
+     "getroffen": [
+      "Z-42|feind"
      ],
      "verstoesse": []
     },
@@ -380,21 +410,22 @@
      "t_meld": 915,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 955.0,
+     "t_g1": 960.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1005.0,
+     "t_g2": 1010.0,
      "g2": "LM",
-     "t_g3": 1035.0,
+     "t_g3": 1040.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1067.682,
+     "t_wirkung": 1072.682,
      "ziel": "Z-14",
      "pos": [
       530.0,
       352.0
      ],
      "getroffen": [
-      "Z-14|feind"
+      "Z-14|feind",
+      "Z-46|feind"
      ],
      "verstoesse": []
     },
@@ -403,44 +434,71 @@
      "t_meld": 960,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1000.0,
+     "t_g1": 995.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1055.0,
+     "t_g2": 1050.0,
      "g2": "PZA",
-     "t_g3": 1085.0,
+     "t_g3": 1080.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1095.0,
+     "t_wirkung": 1090.0,
      "ziel": "Z-33",
      "pos": [
       402.0,
       291.0
      ],
      "getroffen": [
-      "Z-33|feind"
+      "Z-33|feind",
+      "Z-34|feind",
+      "Z-35|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M32",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1030.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1090.0,
+     "g2": "LM",
+     "t_g3": 1120.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1158.434,
+     "ziel": "Z-41",
+     "pos": [
+      703.0,
+      372.0
+     ],
+     "getroffen": [
+      "Z-41|feind",
+      "Z-41|zivil"
      ],
      "verstoesse": []
     },
     {
      "meldung": "M16",
-     "t_meld": 1005,
+     "t_meld": 1020,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1045.0,
+     "t_g1": 1065.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1105.0,
+     "t_g2": 1130.0,
      "g2": "PZA",
-     "t_g3": 1135.0,
+     "t_g3": 1160.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1145.0,
+     "t_wirkung": 1170.0,
      "ziel": "Z-18",
      "pos": [
       480.0,
       404.0
      ],
      "getroffen": [
-      "Z-18|feind"
+      "Z-18|feind",
+      "Z-47|feind"
      ],
      "verstoesse": []
     },
@@ -449,25 +507,23 @@
      "t_meld": 1055,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1095.0,
+     "t_g1": 1100.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1155.0,
+     "t_g2": 1170.0,
      "g2": "LM",
-     "t_g3": 1185.0,
+     "t_g3": 1200.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1223.599,
+     "t_wirkung": 1237.408,
      "ziel": "Z-36",
      "pos": [
-      706.661,
-      431.586
+      671.592,
+      415.381
      ],
      "getroffen": [
       "Z-36|feind"
      ],
-     "verstoesse": [
-      "Schule"
-     ]
+     "verstoesse": []
     },
     {
      "meldung": "M18",
@@ -476,12 +532,12 @@
      "ende": "Wirkung",
      "t_g1": 1135.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1205.0,
+     "t_g2": 1210.0,
      "g2": "LM",
-     "t_g3": 1235.0,
+     "t_g3": 1240.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1275.688,
+     "t_wirkung": 1280.688,
      "ziel": "Z-19",
      "pos": [
       768.0,
@@ -495,26 +551,71 @@
      "verstoesse": []
     },
     {
-     "meldung": "M19",
-     "t_meld": 1155,
+     "meldung": "M33",
+     "t_meld": 1125,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1195.0,
+     "t_g1": 1170.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1255.0,
-     "g2": "LM",
-     "t_g3": 1285.0,
+     "t_g2": 1250.0,
+     "g2": "MRS",
+     "t_g3": 1280.0,
      "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1316.855,
-     "ziel": "Z-20",
+     "wm": "MRS",
+     "t_wirkung": 1315.0,
+     "ziel": "Z-43",
      "pos": [
-      505.0,
-      412.0
+      925.0,
+      355.0
      ],
      "getroffen": [
-      "Z-20|feind"
+      "Z-38|feind",
+      "Z-39|feind",
+      "Z-40|feind",
+      "Z-43|zivil",
+      "Z-43|zivil"
      ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M35",
+     "t_meld": 1155,
+     "ft": true,
+     "ende": "Wirkung",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1290.0,
+     "g2": "PZA",
+     "t_g3": 1320.0,
+     "g3": "FREIGABE",
+     "wm": "PZA",
+     "t_wirkung": 1330.0,
+     "ziel": "Z-45",
+     "pos": [
+      496.0,
+      252.0
+     ],
+     "getroffen": [
+      "Z-45|ausser_gefecht"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M36",
+     "t_meld": 1185,
+     "ft": false,
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -524,19 +625,21 @@
      "ende": "Wirkung",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1305.0,
+     "t_g2": 1330.0,
      "g2": "PZA",
-     "t_g3": 1335.0,
+     "t_g3": 1360.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1345.0,
+     "t_wirkung": 1370.0,
      "ziel": "Z-15",
      "pos": [
-      468.0,
-      474.205
+      469.0,
+      437.0
      ],
      "getroffen": [
-      "Z-15|verbuendet"
+      "Z-15|verbuendet",
+      "Z-16|verbuendet",
+      "Z-17|verbuendet"
      ],
      "verstoesse": []
     },
@@ -547,12 +650,12 @@
      "ende": "Wirkung",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1355.0,
+     "t_g2": 1370.0,
      "g2": "PZA",
-     "t_g3": 1385.0,
+     "t_g3": 1400.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1395.0,
+     "t_wirkung": 1410.0,
      "ziel": "Z-24",
      "pos": [
       492.0,
@@ -565,26 +668,21 @@
      "verstoesse": []
     },
     {
-     "meldung": "M22",
-     "t_meld": 1280,
+     "meldung": "M34",
+     "t_meld": 1275,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 1320.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 1310.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1405.0,
-     "g2": "LM",
-     "t_g3": 1435.0,
-     "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1476.825,
-     "ziel": "Z-21",
-     "pos": [
-      790.0,
-      560.0
-     ],
-     "getroffen": [
-      "Z-21|feind"
-     ],
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -610,7 +708,7 @@
      "t_meld": 1350,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1390.0,
+     "t_g1": 1385.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -624,12 +722,35 @@
      "verstoesse": []
     },
     {
-     "meldung": "M25",
-     "t_meld": 1390,
+     "meldung": "M19",
+     "t_meld": 1380,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 1430.0,
-     "g1": "ABLEHNEN",
+     "ende": "Wirkung",
+     "t_g1": 1420.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1460.0,
+     "g2": "MRS",
+     "t_g3": 1490.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1525.0,
+     "ziel": "Z-20",
+     "pos": [
+      80.311,
+      427.044
+     ],
+     "getroffen": [
+      "Z-20|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1410,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1455.0,
+     "g1": "ANNEHMEN",
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -643,13 +764,13 @@
     },
     {
      "meldung": "M26",
-     "t_meld": 1425,
+     "t_meld": 1440,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1470.0,
+     "t_g1": 1490.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1520.0,
-     "g2": "MRS",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -661,13 +782,13 @@
     },
     {
      "meldung": "M27",
-     "t_meld": 1460,
+     "t_meld": 1470,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1510.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1570.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -689,7 +810,7 @@
     },
     {
      "inject": "K-01",
-     "t": 406.0
+     "t": 399.0
     },
     {
      "inject": "I-03",
@@ -701,23 +822,23 @@
     },
     {
      "inject": "K-02",
-     "t": 680.0
+     "t": 665.0
     },
     {
      "inject": "I-05",
      "t": 840.0
     },
     {
-     "inject": "K-03",
-     "t": 864.0
-    },
-    {
      "inject": "I-12",
      "t": 880.0
     },
     {
+     "inject": "K-03",
+     "t": 895.0
+    },
+    {
      "inject": "K-04",
-     "t": 954.0
+     "t": 986.0
     },
     {
      "inject": "I-04",
@@ -725,59 +846,83 @@
     },
     {
      "inject": "K-05",
-     "t": 1081.0
+     "t": 1024.0
+    },
+    {
+     "inject": "K-06",
+     "t": 1060.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
-     "inject": "K-06",
-     "t": 1126.0
+     "inject": "K-07",
+     "t": 1103.0
     },
     {
-     "inject": "K-07",
-     "t": 1171.0
+     "inject": "K-08",
+     "t": 1161.0
+    },
+    {
+     "inject": "I-14",
+     "t": 1180.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1186.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
-     "inject": "K-08",
-     "t": 1204.0
+     "inject": "K-10",
+     "t": 1231.0
     },
     {
-     "inject": "K-09",
-     "t": 1256.0
+     "inject": "K-11",
+     "t": 1240.0
+    },
+    {
+     "inject": "K-12",
+     "t": 1291.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1298.0
     },
     {
      "inject": "I-09",
-     "t": 1295.0
+     "t": 1300.0
     },
     {
-     "inject": "K-10",
-     "t": 1351.0
+     "inject": "K-14",
+     "t": 1370.0
+    },
+    {
+     "inject": "I-15",
+     "t": 1375.0
     },
     {
      "inject": "I-08a",
-     "t": 1395.0
+     "t": 1420.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
     },
     {
-     "inject": "K-11",
+     "inject": "K-15",
      "t": 1440.9
-    },
-    {
-     "inject": "K-12",
-     "t": 1441.0
     },
     {
      "inject": "I-13",
      "t": 1450.9
+    },
+    {
+     "inject": "K-16",
+     "t": 1471.0
     }
    ],
    "hintergrund": [
@@ -804,7 +949,7 @@
     {
      "id": "H-05",
      "t": 1010,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-06",
@@ -824,12 +969,12 @@
     {
      "id": "H-09",
      "t": 1135,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-10",
      "t": 1150,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-11",
@@ -881,7 +1026,7 @@
     {
      "gruppe": "D-07",
      "t": 1458,
-     "durch": false
+     "durch": true
     },
     {
      "gruppe": "D-08",
@@ -890,19 +1035,26 @@
     }
    ],
    "durchgebrochen": [
+    "Z-20",
     "Z-27",
     "Z-28"
    ],
    "rest": {
     "MRS": 8,
-    "LM": 0,
+    "LM": 3,
     "PZA": "∞"
    },
    "treffer_schutz": [
     "Z-07 Attrappe",
     "Z-12 geschützt",
+    "Z-41 5 Zivilpersonen",
     "Z-19 4 Zivilpersonen",
+    "Z-43 zivil",
+    "Z-43 2 Zivilpersonen",
+    "Z-45 außer Gefecht",
     "Z-15 verbündet",
+    "Z-16 verbündet",
+    "Z-17 verbündet",
     "Z-24 außer Gefecht",
     "Z-24 3 Besatzung (ergibt sich)"
    ],
@@ -911,41 +1063,51 @@
     "S2": true,
     "S1": true,
     "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true,
+    "S8": true,
     "N1": true,
     "N2": true,
     "N3": true,
     "N4": true
    },
-   "letzte_freigabe": 1435,
+   "letzte_freigabe": 1490,
    "log": [
-    "M01: Freigabe 02:20 mit LM, Einschlag 03:01",
-    "M02: Freigabe 03:15 mit PZA, Einschlag 03:25",
-    "M28: entfällt vor G3 03:40 (Ziel inzwischen zerstört oder weg)",
-    "M29: G1 lehnt ab 03:45",
-    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
-    "M04: Freigabe 06:50 mit LM, Einschlag 07:33",
-    "M05: Freigabe 07:40 mit MRS, Einschlag 08:15",
-    "M06: Freigabe 08:30 mit LM, Einschlag 09:03",
-    "M07: Freigabe 09:30 mit LM, Einschlag 10:05",
-    "M08: Freigabe 10:30 mit PZA, Einschlag 10:40",
-    "M30: entfällt vor G3 10:50 (Ziel inzwischen zerstört oder weg)",
-    "M09: Freigabe 12:15 mit MRS, Einschlag 12:50",
-    "M10: Freigabe 13:15 mit MRS, Einschlag 13:50",
-    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
-    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
-    "M13: Freigabe 16:15 mit MRS, Einschlag 16:50",
-    "M14: Freigabe 17:15 mit LM, Einschlag 17:48",
-    "M15: Freigabe 18:05 mit PZA, Einschlag 18:15",
-    "M16: Freigabe 18:55 mit PZA, Einschlag 19:05",
-    "M17: Freigabe 19:45 mit LM, Einschlag 20:24 – RoE: Schule im Wirkradius (0 m)",
-    "M18: Freigabe 20:35 mit LM, Einschlag 21:16",
-    "M19: Freigabe 21:25 mit LM, Einschlag 21:57",
-    "M20: Freigabe 22:15 mit PZA FT, Einschlag 22:25",
-    "M21: Freigabe 23:05 mit PZA FT, Einschlag 23:15",
-    "M22: Freigabe 23:55 mit LM, Einschlag 24:37",
+    "M01: Freigabe 02:05 mit LM ×2, Einschlag 02:46",
+    "M02: Freigabe 03:00 mit LM ×2, Einschlag 03:31",
+    "M28: entfällt bei G3 03:55 (Ziel inzwischen getroffen oder weg)",
+    "M29: entfällt bei G1 03:40 (Ziel inzwischen zerstört oder weg)",
+    "M03: entfällt (Ziel schon zerstört oder weg)",
+    "M04: Freigabe 06:30 mit LM, Einschlag 07:13",
+    "M05: Freigabe 07:15 mit MRS, Einschlag 07:50",
+    "M06: Freigabe 08:15 mit LM, Einschlag 08:48",
+    "M07: Freigabe 09:15 mit LM ×3, Einschlag 09:49",
+    "M08: Freigabe 10:15 mit PZA, Einschlag 10:25",
+    "M30: entfällt bei G2 10:35 (Ziel inzwischen zerstört oder weg)",
+    "M09: entfällt (Ziel schon zerstört oder weg)",
+    "M25: G1 lehnt ab 11:20",
+    "M10: G1 lehnt ab 11:55",
+    "M11: Freigabe 14:00 mit LM, Einschlag 14:36",
+    "M12: Freigabe 15:00 mit LM, Einschlag 15:33",
+    "M13: Freigabe 16:00 mit MRS, Einschlag 16:35",
+    "M31: Freigabe 16:40 mit LM, Einschlag 17:20",
+    "M14: Freigabe 17:20 mit LM ×2, Einschlag 17:53",
+    "M15: Freigabe 18:00 mit PZA ×3, Einschlag 18:10",
+    "M32: Freigabe 18:40 mit LM, Einschlag 19:18",
+    "M16: Freigabe 19:20 mit PZA ×2, Einschlag 19:30",
+    "M17: Freigabe 20:00 mit LM, Einschlag 20:37",
+    "M18: Freigabe 20:40 mit LM, Einschlag 21:21",
+    "M33: Freigabe 21:20 mit MRS, Einschlag 21:55",
+    "M35: Freigabe 22:00 mit PZA FT, Einschlag 22:10",
+    "M36: entfällt (Ziel schon zerstört oder weg)",
+    "M20: Freigabe 22:40 mit PZA ×3 FT, Einschlag 22:50",
+    "M21: Freigabe 23:20 mit PZA FT, Einschlag 23:30",
+    "M34: entfällt vor G2 22:50 (Ziel inzwischen zerstört oder weg)",
     "M23: entfällt (Ziel schon zerstört oder weg)",
-    "M24: G1 lehnt ab 23:10",
-    "M25: G1 lehnt ab 23:50",
+    "M24: G1 lehnt ab 23:05",
+    "M19: Freigabe 24:50 mit MRS, Einschlag 25:25",
+    "M22: bei Spielende noch offen",
     "M26: bei Spielende noch offen",
     "M27: bei Spielende noch offen",
     "E-01: entfällt (Gegenangriff abgebrochen)",
@@ -955,122 +1117,150 @@
     "D-04: bricht durch ab 23:33",
     "D-05: bricht durch ab 23:48",
     "D-06: aufgehalten (Z-18 zerstört)",
-    "D-07: aufgehalten (Z-20 zerstört)",
+    "D-07: bricht durch ab 24:18",
     "D-08: aufgehalten (Z-36 zerstört)"
    ],
    "verluste": {
     "zuege": {
      "zug1": {
-      "verlust": 288,
+      "verlust": 423,
+      "kampfkraft": 57,
+      "verwundete": 14
+     },
+     "zug2": {
+      "verlust": 289,
       "kampfkraft": 71,
       "verwundete": 9
      },
-     "zug2": {
-      "verlust": 180,
-      "kampfkraft": 82,
-      "verwundete": 6
-     },
      "zug3": {
-      "verlust": 256,
-      "kampfkraft": 74,
-      "verwundete": 8
+      "verlust": 306,
+      "kampfkraft": 69,
+      "verwundete": 10
      }
     },
     "kompanie": {
-     "kampfkraft": 75,
-     "verwundete": 23
+     "kampfkraft": 66,
+     "verwundete": 33
     },
-    "ereignisse": 195,
+    "ereignisse": 266,
     "meldungen": [
      {
       "inject": "K-01",
-      "t": 406.0,
+      "t": 399.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer von den Feldern Nord, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-02",
-      "t": 680.0,
+      "t": 665.0,
       "zug": "zug2",
       "stufe": 0,
       "text": "2. Zug unter Artilleriefeuer, 3 Verwundete. Stellung offenbar aufgeklärt!"
      },
      {
       "inject": "K-03",
-      "t": 864.0,
-      "zug": "zug1",
+      "t": 895.0,
+      "zug": "zug2",
       "stufe": 0,
-      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+      "text": "2. Zug unter gelenktem Artilleriefeuer aus dem Kirchturm, 2 neue Verwundete. Beobachter bekämpfen!"
      },
      {
       "inject": "K-04",
-      "t": 954.0,
-      "zug": "zug2",
+      "t": 986.0,
+      "zug": "zug1",
       "stufe": 0,
-      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-05",
-      "t": 1081.0,
-      "zug": "zug3",
+      "t": 1024.0,
+      "zug": "zug2",
       "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-06",
-      "t": 1126.0,
-      "zug": "zug1",
-      "stufe": 0,
-      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+      "t": 1060.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-07",
-      "t": 1171.0,
-      "zug": "zug3",
+      "t": 1103.0,
+      "zug": "zug1",
       "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-08",
-      "t": 1204.0,
+      "t": 1161.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 3 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1186.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
-      "inject": "K-09",
-      "t": 1256.0,
+      "inject": "K-10",
+      "t": 1231.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
-      "inject": "K-10",
-      "t": 1351.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Panzerfeuer vom Waldrand DACHS, 2 neue Verwundete. Panzer bekämpfen!"
-     },
-     {
       "inject": "K-11",
-      "t": 1440.9,
+      "t": 1240.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 73 %, 8 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-12",
-      "t": 1441.0,
+      "t": 1291.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-13",
+      "t": 1298.0,
       "zug": "zug3",
       "stufe": 1,
-      "text": "3. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer vom Waldrand DACHS hält an. Panzer bekämpfen!"
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-14",
+      "t": 1370.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 69 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1440.9,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-16",
+      "t": 1471.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer vom Waldrand DACHS hält an. Panzer bekämpfen!"
      }
     ],
     "texte": {
      "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 82 %. Sofort Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 76 %, 22 Verwundete. Wir binden ihn mit Panzerabwehr."
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 78 %. Sofort Feuer auf Brücke Ost!",
+     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 68 %, 30 Verwundete. Wir binden ihn mit Panzerabwehr."
     },
     "verlauf": [
      [
@@ -1200,7 +1390,7 @@
      ],
      [
       375,
-      98,
+      97,
       1
      ],
      [
@@ -1211,7 +1401,7 @@
      [
       405,
       97,
-      1
+      2
      ],
      [
       420,
@@ -1230,7 +1420,7 @@
      ],
      [
       465,
-      97,
+      96,
       2
      ],
      [
@@ -1305,7 +1495,7 @@
      ],
      [
       690,
-      95,
+      94,
       4
      ],
      [
@@ -1321,36 +1511,36 @@
      [
       735,
       94,
-      5
+      4
      ],
      [
       750,
       94,
-      5
+      4
      ],
      [
       765,
       94,
-      5
+      4
      ],
      [
       780,
       94,
-      5
+      4
      ],
      [
       795,
       94,
-      5
+      4
      ],
      [
       810,
       94,
-      5
+      4
      ],
      [
       825,
-      93,
+      94,
       5
      ],
      [
@@ -1366,12 +1556,12 @@
      [
       870,
       92,
-      6
+      5
      ],
      [
       885,
       92,
-      6
+      5
      ],
      [
       900,
@@ -1390,193 +1580,193 @@
      ],
      [
       945,
-      92,
+      91,
       6
      ],
      [
       960,
-      92,
-      7
-     ],
-     [
-      975,
-      92,
-      7
-     ],
-     [
-      990,
-      92,
-      7
-     ],
-     [
-      1005,
-      92,
-      7
-     ],
-     [
-      1020,
-      92,
-      7
-     ],
-     [
-      1035,
       91,
       7
      ],
      [
-      1050,
-      90,
+      975,
+      91,
+      7
+     ],
+     [
+      990,
+      91,
       8
      ],
      [
-      1065,
+      1005,
       90,
-      8
+      9
      ],
      [
-      1080,
+      1020,
       89,
       9
      ],
      [
-      1095,
-      89,
-      10
-     ],
-     [
-      1110,
+      1035,
       88,
       10
      ],
      [
-      1125,
+      1050,
       87,
       10
      ],
      [
-      1140,
-      86,
+      1065,
+      87,
       12
      ],
      [
-      1155,
+      1080,
       86,
       13
      ],
      [
-      1170,
+      1095,
       85,
       13
      ],
      [
-      1185,
+      1110,
       84,
-      15
+      14
      ],
      [
-      1200,
-      84,
-      15
+      1125,
+      83,
+      16
      ],
      [
-      1215,
+      1140,
       82,
-      17
+      16
      ],
      [
-      1230,
+      1155,
       81,
       17
      ],
      [
-      1245,
-      81,
-      17
-     ],
-     [
-      1260,
-      81,
-      18
-     ],
-     [
-      1275,
+      1170,
       80,
-      18
+      19
      ],
      [
-      1290,
+      1185,
       79,
       19
      ],
      [
-      1305,
-      79,
+      1200,
+      78,
       20
+     ],
+     [
+      1215,
+      77,
+      21
+     ],
+     [
+      1230,
+      76,
+      22
+     ],
+     [
+      1245,
+      76,
+      22
+     ],
+     [
+      1260,
+      75,
+      23
+     ],
+     [
+      1275,
+      74,
+      23
+     ],
+     [
+      1290,
+      73,
+      24
+     ],
+     [
+      1305,
+      72,
+      26
      ],
      [
       1320,
-      79,
-      20
+      72,
+      26
      ],
      [
       1335,
-      79,
-      20
+      72,
+      26
      ],
      [
       1350,
-      78,
-      20
+      71,
+      26
      ],
      [
       1365,
-      78,
-      21
+      71,
+      27
      ],
      [
       1380,
-      78,
-      21
+      71,
+      28
      ],
      [
       1395,
-      78,
-      21
+      70,
+      28
      ],
      [
       1410,
-      78,
-      21
+      70,
+      28
      ],
      [
       1425,
-      77,
-      21
+      69,
+      29
      ],
      [
       1440,
-      77,
-      21
+      69,
+      29
      ],
      [
       1455,
-      76,
-      23
+      67,
+      31
      ],
      [
       1470,
-      75,
-      23
+      67,
+      31
      ],
      [
       1485,
-      75,
-      23
+      66,
+      33
      ],
      [
       1500,
-      75,
-      23
+      66,
+      33
      ]
     ]
    }
@@ -1591,21 +1781,22 @@
      "t_meld": 20,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 60.0,
+     "t_g1": 55.0,
      "g1": "ANNEHMEN",
-     "t_g2": 110.0,
+     "t_g2": 95.0,
      "g2": "LM",
-     "t_g3": 140.0,
+     "t_g3": 125.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 180.789,
+     "t_wirkung": 165.789,
      "ziel": "Z-01",
      "pos": [
       772.0,
       440.0
      ],
      "getroffen": [
-      "Z-01|feind"
+      "Z-01|feind",
+      "Z-02|feind"
      ],
      "verstoesse": []
     },
@@ -1614,21 +1805,22 @@
      "t_meld": 75,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 115.0,
+     "t_g1": 110.0,
      "g1": "ANNEHMEN",
-     "t_g2": 165.0,
-     "g2": "PZA",
-     "t_g3": 195.0,
+     "t_g2": 150.0,
+     "g2": "LM",
+     "t_g3": 180.0,
      "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 205.0,
+     "wm": "LM",
+     "t_wirkung": 210.617,
      "ziel": "Z-03",
      "pos": [
       468.0,
       352.0
      ],
      "getroffen": [
-      "Z-03|feind"
+      "Z-03|feind",
+      "Z-04|feind"
      ],
      "verstoesse": []
     },
@@ -1637,11 +1829,11 @@
      "t_meld": 130,
      "ft": false,
      "ende": "entfällt (G3)",
-     "t_g1": 170.0,
+     "t_g1": 165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 220.0,
+     "t_g2": 205.0,
      "g2": "PZA",
-     "t_g3": null,
+     "t_g3": 235.0,
      "g3": "ENTFÄLLT",
      "wm": null,
      "t_wirkung": null,
@@ -1654,46 +1846,36 @@
      "meldung": "M29",
      "t_meld": 185,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 225.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 275.0,
-     "g2": "MRS",
-     "t_g3": 305.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 340.0,
-     "ziel": "Z-04",
-     "pos": [
-      512.0,
-      262.0
-     ],
-     "getroffen": [
-      "Z-04|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M03",
      "t_meld": 240,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 280.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 330.0,
-     "g2": "PZA",
-     "t_g3": 360.0,
-     "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 370.0,
-     "ziel": "Z-02",
-     "pos": [
-      476.0,
-      375.0
-     ],
-     "getroffen": [
-      "Z-02|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -1701,14 +1883,14 @@
      "t_meld": 285,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 325.0,
+     "t_g1": 320.0,
      "g1": "ANNEHMEN",
-     "t_g2": 380.0,
+     "t_g2": 360.0,
      "g2": "LM",
-     "t_g3": 410.0,
+     "t_g3": 390.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 452.764,
+     "t_wirkung": 432.764,
      "ziel": "Z-05",
      "pos": [
       824.0,
@@ -1724,14 +1906,14 @@
      "t_meld": 330,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 370.0,
+     "t_g1": 365.0,
      "g1": "ANNEHMEN",
-     "t_g2": 430.0,
+     "t_g2": 405.0,
      "g2": "MRS",
-     "t_g3": 460.0,
+     "t_g3": 435.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 495.0,
+     "t_wirkung": 470.0,
      "ziel": "Z-06",
      "pos": [
       920.0,
@@ -1748,14 +1930,14 @@
      "t_meld": 390,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 430.0,
+     "t_g1": 425.0,
      "g1": "ANNEHMEN",
-     "t_g2": 480.0,
+     "t_g2": 465.0,
      "g2": "LM",
-     "t_g3": 510.0,
+     "t_g3": 495.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 542.717,
+     "t_wirkung": 527.717,
      "ziel": "Z-08",
      "pos": [
       530.0,
@@ -1771,21 +1953,22 @@
      "t_meld": 450,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 490.0,
+     "t_g1": 485.0,
      "g1": "ANNEHMEN",
-     "t_g2": 540.0,
+     "t_g2": 525.0,
      "g2": "LM",
-     "t_g3": 570.0,
+     "t_g3": 555.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 605.29,
+     "t_wirkung": 588.758,
      "ziel": "Z-09",
      "pos": [
-      606.046,
-      310.586
+      562.0,
+      344.0
      ],
      "getroffen": [
-      "Z-09|feind"
+      "Z-09|feind",
+      "Z-10|feind"
      ],
      "verstoesse": []
     },
@@ -1794,7 +1977,7 @@
      "t_meld": 510,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 550.0,
+     "t_g1": 545.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -1811,13 +1994,13 @@
      "meldung": "M30",
      "t_meld": 560,
      "ft": false,
-     "ende": "entfällt (G3)",
-     "t_g1": 600.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 595.0,
      "g1": "ANNEHMEN",
-     "t_g2": 650.0,
-     "g2": "LM",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
-     "g3": "ENTFÄLLT",
+     "g3": null,
      "wm": null,
      "t_wirkung": null,
      "ziel": null,
@@ -1829,23 +2012,39 @@
      "meldung": "M09",
      "t_meld": 615,
      "ft": false,
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 645,
+     "ft": false,
      "ende": "Wirkung",
-     "t_g1": 655.0,
+     "t_g1": 680.0,
      "g1": "ANNEHMEN",
-     "t_g2": 705.0,
+     "t_g2": 720.0,
      "g2": "MRS",
-     "t_g3": 735.0,
+     "t_g3": 750.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 770.0,
-     "ziel": "Z-10",
+     "t_wirkung": 785.0,
+     "ziel": "Z-23",
      "pos": [
-      925.0,
-      198.0
+      1010.0,
+      245.0
      ],
-     "getroffen": [
-      "Z-10|feind"
-     ],
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -1855,12 +2054,12 @@
      "ende": "Wirkung",
      "t_g1": 715.0,
      "g1": "ANNEHMEN",
-     "t_g2": 765.0,
+     "t_g2": 760.0,
      "g2": "MRS",
-     "t_g3": 795.0,
+     "t_g3": 790.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 830.0,
+     "t_wirkung": 825.0,
      "ziel": "Z-29",
      "pos": [
       830.0,
@@ -1876,14 +2075,14 @@
      "t_meld": 735,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 775.0,
+     "t_g1": 770.0,
      "g1": "ANNEHMEN",
-     "t_g2": 825.0,
+     "t_g2": 810.0,
      "g2": "LM",
-     "t_g3": 855.0,
+     "t_g3": 840.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 891.401,
+     "t_wirkung": 876.401,
      "ziel": "Z-13",
      "pos": [
       641.0,
@@ -1899,7 +2098,7 @@
      "t_meld": 795,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 835.0,
+     "t_g1": 830.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -1917,22 +2116,46 @@
      "t_meld": 855,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 895.0,
+     "t_g1": 890.0,
      "g1": "ANNEHMEN",
-     "t_g2": 945.0,
+     "t_g2": 930.0,
      "g2": "MRS",
-     "t_g3": 975.0,
+     "t_g3": 960.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 1010.0,
+     "t_wirkung": 995.0,
      "ziel": "Z-30",
      "pos": [
-      462.0,
-      250.0
+      472.535,
+      244.423
      ],
      "getroffen": [
       "Z-30|feind",
+      "Z-31|feind",
       "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M31",
+     "t_meld": 885,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 925.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 970.0,
+     "g2": "LM",
+     "t_g3": 1000.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1040.368,
+     "ziel": "Z-42",
+     "pos": [
+      761.0,
+      370.0
+     ],
+     "getroffen": [
+      "Z-42|feind"
      ],
      "verstoesse": []
     },
@@ -1941,21 +2164,22 @@
      "t_meld": 915,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 955.0,
+     "t_g1": 960.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1005.0,
+     "t_g2": 1010.0,
      "g2": "LM",
-     "t_g3": 1035.0,
+     "t_g3": 1040.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1067.682,
+     "t_wirkung": 1072.682,
      "ziel": "Z-14",
      "pos": [
       530.0,
       352.0
      ],
      "getroffen": [
-      "Z-14|feind"
+      "Z-14|feind",
+      "Z-46|feind"
      ],
      "verstoesse": []
     },
@@ -1964,44 +2188,65 @@
      "t_meld": 960,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1000.0,
+     "t_g1": 995.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1055.0,
+     "t_g2": 1050.0,
      "g2": "PZA",
-     "t_g3": 1085.0,
+     "t_g3": 1080.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1095.0,
+     "t_wirkung": 1090.0,
      "ziel": "Z-33",
      "pos": [
       402.0,
       291.0
      ],
      "getroffen": [
-      "Z-33|feind"
+      "Z-33|feind",
+      "Z-34|feind",
+      "Z-35|feind"
      ],
      "verstoesse": []
     },
     {
+     "meldung": "M32",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1030.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1090.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
      "meldung": "M16",
-     "t_meld": 1005,
+     "t_meld": 1020,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1045.0,
+     "t_g1": 1065.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1105.0,
+     "t_g2": 1130.0,
      "g2": "PZA",
-     "t_g3": 1135.0,
+     "t_g3": 1160.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1145.0,
+     "t_wirkung": 1170.0,
      "ziel": "Z-18",
      "pos": [
       480.0,
       404.0
      ],
      "getroffen": [
-      "Z-18|feind"
+      "Z-18|feind",
+      "Z-47|feind"
      ],
      "verstoesse": []
     },
@@ -2010,9 +2255,9 @@
      "t_meld": 1055,
      "ft": false,
      "ende": "G2 beobachtet",
-     "t_g1": 1095.0,
+     "t_g1": 1100.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1155.0,
+     "t_g2": 1170.0,
      "g2": "BEOBACHTEN",
      "t_g3": null,
      "g3": null,
@@ -2030,7 +2275,7 @@
      "ende": "G2 beobachtet",
      "t_g1": 1135.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1205.0,
+     "t_g2": 1210.0,
      "g2": "BEOBACHTEN",
      "t_g3": null,
      "g3": null,
@@ -2042,52 +2287,11 @@
      "verstoesse": []
     },
     {
-     "meldung": "M19",
-     "t_meld": 1155,
-     "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 1195.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1255.0,
-     "g2": "LM",
-     "t_g3": 1285.0,
-     "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1316.855,
-     "ziel": "Z-20",
-     "pos": [
-      505.0,
-      412.0
-     ],
-     "getroffen": [
-      "Z-20|feind"
-     ],
-     "verstoesse": []
-    },
-    {
-     "meldung": "M20",
-     "t_meld": 1215,
-     "ft": false,
-     "ende": "G3 lehnt ab",
-     "t_g1": 1255.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1305.0,
-     "g2": "PZA",
-     "t_g3": 1335.0,
-     "g3": "ABLEHNEN",
-     "wm": null,
-     "t_wirkung": null,
-     "ziel": null,
-     "pos": null,
-     "getroffen": [],
-     "verstoesse": []
-    },
-    {
-     "meldung": "M21",
-     "t_meld": 1245,
+     "meldung": "M33",
+     "t_meld": 1125,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1295.0,
+     "t_g1": 1170.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -2101,25 +2305,104 @@
      "verstoesse": []
     },
     {
-     "meldung": "M22",
-     "t_meld": 1280,
+     "meldung": "M35",
+     "t_meld": 1155,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1205.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M36",
+     "t_meld": 1185,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1335.0,
+     "t_g1": 1240.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1280.0,
+     "g2": "LM",
+     "t_g3": 1310.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1348.434,
+     "ziel": "Z-41",
+     "pos": [
+      703.0,
+      372.0
+     ],
+     "getroffen": [
+      "Z-41|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": false,
+     "ende": "G3 lehnt ab",
+     "t_g1": 1275.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1320.0,
+     "g2": "PZA",
+     "t_g3": 1350.0,
+     "g3": "ABLEHNEN",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1310.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M34",
+     "t_meld": 1275,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1345.0,
      "g1": "ANNEHMEN",
      "t_g2": 1385.0,
      "g2": "LM",
      "t_g3": 1415.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1456.825,
-     "ziel": "Z-21",
+     "t_wirkung": 1460.078,
+     "ziel": "Z-38",
      "pos": [
-      790.0,
-      560.0
+      900.0,
+      305.0
      ],
      "getroffen": [
-      "Z-21|feind"
+      "Z-38|feind",
+      "Z-39|feind",
+      "Z-40|feind"
      ],
      "verstoesse": []
     },
@@ -2128,14 +2411,14 @@
      "t_meld": 1320,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1375.0,
+     "t_g1": 1380.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1435.0,
+     "t_g2": 1425.0,
      "g2": "LM",
-     "t_g3": 1465.0,
+     "t_g3": 1455.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1505.688,
+     "t_wirkung": 1495.688,
      "ziel": "Z-19",
      "pos": [
       768.0,
@@ -2166,14 +2449,32 @@
      "verstoesse": []
     },
     {
-     "meldung": "M25",
-     "t_meld": 1390,
+     "meldung": "M19",
+     "t_meld": 1380,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1455.0,
+     "t_g1": 1450.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1505.0,
-     "g2": "MRS",
+     "t_g2": 1490.0,
+     "g2": "LM",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1410,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1485.0,
+     "g1": "ANNEHMEN",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -2185,13 +2486,13 @@
     },
     {
      "meldung": "M26",
-     "t_meld": 1425,
+     "t_meld": 1440,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1495.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1555.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -2203,13 +2504,13 @@
     },
     {
      "meldung": "M27",
-     "t_meld": 1460,
+     "t_meld": 1470,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1535.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1605.0,
-     "g2": "LM",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -2231,7 +2532,7 @@
     },
     {
      "inject": "K-01",
-     "t": 406.0
+     "t": 399.0
     },
     {
      "inject": "I-03",
@@ -2246,16 +2547,16 @@
      "t": 840.0
     },
     {
-     "inject": "K-02",
-     "t": 864.0
-    },
-    {
      "inject": "I-12",
      "t": 880.0
     },
     {
+     "inject": "K-02",
+     "t": 903.0
+    },
+    {
      "inject": "K-03",
-     "t": 968.0
+     "t": 986.0
     },
     {
      "inject": "I-04",
@@ -2263,66 +2564,82 @@
     },
     {
      "inject": "K-04",
-     "t": 1081.0
+     "t": 1024.0
+    },
+    {
+     "inject": "K-05",
+     "t": 1076.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
-     "inject": "K-05",
-     "t": 1126.0
+     "inject": "K-06",
+     "t": 1103.0
     },
     {
-     "inject": "K-06",
-     "t": 1171.0
+     "inject": "K-07",
+     "t": 1144.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1150.0
+    },
+    {
+     "inject": "K-09",
+     "t": 1180.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
-     "inject": "K-07",
-     "t": 1204.0
-    },
-    {
-     "inject": "K-08",
-     "t": 1256.0
-    },
-    {
-     "inject": "K-09",
-     "t": 1320.0
-    },
-    {
      "inject": "K-10",
-     "t": 1351.0
+     "t": 1206.0
     },
     {
      "inject": "K-11",
-     "t": 1355.0
+     "t": 1240.0
     },
     {
      "inject": "K-12",
-     "t": 1381.0
+     "t": 1276.0
     },
     {
      "inject": "K-13",
-     "t": 1415.0
+     "t": 1298.0
+    },
+    {
+     "inject": "K-14",
+     "t": 1324.0
+    },
+    {
+     "inject": "K-15",
+     "t": 1351.0
+    },
+    {
+     "inject": "K-16",
+     "t": 1381.0
+    },
+    {
+     "inject": "K-17",
+     "t": 1411.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
     },
     {
-     "inject": "K-14",
+     "inject": "K-18",
      "t": 1441.0
     },
     {
-     "inject": "K-15",
-     "t": 1464.0
+     "inject": "I-08b",
+     "t": 1480.0
     },
     {
-     "inject": "I-08b",
+     "inject": "K-19",
      "t": 1480.0
     }
    ],
@@ -2350,7 +2667,7 @@
     {
      "id": "H-05",
      "t": 1010,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-06",
@@ -2370,12 +2687,12 @@
     {
      "id": "H-09",
      "t": 1135,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-10",
      "t": 1150,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-11",
@@ -2398,6 +2715,11 @@
      "t": 1425,
      "von": "Z-16",
      "ziel": "Z-28"
+    },
+    {
+     "t": 1455,
+     "von": "Z-15",
+     "ziel": "Z-20"
     },
     {
      "t": 1465,
@@ -2449,7 +2771,7 @@
    ],
    "durchgebrochen": [],
    "rest": {
-    "MRS": 7,
+    "MRS": 8,
     "LM": 2,
     "PZA": "∞"
    },
@@ -2459,45 +2781,56 @@
     "S2": true,
     "S1": true,
     "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true,
+    "S8": true,
     "N1": true,
     "N2": true,
     "N3": true,
     "N4": true
    },
-   "letzte_freigabe": 1465,
+   "letzte_freigabe": 1455,
    "log": [
-    "M01: Freigabe 02:20 mit LM, Einschlag 03:01",
-    "M02: Freigabe 03:15 mit PZA, Einschlag 03:25",
-    "M28: entfällt vor G3 03:40 (Ziel inzwischen zerstört oder weg)",
-    "M29: Freigabe 05:05 mit MRS, Einschlag 05:40",
-    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
-    "M04: Freigabe 06:50 mit LM, Einschlag 07:33",
-    "M05: Freigabe 07:40 mit MRS, Einschlag 08:15",
-    "M06: Freigabe 08:30 mit LM, Einschlag 09:03",
-    "M07: Freigabe 09:30 mit LM, Einschlag 10:05",
-    "M08: G1 lehnt ab 09:10",
-    "M30: entfällt vor G3 10:50 (Ziel inzwischen zerstört oder weg)",
-    "M09: Freigabe 12:15 mit MRS, Einschlag 12:50",
-    "M10: Freigabe 13:15 mit MRS, Einschlag 13:50",
-    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
-    "M12: G1 lehnt ab 13:55",
-    "M13: Freigabe 16:15 mit MRS, Einschlag 16:50",
-    "M14: Freigabe 17:15 mit LM, Einschlag 17:48",
-    "M15: Freigabe 18:05 mit PZA, Einschlag 18:15",
-    "M16: Freigabe 18:55 mit PZA, Einschlag 19:05",
-    "M17: G2 BEOBACHTEN 19:15",
-    "M18: G2 BEOBACHTEN 20:05",
-    "M19: Freigabe 21:25 mit LM, Einschlag 21:57",
-    "M20: G3 lehnt ab 22:15",
-    "M21: G1 lehnt ab 21:35",
-    "M22: Freigabe 23:35 mit LM, Einschlag 24:17",
-    "M23: Freigabe 24:25 mit LM, Einschlag 25:06",
+    "M01: Freigabe 02:05 mit LM ×2, Einschlag 02:46",
+    "M02: Freigabe 03:00 mit LM ×2, Einschlag 03:31",
+    "M28: entfällt bei G3 03:55 (Ziel inzwischen getroffen oder weg)",
+    "M29: entfällt bei G1 03:40 (Ziel inzwischen zerstört oder weg)",
+    "M03: entfällt (Ziel schon zerstört oder weg)",
+    "M04: Freigabe 06:30 mit LM, Einschlag 07:13",
+    "M05: Freigabe 07:15 mit MRS, Einschlag 07:50",
+    "M06: Freigabe 08:15 mit LM, Einschlag 08:48",
+    "M07: Freigabe 09:15 mit LM ×3, Einschlag 09:49",
+    "M08: G1 lehnt ab 09:05",
+    "M30: entfällt bei G2 10:35 (Ziel inzwischen zerstört oder weg)",
+    "M09: entfällt (Ziel schon zerstört oder weg)",
+    "M25: Freigabe 12:30 mit MRS, Einschlag 13:05",
+    "M10: Freigabe 13:10 mit MRS, Einschlag 13:45",
+    "M11: Freigabe 14:00 mit LM, Einschlag 14:36",
+    "M12: G1 lehnt ab 13:50",
+    "M13: Freigabe 16:00 mit MRS, Einschlag 16:35",
+    "M31: Freigabe 16:40 mit LM, Einschlag 17:20",
+    "M14: Freigabe 17:20 mit LM ×2, Einschlag 17:53",
+    "M15: Freigabe 18:00 mit PZA ×3, Einschlag 18:10",
+    "M32: G2 BEOBACHTEN 18:10",
+    "M16: Freigabe 19:20 mit PZA ×2, Einschlag 19:30",
+    "M17: G2 BEOBACHTEN 19:30",
+    "M18: G2 BEOBACHTEN 20:10",
+    "M33: G1 lehnt ab 19:30",
+    "M35: G1 lehnt ab 20:05",
+    "M36: Freigabe 21:50 mit LM, Einschlag 22:28",
+    "M20: G3 lehnt ab 22:30",
+    "M21: G1 lehnt ab 21:50",
+    "M34: Freigabe 23:35 mit LM ×3, Einschlag 24:20",
+    "M23: Freigabe 24:15 mit LM, Einschlag 24:56",
     "M24: G1 lehnt ab 23:35",
-    "M25: bei Spielende noch offen",
+    "M19: bei Spielende noch offen",
+    "M22: bei Spielende noch offen",
     "M26: bei Spielende noch offen",
     "M27: bei Spielende noch offen",
     "E-01: Z-15 trifft Z-27 um 23:30",
     "E-01: Z-16 trifft Z-28 um 23:45",
+    "E-01: Z-15 trifft Z-20 um 24:15",
     "E-01: Z-16 trifft Z-36 um 24:25",
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
@@ -2511,136 +2844,164 @@
    "verluste": {
     "zuege": {
      "zug1": {
-      "verlust": 324,
-      "kampfkraft": 67,
-      "verwundete": 10
+      "verlust": 434,
+      "kampfkraft": 56,
+      "verwundete": 14
      },
      "zug2": {
-      "verlust": 144,
-      "kampfkraft": 85,
-      "verwundete": 4
+      "verlust": 313,
+      "kampfkraft": 68,
+      "verwundete": 10
      },
      "zug3": {
-      "verlust": 494,
-      "kampfkraft": 50,
-      "verwundete": 16
+      "verlust": 536,
+      "kampfkraft": 46,
+      "verwundete": 17
      }
     },
     "kompanie": {
-     "kampfkraft": 67,
-     "verwundete": 30
+     "kampfkraft": 57,
+     "verwundete": 41
     },
-    "ereignisse": 220,
+    "ereignisse": 302,
     "meldungen": [
      {
       "inject": "K-01",
-      "t": 406.0,
+      "t": 399.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer von den Feldern Nord, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-02",
-      "t": 864.0,
-      "zug": "zug1",
+      "t": 903.0,
+      "zug": "zug2",
       "stufe": 0,
-      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+      "text": "2. Zug unter gelenktem Artilleriefeuer aus dem Kirchturm, 2 neue Verwundete. Beobachter bekämpfen!"
      },
      {
       "inject": "K-03",
-      "t": 968.0,
-      "zug": "zug2",
+      "t": 986.0,
+      "zug": "zug1",
       "stufe": 0,
-      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-04",
-      "t": 1081.0,
-      "zug": "zug3",
+      "t": 1024.0,
+      "zug": "zug2",
       "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-05",
-      "t": 1126.0,
-      "zug": "zug1",
+      "t": 1076.0,
+      "zug": "zug3",
       "stufe": 0,
-      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
       "inject": "K-06",
-      "t": 1171.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-07",
-      "t": 1204.0,
-      "zug": "zug1",
-      "stufe": 0,
-      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
-     },
-     {
-      "inject": "K-08",
-      "t": 1256.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-09",
-      "t": 1320.0,
-      "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-10",
-      "t": 1351.0,
+      "t": 1103.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
+      "inject": "K-07",
+      "t": 1144.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1150.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-09",
+      "t": 1180.0,
+      "zug": "zug1",
+      "stufe": 0,
+      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1206.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+     },
+     {
       "inject": "K-11",
-      "t": 1355.0,
+      "t": 1240.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-12",
-      "t": 1381.0,
+      "t": 1276.0,
       "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
       "inject": "K-13",
-      "t": 1415.0,
-      "zug": "zug1",
+      "t": 1298.0,
+      "zug": "zug3",
       "stufe": 1,
-      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+      "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-14",
-      "t": 1441.0,
-      "zug": "zug3",
+      "t": 1324.0,
+      "zug": "zug2",
       "stufe": 1,
-      "text": "3. Zug nur noch 57 %, 14 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+      "text": "2. Zug nur noch 69 %, 10 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-15",
-      "t": 1464.0,
+      "t": 1351.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 68 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-16",
+      "t": 1381.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 64 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-17",
+      "t": 1411.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 61 %, 12 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-18",
+      "t": 1441.0,
       "zug": "zug3",
       "stufe": 2,
       "text": "DRINGEND: 3. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-19",
+      "t": 1480.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 56 %, 14 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      }
     ],
     "texte": {
      "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 82 %. Sofort Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 78 %. Sofort Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -2770,7 +3131,7 @@
      ],
      [
       375,
-      98,
+      97,
       1
      ],
      [
@@ -2781,7 +3142,7 @@
      [
       405,
       97,
-      1
+      2
      ],
      [
       420,
@@ -2800,7 +3161,7 @@
      ],
      [
       465,
-      97,
+      96,
       2
      ],
      [
@@ -2891,32 +3252,32 @@
      [
       735,
       95,
-      4
+      3
      ],
      [
       750,
       95,
-      4
+      3
      ],
      [
       765,
       95,
-      4
+      3
      ],
      [
       780,
       95,
-      4
+      3
      ],
      [
       795,
       95,
-      4
+      3
      ],
      [
       810,
       95,
-      4
+      3
      ],
      [
       825,
@@ -2936,17 +3297,17 @@
      [
       870,
       94,
-      5
+      4
      ],
      [
       885,
       93,
-      5
+      4
      ],
      [
       900,
       93,
-      5
+      4
      ],
      [
       915,
@@ -2965,188 +3326,188 @@
      ],
      [
       960,
-      93,
+      92,
       5
      ],
      [
       975,
-      93,
-      6
-     ],
-     [
-      990,
-      93,
-      6
-     ],
-     [
-      1005,
-      93,
-      6
-     ],
-     [
-      1020,
-      93,
-      6
-     ],
-     [
-      1035,
       92,
       6
      ],
      [
-      1050,
-      91,
+      990,
+      92,
       7
      ],
      [
-      1065,
+      1005,
       91,
-      7
-     ],
-     [
-      1080,
-      90,
       8
      ],
      [
-      1095,
-      90,
-      9
+      1020,
+      91,
+      8
      ],
      [
-      1110,
+      1035,
       89,
       9
      ],
      [
-      1125,
+      1050,
       88,
       9
      ],
      [
-      1140,
-      87,
+      1065,
+      88,
       11
      ],
      [
-      1155,
+      1080,
       87,
-      11
+      12
      ],
      [
-      1170,
+      1095,
       86,
-      11
+      12
      ],
      [
-      1185,
+      1110,
       85,
       13
      ],
      [
-      1200,
-      85,
-      13
-     ],
-     [
-      1215,
+      1125,
       84,
       15
      ],
      [
-      1230,
+      1140,
       83,
       15
      ],
      [
-      1245,
-      82,
-      15
-     ],
-     [
-      1260,
+      1155,
       82,
       16
      ],
      [
-      1275,
+      1170,
       81,
-      16
+      18
      ],
      [
-      1290,
+      1185,
       80,
-      17
+      18
      ],
      [
-      1305,
-      80,
-      19
-     ],
-     [
-      1320,
+      1200,
       79,
       19
      ],
      [
-      1335,
+      1215,
       78,
-      20
+      21
      ],
      [
-      1350,
-      77,
-      20
-     ],
-     [
-      1365,
+      1230,
       76,
       22
      ],
      [
-      1380,
+      1245,
+      76,
+      22
+     ],
+     [
+      1260,
       75,
       23
      ],
      [
-      1395,
+      1275,
       74,
+      23
+     ],
+     [
+      1290,
+      73,
       24
      ],
      [
+      1305,
+      72,
+      27
+     ],
+     [
+      1320,
+      71,
+      27
+     ],
+     [
+      1335,
+      69,
+      29
+     ],
+     [
+      1350,
+      68,
+      30
+     ],
+     [
+      1365,
+      67,
+      32
+     ],
+     [
+      1380,
+      66,
+      32
+     ],
+     [
+      1395,
+      64,
+      34
+     ],
+     [
       1410,
-      73,
-      25
+      63,
+      35
      ],
      [
       1425,
-      72,
-      26
+      62,
+      36
      ],
      [
       1440,
-      70,
-      28
+      60,
+      38
      ],
      [
       1455,
-      70,
-      28
+      60,
+      39
      ],
      [
       1470,
-      68,
-      29
+      58,
+      40
      ],
      [
       1485,
-      68,
-      29
+      58,
+      40
      ],
      [
       1500,
-      67,
-      30
+      57,
+      41
      ]
     ]
    }
@@ -3166,21 +3527,22 @@
      "t_meld": 20,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 60.0,
+     "t_g1": 55.0,
      "g1": "ANNEHMEN",
-     "t_g2": 110.0,
+     "t_g2": 95.0,
      "g2": "LM",
-     "t_g3": 140.0,
+     "t_g3": 125.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 180.789,
+     "t_wirkung": 165.789,
      "ziel": "Z-01",
      "pos": [
       772.0,
       440.0
      ],
      "getroffen": [
-      "Z-01|feind"
+      "Z-01|feind",
+      "Z-02|feind"
      ],
      "verstoesse": []
     },
@@ -3189,21 +3551,22 @@
      "t_meld": 75,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 115.0,
+     "t_g1": 110.0,
      "g1": "ANNEHMEN",
-     "t_g2": 165.0,
-     "g2": "PZA",
-     "t_g3": 195.0,
+     "t_g2": 150.0,
+     "g2": "LM",
+     "t_g3": 180.0,
      "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 205.0,
+     "wm": "LM",
+     "t_wirkung": 210.617,
      "ziel": "Z-03",
      "pos": [
       468.0,
       352.0
      ],
      "getroffen": [
-      "Z-03|feind"
+      "Z-03|feind",
+      "Z-04|feind"
      ],
      "verstoesse": []
     },
@@ -3212,11 +3575,11 @@
      "t_meld": 130,
      "ft": false,
      "ende": "entfällt (G3)",
-     "t_g1": 170.0,
+     "t_g1": 165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 220.0,
+     "t_g2": 205.0,
      "g2": "PZA",
-     "t_g3": null,
+     "t_g3": 235.0,
      "g3": "ENTFÄLLT",
      "wm": null,
      "t_wirkung": null,
@@ -3229,9 +3592,9 @@
      "meldung": "M29",
      "t_meld": 185,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 225.0,
-     "g1": "ABLEHNEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -3247,23 +3610,18 @@
      "meldung": "M03",
      "t_meld": 240,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 280.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 330.0,
-     "g2": "PZA",
-     "t_g3": 360.0,
-     "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 370.0,
-     "ziel": "Z-02",
-     "pos": [
-      476.0,
-      375.0
-     ],
-     "getroffen": [
-      "Z-02|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -3271,20 +3629,23 @@
      "t_meld": 250,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 320.0,
+     "t_g1": 285.0,
      "g1": "ANNEHMEN",
-     "t_g2": 380.0,
+     "t_g2": 325.0,
      "g2": "LM",
-     "t_g3": 410.0,
+     "t_g3": 355.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 451.463,
+     "t_wirkung": 394.551,
      "ziel": "V1-1",
      "pos": [
-      722.0,
-      -10.0
+      698.0,
+      100.0
      ],
-     "getroffen": [],
+     "getroffen": [
+      "V1-1|feind",
+      "V1-2|feind"
+     ],
      "verstoesse": []
     },
     {
@@ -3292,14 +3653,14 @@
      "t_meld": 285,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 360.0,
+     "t_g1": 320.0,
      "g1": "ANNEHMEN",
-     "t_g2": 430.0,
+     "t_g2": 365.0,
      "g2": "LM",
-     "t_g3": 460.0,
+     "t_g3": 395.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 502.764,
+     "t_wirkung": 437.764,
      "ziel": "Z-05",
      "pos": [
       824.0,
@@ -3315,14 +3676,14 @@
      "t_meld": 330,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 400.0,
+     "t_g1": 365.0,
      "g1": "ANNEHMEN",
-     "t_g2": 480.0,
+     "t_g2": 405.0,
      "g2": "MRS",
-     "t_g3": 510.0,
+     "t_g3": 435.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 545.0,
+     "t_wirkung": 470.0,
      "ziel": "Z-06",
      "pos": [
       920.0,
@@ -3339,18 +3700,18 @@
      "t_meld": 390,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 440.0,
+     "t_g1": 425.0,
      "g1": "ANNEHMEN",
-     "t_g2": 530.0,
+     "t_g2": 465.0,
      "g2": "LM",
-     "t_g3": 560.0,
+     "t_g3": 495.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 592.816,
+     "t_wirkung": 527.717,
      "ziel": "Z-08",
      "pos": [
-      532.854,
-      328.165
+      530.0,
+      330.0
      ],
      "getroffen": [
       "Z-08|feind"
@@ -3362,21 +3723,22 @@
      "t_meld": 450,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 490.0,
+     "t_g1": 485.0,
      "g1": "ANNEHMEN",
-     "t_g2": 580.0,
+     "t_g2": 525.0,
      "g2": "LM",
-     "t_g3": 610.0,
+     "t_g3": 555.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 651.213,
+     "t_wirkung": 588.758,
      "ziel": "Z-09",
      "pos": [
-      775.09,
-      223.366
+      562.0,
+      344.0
      ],
      "getroffen": [
-      "Z-09|feind"
+      "Z-09|feind",
+      "Z-10|feind"
      ],
      "verstoesse": []
     },
@@ -3385,14 +3747,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 550.0,
+     "t_g1": 545.0,
      "g1": "ANNEHMEN",
-     "t_g2": 630.0,
+     "t_g2": 585.0,
      "g2": "PZA",
-     "t_g3": 660.0,
+     "t_g3": 615.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 670.0,
+     "t_wirkung": 625.0,
      "ziel": "Z-07",
      "pos": [
       268.0,
@@ -3408,14 +3770,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 590.0,
+     "t_g1": 580.0,
      "g1": "ANNEHMEN",
-     "t_g2": 680.0,
+     "t_g2": 625.0,
      "g2": "MRS",
-     "t_g3": 710.0,
+     "t_g3": 655.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 745.0,
+     "t_wirkung": 690.0,
      "ziel": "V2-1",
      "pos": [
       880.0,
@@ -3434,7 +3796,7 @@
      "t_meld": 560,
      "ft": false,
      "ende": "entfällt (G2)",
-     "t_g1": 630.0,
+     "t_g1": 615.0,
      "g1": "ANNEHMEN",
      "t_g2": null,
      "g2": null,
@@ -3451,36 +3813,49 @@
      "meldung": "M09",
      "t_meld": 615,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 670.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 730.0,
-     "g2": "MRS",
-     "t_g3": 760.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 795.0,
-     "ziel": "Z-10",
-     "pos": [
-      925.0,
-      198.0
-     ],
-     "getroffen": [
-      "Z-10|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 645,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 680.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M10",
      "t_meld": 675,
      "ft": false,
-     "ende": "entfällt (G3)",
-     "t_g1": 715.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 780.0,
-     "g2": "MRS",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
-     "g3": "ENTFÄLLT",
+     "g3": null,
      "wm": null,
      "t_wirkung": null,
      "ziel": null,
@@ -3493,14 +3868,14 @@
      "t_meld": 735,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 775.0,
+     "t_g1": 770.0,
      "g1": "ANNEHMEN",
-     "t_g2": 830.0,
+     "t_g2": 810.0,
      "g2": "LM",
-     "t_g3": 860.0,
+     "t_g3": 840.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 896.401,
+     "t_wirkung": 876.401,
      "ziel": "Z-13",
      "pos": [
       641.0,
@@ -3516,14 +3891,14 @@
      "t_meld": 795,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 835.0,
+     "t_g1": 830.0,
      "g1": "ANNEHMEN",
-     "t_g2": 885.0,
+     "t_g2": 870.0,
      "g2": "LM",
-     "t_g3": 915.0,
+     "t_g3": 900.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 948.267,
+     "t_wirkung": 933.267,
      "ziel": "Z-12",
      "pos": [
       548.0,
@@ -3539,21 +3914,23 @@
      "t_meld": 850,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 890.0,
+     "t_g1": 885.0,
      "g1": "ANNEHMEN",
-     "t_g2": 940.0,
+     "t_g2": 925.0,
      "g2": "LM",
-     "t_g3": 970.0,
+     "t_g3": 955.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1005.806,
+     "t_wirkung": 990.806,
      "ziel": "V3-1",
      "pos": [
       600.0,
       170.0
      ],
      "getroffen": [
-      "V3-1|feind"
+      "V3-1|feind",
+      "V3-2|feind",
+      "V3-3|feind"
      ],
      "verstoesse": []
     },
@@ -3562,21 +3939,45 @@
      "t_meld": 855,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 930.0,
+     "t_g1": 920.0,
      "g1": "ANNEHMEN",
-     "t_g2": 990.0,
+     "t_g2": 965.0,
      "g2": "PZA",
-     "t_g3": 1020.0,
+     "t_g3": 995.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1030.0,
+     "t_wirkung": 1005.0,
      "ziel": "Z-30",
      "pos": [
       462.0,
       250.0
      ],
      "getroffen": [
-      "Z-30|feind"
+      "Z-30|feind",
+      "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M31",
+     "t_meld": 885,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1005.0,
+     "g2": "LM",
+     "t_g3": 1035.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1075.368,
+     "ziel": "Z-42",
+     "pos": [
+      761.0,
+      370.0
+     ],
+     "getroffen": [
+      "Z-42|feind"
      ],
      "verstoesse": []
     },
@@ -3585,21 +3986,22 @@
      "t_meld": 915,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 970.0,
+     "t_g1": 990.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1040.0,
+     "t_g2": 1045.0,
      "g2": "LM",
-     "t_g3": 1070.0,
+     "t_g3": 1075.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1102.682,
+     "t_wirkung": 1107.682,
      "ziel": "Z-14",
      "pos": [
       530.0,
       352.0
      ],
      "getroffen": [
-      "Z-14|feind"
+      "Z-14|feind",
+      "Z-46|feind"
      ],
      "verstoesse": []
     },
@@ -3608,21 +4010,45 @@
      "t_meld": 960,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1010.0,
+     "t_g1": 1025.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1090.0,
+     "t_g2": 1085.0,
      "g2": "PZA",
-     "t_g3": 1120.0,
+     "t_g3": 1115.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1130.0,
+     "t_wirkung": 1125.0,
      "ziel": "Z-34",
      "pos": [
       488.0,
       240.0
      ],
      "getroffen": [
-      "Z-34|feind"
+      "Z-34|feind",
+      "Z-35|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M32",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1060.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1125.0,
+     "g2": "LM",
+     "t_g3": 1155.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1193.434,
+     "ziel": "Z-41",
+     "pos": [
+      703.0,
+      372.0
+     ],
+     "getroffen": [
+      "Z-41|feind"
      ],
      "verstoesse": []
     },
@@ -3631,14 +4057,14 @@
      "t_meld": 990,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1050.0,
+     "t_g1": 1095.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1140.0,
+     "t_g2": 1165.0,
      "g2": "MRS",
-     "t_g3": 1170.0,
+     "t_g3": 1195.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 1205.0,
+     "t_wirkung": 1230.0,
      "ziel": "V4-1",
      "pos": [
       862.0,
@@ -3652,24 +4078,25 @@
     },
     {
      "meldung": "M16",
-     "t_meld": 1005,
+     "t_meld": 1020,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1090.0,
+     "t_g1": 1130.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1190.0,
+     "t_g2": 1205.0,
      "g2": "PZA",
-     "t_g3": 1220.0,
+     "t_g3": 1235.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1230.0,
+     "t_wirkung": 1245.0,
      "ziel": "Z-18",
      "pos": [
       480.0,
       404.0
      ],
      "getroffen": [
-      "Z-18|feind"
+      "Z-18|feind",
+      "Z-47|feind"
      ],
      "verstoesse": []
     },
@@ -3678,37 +4105,43 @@
      "t_meld": 1055,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1130.0,
+     "t_g1": 1165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1240.0,
-     "g2": "LM",
-     "t_g3": 1270.0,
+     "t_g2": 1245.0,
+     "g2": "MRS",
+     "t_g3": 1275.0,
      "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1302.426,
+     "wm": "MRS",
+     "t_wirkung": 1310.0,
      "ziel": "Z-36",
      "pos": [
       522.0,
       416.0
      ],
      "getroffen": [
-      "Z-36|feind"
+      "Z-20|feind",
+      "Z-27|feind",
+      "Z-36|feind",
+      "Z-48|feind"
      ],
-     "verstoesse": []
+     "verstoesse": [
+      "Schule",
+      "Ortschaft"
+     ]
     },
     {
      "meldung": "M18",
      "t_meld": 1095,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1170.0,
+     "t_g1": 1200.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1290.0,
-     "g2": "LM",
-     "t_g3": 1320.0,
+     "t_g2": 1285.0,
+     "g2": "MRS",
+     "t_g3": 1315.0,
      "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1360.688,
+     "wm": "MRS",
+     "t_wirkung": 1350.0,
      "ziel": "Z-19",
      "pos": [
       768.0,
@@ -3716,38 +4149,80 @@
      ],
      "getroffen": [
       "Z-19|feind",
-      "Z-19|soldat"
+      "Z-19|soldat",
+      "Z-25|feind"
+     ],
+     "verstoesse": [
+      "Ortschaft"
+     ]
+    },
+    {
+     "meldung": "M33",
+     "t_meld": 1125,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1235.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1325.0,
+     "g2": "MRS",
+     "t_g3": 1355.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1390.0,
+     "ziel": "Z-43",
+     "pos": [
+      925.0,
+      355.0
+     ],
+     "getroffen": [
+      "Z-38|feind",
+      "Z-39|feind",
+      "Z-40|feind",
+      "Z-43|zivil",
+      "Z-43|zivil"
      ],
      "verstoesse": []
     },
     {
-     "meldung": "M19",
+     "meldung": "M35",
      "t_meld": 1155,
-     "ft": false,
+     "ft": true,
      "ende": "Wirkung",
-     "t_g1": 1210.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1340.0,
-     "g2": "MRS",
-     "t_g3": 1370.0,
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1365.0,
+     "g2": "PZA",
+     "t_g3": 1395.0,
      "g3": "FREIGABE",
-     "wm": "MRS",
+     "wm": "PZA",
      "t_wirkung": 1405.0,
-     "ziel": "Z-20",
+     "ziel": "Z-45",
      "pos": [
-      505.0,
-      412.0
+      496.0,
+      252.0
      ],
      "getroffen": [
-      "Z-15|verbuendet",
-      "Z-16|verbuendet",
-      "Z-20|feind",
-      "Z-28|feind"
+      "Z-45|ausser_gefecht"
      ],
-     "verstoesse": [
-      "Schule",
-      "Ortschaft"
-     ]
+     "verstoesse": []
+    },
+    {
+     "meldung": "M36",
+     "t_meld": 1185,
+     "ft": true,
+     "ende": "entfällt (G2)",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
     },
     {
      "meldung": "M20",
@@ -3756,18 +4231,20 @@
      "ende": "Wirkung",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1390.0,
+     "t_g2": 1405.0,
      "g2": "PZA",
-     "t_g3": 1420.0,
+     "t_g3": 1435.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1430.0,
-     "ziel": "Z-17",
+     "t_wirkung": 1445.0,
+     "ziel": "Z-15",
      "pos": [
-      468.0,
-      495.0
+      469.0,
+      437.0
      ],
      "getroffen": [
+      "Z-15|verbuendet",
+      "Z-16|verbuendet",
       "Z-17|verbuendet"
      ],
      "verstoesse": []
@@ -3779,12 +4256,12 @@
      "ende": "Wirkung",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1440.0,
+     "t_g2": 1445.0,
      "g2": "PZA",
-     "t_g3": 1470.0,
+     "t_g3": 1475.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1480.0,
+     "t_wirkung": 1485.0,
      "ziel": "Z-24",
      "pos": [
       492.0,
@@ -3797,14 +4274,14 @@
      "verstoesse": []
     },
     {
-     "meldung": "M22",
-     "t_meld": 1280,
+     "meldung": "M34",
+     "t_meld": 1275,
      "ft": false,
-     "ende": "Spielende",
-     "t_g1": 1320.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 1310.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1490.0,
-     "g2": "MRS",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -3837,7 +4314,7 @@
      "t_meld": 1350,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1390.0,
+     "t_g1": 1385.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -3851,14 +4328,32 @@
      "verstoesse": []
     },
     {
-     "meldung": "M25",
-     "t_meld": 1390,
+     "meldung": "M19",
+     "t_meld": 1380,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 1430.0,
-     "g1": "ABLEHNEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
      "t_g2": null,
      "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1410,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1445.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1485.0,
+     "g2": "MRS",
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -3870,13 +4365,13 @@
     },
     {
      "meldung": "M26",
-     "t_meld": 1425,
+     "t_meld": 1440,
      "ft": false,
-     "ende": "Spielende",
-     "t_g1": 1470.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1540.0,
-     "g2": "MRS",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -3888,13 +4383,13 @@
     },
     {
      "meldung": "M27",
-     "t_meld": 1460,
+     "t_meld": 1470,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1510.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1590.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -3916,7 +4411,7 @@
     },
     {
      "inject": "K-01",
-     "t": 406.0
+     "t": 399.0
     },
     {
      "inject": "I-03",
@@ -3928,31 +4423,31 @@
     },
     {
      "inject": "K-02",
-     "t": 569.0
+     "t": 665.0
     },
     {
      "inject": "K-03",
-     "t": 645.0
-    },
-    {
-     "inject": "K-04",
-     "t": 710.0
-    },
-    {
-     "inject": "K-05",
-     "t": 837.0
+     "t": 665.0
     },
     {
      "inject": "I-05",
      "t": 840.0
     },
     {
+     "inject": "K-04",
+     "t": 847.0
+    },
+    {
      "inject": "I-12",
      "t": 880.0
     },
     {
+     "inject": "K-05",
+     "t": 963.0
+    },
+    {
      "inject": "K-06",
-     "t": 888.0
+     "t": 1003.0
     },
     {
      "inject": "I-04",
@@ -3964,71 +4459,67 @@
     },
     {
      "inject": "K-08",
-     "t": 1046.0
-    },
-    {
-     "inject": "K-09",
-     "t": 1081.0
+     "t": 1076.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-09",
+     "t": 1104.0
+    },
+    {
      "inject": "K-10",
-     "t": 1106.0
+     "t": 1130.0
     },
     {
      "inject": "K-11",
-     "t": 1134.0
+     "t": 1166.0
     },
     {
      "inject": "K-12",
-     "t": 1171.0
-    },
-    {
-     "inject": "K-13",
-     "t": 1186.0
+     "t": 1181.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-13",
+     "t": 1206.0
+    },
+    {
      "inject": "K-14",
-     "t": 1256.0
+     "t": 1244.0
     },
     {
      "inject": "K-15",
-     "t": 1284.0
+     "t": 1276.0
     },
     {
      "inject": "K-16",
-     "t": 1320.0
+     "t": 1298.0
     },
     {
      "inject": "K-17",
-     "t": 1345.0
+     "t": 1358.0
     },
     {
      "inject": "K-18",
-     "t": 1381.0
+     "t": 1385.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
     },
     {
-     "inject": "K-19",
-     "t": 1440.9
-    },
-    {
-     "inject": "I-13",
-     "t": 1450.9
+     "inject": "I-15",
+     "t": 1450.0
     },
     {
      "inject": "I-08a",
-     "t": 1480.0
+     "t": 1495.0
     }
    ],
    "hintergrund": [
@@ -4060,7 +4551,7 @@
     {
      "id": "H-06",
      "t": 1030,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-07",
@@ -4080,7 +4571,7 @@
     {
      "id": "H-10",
      "t": 1150,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-11",
@@ -4093,7 +4584,13 @@
      "wirkt": null
     }
    ],
-   "e01": [],
+   "e01": [
+    {
+     "t": 1425,
+     "von": "Z-16",
+     "ziel": "Z-28"
+    }
+   ],
    "durchbruch": [
     {
      "gruppe": "D-01",
@@ -4113,7 +4610,7 @@
     {
      "gruppe": "D-04",
      "t": 1413,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-05",
@@ -4146,17 +4643,18 @@
      "durch": false
     }
    ],
-   "durchgebrochen": [
-    "Z-27"
-   ],
+   "durchgebrochen": [],
    "rest": {
-    "MRS": 7,
+    "MRS": 6,
     "LM": 0,
     "PZA": "∞"
    },
    "treffer_schutz": [
     "Z-07 Attrappe",
     "Z-12 geschützt",
+    "Z-43 zivil",
+    "Z-43 2 Zivilpersonen",
+    "Z-45 außer Gefecht",
     "Z-15 verbündet",
     "Z-16 verbündet",
     "Z-17 verbündet",
@@ -4168,51 +4666,62 @@
     "S2": true,
     "S1": true,
     "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true,
+    "S8": true,
     "N1": true,
     "N2": true,
     "N3": true,
     "N4": true
    },
-   "letzte_freigabe": 1470,
+   "letzte_freigabe": 1475,
    "log": [
-    "M01: Freigabe 02:20 mit LM, Einschlag 03:01",
-    "M02: Freigabe 03:15 mit PZA, Einschlag 03:25",
-    "M28: entfällt vor G3 03:40 (Ziel inzwischen zerstört oder weg)",
-    "M29: G1 lehnt ab 03:45",
-    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
-    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
-    "M04: Freigabe 07:40 mit LM, Einschlag 08:23",
-    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
-    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
-    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
-    "M08: Freigabe 11:00 mit PZA, Einschlag 11:10",
-    "V2-M1: Freigabe 11:50 mit MRS, Einschlag 12:25",
-    "M30: entfällt vor G2 11:20 (Ziel inzwischen zerstört oder weg)",
-    "M09: Freigabe 12:40 mit MRS, Einschlag 13:15",
-    "M10: entfällt vor G3 13:00 (Ziel inzwischen zerstört oder weg)",
-    "M11: Freigabe 14:20 mit LM, Einschlag 14:56",
-    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
-    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
-    "M13: Freigabe 17:00 mit PZA, Einschlag 17:10",
-    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
-    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
-    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
-    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
-    "M17: Freigabe 21:10 mit LM, Einschlag 21:42",
-    "M18: Freigabe 22:00 mit LM, Einschlag 22:41",
-    "M19: Freigabe 22:50 mit MRS, Einschlag 23:25 – RoE: Schule im Wirkradius (77 m); Ortschaft: Wirkradius > 50 m (0 m)",
-    "M20: Freigabe 23:40 mit PZA FT, Einschlag 23:50",
-    "M21: Freigabe 24:30 mit PZA FT, Einschlag 24:40",
+    "M01: Freigabe 02:05 mit LM ×2, Einschlag 02:46",
+    "M02: Freigabe 03:00 mit LM ×2, Einschlag 03:31",
+    "M28: entfällt bei G3 03:55 (Ziel inzwischen getroffen oder weg)",
+    "M29: entfällt bei G1 03:40 (Ziel inzwischen zerstört oder weg)",
+    "M03: entfällt (Ziel schon zerstört oder weg)",
+    "V1-M1: Freigabe 05:55 mit LM ×2, Einschlag 06:35",
+    "M04: Freigabe 06:35 mit LM, Einschlag 07:18",
+    "M05: Freigabe 07:15 mit MRS, Einschlag 07:50",
+    "M06: Freigabe 08:15 mit LM, Einschlag 08:48",
+    "M07: Freigabe 09:15 mit LM ×3, Einschlag 09:49",
+    "M08: Freigabe 10:15 mit PZA, Einschlag 10:25",
+    "V2-M1: Freigabe 10:55 mit MRS, Einschlag 11:30",
+    "M30: entfällt vor G2 10:25 (Ziel inzwischen zerstört oder weg)",
+    "M09: entfällt (Ziel schon zerstört oder weg)",
+    "M25: G1 lehnt ab 11:20",
+    "M10: entfällt bei G1 11:55 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:00 mit LM, Einschlag 14:36",
+    "M12: Freigabe 15:00 mit LM, Einschlag 15:33",
+    "V3-M1: Freigabe 15:55 mit LM ×3, Einschlag 16:31",
+    "M13: Freigabe 16:35 mit PZA ×3, Einschlag 16:45",
+    "M31: Freigabe 17:15 mit LM, Einschlag 17:55",
+    "M14: Freigabe 17:55 mit LM ×2, Einschlag 18:28",
+    "M15: Freigabe 18:35 mit PZA ×2, Einschlag 18:45",
+    "M32: Freigabe 19:15 mit LM, Einschlag 19:53",
+    "V4-M1: Freigabe 19:55 mit MRS, Einschlag 20:30",
+    "M16: Freigabe 20:35 mit PZA ×2, Einschlag 20:45",
+    "M17: Freigabe 21:15 mit MRS, Einschlag 21:50 – RoE: Schule im Wirkradius (60 m); Ortschaft: Wirkradius > 50 m (0 m)",
+    "M18: Freigabe 21:55 mit MRS, Einschlag 22:30 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M33: Freigabe 22:35 mit MRS, Einschlag 23:10",
+    "M35: Freigabe 23:15 mit PZA FT, Einschlag 23:25",
+    "M36: entfällt vor G2 22:45 (Ziel inzwischen zerstört oder weg)",
+    "M20: Freigabe 23:55 mit PZA ×3 FT, Einschlag 24:05",
+    "M21: Freigabe 24:35 mit PZA FT, Einschlag 24:45",
+    "M34: entfällt vor G2 24:05 (Ziel inzwischen zerstört oder weg)",
+    "M23: entfällt vor G2 24:05 (Ziel inzwischen zerstört oder weg)",
+    "M24: G1 lehnt ab 23:05",
+    "M19: entfällt (Ziel schon zerstört oder weg)",
     "M22: bei Spielende noch offen",
-    "M23: entfällt vor G2 24:50 (Ziel inzwischen zerstört oder weg)",
-    "M24: G1 lehnt ab 23:10",
-    "M25: G1 lehnt ab 23:50",
-    "M26: bei Spielende noch offen",
+    "M26: entfällt (Ziel schon zerstört oder weg)",
     "M27: bei Spielende noch offen",
+    "E-01: Z-16 trifft Z-28 um 23:45",
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
     "D-03: aufgehalten (Z-14 zerstört)",
-    "D-04: bricht durch ab 23:33",
+    "D-04: aufgehalten (Z-27 zerstört)",
     "D-05: aufgehalten (Z-28 zerstört)",
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
@@ -4223,165 +4732,157 @@
    "verluste": {
     "zuege": {
      "zug1": {
-      "verlust": 374,
-      "kampfkraft": 62,
+      "verlust": 367,
+      "kampfkraft": 63,
       "verwundete": 12
      },
      "zug2": {
-      "verlust": 382,
-      "kampfkraft": 61,
-      "verwundete": 12
+      "verlust": 427,
+      "kampfkraft": 57,
+      "verwundete": 14
      },
      "zug3": {
-      "verlust": 348,
-      "kampfkraft": 65,
-      "verwundete": 11
+      "verlust": 386,
+      "kampfkraft": 61,
+      "verwundete": 12
      }
     },
     "kompanie": {
-     "kampfkraft": 63,
-     "verwundete": 35
+     "kampfkraft": 60,
+     "verwundete": 38
     },
-    "ereignisse": 390,
+    "ereignisse": 353,
     "meldungen": [
      {
       "inject": "K-01",
-      "t": 406.0,
+      "t": 399.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer von den Feldern Nord, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-02",
-      "t": 569.0,
-      "zug": "zug2",
-      "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-03",
-      "t": 645.0,
+      "t": 665.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
-      "inject": "K-04",
-      "t": 710.0,
+      "inject": "K-03",
+      "t": 665.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Artilleriefeuer, 4 Verwundete. Stellung offenbar aufgeklärt!"
+      "text": "2. Zug unter Artilleriefeuer, 3 Verwundete. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-04",
+      "t": 847.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
      },
      {
       "inject": "K-05",
-      "t": 837.0,
-      "zug": "zug1",
-      "stufe": 0,
-      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
-     },
-     {
-      "inject": "K-06",
-      "t": 888.0,
+      "t": 963.0,
       "zug": "zug2",
       "stufe": 0,
       "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
+      "inject": "K-06",
+      "t": 1003.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
       "inject": "K-07",
       "t": 1038.0,
-      "zug": "zug2",
+      "zug": "zug1",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-08",
-      "t": 1046.0,
-      "zug": "zug2",
-      "stufe": 1,
-      "text": "2. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-09",
-      "t": 1081.0,
+      "t": 1076.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
+      "inject": "K-09",
+      "t": 1104.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 65 %, 11 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
       "inject": "K-10",
-      "t": 1106.0,
+      "t": 1130.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-11",
-      "t": 1134.0,
+      "t": 1166.0,
       "zug": "zug2",
       "stufe": 1,
-      "text": "2. Zug nur noch 69 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+      "text": "2. Zug nur noch 60 %, 13 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-12",
-      "t": 1171.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-13",
-      "t": 1186.0,
+      "t": 1181.0,
       "zug": "zug1",
       "stufe": 1,
       "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
      },
      {
-      "inject": "K-14",
-      "t": 1256.0,
+      "inject": "K-13",
+      "t": 1206.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
-      "inject": "K-15",
-      "t": 1284.0,
+      "inject": "K-14",
+      "t": 1244.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+      "text": "1. Zug nur noch 67 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1276.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
       "inject": "K-16",
-      "t": 1320.0,
+      "t": 1298.0,
       "zug": "zug3",
       "stufe": 1,
       "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-17",
-      "t": 1345.0,
-      "zug": "zug2",
+      "t": 1358.0,
+      "zug": "zug3",
       "stufe": 1,
-      "text": "2. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+      "text": "3. Zug nur noch 67 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-18",
-      "t": 1381.0,
-      "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-19",
-      "t": 1440.9,
+      "t": 1385.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 62 %, 12 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+      "text": "1. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      }
     ],
     "texte": {
      "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 74 %. Sofort Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 63 %, 35 Verwundete. Wir binden ihn mit Panzerabwehr."
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 72 %. Sofort Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -4511,7 +5012,7 @@
      ],
      [
       375,
-      98,
+      97,
       1
      ],
      [
@@ -4522,7 +5023,7 @@
      [
       405,
       97,
-      1
+      2
      ],
      [
       420,
@@ -4541,7 +5042,7 @@
      ],
      [
       465,
-      97,
+      96,
       2
      ],
      [
@@ -4566,53 +5067,53 @@
      ],
      [
       540,
-      95,
+      96,
       3
      ],
      [
       555,
-      95,
+      96,
       3
      ],
      [
       570,
       95,
-      5
+      3
      ],
      [
       585,
-      94,
-      5
+      95,
+      4
      ],
      [
       600,
-      94,
-      5
+      95,
+      4
      ],
      [
       615,
-      94,
-      5
+      95,
+      4
      ],
      [
       630,
-      94,
-      5
+      95,
+      4
      ],
      [
       645,
-      93,
-      6
+      94,
+      4
      ],
      [
       660,
-      93,
-      6
+      94,
+      4
      ],
      [
       675,
       93,
-      6
+      5
      ],
      [
       690,
@@ -4626,88 +5127,88 @@
      ],
      [
       720,
-      92,
+      93,
       6
      ],
      [
       735,
-      91,
-      8
+      93,
+      6
      ],
      [
       750,
-      91,
-      8
+      93,
+      6
      ],
      [
       765,
-      91,
-      8
+      93,
+      6
      ],
      [
       780,
-      91,
-      8
+      93,
+      6
      ],
      [
       795,
-      91,
-      8
+      93,
+      6
      ],
      [
       810,
+      93,
+      6
+     ],
+     [
+      825,
+      92,
+      6
+     ],
+     [
+      840,
+      92,
+      6
+     ],
+     [
+      855,
       91,
       8
      ],
      [
-      825,
+      870,
+      91,
+      8
+     ],
+     [
+      885,
       90,
       8
      ],
      [
-      840,
-      90,
-      9
-     ],
-     [
-      855,
-      89,
-      9
-     ],
-     [
-      870,
-      89,
-      9
-     ],
-     [
-      885,
-      89,
-      9
-     ],
-     [
       900,
-      89,
-      10
+      90,
+      8
      ],
      [
       915,
-      89,
-      10
+      90,
+      8
      ],
      [
       930,
-      88,
-      10
+      90,
+      8
      ],
      [
       945,
-      88,
-      10
+      89,
+      9
      ],
      [
       960,
-      88,
-      10
+      89,
+      9
      ],
      [
       975,
@@ -4731,163 +5232,163 @@
      ],
      [
       1035,
-      86,
-      11
+      85,
+      14
      ],
      [
       1050,
-      85,
+      84,
       14
      ],
      [
       1065,
-      85,
-      14
+      83,
+      15
      ],
      [
       1080,
-      83,
-      14
-     ],
-     [
-      1095,
-      83,
+      82,
       16
      ],
      [
+      1095,
+      81,
+      18
+     ],
+     [
       1110,
-      82,
-      17
+      80,
+      18
      ],
      [
       1125,
-      80,
-      17
+      78,
+      21
      ],
      [
       1140,
-      79,
-      19
+      77,
+      21
      ],
      [
       1155,
-      79,
-      20
-     ],
-     [
-      1170,
-      77,
-      20
-     ],
-     [
-      1185,
       76,
       22
      ],
      [
-      1200,
-      75,
-      23
-     ],
-     [
-      1215,
+      1170,
       74,
-      25
+      24
      ],
      [
-      1230,
+      1185,
       73,
       25
      ],
      [
-      1245,
-      73,
-      25
-     ],
-     [
-      1260,
+      1200,
       72,
       26
      ],
      [
-      1275,
-      71,
-      26
+      1215,
+      70,
+      27
      ],
      [
-      1290,
-      70,
+      1230,
+      69,
       28
      ],
      [
-      1305,
+      1245,
       69,
       29
      ],
      [
-      1320,
-      69,
-      29
+      1260,
+      68,
+      31
      ],
      [
-      1335,
+      1275,
       67,
       31
      ],
      [
-      1350,
-      67,
-      31
-     ],
-     [
-      1365,
+      1290,
       66,
       32
      ],
      [
-      1380,
+      1305,
       65,
-      34
+      33
+     ],
+     [
+      1320,
+      64,
+      33
+     ],
+     [
+      1335,
+      63,
+      35
+     ],
+     [
+      1350,
+      63,
+      35
+     ],
+     [
+      1365,
+      62,
+      36
+     ],
+     [
+      1380,
+      61,
+      37
      ],
      [
       1395,
-      65,
-      34
+      61,
+      37
      ],
      [
       1410,
-      64,
-      34
+      61,
+      38
      ],
      [
       1425,
-      64,
-      34
+      61,
+      38
      ],
      [
       1440,
-      64,
-      34
+      61,
+      38
      ],
      [
       1455,
-      63,
-      35
+      61,
+      38
      ],
      [
       1470,
-      63,
-      35
+      60,
+      38
      ],
      [
       1485,
-      63,
-      35
+      60,
+      38
      ],
      [
       1500,
-      63,
-      35
+      60,
+      38
      ]
     ]
    }
@@ -4907,21 +5408,22 @@
      "t_meld": 20,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 60.0,
+     "t_g1": 55.0,
      "g1": "ANNEHMEN",
-     "t_g2": 110.0,
+     "t_g2": 95.0,
      "g2": "LM",
-     "t_g3": 140.0,
+     "t_g3": 125.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 180.789,
+     "t_wirkung": 165.789,
      "ziel": "Z-01",
      "pos": [
       772.0,
       440.0
      ],
      "getroffen": [
-      "Z-01|feind"
+      "Z-01|feind",
+      "Z-02|feind"
      ],
      "verstoesse": []
     },
@@ -4930,21 +5432,22 @@
      "t_meld": 75,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 115.0,
+     "t_g1": 110.0,
      "g1": "ANNEHMEN",
-     "t_g2": 165.0,
-     "g2": "PZA",
-     "t_g3": 195.0,
+     "t_g2": 150.0,
+     "g2": "LM",
+     "t_g3": 180.0,
      "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 205.0,
+     "wm": "LM",
+     "t_wirkung": 210.617,
      "ziel": "Z-03",
      "pos": [
       468.0,
       352.0
      ],
      "getroffen": [
-      "Z-03|feind"
+      "Z-03|feind",
+      "Z-04|feind"
      ],
      "verstoesse": []
     },
@@ -4953,11 +5456,11 @@
      "t_meld": 130,
      "ft": false,
      "ende": "entfällt (G3)",
-     "t_g1": 170.0,
+     "t_g1": 165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 220.0,
+     "t_g2": 205.0,
      "g2": "PZA",
-     "t_g3": null,
+     "t_g3": 235.0,
      "g3": "ENTFÄLLT",
      "wm": null,
      "t_wirkung": null,
@@ -4970,46 +5473,36 @@
      "meldung": "M29",
      "t_meld": 185,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 225.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 275.0,
-     "g2": "MRS",
-     "t_g3": 305.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 340.0,
-     "ziel": "Z-04",
-     "pos": [
-      512.0,
-      262.0
-     ],
-     "getroffen": [
-      "Z-04|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M03",
      "t_meld": 240,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 280.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 330.0,
-     "g2": "PZA",
-     "t_g3": 360.0,
-     "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 370.0,
-     "ziel": "Z-02",
-     "pos": [
-      476.0,
-      375.0
-     ],
-     "getroffen": [
-      "Z-02|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -5017,20 +5510,23 @@
      "t_meld": 250,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 320.0,
+     "t_g1": 285.0,
      "g1": "ANNEHMEN",
-     "t_g2": 380.0,
+     "t_g2": 325.0,
      "g2": "LM",
-     "t_g3": 410.0,
+     "t_g3": 355.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 451.463,
+     "t_wirkung": 394.551,
      "ziel": "V1-1",
      "pos": [
-      722.0,
-      -10.0
+      698.0,
+      100.0
      ],
-     "getroffen": [],
+     "getroffen": [
+      "V1-1|feind",
+      "V1-2|feind"
+     ],
      "verstoesse": []
     },
     {
@@ -5038,14 +5534,14 @@
      "t_meld": 285,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 360.0,
+     "t_g1": 320.0,
      "g1": "ANNEHMEN",
-     "t_g2": 430.0,
+     "t_g2": 365.0,
      "g2": "LM",
-     "t_g3": 460.0,
+     "t_g3": 395.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 502.764,
+     "t_wirkung": 437.764,
      "ziel": "Z-05",
      "pos": [
       824.0,
@@ -5061,14 +5557,14 @@
      "t_meld": 330,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 400.0,
+     "t_g1": 365.0,
      "g1": "ANNEHMEN",
-     "t_g2": 480.0,
+     "t_g2": 405.0,
      "g2": "MRS",
-     "t_g3": 510.0,
+     "t_g3": 435.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 545.0,
+     "t_wirkung": 470.0,
      "ziel": "Z-06",
      "pos": [
       920.0,
@@ -5085,18 +5581,18 @@
      "t_meld": 390,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 440.0,
+     "t_g1": 425.0,
      "g1": "ANNEHMEN",
-     "t_g2": 530.0,
+     "t_g2": 465.0,
      "g2": "LM",
-     "t_g3": 560.0,
+     "t_g3": 495.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 592.816,
+     "t_wirkung": 527.717,
      "ziel": "Z-08",
      "pos": [
-      532.854,
-      328.165
+      530.0,
+      330.0
      ],
      "getroffen": [
       "Z-08|feind"
@@ -5108,21 +5604,22 @@
      "t_meld": 450,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 490.0,
+     "t_g1": 485.0,
      "g1": "ANNEHMEN",
-     "t_g2": 580.0,
+     "t_g2": 525.0,
      "g2": "LM",
-     "t_g3": 610.0,
+     "t_g3": 555.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 651.213,
+     "t_wirkung": 588.758,
      "ziel": "Z-09",
      "pos": [
-      775.09,
-      223.366
+      562.0,
+      344.0
      ],
      "getroffen": [
-      "Z-09|feind"
+      "Z-09|feind",
+      "Z-10|feind"
      ],
      "verstoesse": []
     },
@@ -5131,7 +5628,7 @@
      "t_meld": 510,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 550.0,
+     "t_g1": 545.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -5149,14 +5646,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 590.0,
+     "t_g1": 580.0,
      "g1": "ANNEHMEN",
-     "t_g2": 640.0,
+     "t_g2": 620.0,
      "g2": "MRS",
-     "t_g3": 670.0,
+     "t_g3": 650.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 705.0,
+     "t_wirkung": 685.0,
      "ziel": "V2-1",
      "pos": [
       880.0,
@@ -5175,7 +5672,7 @@
      "t_meld": 560,
      "ft": false,
      "ende": "entfällt (G2)",
-     "t_g1": 630.0,
+     "t_g1": 615.0,
      "g1": "ANNEHMEN",
      "t_g2": null,
      "g2": null,
@@ -5192,8 +5689,26 @@
      "meldung": "M09",
      "t_meld": 615,
      "ft": false,
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 645,
+     "ft": false,
      "ende": "Wirkung",
-     "t_g1": 670.0,
+     "t_g1": 680.0,
      "g1": "ANNEHMEN",
      "t_g2": 720.0,
      "g2": "MRS",
@@ -5201,23 +5716,21 @@
      "g3": "FREIGABE",
      "wm": "MRS",
      "t_wirkung": 785.0,
-     "ziel": "Z-10",
+     "ziel": "Z-23",
      "pos": [
-      925.0,
-      198.0
+      1010.0,
+      245.0
      ],
-     "getroffen": [
-      "Z-10|feind"
-     ],
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M10",
      "t_meld": 675,
      "ft": false,
-     "ende": "entfällt (G2)",
-     "t_g1": 715.0,
-     "g1": "ANNEHMEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -5234,14 +5747,14 @@
      "t_meld": 735,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 775.0,
+     "t_g1": 770.0,
      "g1": "ANNEHMEN",
-     "t_g2": 825.0,
+     "t_g2": 810.0,
      "g2": "LM",
-     "t_g3": 855.0,
+     "t_g3": 840.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 891.401,
+     "t_wirkung": 876.401,
      "ziel": "Z-13",
      "pos": [
       641.0,
@@ -5257,7 +5770,7 @@
      "t_meld": 795,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 835.0,
+     "t_g1": 830.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -5275,21 +5788,23 @@
      "t_meld": 850,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 890.0,
+     "t_g1": 885.0,
      "g1": "ANNEHMEN",
-     "t_g2": 940.0,
+     "t_g2": 925.0,
      "g2": "LM",
-     "t_g3": 970.0,
+     "t_g3": 955.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1005.806,
+     "t_wirkung": 990.806,
      "ziel": "V3-1",
      "pos": [
       600.0,
       170.0
      ],
      "getroffen": [
-      "V3-1|feind"
+      "V3-1|feind",
+      "V3-2|feind",
+      "V3-3|feind"
      ],
      "verstoesse": []
     },
@@ -5298,21 +5813,45 @@
      "t_meld": 855,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 930.0,
+     "t_g1": 920.0,
      "g1": "ANNEHMEN",
-     "t_g2": 990.0,
+     "t_g2": 965.0,
      "g2": "PZA",
-     "t_g3": 1020.0,
+     "t_g3": 995.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1030.0,
+     "t_wirkung": 1005.0,
      "ziel": "Z-30",
      "pos": [
       462.0,
       250.0
      ],
      "getroffen": [
-      "Z-30|feind"
+      "Z-30|feind",
+      "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M31",
+     "t_meld": 885,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1005.0,
+     "g2": "LM",
+     "t_g3": 1035.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1075.368,
+     "ziel": "Z-42",
+     "pos": [
+      761.0,
+      370.0
+     ],
+     "getroffen": [
+      "Z-42|feind"
      ],
      "verstoesse": []
     },
@@ -5321,21 +5860,22 @@
      "t_meld": 915,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 970.0,
+     "t_g1": 990.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1040.0,
+     "t_g2": 1045.0,
      "g2": "LM",
-     "t_g3": 1070.0,
+     "t_g3": 1075.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1102.682,
+     "t_wirkung": 1107.682,
      "ziel": "Z-14",
      "pos": [
       530.0,
       352.0
      ],
      "getroffen": [
-      "Z-14|feind"
+      "Z-14|feind",
+      "Z-46|feind"
      ],
      "verstoesse": []
     },
@@ -5344,22 +5884,41 @@
      "t_meld": 960,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1010.0,
+     "t_g1": 1025.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1090.0,
+     "t_g2": 1085.0,
      "g2": "PZA",
-     "t_g3": 1120.0,
+     "t_g3": 1115.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1130.0,
+     "t_wirkung": 1125.0,
      "ziel": "Z-34",
      "pos": [
       488.0,
       240.0
      ],
      "getroffen": [
-      "Z-34|feind"
+      "Z-34|feind",
+      "Z-35|feind"
      ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M32",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "G2 beobachtet",
+     "t_g1": 1060.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1125.0,
+     "g2": "BEOBACHTEN",
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -5367,14 +5926,14 @@
      "t_meld": 990,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1050.0,
+     "t_g1": 1095.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1140.0,
+     "t_g2": 1165.0,
      "g2": "MRS",
-     "t_g3": 1170.0,
+     "t_g3": 1195.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 1205.0,
+     "t_wirkung": 1230.0,
      "ziel": "V4-1",
      "pos": [
       862.0,
@@ -5388,24 +5947,25 @@
     },
     {
      "meldung": "M16",
-     "t_meld": 1005,
+     "t_meld": 1020,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1090.0,
+     "t_g1": 1130.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1190.0,
+     "t_g2": 1205.0,
      "g2": "PZA",
-     "t_g3": 1220.0,
+     "t_g3": 1235.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1230.0,
+     "t_wirkung": 1245.0,
      "ziel": "Z-18",
      "pos": [
       480.0,
       404.0
      ],
      "getroffen": [
-      "Z-18|feind"
+      "Z-18|feind",
+      "Z-47|feind"
      ],
      "verstoesse": []
     },
@@ -5414,9 +5974,9 @@
      "t_meld": 1055,
      "ft": false,
      "ende": "G2 beobachtet",
-     "t_g1": 1130.0,
+     "t_g1": 1165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1240.0,
+     "t_g2": 1245.0,
      "g2": "BEOBACHTEN",
      "t_g3": null,
      "g3": null,
@@ -5432,9 +5992,9 @@
      "t_meld": 1095,
      "ft": false,
      "ende": "G2 beobachtet",
-     "t_g1": 1170.0,
+     "t_g1": 1200.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1290.0,
+     "t_g2": 1285.0,
      "g2": "BEOBACHTEN",
      "t_g3": null,
      "g3": null,
@@ -5446,52 +6006,11 @@
      "verstoesse": []
     },
     {
-     "meldung": "M19",
-     "t_meld": 1155,
-     "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 1210.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1340.0,
-     "g2": "LM",
-     "t_g3": 1370.0,
-     "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1401.855,
-     "ziel": "Z-20",
-     "pos": [
-      505.0,
-      412.0
-     ],
-     "getroffen": [
-      "Z-20|feind"
-     ],
-     "verstoesse": []
-    },
-    {
-     "meldung": "M20",
-     "t_meld": 1215,
-     "ft": false,
-     "ende": "G3 lehnt ab",
-     "t_g1": 1255.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1390.0,
-     "g2": "PZA",
-     "t_g3": 1420.0,
-     "g3": "ABLEHNEN",
-     "wm": null,
-     "t_wirkung": null,
-     "ziel": null,
-     "pos": null,
-     "getroffen": [],
-     "verstoesse": []
-    },
-    {
-     "meldung": "M21",
-     "t_meld": 1245,
+     "meldung": "M33",
+     "t_meld": 1125,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1295.0,
+     "t_g1": 1235.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -5505,25 +6024,102 @@
      "verstoesse": []
     },
     {
-     "meldung": "M22",
-     "t_meld": 1280,
+     "meldung": "M35",
+     "t_meld": 1155,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1270.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M36",
+     "t_meld": 1185,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1335.0,
+     "t_g1": 1305.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1440.0,
+     "t_g2": 1345.0,
      "g2": "LM",
-     "t_g3": 1470.0,
+     "t_g3": 1375.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1511.825,
-     "ziel": "Z-21",
+     "t_wirkung": 1413.434,
+     "ziel": "Z-41",
      "pos": [
-      790.0,
-      560.0
+      703.0,
+      372.0
      ],
      "getroffen": [
-      "Z-21|feind"
+      "Z-41|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M20",
+     "t_meld": 1215,
+     "ft": false,
+     "ende": "G3 lehnt ab",
+     "t_g1": 1340.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1385.0,
+     "g2": "PZA",
+     "t_g3": 1415.0,
+     "g3": "ABLEHNEN",
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M21",
+     "t_meld": 1245,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 1375.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M34",
+     "t_meld": 1275,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1410.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1450.0,
+     "g2": "LM",
+     "t_g3": 1480.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1525.078,
+     "ziel": "Z-38",
+     "pos": [
+      900.0,
+      305.0
+     ],
+     "getroffen": [
+      "Z-38|feind"
      ],
      "verstoesse": []
     },
@@ -5531,11 +6127,11 @@
      "meldung": "M23",
      "t_meld": 1320,
      "ft": false,
-     "ende": "Spielende",
-     "t_g1": 1375.0,
+     "ende": "kein Wirkmittel",
+     "t_g1": 1445.0,
      "g1": "ANNEHMEN",
      "t_g2": 1490.0,
-     "g2": "LM",
+     "g2": "kein Wirkmittel",
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -5550,7 +6146,7 @@
      "t_meld": 1350,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1415.0,
+     "t_g1": 1480.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -5564,14 +6160,32 @@
      "verstoesse": []
     },
     {
-     "meldung": "M25",
-     "t_meld": 1390,
+     "meldung": "M19",
+     "t_meld": 1380,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1455.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1540.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1410,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -5583,13 +6197,13 @@
     },
     {
      "meldung": "M26",
-     "t_meld": 1425,
+     "t_meld": 1440,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1495.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1590.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -5601,13 +6215,13 @@
     },
     {
      "meldung": "M27",
-     "t_meld": 1460,
+     "t_meld": 1470,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1535.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1640.0,
-     "g2": "LM",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -5629,7 +6243,7 @@
     },
     {
      "inject": "K-01",
-     "t": 406.0
+     "t": 399.0
     },
     {
      "inject": "I-03",
@@ -5641,15 +6255,15 @@
     },
     {
      "inject": "K-02",
-     "t": 569.0
-    },
-    {
-     "inject": "K-03",
-     "t": 645.0
+     "t": 665.0
     },
     {
      "inject": "I-05",
      "t": 840.0
+    },
+    {
+     "inject": "K-03",
+     "t": 873.0
     },
     {
      "inject": "I-12",
@@ -5657,83 +6271,95 @@
     },
     {
      "inject": "K-04",
-     "t": 890.0
-    },
-    {
-     "inject": "K-05",
-     "t": 1002.0
+     "t": 968.0
     },
     {
      "inject": "I-04",
      "t": 1020.0
     },
     {
+     "inject": "K-05",
+     "t": 1025.0
+    },
+    {
      "inject": "K-06",
-     "t": 1081.0
+     "t": 1045.0
+    },
+    {
+     "inject": "K-07",
+     "t": 1076.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
-     "inject": "K-07",
-     "t": 1112.0
-    },
-    {
      "inject": "K-08",
-     "t": 1113.0
+     "t": 1105.0
     },
     {
      "inject": "K-09",
-     "t": 1141.0
+     "t": 1130.0
     },
     {
      "inject": "K-10",
-     "t": 1171.0
+     "t": 1166.0
+    },
+    {
+     "inject": "K-11",
+     "t": 1184.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
-     "inject": "K-11",
-     "t": 1201.0
-    },
-    {
      "inject": "K-12",
-     "t": 1233.0
+     "t": 1210.0
     },
     {
      "inject": "K-13",
-     "t": 1261.0
+     "t": 1244.0
     },
     {
      "inject": "K-14",
-     "t": 1320.0
+     "t": 1270.0
     },
     {
      "inject": "K-15",
-     "t": 1351.0
+     "t": 1298.0
     },
     {
      "inject": "K-16",
-     "t": 1381.0
+     "t": 1324.0
     },
     {
      "inject": "K-17",
-     "t": 1413.0
+     "t": 1358.0
+    },
+    {
+     "inject": "K-18",
+     "t": 1360.0
+    },
+    {
+     "inject": "K-19",
+     "t": 1385.0
+    },
+    {
+     "inject": "K-20",
+     "t": 1404.0
+    },
+    {
+     "inject": "K-21",
+     "t": 1430.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
     },
     {
-     "inject": "K-18",
+     "inject": "K-22",
      "t": 1441.0
-    },
-    {
-     "inject": "K-19",
-     "t": 1464.0
     },
     {
      "inject": "I-08b",
@@ -5769,7 +6395,7 @@
     {
      "id": "H-06",
      "t": 1030,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-07",
@@ -5789,7 +6415,7 @@
     {
      "id": "H-10",
      "t": 1150,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-11",
@@ -5812,6 +6438,11 @@
      "t": 1425,
      "von": "Z-16",
      "ziel": "Z-28"
+    },
+    {
+     "t": 1455,
+     "von": "Z-15",
+     "ziel": "Z-20"
     },
     {
      "t": 1465,
@@ -5873,8 +6504,8 @@
    ],
    "durchgebrochen": [],
    "rest": {
-    "MRS": 7,
-    "LM": 1,
+    "MRS": 8,
+    "LM": 0,
     "PZA": "∞"
    },
    "treffer_schutz": [],
@@ -5883,49 +6514,60 @@
     "S2": true,
     "S1": true,
     "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true,
+    "S8": true,
     "N1": true,
     "N2": true,
     "N3": true,
     "N4": true
    },
-   "letzte_freigabe": 1470,
+   "letzte_freigabe": 1480,
    "log": [
-    "M01: Freigabe 02:20 mit LM, Einschlag 03:01",
-    "M02: Freigabe 03:15 mit PZA, Einschlag 03:25",
-    "M28: entfällt vor G3 03:40 (Ziel inzwischen zerstört oder weg)",
-    "M29: Freigabe 05:05 mit MRS, Einschlag 05:40",
-    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
-    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
-    "M04: Freigabe 07:40 mit LM, Einschlag 08:23",
-    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
-    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
-    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
-    "M08: G1 lehnt ab 09:10",
-    "V2-M1: Freigabe 11:10 mit MRS, Einschlag 11:45",
-    "M30: entfällt vor G2 10:40 (Ziel inzwischen zerstört oder weg)",
-    "M09: Freigabe 12:30 mit MRS, Einschlag 13:05",
-    "M10: entfällt vor G2 12:00 (Ziel inzwischen zerstört oder weg)",
-    "M11: Freigabe 14:15 mit LM, Einschlag 14:51",
-    "M12: G1 lehnt ab 13:55",
-    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
-    "M13: Freigabe 17:00 mit PZA, Einschlag 17:10",
-    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
-    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
-    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
-    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
-    "M17: G2 BEOBACHTEN 20:40",
-    "M18: G2 BEOBACHTEN 21:30",
-    "M19: Freigabe 22:50 mit LM, Einschlag 23:22",
-    "M20: G3 lehnt ab 23:40",
-    "M21: G1 lehnt ab 21:35",
-    "M22: Freigabe 24:30 mit LM, Einschlag 25:12",
-    "M23: bei Spielende noch offen",
-    "M24: G1 lehnt ab 23:35",
-    "M25: bei Spielende noch offen",
+    "M01: Freigabe 02:05 mit LM ×2, Einschlag 02:46",
+    "M02: Freigabe 03:00 mit LM ×2, Einschlag 03:31",
+    "M28: entfällt bei G3 03:55 (Ziel inzwischen getroffen oder weg)",
+    "M29: entfällt bei G1 03:40 (Ziel inzwischen zerstört oder weg)",
+    "M03: entfällt (Ziel schon zerstört oder weg)",
+    "V1-M1: Freigabe 05:55 mit LM ×2, Einschlag 06:35",
+    "M04: Freigabe 06:35 mit LM, Einschlag 07:18",
+    "M05: Freigabe 07:15 mit MRS, Einschlag 07:50",
+    "M06: Freigabe 08:15 mit LM, Einschlag 08:48",
+    "M07: Freigabe 09:15 mit LM ×3, Einschlag 09:49",
+    "M08: G1 lehnt ab 09:05",
+    "V2-M1: Freigabe 10:50 mit MRS, Einschlag 11:25",
+    "M30: entfällt vor G2 10:20 (Ziel inzwischen zerstört oder weg)",
+    "M09: entfällt (Ziel schon zerstört oder weg)",
+    "M25: Freigabe 12:30 mit MRS, Einschlag 13:05",
+    "M10: entfällt bei G1 11:55 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:00 mit LM, Einschlag 14:36",
+    "M12: G1 lehnt ab 13:50",
+    "V3-M1: Freigabe 15:55 mit LM ×3, Einschlag 16:31",
+    "M13: Freigabe 16:35 mit PZA ×3, Einschlag 16:45",
+    "M31: Freigabe 17:15 mit LM, Einschlag 17:55",
+    "M14: Freigabe 17:55 mit LM ×2, Einschlag 18:28",
+    "M15: Freigabe 18:35 mit PZA ×2, Einschlag 18:45",
+    "M32: G2 BEOBACHTEN 18:45",
+    "V4-M1: Freigabe 19:55 mit MRS, Einschlag 20:30",
+    "M16: Freigabe 20:35 mit PZA ×2, Einschlag 20:45",
+    "M17: G2 BEOBACHTEN 20:45",
+    "M18: G2 BEOBACHTEN 21:25",
+    "M33: G1 lehnt ab 20:35",
+    "M35: G1 lehnt ab 21:10",
+    "M36: Freigabe 22:55 mit LM, Einschlag 23:33",
+    "M20: G3 lehnt ab 23:35",
+    "M21: G1 lehnt ab 22:55",
+    "M34: Freigabe 24:40 mit LM, Einschlag 25:25",
+    "M23: G2: kein Wirkmittel ohne Warnung 24:50",
+    "M24: G1 lehnt ab 24:40",
+    "M19: bei Spielende noch offen",
+    "M22: bei Spielende noch offen",
     "M26: bei Spielende noch offen",
     "M27: bei Spielende noch offen",
     "E-01: Z-15 trifft Z-27 um 23:30",
     "E-01: Z-16 trifft Z-28 um 23:45",
+    "E-01: Z-15 trifft Z-20 um 24:15",
     "E-01: Z-16 trifft Z-36 um 24:25",
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
@@ -5941,156 +6583,177 @@
    "verluste": {
     "zuege": {
      "zug1": {
-      "verlust": 417,
-      "kampfkraft": 58,
-      "verwundete": 13
+      "verlust": 508,
+      "kampfkraft": 49,
+      "verwundete": 16
      },
      "zug2": {
-      "verlust": 346,
-      "kampfkraft": 65,
-      "verwundete": 11
+      "verlust": 466,
+      "kampfkraft": 53,
+      "verwundete": 15
      },
      "zug3": {
-      "verlust": 498,
-      "kampfkraft": 50,
-      "verwundete": 16
+      "verlust": 536,
+      "kampfkraft": 46,
+      "verwundete": 17
      }
     },
     "kompanie": {
-     "kampfkraft": 57,
-     "verwundete": 40
+     "kampfkraft": 49,
+     "verwundete": 48
     },
-    "ereignisse": 402,
+    "ereignisse": 407,
     "meldungen": [
      {
       "inject": "K-01",
-      "t": 406.0,
+      "t": 399.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer von den Feldern Nord, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-02",
-      "t": 569.0,
-      "zug": "zug2",
-      "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-03",
-      "t": 645.0,
+      "t": 665.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
-      "inject": "K-04",
-      "t": 890.0,
-      "zug": "zug1",
+      "inject": "K-03",
+      "t": 873.0,
+      "zug": "zug2",
       "stufe": 0,
-      "text": "1. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "2. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
+     },
+     {
+      "inject": "K-04",
+      "t": 968.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Panzerfeuer aus der Ortschaft, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-05",
-      "t": 1002.0,
-      "zug": "zug2",
+      "t": 1025.0,
+      "zug": "zug1",
       "stufe": 0,
-      "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-06",
-      "t": 1081.0,
+      "t": 1045.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-07",
+      "t": 1076.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
-      "t": 1112.0,
-      "zug": "zug2",
-      "stufe": 0,
-      "text": "2. Zug unter Panzerfeuer vom Ostufer an der Furt, 2 neue Verwundete. Panzer bekämpfen!"
-     },
-     {
       "inject": "K-08",
-      "t": 1113.0,
+      "t": 1105.0,
       "zug": "zug2",
       "stufe": 1,
-      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer vom Ostufer an der Furt hält an. Panzer bekämpfen!"
+      "text": "2. Zug nur noch 69 %, 10 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-09",
-      "t": 1141.0,
+      "t": 1130.0,
       "zug": "zug1",
       "stufe": 0,
-      "text": "1. Zug unter Panzerfeuer von der Schule, 2 neue Verwundete. Panzer bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-10",
-      "t": 1171.0,
+      "t": 1166.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
       "inject": "K-11",
-      "t": 1201.0,
+      "t": 1184.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
+      "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-12",
-      "t": 1233.0,
+      "t": 1210.0,
       "zug": "zug2",
       "stufe": 1,
-      "text": "2. Zug nur noch 68 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+      "text": "2. Zug nur noch 61 %, 12 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-13",
-      "t": 1261.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
+      "t": 1244.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 67 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-14",
-      "t": 1320.0,
+      "t": 1270.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 57 %, 14 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1298.0,
       "zug": "zug3",
       "stufe": 1,
       "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
-      "inject": "K-15",
-      "t": 1351.0,
+      "inject": "K-16",
+      "t": 1324.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 67 %, 11 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
-     },
-     {
-      "inject": "K-16",
-      "t": 1381.0,
-      "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+      "text": "1. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      },
      {
       "inject": "K-17",
-      "t": 1413.0,
-      "zug": "zug1",
+      "t": 1358.0,
+      "zug": "zug3",
       "stufe": 1,
-      "text": "1. Zug nur noch 60 %, 13 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+      "text": "3. Zug nur noch 67 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-18",
-      "t": 1441.0,
-      "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 57 %, 14 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+      "t": 1360.0,
+      "zug": "zug2",
+      "stufe": 2,
+      "text": "DRINGEND: 2. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Panzer bekämpfen!"
      },
      {
       "inject": "K-19",
-      "t": 1464.0,
+      "t": 1385.0,
+      "zug": "zug1",
+      "stufe": 1,
+      "text": "1. Zug nur noch 56 %, 14 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-20",
+      "t": 1404.0,
+      "zug": "zug1",
+      "stufe": 2,
+      "text": "DRINGEND: 1. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-21",
+      "t": 1430.0,
+      "zug": "zug3",
+      "stufe": 1,
+      "text": "3. Zug nur noch 56 %, 14 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-22",
+      "t": 1441.0,
       "zug": "zug3",
       "stufe": 2,
       "text": "DRINGEND: 3. Zug 54 %, 15 Verwundete. Bergung unter Feuer kaum möglich. Mörser bekämpfen!"
@@ -6098,7 +6761,7 @@
     ],
     "texte": {
      "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 75 %. Sofort Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 72 %. Sofort Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -6228,7 +6891,7 @@
      ],
      [
       375,
-      98,
+      97,
       1
      ],
      [
@@ -6239,7 +6902,7 @@
      [
       405,
       97,
-      1
+      2
      ],
      [
       420,
@@ -6258,7 +6921,7 @@
      ],
      [
       465,
-      97,
+      96,
       2
      ],
      [
@@ -6283,148 +6946,148 @@
      ],
      [
       540,
-      95,
+      96,
       3
      ],
      [
       555,
-      95,
+      96,
       3
      ],
      [
       570,
       95,
-      5
+      3
      ],
      [
       585,
-      94,
-      5
+      95,
+      4
      ],
      [
       600,
-      94,
-      5
+      95,
+      4
      ],
      [
       615,
-      94,
-      5
+      95,
+      4
      ],
      [
       630,
+      95,
+      4
+     ],
+     [
+      645,
+      94,
+      4
+     ],
+     [
+      660,
+      94,
+      4
+     ],
+     [
+      675,
       94,
       5
      ],
      [
-      645,
-      93,
-      6
-     ],
-     [
-      660,
-      93,
-      6
-     ],
-     [
-      675,
-      93,
-      6
-     ],
-     [
       690,
-      93,
-      6
+      94,
+      5
      ],
      [
       705,
-      93,
-      6
+      94,
+      5
      ],
      [
       720,
-      93,
-      6
+      94,
+      5
      ],
      [
       735,
-      93,
-      6
+      94,
+      5
      ],
      [
       750,
-      92,
-      6
+      94,
+      5
      ],
      [
       765,
+      94,
+      5
+     ],
+     [
+      780,
+      94,
+      5
+     ],
+     [
+      795,
+      94,
+      5
+     ],
+     [
+      810,
+      94,
+      5
+     ],
+     [
+      825,
+      93,
+      5
+     ],
+     [
+      840,
+      93,
+      5
+     ],
+     [
+      855,
       92,
       6
      ],
      [
-      780,
-      92,
-      7
-     ],
-     [
-      795,
-      92,
-      7
-     ],
-     [
-      810,
-      92,
-      7
-     ],
-     [
-      825,
-      92,
-      7
-     ],
-     [
-      840,
-      92,
-      7
-     ],
-     [
-      855,
-      91,
-      7
-     ],
-     [
       870,
-      91,
-      7
+      92,
+      6
      ],
      [
       885,
-      91,
+      92,
       7
      ],
      [
       900,
-      90,
-      8
+      91,
+      7
      ],
      [
       915,
-      90,
-      8
+      91,
+      7
      ],
      [
       930,
-      90,
-      9
+      91,
+      7
      ],
      [
       945,
-      90,
-      9
+      91,
+      8
      ],
      [
       960,
       90,
-      9
+      8
      ],
      [
       975,
@@ -6438,173 +7101,173 @@
      ],
      [
       1005,
-      89,
+      88,
       10
      ],
      [
       1020,
-      89,
+      88,
       10
      ],
      [
       1035,
       87,
-      10
+      12
      ],
      [
       1050,
-      86,
-      12
+      85,
+      13
      ],
      [
       1065,
-      86,
-      12
+      84,
+      14
      ],
      [
       1080,
-      85,
-      12
-     ],
-     [
-      1095,
-      84,
-      15
-     ],
-     [
-      1110,
       83,
       15
      ],
      [
-      1125,
+      1095,
       82,
-      15
+      17
+     ],
+     [
+      1110,
+      81,
+      17
+     ],
+     [
+      1125,
+      79,
+      20
      ],
      [
       1140,
-      81,
-      18
-     ],
-     [
-      1155,
-      80,
-      18
-     ],
-     [
-      1170,
-      79,
-      19
-     ],
-     [
-      1185,
       78,
       20
      ],
      [
-      1200,
+      1155,
       77,
       21
      ],
      [
-      1215,
-      75,
+      1170,
+      76,
       23
      ],
      [
-      1230,
+      1185,
       74,
       24
      ],
      [
-      1245,
-      74,
-      24
-     ],
-     [
-      1260,
+      1200,
       73,
       25
      ],
      [
-      1275,
-      73,
-      25
-     ],
-     [
-      1290,
-      72,
-      26
-     ],
-     [
-      1305,
+      1215,
       71,
       27
      ],
      [
-      1320,
+      1230,
       70,
-      27
+      28
      ],
      [
-      1335,
+      1245,
       69,
-      29
+      28
      ],
      [
-      1350,
+      1260,
       68,
-      29
+      30
      ],
      [
-      1365,
+      1275,
       67,
       31
      ],
      [
-      1380,
+      1290,
       66,
+      32
+     ],
+     [
+      1305,
+      65,
       33
      ],
      [
-      1395,
+      1320,
       64,
-      34
+      33
      ],
      [
-      1410,
-      63,
-      35
-     ],
-     [
-      1425,
+      1335,
       62,
       36
      ],
      [
+      1350,
+      62,
+      36
+     ],
+     [
+      1365,
+      60,
+      39
+     ],
+     [
+      1380,
+      59,
+      40
+     ],
+     [
+      1395,
+      57,
+      41
+     ],
+     [
+      1410,
+      56,
+      43
+     ],
+     [
+      1425,
+      54,
+      43
+     ],
+     [
       1440,
-      61,
-      38
+      53,
+      46
      ],
      [
       1455,
-      60,
-      38
+      52,
+      46
      ],
      [
       1470,
-      59,
-      39
+      51,
+      47
      ],
      [
       1485,
-      59,
-      39
+      50,
+      47
      ],
      [
       1500,
-      57,
-      40
+      49,
+      48
      ]
     ]
    }
@@ -6625,21 +7288,22 @@
      "t_meld": 20,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 60.0,
+     "t_g1": 55.0,
      "g1": "ANNEHMEN",
-     "t_g2": 110.0,
+     "t_g2": 95.0,
      "g2": "LM",
-     "t_g3": 140.0,
+     "t_g3": 125.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 180.789,
+     "t_wirkung": 165.789,
      "ziel": "Z-01",
      "pos": [
       772.0,
       440.0
      ],
      "getroffen": [
-      "Z-01|feind"
+      "Z-01|feind",
+      "Z-02|feind"
      ],
      "verstoesse": []
     },
@@ -6648,21 +7312,22 @@
      "t_meld": 75,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 115.0,
+     "t_g1": 110.0,
      "g1": "ANNEHMEN",
-     "t_g2": 165.0,
-     "g2": "PZA",
-     "t_g3": 195.0,
+     "t_g2": 150.0,
+     "g2": "LM",
+     "t_g3": 180.0,
      "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 205.0,
+     "wm": "LM",
+     "t_wirkung": 210.617,
      "ziel": "Z-03",
      "pos": [
       468.0,
       352.0
      ],
      "getroffen": [
-      "Z-03|feind"
+      "Z-03|feind",
+      "Z-04|feind"
      ],
      "verstoesse": []
     },
@@ -6671,11 +7336,11 @@
      "t_meld": 130,
      "ft": false,
      "ende": "entfällt (G3)",
-     "t_g1": 170.0,
+     "t_g1": 165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 220.0,
+     "t_g2": 205.0,
      "g2": "PZA",
-     "t_g3": null,
+     "t_g3": 235.0,
      "g3": "ENTFÄLLT",
      "wm": null,
      "t_wirkung": null,
@@ -6688,9 +7353,9 @@
      "meldung": "M29",
      "t_meld": 185,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 225.0,
-     "g1": "ABLEHNEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -6706,23 +7371,18 @@
      "meldung": "M03",
      "t_meld": 240,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 280.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 330.0,
-     "g2": "PZA",
-     "t_g3": 360.0,
-     "g3": "FREIGABE",
-     "wm": "PZA",
-     "t_wirkung": 370.0,
-     "ziel": "Z-02",
-     "pos": [
-      476.0,
-      375.0
-     ],
-     "getroffen": [
-      "Z-02|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
@@ -6730,20 +7390,23 @@
      "t_meld": 250,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 320.0,
+     "t_g1": 285.0,
      "g1": "ANNEHMEN",
-     "t_g2": 380.0,
+     "t_g2": 325.0,
      "g2": "LM",
-     "t_g3": 410.0,
+     "t_g3": 355.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 451.463,
+     "t_wirkung": 394.551,
      "ziel": "V1-1",
      "pos": [
-      722.0,
-      -10.0
+      698.0,
+      100.0
      ],
-     "getroffen": [],
+     "getroffen": [
+      "V1-1|feind",
+      "V1-2|feind"
+     ],
      "verstoesse": []
     },
     {
@@ -6751,14 +7414,14 @@
      "t_meld": 285,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 360.0,
+     "t_g1": 320.0,
      "g1": "ANNEHMEN",
-     "t_g2": 430.0,
+     "t_g2": 365.0,
      "g2": "LM",
-     "t_g3": 460.0,
+     "t_g3": 395.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 502.764,
+     "t_wirkung": 437.764,
      "ziel": "Z-05",
      "pos": [
       824.0,
@@ -6774,14 +7437,14 @@
      "t_meld": 330,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 400.0,
+     "t_g1": 365.0,
      "g1": "ANNEHMEN",
-     "t_g2": 480.0,
+     "t_g2": 405.0,
      "g2": "MRS",
-     "t_g3": 510.0,
+     "t_g3": 435.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 545.0,
+     "t_wirkung": 470.0,
      "ziel": "Z-06",
      "pos": [
       920.0,
@@ -6798,18 +7461,18 @@
      "t_meld": 390,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 440.0,
+     "t_g1": 425.0,
      "g1": "ANNEHMEN",
-     "t_g2": 530.0,
+     "t_g2": 465.0,
      "g2": "LM",
-     "t_g3": 560.0,
+     "t_g3": 495.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 592.816,
+     "t_wirkung": 527.717,
      "ziel": "Z-08",
      "pos": [
-      532.854,
-      328.165
+      530.0,
+      330.0
      ],
      "getroffen": [
       "Z-08|feind"
@@ -6821,21 +7484,22 @@
      "t_meld": 450,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 490.0,
+     "t_g1": 485.0,
      "g1": "ANNEHMEN",
-     "t_g2": 580.0,
+     "t_g2": 525.0,
      "g2": "LM",
-     "t_g3": 610.0,
+     "t_g3": 555.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 651.213,
+     "t_wirkung": 588.758,
      "ziel": "Z-09",
      "pos": [
-      775.09,
-      223.366
+      562.0,
+      344.0
      ],
      "getroffen": [
-      "Z-09|feind"
+      "Z-09|feind",
+      "Z-10|feind"
      ],
      "verstoesse": []
     },
@@ -6844,14 +7508,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 550.0,
+     "t_g1": 545.0,
      "g1": "ANNEHMEN",
-     "t_g2": 630.0,
+     "t_g2": 585.0,
      "g2": "PZA",
-     "t_g3": 660.0,
+     "t_g3": 615.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 670.0,
+     "t_wirkung": 625.0,
      "ziel": "Z-07",
      "pos": [
       268.0,
@@ -6867,14 +7531,14 @@
      "t_meld": 510,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 590.0,
+     "t_g1": 580.0,
      "g1": "ANNEHMEN",
-     "t_g2": 680.0,
+     "t_g2": 625.0,
      "g2": "MRS",
-     "t_g3": 710.0,
+     "t_g3": 655.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 745.0,
+     "t_wirkung": 690.0,
      "ziel": "V2-1",
      "pos": [
       880.0,
@@ -6893,7 +7557,7 @@
      "t_meld": 560,
      "ft": false,
      "ende": "entfällt (G2)",
-     "t_g1": 630.0,
+     "t_g1": 615.0,
      "g1": "ANNEHMEN",
      "t_g2": null,
      "g2": null,
@@ -6910,36 +7574,49 @@
      "meldung": "M09",
      "t_meld": 615,
      "ft": false,
-     "ende": "Wirkung",
-     "t_g1": 670.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 730.0,
-     "g2": "MRS",
-     "t_g3": 760.0,
-     "g3": "FREIGABE",
-     "wm": "MRS",
-     "t_wirkung": 795.0,
-     "ziel": "Z-10",
-     "pos": [
-      925.0,
-      198.0
-     ],
-     "getroffen": [
-      "Z-10|feind"
-     ],
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M25",
+     "t_meld": 645,
+     "ft": false,
+     "ende": "G1 lehnt ab",
+     "t_g1": 680.0,
+     "g1": "ABLEHNEN",
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
      "verstoesse": []
     },
     {
      "meldung": "M10",
      "t_meld": 675,
      "ft": false,
-     "ende": "entfällt (G3)",
-     "t_g1": 715.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 780.0,
-     "g2": "MRS",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
-     "g3": "ENTFÄLLT",
+     "g3": null,
      "wm": null,
      "t_wirkung": null,
      "ziel": null,
@@ -6952,14 +7629,14 @@
      "t_meld": 735,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 775.0,
+     "t_g1": 770.0,
      "g1": "ANNEHMEN",
-     "t_g2": 830.0,
+     "t_g2": 810.0,
      "g2": "LM",
-     "t_g3": 860.0,
+     "t_g3": 840.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 896.401,
+     "t_wirkung": 876.401,
      "ziel": "Z-13",
      "pos": [
       641.0,
@@ -6975,14 +7652,14 @@
      "t_meld": 795,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 835.0,
+     "t_g1": 830.0,
      "g1": "ANNEHMEN",
-     "t_g2": 885.0,
+     "t_g2": 870.0,
      "g2": "LM",
-     "t_g3": 915.0,
+     "t_g3": 900.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 948.267,
+     "t_wirkung": 933.267,
      "ziel": "Z-12",
      "pos": [
       548.0,
@@ -6998,21 +7675,23 @@
      "t_meld": 850,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 890.0,
+     "t_g1": 885.0,
      "g1": "ANNEHMEN",
-     "t_g2": 940.0,
+     "t_g2": 925.0,
      "g2": "LM",
-     "t_g3": 970.0,
+     "t_g3": 955.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1005.806,
+     "t_wirkung": 990.806,
      "ziel": "V3-1",
      "pos": [
       600.0,
       170.0
      ],
      "getroffen": [
-      "V3-1|feind"
+      "V3-1|feind",
+      "V3-2|feind",
+      "V3-3|feind"
      ],
      "verstoesse": []
     },
@@ -7021,21 +7700,45 @@
      "t_meld": 855,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 930.0,
+     "t_g1": 920.0,
      "g1": "ANNEHMEN",
-     "t_g2": 990.0,
+     "t_g2": 965.0,
      "g2": "PZA",
-     "t_g3": 1020.0,
+     "t_g3": 995.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1030.0,
+     "t_wirkung": 1005.0,
      "ziel": "Z-30",
      "pos": [
       462.0,
       250.0
      ],
      "getroffen": [
-      "Z-30|feind"
+      "Z-30|feind",
+      "Z-32|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M31",
+     "t_meld": 885,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 955.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1005.0,
+     "g2": "LM",
+     "t_g3": 1035.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1075.368,
+     "ziel": "Z-42",
+     "pos": [
+      761.0,
+      370.0
+     ],
+     "getroffen": [
+      "Z-42|feind"
      ],
      "verstoesse": []
     },
@@ -7044,21 +7747,22 @@
      "t_meld": 915,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 970.0,
+     "t_g1": 990.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1040.0,
+     "t_g2": 1045.0,
      "g2": "LM",
-     "t_g3": 1070.0,
+     "t_g3": 1075.0,
      "g3": "FREIGABE",
      "wm": "LM",
-     "t_wirkung": 1102.682,
+     "t_wirkung": 1107.682,
      "ziel": "Z-14",
      "pos": [
       530.0,
       352.0
      ],
      "getroffen": [
-      "Z-14|feind"
+      "Z-14|feind",
+      "Z-46|feind"
      ],
      "verstoesse": []
     },
@@ -7067,21 +7771,45 @@
      "t_meld": 960,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1010.0,
+     "t_g1": 1025.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1090.0,
+     "t_g2": 1085.0,
      "g2": "PZA",
-     "t_g3": 1120.0,
+     "t_g3": 1115.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1130.0,
+     "t_wirkung": 1125.0,
      "ziel": "Z-34",
      "pos": [
       488.0,
       240.0
      ],
      "getroffen": [
-      "Z-34|feind"
+      "Z-34|feind",
+      "Z-35|feind"
+     ],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M32",
+     "t_meld": 990,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1060.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1125.0,
+     "g2": "LM",
+     "t_g3": 1155.0,
+     "g3": "FREIGABE",
+     "wm": "LM",
+     "t_wirkung": 1193.434,
+     "ziel": "Z-41",
+     "pos": [
+      703.0,
+      372.0
+     ],
+     "getroffen": [
+      "Z-41|feind"
      ],
      "verstoesse": []
     },
@@ -7090,14 +7818,14 @@
      "t_meld": 990,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1050.0,
+     "t_g1": 1095.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1140.0,
+     "t_g2": 1165.0,
      "g2": "MRS",
-     "t_g3": 1170.0,
+     "t_g3": 1195.0,
      "g3": "FREIGABE",
      "wm": "MRS",
-     "t_wirkung": 1205.0,
+     "t_wirkung": 1230.0,
      "ziel": "V4-1",
      "pos": [
       862.0,
@@ -7111,24 +7839,25 @@
     },
     {
      "meldung": "M16",
-     "t_meld": 1005,
+     "t_meld": 1020,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1090.0,
+     "t_g1": 1130.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1190.0,
+     "t_g2": 1205.0,
      "g2": "PZA",
-     "t_g3": 1220.0,
+     "t_g3": 1235.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1230.0,
+     "t_wirkung": 1245.0,
      "ziel": "Z-18",
      "pos": [
       480.0,
       404.0
      ],
      "getroffen": [
-      "Z-18|feind"
+      "Z-18|feind",
+      "Z-47|feind"
      ],
      "verstoesse": []
     },
@@ -7137,37 +7866,43 @@
      "t_meld": 1055,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1130.0,
+     "t_g1": 1165.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1240.0,
-     "g2": "LM",
-     "t_g3": 1270.0,
+     "t_g2": 1245.0,
+     "g2": "MRS",
+     "t_g3": 1275.0,
      "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1302.426,
+     "wm": "MRS",
+     "t_wirkung": 1310.0,
      "ziel": "Z-36",
      "pos": [
       522.0,
       416.0
      ],
      "getroffen": [
-      "Z-36|feind"
+      "Z-20|feind",
+      "Z-27|feind",
+      "Z-36|feind",
+      "Z-48|feind"
      ],
-     "verstoesse": []
+     "verstoesse": [
+      "Schule",
+      "Ortschaft"
+     ]
     },
     {
      "meldung": "M18",
      "t_meld": 1095,
      "ft": false,
      "ende": "Wirkung",
-     "t_g1": 1170.0,
+     "t_g1": 1200.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1290.0,
-     "g2": "LM",
-     "t_g3": 1320.0,
+     "t_g2": 1285.0,
+     "g2": "MRS",
+     "t_g3": 1315.0,
      "g3": "FREIGABE",
-     "wm": "LM",
-     "t_wirkung": 1360.688,
+     "wm": "MRS",
+     "t_wirkung": 1350.0,
      "ziel": "Z-19",
      "pos": [
       768.0,
@@ -7175,38 +7910,80 @@
      ],
      "getroffen": [
       "Z-19|feind",
-      "Z-19|soldat"
+      "Z-19|soldat",
+      "Z-25|feind"
+     ],
+     "verstoesse": [
+      "Ortschaft"
+     ]
+    },
+    {
+     "meldung": "M33",
+     "t_meld": 1125,
+     "ft": false,
+     "ende": "Wirkung",
+     "t_g1": 1235.0,
+     "g1": "ANNEHMEN",
+     "t_g2": 1325.0,
+     "g2": "MRS",
+     "t_g3": 1355.0,
+     "g3": "FREIGABE",
+     "wm": "MRS",
+     "t_wirkung": 1390.0,
+     "ziel": "Z-43",
+     "pos": [
+      925.0,
+      355.0
+     ],
+     "getroffen": [
+      "Z-38|feind",
+      "Z-39|feind",
+      "Z-40|feind",
+      "Z-43|zivil",
+      "Z-43|zivil"
      ],
      "verstoesse": []
     },
     {
-     "meldung": "M19",
+     "meldung": "M35",
      "t_meld": 1155,
-     "ft": false,
+     "ft": true,
      "ende": "Wirkung",
-     "t_g1": 1210.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1340.0,
-     "g2": "MRS",
-     "t_g3": 1370.0,
+     "t_g1": null,
+     "g1": null,
+     "t_g2": 1365.0,
+     "g2": "PZA",
+     "t_g3": 1395.0,
      "g3": "FREIGABE",
-     "wm": "MRS",
+     "wm": "PZA",
      "t_wirkung": 1405.0,
-     "ziel": "Z-20",
+     "ziel": "Z-45",
      "pos": [
-      505.0,
-      412.0
+      496.0,
+      252.0
      ],
      "getroffen": [
-      "Z-15|verbuendet",
-      "Z-16|verbuendet",
-      "Z-20|feind",
-      "Z-28|feind"
+      "Z-45|ausser_gefecht"
      ],
-     "verstoesse": [
-      "Schule",
-      "Ortschaft"
-     ]
+     "verstoesse": []
+    },
+    {
+     "meldung": "M36",
+     "t_meld": 1185,
+     "ft": true,
+     "ende": "entfällt (G2)",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
     },
     {
      "meldung": "M20",
@@ -7215,18 +7992,20 @@
      "ende": "Wirkung",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1390.0,
+     "t_g2": 1405.0,
      "g2": "PZA",
-     "t_g3": 1420.0,
+     "t_g3": 1435.0,
      "g3": "FREIGABE",
      "wm": "PZA",
-     "t_wirkung": 1430.0,
-     "ziel": "Z-17",
+     "t_wirkung": 1445.0,
+     "ziel": "Z-15",
      "pos": [
-      468.0,
-      495.0
+      469.0,
+      437.0
      ],
      "getroffen": [
+      "Z-15|verbuendet",
+      "Z-16|verbuendet",
       "Z-17|verbuendet"
      ],
      "verstoesse": []
@@ -7235,13 +8014,13 @@
      "meldung": "V5-M1",
      "t_meld": 1235,
      "ft": false,
-     "ende": "entfällt (G3)",
-     "t_g1": 1275.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 1270.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1440.0,
-     "g2": "MRS",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
-     "g3": "ENTFÄLLT",
+     "g3": null,
      "wm": null,
      "t_wirkung": null,
      "ziel": null,
@@ -7256,7 +8035,7 @@
      "ende": "Spielende",
      "t_g1": null,
      "g1": null,
-     "t_g2": 1490.0,
+     "t_g2": 1485.0,
      "g2": "PZA",
      "t_g3": null,
      "g3": null,
@@ -7268,14 +8047,14 @@
      "verstoesse": []
     },
     {
-     "meldung": "M22",
-     "t_meld": 1280,
+     "meldung": "M34",
+     "t_meld": 1275,
      "ft": false,
-     "ende": "Spielende",
-     "t_g1": 1320.0,
+     "ende": "entfällt (G2)",
+     "t_g1": 1310.0,
      "g1": "ANNEHMEN",
-     "t_g2": 1540.0,
-     "g2": "MRS",
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -7308,7 +8087,7 @@
      "t_meld": 1350,
      "ft": false,
      "ende": "G1 lehnt ab",
-     "t_g1": 1390.0,
+     "t_g1": 1385.0,
      "g1": "ABLEHNEN",
      "t_g2": null,
      "g2": null,
@@ -7322,12 +8101,30 @@
      "verstoesse": []
     },
     {
-     "meldung": "M25",
-     "t_meld": 1390,
+     "meldung": "M19",
+     "t_meld": 1380,
      "ft": false,
-     "ende": "G1 lehnt ab",
-     "t_g1": 1430.0,
-     "g1": "ABLEHNEN",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
+     "t_g3": null,
+     "g3": null,
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
+    },
+    {
+     "meldung": "M22",
+     "t_meld": 1410,
+     "ft": false,
+     "ende": "Spielende",
+     "t_g1": 1445.0,
+     "g1": "ANNEHMEN",
      "t_g2": null,
      "g2": null,
      "t_g3": null,
@@ -7341,13 +8138,13 @@
     },
     {
      "meldung": "M26",
-     "t_meld": 1425,
+     "t_meld": 1440,
      "ft": false,
-     "ende": "Spielende",
-     "t_g1": 1470.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1590.0,
-     "g2": "MRS",
+     "ende": "entfällt",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -7359,13 +8156,13 @@
     },
     {
      "meldung": "M27",
-     "t_meld": 1460,
+     "t_meld": 1470,
      "ft": false,
      "ende": "Spielende",
-     "t_g1": 1510.0,
-     "g1": "ANNEHMEN",
-     "t_g2": 1640.0,
-     "g2": "MRS",
+     "t_g1": null,
+     "g1": null,
+     "t_g2": null,
+     "g2": null,
      "t_g3": null,
      "g3": null,
      "wm": null,
@@ -7387,7 +8184,7 @@
     },
     {
      "inject": "K-01",
-     "t": 406.0
+     "t": 399.0
     },
     {
      "inject": "I-03",
@@ -7399,31 +8196,31 @@
     },
     {
      "inject": "K-02",
-     "t": 569.0
+     "t": 665.0
     },
     {
      "inject": "K-03",
-     "t": 645.0
-    },
-    {
-     "inject": "K-04",
-     "t": 710.0
-    },
-    {
-     "inject": "K-05",
-     "t": 837.0
+     "t": 665.0
     },
     {
      "inject": "I-05",
      "t": 840.0
     },
     {
+     "inject": "K-04",
+     "t": 847.0
+    },
+    {
      "inject": "I-12",
      "t": 880.0
     },
     {
+     "inject": "K-05",
+     "t": 963.0
+    },
+    {
      "inject": "K-06",
-     "t": 888.0
+     "t": 1003.0
     },
     {
      "inject": "I-04",
@@ -7435,71 +8232,67 @@
     },
     {
      "inject": "K-08",
-     "t": 1046.0
-    },
-    {
-     "inject": "K-09",
-     "t": 1081.0
+     "t": 1076.0
     },
     {
      "inject": "I-07",
      "t": 1095.0
     },
     {
+     "inject": "K-09",
+     "t": 1104.0
+    },
+    {
      "inject": "K-10",
-     "t": 1106.0
+     "t": 1130.0
     },
     {
      "inject": "K-11",
-     "t": 1134.0
+     "t": 1166.0
     },
     {
      "inject": "K-12",
-     "t": 1171.0
-    },
-    {
-     "inject": "K-13",
-     "t": 1186.0
+     "t": 1181.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
+     "inject": "K-13",
+     "t": 1206.0
+    },
+    {
      "inject": "K-14",
-     "t": 1256.0
+     "t": 1244.0
     },
     {
      "inject": "K-15",
-     "t": 1284.0
+     "t": 1276.0
     },
     {
      "inject": "K-16",
-     "t": 1320.0
+     "t": 1298.0
     },
     {
      "inject": "K-17",
-     "t": 1345.0
+     "t": 1358.0
     },
     {
      "inject": "K-18",
-     "t": 1381.0
+     "t": 1385.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
     },
     {
-     "inject": "K-19",
-     "t": 1440.9
-    },
-    {
-     "inject": "I-13",
-     "t": 1450.9
+     "inject": "I-15",
+     "t": 1450.0
     },
     {
      "inject": "I-08a",
-     "t": 1480.0
+     "t": 1495.0
     }
    ],
    "hintergrund": [
@@ -7531,7 +8324,7 @@
     {
      "id": "H-06",
      "t": 1030,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-07",
@@ -7551,7 +8344,7 @@
     {
      "id": "H-10",
      "t": 1150,
-     "wirkt": true
+     "wirkt": false
     },
     {
      "id": "H-11",
@@ -7564,7 +8357,13 @@
      "wirkt": null
     }
    ],
-   "e01": [],
+   "e01": [
+    {
+     "t": 1425,
+     "von": "Z-16",
+     "ziel": "Z-28"
+    }
+   ],
    "durchbruch": [
     {
      "gruppe": "D-01",
@@ -7584,7 +8383,7 @@
     {
      "gruppe": "D-04",
      "t": 1413,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-05",
@@ -7617,17 +8416,18 @@
      "durch": false
     }
    ],
-   "durchgebrochen": [
-    "Z-27"
-   ],
+   "durchgebrochen": [],
    "rest": {
-    "MRS": 7,
+    "MRS": 6,
     "LM": 0,
     "PZA": "∞"
    },
    "treffer_schutz": [
     "Z-07 Attrappe",
     "Z-12 geschützt",
+    "Z-43 zivil",
+    "Z-43 2 Zivilpersonen",
+    "Z-45 außer Gefecht",
     "Z-15 verbündet",
     "Z-16 verbündet",
     "Z-17 verbündet"
@@ -7637,52 +8437,63 @@
     "S2": true,
     "S1": true,
     "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true,
+    "S8": true,
     "N1": true,
     "N2": false,
     "N3": true,
     "N4": true
    },
-   "letzte_freigabe": 1420,
+   "letzte_freigabe": 1435,
    "log": [
-    "M01: Freigabe 02:20 mit LM, Einschlag 03:01",
-    "M02: Freigabe 03:15 mit PZA, Einschlag 03:25",
-    "M28: entfällt vor G3 03:40 (Ziel inzwischen zerstört oder weg)",
-    "M29: G1 lehnt ab 03:45",
-    "M03: Freigabe 06:00 mit PZA, Einschlag 06:10",
-    "V1-M1: Freigabe 06:50 mit LM, Einschlag 07:31",
-    "M04: Freigabe 07:40 mit LM, Einschlag 08:23",
-    "M05: Freigabe 08:30 mit MRS, Einschlag 09:05",
-    "M06: Freigabe 09:20 mit LM, Einschlag 09:53",
-    "M07: Freigabe 10:10 mit LM, Einschlag 10:51",
-    "M08: Freigabe 11:00 mit PZA, Einschlag 11:10",
-    "V2-M1: Freigabe 11:50 mit MRS, Einschlag 12:25",
-    "M30: entfällt vor G2 11:20 (Ziel inzwischen zerstört oder weg)",
-    "M09: Freigabe 12:40 mit MRS, Einschlag 13:15",
-    "M10: entfällt vor G3 13:00 (Ziel inzwischen zerstört oder weg)",
-    "M11: Freigabe 14:20 mit LM, Einschlag 14:56",
-    "M12: Freigabe 15:15 mit LM, Einschlag 15:48",
-    "V3-M1: Freigabe 16:10 mit LM, Einschlag 16:46",
-    "M13: Freigabe 17:00 mit PZA, Einschlag 17:10",
-    "M14: Freigabe 17:50 mit LM, Einschlag 18:23",
-    "M15: Freigabe 18:40 mit PZA, Einschlag 18:50",
-    "V4-M1: Freigabe 19:30 mit MRS, Einschlag 20:05",
-    "M16: Freigabe 20:20 mit PZA, Einschlag 20:30",
-    "M17: Freigabe 21:10 mit LM, Einschlag 21:42",
-    "M18: Freigabe 22:00 mit LM, Einschlag 22:41",
-    "M19: Freigabe 22:50 mit MRS, Einschlag 23:25 – RoE: Schule im Wirkradius (77 m); Ortschaft: Wirkradius > 50 m (0 m)",
-    "M20: Freigabe 23:40 mit PZA FT, Einschlag 23:50",
-    "V5-M1: entfällt vor G3 24:00 (Ziel inzwischen zerstört oder weg)",
+    "M01: Freigabe 02:05 mit LM ×2, Einschlag 02:46",
+    "M02: Freigabe 03:00 mit LM ×2, Einschlag 03:31",
+    "M28: entfällt bei G3 03:55 (Ziel inzwischen getroffen oder weg)",
+    "M29: entfällt bei G1 03:40 (Ziel inzwischen zerstört oder weg)",
+    "M03: entfällt (Ziel schon zerstört oder weg)",
+    "V1-M1: Freigabe 05:55 mit LM ×2, Einschlag 06:35",
+    "M04: Freigabe 06:35 mit LM, Einschlag 07:18",
+    "M05: Freigabe 07:15 mit MRS, Einschlag 07:50",
+    "M06: Freigabe 08:15 mit LM, Einschlag 08:48",
+    "M07: Freigabe 09:15 mit LM ×3, Einschlag 09:49",
+    "M08: Freigabe 10:15 mit PZA, Einschlag 10:25",
+    "V2-M1: Freigabe 10:55 mit MRS, Einschlag 11:30",
+    "M30: entfällt vor G2 10:25 (Ziel inzwischen zerstört oder weg)",
+    "M09: entfällt (Ziel schon zerstört oder weg)",
+    "M25: G1 lehnt ab 11:20",
+    "M10: entfällt bei G1 11:55 (Ziel inzwischen zerstört oder weg)",
+    "M11: Freigabe 14:00 mit LM, Einschlag 14:36",
+    "M12: Freigabe 15:00 mit LM, Einschlag 15:33",
+    "V3-M1: Freigabe 15:55 mit LM ×3, Einschlag 16:31",
+    "M13: Freigabe 16:35 mit PZA ×3, Einschlag 16:45",
+    "M31: Freigabe 17:15 mit LM, Einschlag 17:55",
+    "M14: Freigabe 17:55 mit LM ×2, Einschlag 18:28",
+    "M15: Freigabe 18:35 mit PZA ×2, Einschlag 18:45",
+    "M32: Freigabe 19:15 mit LM, Einschlag 19:53",
+    "V4-M1: Freigabe 19:55 mit MRS, Einschlag 20:30",
+    "M16: Freigabe 20:35 mit PZA ×2, Einschlag 20:45",
+    "M17: Freigabe 21:15 mit MRS, Einschlag 21:50 – RoE: Schule im Wirkradius (60 m); Ortschaft: Wirkradius > 50 m (0 m)",
+    "M18: Freigabe 21:55 mit MRS, Einschlag 22:30 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M33: Freigabe 22:35 mit MRS, Einschlag 23:10",
+    "M35: Freigabe 23:15 mit PZA FT, Einschlag 23:25",
+    "M36: entfällt vor G2 22:45 (Ziel inzwischen zerstört oder weg)",
+    "M20: Freigabe 23:55 mit PZA ×3 FT, Einschlag 24:05",
+    "V5-M1: entfällt bei G2 24:05 (Ziel inzwischen zerstört oder weg)",
     "M21: bei Spielende noch offen",
+    "M34: entfällt vor G2 24:45 (Ziel inzwischen zerstört oder weg)",
+    "M23: entfällt vor G2 24:45 (Ziel inzwischen zerstört oder weg)",
+    "M24: G1 lehnt ab 23:05",
+    "M19: entfällt (Ziel schon zerstört oder weg)",
     "M22: bei Spielende noch offen",
-    "M23: entfällt vor G2 25:40 (Ziel inzwischen zerstört oder weg)",
-    "M24: G1 lehnt ab 23:10",
-    "M25: G1 lehnt ab 23:50",
-    "M26: bei Spielende noch offen",
+    "M26: entfällt (Ziel schon zerstört oder weg)",
     "M27: bei Spielende noch offen",
+    "E-01: Z-16 trifft Z-28 um 23:45",
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
     "D-03: aufgehalten (Z-14 zerstört)",
-    "D-04: bricht durch ab 23:33",
+    "D-04: aufgehalten (Z-27 zerstört)",
     "D-05: aufgehalten (Z-28 zerstört)",
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
@@ -7693,165 +8504,157 @@
    "verluste": {
     "zuege": {
      "zug1": {
-      "verlust": 374,
-      "kampfkraft": 62,
+      "verlust": 367,
+      "kampfkraft": 63,
       "verwundete": 12
      },
      "zug2": {
-      "verlust": 382,
-      "kampfkraft": 61,
-      "verwundete": 12
+      "verlust": 427,
+      "kampfkraft": 57,
+      "verwundete": 14
      },
      "zug3": {
-      "verlust": 348,
-      "kampfkraft": 65,
-      "verwundete": 11
+      "verlust": 386,
+      "kampfkraft": 61,
+      "verwundete": 12
      }
     },
     "kompanie": {
-     "kampfkraft": 63,
-     "verwundete": 35
+     "kampfkraft": 60,
+     "verwundete": 38
     },
-    "ereignisse": 390,
+    "ereignisse": 353,
     "meldungen": [
      {
       "inject": "K-01",
-      "t": 406.0,
+      "t": 399.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "2. Zug unter Panzerfeuer von den Feldern Nord, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-02",
-      "t": 569.0,
-      "zug": "zug2",
-      "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-03",
-      "t": 645.0,
+      "t": 665.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
-      "inject": "K-04",
-      "t": 710.0,
+      "inject": "K-03",
+      "t": 665.0,
       "zug": "zug2",
       "stufe": 0,
-      "text": "2. Zug unter Artilleriefeuer, 4 Verwundete. Stellung offenbar aufgeklärt!"
+      "text": "2. Zug unter Artilleriefeuer, 3 Verwundete. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-04",
+      "t": 847.0,
+      "zug": "zug2",
+      "stufe": 0,
+      "text": "2. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
      },
      {
       "inject": "K-05",
-      "t": 837.0,
-      "zug": "zug1",
-      "stufe": 0,
-      "text": "1. Zug unter Artilleriefeuer, 2 neue Verwundete. Halten Stellung."
-     },
-     {
-      "inject": "K-06",
-      "t": 888.0,
+      "t": 963.0,
       "zug": "zug2",
       "stufe": 0,
       "text": "2. Zug unter Panzerfeuer, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
+      "inject": "K-06",
+      "t": 1003.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
       "inject": "K-07",
       "t": 1038.0,
-      "zug": "zug2",
+      "zug": "zug1",
       "stufe": 0,
-      "text": "2. Zug unter Mörserfeuer vom Waldrand MARDER, 2 neue Verwundete. Mörser bekämpfen!"
+      "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-08",
-      "t": 1046.0,
-      "zug": "zug2",
-      "stufe": 1,
-      "text": "2. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-09",
-      "t": 1081.0,
+      "t": 1076.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
+      "inject": "K-09",
+      "t": 1104.0,
+      "zug": "zug2",
+      "stufe": 1,
+      "text": "2. Zug nur noch 65 %, 11 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+     },
+     {
       "inject": "K-10",
-      "t": 1106.0,
+      "t": 1130.0,
       "zug": "zug1",
       "stufe": 0,
       "text": "1. Zug unter Panzerfeuer von der Brücke Ost, 2 neue Verwundete. Panzer bekämpfen!"
      },
      {
       "inject": "K-11",
-      "t": 1134.0,
+      "t": 1166.0,
       "zug": "zug2",
       "stufe": 1,
-      "text": "2. Zug nur noch 69 %, 10 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
+      "text": "2. Zug nur noch 60 %, 13 Verwundete. Mörserfeuer vom Waldrand MARDER hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-12",
-      "t": 1171.0,
-      "zug": "zug3",
-      "stufe": 0,
-      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-13",
-      "t": 1186.0,
+      "t": 1181.0,
       "zug": "zug1",
       "stufe": 1,
       "text": "1. Zug nur noch 74 %, 8 Verwundete. Panzerfeuer von der Schule hält an. Panzer bekämpfen!"
      },
      {
-      "inject": "K-14",
-      "t": 1256.0,
+      "inject": "K-13",
+      "t": 1206.0,
       "zug": "zug3",
       "stufe": 0,
       "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
-      "inject": "K-15",
-      "t": 1284.0,
+      "inject": "K-14",
+      "t": 1244.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 70 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+      "text": "1. Zug nur noch 67 %, 10 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-15",
+      "t": 1276.0,
+      "zug": "zug3",
+      "stufe": 0,
+      "text": "3. Zug unter Mörserfeuer aus Hof RABE, 2 neue Verwundete. Mörser bekämpfen!"
      },
      {
       "inject": "K-16",
-      "t": 1320.0,
+      "t": 1298.0,
       "zug": "zug3",
       "stufe": 1,
       "text": "3. Zug nur noch 74 %, 8 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-17",
-      "t": 1345.0,
-      "zug": "zug2",
+      "t": 1358.0,
+      "zug": "zug3",
       "stufe": 1,
-      "text": "2. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer aus der Ortschaft hält an. Panzer bekämpfen!"
+      "text": "3. Zug nur noch 67 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
      },
      {
       "inject": "K-18",
-      "t": 1381.0,
-      "zug": "zug3",
-      "stufe": 1,
-      "text": "3. Zug nur noch 66 %, 11 Verwundete. Mörserfeuer aus Hof RABE hält an. Mörser bekämpfen!"
-     },
-     {
-      "inject": "K-19",
-      "t": 1440.9,
+      "t": 1385.0,
       "zug": "zug1",
       "stufe": 1,
-      "text": "1. Zug nur noch 62 %, 12 Verwundete. Feuer eingebrochener Kampffahrzeuge hält an. Binden mit Panzerabwehr."
+      "text": "1. Zug nur noch 63 %, 12 Verwundete. Panzerfeuer von der Brücke Ost hält an. Panzer bekämpfen!"
      }
     ],
     "texte": {
      "I-07": "3. Zug unter Mörserfeuer aus Hof RABE, 2 Verwundete. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 74 %. Sofort Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! Kp 63 %, 35 Verwundete. Wir binden ihn mit Panzerabwehr."
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff über den Bach steht bevor. 1. Zug 72 %. Sofort Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -7981,7 +8784,7 @@
      ],
      [
       375,
-      98,
+      97,
       1
      ],
      [
@@ -7992,7 +8795,7 @@
      [
       405,
       97,
-      1
+      2
      ],
      [
       420,
@@ -8011,7 +8814,7 @@
      ],
      [
       465,
-      97,
+      96,
       2
      ],
      [
@@ -8036,53 +8839,53 @@
      ],
      [
       540,
-      95,
+      96,
       3
      ],
      [
       555,
-      95,
+      96,
       3
      ],
      [
       570,
       95,
-      5
+      3
      ],
      [
       585,
-      94,
-      5
+      95,
+      4
      ],
      [
       600,
-      94,
-      5
+      95,
+      4
      ],
      [
       615,
-      94,
-      5
+      95,
+      4
      ],
      [
       630,
-      94,
-      5
+      95,
+      4
      ],
      [
       645,
-      93,
-      6
+      94,
+      4
      ],
      [
       660,
-      93,
-      6
+      94,
+      4
      ],
      [
       675,
       93,
-      6
+      5
      ],
      [
       690,
@@ -8096,88 +8899,88 @@
      ],
      [
       720,
-      92,
+      93,
       6
      ],
      [
       735,
-      91,
-      8
+      93,
+      6
      ],
      [
       750,
-      91,
-      8
+      93,
+      6
      ],
      [
       765,
-      91,
-      8
+      93,
+      6
      ],
      [
       780,
-      91,
-      8
+      93,
+      6
      ],
      [
       795,
-      91,
-      8
+      93,
+      6
      ],
      [
       810,
+      93,
+      6
+     ],
+     [
+      825,
+      92,
+      6
+     ],
+     [
+      840,
+      92,
+      6
+     ],
+     [
+      855,
       91,
       8
      ],
      [
-      825,
+      870,
+      91,
+      8
+     ],
+     [
+      885,
       90,
       8
      ],
      [
-      840,
-      90,
-      9
-     ],
-     [
-      855,
-      89,
-      9
-     ],
-     [
-      870,
-      89,
-      9
-     ],
-     [
-      885,
-      89,
-      9
-     ],
-     [
       900,
-      89,
-      10
+      90,
+      8
      ],
      [
       915,
-      89,
-      10
+      90,
+      8
      ],
      [
       930,
-      88,
-      10
+      90,
+      8
      ],
      [
       945,
-      88,
-      10
+      89,
+      9
      ],
      [
       960,
-      88,
-      10
+      89,
+      9
      ],
      [
       975,
@@ -8201,163 +9004,163 @@
      ],
      [
       1035,
-      86,
-      11
+      85,
+      14
      ],
      [
       1050,
-      85,
+      84,
       14
      ],
      [
       1065,
-      85,
-      14
+      83,
+      15
      ],
      [
       1080,
-      83,
-      14
-     ],
-     [
-      1095,
-      83,
+      82,
       16
      ],
      [
+      1095,
+      81,
+      18
+     ],
+     [
       1110,
-      82,
-      17
+      80,
+      18
      ],
      [
       1125,
-      80,
-      17
+      78,
+      21
      ],
      [
       1140,
-      79,
-      19
+      77,
+      21
      ],
      [
       1155,
-      79,
-      20
-     ],
-     [
-      1170,
-      77,
-      20
-     ],
-     [
-      1185,
       76,
       22
      ],
      [
-      1200,
-      75,
-      23
-     ],
-     [
-      1215,
+      1170,
       74,
-      25
+      24
      ],
      [
-      1230,
+      1185,
       73,
       25
      ],
      [
-      1245,
-      73,
-      25
-     ],
-     [
-      1260,
+      1200,
       72,
       26
      ],
      [
-      1275,
-      71,
-      26
+      1215,
+      70,
+      27
      ],
      [
-      1290,
-      70,
+      1230,
+      69,
       28
      ],
      [
-      1305,
+      1245,
       69,
       29
      ],
      [
-      1320,
-      69,
-      29
+      1260,
+      68,
+      31
      ],
      [
-      1335,
+      1275,
       67,
       31
      ],
      [
-      1350,
-      67,
-      31
-     ],
-     [
-      1365,
+      1290,
       66,
       32
      ],
      [
-      1380,
+      1305,
       65,
-      34
+      33
+     ],
+     [
+      1320,
+      64,
+      33
+     ],
+     [
+      1335,
+      63,
+      35
+     ],
+     [
+      1350,
+      63,
+      35
+     ],
+     [
+      1365,
+      62,
+      36
+     ],
+     [
+      1380,
+      61,
+      37
      ],
      [
       1395,
-      65,
-      34
+      61,
+      37
      ],
      [
       1410,
-      64,
-      34
+      61,
+      38
      ],
      [
       1425,
-      64,
-      34
+      61,
+      38
      ],
      [
       1440,
-      64,
-      34
+      61,
+      38
      ],
      [
       1455,
-      63,
-      35
+      61,
+      38
      ],
      [
       1470,
-      63,
-      35
+      60,
+      38
      ],
      [
       1485,
-      63,
-      35
+      60,
+      38
      ],
      [
       1500,
-      63,
-      35
+      60,
+      38
      ]
     ]
    }

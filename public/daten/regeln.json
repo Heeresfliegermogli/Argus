@@ -1,5 +1,5 @@
 {
-  "version": "2.3",
+  "version": "2.4",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -9,7 +9,11 @@
       "NICHT BEKÄMPFEN": "ARGUS erkennt Personen ohne Uniform oder Schutzzeichen im Umkreis des Ziels (Warnung, unabhängig von der Konfidenz)"
     },
     "klassifiziert_nur": "Tagsichtbild (EO). Sensordaten der Drohne (Wärmebild, Bewegungsverlauf, Spuren) fließen nicht in Klasse und Konfidenz ein.",
-    "unbekannt": "Erkennt ARGUS nichts (z. B. Bildstörung), meldet es „Ziel unbekannt“ oder „Fahrzeug unbekannt“ mit niedriger Konfidenz (UNKLAR)."
+    "unbekannt": "Erkennt ARGUS nichts (z. B. Bildstörung), meldet es „Ziel unbekannt“ oder „Fahrzeug unbekannt“ mit niedriger Konfidenz (UNKLAR).",
+    "klassen": "Seit 2.4 (E6.2): ARGUS meldet nur drei Klassen: Panzer (gepanzerte Fahrzeuge), Fahrzeug (ungepanzerte Fahrzeuge, auch zivile) und Infanterie (Personen, Mörsertrupps, Beobachter). Dazu die Zugehörigkeit: Feind ab der Schwelle PRÜFEN, darunter unbekannt.",
+    "zugehoerigkeit": {"feind_ab": 60, "werte": ["Feind", "unbekannt"]},
+    "eloka": "Seit 2.4 (E4): Solange ein EloKa-Fahrzeug (szenario.eloka) im Raum steht und nicht zerstört ist, ist der Datenlink gestört: Alle Drohnenbilder rauschen und haben Streifen, das Bildalter steigt, ARGUS ist unsicherer (Konfidenz − konfidenz_minus; darunter „unbekannt“). Maßgeblich ist der Stand zur Meldezeit; Zerstören stellt das Bild sofort wieder her.",
+    "bildalter_s": 3
   },
   "fast_track": {
     "schwelle": 90,
@@ -24,10 +28,10 @@
       "stufe": "G1",
       "aktionen": ["ANNEHMEN", "ABLEHNEN"],
       "sieht": [
-        "Drohnenbild mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung)",
-        "ARGUS-Klasse, Konfidenz, Empfehlung",
-        "Sensordaten mit Bildalter",
-        "PQ, Uhrzeit"
+        "Drohnenbild mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung), Lupe",
+        "ARGUS: Klasse (Panzer, Fahrzeug, Infanterie), Zugehörigkeit, Konfidenz, Empfehlung",
+        "Bildalter",
+        "Ziel-Nr."
       ]
     },
     {
@@ -35,7 +39,7 @@
       "aktionen": ["BEKÄMPFEN mit <Wirkmittel>", "BEOBACHTEN (zurückstellen)", "NICHT BEKÄMPFEN"],
       "zusatz": "Begründung (1 Zeile)",
       "sieht": [
-        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz",
+        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz; bei Zügen ×n",
         "Lagekarte mit Zonen, Spuren der gemeldeten Ziele, Wirkradius-Vorschau am vorausberechneten Einschlagort",
         "Wirkmittelbestand"
       ]
@@ -84,14 +88,15 @@
     "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Die Warnung gilt für den vorausberechneten Einschlagort. Jeder Verstoß wird protokolliert."
   },
   "wirkung": {
-    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (bei Zugmeldungen dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, PzAbw ca. 10 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
+    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (seit 2.4 bei Zugmeldungen je Fahrzeug, siehe zug; Mörser dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, PzAbw ca. 10 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
     "begruendung": "Fahrzeuge bewegen sich während der Flugzeit weiter. Wer freigibt, verantwortet auch, wo die Wirkung tatsächlich einschlägt: Ein Ziel kann während des Anflugs an der Schule vorbeifahren oder Zivilpersonen können in den Wirkradius kommen.",
     "vorhersage": "Die Warnungen bei G2 und G3 rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
     "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
     "hintergrund": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
     "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
     "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren.",
-    "praezision": "Präzisionswirkmittel (Loitering Munition, katalog_wirkmittel: nur_zielfahrzeug) treffen genau das bekämpfte Fahrzeug: Andere Fahrzeuge im Wirkradius bleiben stehen. Personen im Wirkradius sind betroffen; R2, R3 und die Warnungen gelten wie bei jedem Wirkmittel. Der Mörser trifft weiter alles im Wirkradius."
+    "praezision": "Präzisionswirkmittel (Loitering Munition, katalog_wirkmittel: nur_zielfahrzeug) treffen genau das bekämpfte Fahrzeug: Andere Fahrzeuge im Wirkradius bleiben stehen. Personen im Wirkradius sind betroffen; R2, R3 und die Warnungen gelten wie bei jedem Wirkmittel. Der Mörser trifft weiter alles im Wirkradius.",
+    "zug": "Seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug. Loitering Munition: 1 LM je noch stehendem Fahrzeug (der Bestand sinkt um n; reicht er nicht, werden nur so viele Fahrzeuge bekämpft, wie LM da sind – Warnung „nur k von n“). Panzerabwehr: ein Schuss je Fahrzeug nacheinander. Mörser: ein Einschlag am ersten Fahrzeug, getroffen ist alles im Wirkradius. Jeder Einschlag schlägt am Ort seines Fahrzeugs zum Einschlagzeitpunkt ein; Warnungen gelten für jeden Einschlag."
   },
   "kennzahlen": [
     {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},
@@ -108,18 +113,19 @@
   ],
   "eigene_kraefte": "Seit 2.3 steht die 2. Kompanie mit drei Zügen am Westrand der Karte (szenario.eigene_truppe). Ein Sicherheitsabstand wird nicht geprüft; Wirkungen liegen alle östlich des Bachs.",
   "verluste": {
-    "hinweis": "Verlustmodell der eigenen Kompanie (seit 2.3, D2). Ganzzahlig in Promille Kampfkraft je Zug. Ein Schuss zählt, wenn der Schütze dann noch steht (im Raum, nicht zerstört, Feind und legitim); der Schaden kommt verzug_s später an der Stellung an. waffen je Fahrzeugtyp: art steil (Mörser, nur nach feuert, Zug aus feuert[].auf) oder direkt (im Halt seit feuerbereit_s, alle takt_s auf den nächsten Zug in reichweite_m; Fahrzeuge mit feuert nur nach feuert). Feindartillerie je Einschlag auf den nächsten Zug in radius_m. Attrappe und Durchbruch siehe szenario.verluste. Untergrenze je Zug (die Kompanie hält immer), Verwundete = Verlust / promille_je_verwundeter. Meldungen: Regeln der Druckmeldungen (D3).",
+    "hinweis": "Verlustmodell der eigenen Kompanie (seit 2.3, D2). Ganzzahlig in Promille Kampfkraft je Zug. Ein Schuss zählt, wenn der Schütze dann noch steht (im Raum, nicht zerstört, Feind und legitim); der Schaden kommt verzug_s später an der Stellung an. waffen je Fahrzeugtyp: art steil (Mörser, nur nach feuert, Zug aus feuert[].auf) oder direkt (im Halt seit feuerbereit_s, alle takt_s auf den nächsten Zug in reichweite_m; Fahrzeuge mit feuert nur nach feuert). Feindartillerie je Einschlag auf den nächsten Zug in radius_m. Attrappe und Durchbruch siehe szenario.verluste. Untergrenze je Zug (die Kompanie hält immer), Verwundete = Verlust / promille_je_verwundeter. Meldungen: Regeln der Druckmeldungen (D3). Seit 2.4 (E2): art beobachter – ein Beobachter (S7) lenkt Artilleriefeuer nach feuert auf feuert[].auf, Schaden verzug_s.beobachter nach dem „Schuss“ (Feuerkommando); Werte neu kalibriert (Drehbuch, Abschnitt 9).",
     "untergrenze_prozent": 40,
     "promille_je_verwundeter": 30,
     "schwellen_prozent": [75, 55],
-    "verzug_s": {"direkt": 4, "steil": 20},
+    "verzug_s": {"direkt": 4, "steil": 20, "beobachter": 25},
     "waffen": {
       "kpz_t72": {"art": "direkt", "promille": 3, "takt_s": 20, "feuerbereit_s": 10, "reichweite_m": 800},
       "spz_bmp2": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 800},
       "spw_btr80": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 600},
-      "moerser_trupp": {"art": "steil", "promille": 6, "reichweite_m": 3000}
+      "moerser_trupp": {"art": "steil", "promille": 7, "reichweite_m": 3000},
+      "beobachter_trupp": {"art": "beobachter", "promille": 5, "reichweite_m": 3000}
     },
-    "feindartillerie": {"promille": 3, "radius_m": 70},
+    "feindartillerie": {"promille": 4, "radius_m": 70},
     "attrappe": {"promille": 6},
     "durchbruch": {"promille": 25},
     "versatz_m": [[0, 0], [8, -6], [-7, 5], [5, 9], [-9, -7], [11, 3], [-4, 11], [3, -10]],
@@ -131,5 +137,10 @@
       "fenster_s": 60,
       "sofort": ["attrappe"]
     }
-  }
+  },
+  "spielleitung": {
+    "verstaerkung_menue": false,
+    "hinweis": "Seit 2.4 (E1): Das Menü „Verstärkung“ in Übersicht und Teamansicht der Spielleitung ist ausgeblendet; der Druck kommt aus dem Drehbuch selbst, damit alle Teams gleich spielen. Der Code bleibt, true blendet es wieder ein."
+  },
+  "sensordaten": "Seit 2.4 (E6.3): Sensordaten und Infrarot entfallen für die Spieler. Ob etwas fährt, zeigt das Live-Drohnenbild; was bisher nur in den Sensordaten stand, ist im Bild erkennbar (meldungen[].bild.merkmale). meldungen[].sensor bleibt für Spielleitung und Drehbuch."
 }

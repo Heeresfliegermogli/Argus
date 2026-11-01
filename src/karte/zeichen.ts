@@ -42,11 +42,13 @@ export const GT_ZUGEHOERIGKEIT: Record<GtKategorie, Zugehoerigkeit> = {
  * (Katalog symbol.einheit) mit Größenangabe nach APP-6 (●● Halbzug/Trupp, ●●● Zug; Katalog groesse_nach_anzahl).
  */
 export function zeichenArgus(inh: Inhalte, klasse: string, konfidenz: number, status: ZeichenStatus = "P", anzahl = 1): string {
-  if (konfidenz < inh.regeln.argus.schwellen.pruefen) return sidc("U", FUNKTION_ALLGEMEIN, { status });
-  const typ = Object.values(inh.fahrzeuge).find((f) => f.argus_klasse === klasse);
-  const einheit = typ?.symbol?.einheit;
+  if (konfidenz < inh.regeln.argus.schwellen.pruefen || klasse === "unbekannt") return sidc("U", FUNKTION_ALLGEMEIN, { status });
+  // seit 2.4 (E6.2): drei Klassen mit eigenem Zeichen im Katalog (Panzer, Fahrzeug, Infanterie); ältere Kataloge: erster Typ der Klasse
+  const k = inh.klassen?.[klasse];
+  const typ = k ? undefined : Object.values(inh.fahrzeuge).find((f) => f.argus_klasse === klasse);
+  const einheit = k ? k.einheit : typ?.symbol?.einheit;
   if (anzahl >= 2 && einheit) return sidc("H", einheit, { status, groesse: groesseNachAnzahl(inh, anzahl) });
-  return sidc("H", funktionVon(typ), { status });
+  return sidc("H", k ? k.sidc : funktionVon(typ), { status });
 }
 
 /** Größenangabe (APP-6) für n Fahrzeuge: aus dem Katalog, sonst 2 → C (●●), ab 3 → D (●●●). */

@@ -13,7 +13,7 @@ interface Referenz {
   zonen: { p: Punkt; zone: string; abstand: number }[];
   einschlaege: {
     meldung: string; t_freigabe: number; wm: string; t: number; pos: Punkt; ziel: string; zulaessig: boolean;
-    verstoesse: [string, string | null, number | null][]; getroffen: string[];
+    verstoesse: [string, string | null, number | null][]; getroffen: string[]; teile?: [number, number, number, string][];
   }[];
   zerstoert_hintergrund: Record<string, number>;
 }
@@ -112,6 +112,14 @@ describe("Trefferregel beim Einschlag wie argus_lib.py (einschlag, wirkung)", ()
       expect(v.pruefung.zulaessig, ort).toBe(f.zulaessig);
       expect(v.pruefung.verstoesse.map((x) => x.regel), ort).toEqual(f.verstoesse.map((x) => x[0]));
       expect(v.getroffen.map((g) => `${g.ziel}|${g.kategorie}`).sort(), ort).toEqual(f.getroffen);
+      // seit 2.4 (E3): je Fahrzeug eines Zuges ein Einschlag (LM, PzAbw), Mörser einer
+      if (f.teile) {
+        expect(v.teile.length, `${ort} Einschläge`).toBe(f.teile.length);
+        v.teile.forEach((x, i) => {
+          expect(x.einschlag.t, `${ort} #${i}`).toBeCloseTo(f.teile![i][0], 6);
+          expect(x.einschlag.ziel, `${ort} #${i}`).toBe(f.teile![i][3]);
+        });
+      }
     }
   });
 

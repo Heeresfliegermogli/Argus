@@ -164,9 +164,92 @@ export function wirkungBeimEinschlag(inh: Inhalte, e: Einschlag, wmId: string, z
   return { einschlag: e, pruefung, getroffen };
 }
 
-/** Vorhersage für eine Freigabe zur Zeit tFreigabe: Einschlag, Regelprüfung dort und Treffer (Warnungen G2/G3). */
-export function vorhersage(inh: Inhalte, m: Meldung, wmId: string, tFreigabe: number, zerstoert: Record<string, number> = {}): Wirkungsergebnis {
-  return wirkungBeimEinschlag(inh, einschlag(inh, m.ziele, wmId, tFreigabe, zerstoert), wmId, zerstoert);
+// ---------------------------------------------------------------- Zug-Bekämpfung (seit Szenario 2.4, E3)
+
+/** Wie BEKÄMPFEN auf einen Zug wirkt: „je_fahrzeug“ (LM, PzAbw) oder „flaeche“ (Mörser; ohne Angabe). */
+export function zugArt(wm: Wirkmittel | undefined): "je_fahrzeug" | "flaeche" {
+  return wm?.zug?.art ?? "flaeche";
+}
+
+/** Fahrzeuge der Meldung, die zur Zeit t im Raum und nicht zerstört sind (Reihenfolge der Meldung). */
+export function stehende(inh: Inhalte, ziele: string[], t: number, zerstoert: Record<string, number> = {}): string[] {
+  return ziele.filter((id) => inh.ziele[id] && vorhanden(inh.ziele[id], t) && !((zerstoert[id] ?? Infinity) <= t));
+}
+
+/**
+ * Alle Einschläge einer Freigabe (wie argus_lib.einschlaege): Fläche (Mörser) ein Einschlag wie einschlag(); je Fahrzeug
+ * (LM, PzAbw) ein Schuss je bei der Freigabe noch stehendem Fahrzeug, der i-te startet zug.abstand_s · i nach der Freigabe.
+ * bestand (endlich): höchstens so viele Fahrzeuge, wie Munition da ist (mindestens eines).
+ */
+export function einschlaege(
+  inh: Inhalte, ziele: string[], wmId: string, tFreigabe: number, zerstoert: Record<string, number> = {}, bestand: number | null = null,
+): Einschlag[] {
+  const wm = inh.wirkmittel[wmId];
+  if (zugArt(wm) !== "je_fahrzeug") return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)];
+  let kand = stehende(inh, ziele, tFreigabe, zerstoert);
+  if (!kand.length) return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)];
+  if (bestand !== null) kand = kand.slice(0, Math.max(1, bestand));
+  const abstand = wm.zug?.abstand_s ?? 0;
+  return kand.map((id, i) => {
+    const z0 = inh.ziele[id];
+    const t0 = tFreigabe + i * abstand;
+    let t = t0 + flugzeit(wm, position(z0, t0));
+    for (let k = 0; k < 4; k++) t = t0 + flugzeit(wm, position(z0, t));
+    return { t, pos: position(z0, t), ziel: id };
+  });
+}
+
+/** Ergebnis einer Freigabe über alle Einschläge (Zug): erster Einschlag, Prüfung und Treffer zusammengefasst, je Einschlag einzeln. */
+export interface ZugWirkung extends Wirkungsergebnis {
+  /** je Einschlag (nacheinander gerechnet: ein Fahrzeug, das ein früherer Einschlag zerstört hat, zählt beim nächsten als Wrack) */
+  teile: Wirkungsergebnis[];
+  /** Fahrzeuge der Meldung, die bei der Freigabe noch stehen */
+  n: number;
+  /** davon bekämpft (je Fahrzeug: höchstens der Bestand; Fläche: 1) */
+  k: number;
+}
+
+/** Treffer zusammenfassen: ein Eintrag je Ziel und Art (Fahrzeug/Attrappe bzw. Personenart). */
+export function trefferVereint(liste: Treffer[]): Treffer[] {
+  const out: Treffer[] = [];
+  const gesehen = new Set<string>();
+  for (const g of liste) {
+    const k = `${g.ziel}|${g.was === "personen" ? "p" : "f"}|${g.kategorie}`;
+    if (gesehen.has(k)) continue;
+    gesehen.add(k);
+    out.push(g);
+  }
+  return out;
+}
+
+/** Was eine Freigabe mit allen ihren Einschlägen trifft (wie argus_lib.wirkung seit 2.4). */
+export function wirkungZug(inh: Inhalte, e: Einschlag[], wmId: string, zerstoert: Record<string, number> = {}, n = e.length): ZugWirkung {
+  const zer = { ...zerstoert };
+  const teile = e.map((x) => {
+    const w = wirkungBeimEinschlag(inh, x, wmId, zer);
+    for (const g of w.getroffen) if (g.was !== "personen") zer[g.ziel] = Math.min(zer[g.ziel] ?? Infinity, x.t);
+    return w;
+  });
+  const verstoesse: Verstoss[] = [];
+  for (const w of teile) for (const v of w.pruefung.verstoesse) if (!verstoesse.some((x) => x.regel === v.regel && x.text === v.text)) verstoesse.push(v);
+  const getroffen = trefferVereint(teile.flatMap((w) => w.getroffen));
+  return {
+    einschlag: teile[0].einschlag,
+    pruefung: { zulaessig: teile.every((w) => w.pruefung.zulaessig), verstoesse, getroffen: trefferVereint(teile.flatMap((w) => w.pruefung.getroffen)) },
+    getroffen, teile, n, k: e.length,
+  };
+}
+
+/**
+ * Vorhersage für eine Freigabe zur Zeit tFreigabe (Warnungen G2/G3): alle Einschläge (seit 2.4 je Fahrzeug eines Zuges),
+ * Regelprüfung und Treffer dort. bestand: Restbestand des Wirkmittels (null = unbegrenzt).
+ */
+export function vorhersage(
+  inh: Inhalte, m: Meldung, wmId: string, tFreigabe: number, zerstoert: Record<string, number> = {}, bestand: number | null = null,
+): ZugWirkung {
+  const e = einschlaege(inh, m.ziele, wmId, tFreigabe, zerstoert, bestand);
+  const n = zugArt(inh.wirkmittel[wmId]) === "je_fahrzeug" ? Math.max(1, stehende(inh, m.ziele, tFreigabe, zerstoert).length) : 1;
+  return wirkungZug(inh, e, wmId, zerstoert, n);
 }
 
 export function trefferText(t: Treffer): string {

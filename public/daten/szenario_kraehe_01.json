@@ -2,7 +2,7 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.3",
+  "version": "2.4",
   "stand": "2026-11-01",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
@@ -25,28 +25,28 @@
       "name": "Gefechtsaufklärung",
       "von_s": 300,
       "bis_s": 660,
-      "absicht": "Feuervorbereitung auf die 2. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch."
+      "absicht": "Feuervorbereitung auf die 2. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch. Ab 10:00 stört ein EloKa-Fahrzeug den Datenlink: Alle Bilder rauschen, ARGUS wird unsicherer, bis es zerstört ist oder verlegt."
     },
     {
       "nr": 3,
       "name": "Bergung",
       "von_s": 660,
       "bis_s": 840,
-      "absicht": "Ein BTR-80 sichert, das Sanitätsfahrzeug holt die Verwundeten des Zuges 60 m vor der Schule ab (S2)."
+      "absicht": "Ein BTR-80 sichert, das Sanitätsfahrzeug holt die Verwundeten des Zuges 60 m vor der Schule ab (S2). Der Störsender verlegt um 12:40 nach Osten, wenn er nicht vorher bekämpft wurde."
     },
     {
       "nr": 4,
       "name": "Hauptangriff",
       "von_s": 840,
       "bis_s": 1200,
-      "absicht": "Fast-Track-Angebot (I-05), Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf drei Achsen: NORD über die Felder Richtung Furt Nord, ORT durch den Nordteil der Ortschaft, SÜD über die Felder südlich der Ortschaft an der Schule vorbei zur Brücke. Der Mörser im Hof RABE unterstützt (S4), ein BMP-2 der Achse SÜD sucht Deckung an der Schule (N4). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04)."
+      "absicht": "Fast-Track-Angebot (I-05), Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf drei Achsen (NORD, ORT, SÜD). Ein Beobachter im Kirchturm lenkt Artillerie auf den 2. Zug (S7), ein SPz versteckt sich hinter Zivilpersonen (S5), ein Kamerateam filmt eine Reservekolonne (S8), der Mörser im Hof RABE unterstützt (S4), ein BMP-2 sucht Deckung an der Schule (N4), am Ostufer liegen Verwundete (S6). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04)."
     },
     {
       "nr": 5,
       "name": "Krise und Gegenangriff",
       "von_s": 1200,
       "bis_s": 1500,
-      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 2. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1)."
+      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 2. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1). Eine Familie flieht im Pkw an der Kolonne vorbei (S8); die Bewohner verlassen das Haus am Schutzschild-SPz (S5)."
     }
   ],
   "vorbild": {
@@ -78,7 +78,8 @@
     "name": "ARGUS 3.2",
     "beschreibung": "KI-gestütztes Zielerkennungssystem (fiktiv). Wertet die Bilder der Aufklärungsdrohne UAV-2 „Milan“ aus, erkennt Fahrzeuge, ordnet sie einer Klasse zu, nennt eine Konfidenz und gibt eine Empfehlung.",
     "herstellerangabe": "Erkennungsgenauigkeit 94 % im Truppenversuch.",
-    "kleingedrucktes": "Trainiert überwiegend auf Aufnahmen russischer Fahrzeugtypen und auf Simulatordaten. Die Konfidenz ist keine Trefferwahrscheinlichkeit. ARGUS wertet nur das Tagsichtbild aus; Wärmebild, Bewegungsverlauf und Spuren fließen nicht in die Klassifizierung ein."
+    "kleingedrucktes": "Trainiert überwiegend auf Aufnahmen russischer Fahrzeugtypen und auf Simulatordaten. Die Konfidenz ist keine Trefferwahrscheinlichkeit. ARGUS wertet nur das Tagsichtbild aus; Wärmebild, Bewegungsverlauf und Spuren fließen nicht in die Klassifizierung ein.",
+    "kleingedrucktes_kurz": "ARGUS 3.2: trainiert überwiegend auf russischen Fahrzeugtypen und Simulatordaten; die Konfidenz ist keine Trefferwahrscheinlichkeit."
   },
   "lage": {
     "plenum": {
@@ -94,9 +95,9 @@
     "G1": {
       "titel": "G1 Aufklärung",
       "absaetze": [
-        "Du siehst jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung, Klasse, Konfidenz, Empfehlung und die Sensordaten der Drohne. Wolken, Rauch und Bewuchs verdecken oft Teile des Bildes. Zugweise Meldungen fassen mehrere Fahrzeuge zusammen (z. B. 3× T-72).",
-        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an G2) oder ABLEHNEN.",
-        "G2 und G3 sehen nur deine Zielmeldung, nicht das Bild und nicht die Sensordaten."
+        "Du siehst jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung und was ARGUS meldet – Klasse (Panzer, Fahrzeug oder Infanterie), Zugehörigkeit, Konfidenz und Empfehlung. Mit der Lupe prüfst du das Bild. Wolken, Rauch und Bewuchs verdecken oft Teile davon.",
+        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an die Zielprüfung) oder ABLEHNEN.",
+        "Die Zielprüfung und Führung sehen nur deine Zielmeldung, nicht das Bild."
       ]
     },
     "G2": {
@@ -104,7 +105,7 @@
       "absaetze": [
         "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse und Konfidenz. Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene 2. Kompanie liegt mit drei Zügen am Westrand der Karte (blau).",
         "Du prüfst die Einsatzregeln R2 und R3, wählst ein Wirkmittel (Mörser, Loitering Munition oder Panzerabwehr) und gibst G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
-        "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt."
+        "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt. Bei einem Zug wirkt BEKÄMPFEN auf alle Fahrzeuge: LM und Panzerabwehr je Fahrzeug, der Mörser als Fläche."
       ]
     },
     "G3": {
@@ -431,7 +432,8 @@
         "kategorie": "feind",
         "text": "KPz T-72 der Achse ORT, fährt durch die Ortschaft Richtung Brücke.",
         "legitim": true
-      }
+      },
+      "gruppe": "Z-14–46"
     },
     {
       "id": "Z-15",
@@ -499,7 +501,8 @@
         "text": "SPz BMP-2 der Achse SÜD. Fährt über die Felder südlich der Ortschaft an der Schule vorbei zur Brücke ELSTER Ost und schießt von dort auf die 2. Kp.",
         "legitim": true
       },
-      "feuert": [{"von_s": 988, "bis_s": 1210, "takt_s": 3, "salve": 3, "pause_s": 18}]
+      "feuert": [{"von_s": 988, "bis_s": 1210, "takt_s": 3, "salve": 3, "pause_s": 18}],
+      "gruppe": "Z-18–47"
     },
     {
       "id": "Z-19",
@@ -554,7 +557,8 @@
         "text": "KPz T-72 der Achse SÜD. Fährt zwischen Ortschaft und Schule nach Westen und sammelt ab 10:19:05 an der Brücke ELSTER Ost (bei der Meldung ca. 75 m vom Schulgelände).",
         "legitim": true,
         "hinweis": "Gegenstück zum Sanitätsfahrzeug: gleiche Lage zur Schule, aber echtes Ziel. Mit LM regelkonform bekämpfbar."
-      }
+      },
+      "gruppe": "Z-20–48"
     },
     {
       "id": "Z-21",
@@ -567,7 +571,8 @@
         "text": "SPz BMP-2, fährt um 10:18:40 durch den Wald DACHS in eine Lauerstellung am Waldrand, kommt um 10:20:30 heraus und sichert die Flanke der Feindkräfte, die sich an der Brücke sammeln.",
         "legitim": true
       },
-      "kein_durchbruch": "Flankensicherung am Waldrand DACHS"
+      "kein_durchbruch": "Flankensicherung am Waldrand DACHS",
+      "gruppe": "Z-21–49"
     },
     {
       "id": "Z-22",
@@ -611,12 +616,18 @@
       "typ": "eloka_lkw",
       "pos": [985, 250],
       "hdg": -90,
-      "bewegung": {"route": [[1236, 1010, 308], [1239.6, 985, 312], [1261.9, 985, 250]]},
+      "bewegung": {
+        "route": [
+          [600, 1010, 308], [603.6, 985, 312], [625.9, 985, 250], [760, 985, 250], [764, 995, 248], [768, 1010, 245]
+        ]
+      },
       "gt": {
         "kategorie": "feind",
-        "text": "Störsender auf Lkw, fährt um 10:20:40 vom Ostrand ins Feld, steht ab 10:21:10 und stört den Drohnen-Datenlink.",
-        "legitim": true
-      }
+        "text": "Störsender auf Lkw (EloKa): fährt um 10:00 vom Ostrand ins Feld, stört ab dann den Datenlink der Drohne und verlegt um 12:40 wieder nach Osten. Solange er im Raum steht, sind alle Drohnenbilder gestört und ARGUS ist unsicherer.",
+        "legitim": true,
+        "hinweis": "Seit 2.4 (E4): Zerstören stellt die Bilder sofort wieder her. Bewusst zwischen S1 und S2 gelegt: kein Schlüsselfall wird überdeckt."
+      },
+      "bis_s": 768
     },
     {
       "id": "Z-24",
@@ -657,8 +668,8 @@
     {
       "id": "Z-25",
       "typ": "lkw_ural",
-      "pos": [828, 338],
-      "hdg": -10,
+      "pos": [910, 324],
+      "hdg": 352,
       "bewegung": {
         "route": [
           [1250, 1010, 308], [1253.8, 979, 313], [1257.7, 947, 318], [1261.5, 916, 324], [1265.4, 884, 329],
@@ -676,14 +687,14 @@
     {
       "id": "Z-26",
       "typ": "spaehpz_brdm2",
-      "pos": [701, 87],
+      "pos": [704, 70],
       "hdg": 282,
       "bewegung": {
         "route": [
           [1003, 722, -10], [1007.6, 715, 21], [1012, 709, 51], [1016.6, 702, 82], [1021, 695, 112],
           [1025.6, 686, 143], [1030, 676, 172], [1034.6, 666, 202], [1039.2, 655, 232], [1043.6, 648, 262],
-          [1438, 648, 262], [1441.5, 655, 234], [1445, 664, 206], [1448.5, 674, 179], [1451.9, 683, 152],
-          [1455.4, 692, 124], [1458.9, 699, 96], [1462.3, 705, 68], [1465.7, 711, 40], [1500, 711, 40]
+          [1446, 648, 262], [1449.5, 655, 234], [1453, 664, 206], [1456.5, 674, 179], [1459.9, 683, 152],
+          [1463.4, 692, 124], [1466.9, 699, 96], [1470.3, 705, 68], [1473.7, 711, 40], [1500, 711, 40]
         ]
       },
       "gt": {
@@ -901,6 +912,249 @@
         "legitim": true,
         "text": "Spähpanzer BRDM-2 mit vorgeschobenem Beobachter: kommt um 10:08:45 über die Nordstraße, lenkt vom Nordrand der Ortschaft das Feuer der Feindartillerie auf die 2. Kp und zieht sich um 10:10 mit dem Rückzug des verstärkten Zuges nach Norden zurück."
       }
+    },
+    {
+      "id": "Z-46",
+      "typ": "kpz_t72",
+      "pos": [899, 327],
+      "hdg": 171,
+      "bewegung": {
+        "route": [
+          [888, 1010, 308], [895.5, 979, 313], [903, 948, 318], [910.6, 917, 324], [918.1, 886, 329],
+          [925.6, 855, 334], [933.1, 824, 339], [940.6, 793, 344], [948.2, 762, 350], [955.7, 731, 355],
+          [983.3, 731, 355], [990.9, 700, 361], [1002.5, 655, 360], [1014.6, 605, 350], [1028.0, 550, 325]
+        ]
+      },
+      "gt": {
+        "kategorie": "feind",
+        "text": "KPz T-72 der Achse ORT, fährt durch die Ortschaft Richtung Brücke (zweites Fahrzeug, folgt Z-14).",
+        "legitim": true
+      },
+      "gruppe": "Z-14–46"
+    },
+    {
+      "id": "Z-47",
+      "typ": "spz_bmp2",
+      "pos": [480, 422],
+      "hdg": -173,
+      "bewegung": {
+        "route": [
+          [834, 1010, 390], [861.6, 905, 412], [889, 800, 431], [903.1, 745, 432], [914.7, 700, 431], [925, 660, 434],
+          [935.4, 620, 439], [945.7, 580, 440], [956.1, 540, 434], [965.4, 505, 425], [971.9, 480, 422],
+          [1506, 480, 422]
+        ]
+      },
+      "gt": {"kategorie": "feind", "text": "SPz BMP-2 der Achse SÜD (zweites Fahrzeug, folgt Z-18).", "legitim": true},
+      "gruppe": "Z-18–47",
+      "kein_durchbruch": "Feuerunterstützung am Übergang (Brücke Ost)"
+    },
+    {
+      "id": "Z-48",
+      "typ": "kpz_t72",
+      "pos": [560, 430],
+      "hdg": 187,
+      "bewegung": {
+        "route": [
+          [1029, 1010, 354], [1054.8, 905, 378], [1080.5, 800, 399], [1093.7, 745, 400], [1104.5, 700, 399],
+          [1114.1, 660, 402], [1123.8, 620, 407], [1133.4, 580, 408], [1140.6, 560, 430]
+        ]
+      },
+      "gt": {
+        "kategorie": "feind",
+        "text": "KPz T-72 der Achse SÜD (zweites Fahrzeug, folgt Z-20).",
+        "legitim": true,
+        "hinweis": "Gegenstück zum Sanitätsfahrzeug: gleiche Lage zur Schule, aber echtes Ziel. Mit LM regelkonform bekämpfbar."
+      },
+      "gruppe": "Z-20–48",
+      "kein_durchbruch": "Feuerunterstützung am Übergang (Brücke Ost)"
+    },
+    {
+      "id": "Z-49",
+      "typ": "spz_bmp2",
+      "pos": [790, 580],
+      "hdg": 197,
+      "bewegung": {"route": [[1123, 1010, 605], [1175, 880, 600], [1190, 842, 596], [1235, 842, 596], [1255, 790, 580]]},
+      "gt": {
+        "kategorie": "feind",
+        "text": "SPz BMP-2, fährt um 10:18:40 durch den Wald DACHS in eine Lauerstellung am Waldrand, kommt um 10:20:30 heraus und sichert die Flanke der Feindkräfte, die sich an der Brücke sammeln (zweites Fahrzeug, folgt Z-21).",
+        "legitim": true
+      },
+      "kein_durchbruch": "Flankensicherung am Waldrand DACHS",
+      "gruppe": "Z-21–49"
+    },
+    {
+      "id": "Z-41",
+      "typ": "spz_bmp2",
+      "pos": [703, 372],
+      "hdg": 180,
+      "bewegung": {
+        "route": [
+          [860, 1010, 308], [864.4, 980, 313], [868.8, 950, 318], [873, 921, 323], [877.4, 891, 328],
+          [881.8, 861, 333], [886.2, 831, 338], [890.6, 801, 343], [894.8, 772, 348], [899.2, 742, 353],
+          [903.6, 712, 359], [909.3, 703, 372]
+        ]
+      },
+      "personen": [
+        {
+          "art": "zivil",
+          "anzahl": 5,
+          "klein": 2,
+          "text": "Bewohner, vom Feind vor das Haus gezwungen",
+          "pos": [703, 379],
+          "ab_s": 925,
+          "bis_s": 1230,
+          "bewegung": {"route": [[925, 703, 379], [1170, 703, 379], [1182, 690, 382], [1222, 640, 389]]}
+        }
+      ],
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "SPz BMP-2 der Achse ORT, steht bewusst vor einem Wohnhaus an der Hauptstraße; die Bewohner (fünf Zivilpersonen, darunter zwei Kinder) stehen vor der Hauswand keine 10 m daneben. Feuert von dort auf den 2. Zug. Um 19:30 gehen die Bewohner ins Nachbarhaus.",
+        "hinweis": "Menschliche Schutzschilde: Der Missbrauch entbindet nicht von Verhältnismäßigkeit und Vorsicht. Mörser nie (Ortschaft); LM nur, wenn beim Einschlag niemand im Wirkradius ist – also warten, bis die Personen weg sind (Folgemeldung).",
+        "bezug": "Art. 51 Abs. 7 und 8 ZP I, Art. 57 ZP I"
+      },
+      "verlust_promille": 5,
+      "feuert": [{"von_s": 930, "bis_s": 1500, "takt_s": 6, "salve": 2, "pause_s": 18, "auf": "zug2"}],
+      "kein_durchbruch": "hält vor dem Wohnhaus (Schutzschild)"
+    },
+    {
+      "id": "Z-42",
+      "typ": "beobachter_trupp",
+      "pos": [761, 370],
+      "hdg": 190,
+      "ab_s": 0,
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "Feindlicher Artilleriebeobachter (2 Soldaten mit Fernglas und Funkgerät) auf der Plattform des Kirchturms in KRÄHE, seit der Nacht dort. Lenkt ab 14:30 das Artilleriefeuer auf den 2. Zug.",
+        "hinweis": "Die Kirche ist Kulturgut, verliert den Schutz aber durch die militärische Nutzung (Beobachtungsposten). Der Mörser träfe die Ortschaft und die Kirche (R3) – zulässig und verhältnismäßig ist nur die LM auf die Turmplattform.",
+        "bezug": "Art. 53 und 52 Abs. 2 ZP I, Haager Konvention 1954 (Art. 4, 11)"
+      },
+      "feuert": [{"von_s": 870, "bis_s": 1500, "takt_s": 8, "salve": 2, "pause_s": 34, "auf": "zug2"}],
+      "kein_durchbruch": "Beobachtungsposten im Kirchturm"
+    },
+    {
+      "id": "Z-43",
+      "typ": "pkw_presse",
+      "pos": [925, 355],
+      "hdg": 300,
+      "bewegung": {
+        "route": [[935, 1010, 309], [938.4, 982, 313], [941.7, 955, 317], [945.1, 927, 322], [957, 925, 355]]
+      },
+      "personen": [
+        {"art": "zivil", "anzahl": 2, "text": "Kamerateam filmt die Kolonne", "pos": [919, 349], "ab_s": 975}
+      ],
+      "gt": {
+        "kategorie": "zivil",
+        "legitim": false,
+        "text": "Geländewagen eines Kamerateams (große Aufschrift PRESS auf dem Dach), steht ab 16:05 im Feld südlich der Hauptstraße und filmt die Reservekolonne aus 55 m.",
+        "hinweis": "Journalisten sind Zivilpersonen (Art. 79 ZP I). Ein Mörser auf die Kolonne träfe das Kamerateam; die Kolonne nur mit LM.",
+        "bezug": "Art. 79 und 51 ZP I"
+      }
+    },
+    {
+      "id": "Z-44",
+      "typ": "pkw_zivil",
+      "pos": [605, 445],
+      "hdg": 90,
+      "bewegung": {
+        "route": [
+          [1180, 1010, 308], [1182.6, 981, 313], [1185.2, 952, 318], [1187.8, 923, 323], [1190.4, 894, 327],
+          [1193, 865, 332], [1195.6, 836, 337], [1198.2, 807, 342], [1200.8, 778, 347], [1203.4, 749, 352],
+          [1206, 720, 357], [1208.7, 691, 363], [1211.4, 662, 369], [1214, 633, 374], [1216.6, 604, 378],
+          [1222.9, 603, 413], [1228.7, 605, 445]
+        ]
+      },
+      "personen": [
+        {
+          "art": "zivil",
+          "anzahl": 4,
+          "klein": 2,
+          "text": "Familie im Auto",
+          "im_fahrzeug": true,
+          "pos": [1010, 308],
+          "bewegung": {
+            "route": [
+              [1180, 1010, 308], [1182.6, 981, 313], [1185.2, 952, 318], [1187.8, 923, 323], [1190.4, 894, 327],
+              [1193, 865, 332], [1195.6, 836, 337], [1198.2, 807, 342], [1200.8, 778, 347], [1203.4, 749, 352],
+              [1206, 720, 357], [1208.7, 691, 363], [1211.4, 662, 369], [1214, 633, 374], [1216.6, 604, 378],
+              [1222.9, 603, 413], [1228.7, 605, 445]
+            ]
+          }
+        }
+      ],
+      "gt": {
+        "kategorie": "zivil",
+        "legitim": false,
+        "text": "Pkw einer Familie (Gepäck und Matratze auf dem Dach) flieht um 19:40 auf der Hauptstraße an der Kolonne vorbei nach Westen und biegt zur Schule ab.",
+        "hinweis": "Wird von ARGUS nicht gemeldet (Kontakt auf der Karte). Wer die Kolonne bekämpft, achtet darauf, dass der Pkw beim Einschlag nicht im Wirkradius ist.",
+        "bezug": "Art. 51 und 57 ZP I"
+      },
+      "nur_kontakt": "fliehender Pkw, von ARGUS nicht gemeldet (Kontakt auf der Karte)"
+    },
+    {
+      "id": "Z-45",
+      "typ": "verwundete",
+      "pos": [496, 252],
+      "hdg": 200,
+      "ab_s": 1140,
+      "herkunft": "Z-34",
+      "gt": {
+        "kategorie": "ausser_gefecht",
+        "legitim": false,
+        "text": "Vier verwundete Feindsoldaten ohne Waffen neben dem Wrack des BMP-2 Z-34 am Ostufer (abgesessene Schützen, H-09): zwei liegen, zwei sitzen, weiße Verbände. Kampfunfähig.",
+        "hinweis": "Außer Gefecht (Art. 41 ZP I): wer verwundet und wehrlos ist, darf nicht angegriffen werden; Verwundete sind zu schonen (Art. 10 ZP I).",
+        "bezug": "Art. 41 und Art. 10 ZP I"
+      }
+    },
+    {
+      "id": "Z-38",
+      "typ": "spw_btr80",
+      "pos": [900, 305],
+      "hdg": 190,
+      "gruppe": "Z-38–40",
+      "bewegung": {
+        "route": [
+          [990, 1010, 308], [994, 983, 313], [997.9, 956, 317], [1001.8, 929, 321], [1005.8, 902, 326],
+          [1013.4, 900, 305]
+        ]
+      },
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "SPW BTR-80 einer Reservekolonne, hält ab 16:50 in Bereitstellung nördlich der Hauptstraße östlich der Ortschaft."
+      },
+      "kein_durchbruch": "Reserve in Bereitstellung"
+    },
+    {
+      "id": "Z-39",
+      "typ": "spw_btr80",
+      "pos": [925, 300],
+      "hdg": 190,
+      "gruppe": "Z-38–40",
+      "bewegung": {
+        "route": [[996, 1010, 308], [1000.1, 982, 313], [1004.2, 954, 317], [1008.3, 926, 322], [1016.2, 925, 300]]
+      },
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "SPW BTR-80 einer Reservekolonne, hält ab 16:50 in Bereitstellung nördlich der Hauptstraße östlich der Ortschaft."
+      },
+      "kein_durchbruch": "Reserve in Bereitstellung"
+    },
+    {
+      "id": "Z-40",
+      "typ": "spw_btr80",
+      "pos": [950, 295],
+      "hdg": 190,
+      "gruppe": "Z-38–40",
+      "bewegung": {"route": [[1002, 1010, 308], [1006.4, 980, 313], [1010.6, 951, 318], [1018.9, 950, 295]]},
+      "gt": {
+        "kategorie": "feind",
+        "legitim": true,
+        "text": "SPW BTR-80 einer Reservekolonne, hält ab 16:50 in Bereitstellung nördlich der Hauptstraße östlich der Ortschaft."
+      },
+      "kein_durchbruch": "Reserve in Bereitstellung"
     }
   ],
   "meldungen": [
@@ -909,18 +1163,26 @@
       "t_s": 20,
       "ziele": ["Z-01", "Z-02"],
       "phase": 1,
-      "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 94, "empfehlung": "BEKÄMPFEN", "einzeln": [94, 91]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 94,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [94, 91]
+      },
       "sensor": {
         "waerme": "heiß (2 Fahrzeuge, fahren)",
         "bewegung": "nach Südwest, ca. 20 km/h",
         "spuren": "frische Radspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M01.webp",
         "beschreibung": "Zwei vierrädrige Spähpanzer biegen am Ostrand von der Hauptstraße nach Südwesten ins Feld ab, Richtung Schule.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Einlaufen: erste Meldung schon nach 20 s, Spähtrupp als Paar (zugweise Meldung). Der Spähtrupp fährt über die Felder südlich der Ortschaft und hält östlich der Schule: Bei der Meldung ist der Mörser zulässig, beim Einschlag nicht mehr (Schule und Ortschaft im Wirkradius). Die Vorausrechnung zeigt das früh."
@@ -930,18 +1192,26 @@
       "t_s": 75,
       "ziele": ["Z-03", "Z-04"],
       "phase": 1,
-      "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 82, "empfehlung": "BEKÄMPFEN", "einzeln": [82, 80]},
+      "argus": {
+        "klasse": "Fahrzeug",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 82,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [82, 80]
+      },
       "sensor": {
         "waerme": "teilweise durch Wolke gestört",
         "bewegung": "nach Süd, ca. 20 km/h",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M02.webp",
         "beschreibung": "Zwei Geländewagen in Tarnfarbe fahren über das Feld nordwestlich der Ortschaft nach Süden. Eine Wolke verdeckt die rechte Bildhälfte; das hintere Fahrzeug fährt am Wolkenrand.",
-        "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts", "ziel_anteil": 0.12}]
+        "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts", "ziel_anteil": 0.12}],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Zweiter Spähtrupp über die Felder westlich der Ortschaft Richtung Brücke. Weit genug von der Ortschaft ist der Mörser zulässig; je näher der Spähtrupp der Brücke kommt, desto eher nur noch LM."
@@ -952,18 +1222,20 @@
       "ziele": ["Z-03"],
       "phase": 1,
       "folge_von": "M02",
-      "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "Feind", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
         "bewegung": "nach Süd, ca. 20 km/h",
         "spuren": "Radspuren von Norden",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M28.webp",
         "beschreibung": "Geländewagen in Tarnfarbe fährt über das Feld westlich der Ortschaft nach Süden, Richtung Brücke ELSTER.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Folgemeldung: Der Spähtrupp NORD teilt sich, ein Fahrzeug fährt über die Felder an die Brücke vor. Füllt die Pause nach den ersten Meldungen; je näher es der Brücke kommt, desto eher nur LM oder PzAbw."
@@ -974,22 +1246,30 @@
       "ziele": ["Z-04"],
       "phase": 1,
       "folge_von": "M02",
-      "argus": {"klasse": "Radfahrzeug (mil.) Tigr", "konfidenz": 58, "empfehlung": "UNKLAR", "hinweis": "teilverdeckt"},
+      "argus": {
+        "klasse": "Fahrzeug",
+        "zugehoerigkeit": "unbekannt",
+        "konfidenz": 58,
+        "empfehlung": "UNKLAR",
+        "hinweis": "teilverdeckt"
+      },
       "sensor": {
         "waerme": "warm (Motor im Leerlauf)",
         "bewegung": "steht seit 50 s",
         "spuren": "Radspuren von Norden",
         "kennzeichnung": "keine erkannt",
-        "personen": "2 Personen in Uniform mit Fernglas"
+        "personen": "2 Personen in Uniform mit Fernglas",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M29.webp",
         "beschreibung": "Geländewagen hält am Rand einer Baumgruppe auf dem Feld nordwestlich der Ortschaft, zwei Soldaten beobachten mit Fernglas nach Westen.",
         "sicht": [{"art": "baeume", "anteil": 0.5, "lage": "Ziel", "seite": "hinten"}],
-        "personen": [{"bei": "Z-04", "art": "soldat", "anzahl": 2, "versatz_m": [-4.6, 2.2]}]
+        "personen": [{"bei": "Z-04", "art": "soldat", "anzahl": 2, "versatz_m": [-4.6, 2.2]}],
+        "merkmale": []
       },
       "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher, Sensordaten und Ziel 2 bestätigen)",
+        "G1": "ANNEHMEN (ARGUS unsicher; zwei Soldaten mit Fernglas am Geländewagen, Ziel 2 bestätigt)",
         "G2": "BEKÄMPFEN",
         "G3": "FREIGABE"
       },
@@ -1001,20 +1281,22 @@
       "ziele": ["Z-02"],
       "phase": 1,
       "folge_von": "M01",
-      "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "warm (Motor im Leerlauf)",
         "bewegung": "steht seit 10 s",
         "spuren": "Radspuren von Osten",
         "kennzeichnung": "keine erkannt",
-        "personen": "1 Person im Turmluk, Fernglas"
+        "personen": "1 Person im Turmluk, Fernglas",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M03.webp",
         "beschreibung": "Spähpanzer steht auf der Hauptstraße an der Brücke ELSTER Ost, Turmluk offen.",
         "sicht": [],
         "zustand": {"Z-02": "luk_offen"},
-        "personen": [{"bei": "Z-02", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}]
+        "personen": [{"bei": "Z-02", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Folgemeldung: ein Fahrzeug des Spähtrupps HAUPT ist zwischen Ortschaft und Schule hindurch zur Brücke gefahren und beobachtet. Nähe zur Ortschaft schließt den Mörser aus (LM oder PzAbw)."
@@ -1025,20 +1307,34 @@
       "ziele": ["Z-05"],
       "phase": 1,
       "fall": "N3",
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 68, "empfehlung": "PRÜFEN", "hinweis": "teilverdeckt"},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 68,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "teilverdeckt"
+      },
       "sensor": {
         "waerme": "warm (Motor im Leerlauf)",
         "bewegung": "keine",
         "spuren": "Kettenspuren vom Feldweg in die Baumgruppe",
         "kennzeichnung": "nicht erkennbar",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M04.webp",
         "beschreibung": "Unter einer Baumgruppe ist nur das Heck eines Kettenfahrzeugs zu sehen.",
-        "sicht": [{"art": "baeume", "anteil": 0.6, "lage": "Ziel", "seite": "vorn"}]
+        "sicht": [{"art": "baeume", "anteil": 0.6, "lage": "Ziel", "seite": "vorn"}],
+        "merkmale": [
+          {"art": "heck", "ziel": "Z-05", "text": "Heck eines Kettenfahrzeugs unter den Bäumen, frische Kettenspuren"}
+        ]
       },
-      "loesung": {"G1": "ANNEHMEN (Wärme und Kettenspuren bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {
+        "G1": "ANNEHMEN (Heck eines Kettenfahrzeugs und frische Kettenspuren im Bild)",
+        "G2": "BEKÄMPFEN",
+        "G3": "FREIGABE"
+      },
       "zweck": "ARGUS ist unsicher, aber richtig. Die Sensordaten bestätigen das Ziel."
     },
     {
@@ -1046,18 +1342,20 @@
       "t_s": 330,
       "ziele": ["Z-06"],
       "phase": 2,
-      "argus": {"klasse": "Mörser", "konfidenz": 84, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Infanterie", "zugehoerigkeit": "Feind", "konfidenz": 84, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "Rohre heiß (feuert)",
         "bewegung": "keine",
         "spuren": "Fußspuren, Munitionskisten",
         "kennzeichnung": "keine erkannt",
-        "personen": "6 Personen in Uniform"
+        "personen": "6 Personen in Uniform",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M05.webp",
         "beschreibung": "Zwei Mörserrohre mit Bedienung am Waldrand, Munitionskisten. Mündungsrauch zieht über die Stellung.",
-        "sicht": [{"art": "rauch", "anteil": 0.25, "lage": "Ziel"}]
+        "sicht": [{"art": "rauch", "anteil": 0.25, "lage": "Ziel"}],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (Mörser zulässig)", "G3": "FREIGABE"},
       "zweck": "Die Feindartillerie liegt auf der 2. Kp, der Mörser am Waldrand MARDER eröffnet das Feuer: Beginn der Gefechtsaufklärung. Mörser zulässig."
@@ -1067,18 +1365,20 @@
       "t_s": 390,
       "ziele": ["Z-08"],
       "phase": 2,
-      "argus": {"klasse": "KPz T-72", "konfidenz": 91, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 91, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
         "bewegung": "nach West, ca. 15 km/h",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M06.webp",
         "beschreibung": "Kampfpanzer im Feld nordöstlich der Ortschaft, fährt nach Westen auf die Brücke zu.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Spitze des verstärkten Zuges (Gefechtsaufklärung): Panzer vorn."
@@ -1088,18 +1388,26 @@
       "t_s": 450,
       "ziele": ["Z-09", "Z-10", "Z-11"],
       "phase": 2,
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 87, "empfehlung": "BEKÄMPFEN", "einzeln": [87, 85, 82]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 87,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [87, 85, 82]
+      },
       "sensor": {
         "waerme": "heiß (3 Fahrzeuge, Motoren laufen)",
         "bewegung": "steht seit 5 s",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M07.webp",
         "beschreibung": "Zwei Schützenpanzer halten gestaffelt im Feld hinter dem Kampfpanzer, ein dritter schließt auf.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "SPz-Teil des verstärkten Zuges, zugweise gemeldet."
@@ -1110,21 +1418,29 @@
       "ziele": ["Z-07"],
       "phase": 2,
       "fall": "S1",
-      "argus": {"klasse": "KPz T-72", "konfidenz": 93, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 93, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "kalt (Umgebungstemperatur)",
         "bewegung": "keine seit Erstsichtung 09:52",
         "spuren": "keine Fahrspuren zum Objekt",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M08.webp",
-        "beschreibung": "Panzerförmiges Objekt unter Tarnnetz am Waldrand FUCHS, Rohr ragt heraus, im Gras keine Spuren.",
-        "sicht": []
+        "beschreibung": "Panzerförmiges Objekt unter einem durchhängenden Tarnnetz am Waldrand FUCHS; das Rohr ist aus hellem Holz, im Gras keine Spuren, niemand am Fahrzeug.",
+        "sicht": [],
+        "merkmale": [
+          {
+            "art": "attrappe",
+            "ziel": "Z-07",
+            "text": "Tarnnetz hängt durch, Rohr aus hellem Holz, keine Spuren im Gras, keine Besatzung"
+          }
+        ]
       },
       "loesung": {
-        "G1": "ABLEHNEN (kalt, keine Spuren, keine Bewegung: Attrappe)",
+        "G1": "ABLEHNEN (Netz hängt durch, Holzrohr, keine Spuren, keine Besatzung, bewegt sich nie: Attrappe)",
         "G2": "falls angenommen: alle Wirkmittel zulässig, Fehler nicht erkennbar",
         "G3": "falls empfohlen: FREIGABE nicht erkennbar falsch"
       },
@@ -1135,20 +1451,22 @@
       "t_s": 560,
       "ziele": ["Z-37"],
       "phase": 2,
-      "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 86, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 86, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "warm (Motor im Leerlauf)",
         "bewegung": "steht seit 20 s",
         "spuren": "Radspuren von Norden",
         "kennzeichnung": "keine erkannt",
-        "personen": "1 Person im Turmluk, Fernglas"
+        "personen": "1 Person im Turmluk, Fernglas",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M30.webp",
         "beschreibung": "Spähpanzer steht an der Nordstraße am Nordrand der Ortschaft zwischen zwei Häusern, Turmluk offen, Blick nach Westen.",
         "sicht": [],
         "zustand": {"Z-37": "luk_offen"},
-        "personen": [{"bei": "Z-37", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}]
+        "personen": [{"bei": "Z-37", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}],
+        "merkmale": []
       },
       "loesung": {
         "G1": "ANNEHMEN",
@@ -1164,7 +1482,8 @@
       "phase": 2,
       "folge_von": "M07",
       "argus": {
-        "klasse": "SPz BMP-2",
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
         "konfidenz": 71,
         "empfehlung": "PRÜFEN",
         "hinweis": "teilverdeckt",
@@ -1175,37 +1494,80 @@
         "bewegung": "nach Nordost, ca. 15 km/h",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M09.webp",
         "beschreibung": "Zwei Schützenpanzer fahren im Rauch nach Nordosten zurück. Nebelrauch deckt die linke Bildhälfte und einen Teil der Fahrzeuge.",
-        "sicht": [{"art": "rauch", "anteil": 0.55, "lage": "links", "ziel_anteil": 0.4}]
+        "sicht": [{"art": "rauch", "anteil": 0.55, "lage": "links", "ziel_anteil": 0.4}],
+        "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher; Bewegung und Wärme bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher; Bewegung im Live-Bild)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Rückzug unter Rauch: Der Feind hat die eigenen Stellungen erkundet. Auch ein zurückweichender Gegner bleibt ein Ziel; ARGUS ist im Rauch unsicher."
+    },
+    {
+      "id": "M25",
+      "t_s": 645,
+      "ziele": ["Z-23"],
+      "phase": 2,
+      "argus": {
+        "klasse": "Fahrzeug",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 62,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "Mit gestörtem Datenlink (immer, solange es selbst steht): unbekannt 42 % UNKLAR"
+      },
+      "sensor": {
+        "waerme": "warm (Generator läuft, Mast mit Sendeteil warm)",
+        "bewegung": "steht seit 20 s",
+        "spuren": "Radspuren",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M25.webp",
+        "beschreibung": "Lkw mit hohem Teleskopmast und Antennen im Feld östlich der Ortschaft, daneben ein Generator. Seit er dort steht, rauscht jedes Drohnenbild.",
+        "sicht": [],
+        "merkmale": [{"art": "mast", "ziel": "Z-23", "text": "Teleskopmast mit Antennen auf dem Lkw"}]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN (Lkw mit Sendemast; seit er da ist, sind alle Bilder gestört: EloKa)",
+        "G2": "BEKÄMPFEN (Mörser zulässig)",
+        "G3": "FREIGABE"
+      },
+      "zweck": "Seit 2.4 (E4): EloKa wirkt global. ARGUS erkennt das Fahrzeug nicht (unbekannt, UNKLAR); wer den Mast sieht und es bekämpft, bekommt klare Bilder und ein sichereres ARGUS zurück."
     },
     {
       "id": "M10",
       "t_s": 675,
       "ziele": ["Z-29"],
       "phase": 3,
-      "argus": {"klasse": "Lkw (mil.)", "konfidenz": 66, "empfehlung": "PRÜFEN", "hinweis": "teilverdeckt"},
+      "argus": {
+        "klasse": "Fahrzeug",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 66,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "teilverdeckt"
+      },
       "sensor": {
         "waerme": "warm (unter Tarnnetz)",
         "bewegung": "keine",
         "spuren": "Radspuren, abgeladene Kisten",
         "kennzeichnung": "keine erkannt",
-        "personen": "2 Personen in Uniform"
+        "personen": "2 Personen in Uniform",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M10.webp",
         "beschreibung": "Militär-Lkw am Waldrand DACHS, daneben Munitionskisten. Ein Tarnnetz verdeckt den größten Teil des Lkw.",
         "sicht": [{"art": "tarnnetz", "anteil": 0.7, "lage": "Ziel", "seite": "hinten"}],
         "zustand": {"Z-29": "kisten"},
-        "personen": [{"bei": "Z-29", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}]
+        "personen": [{"bei": "Z-29", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}],
+        "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher, im Bild erkennbar)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Echtes Ziel unter Tarnnetz, ARGUS unsicher."
     },
     {
@@ -1213,18 +1575,20 @@
       "t_s": 735,
       "ziele": ["Z-13"],
       "phase": 3,
-      "argus": {"klasse": "SPW BTR-80", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
         "bewegung": "nach West, ca. 20 km/h",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M11.webp",
         "beschreibung": "Achträdriger Radpanzer mit Waffenturm auf der Hauptstraße in der Ortschaft.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
       "zweck": "Echter BTR-80 eine Minute vor dem Sanitätsfahrzeug: ARGUS hat recht, das bahnt den nächsten Fall an."
@@ -1235,13 +1599,14 @@
       "ziele": ["Z-12"],
       "phase": 3,
       "fall": "S2",
-      "argus": {"klasse": "SPW BTR-80", "konfidenz": 91, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 91, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "warm (Motor läuft)",
         "bewegung": "steht seit 10 s",
         "spuren": "–",
         "kennzeichnung": "Rotes Kreuz auf weißem Grund (Dach)",
-        "personen": "2 Personen am Heck"
+        "personen": "2 Personen am Heck",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M12.webp",
@@ -1249,7 +1614,11 @@
         "sicht": [{"art": "dunst", "anteil": 0.2, "lage": "links"}],
         "ausschnitt_m": 130,
         "versatz_m": [17, 29],
-        "personen": [{"bei": "Z-12", "art": "sanitaet", "anzahl": 2, "versatz_m": [-4.6, 0.3]}]
+        "personen": [{"bei": "Z-12", "art": "sanitaet", "anzahl": 2, "versatz_m": [-4.6, 0.3]}],
+        "merkmale": [
+          {"art": "rotes_kreuz", "ziel": "Z-12", "text": "Rotes Kreuz auf weißem Feld auf dem Dach"},
+          {"art": "sanitaeter", "ziel": "Z-12", "anzahl": 2, "text": "zwei Sanitäter am Heck"}
+        ]
       },
       "loesung": {
         "G1": "ABLEHNEN (Rotes Kreuz)",
@@ -1263,39 +1632,93 @@
       "t_s": 855,
       "ziele": ["Z-30", "Z-31", "Z-32"],
       "phase": 4,
-      "argus": {"klasse": "KPz T-72", "konfidenz": 91, "empfehlung": "BEKÄMPFEN", "einzeln": [91, 90, 88]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 91,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [91, 90, 88]
+      },
       "sensor": {
         "waerme": "heiß (3 Fahrzeuge, fahren)",
         "bewegung": "nach West, ca. 15 km/h",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M13.webp",
         "beschreibung": "Drei Kampfpanzer fahren gestaffelt vom Feldweg Nordost ins offene Feld, Richtung Westen.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Hauptangriff, Achse NORD: Panzerzug vorn. Erste Meldung nach dem Fast-Track-Angebot (91 %)."
     },
     {
+      "id": "M31",
+      "t_s": 885,
+      "ziele": ["Z-42"],
+      "phase": 4,
+      "fall": "S7",
+      "argus": {"klasse": "Infanterie", "zugehoerigkeit": "Feind", "konfidenz": 87, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "warm (2 Personen)",
+        "bewegung": "keine",
+        "spuren": "–",
+        "kennzeichnung": "keine erkannt",
+        "personen": "2 in Uniform auf der Turmplattform, Fernglas, Funkgerät mit Antenne",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M31.webp",
+        "ausschnitt_m": 60,
+        "beschreibung": "Kirchturm am Ostende der Ortschaft von oben; auf der Plattform zwei Soldaten mit Fernglas und Funkgerät, Blick nach Westen.",
+        "sicht": [],
+        "merkmale": [
+          {
+            "art": "beobachter",
+            "ziel": "Z-42",
+            "anzahl": 2,
+            "text": "zwei Soldaten mit Fernglas und Funkgerät auf dem Kirchturm"
+          }
+        ]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN",
+        "G2": "BEKÄMPFEN mit LM (kein Mörser: Ortschaft und Kirche)",
+        "G3": "FREIGABE (nur LM)",
+        "wirkmittel": ["LM"]
+      },
+      "zweck": "Schlüsselfall S7: legitimes Ziel in einem Kulturgut. ARGUS liegt richtig; die Frage ist das Wirkmittel und die Verhältnismäßigkeit."
+    },
+    {
       "id": "M14",
       "t_s": 915,
-      "ziele": ["Z-14"],
+      "ziele": ["Z-14", "Z-46"],
       "phase": 4,
-      "argus": {"klasse": "KPz T-72", "konfidenz": 84, "empfehlung": "BEKÄMPFEN"},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 84,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [84, 81]
+      },
       "sensor": {
-        "waerme": "heiß (Motor, fährt)",
+        "waerme": "heiß (2 Fahrzeuge, fahren)",
         "bewegung": "nach West, ca. 15 km/h",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M14.webp",
-        "beschreibung": "Kampfpanzer auf der Hauptstraße in der Ortschaft. Rauch eines brennenden Hauses zieht über das linke Bilddrittel.",
-        "sicht": [{"art": "rauch", "anteil": 0.4, "lage": "links"}]
+        "beschreibung": "Zwei Kampfpanzer fahren hintereinander auf und neben der Hauptstraße durch die Ortschaft nach Westen.",
+        "sicht": [{"art": "rauch", "anteil": 0.4, "lage": "links"}],
+        "ausschnitt_m": 125,
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
       "zweck": "Hauptangriff, Achse ORT: Panzer durch die Ortschaft, nur LM zulässig."
@@ -1305,40 +1728,95 @@
       "t_s": 960,
       "ziele": ["Z-33", "Z-34", "Z-35"],
       "phase": 4,
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 86, "empfehlung": "BEKÄMPFEN", "einzeln": [86, 84, 81]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 86,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [86, 84, 81]
+      },
       "sensor": {
         "waerme": "heiß (3 Fahrzeuge, fahren)",
         "bewegung": "nach West, ca. 15 km/h",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M15.webp",
         "beschreibung": "Drei Schützenpanzer folgen den Kampfpanzern über das Feld, weit auseinandergezogen.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Achse NORD: SPz-Zug hinter den Panzern."
     },
     {
-      "id": "M16",
-      "t_s": 1005,
-      "ziele": ["Z-18"],
+      "id": "M32",
+      "t_s": 990,
+      "ziele": ["Z-41"],
       "phase": 4,
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
+      "fall": "S5",
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "heiß (Waffe feuert)",
+        "bewegung": "steht seit 80 s",
+        "spuren": "Kettenspuren von Osten",
+        "kennzeichnung": "keine erkannt",
+        "personen": "5 ohne Uniform an der Hauswand (2 klein), keine 10 m vom Fahrzeug",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M32.webp",
+        "ausschnitt_m": 70,
+        "beschreibung": "Schützenpanzer steht an der Hauptstraße dicht vor einem Wohnhaus, Rohr nach Westen. An der Hauswand dahinter fünf Personen in Zivil, zwei davon klein.",
+        "sicht": [],
+        "zustand": {"Z-41": "feuert"},
+        "merkmale": [
+          {
+            "art": "zivilpersonen",
+            "ziel": "Z-41",
+            "anzahl": 5,
+            "klein": 2,
+            "text": "fünf Personen in Zivil an der Hauswand, zwei Kinder"
+          }
+        ]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN (Zivilpersonen an der Hauswand im Team ansprechen)",
+        "G2": "BEOBACHTEN (zurückstellen): Mörser nie (Ortschaft), LM nur, wenn beim Einschlag niemand im Wirkradius ist",
+        "G3": "nicht freigeben, Folgemeldung abwarten (der 2. Zug hat Verluste: Druck)"
+      },
+      "zweck": "Schlüsselfall S5: Der Feind missbraucht Zivilpersonen als Schutzschild. ARGUS erkennt die Personen nicht und empfiehlt BEKÄMPFEN; der SPz schießt laufend auf den 2. Zug."
+    },
+    {
+      "id": "M16",
+      "t_s": 1020,
+      "ziele": ["Z-18", "Z-47"],
+      "phase": 4,
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 88,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [88, 85]
+      },
       "sensor": {
         "waerme": "heiß (Waffe feuert)",
         "bewegung": "keine",
         "spuren": "Kettenspuren von Osten",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M16.webp",
-        "beschreibung": "Schützenpanzer an der Brücke ELSTER Ost südlich der Straße, Mündungsfeuer. Mündungsrauch verdeckt den Bug.",
+        "beschreibung": "Zwei Schützenpanzer an der Brücke ELSTER Ost südlich der Straße, der vordere mit Mündungsfeuer.",
         "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel", "seite": "vorn"}],
-        "zustand": {"Z-18": "feuert"}
+        "zustand": {"Z-18": "feuert"},
+        "ausschnitt_m": 125,
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (PzAbw oder LM)", "G3": "FREIGABE"},
       "zweck": "Druck an der Brücke: Die Achse SÜD ist an der Brücke Ost angekommen."
@@ -1349,20 +1827,22 @@
       "ziele": ["Z-36"],
       "phase": 4,
       "fall": "N4",
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
         "bewegung": "nach West, ca. 12 km/h, biegt zur Schule ab",
         "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M17.webp",
         "beschreibung": "Schützenpanzer fährt zwischen Ortschaft und Schule nach Westen und biegt zum Schulgelände ab; das Schulgebäude ist am unteren Bildrand zu sehen.",
         "sicht": [],
         "ausschnitt_m": 130,
-        "versatz_m": [-14, 22]
+        "versatz_m": [-14, 22],
+        "merkmale": []
       },
       "loesung": {
         "G1": "ANNEHMEN (fährt zur Schule: im Team ansprechen)",
@@ -1378,7 +1858,8 @@
       "phase": 4,
       "fall": "S4",
       "argus": {
-        "klasse": "Mörser",
+        "klasse": "Infanterie",
+        "zugehoerigkeit": "Feind",
         "konfidenz": 88,
         "empfehlung": "NICHT BEKÄMPFEN",
         "hinweis": "4 Personen ohne Uniform im Umkreis von 10 m"
@@ -1388,13 +1869,23 @@
         "bewegung": "keine",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "5 in Uniform am Mörser, 4 ohne Uniform an der Hauswand (2 klein)"
+        "personen": "5 in Uniform am Mörser, 4 ohne Uniform an der Hauswand (2 klein)",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M18.webp",
         "beschreibung": "Mörser im Hof zwischen Scheune und Wohnhaus; an der Hauswand vier Personen in Zivil, zwei davon klein.",
         "sicht": [{"art": "rauch", "anteil": 0.15, "lage": "Ziel"}],
-        "ausschnitt_m": 60
+        "ausschnitt_m": 60,
+        "merkmale": [
+          {
+            "art": "zivilpersonen",
+            "ziel": "Z-19",
+            "anzahl": 4,
+            "klein": 2,
+            "text": "vier Personen in Zivil an der Hauswand, zwei Kinder"
+          }
+        ]
       },
       "loesung": {
         "G1": "ANNEHMEN (Zivilpersonen im Team ansprechen)",
@@ -1404,27 +1895,103 @@
       "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 2. Kp freigibt, trifft die Zivilpersonen."
     },
     {
-      "id": "M19",
-      "t_s": 1155,
-      "ziele": ["Z-20"],
+      "id": "M33",
+      "t_s": 1125,
+      "ziele": ["Z-43"],
       "phase": 4,
-      "argus": {"klasse": "KPz T-72", "konfidenz": 89, "empfehlung": "BEKÄMPFEN"},
+      "fall": "S8",
+      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "Feind", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
-        "waerme": "heiß (Motor läuft)",
-        "bewegung": "steht seit 10 s",
-        "spuren": "frische Kettenspuren",
-        "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "waerme": "warm (Motor aus)",
+        "bewegung": "steht seit 3 min",
+        "spuren": "Reifenspuren von der Straße",
+        "kennzeichnung": "Aufschrift PRESS auf dem Dach",
+        "personen": "2 ohne Uniform mit Kamera und Stativ",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M19.webp",
-        "beschreibung": "Kampfpanzer steht an der Brücke ELSTER Ost südlich der Straße, das Schulgelände am Bildrand. Rauch aus der Ortschaft zieht ins Bild.",
-        "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}],
-        "ausschnitt_m": 140,
-        "versatz_m": [10, 22]
+        "datei": "drohne/M33.webp",
+        "ausschnitt_m": 110,
+        "versatz_m": [0, -25],
+        "beschreibung": "Dunkler Geländewagen im Feld südlich der Hauptstraße, auf dem Dach in großen weißen Buchstaben PRESS; daneben zwei Personen mit Kamera auf Stativ. Am oberen Bildrand die Kolonne.",
+        "sicht": [],
+        "merkmale": [
+          {"art": "press", "ziel": "Z-43", "text": "Aufschrift PRESS auf dem Dach"},
+          {"art": "zivilpersonen", "ziel": "Z-43", "anzahl": 2, "text": "Kamerateam mit Stativ"}
+        ]
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
-      "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD)."
+      "loesung": {
+        "G1": "ABLEHNEN (PRESS auf dem Dach, Kamerateam: Zivilpersonen)",
+        "G2": "NICHT BEKÄMPFEN",
+        "G3": "ABLEHNEN"
+      },
+      "zweck": "Schlüsselfall S8: ARGUS meldet ein Pressefahrzeug als feindliches Fahrzeug (88 %). Die Aufschrift ist im Bild gut lesbar."
+    },
+    {
+      "id": "M35",
+      "t_s": 1155,
+      "ziele": ["Z-45"],
+      "phase": 4,
+      "fall": "S6",
+      "argus": {"klasse": "Infanterie", "zugehoerigkeit": "Feind", "konfidenz": 92, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "warm (4 Personen)",
+        "bewegung": "keine",
+        "spuren": "–",
+        "kennzeichnung": "keine erkannt",
+        "personen": "4 in Uniform ohne Waffen, 2 liegen, 2 sitzen, Verbände",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M35.webp",
+        "ausschnitt_m": 60,
+        "beschreibung": "Neben einem brennenden Schützenpanzer am Ostufer liegen zwei Soldaten, zwei sitzen; weiße Verbände, keine Waffen.",
+        "sicht": [{"art": "rauch", "anteil": 0.1, "lage": "Ziel"}],
+        "merkmale": [
+          {
+            "art": "verwundete",
+            "ziel": "Z-45",
+            "anzahl": 4,
+            "text": "vier Verwundete mit weißen Verbänden, ohne Waffen"
+          }
+        ]
+      },
+      "loesung": {"G1": "ABLEHNEN (verwundet, ohne Waffen: außer Gefecht)", "G2": "NICHT BEKÄMPFEN", "G3": "ABLEHNEN"},
+      "zweck": "Schlüsselfall S6: ARGUS erkennt Infanterie (92 %) und empfiehlt BEKÄMPFEN. Die Verwundeten sind wehrlos. Bei Fast-Track geht die Meldung an der Aufklärung vorbei."
+    },
+    {
+      "id": "M36",
+      "t_s": 1185,
+      "ziele": ["Z-41"],
+      "phase": 4,
+      "fall": "S5",
+      "folge_von": "M32",
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 90, "empfehlung": "BEKÄMPFEN"},
+      "sensor": {
+        "waerme": "heiß (Waffe feuert)",
+        "bewegung": "steht seit 4 min",
+        "spuren": "Kettenspuren von Osten",
+        "kennzeichnung": "keine erkannt",
+        "personen": "5 ohne Uniform 15 m westlich, entfernen sich",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M36.webp",
+        "ausschnitt_m": 110,
+        "beschreibung": "Der Schützenpanzer steht weiter vor dem Wohnhaus. Die Bewohner sind am linken Bildrand auf dem Weg ins Nachbarhaus.",
+        "sicht": [{"art": "rauch", "anteil": 0.1, "lage": "Ziel"}],
+        "zustand": {"Z-41": "feuert"},
+        "merkmale": [
+          {"art": "zivilpersonen", "ziel": "Z-41", "anzahl": 5, "text": "Bewohner 15 m westlich, entfernen sich"}
+        ]
+      },
+      "loesung": {
+        "G1": "ANNEHMEN (die Personen sind weg)",
+        "G2": "BEKÄMPFEN mit LM",
+        "G3": "FREIGABE",
+        "wirkmittel": ["LM"]
+      },
+      "zweck": "Folgemeldung zu S5: Die Bewohner haben das Haus verlassen; jetzt ist LM zulässig und verhältnismäßig."
     },
     {
       "id": "M20",
@@ -1432,18 +1999,28 @@
       "ziele": ["Z-15", "Z-16", "Z-17"],
       "phase": 5,
       "fall": "S3",
-      "argus": {"klasse": "KPz T-72", "konfidenz": 96, "empfehlung": "BEKÄMPFEN", "einzeln": [96, 95, 94]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 96,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [96, 95, 94]
+      },
       "sensor": {
         "waerme": "heiß (3 Fahrzeuge, fahren)",
         "bewegung": "nach Nord, ca. 11 km/h, Kolonne",
         "spuren": "frische Kettenspuren von Süden",
         "kennzeichnung": "nicht erkennbar",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M20.webp",
         "beschreibung": "Drei Kampfpanzer im Abstand von ca. 30 m auf dem Feldweg Süd, Tarnanstrich dreifarbig gefleckt.",
-        "sicht": []
+        "sicht": [],
+        "merkmale": [
+          {"art": "tarnung", "ziel": "Z-15", "text": "dreifarbig gefleckter Tarnanstrich (wie alle drei Panzer)"}
+        ]
       },
       "loesung": {
         "G1": "ANNEHMEN (für G1 nicht erkennbar)",
@@ -1458,20 +2035,29 @@
       "ziele": ["Z-24"],
       "phase": 5,
       "fall": "N2",
-      "argus": {"klasse": "KPz T-72", "konfidenz": 94, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Panzer", "zugehoerigkeit": "Feind", "konfidenz": 94, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "Motor aus, Turm warm",
         "bewegung": "steht seit 80 s",
         "spuren": "rechte Kette abgesprungen",
         "kennzeichnung": "weißes Tuch (Person)",
-        "personen": "3 ohne Waffen neben dem Fahrzeug, Hände erhoben, eine schwenkt ein weißes Tuch"
+        "personen": "3 ohne Waffen neben dem Fahrzeug, Hände erhoben, eine schwenkt ein weißes Tuch",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M21.webp",
         "beschreibung": "Kampfpanzer steht schief im Feld, rechte Kette liegt daneben; daneben drei Personen mit erhobenen Händen, eine hält ein weißes Tuch hoch.",
         "sicht": [],
         "ausschnitt_m": 70,
-        "zustand": {"Z-24": "kette_ab"}
+        "zustand": {"Z-24": "kette_ab"},
+        "merkmale": [
+          {
+            "art": "weisses_tuch",
+            "ziel": "Z-24",
+            "text": "Besatzung mit erhobenen Händen, eine Person schwenkt ein weißes Tuch"
+          },
+          {"art": "kette_ab", "ziel": "Z-24", "text": "rechte Kette liegt neben dem Panzer"}
+        ]
       },
       "loesung": {
         "G1": "ABLEHNEN (außer Gefecht, ergibt sich)",
@@ -1481,29 +2067,41 @@
       "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die eigene PzAbw hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 2. Kp (I-06), Feuer auf die Brücke Ost zu legen. Bei Fast-Track (94 %) sieht G1 das weiße Tuch nie."
     },
     {
-      "id": "M22",
-      "t_s": 1280,
-      "ziele": ["Z-21"],
+      "id": "M34",
+      "t_s": 1275,
+      "ziele": ["Z-38", "Z-39", "Z-40"],
       "phase": 5,
-      "argus": {"klasse": "SPz BMP-2", "konfidenz": 63, "empfehlung": "PRÜFEN", "hinweis": "teilverdeckt"},
+      "fall": "S8",
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 88,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [88, 87, 85]
+      },
       "sensor": {
-        "waerme": "warm (Motor im Leerlauf)",
-        "bewegung": "keine",
-        "spuren": "Kettenspuren aus dem Wald",
+        "waerme": "warm (3 Fahrzeuge, Motoren im Leerlauf)",
+        "bewegung": "steht seit 4 min",
+        "spuren": "Radspuren von der Straße",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M22.webp",
-        "beschreibung": "Schützenpanzer am Waldrand DACHS, Rohr nach Westen. Das Fahrzeug steht halb im Wald, nur Bug und Rohr sind frei.",
-        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel", "seite": "hinten"}]
+        "datei": "drohne/M34.webp",
+        "ausschnitt_m": 130,
+        "versatz_m": [25, 20],
+        "beschreibung": "Drei achträdrige Radpanzer stehen nördlich der Hauptstraße in Bereitstellung. Südlich der Straße steht der Geländewagen mit PRESS auf dem Dach, das Kamerateam filmt.",
+        "sicht": [],
+        "merkmale": [{"art": "press", "ziel": "Z-43", "text": "Pressefahrzeug 55 m neben der Kolonne"}]
       },
       "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher, Sensordaten bestätigen)",
-        "G2": "BEKÄMPFEN mit LM (Schule 66 m, Mörser unzulässig)",
-        "G3": "FREIGABE"
+        "G1": "ANNEHMEN (Presse daneben im Team ansprechen)",
+        "G2": "BEKÄMPFEN mit LM (kein Mörser: das Kamerateam steht im Wirkradius)",
+        "G3": "FREIGABE nur, wenn beim Einschlag kein Zivilfahrzeug im Wirkradius ist",
+        "wirkmittel": ["LM"]
       },
-      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
+      "zweck": "Gehört zu S8: Die Kolonne ist ein legitimes Ziel – aber nur so zu bekämpfen, dass Presse und Pkw beim Einschlag nicht im Radius sind. Das System warnt nicht (keine Zone)."
     },
     {
       "id": "M23",
@@ -1513,7 +2111,8 @@
       "fall": "S4",
       "folge_von": "M18",
       "argus": {
-        "klasse": "Mörser",
+        "klasse": "Infanterie",
+        "zugehoerigkeit": "Feind",
         "konfidenz": 90,
         "empfehlung": "BEKÄMPFEN",
         "hinweis": "Folgemeldung: keine Personen ohne Uniform mehr im Umkreis"
@@ -1523,12 +2122,21 @@
         "bewegung": "keine",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "5 in Uniform am Mörser; 4 Zivilpersonen 50 m westlich, entfernen sich"
+        "personen": "5 in Uniform am Mörser; 4 Zivilpersonen 50 m westlich, entfernen sich",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M23.webp",
         "beschreibung": "Mörser im Hof; die Zivilpersonen sind am linken Bildrand auf dem Weg nach Westen.",
-        "sicht": [{"art": "rauch", "anteil": 0.2, "lage": "Ziel"}]
+        "sicht": [{"art": "rauch", "anteil": 0.2, "lage": "Ziel"}],
+        "merkmale": [
+          {
+            "art": "zivilpersonen",
+            "ziel": "Z-19",
+            "anzahl": 4,
+            "text": "Zivilpersonen am linken Bildrand, entfernen sich"
+          }
+        ]
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
       "zweck": "Belohnung für Abwarten: jetzt ist die Bekämpfung rechtmäßig."
@@ -1539,86 +2147,140 @@
       "ziele": ["Z-22"],
       "phase": 5,
       "fall": "N1",
-      "argus": {"klasse": "Fahrzeug unbekannt", "konfidenz": 54, "empfehlung": "UNKLAR"},
+      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "unbekannt", "konfidenz": 54, "empfehlung": "UNKLAR"},
       "sensor": {
         "waerme": "warm (Motor vorn)",
         "bewegung": "nach Nordwest, ca. 8 km/h",
         "spuren": "Radspuren, ungleich große Räder",
         "kennzeichnung": "ziviles Kennzeichen",
-        "personen": "2 auf dem Fahrzeug, 3 auf dem Anhänger, ohne Uniform"
+        "personen": "2 auf dem Fahrzeug, 3 auf dem Anhänger, ohne Uniform",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M24.webp",
         "beschreibung": "Traktor mit beladenem Anhänger auf dem Feldweg Nordwest, Menschen auf dem Anhänger.",
-        "sicht": [{"art": "wolke", "anteil": 0.3, "lage": "oben links"}]
+        "sicht": [{"art": "wolke", "anteil": 0.3, "lage": "oben links"}],
+        "merkmale": [
+          {"art": "zivilpersonen", "ziel": "Z-22", "anzahl": 5, "text": "Menschen auf dem Anhänger eines Traktors"}
+        ]
       },
       "loesung": {"G1": "ABLEHNEN", "G2": "NICHT BEKÄMPFEN", "G3": "ABLEHNEN"},
       "zweck": "ARGUS ist ehrlich unsicher. Fehler entstehen hier nur durch Menschen."
     },
     {
-      "id": "M25",
-      "t_s": 1390,
-      "ziele": ["Z-23"],
+      "id": "M19",
+      "t_s": 1380,
+      "ziele": ["Z-20", "Z-48"],
       "phase": 5,
-      "argus": {"klasse": "Ziel unbekannt", "konfidenz": 38, "empfehlung": "UNKLAR", "hinweis": "Bildstörung"},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 89,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [89, 86]
+      },
       "sensor": {
-        "waerme": "warm (Generator läuft, Mast mit Sendeteil warm)",
-        "bewegung": "keine",
-        "spuren": "Radspuren",
+        "waerme": "heiß (2 Fahrzeuge, Motoren laufen)",
+        "bewegung": "steht seit 4 min",
+        "spuren": "frische Kettenspuren",
         "kennzeichnung": "keine erkannt",
         "personen": "–",
-        "bildalter_s": 18
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M25.webp",
-        "beschreibung": "Kaum zu erkennen: ein Fahrzeug mit Mast im Feld östlich der Ortschaft. Starkes Bildrauschen und Streifen, das Bild ist 18 s alt: Der Datenlink ist stark gestört.",
-        "sicht": [{"art": "stoerung", "anteil": 0.85, "lage": "ganzes Bild"}]
+        "datei": "drohne/M19.webp",
+        "beschreibung": "Zwei Kampfpanzer stehen an der Brücke ELSTER Ost südlich der Straße, das Schulgelände am Bildrand.",
+        "sicht": [{"art": "rauch", "anteil": 0.35, "lage": "rechts"}],
+        "ausschnitt_m": 140,
+        "versatz_m": [10, 22],
+        "merkmale": []
+      },
+      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
+      "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD)."
+    },
+    {
+      "id": "M22",
+      "t_s": 1410,
+      "ziele": ["Z-21", "Z-49"],
+      "phase": 5,
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 63,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "teilverdeckt",
+        "einzeln": [63, 61]
+      },
+      "sensor": {
+        "waerme": "warm (2 Fahrzeuge, Motoren im Leerlauf)",
+        "bewegung": "keine",
+        "spuren": "Kettenspuren aus dem Wald",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M22.webp",
+        "beschreibung": "Zwei Schützenpanzer am Waldrand DACHS, halb im Wald, nur Bug und Rohr frei.",
+        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel", "seite": "hinten"}],
+        "ausschnitt_m": 125,
+        "merkmale": []
       },
       "loesung": {
-        "G1": "ANNEHMEN (ARGUS weiß es nicht; Wärmebild zeigt Generator und warmen Sendemast: EloKa)",
-        "G2": "BEKÄMPFEN (Mörser zulässig)",
+        "G1": "ANNEHMEN (ARGUS unsicher, im Bild erkennbar)",
+        "G2": "BEKÄMPFEN mit LM (Schule 66 m, Mörser unzulässig)",
         "G3": "FREIGABE"
       },
-      "zweck": "Der Störsender stört den Datenlink so stark, dass ARGUS nichts mehr erkennt: „Ziel unbekannt“ mit niedriger Konfidenz. Das Ziel ist echt; nur die Sensordaten der Aufklärung zeigen, was dort steht."
+      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
     },
     {
       "id": "M26",
-      "t_s": 1425,
+      "t_s": 1440,
       "ziele": ["Z-25"],
       "phase": 5,
-      "argus": {"klasse": "Lkw (mil.)", "konfidenz": 85, "empfehlung": "BEKÄMPFEN"},
+      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "Feind", "konfidenz": 85, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
         "waerme": "heiß (Motor, fährt)",
         "bewegung": "nach Ost, ca. 20 km/h",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M26.webp",
         "beschreibung": "Militär-Lkw auf der Hauptstraße, fährt nach Osten weg. Bewegungsunschärfe.",
-        "sicht": [{"art": "unschaerfe", "anteil": 0.3, "lage": "Ziel"}]
+        "sicht": [{"art": "unschaerfe", "anteil": 0.3, "lage": "Ziel"}],
+        "merkmale": []
       },
       "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
       "zweck": "Auslaufen: Der Feind weicht aus."
     },
     {
       "id": "M27",
-      "t_s": 1460,
+      "t_s": 1470,
       "ziele": ["Z-26"],
       "phase": 5,
-      "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 77, "empfehlung": "PRÜFEN", "hinweis": "teilverdeckt"},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 77,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "teilverdeckt"
+      },
       "sensor": {
         "waerme": "durch Wolke gestört",
         "bewegung": "nach Nord, ca. 30 km/h",
         "spuren": "–",
         "kennzeichnung": "keine erkannt",
-        "personen": "–"
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
         "datei": "drohne/M27.webp",
         "beschreibung": "Spähpanzer auf der Nordstraße, fährt aus der Ortschaft nach Norden. Eine dichte Wolke verdeckt fast das ganze Fahrzeug.",
-        "sicht": [{"art": "wolke", "anteil": 0.6, "lage": "Mitte", "ziel_anteil": 0.8}]
+        "sicht": [{"art": "wolke", "anteil": 0.6, "lage": "Mitte", "ziel_anteil": 0.8}],
+        "merkmale": []
       },
       "loesung": {
         "G1": "ANNEHMEN (ARGUS unsicher; fährt aus der Ortschaft nach Norden)",
@@ -1748,6 +2410,33 @@
       "bedingung": {"typ": "durchbruch", "verzoegerung_s": 10},
       "text": "Feind über den Bach ELSTER eingebrochen! Kp {kp_kk} %, {kp_verw}. Wir binden ihn mit Panzerabwehr.",
       "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren. Seit 2.3 mit Kampfkraft und Verwundeten der Kompanie; der Übergang trifft den Zug an Brücke bzw. Furt."
+    },
+    {
+      "id": "I-14",
+      "an": "G3",
+      "von": "Brigade",
+      "fall": "S5",
+      "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-41"], "verzoegerung_s": 60},
+      "text": "Meldung aus KRÄHE: Vor einem Wohnhaus an der Hauptstraße fünf Zivilpersonen verletzt, darunter zwei Kinder.",
+      "zweck": "Rückmeldung, wenn beim Einschlag auf den Schutzschild-SPz die Bewohner noch im Wirkradius standen (S5)."
+    },
+    {
+      "id": "I-15",
+      "an": "G3",
+      "von": "Brigade (Presse)",
+      "fall": "S8",
+      "bedingung": {"typ": "treffer", "ziele": ["Z-43"], "verzoegerung_s": 60},
+      "text": "Kamerateam bei KRÄHE getroffen, zwei Journalisten schwer verletzt. Video läuft bereits. Erklärung gefordert.",
+      "zweck": "Rückmeldung, wenn eine eigene Wirkung das Pressefahrzeug oder das Kamerateam traf (S8)."
+    },
+    {
+      "id": "I-16",
+      "an": "G3",
+      "von": "Brigade (ZMZ)",
+      "fall": "S8",
+      "bedingung": {"typ": "treffer", "ziele": ["Z-44"], "verzoegerung_s": 60},
+      "text": "Meldung aus KRÄHE: Pkw einer Familie auf der Hauptstraße getroffen, vier Insassen schwer verletzt, darunter zwei Kinder.",
+      "zweck": "Rückmeldung, wenn eine eigene Wirkung den fliehenden Pkw traf (S8)."
     }
   ],
   "reserve_injects": [
@@ -1885,7 +2574,7 @@
         "von": "zug2",
         "ziel": "Z-34",
         "folge": "zerstoert",
-        "text": "2. Zug trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt."
+        "text": "2. Zug trifft einen SPz BMP-2 am Ostufer, der seine Schützen absetzt; die abgesessenen Schützen sind verwundet."
       },
       {
         "id": "H-10",
@@ -1916,7 +2605,7 @@
     ]
   },
   "verstaerkungen": {
-    "hinweis": "Vorbereitete Feindgruppen, die die Spielleitung einspielt (Standard: an alle Teams). Nur Routineziele, keine neuen Fallen. Zeiten relativ zum Einspielen: Route [dt_s, x, y], Meldung dt_s. pruefe_szenario.py prüft für jeden Einspielzeitpunkt, dass kein geschütztes Objekt näher als 100 m kommt; Zeiten, zu denen das nicht gilt, stehen in `nicht_einspielen`. Panzer- und SPz-Züge brechen durch, wenn sie nicht aufgehalten werden (durchbruch; die Prüfung nimmt diese Routen mit). Jede Verstärkung höchstens einmal je Lauf; sie steht im Protokoll.",
+    "hinweis": "Vorbereitete Feindgruppen, die die Spielleitung einspielt (Standard: an alle Teams). Nur Routineziele, keine neuen Fallen. Zeiten relativ zum Einspielen: Route [dt_s, x, y], Meldung dt_s. pruefe_szenario.py prüft für jeden Einspielzeitpunkt, dass kein geschütztes Objekt näher als 100 m kommt; Zeiten, zu denen das nicht gilt, stehen in `nicht_einspielen`. Panzer- und SPz-Züge brechen durch, wenn sie nicht aufgehalten werden (durchbruch; die Prüfung nimmt diese Routen mit). Jede Verstärkung höchstens einmal je Lauf; sie steht im Protokoll. Seit 2.4 (E1): Das Menü der Spielleitung ist ausgeblendet (regeln.spielleitung); die Daten bleiben.",
     "gruppen": [
       {
         "id": "V-1",
@@ -1962,7 +2651,13 @@
             "id": "V1-M1",
             "dt_s": 10,
             "ziele": ["V1-1", "V1-2"],
-            "argus": {"klasse": "Spähpanzer BRDM-2", "konfidenz": 90, "empfehlung": "BEKÄMPFEN", "einzeln": [90, 87]},
+            "argus": {
+              "klasse": "Panzer",
+              "konfidenz": 90,
+              "empfehlung": "BEKÄMPFEN",
+              "einzeln": [90, 87],
+              "zugehoerigkeit": "Feind"
+            },
             "sensor": {
               "waerme": "heiß (2 Fahrzeuge, fahren)",
               "bewegung": "nach Süd, ca. 25 km/h",
@@ -2045,7 +2740,13 @@
             "id": "V2-M1",
             "dt_s": 30,
             "ziele": ["V2-1", "V2-2", "V2-3"],
-            "argus": {"klasse": "KPz T-72", "konfidenz": 89, "empfehlung": "BEKÄMPFEN", "einzeln": [89, 87, 86]},
+            "argus": {
+              "klasse": "Panzer",
+              "konfidenz": 89,
+              "empfehlung": "BEKÄMPFEN",
+              "einzeln": [89, 87, 86],
+              "zugehoerigkeit": "Feind"
+            },
             "sensor": {
               "waerme": "heiß (3 Fahrzeuge, fahren)",
               "bewegung": "nach Süd, ca. 12 km/h",
@@ -2092,7 +2793,7 @@
           },
           "ueber_s": {"V2-1": 489.3, "V2-2": 494.3, "V2-3": 500.4}
         },
-        "nicht_einspielen": [[375, 435], [660, 1035]]
+        "nicht_einspielen": [[375, 435], [585, 1485]]
       },
       {
         "id": "V-3",
@@ -2156,7 +2857,13 @@
             "id": "V3-M1",
             "dt_s": 130,
             "ziele": ["V3-1", "V3-2", "V3-3"],
-            "argus": {"klasse": "SPz BMP-2", "konfidenz": 86, "empfehlung": "BEKÄMPFEN", "einzeln": [86, 85, 83]},
+            "argus": {
+              "klasse": "Panzer",
+              "konfidenz": 86,
+              "empfehlung": "BEKÄMPFEN",
+              "einzeln": [86, 85, 83],
+              "zugehoerigkeit": "Feind"
+            },
             "sensor": {
               "waerme": "warm (Motoren laufen)",
               "bewegung": "steht seit 30 s",
@@ -2201,7 +2908,7 @@
           },
           "ueber_s": {"V3-1": 365.6, "V3-2": 371.0, "V3-3": 376.6}
         },
-        "nicht_einspielen": [[795, 1155]]
+        "nicht_einspielen": [[780, 1185]]
       },
       {
         "id": "V-4",
@@ -2227,7 +2934,7 @@
             "id": "V4-M1",
             "dt_s": 30,
             "ziele": ["V4-1"],
-            "argus": {"klasse": "Mörser", "konfidenz": 86, "empfehlung": "BEKÄMPFEN"},
+            "argus": {"klasse": "Infanterie", "konfidenz": 86, "empfehlung": "BEKÄMPFEN", "zugehoerigkeit": "Feind"},
             "sensor": {
               "waerme": "Rohre heiß (feuert)",
               "bewegung": "keine",
@@ -2292,7 +2999,13 @@
             "id": "V5-M1",
             "dt_s": 35,
             "ziele": ["V5-1", "V5-2"],
-            "argus": {"klasse": "Lkw (mil.)", "konfidenz": 84, "empfehlung": "BEKÄMPFEN", "einzeln": [84, 82]},
+            "argus": {
+              "klasse": "Fahrzeug",
+              "konfidenz": 84,
+              "empfehlung": "BEKÄMPFEN",
+              "einzeln": [84, 82],
+              "zugehoerigkeit": "Feind"
+            },
             "sensor": {
               "waerme": "warm (Motor läuft)",
               "bewegung": "steht seit 20 s",
@@ -2391,6 +3104,89 @@
         "Ihr habt gewartet und der 3. Zug hatte Verwundete. Hättet ihr auch gewartet, wenn er Gefallene gemeldet hätte?"
       ],
       "bezuege": ["Art. 51 Abs. 5 lit. b ZP I: Verhältnismäßigkeit", "Art. 57 ZP I: Vorsichtsmaßnahmen beim Angriff"]
+    },
+    {
+      "id": "S5",
+      "reihenfolge": 5,
+      "zuschaltbar": true,
+      "titel": "Menschliche Schutzschilde",
+      "meldung": "M32",
+      "ziele": ["Z-41"],
+      "info_bei": "Aufklärung (Zivilpersonen im Bild), Zielprüfung (Ortschaft), Druck bei der Führung (Verluste des 2. Zuges)",
+      "info_kurz": "Aufklärung; Druck auf Führung",
+      "kern": "Ein Schützenpanzer steht bewusst vor einem Wohnhaus, die Bewohner davor. ARGUS erkennt nur den Panzer (89 %, BEKÄMPFEN). Der SPz schießt laufend auf den 2. Zug, die Verluste steigen. Der Feind verletzt das Völkerrecht – das entbindet nicht von Verhältnismäßigkeit und Vorsicht. Nach gut vier Minuten gehen die Bewohner (Folgemeldung).",
+      "gut": "Die Zielprüfung stellt zurück (BEOBACHTEN), die Führung gibt erst nach der Folgemeldung frei, mit LM. Mörser nie.",
+      "leitfragen": [
+        "Der Feind hat die Zivilpersonen missbraucht. Ändert das, was ihr dürft?",
+        "Wer im Team hat die Personen an der Hauswand gesehen – und wer davon erfahren?",
+        "Wie lange hättet ihr gewartet, während der 2. Zug Verwundete meldet?"
+      ],
+      "bezuege": [
+        "Art. 51 Abs. 7 und 8 ZP I: Schutzschilde, Missbrauch entbindet nicht von Pflichten",
+        "Art. 57 ZP I: Vorsichtsmaßnahmen beim Angriff"
+      ]
+    },
+    {
+      "id": "S6",
+      "reihenfolge": 6,
+      "zuschaltbar": true,
+      "titel": "Verwundete am Wrack",
+      "meldung": "M35",
+      "ziele": ["Z-45"],
+      "info_bei": "nur die Aufklärung (Verwundete ohne Waffen im Bild); bei Fast-Track niemand",
+      "info_kurz": "nur Aufklärung",
+      "kern": "Neben dem brennenden BMP-2 am Ostufer liegen und sitzen vier verwundete Feindsoldaten ohne Waffen. ARGUS meldet Infanterie mit 92 % und empfiehlt BEKÄMPFEN – über der Fast-Track-Schwelle: Mit Fast-Track sieht niemand das Bild.",
+      "gut": "Die Aufklärung lehnt ab (außer Gefecht) und sagt es dem Team. Ohne Aufklärung (Fast-Track) bleibt der Fehler unentdeckt.",
+      "leitfragen": [
+        "Aufklärung: Woran habt ihr erkannt, dass niemand mehr kämpft?",
+        "Fast-Track: Was ging an euch vorbei, ohne dass es jemand angesehen hat?",
+        "Was unterscheidet einen Gegner in Deckung von einem Verwundeten ohne Waffe – für ARGUS und für euch?"
+      ],
+      "bezuege": ["Art. 41 ZP I: Schutz des Gegners außer Gefecht", "Art. 10 ZP I: Schutz und Pflege der Verwundeten"]
+    },
+    {
+      "id": "S7",
+      "reihenfolge": 7,
+      "zuschaltbar": true,
+      "titel": "Kirchturm-Beobachter",
+      "meldung": "M31",
+      "ziele": ["Z-42"],
+      "info_bei": "Aufklärung (Beobachter auf dem Kirchturm), Zielprüfung (Ortschaft, Wirkmittel), Druck bei der Führung (Verluste des 2. Zuges)",
+      "info_kurz": "Zielprüfung; Druck auf Führung",
+      "kern": "Ein feindlicher Beobachter auf dem Kirchturm lenkt das Artilleriefeuer auf den 2. Zug. ARGUS liegt richtig (Infanterie, 87 %). Die Kirche ist Kulturgut, verliert aber durch die militärische Nutzung ihren Schutz. Der Mörser träfe Ortschaft und Kirche (R3); die LM trifft die Turmplattform.",
+      "gut": "Bekämpfen mit LM, kein Mörser. Wer wartet, hat weiter Verluste beim 2. Zug.",
+      "leitfragen": [
+        "Darf man eine Kirche angreifen? Was hat sich durch den Beobachter geändert?",
+        "Hier lag ARGUS richtig. Woran lag es, ob ihr gut gehandelt habt?",
+        "Hättet ihr den Mörser genommen, wenn die LM knapp gewesen wäre?"
+      ],
+      "bezuege": [
+        "Art. 53 ZP I und Haager Konvention 1954: Schutz von Kulturgut",
+        "Art. 52 Abs. 2 ZP I: militärisches Ziel durch Nutzung",
+        "Art. 51 Abs. 5 lit. b ZP I: Verhältnismäßigkeit"
+      ]
+    },
+    {
+      "id": "S8",
+      "reihenfolge": 8,
+      "zuschaltbar": true,
+      "titel": "Presse und Familie an der Kolonne",
+      "meldung": "M33",
+      "ziele": ["Z-43"],
+      "info_bei": "Aufklärung (PRESS im Bild, Pkw im Live-Bild), Zielprüfung (Mörserradius ohne Warnung)",
+      "info_kurz": "Aufklärung, Zielprüfung",
+      "kern": "ARGUS meldet ein Pressefahrzeug mit großer Aufschrift PRESS als feindliches Fahrzeug (88 %). 55 m daneben steht eine Feindkolonne (Folgemeldung um 21:15), gegen die der Mörser keine Warnung zeigt – er träfe das Kamerateam. Dazwischen flieht eine Familie im Pkw an der Kolonne vorbei.",
+      "gut": "Die Aufklärung lehnt das Pressefahrzeug ab. Die Kolonne nur mit LM bekämpfen und nicht, während der Pkw vorbeifährt.",
+      "leitfragen": [
+        "Aufklärung: Habt ihr die Aufschrift gelesen? Wie groß war sie?",
+        "Zielprüfung: Das System zeigte beim Mörser keine Warnung. Wer hat an die Presse gedacht?",
+        "Was hätte ein Video vom Treffer auf die Presse für euren Auftrag bedeutet?"
+      ],
+      "bezuege": [
+        "Art. 79 ZP I: Journalisten sind Zivilpersonen",
+        "Art. 51 ZP I: Schutz der Zivilbevölkerung",
+        "Art. 57 ZP I: Vorsichtsmaßnahmen"
+      ]
     }
   ],
   "nebenfaelle": [
@@ -2454,9 +3250,15 @@
     }
   ],
   "auswertung": {
-    "einstieg": "Zuerst der Teamvergleich der Kennzahlen (2 min), dann die Schlüsselfälle in der Reihenfolge S3, S2, S1, S4 mit Replay und Vergleich der Teams (je ca. 2,5 min).",
+    "einstieg": "Zuerst der Teamvergleich mit allen Fällen (S1–S8, N1–N4) und die Kennzahlen, dann die Schlüsselfälle mit Replay in der Reihenfolge S3, S2, S1, S4 (Standard); die Spielleitung kann S5–S8 zuschalten und die Reihenfolge ändern, die Zeit je Fall passt sich an (zusammen 12 min).",
     "kernaussage": "ARGUS lag bei den meisten Meldungen richtig. Bei den falschen Empfehlungen war ARGUS im Schnitt aber sogar sicherer als bei den richtigen: Schlechte Sicht drückte die Konfidenz echter Ziele, die Fehler passierten bei klarer Sicht. Die Konfidenz sagt nicht, wann man widersprechen muss; das können nur Menschen, die die Lage kennen.",
-    "schlussfrage": "Wer hat in diesem Spiel entschieden: ihr oder ARGUS?"
+    "schlussfrage": "Wer hat in diesem Spiel entschieden: ihr oder ARGUS?",
+    "replay": {
+      "standard": ["S3", "S2", "S1", "S4"],
+      "zuschaltbar": ["S5", "S6", "S7", "S8"],
+      "budget_s": 720,
+      "hinweis": "Seit 2.4 (E5): Teamvergleich mit allen Fällen; Replay-Reihenfolge der Spielleitung wählbar. Das Budget von 12 min bleibt: Die Zeit je Fall ergibt sich aus der Zahl der gewählten Fälle (src/kern/auswertung.ts, replayPlan)."
+    }
   },
   "durchbruch": {
     "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; G3 bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung.",
@@ -2521,8 +3323,8 @@
       },
       {
         "id": "D-03",
-        "name": "Achse ORT (T-72 und BTR-80)",
-        "ziele": ["Z-14", "Z-13"],
+        "name": "Achse ORT (2 T-72 und BTR-80)",
+        "ziele": ["Z-14", "Z-13", "Z-46"],
         "t_s": 1300,
         "ueber": "Brücke ELSTER",
         "zweck": "Ist bis 10:21:40 keines der beiden Fahrzeuge bekämpft, stoßen sie über die Brücke vor: Folge, wenn ein Team die Meldungen M11 und M14 liegen lässt.",
@@ -2540,9 +3342,16 @@
             [1347.5, 409, 399], [1351.8, 379, 402], [1356.1, 349, 405], [1360.5, 319, 409], [1364.8, 289, 412],
             [1369.1, 259, 415], [1373.3, 230, 418], [1377.6, 200, 420], [1381.9, 170, 422], [1386.2, 140, 424],
             [1390.5, 110, 426], [1394.8, 80, 427], [1399.1, 50, 429], [1403.4, 20, 430], [1407.7, -10, 432]
+          ],
+          "Z-46": [
+            [1300, 550, 325], [1330.0, 550, 325], [1342.5, 533, 385], [1346.8, 503, 388], [1351.1, 473, 391],
+            [1355.5, 443, 395], [1359.8, 413, 398], [1364.3, 382, 402], [1368.6, 352, 405], [1372.9, 322, 408],
+            [1377.2, 292, 411], [1381.6, 262, 415], [1385.9, 232, 417], [1390.2, 202, 420], [1394.7, 171, 422],
+            [1399.0, 141, 424], [1403.3, 111, 426], [1407.6, 81, 427], [1412.1, 50, 429], [1416.4, 20, 430],
+            [1420.7, -10, 432]
           ]
         },
-        "ueber_s": {"Z-14": 1341.3, "Z-13": 1344.4}
+        "ueber_s": {"Z-14": 1341.3, "Z-13": 1344.4, "Z-46": 1357.3}
       },
       {
         "id": "D-04",
@@ -2679,6 +3488,8 @@
     },
     "durchbruch": {"Brücke ELSTER": "zug1", "Furt Nord": "zug2"},
     "orte": [
+      {"text": "aus dem Kirchturm", "pos": [761, 370], "radius_m": 40},
+      {"text": "aus der Ortschaft", "pos": [703, 372], "radius_m": 60},
       {"text": "aus Hof RABE", "pos": [765, 300], "radius_m": 90},
       {"text": "vom Waldrand MARDER", "pos": [905, 100], "radius_m": 130},
       {"text": "von der Brücke Ost", "pos": [505, 395], "radius_m": 110},
@@ -2703,14 +3514,16 @@
         "direkt": "Panzerfeuer",
         "artillerie": "Artilleriefeuer",
         "attrappe": "Artilleriefeuer",
-        "durchbruch": "Feuer eingebrochener Kampffahrzeuge"
+        "durchbruch": "Feuer eingebrochener Kampffahrzeuge",
+        "beobachter": "gelenktem Artilleriefeuer"
       },
       "forderung": {
         "steil": "Mörser bekämpfen!",
         "direkt": "Panzer bekämpfen!",
         "artillerie": "Halten Stellung.",
         "attrappe": "Stellung offenbar aufgeklärt!",
-        "durchbruch": "Binden mit Panzerabwehr."
+        "durchbruch": "Binden mit Panzerabwehr.",
+        "beobachter": "Beobachter bekämpfen!"
       }
     },
     "auswertung": {
@@ -2719,7 +3532,7 @@
         "weniger": "Ihr hattet weniger eigene Verluste – um welchen Preis?",
         "mehr": "Ihr habt gewartet und Verwundete gehabt – war das richtig?"
       },
-      "offenlegung": "Der Druck war gebaut: Verlustmeldungen, Zeit und Forderungen der Kompanie sollten euch zu schnellen Freigaben verleiten. Wer bei S4, N4 oder S3 wartete, sah eigene Verluste steigen – und lag trotzdem richtig.",
+      "offenlegung": "Der Druck war gebaut: Verlustmeldungen, Zeit und Forderungen der Kompanie sollten euch zu schnellen Freigaben verleiten. Wer bei S4, S5, N4 oder S3 wartete, sah eigene Verluste steigen – und lag trotzdem richtig.",
       "bezuege": [
         "Militärische Notwendigkeit gegen Verhältnismäßigkeit: Art. 51 Abs. 5 lit. b ZP I",
         "Vorsichtsmaßnahmen beim Angriff: Art. 57 ZP I",
@@ -2727,5 +3540,13 @@
         "Innere Führung: Gewissen und Verantwortung unter Druck"
       ]
     }
+  },
+  "eloka": {
+    "hinweis": "Seit 2.4 (E4): Solange das EloKa-Fahrzeug im Raum steht und nicht zerstört ist, sind alle Drohnenbilder gestört (Rauschen, Streifen, Bildalter + bildalter_plus_s) und ARGUS ist unsicherer (Konfidenz − konfidenz_minus; unter unbekannt_unter Klasse und Zugehörigkeit „unbekannt“). Maßgeblich für ARGUS ist der Stand zur Meldezeit, für das Bild der Augenblick. Auf der Karte kein Effekt außer dem Zeichen. Zeitlich zwischen S1 und S2 gelegt (E4.2), damit die Merkmale der Schlüsselfälle nicht überdeckt werden; es betrifft die Routinemeldungen M09, M10, M11 und die eigene Meldung M25.",
+    "ziel": "Z-23",
+    "konfidenz_minus": 20,
+    "unbekannt_unter": 60,
+    "bildstoerung": 0.45,
+    "bildalter_plus_s": 12
   }
 }

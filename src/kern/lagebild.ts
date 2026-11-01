@@ -16,16 +16,18 @@
 // (nie Ground Truth). Sind alle Fahrzeuge zerstört, bleibt das Zeichen durchgestrichen am Wrack; nach der
 // eigenen Wirkung bleibt es beim bekämpften Fahrzeug am Einschlagort (Rest eines Zuges meldet ARGUS neu).
 // Zieht ein Ziel ab, verschwindet seine Spur, sobald die Meldung bei dieser Rolle erledigt ist.
-import type { GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
+import type { ArgusAusgabe, GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
 import { ZEICHEN_KONTAKT, zeichenArgus, zeichenZiel } from "../karte/zeichen";
 import { ausrichtung, dist, feinlage, gtBei, imPolygon, position, vorhanden } from "./geometrie";
-import { einschlagVon } from "./lage";
+import { einschlaegeVon, offeneEinschlaege } from "./lage";
 import { gemeldetePosition } from "./regeln";
+import { argusBei } from "./eloka";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
 import { stand as verlustZugStand, stufeFuer, verlustLage, zuege as eigeneZuege, zugMitte } from "./verluste";
 import { zielNr } from "./zielnummern";
 import type { MeldungsStand, Spielzustand } from "./zustand";
+import type { TrefferDaten } from "./ereignisse";
 
 export type ObjektZustand = "offen" | "zurueckgestellt" | "freigegeben" | "bekaempft" | "erledigt";
 
@@ -206,21 +208,33 @@ function zustandFuer(st: MeldungsStand, rolle: "g1" | "g2" | "g3"): ObjektZustan
   return "erledigt";
 }
 
-/** Freigegebene Wirkung, deren Einschlag noch aussteht (für alle Karten gleich): Ort und Zeit vorausberechnet. */
-function geplanteWirkung(inh: Inhalte, z: Spielzustand, m: Meldung, st: MeldungsStand): WirkungsMarke | null {
-  if (st.stufe !== "wirkung" || st.wirkung || !st.g3?.wirkmittel) return null;
+/** Kennung der Wirkungsmarke: W-M07 (erster Einschlag), bei einem Zug W-M07-1, W-M07-2 … (seit 2.4, E3). */
+function markenId(id: string, nr: number): string {
+  return nr ? `W-${id}-${nr}` : `W-${id}`;
+}
+
+/** Freigegebene Wirkung, deren Einschläge noch ausstehen (für alle Karten gleich): Ort und Zeit vorausberechnet, je Einschlag. */
+function geplanteWirkungen(inh: Inhalte, z: Spielzustand, m: Meldung, st: MeldungsStand): WirkungsMarke[] {
+  if (st.stufe !== "wirkung" || st.wirkung || !st.g3?.wirkmittel) return [];
   const wm = inh.wirkmittel[st.g3.wirkmittel];
-  const e = einschlagVon(inh, z, m.id);
-  if (!wm || !e) return null;
+  if (!wm) return [];
   const start = inh.szenario.spieluhr.start;
-  return {
-    id: `W-${m.id}`,
+  const alle = einschlaegeVon(inh, z, m.id);
+  const zug = alle.length > 1 ? ` ×${alle.length}` : "";
+  return offeneEinschlaege(inh, z, m.id).map(({ nr, e }) => ({
+    id: markenId(m.id, nr),
     pos: e.pos,
     radius_m: wm.wirkradius_m,
-    text: `Ziel ${zielNr(inh, z, m.id)} ${wm.kurz} · ${uhrzeit(start, e.t)}`,
-    zeilen: [`freigegeben ${uhrzeit(start, st.g3.t_s)}, Einschlag ${uhrzeit(start, e.t)} (vorausberechnet)`, wm.name],
+    text: `Ziel ${zielNr(inh, z, m.id)} ${wm.kurz}${zug} · ${uhrzeit(start, e.t)}`,
+    zeilen: [`freigegeben ${uhrzeit(start, st.g3!.t_s)}, Einschlag ${uhrzeit(start, e.t)} (vorausberechnet)`, wm.name],
     geplant: true,
-  };
+  }));
+}
+
+/** Eingeschlagene Wirkungen einer Meldung, je Einschlag (seit 2.4 bei einem Zug mehrere). */
+function einschlagListe(st: MeldungsStand): { nr: number; pos: Punkt; t: number; getroffen: TrefferDaten[] }[] {
+  if (st.wirkungen?.length) return st.wirkungen.map((w) => ({ nr: w.nr, pos: w.pos, t: w.t_einschlag, getroffen: w.getroffen }));
+  return st.wirkung ? [{ nr: 0, pos: st.wirkung.pos, t: st.wirkung.t_einschlag, getroffen: st.wirkung.getroffen }] : [];
 }
 
 /** Ab wann das Hintergrundgefecht ein Ziel außer Gefecht gesetzt hat (folge ausser_gefecht, wirkt); sonst undefined. */
@@ -289,7 +303,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
   const objekte: KartenObjekt[] = [];
   const wirkungen: WirkungsMarke[] = [];
   /** je Zeichen: Fahrzeug, dem es folgt, und alle Fahrzeuge seiner Meldungen (für Teil-, Wrack- und Kontaktzeichen) */
-  const zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[] }[] = [];
+  const zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[]; argus: ArgusAusgabe }[] = [];
   for (const [nr, liste] of proZiel) {
     const sortiert = [...liste].sort((a, b) => RANG[zustandFuer(b.st, rolle)] - RANG[zustandFuer(a.st, rolle)]
       || b.st.erschienen.seq - a.st.erschienen.seq);
@@ -346,7 +360,8 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
     const o: KartenObjekt = {
       id: nr,
       pos,
-      sidc: zeichenArgus(inh, m.argus.klasse, m.argus.konfidenz, zeichenStatus, anzahl),
+      // seit 2.4 (E4): das Zeichen zeigt, was ARGUS zur Meldezeit meldete (bei gestörtem Datenlink unsicherer)
+      sidc: zeichenArgus(inh, argusBei(inh, m, st.gestoert).klasse, argusBei(inh, m, st.gestoert).konfidenz, zeichenStatus, anzahl),
       menge,
       text: `Ziel ${nummern.join("/")}`,
       titel: `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
@@ -363,20 +378,20 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
       zerstoert: zerstoert || (bekaempft && tLage === undefined),
     };
     objekte.push(o);
-    zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern });
+    zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern, argus: argusBei(inh, m, st.gestoert) });
     for (const x of liste) {
-      const geplant = geplanteWirkung(inh, z, x.m, x.st);
-      if (geplant) wirkungen.push(geplant);
-      const w = x.st.wirkung;
-      if (!w) continue;
-      const wm = inh.wirkmittel[w.wirkmittel];
-      wirkungen.push({
-        id: `W-${x.m.id}`,
-        pos: w.pos,
-        radius_m: wm?.wirkradius_m ?? 0,
-        text: `Ziel ${zielNr(inh, z, x.m.id)} ${wm?.kurz ?? w.wirkmittel}`,
-        zeilen: [`Einschlag ${uhrzeit(start, w.t_einschlag)} mit ${wm?.name ?? w.wirkmittel}`, `freigegeben ${uhrzeit(start, w.t_freigabe)}`],
-      });
+      wirkungen.push(...geplanteWirkungen(inh, z, x.m, x.st));
+      const wmId = x.st.wirkung?.wirkmittel ?? x.st.g3?.wirkmittel;
+      const wm = wmId ? inh.wirkmittel[wmId] : undefined;
+      for (const w of einschlagListe(x.st)) {
+        wirkungen.push({
+          id: markenId(x.m.id, w.nr),
+          pos: w.pos,
+          radius_m: wm?.wirkradius_m ?? 0,
+          text: `Ziel ${zielNr(inh, z, x.m.id)} ${wm?.kurz ?? wmId ?? ""}`,
+          zeilen: [`Einschlag ${uhrzeit(start, w.t)} mit ${wm?.name ?? wmId ?? ""}`, `freigegeben ${uhrzeit(start, x.st.g3?.t_s ?? w.t)}`],
+        });
+      }
     }
   }
   if (tLage !== undefined) objekte.push(...weitereZeichen(inh, z, tLage, zeichen));
@@ -385,7 +400,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
 
 /** Wrack-, Teil- und Kontaktzeichen zu den Meldungszeichen einer Rolle (seit 2.2, C1/C8). */
 function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
-  zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[] }[]): KartenObjekt[] {
+  zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[]; argus: ArgusAusgabe }[]): KartenObjekt[] {
   const out: KartenObjekt[] = [];
   const fuehrer = new Set(zeichen.map((x) => x.fuehrer).filter((x): x is string => !!x));
   const erledigt = new Set<string>(fuehrer);
@@ -404,7 +419,7 @@ function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
         out.push({
           id: `${x.o.id}~${id}`,
           pos: position(ziel, tz),
-          sidc: zeichenArgus(inh, x.m.argus.klasse, x.m.argus.konfidenz, "X", 1),
+          sidc: zeichenArgus(inh, x.argus.klasse, x.argus.konfidenz, "X", 1),
           text: "",
           titel: `Ziel ${x.nummern.join(", ")} · Fahrzeug zerstört`,
           zeilen: [`${eigen ? `getroffen bei Ziel ${zielNr(inh, z, durch!)}` : "zerstört"} (${uhrzeit(inh.szenario.spieluhr.start, tz)})`],
@@ -425,7 +440,7 @@ function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
       out.push({
         id: `${x.o.id}+${id}`,
         pos: position(ziel, t),
-        sidc: zeichenArgus(inh, x.m.argus.klasse, x.m.argus.konfidenz, "P", 1),
+        sidc: zeichenArgus(inh, x.argus.klasse, x.argus.konfidenz, "P", 1),
         text: x.o.text,
         titel: `${x.o.text} · ein Fahrzeug der Meldung`,
         zeilen: ["Fahrzeug dieser Meldung, hat sich vom Zeichen entfernt"],
@@ -469,24 +484,26 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
   const wirkungen: WirkungsMarke[] = [];
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
-    const geplant = st && inh.meldungen[id] && geplanteWirkung(inh, z, inh.meldungen[id], st);
-    if (geplant) wirkungen.push(geplant);
-    const w = st?.wirkung;
-    if (!w) continue;
-    const wm = inh.wirkmittel[w.wirkmittel];
-    for (const g of w.getroffen) if (g.was === "personen") getroffenePersonen.add(`${g.ziel}:${g.kategorie}`);
-    const treffer = w.getroffen.map((g) => g.was === "personen"
-      ? `${g.ziel}: ${g.anzahl ?? ""} ${PERSONEN_NAME[g.kategorie] ?? g.kategorie}`.replace("  ", " ")
-      : `${g.ziel} (${GT_NAME[g.kategorie as GtKategorie] ?? g.kategorie})`);
-    wirkungen.push({
-      id: `W-${id}`,
-      pos: w.pos,
-      radius_m: wm?.wirkradius_m ?? 0,
-      text: `Ziel ${zielNr(inh, z, id)} ${wm?.kurz ?? w.wirkmittel}`,
-      zeilen: [`Einschlag ${uhrzeit(start, w.t_einschlag)} (frei ${uhrzeit(start, w.t_freigabe)}) mit ${wm?.name ?? w.wirkmittel}`,
-        treffer.length ? `getroffen: ${treffer.join(", ")}` : "nichts getroffen"],
-      fehl: w.getroffen.some((g) => FEHL.has(g.kategorie)),
-    });
+    if (!st) continue;
+    if (inh.meldungen[id]) wirkungen.push(...geplanteWirkungen(inh, z, inh.meldungen[id], st));
+    const wmId = st.wirkung?.wirkmittel ?? st.g3?.wirkmittel;
+    const wm = wmId ? inh.wirkmittel[wmId] : undefined;
+    // seit 2.4 (E3): je Einschlag eines Zuges eine Marke
+    for (const w of einschlagListe(st)) {
+      for (const g of w.getroffen) if (g.was === "personen") getroffenePersonen.add(`${g.ziel}:${g.kategorie}`);
+      const treffer = w.getroffen.map((g) => g.was === "personen"
+        ? `${g.ziel}: ${g.anzahl ?? ""} ${PERSONEN_NAME[g.kategorie] ?? g.kategorie}`.replace("  ", " ")
+        : `${g.ziel} (${GT_NAME[g.kategorie as GtKategorie] ?? g.kategorie})`);
+      wirkungen.push({
+        id: markenId(id, w.nr),
+        pos: w.pos,
+        radius_m: wm?.wirkradius_m ?? 0,
+        text: `Ziel ${zielNr(inh, z, id)} ${wm?.kurz ?? wmId ?? ""}`,
+        zeilen: [`Einschlag ${uhrzeit(start, w.t)} (frei ${uhrzeit(start, st.g3?.t_s ?? w.t)}) mit ${wm?.name ?? wmId ?? ""}`,
+          treffer.length ? `getroffen: ${treffer.join(", ")}` : "nichts getroffen"],
+        fehl: w.getroffen.some((g) => FEHL.has(g.kategorie)),
+      });
+    }
   }
 
   const objekte: KartenObjekt[] = [];

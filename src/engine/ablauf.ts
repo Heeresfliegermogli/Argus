@@ -20,37 +20,56 @@
 import type { HintergrundEreignis, Inhalte, Meldung } from "../inhalte/typen";
 import { durchbruchGruppen, durchbruchStand, durchgebrochen } from "../kern/durchbruch";
 import { gtBei, position, weg } from "../kern/geometrie";
-import { alleWeg, ausserGefechtZeiten, einschlagVon, freigaben, fruehesteFreigabe, wegAb, weltFuer } from "../kern/lage";
+import { alleWeg, ausserGefechtZeiten, einschlaegeVon, einschlagVon, freigaben, fruehesteFreigabe, offeneEinschlaege, wegAb, weltFuer } from "../kern/lage";
+import { elokaAktiv } from "../kern/eloka";
+import type { Einschlag } from "../kern/regeln";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
+import { argusBei } from "../kern/eloka";
 import { uhrzeit } from "../kern/uhr";
 import { fuelle, stand, verlustLage } from "../kern/verluste";
 import type { Spielzustand } from "../kern/zustand";
 
-export { alleWeg, einschlagVon, freigaben, wegAb, weltFuer };
+export { alleWeg, einschlaegeVon, einschlagVon, freigaben, wegAb, weltFuer };
 import { type Entwurf, entwurf } from "./entwurf";
 
 /** kleiner Abstand für „erst nach T fällig“ (s) */
 export const NACH = 0.001;
 
-export function fastTrackGreift(inh: Inhalte, z: Spielzustand, m: Meldung): boolean {
-  return z.fastTrack && m.argus.konfidenz >= inh.regeln.fast_track.schwelle && m.argus.empfehlung === "BEKÄMPFEN";
+export function fastTrackGreift(inh: Inhalte, z: Spielzustand, m: Meldung, gestoert = false): boolean {
+  const a = argusBei(inh, m, gestoert);
+  return z.fastTrack && a.konfidenz >= inh.regeln.fast_track.schwelle && a.empfehlung === "BEKÄMPFEN";
 }
 
-/** Meldung freigeben: als Entwurf mit Fast-Track-Weiche und „entfällt“, wenn jedes Fahrzeug schon weg ist. */
+/**
+ * Meldung freigeben: als Entwurf mit Fast-Track-Weiche und „entfällt“, wenn jedes Fahrzeug schon weg ist. Seit 2.4 (E4)
+ * mit `gestoert`, wenn das EloKa-Fahrzeug zur Meldezeit den Datenlink stört (ARGUS meldet dann unsicherer).
+ */
 export function meldungEntwurf(inh: Inhalte, z: Spielzustand, m: Meldung, manuell = false, t = m.t_s): Entwurf {
   const entfaellt = alleWeg(inh, z, m.ziele, t);
+  const gestoert = elokaAktiv(inh, z.zerstoert, t);
   return entwurf("meldung", {
     meldung: m.id,
-    ...(entfaellt ? { entfaellt: true } : fastTrackGreift(inh, z, m) ? { fast_track: true } : {}),
+    ...(entfaellt ? { entfaellt: true } : fastTrackGreift(inh, z, m, gestoert) ? { fast_track: true } : {}),
     ...(manuell ? { manuell: true } : {}),
+    ...(gestoert && !entfaellt ? { gestoert: true } : {}),
   }, { t_geplant: manuell ? undefined : m.t_s });
 }
 
-/** Zivilpersonen beim Einschlag dieser Freigabe? Nur bekannt, wenn die Wirkung schon da ist. */
+/** Zivilpersonen beim Einschlag dieser Freigabe? Zeit des ersten Einschlags, der welche traf (seit 2.4 je Einschlag eines Zuges). */
 function wirkungMitZivil(z: Spielzustand, id: string): number | null {
-  const w = z.meldungen[id]?.wirkung;
-  if (!w) return null;
-  return w.getroffen.some((g) => g.kategorie === "zivil") ? w.t_einschlag : null;
+  const ts = (z.meldungen[id]?.wirkungen ?? []).filter((w) => w.getroffen.some((g) => g.kategorie === "zivil")).map((w) => w.t_einschlag);
+  return ts.length ? Math.min(...ts) : null;
+}
+
+/** Erster eigener Einschlag, der eines der Ziele oder Personen bei ihm traf (Bedingung „treffer“, seit 2.4). */
+function ersterTreffer(z: Spielzustand, ziele: string[]): number | null {
+  let t: number | null = null;
+  for (const id of z.reihenfolge) {
+    for (const w of z.meldungen[id].wirkungen ?? []) {
+      if (w.getroffen.some((g) => ziele.includes(g.ziel)) && (t === null || w.t_einschlag < t)) t = w.t_einschlag;
+    }
+  }
+  return t;
 }
 
 function hgZielStand(inh: Inhalte, z: Spielzustand, h: HintergrundEreignis): { wirkt: boolean; grund?: string } {
@@ -65,16 +84,16 @@ function hgZielStand(inh: Inhalte, z: Spielzustand, h: HintergrundEreignis): { w
   return { wirkt: true };
 }
 
-/** Entwurf einer Wirkung (zum Einschlag oder bei Spielende abgerechnet). */
-function wirkungEntwurf(inh: Inhalte, z: Spielzustand, id: string, dauer: number): Entwurf | null {
+/** Entwurf eines Einschlags (zum Einschlag oder bei Spielende abgerechnet); seit 2.4 (E3) je Fahrzeug eines Zuges mit nr. */
+function wirkungEntwurf(inh: Inhalte, z: Spielzustand, id: string, dauer: number, e: Einschlag, nr: number, anzahl: number): Entwurf | null {
   const st = z.meldungen[id];
   const wmId = st.g3?.wirkmittel;
-  const e = einschlagVon(inh, z, id);
-  if (!wmId || !e || !inh.wirkmittel[wmId]) return null;
+  if (!wmId || !inh.wirkmittel[wmId]) return null;
   const w = wirkungBeimEinschlag(inh, e, wmId, z.zerstoert);
   return entwurf("wirkung", {
     meldung: id, wirkmittel: wmId, pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], t_freigabe: st.g3!.t_s,
     getroffen: w.getroffen, t_einschlag: Math.round(e.t * 100) / 100, ziel: e.ziel, verstoesse: w.pruefung.verstoesse.map(verstossText),
+    ...(anzahl > 1 ? { nr, anzahl } : {}),
   }, { t_geplant: Math.min(e.t, dauer) });
 }
 
@@ -97,13 +116,16 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     }
   }
 
-  // 2 eigene Wirkungen zum Einschlag (bei Spielende alle noch ausstehenden)
+  // 2 eigene Wirkungen zum Einschlag (bei Spielende alle noch ausstehenden); seit 2.4 je Einschlag eines Zuges. Der Host schreibt
+  //   immer nur das früheste Fällige und fragt dann neu – ein späterer Einschlag rechnet also mit den Zerstörungen der früheren.
   for (const id of z.reihenfolge) {
     if (z.meldungen[id].stufe !== "wirkung") continue;
-    const e = einschlagVon(inh, z, id);
-    if (!e || (t < e.t && t < dauer)) continue;
-    const w = wirkungEntwurf(inh, z, id, dauer);
-    if (w) liste.push(w);
+    const anzahl = einschlaegeVon(inh, z, id).length;
+    for (const { nr, e } of offeneEinschlaege(inh, z, id)) {
+      if (t < e.t && t < dauer) continue;
+      const w = wirkungEntwurf(inh, z, id, dauer, e, nr, anzahl);
+      if (w) liste.push(w);
+    }
   }
 
   // 3 Skriptereignisse (E-01): erst nach ihrem Zeitpunkt fällig, damit eine Freigabe genau dann noch zählt
@@ -198,7 +220,13 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
       if (erste && t >= erste.t + b.verzoegerung_s) liste.push(entwurf("inject", mitText(i.id, erste.t + b.verzoegerung_s), { t_geplant: erste.t + b.verzoegerung_s }));
       continue;
     }
-    // freigabe_mit_zivil: zählt die Zivilpersonen beim Einschlag (frühestmöglich, sobald die Wirkung da ist)
+    if (b.typ === "treffer") {
+      // seit 2.4 (S8): verzoegerung_s nach dem ersten eigenen Einschlag, der eines der Ziele traf (Fahrzeug oder Personen dabei)
+      const tt = ersterTreffer(z, b.ziele);
+      if (tt !== null && tt + b.verzoegerung_s <= dauer && t >= tt + b.verzoegerung_s) liste.push(entwurf("inject", mitText(i.id, tt + b.verzoegerung_s), { t_geplant: tt + b.verzoegerung_s }));
+      continue;
+    }
+    // freigabe_mit_zivil: zählt die Zivilpersonen beim Einschlag (frühestmöglich, sobald der Einschlag da ist, der sie traf)
     let tInject = Infinity;
     for (const id of z.reihenfolge) {
       const st = z.meldungen[id];
@@ -253,7 +281,10 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
       const erst = durchgebrochen(inh, z.durchbrueche, z.zerstoert, z.verstaerkungen).erstesUeber;
       if (erst !== null) k.push(erst + b.verzoegerung_s);
     } else if (b.typ === "keine_freigabe_bis") k.push(b.t_s + NACH);
-    else {
+    else if (b.typ === "treffer") {
+      const tt = ersterTreffer(z, b.ziele);
+      if (tt !== null) k.push(tt + b.verzoegerung_s);
+    } else {
       const erste = fruehesteFreigabe(frei, b.ziele);
       if (erste) k.push(erste.t + b.verzoegerung_s);
     }
@@ -263,13 +294,10 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
     const st = z.meldungen[id];
     const m = inh.meldungen[id];
     if (!m) continue;
-    if (st.stufe === "wirkung") {
-      const e = einschlagVon(inh, z, id);
-      if (e) k.push(e.t);
-    }
+    if (st.stufe === "wirkung") for (const { e } of offeneEinschlaege(inh, z, id)) k.push(e.t);
     if (st.stufe === "g1" || st.stufe === "g2" || st.stufe === "g3") k.push(wegAb(inh, z, m.ziele));
-    const w = st.wirkung;
-    if (w && st.g3) for (const i of sz.injects) if (i.bedingung?.typ === "freigabe_mit_zivil") k.push(Math.max(st.g3.t_s + i.bedingung.verzoegerung_s, w.t_einschlag));
+    const tz = wirkungMitZivil(z, id);
+    if (tz !== null && st.g3) for (const i of sz.injects) if (i.bedingung?.typ === "freigabe_mit_zivil") k.push(Math.max(st.g3.t_s + i.bedingung.verzoegerung_s, tz));
   }
   return Math.min(...k.filter((x) => x > t + 1e-9));
 }
@@ -292,6 +320,7 @@ function bedingungText(inh: Inhalte, b: Bedingung): string {
   const uhr = (t: number) => uhrzeit(inh.szenario.spieluhr.start, t);
   if (b.typ === "keine_freigabe_bis") return `wenn bis ${uhr(b.t_s)} keine Freigabe auf ${ziele}`;
   if (b.typ === "freigabe_mit_zivil") return `${b.verzoegerung_s} s nach Freigabe auf ${ziele}, wenn beim Einschlag Zivilpersonen im Wirkradius`;
+  if (b.typ === "treffer") return `${b.verzoegerung_s} s nach einem eigenen Einschlag, der ${ziele} trifft`;
   return `${b.verzoegerung_s} s nach Freigabe auf ${ziele}`;
 }
 
@@ -319,6 +348,11 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
       aus.push(d.erstesUeber === null
         ? { id: i.id, art: "inject", status: "wartet", text }
         : { id: i.id, art: "inject", status: "erfuellt", text: `${text} – ${d.gruppen.join(", ")}`, t: d.erstesUeber + b.verzoegerung_s });
+      continue;
+    }
+    if (b.typ === "treffer") {
+      const tt = ersterTreffer(z, b.ziele);
+      aus.push(tt === null ? { id: i.id, art: "inject", status: "wartet", text } : { id: i.id, art: "inject", status: "erfuellt", text, t: tt + b.verzoegerung_s });
       continue;
     }
     const erste = fruehesteFreigabe(frei, b.ziele);

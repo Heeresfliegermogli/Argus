@@ -1,6 +1,6 @@
 {
-  "version": "2.2",
-  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung). Seit 2.2: nur_zielfahrzeug (LM) – das Wirkmittel trifft nur das bekämpfte Fahrzeug, andere Fahrzeuge im Wirkradius nicht; Personen im Wirkradius schon.",
+  "version": "2.3",
+  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung). Seit 2.2: nur_zielfahrzeug (LM) – das Wirkmittel trifft nur das bekämpfte Fahrzeug, andere Fahrzeuge im Wirkradius nicht; Personen im Wirkradius schon. Seit 2.3 (Szenario 2.4, E3): zug – wie BEKÄMPFEN auf eine zugweise Meldung wirkt: je_fahrzeug (LM, PzAbw: ein Schuss je noch stehendem Fahrzeug, der i-te zug.abstand_s · i nach der Freigabe; LM: 1 LM je Fahrzeug, reicht der Bestand nicht, nur so viele Fahrzeuge, wie LM da sind) oder flaeche (Mörser: ein Einschlag, alles im Wirkradius).",
   "wirkmittel": [
     {
       "id": "MRS",
@@ -11,7 +11,8 @@
       "vorlauf_text": "ca. 35 s (Feuerbereitschaft und Flug)",
       "bestand": 12,
       "einsatzbereich": null,
-      "effekt": "explosion_mittel"
+      "effekt": "explosion_mittel",
+      "zug": {"art": "flaeche"}
     },
     {
       "id": "LM",
@@ -21,10 +22,11 @@
       "vorlauf_s": 40,
       "vorlauf_text": "Start 5 s, dann Flug mit ca. 30 m/s ab Startpunkt westlich des Kartenrands: 30–50 s je nach Entfernung",
       "flug": {"start": [-300, 380], "geschwindigkeit_mps": 30, "vorbereitung_s": 5},
-      "bestand": 11,
+      "bestand": 20,
       "einsatzbereich": null,
       "effekt": "explosion_klein",
-      "nur_zielfahrzeug": true
+      "nur_zielfahrzeug": true,
+      "zug": {"art": "je_fahrzeug", "abstand_s": 2}
     },
     {
       "id": "PZA",
@@ -38,7 +40,8 @@
         "x_max": 500,
         "text": "nur Ziele bis zum Bach ELSTER einschließlich Brücke (x < 500 m), geschossen aus Stellungen westlich des Kartenrands"
       },
-      "effekt": "treffer_direkt"
+      "effekt": "treffer_direkt",
+      "zug": {"art": "je_fahrzeug", "abstand_s": 5}
     }
   ]
 }

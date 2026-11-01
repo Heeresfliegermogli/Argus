@@ -30,12 +30,13 @@ import argus_lib as L
 import verluste as V
 from pruefe_szenario import pruefe
 
-T_G1, T_G2, T_G3 = 40, 50, 30
+T_G1, T_G2, T_G3 = 35, 40, 30
 REIHENFOLGE = ["PZA", "ART", "MRS", "PRZ", "LM"]   # nicht vorhandene Wirkmittel werden übersprungen
 FT_NACH_ANGEBOT_S = 30
 VERSTAERKUNG_STANDARD = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960}          # alle vier Minuten bis 10:16
 VERSTAERKUNG_ZU_SPAET = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960, "V-5": 1200}   # zusätzlich V-5 um 10:20
-ROBUSTHEIT = [(40, 50, 30), (60, 50, 30), (40, 60, 30), (60, 60, 40), (40, 70, 30)]       # Bearbeitungszeiten G1, G2, G3
+VORSCHLAG = {"ideal": (50, 62), "naiv": (60, 72)}   # Kalibrierung E2.2 (2.3: ideal 60–70, naiv 75–85)
+ROBUSTHEIT = [(35, 40, 30), (40, 40, 30), (35, 45, 30), (45, 40, 30), (40, 45, 30), (35, 50, 30), (40, 50, 40)]       # Bearbeitungszeiten G1, G2, G3
 
 
 def mit_verstaerkung(d, einspielen):
@@ -129,27 +130,50 @@ def lauf(d, team, detail=None, einspielen=None):
         zmap = {x["id"]: x for x in welt(t)["szenario"]["ziele"]}
         return all(z.get(x, 1e9) <= t or not L.vorhanden(zmap[x], t) for x in ziele)
 
-    def waehle(m, t_freigabe, t_jetzt):
+    def rest(w):
+        """Bestand für die Zug-Regel (None = unbegrenzt)."""
+        return None if wm[w]["bestand"] is None else bestand[w]
+
+    def waehle(m, t_freigabe, t_jetzt, bild=False):
+        """Wirkmittel ohne Warnung (R2, R3, Einsatzbereich) für eine Freigabe zur Zeit t_freigabe. Team „ideal“ (seit 2.4): nur die
+        Wirkmittel der Lösung (loesung.wirkmittel); die Führung gibt außerdem nur frei (bild=True), wenn beim vorausberechneten Einschlag
+        nichts Geschütztes im Wirkradius ist – sie schaut auf die Lage, nicht nur auf die Warnungen des Systems."""
         z = zerstoert()
         dw = welt(t_jetzt)
-        return [w for w in REIHENFOLGE if w in wm and bestand[w] > 0
-                and L.wirkung(dw, m["ziele"], w, t_freigabe, z)["zulaessig"]]
+        erlaubt = (m.get("loesung") or {}).get("wirkmittel") if team == "ideal" else None
+        out = []
+        for w in REIHENFOLGE:
+            if w not in wm or bestand[w] <= 0 or (erlaubt and w not in erlaubt):
+                continue
+            v = L.wirkung(dw, m["ziele"], w, t_freigabe, z, rest(w))
+            if not v["zulaessig"]:
+                continue
+            if bild and team == "ideal" and any(g[2] in L.SCHUTZ or g[2] == "attrappe" for g in v["getroffen"]):
+                continue
+            out.append(w)
+        return out
 
     def wirkung_beim_einschlag(m, wahl, t):
-        """Einschlag nach der Welt bei der Freigabe (vorausberechnet), Treffer nach der Welt beim Einschlag."""
-        z = zerstoert()
-        t_e, pos, zid = L.einschlag(welt(t), m["ziele"], wahl, t, z)
-        de = welt(t_e)
-        ok, verst, getr = L.pruefe_wirkmittel(de, pos, wahl, t_s=t_e, zerstoert=z, ziel=zid)
-        z0 = next(x for x in L.alle_ziele(de["szenario"]) if x["id"] == zid)
-        if L.vorhanden(z0, t_e) and z.get(zid, 1e9) > t_e and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
-            kat = L.gt_bei(z0, t_e)["kategorie"]
-            getr.append((zid, "Fahrzeug" if kat != "attrappe" else "Attrappe", kat))
-        return {"t": t_e, "pos": pos, "ziel": zid, "zulaessig": ok, "verstoesse": verst, "getroffen": getr}
+        """Einschläge nach der Welt bei der Freigabe (vorausberechnet), Treffer je Einschlag nach der Welt beim Einschlag;
+        seit 2.4 (E3) je Fahrzeug des Zuges nacheinander (LM, PzAbw) oder als Fläche (Mörser)."""
+        z = dict(zerstoert())
+        teile = []
+        for t_e, pos, zid in L.einschlaege(welt(t), m["ziele"], wahl, t, z, rest(wahl)):
+            ok, verst, getr = L.treffer_einschlag(welt(t_e), t_e, pos, zid, wahl, z)
+            teile.append({"t": t_e, "pos": pos, "ziel": zid, "zulaessig": ok, "verstoesse": verst, "getroffen": getr})
+            for g in getr:
+                if g[1] in ("Fahrzeug", "Attrappe"):
+                    z[g[0]] = min(z.get(g[0], 1e9), t_e)
+        return L.zusammenfassen(teile)
+
+    def argus(m):
+        """ARGUS-Ausgabe zur Meldezeit (seit 2.4, E4: bei aktivem EloKa-Fahrzeug gestört)."""
+        g = L.eloka_aktiv(welt(m["t_s"])["szenario"], zerstoert(), m["t_s"])
+        return L.argus_bei(m, sz, regeln, g), g
 
     for m in sz["meldungen"]:
-        a = m["argus"]
-        ev = {"m": m["id"], "t_meld": m["t_s"], "ft": False}
+        a, gestoert = argus(m)
+        ev = {"m": m["id"], "t_meld": m["t_s"], "ft": False, "gestoert": gestoert}
         det.append(ev)
         if alle_weg(m["ziele"], m["t_s"]):
             ev["ende"] = "entfällt"
@@ -167,6 +191,14 @@ def lauf(d, team, detail=None, einspielen=None):
                 continue
             t = max(t, frei["G1"]) + T_G1
             frei["G1"] = t
+            if t >= dauer:
+                ev["ende"] = "Spielende"
+                log.append((m["id"], "bei Spielende noch offen"))
+                continue
+            if alle_weg(m["ziele"], t):       # wie die Engine: entfällt, sobald das letzte Fahrzeug weg ist (auch während der Bearbeitung)
+                ev["ende"] = "entfällt"
+                log.append((m["id"], f"entfällt bei G1 {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
+                continue
             ok = a["empfehlung"] != "UNKLAR" if team == "naiv" else loes["G1"].startswith("ANNEHMEN")
             ev.update(t_g1=t, g1="ANNEHMEN" if ok else "ABLEHNEN")
             if not ok:
@@ -180,6 +212,14 @@ def lauf(d, team, detail=None, einspielen=None):
             continue
         t = max(t, frei["G2"]) + T_G2
         frei["G2"] = t
+        if t >= dauer:
+            ev["ende"] = "Spielende"
+            log.append((m["id"], "bei Spielende noch offen"))
+            continue
+        if alle_weg(m["ziele"], t):
+            ev.update(ende="entfällt (G2)")
+            log.append((m["id"], f"entfällt bei G2 {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
+            continue
         ev["t_g2"] = t
         zul = waehle(m, t + T_G3, t)
         if team == "naiv":
@@ -206,7 +246,7 @@ def lauf(d, team, detail=None, einspielen=None):
             log.append((m["id"], f"entfällt vor G3 {L.mmss(max(t, frei['G3']))} (Ziel inzwischen zerstört oder weg)"))
             continue
         t = max(t, frei["G3"]) + T_G3
-        if t > dauer:
+        if t >= dauer:
             ev["ende"] = "Spielende"
             log.append((m["id"], "bei Spielende noch offen"))
             continue
@@ -221,7 +261,7 @@ def lauf(d, team, detail=None, einspielen=None):
                 ev.update(g3="ABLEHNEN", ende="G3 lehnt ab")
                 log.append((m["id"], f"G3 lehnt ab {L.mmss(t)}"))
                 continue
-            jetzt = waehle(m, t, t)
+            jetzt = waehle(m, t, t, bild=True)
             if wahl not in jetzt:
                 if not jetzt:
                     ev.update(g3="ZURÜCK AN G2", ende="G3: Warnung zum Einschlag")
@@ -229,30 +269,47 @@ def lauf(d, team, detail=None, einspielen=None):
                     continue
                 wahl = jetzt[0]
                 ev["g2"] = wahl
-        bestand[wahl] -= 1
         w = wirkung_beim_einschlag(m, wahl, t)
+        bestand[wahl] -= len(w["einschlaege"])
         for zid in m["ziele"]:
             freigabe_t[zid] = min(freigabe_t.get(zid, 1e9), t)
         schutz = []
+        for x in w["einschlaege"]:          # seit 2.4 (E3): jedes Fahrzeug zur Zeit seines Einschlags
+            for g in x["getroffen"]:
+                if g[1] in ("Fahrzeug", "Attrappe"):
+                    team_z[g[0]] = min(team_z.get(g[0], 1e9), x["t"])
         for g in w["getroffen"]:
-            if g[1] in ("Fahrzeug", "Attrappe"):
-                team_z[g[0]] = min(team_z.get(g[0], 1e9), w["t"])
             if g[2] in L.SCHUTZ or g[2] == "attrappe":
                 treffer_schutz.append(f"{g[0]} {L.GT_TEXT.get(g[2], g[2])}" if g[1] in ("Fahrzeug", "Attrappe") else f"{g[0]} {g[1]}")
                 schutz.append(g)
         ev.update(g3="FREIGABE", wm=wahl, pos=w["pos"], ziel=w["ziel"], t_wirkung=w["t"], getroffen=w["getroffen"], schutz=schutz,
-                  verstoesse=w["verstoesse"], ende="Wirkung")
-        log.append((m["id"], f"Freigabe {L.mmss(t)} mit {wahl}{' FT' if ft else ''}, Einschlag {L.mmss(w['t'])}"
+                  verstoesse=w["verstoesse"], ende="Wirkung", einschlaege=w["einschlaege"])
+        n_zug = len(w["einschlaege"])
+        log.append((m["id"], f"Freigabe {L.mmss(t)} mit {wahl}{f' ×{n_zug}' if n_zug > 1 else ''}{' FT' if ft else ''}, Einschlag {L.mmss(w['t'])}"
                              f"{' – RoE: ' + '; '.join(w['verstoesse']) if w['verstoesse'] else ''}"))
         for i in sz["injects"]:
             b = i.get("bedingung")
             if not b or not set(b.get("ziele", [])) & set(m["ziele"]):
                 continue
-            if b["typ"] == "freigabe" or (b["typ"] == "freigabe_mit_zivil" and any(g[2] == "zivil" for g in w["getroffen"])):
+            if b["typ"] == "freigabe":
                 injects.append(f"{i['id']} um {L.mmss(t + b['verzoegerung_s'])}")
                 det.append({"inject": i["id"], "t": t + b["verzoegerung_s"]})
+            elif b["typ"] == "freigabe_mit_zivil":
+                # Zivilpersonen beim Einschlag: frühestens verzoegerung_s nach der Freigabe, nicht vor dem Einschlag, der sie traf
+                tz = [x["t"] for x in w["einschlaege"] if any(g[2] == "zivil" for g in x["getroffen"])]
+                if tz and i["id"] not in {e.get("inject") for e in det}:
+                    ti = max(t + b["verzoegerung_s"], min(tz))
+                    injects.append(f"{i['id']} um {L.mmss(ti)}")
+                    det.append({"inject": i["id"], "t": ti})
     for i in sz["injects"]:
         b = i.get("bedingung")
+        if b and b["typ"] == "treffer":
+            # seit 2.4 (S8): verzoegerung_s nach dem ersten eigenen Einschlag, der eines der Ziele (oder Personen bei ihm) traf
+            tt = [x["t"] for e in det if "m" in e and e.get("ende") == "Wirkung" for x in e["einschlaege"]
+                  if any(g[0] in b["ziele"] for g in x["getroffen"])]
+            if tt and min(tt) + b["verzoegerung_s"] <= dauer:
+                injects.append(f"{i['id']} um {L.mmss(min(tt) + b['verzoegerung_s'])}")
+                det.append({"inject": i["id"], "t": min(tt) + b["verzoegerung_s"]})
         if b and b["typ"] == "keine_freigabe_bis" and not any(freigabe_t.get(z, 1e9) <= b["t_s"] for z in b["ziele"]):
             injects.append(f"{i['id']} um {L.mmss(b['t_s'])}")
             det.append({"inject": i["id"], "t": b["t_s"]})
@@ -302,8 +359,8 @@ def lauf(d, team, detail=None, einspielen=None):
     # Durchbrüchen; Druckmeldungen K-… kommen als Lagemeldungen dazu, I-07/I-06/I-13 nennen den Stand dieses Teams.
     if (d["regeln"].get("verluste") and sz.get("eigene_truppe")):
         dw = welt(dauer)
-        att = [e["t_wirkung"] for e in det if "m" in e and e.get("ende") == "Wirkung"
-               and any(g[2] == "attrappe" for g in e.get("getroffen", []))]
+        att = [x["t"] for e in det if "m" in e and e.get("ende") == "Wirkung" for x in e.get("einschlaege", [])
+               if any(g[2] == "attrappe" and g[1] == "Attrappe" for g in x["getroffen"])]
         durch_g = [g for g in dbg if g["t_s"] < dauer and L.durchbruch_stand(g, zmap0, z_end, ag)[0]]
         ev = V.zeitlinie(dw, z_end, V.r2(min(att)) if att else None, durch_g)
         for k in V.meldungen(dw, ev):
@@ -408,8 +465,8 @@ def verluste_lauf(d, team, einspielen=None):
 
 
 def kalibrierung(d):
-    """Kalibrierung D2.6: Team „ideal“ hat mehr eigene Verluste als „naiv“ (Kampfkraft der Kompanie am Ende niedriger), in keinem
-    der fünf Modellläufe fällt ein Zug unter die Untergrenze (ungedeckelter Verlust). Vorschlag: ideal 60–70 %, naiv 75–85 %.
+    """Kalibrierung D2.6 (seit 2.4 E2.2 mit mehr Druck): Team „ideal“ hat mehr eigene Verluste als „naiv“ (Kampfkraft der Kompanie am
+    Ende niedriger), in keinem der fünf Modellläufe fällt ein Zug unter die Untergrenze (ungedeckelter Verlust). Vorschlag: VORSCHLAG.
     Liefert dict(ok, laeufe=[(name, kp_kampfkraft, verwundete, {zug: (kampfkraft, roh_prozent, verwundete)}, k_meldungen)], text)."""
     vr = d["regeln"].get("verluste")
     if not vr or not d["szenario"].get("eigene_truppe"):
@@ -426,10 +483,12 @@ def kalibrierung(d):
         if not ein:
             kp[team] = v["kompanie"]["kampfkraft"]
     mehr = kp["ideal"] < kp["naiv"]
-    vorschlag = 60 <= kp["ideal"] <= 70 and 75 <= kp["naiv"] <= 85
-    text = [f"Kalibrierung D2.6: ideal {kp['ideal']} % / naiv {kp['naiv']} % – ideal mehr Verluste: {'ja' if mehr else 'NEIN'}; "
+    # seit 2.4 (E2.2): Druck spürbar höher als in 2.3 (ideal 67 %, naiv 75 %) – Vorschlag ideal 50–62 %, naiv 60–72 %
+    vi, vn = VORSCHLAG["ideal"], VORSCHLAG["naiv"]
+    vorschlag = vi[0] <= kp["ideal"] <= vi[1] and vn[0] <= kp["naiv"] <= vn[1]
+    text = [f"Kalibrierung D2.6/E2.2: ideal {kp['ideal']} % / naiv {kp['naiv']} % – ideal mehr Verluste: {'ja' if mehr else 'NEIN'}; "
             f"Untergrenze {unter} % hält in allen fünf Läufen (ungedeckelt): {'ja' if roh_ok else 'NEIN'}; "
-            f"im Vorschlag (ideal 60–70, naiv 75–85): {'ja' if vorschlag else 'nein'}"]
+            f"im Vorschlag (ideal {vi[0]}–{vi[1]}, naiv {vn[0]}–{vn[1]}): {'ja' if vorschlag else 'nein'}"]
     for name, k, w, zuege, n in out:
         text.append(f"  {name:22} Kp {k:3} %, {w:2} Verwundete, {n:2} Druckmeldungen | " +
                     " | ".join(f"{z} {kk} % ({vw} V, ungedeckelt {r:.1f} %)" for z, (kk, r, vw) in zuege.items()))

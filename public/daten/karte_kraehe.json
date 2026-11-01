@@ -1,9 +1,9 @@
 {
   "id": "raum_kraehe",
   "titel": "Raum KRÄHE (fiktiv)",
-  "version": "1.2",
-  "hinweis": "Fiktives Gelände. Koordinaten in Metern, x nach Osten, y nach Süden, Ursprung oben links. Vektoren stammen aus claude/tools/gen_raum_kraehe.py; Linien mit glatt=true werden als Catmull-Rom-Kurve durch die Stützpunkte gezeichnet.",
-  "ausdehnung_m": { "breite": 1000, "hoehe": 700 },
+  "version": "1.3",
+  "hinweis": "Fiktives Gelände. Koordinaten in Metern, x nach Osten, y nach Süden, Ursprung oben links. Vektoren stammen aus claude/tools/gen_raum_kraehe.py; Linien mit glatt=true werden als Catmull-Rom-Kurve durch die Stützpunkte gezeichnet. Seit 1.3 (Szenario 2.4): Kirche mit Turm am Ostende der Ortschaft (S7, Kirchturm-Beobachter) und ein Wohnhaus an der Hauptstraße (S5, Schutzschilde).",
+  "ausdehnung_m": {"breite": 1000, "hoehe": 700},
   "raster": {
     "zelle_m": 100,
     "spalten": "ABCDEFGHIJ",
@@ -17,65 +17,148 @@
     "aufloesung_m_pro_px": 0.5
   },
   "linien": [
-    { "id": "hauptstrasse", "name": "Hauptstraße", "art": "strasse", "breite_m": 6, "glatt": true,
-      "punkte": [[-10, 432], [200, 420], [380, 402], [520, 386], [620, 376], [760, 350], [1010, 308]], "beschriftung_anteil": 0.25 },
-    { "id": "nordstrasse", "name": "Nordstraße", "art": "strasse", "breite_m": 5, "glatt": true, "allee": true,
-      "punkte": [[640, 376], [648, 260], [690, 130], [722, -10]] },
-    { "id": "schulweg", "name": "Zufahrt Schule", "art": "strasse", "breite_m": 4, "glatt": true,
-      "punkte": [[602, 380], [604, 430], [606, 462]] },
-    { "id": "feldweg_sued", "name": "Feldweg Süd", "art": "feldweg", "breite_m": 3.6, "glatt": true,
-      "punkte": [[470, 396], [468, 520], [476, 610], [492, 710]] },
-    { "id": "feldweg_sw", "name": "Feldweg Südwest", "art": "feldweg", "breite_m": 3.6, "glatt": true,
-      "punkte": [[200, 421], [228, 520], [300, 610], [330, 710]] },
-    { "id": "feldweg_no", "name": "Feldweg Nordost", "art": "feldweg", "breite_m": 3.6, "glatt": true,
-      "punkte": [[760, 350], [800, 230], [880, 170], [1010, 150]] },
-    { "id": "feldweg_nw", "name": "Feldweg Nordwest", "art": "feldweg", "breite_m": 3.6, "glatt": true,
-      "punkte": [[330, 405], [300, 330], [330, 250], [360, 150]] },
-    { "id": "bach_elster", "name": "Bach ELSTER", "art": "gewaesser", "breite_m": 3.2, "glatt": true,
-      "punkte": [[412, -10], [388, 90], [422, 190], [395, 290], [432, 410], [404, 540], [440, 710]] }
+    {
+      "id": "hauptstrasse",
+      "name": "Hauptstraße",
+      "art": "strasse",
+      "breite_m": 6,
+      "glatt": true,
+      "punkte": [[-10, 432], [200, 420], [380, 402], [520, 386], [620, 376], [760, 350], [1010, 308]],
+      "beschriftung_anteil": 0.25
+    },
+    {
+      "id": "nordstrasse",
+      "name": "Nordstraße",
+      "art": "strasse",
+      "breite_m": 5,
+      "glatt": true,
+      "allee": true,
+      "punkte": [[640, 376], [648, 260], [690, 130], [722, -10]]
+    },
+    {
+      "id": "schulweg",
+      "name": "Zufahrt Schule",
+      "art": "strasse",
+      "breite_m": 4,
+      "glatt": true,
+      "punkte": [[602, 380], [604, 430], [606, 462]]
+    },
+    {
+      "id": "feldweg_sued",
+      "name": "Feldweg Süd",
+      "art": "feldweg",
+      "breite_m": 3.6,
+      "glatt": true,
+      "punkte": [[470, 396], [468, 520], [476, 610], [492, 710]]
+    },
+    {
+      "id": "feldweg_sw",
+      "name": "Feldweg Südwest",
+      "art": "feldweg",
+      "breite_m": 3.6,
+      "glatt": true,
+      "punkte": [[200, 421], [228, 520], [300, 610], [330, 710]]
+    },
+    {
+      "id": "feldweg_no",
+      "name": "Feldweg Nordost",
+      "art": "feldweg",
+      "breite_m": 3.6,
+      "glatt": true,
+      "punkte": [[760, 350], [800, 230], [880, 170], [1010, 150]]
+    },
+    {
+      "id": "feldweg_nw",
+      "name": "Feldweg Nordwest",
+      "art": "feldweg",
+      "breite_m": 3.6,
+      "glatt": true,
+      "punkte": [[330, 405], [300, 330], [330, 250], [360, 150]]
+    },
+    {
+      "id": "bach_elster",
+      "name": "Bach ELSTER",
+      "art": "gewaesser",
+      "breite_m": 3.2,
+      "glatt": true,
+      "punkte": [[412, -10], [388, 90], [422, 190], [395, 290], [432, 410], [404, 540], [440, 710]]
+    }
   ],
   "flaechen": [
-    { "id": "wald_fuchs", "name": "Wald FUCHS", "art": "wald",
-      "punkte": [[-20, -20], [335, -20], [318, 110], [282, 190], [262, 236], [226, 300], [140, 336], [-20, 352]] },
-    { "id": "wald_dachs", "name": "Wald DACHS", "art": "wald",
-      "punkte": [[840, 470], [1020, 420], [1020, 720], [770, 720], [800, 600]] },
-    { "id": "wald_marder", "name": "Wald MARDER", "art": "wald", "neu": true,
-      "punkte": [[860, -20], [1020, -20], [1020, 120], [930, 110], [880, 60]] },
-    { "id": "schulgelaende", "name": "Schule mit Sportplatz", "art": "schule",
-      "punkte": [[578, 438], [712, 424], [726, 592], [590, 606]] },
-    { "id": "hof_rabe", "name": "Hof RABE", "art": "hof", "neu": true,
-      "punkte": [[722, 278], [800, 262], [808, 330], [726, 340]] },
-    { "id": "schulhof", "name": "Schulhof", "art": "pflaster",
-      "punkte": [[617.2, 475.3], [660.9, 470.7], [662.8, 488.7], [619.1, 493.3]] },
-    { "id": "parkplatz_schule", "name": "Parkplatz Schule", "art": "parkplatz",
-      "punkte": [[573.4, 453.2], [595.3, 450.9], [598.6, 482.8], [576.7, 485.1]] }
+    {
+      "id": "wald_fuchs",
+      "name": "Wald FUCHS",
+      "art": "wald",
+      "punkte": [[-20, -20], [335, -20], [318, 110], [282, 190], [262, 236], [226, 300], [140, 336], [-20, 352]]
+    },
+    {
+      "id": "wald_dachs",
+      "name": "Wald DACHS",
+      "art": "wald",
+      "punkte": [[840, 470], [1020, 420], [1020, 720], [770, 720], [800, 600]]
+    },
+    {
+      "id": "wald_marder",
+      "name": "Wald MARDER",
+      "art": "wald",
+      "neu": true,
+      "punkte": [[860, -20], [1020, -20], [1020, 120], [930, 110], [880, 60]]
+    },
+    {
+      "id": "schulgelaende",
+      "name": "Schule mit Sportplatz",
+      "art": "schule",
+      "punkte": [[578, 438], [712, 424], [726, 592], [590, 606]]
+    },
+    {
+      "id": "hof_rabe",
+      "name": "Hof RABE",
+      "art": "hof",
+      "neu": true,
+      "punkte": [[722, 278], [800, 262], [808, 330], [726, 340]]
+    },
+    {
+      "id": "schulhof",
+      "name": "Schulhof",
+      "art": "pflaster",
+      "punkte": [[617.2, 475.3], [660.9, 470.7], [662.8, 488.7], [619.1, 493.3]]
+    },
+    {
+      "id": "parkplatz_schule",
+      "name": "Parkplatz Schule",
+      "art": "parkplatz",
+      "punkte": [[573.4, 453.2], [595.3, 450.9], [598.6, 482.8], [576.7, 485.1]]
+    }
   ],
   "gebaeude": [
-    { "id": "schule_a", "art": "schule", "mitte": [655, 463], "laenge": 62, "breite": 15, "winkel": -6 },
-    { "id": "schule_b", "art": "schule", "mitte": [684, 489], "laenge": 15, "breite": 40, "winkel": -6 },
-    { "id": "sportplatz", "art": "sportplatz", "mitte": [640, 548], "laenge": 84, "breite": 56, "winkel": -6 },
-    { "id": "scheune_1", "art": "scheune", "mitte": [742, 290], "laenge": 42, "breite": 16, "winkel": -12 },
-    { "id": "scheune_2", "art": "scheune", "mitte": [786, 312], "laenge": 28, "breite": 13, "winkel": -12 },
-    { "id": "wohnhaus_hof", "art": "wohnhaus", "mitte": [738, 318], "laenge": 14, "breite": 10, "winkel": -12 }
+    {"id": "schule_a", "art": "schule", "mitte": [655, 463], "laenge": 62, "breite": 15, "winkel": -6},
+    {"id": "schule_b", "art": "schule", "mitte": [684, 489], "laenge": 15, "breite": 40, "winkel": -6},
+    {"id": "sportplatz", "art": "sportplatz", "mitte": [640, 548], "laenge": 84, "breite": 56, "winkel": -6},
+    {"id": "scheune_1", "art": "scheune", "mitte": [742, 290], "laenge": 42, "breite": 16, "winkel": -12},
+    {"id": "scheune_2", "art": "scheune", "mitte": [786, 312], "laenge": 28, "breite": 13, "winkel": -12},
+    {"id": "wohnhaus_hof", "art": "wohnhaus", "mitte": [738, 318], "laenge": 14, "breite": 10, "winkel": -12},
+    {"id": "kirche", "art": "kirche", "mitte": [777, 367], "laenge": 24, "breite": 11, "winkel": -10},
+    {"id": "kirchturm", "art": "kirchturm", "mitte": [761, 370], "laenge": 7, "breite": 7, "winkel": -10},
+    {"id": "haus_s5", "art": "wohnhaus", "mitte": [704, 386], "laenge": 13, "breite": 9, "winkel": -10}
   ],
   "bebauung": {
     "hinweis": "Einzelhäuser erzeugt der Generator zufällig (Seed 42) beidseits der Hauptstraße zwischen x=500 und x=800 und beidseits der Nordstraße nördlich y=340, jeweils 13–21 m neben der Fahrbahnmitte, alle 17 m. Kein Haus auf Schule, Hof, Gebäuden oder näher als 8 m an einem Ziel.",
-    "abschnitte": [{ "linie": "hauptstrasse", "x_von": 500, "x_bis": 800 }, { "linie": "nordstrasse", "y_bis": 340 }],
+    "abschnitte": [{"linie": "hauptstrasse", "x_von": 500, "x_bis": 800}, {"linie": "nordstrasse", "y_bis": 340}],
     "abstand_m": [13, 21],
     "schritt_m": 17
   },
   "einzelbaeume": [[600, 520], [602, 540], [604, 560], [606, 580], [720, 440], [722, 520]],
   "namen": [
-    { "text": "Ortschaft KRÄHE", "pos": [650, 330] },
-    { "text": "Wald FUCHS", "pos": [60, 140] },
-    { "text": "Bach ELSTER", "pos": [430, 110] },
-    { "text": "Wald DACHS", "pos": [868, 520] },
-    { "text": "Wald MARDER", "pos": [930, 40], "neu": true },
-    { "text": "Hof RABE", "pos": [770, 255], "neu": true },
-    { "text": "Brücke ELSTER", "pos": [421, 409], "anker": [1, 0], "neu": true }
+    {"text": "Ortschaft KRÄHE", "pos": [650, 330]},
+    {"text": "Wald FUCHS", "pos": [60, 140]},
+    {"text": "Bach ELSTER", "pos": [430, 110]},
+    {"text": "Wald DACHS", "pos": [868, 520]},
+    {"text": "Wald MARDER", "pos": [930, 40], "neu": true},
+    {"text": "Hof RABE", "pos": [770, 255], "neu": true},
+    {"text": "Brücke ELSTER", "pos": [421, 409], "anker": [1, 0], "neu": true}
   ],
   "punkte": [
-    { "id": "bruecke_elster", "name": "Brücke ELSTER", "pos": [430, 396], "art": "bruecke", "neu": true },
-    { "id": "furt_nord", "name": "Furt Nord", "pos": [395, 290], "art": "furt", "neu": true }
+    {"id": "bruecke_elster", "name": "Brücke ELSTER", "pos": [430, 396], "art": "bruecke", "neu": true},
+    {"id": "furt_nord", "name": "Furt Nord", "pos": [395, 290], "art": "furt", "neu": true}
   ]
 }

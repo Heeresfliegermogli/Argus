@@ -22,13 +22,17 @@ import { Host } from "../src/engine/host";
 import { Taktgeber } from "../src/engine/taktgeber";
 import type { Inhalte, Meldung } from "../src/inhalte/typen";
 import type { Absender, Aktion, AktionsDaten, AktionsTyp, Ereignis } from "../src/kern/ereignisse";
-import { einschlagVon, weltFuer } from "../src/kern/lage";
-import { vorhersage, wirkungBeimEinschlag } from "../src/kern/regeln";
+import { argusBei } from "../src/kern/eloka";
+import { offeneEinschlaege, weltFuer } from "../src/kern/lage";
+import { SCHUTZ_KATEGORIEN, stehende, vorhersage, wirkungBeimEinschlag, zugArt } from "../src/kern/regeln";
 import { weg } from "../src/kern/geometrie";
 import type { Spielzustand } from "../src/kern/zustand";
 import type { Abmelden, TeamKanal } from "../src/sync/adapter";
 
 export type Team = "naiv" | "ideal";
+
+/** Was das ideale Team nicht treffen will (wie argus_lib.SCHUTZ und die Attrappe). */
+const SCHUTZ = new Set([...SCHUTZ_KATEGORIEN, "sanitaet", "attrappe"]);
 
 /** Wie G3 mit Lagemeldungen umgeht (null: liest nichts, wie bis Schritt 7). */
 export interface LageVerhalten {
@@ -258,33 +262,85 @@ export class Modellteam {
     for (const id of z.reihenfolge) {
       const st = z.meldungen[id];
       if (st.stufe !== "wirkung" || !st.g3?.wirkmittel) continue;
-      const e = einschlagVon(inh, z, id);
-      if (!e) continue;
-      for (const g of wirkungBeimEinschlag(inh, e, st.g3.wirkmittel, z.zerstoert).getroffen) {
-        if (g.was !== "personen") p[g.ziel] = Math.min(p[g.ziel] ?? Infinity, e.t);
+      // seit 2.4 (E3): je ausstehendem Einschlag eines Zuges, nacheinander
+      const zer = { ...z.zerstoert };
+      for (const { e } of offeneEinschlaege(inh, z, id)) {
+        for (const g of wirkungBeimEinschlag(inh, e, st.g3.wirkmittel, zer).getroffen) {
+          if (g.was !== "personen") {
+            p[g.ziel] = Math.min(p[g.ziel] ?? Infinity, e.t);
+            zer[g.ziel] = Math.min(zer[g.ziel] ?? Infinity, e.t);
+          }
+        }
       }
     }
     return p;
   }
 
-  /** Bestand, wie ihn die Simulation sieht: frühere Meldungen bei G3 mit diesem Wirkmittel sind schon abgezogen. */
-  private bestand(wm: string, vor: string): number {
-    const b = this.z.bestand[wm];
-    if (b === null) return Infinity;
-    const liste = this.liste();
-    const bis = liste.indexOf(vor);
-    let reserviert = 0;
-    for (const id of liste.slice(0, bis)) {
-      const st = this.z.meldungen[id];
-      if (st.stufe === "g3" && st.g2?.wirkmittel === wm) reserviert += 1;
+  /**
+   * Wann gibt G3 die Meldungen frei, die schon bei ihr liegen (Warteschlange in Reihenfolge)? Für die Reservierung des Bestands:
+   * Die Simulation zieht bei einer Zug-Bekämpfung so viele LM ab, wie bei der Freigabe Fahrzeuge stehen (seit 2.4, E3).
+   */
+  private g3Termine(t: number): Map<string, number> {
+    const p = this.personen.G3;
+    const out = new Map<string, number>();
+    let tc = t;
+    if (p.aktuell) {
+      out.set(p.aktuell.meldung, p.aktuell.ende);
+      tc = p.aktuell.ende;
     }
-    return b - reserviert;
+    const liste = this.liste();
+    for (const id of liste.slice(p.zeiger)) {
+      if (out.has(id)) continue;
+      if (this.z.meldungen[id].stufe !== "g3" || this.entscheidungen.get(id)?.g3) continue;
+      tc += this.zeiten.G3;
+      out.set(id, tc);
+    }
+    return out;
   }
 
-  private waehle(m: Meldung, tFreigabe: number, vor: string): string[] {
+  /**
+   * Bestand, wie ihn die Simulation sieht: frühere Meldungen bei G3 mit diesem Wirkmittel sind schon abgezogen – seit 2.4 (E3)
+   * je Fahrzeug, das bei ihrer Freigabe noch steht (Zug-Bekämpfung), höchstens so viele, wie da sind.
+   */
+  private bestand(wm: string, vor: string, t = this.uhr.ms / 1000 - START_MS / 1000): number {
+    const b = this.z.bestand[wm];
+    if (b === null) return Infinity;
+    const inh = this.welt;
+    const liste = this.liste();
+    const bis = liste.indexOf(vor);
+    const termine = this.g3Termine(t);
+    const zp = this.zerstoertPrognose();
+    let rest = b;
+    for (const id of liste.slice(0, bis)) {
+      const st = this.z.meldungen[id];
+      if (st.stufe !== "g3" || st.g2?.wirkmittel !== wm) continue;
+      let n = 1;
+      if (zugArt(inh.wirkmittel[wm]) === "je_fahrzeug") {
+        const t3 = termine.get(id) ?? t;
+        n = Math.max(1, stehende(inh, inh.meldungen[id].ziele, t3, zp).length);
+      }
+      rest -= Math.min(n, Math.max(rest, 1));
+    }
+    return rest;
+  }
+
+  /**
+   * Wirkmittel ohne Warnung für eine Freigabe zur Zeit tFreigabe. ideal (seit 2.4): nur die Wirkmittel der Lösung; die Führung
+   * (bild) gibt außerdem nur frei, wenn beim vorausberechneten Einschlag nichts Geschütztes im Wirkradius ist (wie die Simulation).
+   */
+  private waehle(m: Meldung, tFreigabe: number, vor: string, bild = false, t = tFreigabe): string[] {
     const inh = this.welt;
     const zp = this.zerstoertPrognose();
-    return this.reihenfolge.filter((w) => inh.wirkmittel[w] && this.bestand(w, vor) > 0 && vorhersage(inh, m, w, tFreigabe, zp).pruefung.zulaessig);
+    const erlaubt = this.opt.team === "ideal" ? m.loesung?.wirkmittel : undefined;
+    return this.reihenfolge.filter((w) => {
+      if (!inh.wirkmittel[w] || (erlaubt && !erlaubt.includes(w))) return false;
+      const rest = this.bestand(w, vor, t);
+      if (!(rest > 0)) return false;
+      const v = vorhersage(inh, m, w, tFreigabe, zp, Number.isFinite(rest) ? rest : null);
+      if (!v.pruefung.zulaessig) return false;
+      if (bild && this.opt.team === "ideal" && v.getroffen.some((g) => SCHUTZ.has(g.kategorie))) return false;
+      return true;
+    });
   }
 
   // ---------------------------------------------------------------- Personen
@@ -317,17 +373,18 @@ export class Modellteam {
     const e = this.eintrag(id);
     if (stufe === "G1") {
       if (st.stufe !== "g1") return;
-      const ok = this.opt.team === "naiv" ? m.argus.empfehlung !== "UNKLAR" : loes.G1.startsWith("ANNEHMEN");
+      // seit 2.4 (E4): naiv folgt ARGUS, wie es zur Meldezeit meldete (bei gestörtem Datenlink unsicherer)
+      const ok = this.opt.team === "naiv" ? argusBei(inh, m, st.gestoert).empfehlung !== "UNKLAR" : loes.G1.startsWith("ANNEHMEN");
       e.g1 = { t, ok };
       this.senden("g1_entscheid", { meldung: id, entscheid: ok ? "annehmen" : "ablehnen" }, "g1");
       return;
     }
     if (stufe === "G2") {
       if (st.stufe !== "g2") return;
-      const zul = this.waehle(m, t + this.zeiten.G3, id);
+      const zul = this.waehle(m, t + this.zeiten.G3, id, false, t);
       let wahl: string | null;
       if (this.opt.team === "naiv") {
-        wahl = zul[0] ?? ["LM", "MRS"].find((w) => inh.wirkmittel[w] && this.bestand(w, id) > 0) ?? null;
+        wahl = zul[0] ?? ["LM", "MRS"].find((w) => inh.wirkmittel[w] && this.bestand(w, id, t) > 0) ?? null;
       } else {
         if (loes.G2.split(":")[0].includes("BEOBACHTEN")) {
           e.g2 = { t, wahl: "BEOBACHTEN" };
@@ -359,7 +416,7 @@ export class Modellteam {
         this.senden("g3_entscheid", { meldung: id, entscheid: "ablehnen" }, "g3");
         return;
       }
-      const jetzt = this.waehle(m, t, id);
+      const jetzt = this.waehle(m, t, id, true, t);
       if (!wm || !jetzt.includes(wm)) {
         if (!jetzt.length) {
           e.g3 = { t, was: "ZURUECK" };

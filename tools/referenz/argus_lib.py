@@ -460,18 +460,119 @@ def einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert=None):
     return t_e, position(haupt, t_e), haupt["id"]
 
 
-def wirkung(d, ziele_ids, wm_id, t_freigabe, zerstoert=None):
-    """Trefferregel ab 2.0: Getroffen ist alles im Wirkradius um den Einschlagort nach der Lage beim Einschlag,
-    dazu das bekämpfte Fahrzeug selbst, wenn es dann noch im Raum ist. Verstöße (R2, R3, Einsatzbereich) gelten am
-    Einschlagort. Liefert dict(t, pos, ziel, zulaessig, verstoesse, getroffen)."""
-    t_e, pos, zid = einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)
+def zug_art(wm):
+    """Wie ein Wirkmittel auf eine zugweise Meldung wirkt (seit 2.4, E3): „je_fahrzeug“ (LM, PzAbw: ein Schuss je noch stehendem
+    Fahrzeug, nacheinander im Abstand zug.abstand_s) oder „flaeche“ (Mörser: ein Einschlag, Wirkradius)."""
+    return (wm.get("zug") or {}).get("art", "flaeche")
+
+
+def stehende(d, ziele_ids, t, zerstoert=None):
+    """Fahrzeuge der Meldung, die zur Zeit t im Raum und nicht zerstört sind (in der Reihenfolge der Meldung)."""
+    zmap = {z["id"]: z for z in alle_ziele(d["szenario"])}
+    zerstoert = zerstoert or {}
+    return [zmap[z] for z in ziele_ids if z in zmap and vorhanden(zmap[z], t) and zerstoert.get(z, 1e9) > t]
+
+
+def einschlaege(d, ziele_ids, wm_id, t_freigabe, zerstoert=None, bestand=None):
+    """Alle Einschläge einer Freigabe (seit 2.4, E3: BEKÄMPFEN wirkt auf den ganzen Zug).
+
+    Fläche (Mörser): ein Einschlag wie einschlag(). Je Fahrzeug (LM, PzAbw): ein Schuss je bei der Freigabe noch stehendem
+    Fahrzeug, der i-te startet zug.abstand_s · i nach der Freigabe; reicht der Bestand nicht (bestand < n), nur die ersten
+    `bestand` Fahrzeuge. Liefert [(t_einschlag, pos, ziel-id)] in Reihenfolge der Fahrzeuge."""
+    wm = d["wirkmittel"][wm_id]
+    if zug_art(wm) != "je_fahrzeug":
+        return [einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)]
+    kand = stehende(d, ziele_ids, t_freigabe, zerstoert)
+    if not kand:
+        return [einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)]
+    if bestand is not None:
+        kand = kand[:max(1, bestand)]
+    abstand = (wm.get("zug") or {}).get("abstand_s", 0)
+    out = []
+    for i, z0 in enumerate(kand):
+        t0 = t_freigabe + i * abstand
+        t_e = t0 + flugzeit(wm, position(z0, t0))
+        for _ in range(4):
+            t_e = t0 + flugzeit(wm, position(z0, t_e))
+        out.append((t_e, position(z0, t_e), z0["id"]))
+    return out
+
+
+def treffer_einschlag(d, t_e, pos, zid, wm_id, zerstoert=None):
+    """Was ein Einschlag trifft (Lage beim Einschlag) und welche Regeln dort verletzt sind: (zulaessig, verstoesse, getroffen)."""
     ok, verst, getr = pruefe_wirkmittel(d, pos, wm_id, t_s=t_e, zerstoert=zerstoert, ziel=zid)
     z0 = next(z for z in alle_ziele(d["szenario"]) if z["id"] == zid)
     if vorhanden(z0, t_e) and (zerstoert or {}).get(zid, 1e9) > t_e \
             and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
         kat = gt_bei(z0, t_e)["kategorie"]
         getr.append((zid, "Fahrzeug" if kat != "attrappe" else "Attrappe", kat))
-    return {"t": t_e, "pos": pos, "ziel": zid, "zulaessig": ok, "verstoesse": verst, "getroffen": getr}
+    return ok, verst, getr
+
+
+def zusammenfassen(teile):
+    """Einschläge einer Freigabe zu einer Wirkung: Zeit, Ort und Ziel des ersten Einschlags, zulässig nur, wenn alle es sind,
+    Verstöße und Treffer vereinigt (ein Treffer je Ziel und Art). teile = [dict(t, pos, ziel, zulaessig, verstoesse, getroffen)]."""
+    verst, getr, gesehen = [], [], set()
+    for w in teile:
+        for v in w["verstoesse"]:
+            if v not in verst:
+                verst.append(v)
+        for g in w["getroffen"]:
+            k = (g[0], g[1] if g[1] in ("Fahrzeug", "Attrappe") else "Personen", g[2])
+            if k not in gesehen:
+                gesehen.add(k)
+                getr.append(g)
+    w0 = teile[0]
+    return {"t": w0["t"], "pos": w0["pos"], "ziel": w0["ziel"], "zulaessig": all(w["zulaessig"] for w in teile),
+            "verstoesse": verst, "getroffen": getr, "einschlaege": teile}
+
+
+def wirkung(d, ziele_ids, wm_id, t_freigabe, zerstoert=None, bestand=None):
+    """Trefferregel ab 2.0: Getroffen ist alles im Wirkradius um den Einschlagort nach der Lage beim Einschlag,
+    dazu das bekämpfte Fahrzeug selbst, wenn es dann noch im Raum ist. Verstöße (R2, R3, Einsatzbereich) gelten am
+    Einschlagort. Seit 2.4 (E3) wirkt BEKÄMPFEN auf den ganzen Zug (einschlaege()); die Einschläge werden nacheinander
+    gerechnet (ein Fahrzeug, das ein früherer Einschlag zerstört hat, zählt beim nächsten als Wrack).
+    Liefert dict(t, pos, ziel, zulaessig, verstoesse, getroffen, einschlaege) – t/pos/ziel des ersten Einschlags."""
+    zer = dict(zerstoert or {})
+    teile = []
+    for t_e, pos, zid in einschlaege(d, ziele_ids, wm_id, t_freigabe, zerstoert, bestand):
+        ok, verst, getr = treffer_einschlag(d, t_e, pos, zid, wm_id, zer)
+        teile.append({"t": t_e, "pos": pos, "ziel": zid, "zulaessig": ok, "verstoesse": verst, "getroffen": getr})
+        for g in getr:
+            if g[1] in ("Fahrzeug", "Attrappe"):
+                zer[g[0]] = min(zer.get(g[0], 1e9), t_e)
+    return zusammenfassen(teile)
+
+
+# ----------------------------------------------------------------------------- EloKa (seit 2.4, E4)
+def eloka_aktiv(sz, zerstoert, t_s):
+    """Stört das EloKa-Fahrzeug zur Zeit t den Datenlink? Ja, solange es im Raum steht (ab der Einfahrt) und nicht zerstört ist."""
+    e = sz.get("eloka")
+    if not e:
+        return False
+    z = next((x for x in alle_ziele(sz) if x["id"] == e["ziel"]), None)
+    return z is not None and vorhanden(z, t_s) and (zerstoert or {}).get(z["id"], 1e9) > t_s
+
+
+def argus_bei(m, sz, regeln, gestoert):
+    """ARGUS-Ausgabe einer Meldung (seit 2.4, E4): bei gestörtem Datenlink sinkt die Konfidenz um eloka.konfidenz_minus; unter
+    eloka.unbekannt_unter erkennt ARGUS die Klasse nicht mehr („unbekannt“); die Empfehlung folgt den Schwellen (eine Warnung
+    NICHT BEKÄMPFEN bleibt). Ohne Störung die Ausgabe aus den Daten."""
+    a = dict(m["argus"])
+    e = sz.get("eloka")
+    if not gestoert or not e:
+        return a
+    minus = e["konfidenz_minus"]
+    a["konfidenz"] = max(5, a["konfidenz"] - minus)
+    if a.get("einzeln"):
+        a["einzeln"] = [max(5, k - minus) for k in a["einzeln"]]
+    if a["konfidenz"] < e["unbekannt_unter"]:
+        a["klasse"] = "unbekannt"
+        a["zugehoerigkeit"] = "unbekannt"
+    if a["empfehlung"] != "NICHT BEKÄMPFEN":
+        a["empfehlung"] = argus_empfehlung(a["konfidenz"], regeln)
+    a["gestoert"] = True
+    return a
 
 
 # ----------------------------------------------------------------------------- Verstärkungen

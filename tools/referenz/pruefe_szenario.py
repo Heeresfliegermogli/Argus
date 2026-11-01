@@ -161,7 +161,7 @@ def pruefe(d):
         if f["meldung"] not in mids:
             fehler.append(f"{f['id']}: Meldung {f['meldung']} unbekannt")
     for zid in ziele:
-        if zid not in gemeldet and not ziele[zid].get("ungemeldet"):
+        if zid not in gemeldet and not ziele[zid].get("ungemeldet") and not ziele[zid].get("nur_kontakt"):
             warn.append(f"{zid} wird nie gemeldet")
         if zid in gemeldet and ziele[zid].get("ungemeldet"):
             fehler.append(f"{zid}: ungemeldet, steht aber in einer Meldung")
@@ -209,10 +209,11 @@ def pruefe(d):
     if any(i["t_s"] >= dauer for i in feste):
         fehler.append("Inject nach Spielende")
     n_inj = len({i["id"].rstrip("ab") for i in sz["injects"]})
-    if not 8 <= n_inj <= 14:
-        warn.append(f"{n_inj} G3-Injects (Soll 8–14)")
-    if not 25 <= len(sz["meldungen"]) <= 30:
-        warn.append(f"{len(sz['meldungen'])} Meldungen (Soll ca. 25–30 Entscheidungen je Team ohne Verstärkung)")
+    # seit 2.4 (E2, E5): mehr Druck – mehr Meldungen und bedingte Lagemeldungen zu den neuen Sonderfällen
+    if not 8 <= n_inj <= 18:
+        warn.append(f"{n_inj} G3-Injects (Soll 8–18)")
+    if not 25 <= len(sz["meldungen"]) <= 40:
+        warn.append(f"{len(sz['meldungen'])} Meldungen (Soll ca. 25–40 Entscheidungen je Team ohne Verstärkung)")
     for p in sz.get("phasen", []):
         if p["bis_s"] <= p["von_s"]:
             fehler.append(f"Phase {p['nr']}: bis ≤ von")
@@ -254,6 +255,12 @@ def pruefe(d):
         r = (z.get("bewegung") or {}).get("route")
         a = L.ab_s(z)
         schon_da = a <= 0 and not relativ
+        if z.get("herkunft"):       # seit 2.4: Personen, die aus einem Fahrzeug kommen (S6: abgesessene Schützen von Z-34)
+            if z["herkunft"] not in ziele:
+                fehler.append(f"{wer}: herkunft {z['herkunft']} unbekannt")
+            elif L.dist(z["pos"], L.position(ziele[z["herkunft"]], a)) > 25:
+                fehler.append(f"{wer}: erscheint {L.dist(z['pos'], L.position(ziele[z['herkunft']], a)):.0f} m neben {z['herkunft']} (Soll ≤ 25 m)")
+            return
         if not r:
             if not schon_da:
                 fehler.append(f"{wer}: erscheint um {L.mmss(a)}{' nach dem Einspielen' if relativ else ''} bei ({z['pos'][0]}, "

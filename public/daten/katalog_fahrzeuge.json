@@ -1,11 +1,11 @@
 {
-  "version": "1.4",
-  "hinweis": "Spielkatalog. Ein neues Fahrzeug ist ein Eintrag plus Zeichenfunktion. 'generator' nennt die Zeichenfunktion in tools/assets/fahrzeuge.py; daraus entstehen Sprite, Wrack-Sprite und das Fahrzeug in den Drohnenbildern (tools/assets/gen_assets.py). 'sprite' und 'sprite_wrack' sind Bildnamen im Sprite-Atlas (assets/sprites/fahrzeuge.json). Keine Leistungsdaten, nur Größe und Darstellung. 'symbol.sidc' ist der Funktionsteil des taktischen Zeichens (MIL-STD-2525C/APP-6, milsymbol), 'symbol.groesse' die Größenangabe; Zugehörigkeit und Status setzt die Oberfläche. Seit 1.3: 'symbol.einheit' ist das Zeichen der Einheit (APP-6) für zugweise Meldungen mit Größenangabe (groesse_nach_anzahl); 'sprite_fahrt' der Sprite während der Fahrt (Mörsertrupp auf Lkw).",
+  "version": "1.5",
+  "hinweis": "Spielkatalog. Ein neues Fahrzeug ist ein Eintrag plus Zeichenfunktion. 'generator' nennt die Zeichenfunktion in tools/assets/fahrzeuge.py; daraus entstehen Sprite, Wrack-Sprite und das Fahrzeug in den Drohnenbildern (tools/assets/gen_assets.py). 'sprite' und 'sprite_wrack' sind Bildnamen im Sprite-Atlas (assets/sprites/fahrzeuge.json). Keine Leistungsdaten, nur Größe und Darstellung. 'symbol.sidc' ist der Funktionsteil des taktischen Zeichens (MIL-STD-2525C/APP-6, milsymbol), 'symbol.groesse' die Größenangabe; Zugehörigkeit und Status setzt die Oberfläche. Seit 1.3: 'symbol.einheit' ist das Zeichen der Einheit (APP-6) für zugweise Meldungen mit Größenangabe (groesse_nach_anzahl); 'sprite_fahrt' der Sprite während der Fahrt (Mörsertrupp auf Lkw). Seit 1.5 (Szenario 2.4, E6.2): ARGUS kennt nur drei Klassen (`klassen`): Panzer (gepanzert), Fahrzeug (ungepanzert, auch zivil) und Infanterie (Personen, Mörsertrupps, Beobachter); `argus_klasse` ist die Klasse, die ARGUS für den Typ meldet. `klassen[k].sidc` ist das taktische Zeichen dieser Klasse auf den Karten der Spieler, `einheit` das Zeichen einer zugweisen Meldung. `feuer_effekt: keiner` – das Ziel feuert nicht selbst (Beobachter lenkt Artillerie). `personen_im_fahrzeug` (Szenario) zählen für die Trefferregel, im Bild sitzen sie im Fahrzeug.",
   "fahrzeuge": [
     {
       "id": "kpz_t72",
       "name": "Kampfpanzer T-72",
-      "argus_klasse": "KPz T-72",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [6.9, 3.6],
       "symbol": {"art": "kampfpanzer", "sidc": "EVAT", "einheit": "UCA"},
@@ -17,7 +17,7 @@
     {
       "id": "kpz_pt91",
       "name": "Kampfpanzer PT-91 Twardy",
-      "argus_klasse": "KPz T-72",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [6.9, 3.6],
       "symbol": {"art": "kampfpanzer", "sidc": "EVAT", "einheit": "UCA"},
@@ -30,7 +30,7 @@
     {
       "id": "spz_bmp2",
       "name": "Schützenpanzer BMP-2",
-      "argus_klasse": "SPz BMP-2",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [6.7, 3.2],
       "symbol": {"art": "schuetzenpanzer", "sidc": "EVAI", "einheit": "UCIZ"},
@@ -41,7 +41,7 @@
     {
       "id": "spw_btr80",
       "name": "Schützenpanzerwagen BTR-80",
-      "argus_klasse": "SPW BTR-80",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [7.6, 2.9],
       "symbol": {"art": "schuetzenpanzerwagen", "sidc": "EVAA", "einheit": "UCIZ"},
@@ -52,7 +52,7 @@
     {
       "id": "san_rad",
       "name": "Sanitätsfahrzeug (Radpanzer, Rotes Kreuz)",
-      "argus_klasse": "SPW BTR-80",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [7.6, 2.9],
       "symbol": {"art": "sanitaet", "sidc": "EVUA", "einheit": "USM"},
@@ -64,7 +64,7 @@
     {
       "id": "spaehpz_brdm2",
       "name": "Spähpanzer BRDM-2",
-      "argus_klasse": "Spähpanzer BRDM-2",
+      "argus_klasse": "Panzer",
       "gepanzert": true,
       "groesse_m": [5.8, 2.4],
       "symbol": {"art": "spaehpanzer", "sidc": "UCRVA", "einheit": "UCRVA"},
@@ -75,7 +75,7 @@
     {
       "id": "gfz_tigr",
       "name": "Geschütztes Fahrzeug Tigr",
-      "argus_klasse": "Radfahrzeug (mil.) Tigr",
+      "argus_klasse": "Fahrzeug",
       "gepanzert": false,
       "groesse_m": [5.7, 2.4],
       "symbol": {"art": "radfahrzeug", "sidc": "EVAL", "einheit": "UCR"},
@@ -86,7 +86,7 @@
     {
       "id": "lkw_ural",
       "name": "Lkw Ural (militärisch)",
-      "argus_klasse": "Lkw (mil.)",
+      "argus_klasse": "Fahrzeug",
       "gepanzert": false,
       "groesse_m": [7.4, 2.5],
       "symbol": {"art": "lkw", "sidc": "EVUX", "einheit": "USS"},
@@ -97,7 +97,7 @@
     {
       "id": "eloka_lkw",
       "name": "Störsender auf Lkw (EloKa)",
-      "argus_klasse": "EloKa-Fahrzeug",
+      "argus_klasse": "Fahrzeug",
       "gepanzert": false,
       "groesse_m": [8.0, 2.5],
       "symbol": {"art": "eloka", "sidc": "UUMSEJ", "einheit": "UUMSEJ"},
@@ -108,7 +108,7 @@
     {
       "id": "moerser_trupp",
       "name": "Mörsertrupp (2 Rohre, Bedienung)",
-      "argus_klasse": "Mörser",
+      "argus_klasse": "Infanterie",
       "gepanzert": false,
       "groesse_m": [12, 8],
       "symbol": {"art": "moerser", "sidc": "EWOH", "einheit": "UCFM"},
@@ -120,7 +120,7 @@
     {
       "id": "attrappe_kpz",
       "name": "Kampfpanzer-Attrappe unter Tarnnetz",
-      "argus_klasse": "KPz T-72",
+      "argus_klasse": "Panzer",
       "gepanzert": false,
       "groesse_m": [8.8, 5.0],
       "symbol": {"art": "kampfpanzer", "sidc": "EVAT", "einheit": "UCA"},
@@ -132,7 +132,7 @@
     {
       "id": "traktor",
       "name": "Traktor mit Anhänger (zivil)",
-      "argus_klasse": "Fahrzeug unbekannt",
+      "argus_klasse": "Fahrzeug",
       "gepanzert": false,
       "groesse_m": [9.5, 2.5],
       "symbol": {"art": "zivilfahrzeug", "sidc": "EVCF"},
@@ -163,6 +163,56 @@
       "generator": "Lagekarte (Rechteck)",
       "sprite": null,
       "sprite_wrack": null
+    },
+    {
+      "id": "pkw_zivil",
+      "name": "Pkw (zivil), Familie, Gepäck auf dem Dach",
+      "argus_klasse": "Fahrzeug",
+      "gepanzert": false,
+      "groesse_m": [4.6, 1.9],
+      "symbol": {"art": "zivilfahrzeug", "sidc": "EVCA"},
+      "generator": "pkw_zivil",
+      "sprite": "pkw_zivil.png",
+      "sprite_wrack": "pkw_zivil_wrack.png",
+      "hinweis": "Seit 1.5 (S8): Kombi mit Dachträger, Koffer und Matratze. Insassen sitzen im Fahrzeug."
+    },
+    {
+      "id": "pkw_presse",
+      "name": "Geländewagen der Presse (Aufschrift PRESS)",
+      "argus_klasse": "Fahrzeug",
+      "gepanzert": false,
+      "groesse_m": [4.9, 2.0],
+      "symbol": {"art": "zivilfahrzeug", "sidc": "EVCA"},
+      "generator": "pkw_presse",
+      "sprite": "pkw_presse.png",
+      "sprite_wrack": "pkw_presse_wrack.png",
+      "hinweis": "Seit 1.5 (S8): dunkelblau, auf dem Dach in großen weißen Buchstaben PRESS, daneben ein Kamerateam."
+    },
+    {
+      "id": "beobachter_trupp",
+      "name": "Beobachtungstrupp (2 Soldaten, Fernglas, Funkgerät)",
+      "argus_klasse": "Infanterie",
+      "gepanzert": false,
+      "groesse_m": [3.0, 3.0],
+      "symbol": {"art": "beobachter", "sidc": "UCFO", "einheit": "UCFO"},
+      "generator": "beobachter_trupp",
+      "sprite": "beobachter_trupp.png",
+      "sprite_wrack": "beobachter_trupp_reste.png",
+      "feuer_effekt": "keiner",
+      "hinweis": "Seit 1.5 (S7): auf der Plattform des Kirchturms, lenkt Artilleriefeuer. Getroffen: nur zurückgelassenes Gerät (keine Personen)."
+    },
+    {
+      "id": "verwundete",
+      "name": "verwundete Soldaten ohne Waffen (liegen und sitzen)",
+      "argus_klasse": "Infanterie",
+      "gepanzert": false,
+      "groesse_m": [6.0, 5.0],
+      "symbol": {"art": "infanterie", "sidc": "UCI", "einheit": "UCI"},
+      "generator": "verwundete",
+      "sprite": "verwundete.png",
+      "sprite_wrack": "verwundete_leer.png",
+      "feuer_effekt": "keiner",
+      "hinweis": "Seit 1.5 (S6): vier Soldaten mit weißen Verbänden, zwei liegen, zwei sitzen, keine Waffen. Getroffen: nur Verbandszeug (keine Personen)."
     }
   ],
   "personen": [
@@ -170,7 +220,8 @@
       "id": "zivil",
       "name": "Zivilpersonen",
       "darstellung": "Punkte ohne Uniformfarbe, bewegt",
-      "sprite": "person_zivil.png"
+      "sprite": "person_zivil.png",
+      "hinweis": "Seit 1.5: Zivilpersonen mit im_fahrzeug sitzen im Fahrzeug (nur Trefferregel, nicht im Bild)."
     },
     {"id": "soldat", "name": "Soldaten (Feind)", "darstellung": "Punkte in Uniformfarbe", "sprite": "person_soldat.png"},
     {
@@ -186,5 +237,14 @@
     "2": "C",
     "3": "D",
     "4": "D"
+  },
+  "klassen": {
+    "Panzer": {
+      "text": "gepanzerte Fahrzeuge: Kampf-, Schützen- und Spähpanzer, Radpanzer",
+      "sidc": "EVAT",
+      "einheit": "UCA"
+    },
+    "Fahrzeug": {"text": "ungepanzerte Fahrzeuge: Lkw, Geländewagen, Sonderfahrzeuge, zivile Fahrzeuge", "sidc": "EVU"},
+    "Infanterie": {"text": "Personen: Soldaten, Mörsertrupps, Beobachter", "sidc": "UCI", "einheit": "UCI"}
   }
 }
