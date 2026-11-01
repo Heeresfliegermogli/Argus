@@ -38,7 +38,8 @@ Szenario 2.4 (01.11.2026, Änderungen E4, E5, E6.3 – Teil E-a): Kartenpaket un
 von oben nicht zu sehen, `im_fahrzeug`), `pkw_presse` (dunkelblau, auf dem Dach groß **PRESS** in Weiß, klein auf der Haube),
 `beobachter_trupp` (zwei Soldaten mit Fernglas, Funkgerät mit Antenne, Spektiv und Karte – steht auf der Turmplattform),
 `verwundete` (vier Soldaten ohne Waffen mit weißen Verbänden, zwei liegen, einer auf der Trage, zwei sitzen; alle sichtbar am Leben). Diese
-vier liegen in doppelter Auflösung im Atlas (24 px/m, `px_pro_m` je Rahmen; Karte und Live-Bild skalieren je Rahmen). Getroffen zeigen
+vier liegen höher aufgelöst im Atlas (Pkw 24 px/m, Beobachter und Verwundete 48 px/m, ihre Wracks 24 px/m; `px_pro_m` je Rahmen,
+Karte und Live-Bild skalieren je Rahmen), damit die Lupe scharf bleibt. Getroffen zeigen
 Beobachter und Verwundete nur liegengebliebenes Gerät (Trage, Verbandszeug, Funkgerät) ohne Trümmer und brennen nicht (Katalog
 `feuer_effekt: keiner`, auch auf der Karte). **Attrappe** (S1, E6.3): Rohr aus hellem Holz mit Maserung und gesägtem Ende, das Netz hängt
 zwischen den Stangen durch (Stangenköpfe hell, Mulden dunkel, Maschen). **Kirche mit Turm** (S7): Schieferdach mit Chor im Osten und Kreuz

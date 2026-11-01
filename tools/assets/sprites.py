@@ -55,8 +55,10 @@ def fahrzeug_atlas(d):
     for fid, f in d.fahrzeuge.items():
         if not f.get("sprite"):
             continue
-        ppm = F.SPRITE_PX_PRO_M.get(fid, PX_PRO_M)
         for wrack, name in ((False, f["sprite"]), (True, f["sprite_wrack"])):
+            ppm = F.SPRITE_PX_PRO_M.get(fid, PX_PRO_M)
+            if wrack:
+                ppm = min(ppm, 2 * PX_PRO_M)              # Wracks ohne feine Merkmale: höchstens doppelt (Atlasgröße)
             img = F.fahrzeug(fid, f["groesse_m"], ppm, wrack=wrack, seed=7)
             bilder[name] = img
             info[name] = {"typ": fid, "wrack": wrack, "px_pro_m": ppm,

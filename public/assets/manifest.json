@@ -16,7 +16,7 @@
   "karte_start": 649192,
   "karte_kacheln": 1294782,
   "karte_sonst": 472082,
-  "fahrzeuge": 611967,
+  "fahrzeuge": 621195,
   "effekte": 555030
  },
  "karte": {
@@ -76,8 +76,8 @@
   "bild": "sprites/fahrzeuge.png",
   "json": "sprites/fahrzeuge.json",
   "breite": 1024,
-  "hoehe": 848,
-  "bytes": 611967,
+  "hoehe": 1008,
+  "bytes": 621195,
   "px_pro_m": 12,
   "ausrichtung": "Blick nach Osten (hdg 0), Anker Bildmitte = Fahrzeugmitte; um hdg im Uhrzeigersinn drehen",
   "schatten": "nicht eingebrannt: denselben Rahmen schwarz (Alpha ca. 0,45) um 1,2 m nach Südost versetzt darunter zeichnen",
@@ -355,7 +355,7 @@
    "beobachter_trupp.png": {
     "typ": "beobachter_trupp",
     "wrack": false,
-    "px_pro_m": 24,
+    "px_pro_m": 48,
     "groesse_m": [
      4.79,
      4.79
@@ -373,7 +373,7 @@
    "verwundete.png": {
     "typ": "verwundete",
     "wrack": false,
-    "px_pro_m": 24,
+    "px_pro_m": 48,
     "groesse_m": [
      7.79,
      6.79

@@ -791,9 +791,9 @@ def person_varianten():
     return out
 
 
-# Sprites mit feinen Merkmalen (Schrift PRESS, Verbände, Fernglas) in doppelter Auflösung im Atlas (seit 2.4); Karte
+# Sprites mit feinen Merkmalen (Schrift PRESS; Verbände und Fernglas vierfach) in höherer Auflösung im Atlas (seit 2.4); Karte
 # und Live-Drohnenbild skalieren je Rahmen mit dessen px_pro_m.
-SPRITE_PX_PRO_M = {"pkw_zivil": 24, "pkw_presse": 24, "beobachter_trupp": 24, "verwundete": 24}
+SPRITE_PX_PRO_M = {"pkw_zivil": 24, "pkw_presse": 24, "beobachter_trupp": 48, "verwundete": 48}
 
 # Zustände, die das Fahrzeug selbst verändern (eigene Sprites); „feuert“ ist ein Effekt (muendungsblitz),
 # „kisten“ liegt am Boden, „furt“ ist Gischt im Standbild.
