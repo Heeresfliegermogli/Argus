@@ -80,7 +80,7 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     const [naiv] = await lauf();
     const inh = weltFuer(naiv.inh, naiv.z);
     const d = durchgebrochen(inh, naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen);
-    expect(d.fahrzeuge).toEqual(["Z-27", "Z-28"]);
+    expect(d.fahrzeuge).toEqual(["Z-20", "Z-27", "Z-28"]); // seit 2.4 auch Z-20 (wie simuliere_durchlauf.py)
     expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
     expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
     // die Achse NORD hat die 2. Kp zerschlagen (aufgehalten)

@@ -39,7 +39,7 @@ function abspielen(inh: Awaited<ReturnType<typeof inhalte>>, t: number) {
 describe("Szenario 2.3: Daten (D1, D4)", () => {
   it("D1: drei eigene Züge westlich des Bachs, Gefechtsstand dahinter, eigene PzAbw aus den Stellungen", async () => {
     const inh = await inhalte();
-    expect(inh.szenario.version).toBe("2.3");
+    expect(["2.3", "2.4"]).toContain(inh.szenario.version); // 2.4 baut auf 2.3 auf (E-a)
     const et = inh.szenario.eigene_truppe!;
     expect(et.zuege.map((z) => [z.id, z.name, z.ort])).toEqual([
       ["zug1", "1. Zug", "Brücke West"], ["zug2", "2. Zug", "Furt Nord West"], ["zug3", "3. Zug", "Süd"]]);
@@ -94,9 +94,10 @@ describe("Szenario 2.3: Verlustmodell (D2)", () => {
     // ohne jede Abwehr verliert die Kompanie deutlich (Druck), hält aber (Hintergrundgefecht und E-01 wirken weiter)
     expect(v.kompanie.kampfkraft).toBeLessThan(60);
     expect(Object.values(v.zuege).every((s) => s.kampfkraft >= vr.untergrenze_prozent)).toBe(true);
-    // Arten: Mörser, direktes Feuer, Feindartillerie; ohne Attrappe und Durchbruch keine solchen Schäden
+    // Arten: Mörser, direktes Feuer, Feindartillerie, seit 2.4 der gelenkte Beschuss durch den Kirchturm-Beobachter (S7);
+    // ohne Attrappe und Durchbruch keine solchen Schäden
     const arten = new Set(verlustLage(inh, z).ereignisse.map((e) => e.art));
-    expect([...arten].sort()).toEqual(["artillerie", "direkt", "steil", ...(Object.values(z.durchbrueche).some((d) => d.durch) ? ["durchbruch"] : [])].sort());
+    expect([...arten].sort()).toEqual(["artillerie", "beobachter", "direkt", "steil", ...(Object.values(z.durchbrueche).some((d) => d.durch) ? ["durchbruch"] : [])].sort());
   });
 
   it("deterministisch: gleiche Lage ⇒ gleiche Zeitlinie; Bekämpfen stoppt den Schaden dieses Feindes ab dem Einschlag", async () => {

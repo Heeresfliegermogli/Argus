@@ -64,6 +64,8 @@ export interface Ziel {
   verlust_promille?: number;
   /** Seit 2.4 (S6): Personen, die aus einem Fahrzeug kommen (abgesessene Schützen) – erscheinen dort, nicht am Kartenrand */
   herkunft?: string;
+  /** Seit 2.4 (S7): steigt in diesem Gebäude der Karte auf (Beobachter im Kirchturm) – erscheint dort, nicht am Kartenrand */
+  im_gebaeude?: string;
   /** Seit 2.4 (S8): von ARGUS nie gemeldet, aber kein ungemeldetes Ziel – steht als Kontakt auf den Karten (Grund) */
   nur_kontakt?: string;
 }

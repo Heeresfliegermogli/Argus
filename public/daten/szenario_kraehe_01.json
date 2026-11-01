@@ -1022,11 +1022,12 @@
       "typ": "beobachter_trupp",
       "pos": [761, 370],
       "hdg": 190,
-      "ab_s": 0,
+      "ab_s": 840,
+      "im_gebaeude": "kirchturm",
       "gt": {
         "kategorie": "feind",
         "legitim": true,
-        "text": "Feindlicher Artilleriebeobachter (2 Soldaten mit Fernglas und Funkgerät) auf der Plattform des Kirchturms in KRÄHE, seit der Nacht dort. Lenkt ab 14:30 das Artilleriefeuer auf den 2. Zug.",
+        "text": "Feindlicher Artilleriebeobachter (2 Soldaten mit Fernglas und Funkgerät) auf der Plattform des Kirchturms in KRÄHE. Ist durch die Ortschaft gekommen und um 14:00 auf den Turm gestiegen; lenkt ab 14:30 das Artilleriefeuer auf den 2. Zug.",
         "hinweis": "Die Kirche ist Kulturgut, verliert den Schutz aber durch die militärische Nutzung (Beobachtungsposten). Der Mörser träfe die Ortschaft und die Kirche (R3) – zulässig und verhältnismäßig ist nur die LM auf die Turmplattform.",
         "bezug": "Art. 53 und 52 Abs. 2 ZP I, Haager Konvention 1954 (Art. 4, 11)"
       },

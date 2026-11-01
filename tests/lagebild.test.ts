@@ -31,15 +31,20 @@ describe("Taktische Zeichen", () => {
 
   it("ARGUS-Zeichen: Klasse → Feind, UNKLAR → unbekannt; Ground Truth auf der Kontrollkarte", async () => {
     const inh = await inhalte();
-    expect(zeichenArgus(inh, "KPz T-72", 96)).toBe("SHGPEVAT-------");
-    expect(zeichenArgus(inh, "Fahrzeug unbekannt", 54)).toBe("SUGPEV---------");
-    expect(zeichenArgus(inh, "SPW BTR-80", 91, "X")).toBe("SHGXEVAA-------");
+    // seit 2.4 (E6.2): ARGUS kennt nur drei Klassen – Panzer, Fahrzeug, Infanterie – mit je einem Zeichen aus dem Katalog
+    expect(zeichenArgus(inh, "Panzer", 96)).toBe("SHGPEVAT-------");
+    expect(zeichenArgus(inh, "Fahrzeug", 88)).toBe("SHGPEVU--------");
+    expect(zeichenArgus(inh, "Infanterie", 87)).toBe("SHGPUCI--------");
+    expect(zeichenArgus(inh, "unbekannt", 54)).toBe("SUGPEV---------");
+    expect(zeichenArgus(inh, "unbekannt", 72)).toBe("SUGPEV---------"); // EloKa: Klasse unbekannt trotz Konfidenz
+    expect(zeichenArgus(inh, "Panzer", 59)).toBe("SUGPEV---------"); // unter PRÜFEN
+    expect(zeichenArgus(inh, "Panzer", 91, "X")).toBe("SHGXEVAT-------");
     // C7 (2.2): zugweise Meldung → Zeichen der Einheit mit Größenangabe nach APP-6 (●● Halbzug/Trupp, ●●● Zug)
-    expect(zeichenArgus(inh, "KPz T-72", 91, "P", 3)).toBe("SHGPUCA----D---");
-    expect(zeichenArgus(inh, "SPz BMP-2", 87, "P", 2)).toBe("SHGPUCIZ---C---");
-    expect(zeichenArgus(inh, "Spähpanzer BRDM-2", 94, "P", 2)).toBe("SHGPUCRVA--C---");
-    expect(zeichenArgus(inh, "Fahrzeug unbekannt", 54, "P", 2)).toBe("SUGPEV---------");
-    for (const code of ["SHGPUCA----D---", "SHGPUCIZ---C---", ZEICHEN_KONTAKT]) expect(new ms.Symbol(code).isValid(), code).toBe(true);
+    expect(zeichenArgus(inh, "Panzer", 91, "P", 3)).toBe("SHGPUCA----D---");
+    expect(zeichenArgus(inh, "Panzer", 94, "P", 2)).toBe("SHGPUCA----C---");
+    expect(zeichenArgus(inh, "Infanterie", 87, "P", 2)).toBe("SHGPUCI----C---");
+    expect(zeichenArgus(inh, "unbekannt", 54, "P", 2)).toBe("SUGPEV---------");
+    for (const code of ["SHGPUCA----D---", "SHGPUCI----C---", "SHGPEVU--------", "SHGPUCI--------", ZEICHEN_KONTAKT]) expect(new ms.Symbol(code).isValid(), code).toBe(true);
     expect(zeichenZiel(inh, inh.ziele["Z-15"], false)).toBe("SFGPEVAT-------"); // PT-91 verbündet
     expect(zeichenZiel(inh, inh.ziele["Z-12"], false)).toBe("SHGPEVUA-------"); // Sanität
     expect(zeichenZiel(inh, inh.ziele["Z-22"], false)).toBe("SNGPEVCF-------"); // Traktor zivil
@@ -92,7 +97,7 @@ describe("Lagebild G2/G3", () => {
     ]), inh);
     const g2 = lagebildZielmeldungen(inh, z, "g2");
     expect(g2.objekte).toHaveLength(1);
-    expect(g2.objekte[0].text).toBe("Ziel 21/26"); // Zielnummern statt M18/M23 (B7; seit 2.2 drei Meldungen mehr davor)
+    expect(g2.objekte[0].text).toBe("Ziel 24/31"); // Zielnummern statt M18/M23 (B7; seit 2.4 mehr Meldungen davor)
     expect(g2.objekte[0].zustand).toBe("bekaempft");
     expect(g2.objekte[0].sidc[3]).toBe("X");
     expect(g2.wirkungen.map((w) => w.id)).toEqual(["W-M23"]);
@@ -132,7 +137,7 @@ describe("Tracking (Schritt 7)", () => {
     const lb2 = lagebildZielmeldungen(inh, nachher, "g2", 230);
     const w = lb2.objekte.find((x) => x.meldung === "M01")!;
     expect(w.zerstoert).toBe(false);
-    expect(w.sidc).toBe(zeichenArgus(inh, "Spähpanzer BRDM-2", inh.meldungen.M01.argus.konfidenz)); // ein Fahrzeug: ohne Größenangabe
+    expect(w.sidc).toBe(zeichenArgus(inh, "Panzer", inh.meldungen.M01.argus.konfidenz)); // ein Fahrzeug: ohne Größenangabe (BRDM-2: Klasse Panzer)
     expect(w.menge).toBeUndefined();
     expect(w.zustand).toBe("erledigt");
     const wrack = lb2.objekte.find((x) => x.art === "wrack")!;
@@ -271,6 +276,6 @@ describe("Kontakte, Teil- und Wrackzeichen (2.2, C1/C8)", () => {
     // gemeinsam: Zahl und Größenangabe
     const zusammen = lagebildZielmeldungen(inh, z, "g1", 100).objekte.find((o) => o.meldung === "M01")!;
     expect(zusammen.menge).toBe(2);
-    expect(zusammen.sidc).toBe("SHGPUCRVA--C---");
+    expect(zusammen.sidc).toBe("SHGPUCA----C---");
   });
 });

@@ -3,7 +3,8 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
-  type Auswertung, type TeamLauf, auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, faelle, sollBekaempfen, zeitleiste, zustandBis,
+  type Auswertung, type TeamLauf, auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, faelle, regelWarnung, replayPlan, sollBekaempfen,
+  zeitleiste, zustandBis,
 } from "../src/kern/auswertung";
 import type { Inhalte } from "../src/inhalte/typen";
 import { inhalte } from "./hilfen";
@@ -24,10 +25,16 @@ beforeAll(async () => {
 }, 30000);
 
 describe("Auswertung: Fälle", () => {
-  it("Reihenfolge der Auflösung aus den Daten: S3, S2, S1, S4, dann N1–N4; S4 mit Folgemeldung M23", () => {
+  it("Reihenfolge der Auflösung aus den Daten: S3, S2, S1, S4, S5–S8 (zuschaltbar), dann N1–N4; Folgemeldungen M23, M36, M34", () => {
     const fs = faelle(inh);
-    expect(fs.map((f) => f.id)).toEqual(["S3", "S2", "S1", "S4", "N1", "N2", "N3", "N4"]);
+    expect(fs.map((f) => f.id)).toEqual(["S3", "S2", "S1", "S4", "S5", "S6", "S7", "S8", "N1", "N2", "N3", "N4"]);
+    expect(fs.filter((f) => f.zuschaltbar).map((f) => f.id)).toEqual(["S5", "S6", "S7", "S8"]);
     expect(fs.find((f) => f.id === "S4")!.folge).toEqual(["M23"]);
+    expect(fs.find((f) => f.id === "S5")!.folge).toEqual(["M36"]);
+    expect(fs.find((f) => f.id === "S8")!.folge).toEqual(["M34"]);
+    expect(sollBekaempfen(inh.meldungen.M33)).toBe(false); // Presse
+    expect(sollBekaempfen(inh.meldungen.M35)).toBe(false); // Verwundete
+    expect(sollBekaempfen(inh.meldungen.M31)).toBe(true); // Kirchturm: legitim, nur LM
     expect(sollBekaempfen(inh.meldungen.M20)).toBe(false);
     expect(sollBekaempfen(inh.meldungen.M18)).toBe(false);
     expect(sollBekaempfen(inh.meldungen.M23)).toBe(true);
@@ -36,11 +43,20 @@ describe("Auswertung: Fälle", () => {
 
   it("naive Teams treffen die Fallen, ideale stoppen an der richtigen Stufe", () => {
     const tabelle = Object.fromEntries(a.teams.map((t) => [t.name, Object.fromEntries(a.faelle.map((f) => [f.id, `${t.faelle[f.id].ausgang}${t.faelle[f.id].stufe ? `@${t.faelle[f.id].stufe}` : ""}`]))]));
-    expect(tabelle["Falke Nord"]).toEqual({ S3: "falsch@g3", S2: "falsch@g3", S1: "falsch@g3", S4: "falsch@g3", N1: "richtig@g1", N2: "falsch@g3", N3: "richtig@g3", N4: "falsch@g3" });
-    expect(tabelle["Löwe 2"]).toEqual({ S3: "richtig@g3", S2: "richtig@g1", S1: "richtig@g1", S4: "richtig@g2", N1: "richtig@g1", N2: "richtig@g1", N3: "richtig@g3", N4: "richtig@g2" });
-    // naiv + 4 Verstärkungen: später dran, Zivilpersonen im Hof RABE schon weg (S4 richtig), N4 nach der Schule
+    // seit 2.4: S7 (Kirchturm) ist ein legitimes Ziel – mit LM richtig, auch für naiv; N4: naiv ist bei der dichteren
+    // Meldelage erst um 20:00 bei der Freigabe, der BMP-2 hat die Schule verlassen (ohne Warnung, richtig)
+    expect(tabelle["Falke Nord"]).toEqual({
+      S3: "falsch@g3", S2: "falsch@g3", S1: "falsch@g3", S4: "falsch@g3", S5: "falsch@g3", S6: "falsch@g3", S7: "richtig@g3", S8: "falsch@g3",
+      N1: "richtig@g1", N2: "falsch@g3", N3: "richtig@g3", N4: "richtig@g3",
+    });
+    expect(tabelle["Löwe 2"]).toEqual({
+      S3: "richtig@g3", S2: "richtig@g1", S1: "richtig@g1", S4: "richtig@g2", S5: "richtig@g2", S6: "richtig@g1", S7: "richtig@g3", S8: "richtig@g1",
+      N1: "richtig@g1", N2: "richtig@g1", N3: "richtig@g3", N4: "richtig@g2",
+    });
+    // naiv + 4 Verstärkungen: später dran – bei S5 sind die Zivilpersonen schon weg (richtig), dafür trifft N4 die Schule
     expect(tabelle["Team Ömer & Co"].S3).toBe("falsch@g3");
-    expect(tabelle["Team Ömer & Co"].S4).toBe("richtig@g3");
+    expect(tabelle["Team Ömer & Co"].S5).toBe("richtig@g3");
+    expect(tabelle["Team Ömer & Co"].N4).toBe("falsch@g3");
     expect(tabelle.Kassiopeia.N2).toBe("offen");
   });
 
@@ -51,28 +67,44 @@ describe("Auswertung: Fälle", () => {
     expect(s3.kette.glieder.find((g) => g.entscheidend)?.stufe).toBe("g3");
     expect(s3.kette.einschlag?.fehl).toBe(true);
     expect(s3.kette.einschlag?.text).toContain("Z-15 verbündet");
-    expect(s3.zeilen).toEqual(["FREIGABE 22:15 (PzAbw)", "→ Verbündete getroffen"]);
+    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (PzAbw)", "→ Verbündete getroffen"]);
     const s4 = a.teams[1].faelle.S4;
     expect(s4.kette.glieder[1].zeichen).toBe("◷");
-    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:05", "Ziel 26 FREIGABE 24:25"]); // seit 2.2: M23 ist „Ziel 26“
-    expect(a.teams[1].faelle.S1.text).toBe("Aufklärung lehnt ab 09:10");
+    // seit 2.4: M23 ist „Ziel 31“; sein Einschlag (24:56) liegt vor Spielende, M18 entfällt damit bei der Zielprüfung
+    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:10", "entfallen bei der Zielprüfung – Fahrzeug zerstört", "Ziel 31 FREIGABE 24:15"]);
+    expect(a.teams[1].faelle.S1.text).toBe("Aufklärung lehnt ab 09:05");
+    // neue Fälle (2.4): Schutzschilde abwarten, Verwundete und Presse ablehnen
+    expect(a.teams[1].faelle.S5.zeilen).toEqual(["Zielprüfung stellt zurück 18:10", "entfallen bei der Zielprüfung – Fahrzeug zerstört", "Ziel 27 FREIGABE 21:50"]);
+    expect(a.teams[0].faelle.S5.zeilen).toEqual(["FREIGABE 18:40 (LM)", "→ Zivilpersonen getroffen"]);
+    expect(a.teams[0].faelle.S6.zeilen).toEqual(["FREIGABE 22:00 (PzAbw)", "→ Wehrlose getroffen"]);
+    expect(a.teams[1].faelle.S6.text).toBe("Aufklärung lehnt ab 20:05");
+    expect(a.teams[0].faelle.S8.zeilen).toEqual(["FREIGABE 21:20 (Mrs)", "→ Zivilpersonen getroffen"]);
+    expect(a.teams[1].faelle.S8.zeilen).toEqual(["Aufklärung lehnt ab 19:30", "Ziel 30 FREIGABE 23:35"]);
+    expect(a.teams[0].faelle.S7.zeilen).toEqual(["FREIGABE 16:40 (LM)", "ohne Fehltreffer"]);
   });
 });
 
 describe("Auswertung: Kennzahlen", () => {
   it("Fehlbekämpfungen nach Art, Freigaben trotz Warnung", () => {
     const k = a.teams[0].kennzahlen;
-    expect(k.fehl.wirkungen).toBe(5);
-    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 1, verbuendet: 1, ausser_gefecht: 1 });
-    expect(k.trotzWarnung).toBe(1); // N4: Freigabe trotz Warnung NS-01
+    expect(k.fehl.wirkungen).toBe(8);
+    // seit 2.4: Zivilpersonen in S4, S5, S8 (Presse); Wehrlose in N2 und S6 (Verwundete)
+    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 3, verbuendet: 1, ausser_gefecht: 2 });
+    expect(k.fehl.liste.map((x) => x.meldung)).toEqual(["M08", "M12", "M32", "M18", "M33", "M35", "M20", "M21"]);
+    expect(k.trotzWarnung).toBe(0); // N4 ohne Warnung (siehe oben)
+    expect(a.teams[2].kennzahlen.trotzWarnung).toBe(2); // naiv + Verstärkungen: N4 (Schule) u. a.
     expect(a.teams[1].kennzahlen.fehl.wirkungen).toBe(0);
     expect(a.teams[1].kennzahlen.trotzWarnung).toBe(0);
+    expect(a.teams[3].kennzahlen.trotzWarnung).toBe(0); // der Hinweis „nur k von n – Bestand reicht nicht“ ist keine Regelwarnung
+    expect(regelWarnung("R3: Einschlag im Wirkradius Ortschaft – beim Einschlag 10:18:20")).toBe(true);
+    expect(regelWarnung("nur 3 von 4 Fahrzeugen – Bestand LM reicht nicht")).toBe(false);
+    expect(regelWarnung("Bestand LM aufgebraucht")).toBe(false);
   });
 
   it("Widerspruch gegen ARGUS: zu Recht und zu Unrecht", () => {
     const ideal = a.teams[1].kennzahlen.widerspruch;
-    expect(ideal.liste.map((w) => `${w.meldung}:${w.stufe}`)).toEqual(["M08:g1", "M12:g1", "M17:g2", "M20:g3", "M21:g1"]);
-    expect([ideal.zuRecht, ideal.zuUnrecht]).toEqual([5, 0]);
+    expect(ideal.liste.map((w) => `${w.meldung}:${w.stufe}`)).toEqual(["M08:g1", "M12:g1", "M32:g2", "M17:g2", "M33:g1", "M35:g1", "M20:g3", "M21:g1"]);
+    expect([ideal.zuRecht, ideal.zuUnrecht]).toEqual([8, 0]);
     // naiv: M18 trotz NICHT BEKÄMPFEN freigegeben, Zivilpersonen getroffen → zu Unrecht
     const naiv = a.teams[0].kennzahlen.widerspruch;
     expect(naiv.liste.map((w) => `${w.meldung}:${w.recht}`)).toEqual(["M18:false"]);
@@ -88,7 +120,7 @@ describe("Auswertung: Kennzahlen", () => {
 
   it("Fast-Track wann, I-04 gelesen wann, Lagehinweise", () => {
     const naiv = a.teams[0].kennzahlen;
-    expect(naiv.fastTrack).toMatchObject({ an: true, seit: 870, angebot: 840, meldungen: 2 }); // seit 2.2 kommt M13 schon um 14:15, vor Fast-Track
+    expect(naiv.fastTrack).toMatchObject({ an: true, seit: 870, angebot: 840, meldungen: 3 }); // seit 2.4: M36, M20, M21 (≥ 90 %)
     expect(naiv.lagemeldungen[0]).toEqual({ id: "I-04", fall: "S3", erschienen: 1020, gelesen: 1290 });
     expect(naiv.lagehinweise.anzahl).toBe(0);
     const ideal = a.teams[1].kennzahlen;
@@ -103,12 +135,12 @@ describe("Auswertung: Kennzahlen", () => {
 });
 
 describe("Auswertung: Konfidenz", () => {
-  it("ARGUS-Bilanz wie pruefe_szenario.py: 26 richtig, 4 falsch, Ø 93,5 % gegen 88,1 %", () => {
+  it("ARGUS-Bilanz wie pruefe_szenario.py: 30 richtig, 6 falsch, Ø 92,3 % gegen 88,2 %", () => {
     const k = a.konfidenz;
-    expect([k.richtig, k.falsch, k.mittelFalsch, k.mittelRichtig]).toEqual([26, 4, 93.5, 88.1]);
-    expect(k.punkte.filter((p) => p.falsch).map((p) => p.meldung)).toEqual(["M08", "M12", "M20", "M21"]);
-    // Die Teams folgten den falschen Empfehlungen nur bei hoher Konfidenz
-    expect(k.fehl.min).toBeGreaterThanOrEqual(91);
+    expect([k.richtig, k.falsch, k.mittelFalsch, k.mittelRichtig]).toEqual([30, 6, 92.3, 88.2]);
+    expect(k.punkte.filter((p) => p.falsch).map((p) => p.meldung)).toEqual(["M08", "M12", "M33", "M35", "M20", "M21"]);
+    // Die Teams folgten den falschen Empfehlungen nur bei hoher Konfidenz (seit 2.4 ab 88 %: Presse M33)
+    expect(k.fehl.min).toBeGreaterThanOrEqual(88);
     expect(k.punkte.find((p) => p.meldung === "M20")!.bekaempft).toBe(3);
   });
 });
@@ -120,7 +152,7 @@ describe("Replay", () => {
     expect(von).toBeLessThanOrEqual(1000);
     expect(bis).toBeGreaterThanOrEqual(1435);
     const ideal = zeitleiste(inh, a.teams[1], f).map((m) => m.zeichen);
-    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "23", "A✓", "Z✓", "F✕", "✎"])); // M20 ist seit 2.2 „Ziel 23“
+    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "28", "A✓", "Z✓", "F✕", "✎"])); // M20 ist seit 2.4 „Ziel 28“
     const naiv = zeitleiste(inh, a.teams[0], f);
     expect(naiv.find((m) => m.art === "einschlag")?.klasse).toBe("fehl");
     expect(naiv.find((m) => m.art === "meldung")?.klasse).toBe("ft");
@@ -132,8 +164,29 @@ describe("Replay", () => {
     expect(n).toBe(ereignisseBis(p, 1330));
     expect(z.meldungen.M20.stufe).toBe("g3");
     expect(z.zerstoert["Z-15"]).toBeUndefined();
-    const spaeter = zustandBis(inh, p, 1350).z;
-    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1345, 0);
+    expect(zustandBis(inh, p, 1365).z.zerstoert["Z-15"]).toBeUndefined();
+    const spaeter = zustandBis(inh, p, 1380).z;
+    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1370, 0);
+  });
+});
+
+describe("Replay-Plan (2.4, E5)", () => {
+  it("Standard S3, S2, S1, S4; S5–S8 zuschaltbar, Reihenfolge wählbar; das Budget von 12 min bleibt", () => {
+    const std = replayPlan(inh);
+    expect(std.faelle.map((f) => f.id)).toEqual(["S3", "S2", "S1", "S4"]);
+    expect(std.zuschaltbar.map((f) => f.id)).toEqual(["S5", "S6", "S7", "S8"]);
+    expect([std.jeFall, std.summe, std.budget, std.knapp]).toEqual([150, 720, 720, false]);
+    const preis = replayPlan(inh, null, true);
+    expect([preis.jeFall, preis.preis, preis.summe]).toEqual([135, 60, 720]);
+    const sechs = replayPlan(inh, ["S5", "S3", "S8", "S2", "S1", "S4"], true);
+    expect(sechs.faelle.map((f) => f.id)).toEqual(["S5", "S3", "S8", "S2", "S1", "S4"]);
+    expect([sechs.jeFall, sechs.summe <= 720, sechs.knapp]).toEqual([90, true, false]);
+    const alle = replayPlan(inh, ["S3", "S2", "S1", "S4", "S5", "S6", "S7", "S8"], true);
+    expect([alle.jeFall, alle.summe, alle.knapp]).toEqual([65, 700, true]);
+    // Unbekanntes, Doppeltes und Nebenfälle fallen weg
+    expect(replayPlan(inh, ["S3", "S3", "N2", "S9", "S6"]).faelle.map((f) => f.id)).toEqual(["S3", "S6"]);
+    // Teamvergleich mit allen Fällen
+    expect(a.faelle.filter((f) => f.art === "schluessel")).toHaveLength(8);
   });
 });
 

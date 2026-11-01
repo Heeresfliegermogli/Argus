@@ -261,6 +261,15 @@ def pruefe(d):
             elif L.dist(z["pos"], L.position(ziele[z["herkunft"]], a)) > 25:
                 fehler.append(f"{wer}: erscheint {L.dist(z['pos'], L.position(ziele[z['herkunft']], a)):.0f} m neben {z['herkunft']} (Soll ≤ 25 m)")
             return
+        if z.get("im_gebaeude"):    # seit 2.4: steigt in einem Gebäude auf (S7: Beobachter im Kirchturm)
+            g = next((g for g in karte.get("gebaeude", []) if g["id"] == z["im_gebaeude"]), None)
+            if g is None:
+                fehler.append(f"{wer}: im_gebaeude {z['im_gebaeude']} gibt es auf der Karte nicht")
+            elif L.dist(z["pos"], g["mitte"]) > max(g["laenge"], g["breite"]) / 2 + 2:
+                fehler.append(f"{wer}: steht {L.dist(z['pos'], g['mitte']):.0f} m neben {z['im_gebaeude']} statt darin")
+            if r:
+                fehler.append(f"{wer}: im_gebaeude und Route zugleich")
+            return
         if not r:
             if not schon_da:
                 fehler.append(f"{wer}: erscheint um {L.mmss(a)}{' nach dem Einspielen' if relativ else ''} bei ({z['pos'][0]}, "

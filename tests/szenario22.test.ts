@@ -8,6 +8,7 @@ import { einschlag, wirkungBeimEinschlag } from "../src/kern/regeln";
 import { welt } from "../src/kern/welt";
 import { zustandAus } from "../src/kern/zustand";
 import type { Absender, Ereignis } from "../src/kern/ereignisse";
+import { argusBei, bildalter, elokaAktiv, elokaStoerung } from "../src/kern/eloka";
 import { inhalte } from "./hilfen";
 
 const SYS: Absender = { rolle: "system" };
@@ -24,10 +25,20 @@ describe("Szenario 2.2: Daten", () => {
   it("C1: jedes Fahrzeug erscheint am Kartenrand (nur was bei Spielbeginn dasteht, steht mitten im Bild)", async () => {
     const inh = await inhalte();
     const { breite: w, hoehe: h } = inh.karte.ausdehnung_m;
-    expect(["2.2", "2.3"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5)
+    expect(["2.2", "2.3", "2.4"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5), 2.4 auf 2.3 (E-a)
     for (const z of inh.szenario.ziele) {
       const a = abS(z);
       if (a <= 0 && !z.bewegung?.route?.length) continue; // Attrappe Z-07 steht seit Spielbeginn
+      // seit 2.4: Verwundete kommen aus dem Wrack (herkunft, S6), der Beobachter steigt im Kirchturm auf (im_gebaeude, S7)
+      if (z.herkunft) {
+        expect(dist(z.pos, position(inh.ziele[z.herkunft], a)), `${z.id} neben ${z.herkunft}`).toBeLessThanOrEqual(25);
+        continue;
+      }
+      if (z.im_gebaeude) {
+        const g = inh.karte.gebaeude.find((x) => x.id === z.im_gebaeude)!;
+        expect(dist(z.pos, g.mitte), `${z.id} in ${z.im_gebaeude}`).toBeLessThanOrEqual(Math.max(g.laenge, g.breite) / 2 + 2);
+        continue;
+      }
       expect(z.bewegung?.route?.length, `${z.id} ohne Route`).toBeGreaterThan(0);
       expect(amRand(position(z, a), w, h), `${z.id} erscheint um ${a} s mitten im Bild`).toBe(true);
       if (z.bis_s !== undefined && z.bis_s !== null) expect(amRand(position(z, z.bis_s), w, h), `${z.id} verschwindet mitten im Bild`).toBe(true);
@@ -79,15 +90,20 @@ describe("Szenario 2.2: Daten", () => {
     }
   });
 
-  it("C9: EloKa-Meldung M25 ist „Ziel unbekannt“ mit niedriger Konfidenz, das Bild stark gestört", async () => {
+  it("C9: EloKa-Meldung M25 ist „unbekannt“ mit niedriger Konfidenz, das Bild gestört (seit 2.4, E4: Störung global)", async () => {
     const inh = await inhalte();
     const m = inh.meldungen.M25;
-    expect(m.argus).toMatchObject({ klasse: "Ziel unbekannt", empfehlung: "UNKLAR" });
-    expect(m.argus.konfidenz).toBeLessThan(inh.regeln.argus.schwellen.pruefen);
-    expect(m.bild.sicht.find((s) => s.art === "stoerung")!.anteil).toBeGreaterThanOrEqual(0.8);
-    expect(m.sensor.bildalter_s).toBeGreaterThanOrEqual(15);
+    // Die Daten tragen die ungestörte Ausgabe; zur Meldezeit stört das EloKa-Fahrzeug selbst den Datenlink
+    expect(m.argus).toMatchObject({ klasse: "Fahrzeug", empfehlung: "PRÜFEN" });
+    expect(elokaAktiv(inh, {}, m.t_s)).toBe(true);
+    const a = argusBei(inh, m, true);
+    expect(a).toMatchObject({ klasse: "unbekannt", zugehoerigkeit: "unbekannt", empfehlung: "UNKLAR", gestoert: true });
+    expect(a.konfidenz).toBeLessThan(inh.regeln.argus.schwellen.pruefen);
+    expect(elokaStoerung(inh, {}, m.t_s)).toBeGreaterThanOrEqual(0.4);
+    expect(bildalter(inh, m, true)).toBeGreaterThanOrEqual(15);
     expect(inh.ziele["Z-23"].gt.legitim).toBe(true);
     expect(m.sensor.waerme).toMatch(/Generator/);
+    expect(m.bild.merkmale?.map((x) => x.art)).toEqual(["mast"]);
   });
 });
 

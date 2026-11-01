@@ -147,7 +147,7 @@ export class Modellteam {
 
   constructor(readonly inh: Inhalte, readonly opt: ModellOptionen, readonly name: string, private uhr: Uhr, tg: Taktgeber) {
     this.kanal = new SpeicherKanal(name, uhr);
-    this.zeiten = opt.zeiten ?? { G1: 40, G2: 50, G3: 30 };
+    this.zeiten = opt.zeiten ?? { G1: 35, G2: 40, G3: 30 }; // wie simuliere_durchlauf.py (seit 2.4: T_G1, T_G2, T_G3)
     this.reihenfolge = opt.reihenfolge ?? ["PZA", "ART", "MRS", "PRZ", "LM"];
     const i05 = inh.szenario.injects.find((i) => i.aktion === "fast_track_angebot")?.t_s;
     this.ftAb = opt.team === "naiv" && i05 !== undefined ? i05 + (opt.ftNachAngebot ?? 30) : null;

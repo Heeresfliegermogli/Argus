@@ -5,8 +5,10 @@
 // hat und was beim Einschlag wirklich getroffen wurde – nie Namen von Personen, nur Teams.
 //
 // Begriffe
-//  • Fall: Schlüsselfall (S1–S4, Reihenfolge der Auflösung aus den Daten) oder Nebenfall (N1–N4). Zu einem Fall
-//    gehören seine Meldung und Folgemeldungen mit demselben `fall` (S4: M18 und M23).
+//  • Fall: Schlüsselfall (S1–S8, Reihenfolge der Auflösung aus den Daten) oder Nebenfall (N1–N4). Zu einem Fall
+//    gehören seine Meldung und Folgemeldungen mit demselben `fall` (S4: M18 und M23, S5: M32 und M36, S8: M33 und M34).
+//    Seit 2.4 (E5) sind S5–S8 `zuschaltbar`: Sie stehen im Teamvergleich, das Replay zeigt sie nur, wenn die
+//    Spielleitung sie zuschaltet (replayPlan, Budget 12 min bleibt).
 //  • Ausgang eines Falls je Team:
 //      falsch          – eine Freigabe traf Verbündete, Geschütztes, Zivilpersonen, die Attrappe oder Wehrlose,
 //                        oder schlug unter Verstoß gegen R2/R3 ein (Lage beim Einschlag)
@@ -25,6 +27,7 @@ import type { Inhalte, Meldung, Nebenfall, Schluesselfall } from "../inhalte/typ
 import type { Ereignis } from "./ereignisse";
 import { gtBei } from "./geometrie";
 import { durchgebrochen } from "./durchbruch";
+import { elokaAktiv } from "./eloka";
 import { weltFuer } from "./lage";
 import { FEHL } from "./lagebild";
 import { ROLLEN_DATIV, ROLLEN_NAME, ROLLEN_ZEICHEN } from "./sichten";
@@ -66,21 +69,91 @@ export interface FallDef {
   meldung: string;
   /** Folgemeldungen mit demselben Fall (S4: M23) */
   folge: string[];
+  /** Schlüsselfall, der im Replay nur auf Wunsch der Spielleitung läuft (seit 2.4: S5–S8) */
+  zuschaltbar?: boolean;
   /** Schlüsselfall: volle Daten (Leitfragen, Bezüge) */
   sf?: Schluesselfall;
   nf?: Nebenfall;
 }
 
-/** Fälle in der Reihenfolge der Auflösung: Schlüsselfälle nach `reihenfolge` (S3, S2, S1, S4), dann die Nebenfälle. */
+/** Fälle in der Reihenfolge der Auflösung: Schlüsselfälle nach `reihenfolge` (S3, S2, S1, S4, S5–S8), dann die Nebenfälle. */
 export function faelle(inh: Inhalte): FallDef[] {
   const sz = (inh.basis ?? inh).szenario;
   const folge = (f: { id: string; meldung: string }) => sz.meldungen.filter((m) => m.fall === f.id && m.id !== f.meldung).map((m) => m.id);
   return [
     ...[...sz.schluesselfaelle].sort((a, b) => a.reihenfolge - b.reihenfolge)
-      .map((f): FallDef => ({ id: f.id, art: "schluessel", titel: f.titel, meldung: f.meldung, folge: folge(f), sf: f })),
+      .map((f): FallDef => ({ id: f.id, art: "schluessel", titel: f.titel, meldung: f.meldung, folge: folge(f), ...(f.zuschaltbar ? { zuschaltbar: true } : {}), sf: f })),
     ...[...sz.nebenfaelle].sort((a, b) => a.id.localeCompare(b.id))
       .map((f): FallDef => ({ id: f.id, art: "neben", titel: f.titel, meldung: f.meldung, folge: folge(f), nf: f })),
   ];
+}
+
+/**
+ * Regelwarnung (R2, R3, Einsatzbereich, No-Strike) – im Gegensatz zum Hinweis auf den Bestand („Bestand LM aufgebraucht“,
+ * seit 2.4 auch „nur 3 von 4 Fahrzeugen – Bestand LM reicht nicht“). Nur Regelwarnungen zählen als „Freigabe trotz Warnung“.
+ */
+export function regelWarnung(w: string): boolean {
+  return !/^(Bestand |nur \d+ von \d+ )/.test(w);
+}
+
+// ---------------------------------------------------------------- Replay-Plan (seit 2.4, E5)
+
+/** Zeitbudget der Auflösung in s (12 min), wenn das Szenario keines nennt. */
+export const REPLAY_BUDGET_S = 720;
+/** Feste Kapitel vor den Fällen: Teamvergleich 45 s, Kennzahlen 45 s, Konfidenz 30 s. */
+export const REPLAY_FEST = { teams: 45, kennzahlen: 45, konfidenz: 30 } as const;
+/** „Preis des Abwartens“ nach den Fällen (seit 2.3, nur mit Verlustmodell). */
+export const REPLAY_PREIS_S = 60;
+/** Unter so vielen s je Fall wird es knapp (Hinweis an die Spielleitung, kein Verbot). */
+export const REPLAY_KNAPP_S = 90;
+
+export interface ReplayPlan {
+  /** Schlüsselfälle in der gewählten Reihenfolge */
+  faelle: FallDef[];
+  /** Zeit je Fall in s (auf 5 s abgerundet) */
+  jeFall: number;
+  /** Preis des Abwartens dabei? (dann 60 s) */
+  preis: number;
+  /** Summe aller Kapitel in s, höchstens das Budget */
+  summe: number;
+  budget: number;
+  /** Fälle, die zugeschaltet werden können und noch nicht gewählt sind */
+  zuschaltbar: FallDef[];
+  /** Zeit je Fall unter REPLAY_KNAPP_S */
+  knapp: boolean;
+}
+
+/** Standard-Reihenfolge des Replays: aus szenario.auswertung.replay.standard, sonst alle nicht zuschaltbaren Schlüsselfälle. */
+export function replayStandard(inh: Inhalte): string[] {
+  const sz = (inh.basis ?? inh).szenario;
+  return sz.auswertung.replay?.standard ?? faelle(inh).filter((f) => f.art === "schluessel" && !f.zuschaltbar).map((f) => f.id);
+}
+
+/**
+ * Welche Schlüsselfälle das Replay zeigt, in welcher Reihenfolge und wie lange: Die Spielleitung wählt Fälle und
+ * Reihenfolge (Standard S3, S2, S1, S4; S5–S8 zuschaltbar), das Budget von 12 min bleibt – die festen Kapitel
+ * (2 min, mit Verlustmodell 1 min Preis des Abwartens) gehen ab, der Rest teilt sich gleich auf die gewählten Fälle.
+ * Unbekannte, doppelte und Nebenfälle in `auswahl` fallen weg; ohne Auswahl gilt der Standard.
+ */
+export function replayPlan(inh: Inhalte, auswahl?: string[] | null, mitPreis = false): ReplayPlan {
+  const sz = (inh.basis ?? inh).szenario;
+  const alle = faelle(inh).filter((f) => f.art === "schluessel");
+  const nachId = new Map(alle.map((f) => [f.id, f]));
+  const ids = [...new Set(auswahl ?? replayStandard(inh))].filter((id) => nachId.has(id));
+  const gewaehlt = ids.map((id) => nachId.get(id)!);
+  const budget = sz.auswertung.replay?.budget_s ?? REPLAY_BUDGET_S;
+  const fest = REPLAY_FEST.teams + REPLAY_FEST.kennzahlen + REPLAY_FEST.konfidenz;
+  const preis = mitPreis ? REPLAY_PREIS_S : 0;
+  const jeFall = gewaehlt.length ? Math.floor((budget - fest - preis) / gewaehlt.length / 5) * 5 : 0;
+  return {
+    faelle: gewaehlt,
+    jeFall,
+    preis,
+    summe: fest + preis + jeFall * gewaehlt.length,
+    budget,
+    zuschaltbar: alle.filter((f) => !ids.includes(f.id)),
+    knapp: gewaehlt.length > 0 && jeFall < REPLAY_KNAPP_S,
+  };
 }
 
 // ---------------------------------------------------------------- Verlauf je Meldung aus dem Protokoll
@@ -104,7 +177,7 @@ export const FEHL_TEXT: Record<FehlArt, string> = {
   geschuetzt: "Sanität",
   zivil: "Zivilpersonen",
   attrappe: "Attrappe",
-  ausser_gefecht: "ergibt sich",
+  ausser_gefecht: "Wehrlose", // Besatzung, die sich ergibt (N1), Verwundete am Wrack (S6)
 };
 
 export interface WirkungInfo {
@@ -541,7 +614,7 @@ export function kennzahlen(basis: Inhalte, team: TeamLauf, verlaeufe = meldungsV
     },
     feind: { bekaempft: bekaempft.size, gemeldet: gemeldet.size },
     fehl: { wirkungen: fehlListe.length, arten: [...arten].map(([art, anzahl]) => ({ art, anzahl })), liste: fehlListe },
-    trotzWarnung: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe" && (e.warnungen?.length ?? 0) > 0)).length,
+    trotzWarnung: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe" && (e.warnungen ?? []).some(regelWarnung))).length,
     freigaben: {
       gesamt: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe")).length,
       wieArgus: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe") && inh.meldungen[mv.id]?.argus.empfehlung === "BEKÄMPFEN").length,
@@ -579,8 +652,13 @@ export interface KonfidenzPunkt {
   meldung: string;
   konfidenz: number;
   empfehlung: string;
-  /** Anteil der Sichtstörung (0–1): größter verdeckter Anteil von Bild oder Ziel */
+  /** Anteil der Sichtstörung (0–1): größter verdeckter Anteil von Bild oder Ziel; seit 2.4 auch die EloKa-Störung */
   gestoert: number;
+  /**
+   * Seit 2.4 (E4): zur Meldezeit stört das EloKa-Fahrzeug den Datenlink (Stand der Daten, ohne Bekämpfung). ARGUS zeigte
+   * dann eine niedrigere Konfidenz (argusBei); `konfidenz` ist der Wert der Daten, die Bilanz bleibt wie pruefe_szenario.py.
+   */
+  eloka?: boolean;
   falsch: boolean;
   fall?: string;
   /** Teams, die die Meldung bekämpft haben / bei denen sie entschieden wurde */
@@ -610,7 +688,8 @@ function spanne(werte: number[]) {
 export function konfidenzBild(basis: Inhalte, verlaeufe: Map<string, MeldungsVerlauf>[], kz: Kennzahlen[]): KonfidenzBild {
   const inh = basis.basis ?? basis;
   const punkte = inh.szenario.meldungen.map((m): KonfidenzPunkt => {
-    const gestoert = Math.max(0, ...m.bild.sicht.map((s) => Math.max(s.anteil ?? 0, s.ziel_anteil ?? 0)));
+    const eloka = elokaAktiv(inh, {}, m.t_s);
+    const gestoert = Math.max(eloka ? inh.szenario.eloka!.bildstoerung : 0, ...m.bild.sicht.map((s) => Math.max(s.anteil ?? 0, s.ziel_anteil ?? 0)));
     let bek = 0;
     let ent = 0;
     for (const v of verlaeufe) {
@@ -619,7 +698,10 @@ export function konfidenzBild(basis: Inhalte, verlaeufe: Map<string, MeldungsVer
       if (mv.wirkung || mv.stufe === "wirkung") bek += 1;
       if (mv.wirkung || mv.stufe === "wirkung" || mv.stufe === "erledigt" || mv.zurueckgestellt) ent += 1;
     }
-    return { meldung: m.id, konfidenz: m.argus.konfidenz, empfehlung: m.argus.empfehlung, gestoert, falsch: argusFalsch(inh, m), fall: m.fall, bekaempft: bek, entschieden: ent };
+    return {
+      meldung: m.id, konfidenz: m.argus.konfidenz, empfehlung: m.argus.empfehlung, gestoert, ...(eloka ? { eloka: true } : {}), falsch: argusFalsch(inh, m),
+      fall: m.fall, bekaempft: bek, entschieden: ent,
+    };
   });
   const falsch = punkte.filter((p) => p.falsch);
   const richtigBek = punkte.filter((p) => !p.falsch && p.empfehlung === "BEKÄMPFEN");

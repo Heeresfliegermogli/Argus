@@ -15,7 +15,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../inhalte/typen";
 import {
-  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, type FallDef, type FallErgebnis, type KettenGlied, type TeamAuswertung, type TeamLauf, type ZeitMarke,
+  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, replayPlan, type FallDef, type FallErgebnis, type KettenGlied, type TeamAuswertung, type TeamLauf, type ZeitMarke,
   auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, zeitleiste, zustandBis,
 } from "../kern/auswertung";
 import { bekannteZiele, effekte } from "../kern/effekte";
@@ -58,14 +58,19 @@ interface Kapitel {
 /**
  * Kapitel der Auflösung: Teamvergleich, Kennzahlen, Konfidenz (zusammen 2 min), je Schlüsselfall 2,5 min, Schlussfrage.
  * Seit 2.3 (D5) mit Verlustmodell: „Preis des Abwartens“ (1 min) nach den Fällen, die Fälle dafür je 2:15 – zusammen 12 min.
+ * Seit 2.4 (E5): Welche Fälle in welcher Reihenfolge, entscheidet die Spielleitung (`auswahl`, Standard S3, S2, S1, S4;
+ * S5–S8 zuschaltbar); die Zeit je Fall rechnet replayPlan aus, das Budget bleibt 12 min.
  */
-export function kapitelListe(a: Auswertung): Kapitel[] {
+export function kapitelListe(a: Auswertung, inh?: Inhalte, auswahl?: string[] | null): Kapitel[] {
   const preis = a.teams.some((t) => t.kennzahlen.verluste);
+  const plan = inh ? replayPlan(inh, auswahl, preis) : null;
+  const fs = plan ? plan.faelle : a.faelle.filter((f) => f.art === "schluessel" && !f.zuschaltbar);
+  const jeFall = plan ? plan.jeFall : preis ? 135 : 150;
   return [
     { id: "teams", kurz: "Teams", titel: "Teamvergleich", budget: 45 },
     { id: "kennzahlen", kurz: "Kennzahlen", titel: "Kennzahlen je Team", budget: 45 },
     { id: "konfidenz", kurz: "Konfidenz", titel: "Was die Konfidenz sagt", budget: 30 },
-    ...a.faelle.filter((f) => f.art === "schluessel").map((f) => ({ id: f.id, kurz: f.id, titel: `${f.id} · ${f.titel}`, budget: preis ? 135 : 150, fall: f })),
+    ...fs.map((f) => ({ id: f.id, kurz: f.id, titel: `${f.id} · ${f.titel}`, budget: jeFall, fall: f })),
     ...(preis ? [{ id: "preis", kurz: "Preis", titel: "Preis des Abwartens", budget: 60 }] : []),
     { id: "schluss", kurz: "Schluss", titel: "Schlussfrage", budget: 0 },
   ];
@@ -92,7 +97,7 @@ function teamSchluessel(teams: TeamLauf[]): string {
 export function AuswertungAnsicht(p: AuswertungProps) {
   const schl = teamSchluessel(p.teams);
   const a = useMemo(() => auswerten(p.inh, p.teams), [p.inh, schl]);
-  const kapitel = useMemo(() => kapitelListe(a), [a]);
+  const kapitel = useMemo(() => kapitelListe(a, p.inh), [a, p.inh]);
   const [nr, setNr] = useState(0);
   const [team, setTeam] = useState<string | null>(null);
   const [spielt, setSpielt] = useState(false);

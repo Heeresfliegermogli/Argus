@@ -64,7 +64,7 @@ describe("Vier Fenster bleiben synchron (lokaler Adapter, Direktaufruf)", () => 
 
     const z = g2.stand.zustand;
     expect(z.meldungen.M01.stufe).toBe("wirkung");
-    expect(z.bestand.LM).toBe(10);
+    expect(z.bestand.LM).toBe(19); // 20 im Katalog (seit 2.4); Freigabe bei stehender Uhr (t = 0): noch kein Fahrzeug im Raum → ein Schuss
     expect(z.lagehinweise[0].text).toBe("Feldweg Süd: Feuerverbot");
     expect(z.abgelehnt).toHaveLength(1);
     expect(g1.stand.offen).toEqual({});

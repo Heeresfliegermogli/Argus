@@ -234,7 +234,7 @@ describe("5 Teams à 3 und Spielleitung", () => {
     // Die Teams unterscheiden sich (getrennte Spielstände)
     const abdruecke = teams.map((t) => fingerabdruck(sl.spiel(t.id)!.stand.zustand));
     expect(new Set(abdruecke).size).toBe(5);
-    expect(sl.spiel(teams[0].id)!.stand.zustand.bestand.LM).toBe(10); // 11 im Katalog, eine Freigabe
+    expect(sl.spiel(teams[0].id)!.stand.zustand.bestand.LM).toBe(19); // 20 im Katalog (seit 2.4), eine Freigabe bei t = 0: ein Schuss
     expect(sl.spiel(teams[2].id)!.stand.zustand.bestand.MRS).toBe(11);
     expect(sl.spiel(teams[1].id)!.stand.zustand.fastTrack).toBe(true);
     expect(sl.spiel(teams[4].id)!.stand.zustand.meldungen.M01.ergebnis).toBe("abgelehnt_g3");

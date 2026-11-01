@@ -344,10 +344,12 @@ i14 = {"id": "I-14", "an": "G3", "von": "Brigade", "fall": "S5",
 
 # ---- S7 Kirchturm-Beobachter: lenkt Artilleriefeuer auf den 2. Zug, solange er steht
 z42 = {
-    "id": "Z-42", "typ": "beobachter_trupp", "pos": [761, 370], "hdg": 190, "ab_s": 0,
+    # ab 14:00 (nicht seit Spielbeginn): Ein früher Mörser auf den Spähtrupp HAUPT (M01, 71 m südlich) soll den Fall nicht
+    # versehentlich vorwegnehmen. Er erscheint im Turm (im_gebaeude), nicht am Kartenrand (pruefe_szenario: Ausnahme).
+    "id": "Z-42", "typ": "beobachter_trupp", "pos": [761, 370], "hdg": 190, "ab_s": 840, "im_gebaeude": "kirchturm",
     "gt": {"kategorie": "feind", "legitim": True,
-           "text": "Feindlicher Artilleriebeobachter (2 Soldaten mit Fernglas und Funkgerät) auf der Plattform des Kirchturms in KRÄHE, seit der Nacht "
-                   "dort. Lenkt ab 14:30 das Artilleriefeuer auf den 2. Zug.",
+           "text": "Feindlicher Artilleriebeobachter (2 Soldaten mit Fernglas und Funkgerät) auf der Plattform des Kirchturms in KRÄHE. "
+                   "Ist durch die Ortschaft gekommen und um 14:00 auf den Turm gestiegen; lenkt ab 14:30 das Artilleriefeuer auf den 2. Zug.",
            "hinweis": "Die Kirche ist Kulturgut, verliert den Schutz aber durch die militärische Nutzung (Beobachtungsposten). Der Mörser träfe die "
                       "Ortschaft und die Kirche (R3) – zulässig und verhältnismäßig ist nur die LM auf die Turmplattform.",
            "bezug": "Art. 53 und 52 Abs. 2 ZP I, Haager Konvention 1954 (Art. 4, 11)"},

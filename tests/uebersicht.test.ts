@@ -22,7 +22,7 @@ describe("Übersicht der Spielleitung", () => {
     expect(fall(u, "S1").status).toBe("offen");
     expect(fall(u, "S2").status).toBe("wartet");
     expect(u.eingang).toEqual({ g1: 2, g2: 0, g3: 0 });
-    expect(u.faelle.map((f) => f.id)).toEqual(["S1", "S2", "S3", "S4"]);
+    expect(u.faelle.map((f) => f.id)).toEqual(["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"]); // seit 2.4 (E5) acht Schlüsselfälle
   });
 
   it("S1: G1 lehnt die Attrappe ab → richtig; Freigabe auf die Attrappe → falsch, schon vor dem Einschlag", async () => {
