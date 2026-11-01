@@ -62,7 +62,15 @@ export interface Effekt {
   richtung?: number;
   /** Variante (z. B. Krater 0–2), fest je Effekt */
   nr?: number;
+  /**
+   * einschlag: Krater und andere „danach“-Bilder nur so lange (Spielzeit, s), die letzten 20 s ausgeblendet. Seit 2.3 für die
+   * Treffer an den eigenen Stellungen: Es sind Hunderte je Lauf, dauerhaft stehende Krater kosten jedes Bild Rechenzeit.
+   */
+  bleibt_s?: number;
 }
+
+/** Wie lange Krater an den eigenen Stellungen stehen bleiben (Spielzeit, s). */
+export const KRATER_STELLUNG_S = 90;
 
 export type Sichtbarkeit = "alle" | "umgebung" | Set<string>;
 
@@ -202,7 +210,8 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   for (const v of verlustLage(inh, z).ereignisse) {
     if (v.art === "artillerie") continue;
     const q = v.art === "direkt" || v.art === "durchbruch" ? { hintergrund: "panzerabwehr" } : { hintergrund: "feindartillerie" };
-    out.push({ id: `V-${v.art}-${v.quelle}-${v.nr}`, art: "einschlag", quelle: q, t: v.t, pos: v.pos, nr: variante(`${v.quelle}${v.nr}`, 3) });
+    out.push({ id: `V-${v.art}-${v.quelle}-${v.nr}`, art: "einschlag", quelle: q, t: v.t, pos: v.pos, nr: variante(`${v.quelle}${v.nr}`, 3),
+      bleibt_s: KRATER_STELLUNG_S });
   }
 
   if (sichtbar === "umgebung") return out;

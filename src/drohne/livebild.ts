@@ -575,7 +575,7 @@ export class LiveDrohnenbild {
     // Krater (nach Einschlägen, unter den Fahrzeugen)
     const zu = res.man.effekte.zuordnung;
     for (const e of lage.effekte) {
-      if (e.art !== "einschlag" || t < e.t + 0.3) continue;
+      if (e.art !== "einschlag" || t < e.t + 0.3 || (e.bleibt_s !== undefined && t >= e.t + e.bleibt_s)) continue;
       const danach = e.quelle.wirkmittel ? zu.wirkmittel[e.quelle.wirkmittel]?.danach : e.quelle.hintergrund ? zu.hintergrund[e.quelle.hintergrund]?.danach : undefined;
       for (const n of danach ?? []) {
         const a = res.man.effekte.animationen[n];

@@ -214,7 +214,8 @@ export class EffektEbene {
     for (const x of this.liste) {
       const { e } = x;
       // Krater und andere „danach“-Bilder bleiben stehen
-      if (e.art === "einschlag" && t >= e.t + 0.3) {
+      if (e.art === "einschlag" && t >= e.t + 0.3 && (e.bleibt_s === undefined || t < e.t + e.bleibt_s)) {
+        const blende = e.bleibt_s === undefined ? 1 : Math.min(1, (e.t + e.bleibt_s - t) / 20);
         x.danach.forEach((a, i) => {
           if (a.fps > 0 && a.schleife) return;
           const p = bs(e.pos);
@@ -222,7 +223,7 @@ export class EffektEbene {
           const sp = this.sprite(`${e.id}-d${i}`, a.bilder[(e.nr ?? 0) % a.bilder.length], this.unten);
           sp.position.set(p[0], p[1]);
           sp.scale.set(this.massstab(a, s));
-          sp.alpha = 0.85;
+          sp.alpha = 0.85 * blende;
         });
       }
       if (t < x.aktivAb(tp) || t > x.aktivBis(tp)) continue;
