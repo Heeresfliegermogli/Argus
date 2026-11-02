@@ -866,7 +866,7 @@ function schwere(v: NonNullable<TeamAuswertung["kennzahlen"]["verluste"]>): numb
 }
 
 /**
- * „Preis des Abwartens“ (D5.1/D5.2, seit 2.5 F2.9): Zustand der vier Panzer des eigenen Zuges je Team über die Spielzeit (Mittel,
+ * „Preis des Abwartens“ (D5.1/D5.2, seit 2.5 F2.9): Zustand der vier Panzer der eigenen Kp je Team über die Spielzeit (Mittel,
  * Linien bei 70 % einsatzbereit und 40 % ausgefallen), markiert mit den Entscheidungen bei S4, N4 und S3 (✓ richtig, ✕ falsch);
  * daneben je Team die vier Panzer (Balken nach Zustand und Stufe), einsatzbereite, Verwundete und Fehlbekämpfungen, die Leitfragen
  * und die Offenlegung, dass der Druck gebaut war. Verluste sind Lage, keine Wertung – keine Rangliste.
@@ -932,7 +932,7 @@ function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
               <text x={L - 10} y={Y(v) + 5} class="kd-tick rechts">{v} %</text></g>
           ))}
           <text x={X(dauer)} y={Y(voll) - 6} class="kd-tick rechts">darunter eingeschränkt</text>
-          <text x={X(dauer)} y={Y(unter) - 6} class="kd-tick rechts">darunter ausgefallen – höchstens zwei, der Zug hält</text>
+          <text x={X(dauer)} y={Y(unter) - 6} class="kd-tick rechts">darunter ausgefallen – höchstens zwei, die Kp hält</text>
           {[0, 300, 600, 900, 1200, 1500].map((t) => (
             <g key={t}><line x1={X(t)} x2={X(t)} y1={H - U} y2={H - U + 5} class="kd-achse" /><text x={X(t)} y={H - U + 24} class="kd-tick mitte">{fmtT(t)}</text></g>
           ))}

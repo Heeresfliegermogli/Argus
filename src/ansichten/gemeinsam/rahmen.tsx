@@ -48,7 +48,7 @@ export function UhrAnzeige(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: 
 }
 
 /**
- * Zustand der eigenen Truppe (seit 2.5, F2.6): „1. Zug: 3/4 einsatzbereit · 4 Verwundete“ und je Panzer ein kleiner Balken
+ * Zustand der eigenen Truppe (seit 2.5, F2.6): „1. Kp: 3/4 einsatzbereit · 4 Verwundete“ und je Panzer ein kleiner Balken
  * (Zustand in %, gelb eingeschränkt, grau ausgefallen); beim Zeigen je Panzer. Einsatzbereit zählt, wer nicht ausgefallen ist
  * (eingeschränkte schießen weiter). Für alle Rollen gleich (Verlustmodell aus kern/verluste.ts, keine Punkte).
  */

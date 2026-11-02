@@ -2,12 +2,12 @@
 """Probe Änderungen F (Szenario 2.5, „Panzerzug“) auf der Oberfläche; bis 2.4 prüfte sie D1–D5 mit drei Zügen.
 
 Ein Team im Direktaufruf (SL, Aufklärung, Zielprüfung, Führung, Plenum; lokaler Sync), Uhr über die Steuerung der SL,
-ohne Entscheidungen der Rollen (der Zeitplan läuft, der 1. Zug nimmt Schaden):
+ohne Entscheidungen der Rollen (der Zeitplan läuft, die 1. Kp nimmt Schaden):
   F1  Alle Rollen sehen die vier Panzer 1/1–1/4 auf der Karte (Zeichen, Beschriftung), gezoomt als Sprites in Stellung
       (intakt, eingeschränkt, ausgefallen); Feinde nach Ground Truth nur auf der Kontrollkarte.
-  F2.6 Kopfzeile in jedem Fenster „1. Zug: b/4 einsatzbereit · n Verwundete“ mit einem Balken je Panzer, überall gleich;
+  F2.6 Kopfzeile in jedem Fenster „1. Kp: b/4 einsatzbereit · n Verwundete“ mit einem Balken je Panzer, überall gleich;
       ein getroffener Panzer blinkt (Tempo ×1).
-  F2.7 Druckmeldungen K-… vom „1. Zug“ je Panzer im Postfach der Führung (≤ 140 Zeichen mit Absender), I-07 nennt 1/4.
+  F2.7 Druckmeldungen K-… von der „1. Kp“ je Panzer im Postfach der Führung (≤ 140 Zeichen mit Absender), I-07 nennt 1/4.
   D4  Empfehlungskarte der Führung kompakt (eine Meldung durch die Kette).
   F2.9 Auswertung (Beispiel, 5 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
 Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
@@ -157,8 +157,8 @@ def main():
         werte = {v[:3] for v in stand.values()}
         pruefe(len(werte) == 1, f"Kopfzeile in allen Fenstern gleich: {stand['Führung'][3]} {stand['Führung'][2]} ({len(werte)} Werte)")
         txt = stand["Führung"][3]
-        pruefe(txt.startswith("1. Zug: ") and "/4 einsatzbereit" in txt and ("Verwundete" in txt or "Verwundeter" in txt or "keine Verwundeten" in txt),
-               f"Text „1. Zug: b/4 einsatzbereit · n Verwundete“: {txt}")
+        pruefe(txt.startswith("1. Kp: ") and "/4 einsatzbereit" in txt and ("Verwundete" in txt or "Verwundeter" in txt or "keine Verwundeten" in txt),
+               f"Text „1. Kp: b/4 einsatzbereit · n Verwundete“: {txt}")
         pruefe([x.split(":")[0] for x in stand["Führung"][2]] == ["1/1", "1/2", "1/3", "1/4"], "je Panzer ein Balken (1/1–1/4)")
         bereit = int(stand["Führung"][0])
         for s, k, n in karten:
@@ -185,7 +185,7 @@ def main():
         # ---------------------------------------------------------------- F2.7 Druckmeldungen und Blinken
         print("F2.7 – Druckmeldungen je Panzer und Treffer am Panzer")
         km = g3.locator("[data-testid=postfach] [data-inject^='K-']")
-        pruefe(km.count() >= 3, f"Postfach der Führung: {km.count()} Druckmeldungen des Zuges")
+        pruefe(km.count() >= 3, f"Postfach der Führung: {km.count()} Druckmeldungen der Kp")
         texte = g3.evaluate("""() => [...document.querySelectorAll("[data-testid=postfach] [data-inject]")].map(e => ({
             id: e.dataset.inject, von: e.querySelector('.kopfzeile span')?.textContent.split(' · ').slice(1).join(' · '),
             text: (e.querySelector('.text') || e.querySelector('.einzeilig'))?.textContent, dringend: e.classList.contains('dringend') }))""")
@@ -194,7 +194,7 @@ def main():
         i07 = next((t for t in texte if t["id"] == "I-07"), None)
         pruefe(bool(i07) and i07["text"].startswith("1/4 unter Mörserfeuer aus Hof RABE,"), f"I-07 nennt 1/4: {i07 and i07['text']}")
         k_texte = [t for t in texte if t["id"].startswith("K-")]
-        pruefe(all(t["von"] == "1. Zug" for t in k_texte), "Druckmeldungen vom „1. Zug“")
+        pruefe(all(t["von"] == "1. Kp" for t in k_texte), "Druckmeldungen von der „1. Kp“")
         pruefe(all(any(n in (t["text"] or "") for n in ("1/1", "1/2", "1/3", "1/4")) for t in k_texte), "jede Druckmeldung nennt ihren Panzer")
         foto(g3, "f2_postfach_1840")
         # Blinken: 1/4 liegt unter Mörserfeuer aus Hof RABE (eine Salve alle 30 s), Tempo ×1
@@ -217,7 +217,7 @@ def main():
         bereit2 = int(b.get_attribute("data-bereit"))
         zst = g3.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => [e.dataset.stufe, Number(e.dataset.zustand)])")
         pruefe(bereit2 <= bereit and bereit2 >= 2, f"ohne Abwehr: {bereit}/4 → {bereit2}/4 einsatzbereit, höchstens zwei ausgefallen")
-        pruefe(all(z >= 40 for st, z in zst if st != "ausgefallen"), f"Zug hält (Untergrenze): {zst}")
+        pruefe(all(z >= 40 for st, z in zst if st != "ausgefallen"), f"Kp hält (Untergrenze): {zst}")
         foto(g3, "f2_fuehrung_2450")
         foto(pl, "f1_plenum_2450")
         sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }")

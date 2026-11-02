@@ -15,7 +15,7 @@
   "drohne_ebenen": 1994914,
   "karte_start": 649192,
   "karte_kacheln": 1294782,
-  "karte_sonst": 469428,
+  "karte_sonst": 469444,
   "fahrzeuge": 613686,
   "effekte": 603035
  },
@@ -64,7 +64,7 @@
    "m_pro_px": 0.6667,
    "breite": 1500,
    "hoehe": 1050,
-   "bytes": 361756,
+   "bytes": 361772,
    "hinweis": "Vorschau/Rückfall mit eingebrannter Schrift; im Spiel zeichnet die Karte Raster, Zonen und Namen selbst."
   },
   "gelaende": {

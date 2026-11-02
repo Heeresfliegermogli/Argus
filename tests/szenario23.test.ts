@@ -1,5 +1,5 @@
 // Szenario 2.3 (Änderungsliste D1–D5 vom 01.11.2026, „mehr Druck“): kürzere Lagemeldungen, Druckmeldungen an die Führung,
-// Auswertung „Preis des Abwartens“. Seit 2.5 (F) ist die eigene Truppe der 1. Zug mit vier Panzern: das Verlustmodell je Panzer
+// Auswertung „Preis des Abwartens“. Seit 2.5 (F) ist die eigene Truppe die 1. Kp (1./PzBtl 613) mit vier Panzern: das Verlustmodell je Panzer
 // prüft tests/szenario25.test.ts, Engine = Simulation tests/durchlauf.test.ts; hier, was von D bleibt.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -11,7 +11,7 @@ import { type DrehbuchReferenz, drehbuchTeams, spieleDurch } from "./modellteam"
 
 const MAX_LAGE = 140;
 /** längste Werte der Platzhalter (wie pruefe_szenario.py LAENGSTE, seit 2.5 je Panzer) */
-const LAENGSTE = { pz: "1/1", zustand: 100, verw: "3 Verwundete", treffer: "noch ohne Treffer", lage: "eingeschränkt", bereit: 4, gesamt: 4, zug_verw: "8 Verwundete", zug: "1. Zug" };
+const LAENGSTE = { pz: "1/1", zustand: 100, verw: "3 Verwundete", treffer: "noch ohne Treffer", lage: "eingeschränkt", bereit: 4, gesamt: 4, zug_verw: "8 Verwundete", zug: "1. Kp" };
 const fuellen = (t: string, w: Record<string, string | number>) => t.replace(/\{(\w+)\}/g, (m, k) => (k in w ? String(w[k]) : m));
 
 describe("Szenario 2.3: Daten (D4)", () => {
@@ -54,7 +54,7 @@ describe("Szenario 2.3: Druckmeldungen (D3) und Auswertung (D5) mit den Drehbuch
       const km = m.z.injectReihenfolge.map((id) => m.z.injects[id]).filter((i) => i.stufe !== undefined);
       expect(km.length, m.name).toBeGreaterThan(5);
       for (const k of km) {
-        expect(`1. Zug: ${k.text}`.length, k.text).toBeLessThanOrEqual(MAX_LAGE);
+        expect(`${inh.szenario.verluste!.meldungen!.von}: ${k.text}`.length, k.text).toBeLessThanOrEqual(MAX_LAGE);
         expect(k.zug).toMatch(/^pz[1234]$/); // seit 2.5: der Panzer, um den es geht
         expect(k.text!.startsWith(inh.szenario.eigene_truppe!.panzer.find((p) => p.id === k.zug)!.name) || k.text!.startsWith("DRINGEND")).toBe(true);
       }

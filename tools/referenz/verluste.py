@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) der 1. Zug der Panzerkompanie WOLF mit vier Kampfpanzern
+"""Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 1./PzBtl 613 (Absender „1. Kp“) mit vier Kampfpanzern
 Leopard 2A7V, Zustand je Panzer. Referenz für src/kern/verluste.ts (gleiche Ergebnisse prüft tests/durchlauf.test.ts).
 
 Grundsätze (claude/Aenderungen_Panzerzug_02-11.md, F2):
@@ -14,7 +14,7 @@ Grundsätze (claude/Aenderungen_Panzerzug_02-11.md, F2):
     60–100 m daneben, ab Salve 3 im Ziel. Wechselt der Schütze das Ziel, beginnt er neu.
   * Wirkung am Panzer (Zustand 100 %): Treffer je Waffe (T-72 −25 %, BMP-2 −5 %, BTR-80 −2 %, Mörser/Artillerie im Ziel −4 %, gelenktes
     Feuer −4 %). Ab 70 % einsatzbereit, 40–69 % eingeschränkt (schießt weiter), unter 40 % ausgefallen (Besatzung verwundet, Bergung).
-  * Untergrenze: höchstens `hoechstens_ausgefallen` (2) Panzer fallen aus, die übrigen bleiben bei mindestens 40 %. Der Zug hält immer.
+  * Untergrenze: höchstens `hoechstens_ausgefallen` (2) Panzer fallen aus, die übrigen bleiben bei mindestens 40 %. Die Kp hält immer.
     Verwundete je Stufe fest (eingeschränkt 1, ausgefallen 3), keine Gefallenen.
   * Bekämpfen stoppt den Schaden: Ein Schuss zählt nur, wenn der Schütze zur Schusszeit noch steht (im Raum, nicht zerstört, Feind und
     legitim); der Schaden kommt verzug_s nach dem Schuss an. Deterministisch: gleiche Entscheidungen ⇒ gleiche Verluste.
@@ -172,7 +172,7 @@ def einschlag_ort(vr, art, ergebnis, k, von, ziel, schl):
 
 
 def zeitlinie(d, zerstoert, attrappe_t=None, durch=None):
-    """Alle Schüsse auf den Zug, nach Zeit, mit Ergebnis und Zustand danach.
+    """Alle Schüsse auf die eigenen Panzer, nach Zeit, mit Ergebnis und Zustand danach.
 
     d          Daten der Welt (Szenario mit eingespielten Verstärkungen und Durchbrüchen)
     zerstoert  {ziel: Spielzeit der Zerstörung}
@@ -402,11 +402,11 @@ def fmt(vorlage, werte):
 
 
 def meldungen(d, ev):
-    """Druckmeldungen des Zuges (F2.7, je Panzer) aus der Zeitlinie: Liste dict(id, t, zug, stufe, text) – `zug` ist der Panzer.
+    """Druckmeldungen der Kp (F2.7, je Panzer) aus der Zeitlinie: Liste dict(id, t, zug, stufe, text) – `zug` ist der Panzer.
 
     Sofort, ohne Abstand: ausgefallen (Stufe 3; beim letzten zulässigen Ausfall mit „hält mit Mühe“) und der Wechsel nach eingeschränkt
     (Stufe 2), ebenso der erste Treffer einer Art aus `sofort` (Attrappe). Sonst mit Abstand (abstand_alle_s seit der letzten Meldung
-    des Zuges, abstand_panzer_s seit der letzten dieses Panzers): ein Treffer an einem einsatzbereiten Panzer (Stufe 1), der erste
+    der Kp, abstand_panzer_s seit der letzten dieses Panzers): ein Treffer an einem einsatzbereiten Panzer (Stufe 1), der erste
     Schuss eines neuen Schützen auf einen Panzer (Stufe 0, „Einschläge noch daneben“); ein weiterer Treffer an einem eingeschränkten
     Panzer höchstens alle abstand_limit_s (Stufe 2).
     """

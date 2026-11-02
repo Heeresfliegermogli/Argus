@@ -192,15 +192,15 @@
     },
     {
       "id": "pz_zug",
-      "name": "Panzerzug (eigen)",
+      "name": "Panzerkompanie (eigen)",
       "argus_klasse": null,
       "gepanzert": true,
       "groesse_m": [100, 100],
-      "symbol": {"art": "kampfpanzer", "sidc": "UCA", "groesse": "D"},
+      "symbol": {"art": "kampfpanzer", "sidc": "UCA", "groesse": "E"},
       "generator": "Lagekarte (Rechteck)",
       "sprite": null,
       "sprite_wrack": null,
-      "hinweis": "Seit 1.6 (Szenario 2.5): Kraft „1./PzKp WOLF“ (szenario.kraefte); die Panzer stehen einzeln."
+      "hinweis": "Seit 1.6 (Szenario 2.5): Kraft „1./PzBtl 613“ (szenario.kraefte); die Panzer stehen einzeln."
     },
     {
       "id": "kpz_leo2a7v",
@@ -214,7 +214,7 @@
       "sprite_eingeschraenkt": "kpz_leo2a7v_eingeschraenkt.png",
       "sprite_wrack": "kpz_leo2a7v_ausgefallen.png",
       "farbe": "dreifarbig gefleckt (fiktiv)",
-      "hinweis": "Seit 1.6 (Szenario 2.5, F1): Kampfpanzer des eigenen 1. Zuges in Stellung (fiktiv gestaltet). Kein Ziel, nie gemeldet. Wanne 7,7 m (groesse_m), mit Rohr 10,9 m. Bilder: intakt, eingeschränkt (Kette neben dem Panzer, Optik zerschlagen), ausgefallen (Turm verdreht, Rußflecken – Gerät, kein Brand)."
+      "hinweis": "Seit 1.6 (Szenario 2.5, F1): Kampfpanzer der eigenen 1. Kp in Stellung (fiktiv gestaltet). Kein Ziel, nie gemeldet. Wanne 7,7 m (groesse_m), mit Rohr 10,9 m. Bilder: intakt, eingeschränkt (Kette neben dem Panzer, Optik zerschlagen), ausgefallen (Turm verdreht, Rußflecken – Gerät, kein Brand)."
     }
   ],
   "personen": [

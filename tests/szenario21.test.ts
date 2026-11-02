@@ -1,5 +1,5 @@
 // Szenario 2.1 (Änderungsliste A1–A9 nach dem Solo-Durchlauf am 25.10.2026): Durchbruch nicht aufgehaltener Gruppen
-// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die 2. Kp (seit 2.5: der 1. Zug der PzKp WOLF).
+// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die 2. Kp (seit 2.5: die 1./PzBtl 613).
 // Gespielt mit den Modellteams naiv und ideal (wie tools/referenz/simuliere_durchlauf.py).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -26,7 +26,7 @@ async function lauf(): Promise<Modellteam[]> {
 }
 
 describe("Szenario 2.1: Daten", () => {
-  it("nur eine eigene Kraft (seit 2.5 der 1. Zug der PzKp WOLF), Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
+  it("nur eine eigene Kraft (seit 2.5 die 1./PzBtl 613), Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
     const inh = await inhalte();
     const sz = inh.szenario;
     expect(Number(sz.version)).toBeGreaterThanOrEqual(2.1); // 2.2 baut auf 2.1 auf
@@ -83,7 +83,7 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     expect(d.fahrzeuge).toEqual(["Z-20", "Z-27", "Z-28"]); // seit 2.4 auch Z-20 (wie simuliere_durchlauf.py)
     expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
     expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
-    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; seit 2.5 die Kanonen des 1. Zuges)
+    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; seit 2.5 die Kanonen der 1. Kp)
     expect(naiv.z.durchbrueche["D-01"]).toMatchObject({ durch: false });
     expect(naiv.z.durchbrueche["D-01"].grund).toMatch(/zerstört/);
     // die Spielleitung sieht den Stand je Gruppe

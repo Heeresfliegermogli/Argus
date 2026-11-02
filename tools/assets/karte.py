@@ -195,8 +195,8 @@ def beschriftet(d, welt, breite_px=1500):
                 stroke_width=2, stroke_fill=(0, 0, 0, 180))
     et = d.szenario.get("eigene_truppe")
     if et:
-        # Seit Szenario 2.5 (F1): vier Kampfpanzer des eigenen 1. Zuges einzeln ganz am Westrand – Zeichen Kampfpanzer (eigen, blau)
-        # mit Kennung 1/1 … 1/4, darüber die Einheit mit Größenangabe Zug (●●●). Keine alten Zugzeichen, kein Gefechtsstand mehr.
+        # Seit Szenario 2.5 (F1): vier Kampfpanzer der eigenen 1. Kp einzeln ganz am Westrand – Zeichen Kampfpanzer (eigen, blau)
+        # mit Kennung 1/1 … 1/4, darüber die Einheit mit Größenangabe Kompanie (I, seit dem Folgeauftrag F5: 1./PzBtl 613). Kein Gefechtsstand mehr.
         blau, rand, weiss = (128, 176, 232, 240), (10, 20, 40, 255), (255, 255, 255, 255)
         for pz in et.get("panzer", []):
             X, Y = P(pz["pos"])
@@ -208,8 +208,7 @@ def beschriftet(d, welt, breite_px=1500):
             top = min(pz["pos"][1] for pz in et["panzer"])
             X, Y = P((et["panzer"][0]["pos"][0], top - 34))
             dr.text((X - 10, Y - 2), et.get("einheit", ""), font=f_pq, fill=weiss, stroke_width=2, stroke_fill=(0, 0, 0, 220))
-            for k in (-1, 0, 1):
-                dr.ellipse([X + 18 + k * 8 - 2.5, Y - 14, X + 18 + k * 8 + 2.5, Y - 9], fill=(0, 0, 0, 255))
+            dr.line([(X + 18, Y - 16), (X + 18, Y - 7)], fill=(0, 0, 0, 255), width=3)        # APP-6 Kompanie: ein Strich
     aussen = [k for k in d.szenario["kraefte"] if k.get("ausserhalb")]
     if aussen:
         ym = sum(k["pfeil_y"] for k in aussen) / len(aussen) * sc

@@ -177,7 +177,7 @@ function texte(inh: Inhalte): Record<KartenRolle, RollenText> {
         },
         {
           titel: "Lagemeldungen und Lagehinweise",
-          text: <>Nur du bekommst Meldungen von Brigade, Nachbarn und dem 1. Zug (rechts). Lesen, dann <M k="weiter">Gelesen</M>. Ein Lagehinweis erscheint bei Aufklärung und Zielprüfung auf der Karte. Fast-Track (ab {ft} % ohne Aufklärung) schaltest du oben rechts.</>,
+          text: <>Nur du bekommst Meldungen von Brigade, Nachbarn und der 1. Kp (rechts). Lesen, dann <M k="weiter">Gelesen</M>. Ein Lagehinweis erscheint bei Aufklärung und Zielprüfung auf der Karte. Fast-Track (ab {ft} % ohne Aufklärung) schaltest du oben rechts.</>,
           bild: (
             <div class="mini-panel" aria-hidden="true">
               <div class="mini-inject"><span class="sehr-leise">02:10 · Brigade</span><span>Lagemeldung …</span><span class="knopf klein weiter">Gelesen</span></div>
@@ -239,7 +239,7 @@ function TeamKette(p: { rolle: TeamRolle; team?: KartenTeam }) {
           );
         })}
       </ol>
-      <p class="team-satz">Alle drei sehen die Karte mit den gemeldeten Zielen, sonst jede Person nur ihre eigene Ansicht. Ihr sitzt als Team zusammen und dürft miteinander sprechen. Am Westrand steht der eigene 1. Zug mit vier Kampfpanzern (blau, 1/1–1/4); seinen Zustand zeigt die Kopfzeile oben rechts.</p>
+      <p class="team-satz">Alle drei sehen die Karte mit den gemeldeten Zielen, sonst jede Person nur ihre eigene Ansicht. Ihr sitzt als Team zusammen und dürft miteinander sprechen. Am Westrand steht die eigene 1. Kp mit vier Kampfpanzern (blau, 1/1–1/4); ihren Zustand zeigt die Kopfzeile oben rechts.</p>
     </section>
   );
 }

@@ -67,7 +67,7 @@ describe("Auswertung: Fälle", () => {
     expect(s3.kette.glieder.find((g) => g.entscheidend)?.stufe).toBe("g3");
     expect(s3.kette.einschlag?.fehl).toBe(true);
     expect(s3.kette.einschlag?.text).toContain("Z-15 verbündet");
-    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (Kanone)", "→ Verbündete getroffen"]); // seit 2.5: Kanone des 1. Zuges, ca. 5 s
+    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (Kanone)", "→ Verbündete getroffen"]); // seit 2.5: Kanone der 1. Kp, ca. 5 s
     const s4 = a.teams[1].faelle.S4;
     expect(s4.kette.glieder[1].zeichen).toBe("◷");
     // seit 2.4: M23 ist „Ziel 31“; sein Einschlag (24:56) liegt vor Spielende, M18 entfällt damit bei der Zielprüfung

@@ -2330,8 +2330,8 @@
     ],
     "texte": {
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Zug 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Zug 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!",
+     "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Kp 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
     },
     "verlauf": [
      [
@@ -5994,7 +5994,7 @@
       "t": 1254.0,
       "zug": "pz1",
       "stufe": 3,
-      "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Zug 3/4 einsatzbereit. Panzer bekämpfen!"
+      "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Panzer bekämpfen!"
      },
      {
       "inject": "K-20",
@@ -6041,7 +6041,7 @@
     ],
     "texte": {
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Zug 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -9898,7 +9898,7 @@
       "t": 1126.0,
       "zug": "pz2",
       "stufe": 3,
-      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete, Bergung unter Feuer. Zug 3/4 einsatzbereit. Mörser bekämpfen!"
+      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Mörser bekämpfen!"
      },
      {
       "inject": "K-16",
@@ -9938,7 +9938,7 @@
     ],
     "texte": {
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Zug 3/4 einsatzbereit, 4 Verwundete. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 3/4 einsatzbereit, 4 Verwundete. Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -14074,7 +14074,7 @@
       "t": 1254.0,
       "zug": "pz1",
       "stufe": 3,
-      "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Zug 3/4 einsatzbereit. Panzer bekämpfen!"
+      "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Panzer bekämpfen!"
      },
      {
       "inject": "K-21",
@@ -14095,7 +14095,7 @@
       "t": 1376.0,
       "zug": "pz2",
       "stufe": 3,
-      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete. Zug nur noch 2/4, hält mit Mühe. Brauchen sofort Feuer!"
+      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete. Kp nur noch 2/4, hält mit Mühe. Brauchen sofort Feuer!"
      },
      {
       "inject": "K-24",
@@ -14114,7 +14114,7 @@
     ],
     "texte": {
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Zug 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 2 Verwundete. Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [
@@ -17983,7 +17983,7 @@
       "t": 1126.0,
       "zug": "pz2",
       "stufe": 3,
-      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete, Bergung unter Feuer. Zug 3/4 einsatzbereit. Mörser bekämpfen!"
+      "text": "DRINGEND: 1/2 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Mörser bekämpfen!"
      },
      {
       "inject": "K-16",
@@ -18023,7 +18023,7 @@
     ],
     "texte": {
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Zug 3/4 einsatzbereit, 4 Verwundete. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 3/4 einsatzbereit, 4 Verwundete. Feuer auf Brücke Ost!"
     },
     "verlauf": [
      [

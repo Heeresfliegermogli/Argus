@@ -34,7 +34,7 @@ EFFEKTE = {
     # Szenario 2.1 (A8: dynamische Animationen)
     "abschussrauch": (16, 128, 18.0, 6, False),        # Rauch nach dem Abschuss (Mörser, Kanone): quillt auf, zieht ab
     "staub": (4, 96, 11.0, 0, False),                  # Staubwolke hinter fahrenden Fahrzeugen (4 Varianten)
-    # Szenario 2.5 (F2.6: Feindfeuer auf den eigenen Zug)
+    # Szenario 2.5 (F2.6: Feindfeuer auf die eigene Kp)
     "einschlag_staub": (12, 128, 12.0, 16, False),     # Fehlschuss neben dem Panzer: Erdspritzer und Staub, kein Feuer
     "treffer_panzer": (12, 96, 7.0, 18, False),        # Treffer am eigenen Panzer: Funken und ein Rauchwölkchen
 }
@@ -67,7 +67,7 @@ ZUORDNUNG = {
         "feindartillerie": {"einschlag": "einschlag_artillerie", "danach": ["krater"]},
         "panzerabwehr": {"flug": "leuchtspur", "einschlag": "treffer_direkt"},
         "rauch": {"flaeche": "nebel"},
-        # seit 2.5 (F2.6): Feindfeuer auf den eigenen Zug – Fehlschuss mit Staub, Treffer mit Funken
+        # seit 2.5 (F2.6): Feindfeuer auf die eigene Kp – Fehlschuss mit Staub, Treffer mit Funken
         "fehlschuss": {"einschlag": "einschlag_staub"},
         "treffer_panzer": {"einschlag": "treffer_panzer"},
     },

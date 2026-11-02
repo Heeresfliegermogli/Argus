@@ -33,7 +33,7 @@ ABSTAND_M = 10                  # Abstand aller anderen Fahrzeuge (Sprites dürf
 KETTE = ("kpz_t72", "kpz_pt91", "spz_bmp2", "attrappe_kpz")
 # längste Werte der Platzhalter in Lagemeldungen und Druckmeldungen (seit 2.5 je Panzer, F2.7)
 LAENGSTE = {"pz": "1/1", "zustand": 100, "verw": "3 Verwundete", "treffer": "noch ohne Treffer", "lage": "eingeschränkt", "bereit": 4,
-            "gesamt": 4, "zug_verw": "8 Verwundete", "zug": "1. Zug"}
+            "gesamt": 4, "zug_verw": "8 Verwundete", "zug": "1. Kp"}
 
 
 def strassen(karte):

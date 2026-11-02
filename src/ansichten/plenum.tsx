@@ -44,7 +44,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
   const [wahl, setWahl] = useState<{ modus: Modus; bei: Modus } | null>(null);
   const modus = wahl && wahl.bei === auto ? wahl.modus : auto;
   const tAnzeige = Math.min(t, sz.spieluhr.dauer_s);
-  // Lage im Raum: nur das Gefecht ringsum (Feindartillerie, Rauch, Feuer auf den eigenen Zug), nichts Geheimes
+  // Lage im Raum: nur das Gefecht ringsum (Feindartillerie, Rauch, Feuer auf die eigene Kp), nichts Geheimes
   const umgebung = useMemo(() => effekte(inh, z, "umgebung"), [inh, z]);
   // seit 2.5 (F1, F2.6): die vier eigenen Panzer mit ihrem Zustand – eigene Truppe, verrät kein Ziel
   const tLage = Math.floor(tAnzeige);
@@ -92,7 +92,7 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
   const sz = inh.szenario;
   const b = p.beitritt;
   const lage = sz.lage.plenum;
-  // seit 2.5 (F1): die vier Panzer des 1. Zuges in Stellung, wie in der Lage beschrieben (Spielbeginn, alle einsatzbereit)
+  // seit 2.5 (F1): die vier Panzer der 1. Kp in Stellung, wie in der Lage beschrieben (Spielbeginn, alle einsatzbereit)
   const start = useMemo(() => ({ ...LEER, eigene: eigeneLage(inh, zustandAus([], inh), 0) }), [inh]);
   return (
     <div class="plenum-raster plenum-einweisung">

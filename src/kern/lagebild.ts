@@ -115,7 +115,7 @@ export interface WirkungsMarke {
   geplant?: boolean;
 }
 
-/** Seit 2.5 (F1/F2.6): ein Kampfpanzer des eigenen 1. Zuges auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
+/** Seit 2.5 (F1/F2.6): ein Kampfpanzer der eigenen 1. Kp auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
 export interface EigenerPanzerMarke {
   id: string;
   /** „1/1“ */

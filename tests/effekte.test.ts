@@ -49,7 +49,7 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(f!.echtzeit_s).toBeUndefined();
       } else if (wm.einsatzbereich) {
         expect(f?.echtzeit_s).toBeGreaterThan(0);
-        // seit 2.5 (F1.5): Kanone eines Panzers des 1. Zuges (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
+        // seit 2.5 (F1.5): Kanone eines Panzers der 1. Kp (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
         const vonPanzer = panzer(inh).some((p) => Math.hypot(p.pos[0] - f!.von![0], p.pos[1] - f!.von![1]) < 6);
         expect(vonPanzer, id).toBe(true);
       } else {
@@ -87,7 +87,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Feindfeuer auf den 1. Zug (seit 2.5, F2.6): Fehlschuss neben dem Panzer, Treffer am Panzer, ausgefallen = Rauch am Panzer", async () => {
+  it("Feindfeuer auf die 1. Kp (seit 2.5, F2.6): Fehlschuss neben dem Panzer, Treffer am Panzer, ausgefallen = Rauch am Panzer", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const v = verlustLage(m.inh, m.z).ereignisse;
@@ -160,7 +160,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf den 1. Zug", async () => {
+  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf die 1. Kp", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id));

@@ -1,4 +1,4 @@
-// Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) der 1. Zug der Panzerkompanie WOLF mit vier Kampfpanzern,
+// Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 1./PzBtl 613 (Kopfzeile „1. Kp“) mit vier Kampfpanzern,
 // Zustand je Panzer. Portiert aus tools/referenz/verluste.py; gleiche Ergebnisse prüft tests/durchlauf.test.ts (fünf Teams =
 // Simulation, inkl. Einschießen, Zustand je Panzer und Druckmeldungen).
 //
@@ -9,7 +9,7 @@
 //   • Einschießen je Schütze und Ziel: direkt 1–2 daneben, 3 nah, ab 4 jeder zweite Treffer, ab 8 jeder; Steilfeuer 1–2 daneben,
 //     ab 3 im Ziel. Zielwechsel beginnt neu.
 //   • Zustand 100 %, Treffer je Waffe; ab 70 % einsatzbereit, 40–69 % eingeschränkt, unter 40 % ausgefallen. Höchstens zwei fallen
-//     aus, die übrigen halten 40 % (der Zug hält immer). Verwundete je Stufe, keine Gefallenen.
+//     aus, die übrigen halten 40 % (die Kp hält immer). Verwundete je Stufe, keine Gefallenen.
 //   • Bekämpfen stoppt den Schaden ab dem Einschlag. Deterministisch und ohne Winkelfunktionen: gleiche Entscheidungen ⇒ gleiche
 //     Verluste, Referenz und Engine rechnen bitgleich.
 //
@@ -247,7 +247,7 @@ interface Kandidat {
 }
 
 /**
- * Alle Schüsse auf den Zug, nach Zeit, mit Ergebnis und Zustand danach (wie verluste.zeitlinie).
+ * Alle Schüsse auf die eigenen Panzer, nach Zeit, mit Ergebnis und Zustand danach (wie verluste.zeitlinie).
  * inh: Welt des Teams (Verstärkungen und Durchbrüche) · zerstoert: Ziel → Zeit · attrappeT: Einschlag der ersten Wirkung
  * auf die Attrappe · durch: Durchbruch-Gruppen, die durchgebrochen sind.
  */
@@ -425,7 +425,7 @@ export function stand(inh: Inhalte, ev: VerlustEreignis[], t = Infinity): Record
   return out;
 }
 
-/** Kopfzeile: „1. Zug: 3/4 einsatzbereit · 4 Verwundete“ (einsatzbereit = nicht ausgefallen; eingeschränkte schießen weiter). */
+/** Kopfzeile: „1. Kp: 3/4 einsatzbereit · 4 Verwundete“ (einsatzbereit = nicht ausgefallen; eingeschränkte schießen weiter). */
 export function zug(st: Record<string, PanzerStand>): ZugStand {
   const w = Object.values(st);
   return {
@@ -448,7 +448,7 @@ export function format(vorlage: string, werte: Record<string, string | number>):
   return vorlage.replace(/\{([A-Za-z_]\w*)\}/g, (m, k) => (k in werte ? String(werte[k]) : m));
 }
 
-/** Druckmeldungen des Zuges je Panzer (F2.7) aus der Zeitlinie, wie verluste.meldungen. */
+/** Druckmeldungen der Kp je Panzer (F2.7) aus der Zeitlinie, wie verluste.meldungen. */
 export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldung[] {
   const vr = inh.regeln.verluste;
   const sz = (inh.basis ?? inh).szenario;
@@ -582,7 +582,7 @@ export function verlustLage(basis: Inhalte, z: Spielzustand): VerlustLage {
   return lage;
 }
 
-/** Stand je Panzer und des Zuges zur Spielzeit t. */
+/** Stand je Panzer und der Kp zur Spielzeit t. */
 export function verlustStand(basis: Inhalte, z: Spielzustand, t: number): { panzer: Record<string, PanzerStand>; zug: ZugStand } | null {
   if (!mitVerlusten(basis)) return null;
   const l = verlustLage(basis, z);
@@ -606,7 +606,7 @@ export function verlustVerlauf(basis: Inhalte, z: Spielzustand, schritt = 15): [
 }
 
 /**
- * Wer schießt für den eigenen Zug (Leuchtspur, F1.4/F1.5): der vorgesehene Panzer, wenn er zur Zeit t nicht ausgefallen ist, sonst
+ * Wer schießt für die eigene Kp (Leuchtspur, F1.4/F1.5): der vorgesehene Panzer, wenn er zur Zeit t nicht ausgefallen ist, sonst
  * der nächste nicht ausgefallene zum Ziel (eingeschränkte schießen weiter). Ohne Verlustmodell der vorgesehene bzw. nächste.
  */
 export function schuetze(basis: Inhalte, z: Spielzustand | null, t: number, ziel: Punkt, vorgesehen?: string): EigenerPanzer | null {
@@ -627,7 +627,7 @@ export function injectAnzeige(inh: Inhalte, i: InjectStand): { von: string; text
   const plan = inh.injects[i.id];
   const vm = (inh.basis ?? inh).szenario.verluste?.meldungen;
   return {
-    von: plan?.von ?? (vm?.von || "1. Zug"),
+    von: plan?.von ?? (vm?.von || "1. Kp"),
     text: i.text ?? plan?.text ?? "",
     an: plan?.an ?? "G3",
   };

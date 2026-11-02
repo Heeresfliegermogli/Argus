@@ -5,7 +5,7 @@
 //   • Meldungen mit Fast-Track-Weiche; eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört oder
 //     abgezogen ist – beim Erscheinen oder später in der Kette (meldung_entfaellt bei G1, G2 oder G3).
 //   • Wirkung zum Einschlagzeitpunkt, Treffer nach der Lage beim Einschlag (kern/regeln.ts).
-//   • Hintergrundgefecht (szenario.hintergrund): Kanone des eigenen Zuges wirkt nur, wenn das Ziel dann noch steht.
+//   • Hintergrundgefecht (szenario.hintergrund): Kanone der eigenen Kp wirkt nur, wenn das Ziel dann noch steht.
 //   • Skriptereignis E-01 (polnischer Gegenangriff) mit Abbruch durch eine Freigabe auf Z-15–17.
 //   • Verstärkungen: die Welt des Teams (kern/welt.ts) enthält ihre Ziele und Meldungen.
 //   • Seit Szenario 2.1: Durchbruch nicht aufgehaltener Gruppen (kern/durchbruch.ts) nach ihrem Angriffszeitpunkt,
@@ -237,7 +237,7 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     if (t >= tInject) liste.push(entwurf("inject", mitText(i.id, tInject), { t_geplant: tInject }));
   }
 
-  // 6b Druckmeldungen des Zuges (seit 2.3, je Panzer seit 2.5): aus der Zeitlinie der Verluste bis jetzt, in ihrer Reihenfolge
+  // 6b Druckmeldungen der Kp (seit 2.3, je Panzer seit 2.5): aus der Zeitlinie der Verluste bis jetzt, in ihrer Reihenfolge
   for (const k of vl.meldungen) {
     if (k.t > t) break;
     if (z.injects[k.id]) continue;

@@ -5,7 +5,7 @@ tests/durchlauf.test.ts spielt dieselben fünf Läufe (= fünf Teams einer Sitzu
 (Host, Zeitplan, Trefferregel beim Einschlag, Hintergrundgefecht, E-01, Verstärkungen, seit 2.1 Durchbruch) und vergleicht
 je Meldung Ausgang und Zeitpunkte, Wirkmittel, Einschlag und Treffer, dazu bedingte Injects, Restbestand,
 Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle; seit 2.3 auch die Verluste der eigenen Truppe (seit 2.5 je
-Panzer: jeder Schuss mit Einschießen und Zustand, Stand je Panzer und des Zuges, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem
+Panzer: jeder Schuss mit Einschießen und Zustand, Stand je Panzer und der Kp, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem
 Stand des Teams).
 
 Aufruf (im Repo-Wurzelordner): python3 tools/referenz/erzeuge_durchlauf.py

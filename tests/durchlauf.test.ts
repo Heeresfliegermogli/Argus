@@ -155,7 +155,7 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
       expect(durchgebrochen(weltFuer(m.inh, z), z.durchbrueche, z.zerstoert, z.verstaerkungen).fahrzeuge, `${name} durchgebrochen`).toEqual(r.durchgebrochen);
 
       // Verluste der eigenen Truppe (seit 2.3; seit 2.5 je Panzer, F2): gleiche Zeitlinie Schuss für Schuss (Einschießen, Ergebnis,
-      // Zustand, Einschlagort), gleicher Stand je Panzer und des Zuges, gleiche Druckmeldungen mit Text und Stufe, gleiche Texte der
+      // Zustand, Einschlagort), gleicher Stand je Panzer und der Kp, gleiche Druckmeldungen mit Text und Stufe, gleiche Texte der
       // Lagemeldungen mit Platzhaltern; deterministisch, höchstens zwei Panzer ausgefallen, die übrigen ≥ Untergrenze
       if (r.verluste) {
         const v = r.verluste;

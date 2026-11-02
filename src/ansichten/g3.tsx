@@ -29,10 +29,10 @@ function Postfach(p: { s: Sicht; injects: InjectStand[] }) {
   return (
     <Panel titel="Lagemeldungen" liste testid="postfach"
       rechts={neu ? <span class="badge neu" data-testid="postfach-neu">{neu} neu</span> : <span class="badge">{p.injects.length}</span>}>
-      {p.injects.length === 0 ? <div class="hinweistext">Meldungen von Brigade, Nachbarn und dem 1. Zug erscheinen hier. Nur du bekommst sie.</div> : (
+      {p.injects.length === 0 ? <div class="hinweistext">Meldungen von Brigade, Nachbarn und der 1. Kp erscheinen hier. Nur du bekommst sie.</div> : (
         <div class="stapel" style="gap:6px">
           {[...p.injects].reverse().map((i) => {
-            // seit 2.3: Druckmeldungen des Zuges und gefüllte Platzhalter tragen ihren Text im Protokoll
+            // seit 2.3: Druckmeldungen der Kp und gefüllte Platzhalter tragen ihren Text im Protokoll
             const inj = injectAnzeige(inh, i);
             const dringend = (i.stufe ?? 0) >= 2;
             const aufgeklappt = !i.quittiert || offenId === i.id;

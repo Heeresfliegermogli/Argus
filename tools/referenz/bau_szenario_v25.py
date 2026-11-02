@@ -15,6 +15,10 @@ Quelle: claude/Aenderungen_Panzerzug_02-11.md.
   F3  „Schule“ statt „Schule mit Sportplatz“ (Zone NS-01, Regel R2, Karte); die Geometrie bleibt.
   F4  Texte (Plenum-Lage nach dem Befehl der Druckanlage, Einweisung, Injects, Hintergrund, Fälle), Kalibrierung F2.9 mit
       simuliere_durchlauf.py (Werte unten, Ergebnis im Drehbuch, Abschnitt 9).
+  F5  Folgeauftrag 02.11.2026 abends: eigene Kräfte heißen sichtbar „1./PzBtl 613“ (statt 1./PzKp WOLF), Absender und Kopfzeile
+      „1. Kp“ (statt 1. Zug), übergeordnet „PzBtl 613“ (statt PzBtl (Übung)); Größenangabe der eigenen Kraft Kompanie. Panzer-
+      kennungen 1/1–1/4 bleiben. Umgesetzt als letzter Schritt über alle Texte (EIGENE_NAMEN unten), damit F1–F4 nachvollziehbar
+      bleiben; Zahlen, Zeiten und Spielwerte ändern sich nicht.
 
 Einmalig benutzt wie bau_szenario_v24.py; maßgeblich ist danach die JSON-Datei.
 Aufruf (im Repo-Wurzelordner): python3 tools/referenz/bau_szenario_v25.py BASIS_2.4_ORDNER OUT_ORDNER
@@ -410,8 +414,68 @@ SZ["verluste"] = {
     },
 }
 
+# =============================================================================== F5: eigene Kräfte „1./PzBtl 613“, „1. Kp“
+# Geordnet (längere Wendungen zuerst); Grammatik mit: der Zug → die Kp. Feindliche Züge („verstärkter Zug“, „SPz-Zug“) bleiben.
+EIGENE_NAMEN = [
+    ("Unser Panzerbataillon (Übung)", "Unser Panzerbataillon 613"),
+    ("Eigene Truppe ist der 1. Zug der Panzerkompanie WOLF (fiktiv)", "Eigene Truppe ist die 1./PzBtl 613 (fiktiv)"),
+    ("hält der 1. Zug der Panzerkompanie WOLF", "hält die 1./PzBtl 613"),
+    ("steht der 1. Zug der Panzerkompanie WOLF", "steht die 1./PzBtl 613"),
+    ("1. Zug der Panzerkompanie WOLF am Westrand", "1./PzBtl 613 am Westrand"),
+    ("Panzerkompanie WOLF", "1. Kompanie Panzerbataillon 613"),
+    ("1./PzKp WOLF", "1./PzBtl 613"),
+    ("1./WOLF", "1./613"),
+    ("PzBtl (Übung)", "PzBtl 613"),
+    ("des eigenen 1. Zuges", "der eigenen 1. Kp"),
+    ("des 1. Zuges", "der 1. Kp"),
+    ("Der eigene 1. Zug", "Die eigene 1. Kp"),
+    ("dem 1. Zug; er meldet auch Treffer und Ausfälle seiner Panzer", "der 1. Kp; sie meldet auch Treffer und Ausfälle ihrer Panzer"),
+    ("auf dem 1. Zug", "auf der 1. Kp"),
+    ("auf den 1. Zug", "auf die 1. Kp"),
+    ("Der 1. Zug hat", "Die 1. Kp hat"),
+    ("der 1. Zug fordert", "die 1. Kp fordert"),
+    ("fordert der 1. Zug", "fordert die 1. Kp"),
+    ("der 1. Zug zerschlägt", "die 1. Kp zerschlägt"),
+    ("1. Zug", "1. Kp"),
+    ("Zug {bereit}/", "Kp {bereit}/"),
+    ("Zug nur noch {bereit}", "Kp nur noch {bereit}"),
+    ("Druckmeldungen des Zuges", "Druckmeldungen der Kp"),
+    ("den Zustand des Zuges", "den Zustand der Kp"),
+    ("einsatzbereiten Panzer des Zuges", "einsatzbereiten Panzer der Kp"),
+    ("Treffer am eigenen Zug", "Treffer an der eigenen Kp"),
+    ("(der Zug hält immer)", "(die Kp hält immer)"),
+]
+
+
+def eigene_namen(o):
+    """F5: alle Texte in o (dict/list) an Ort und Stelle umbenennen."""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if isinstance(v, str):
+                for alt, neu in EIGENE_NAMEN:
+                    v = v.replace(alt, neu)
+                o[k] = v
+            else:
+                eigene_namen(v)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            if isinstance(v, str):
+                for alt, neu in EIGENE_NAMEN:
+                    v = v.replace(alt, neu)
+                o[i] = v
+            else:
+                eigene_namen(v)
+
+
+for _obj in (SZ, REG, WMK, FZK):
+    eigene_namen(_obj)
+_pz = next(f for f in FZK["fahrzeuge"] if f["id"] == "pz_zug")      # Kennung bleibt intern
+_pz["name"] = "Panzerkompanie (eigen)"
+_pz["symbol"]["groesse"] = "E"                                       # APP-6: E = Kompanie (D wäre Zug)
+
 # =============================================================================== Prüfung: keine alten Bezeichnungen in sichtbaren Texten
-VERBOTEN = re.compile(r"2\. ?Kp\b|PzGrenBtl|Schule mit Sportplatz|2\. Kompanie|Panzergrenadier")
+VERBOTEN = re.compile(r"2\. ?Kp\b|PzGrenBtl|Schule mit Sportplatz|2\. Kompanie|Panzergrenadier"
+                      r"|WOLF|\(Übung\)|1\. Zug|Zug \{|am eigenen Zug|(Druckmeldungen|Zustand|Panzer) des Zuges|der Zug hält")
 
 
 def texte(o, pfad=""):

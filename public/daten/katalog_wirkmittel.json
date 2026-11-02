@@ -1,6 +1,6 @@
 {
   "version": "2.4",
-  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung). Seit 2.2: nur_zielfahrzeug (LM) – das Wirkmittel trifft nur das bekämpfte Fahrzeug, andere Fahrzeuge im Wirkradius nicht; Personen im Wirkradius schon. Seit 2.3 (Szenario 2.4, E3): zug – wie BEKÄMPFEN auf eine zugweise Meldung wirkt: je_fahrzeug (LM, Kanone: ein Schuss je noch stehendem Fahrzeug, der i-te zug.abstand_s · i nach der Freigabe; LM: 1 LM je Fahrzeug, reicht der Bestand nicht, nur so viele Fahrzeuge, wie LM da sind) oder flaeche (Mörser: ein Einschlag, alles im Wirkradius). Seit 2.4 (Szenario 2.5, F1.4): Das direkte Feuer ist die Kanone 120 mm des eigenen 1. Zuges (PZA, intern weiter so benannt), ca. 5 s bis zum Einschlag; es schießt der nächste einsatzbereite Panzer.",
+  "hinweis": "Spielwerte, keine Leistungsdaten. Drei Wirkmittel: Steilfeuer, Präzision, direktes Feuer. Der Zielkonflikt liegt zwischen Wirkradius (Kollateralrisiko), Zeit bis zum Einschlag und Bestand. Alle Wirkmittel wirken im Spiel gegen alle Zielarten, damit die Auswertung nicht in Taktik kippt. Seit 2.0: Die Wirkung schlägt am Ort des Ziels zum Einschlagzeitpunkt ein (regeln.json, wirkung). Seit 2.2: nur_zielfahrzeug (LM) – das Wirkmittel trifft nur das bekämpfte Fahrzeug, andere Fahrzeuge im Wirkradius nicht; Personen im Wirkradius schon. Seit 2.3 (Szenario 2.4, E3): zug – wie BEKÄMPFEN auf eine zugweise Meldung wirkt: je_fahrzeug (LM, Kanone: ein Schuss je noch stehendem Fahrzeug, der i-te zug.abstand_s · i nach der Freigabe; LM: 1 LM je Fahrzeug, reicht der Bestand nicht, nur so viele Fahrzeuge, wie LM da sind) oder flaeche (Mörser: ein Einschlag, alles im Wirkradius). Seit 2.4 (Szenario 2.5, F1.4): Das direkte Feuer ist die Kanone 120 mm der eigenen 1. Kp (PZA, intern weiter so benannt), ca. 5 s bis zum Einschlag; es schießt der nächste einsatzbereite Panzer.",
   "wirkmittel": [
     {
       "id": "MRS",
@@ -30,7 +30,7 @@
     },
     {
       "id": "PZA",
-      "name": "1. Zug (Kanone 120 mm)",
+      "name": "1. Kp (Kanone 120 mm)",
       "kurz": "Kanone",
       "wirkradius_m": 5,
       "vorlauf_s": 5,
@@ -38,7 +38,7 @@
       "bestand": null,
       "einsatzbereich": {
         "x_max": 500,
-        "text": "nur Ziele bis zum Bach ELSTER einschließlich Brücke (x < 500 m, Sicht); es schießt der nächste einsatzbereite Panzer des 1. Zuges"
+        "text": "nur Ziele bis zum Bach ELSTER einschließlich Brücke (x < 500 m, Sicht); es schießt der nächste einsatzbereite Panzer der 1. Kp"
       },
       "effekt": "treffer_direkt",
       "zug": {"art": "je_fahrzeug", "abstand_s": 5}

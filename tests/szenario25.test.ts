@@ -1,4 +1,4 @@
-// Szenario 2.5 (Änderungsliste F vom 02.11.2026, „Panzerzug“): eigene Truppe ist der 1. Zug der Panzerkompanie WOLF mit vier
+// Szenario 2.5 (Änderungsliste F vom 02.11.2026, „Panzerzug“): eigene Truppe ist die 1./PzBtl 613 (Absender „1. Kp“, seit dem Folgeauftrag F5; vorher 1. Zug der PzKp W.) mit vier
 // Kampfpanzern Leopard 2A7V (F1), Feindfeuer mit Einschießen und Zustand je Panzer (F2), „Schule“ statt „Schule mit Sportplatz“ (F3).
 // Engine = Simulation (Zeitlinie, Zustand je Panzer, Druckmeldungen bitgleich) prüft tests/durchlauf.test.ts, die Kalibrierung F2.9
 // tests/szenario24.test.ts („Kalibrierung“) und dieser Test an den Referenzläufen.
@@ -29,11 +29,11 @@ async function alleLaeufe(): Promise<{ name: string; ev: Pick<VerlustEreignis, "
 }
 
 describe("Szenario 2.5: F1 eigene Truppe", () => {
-  it("F1.1/F1.2: 1./PzKp WOLF, vier Leopard 2A7V einzeln am Westrand (1/2 55,365 · 1/1 55,412 · 1/3 55,470 · 1/4 50,530)", async () => {
+  it("F1.1/F1.2/F5: 1./PzBtl 613, vier Leopard 2A7V einzeln am Westrand (1/2 55,365 · 1/1 55,412 · 1/3 55,470 · 1/4 50,530)", async () => {
     const inh = await inhalte();
     expect(inh.szenario.version).toBe("2.5");
     const et = inh.szenario.eigene_truppe!;
-    expect(et).toMatchObject({ einheit: "1./PzKp WOLF", uebergeordnet: "PzBtl (Übung)", name: "1. Zug", fahrzeug: "kpz_leo2a7v" });
+    expect(et).toMatchObject({ einheit: "1./PzBtl 613", uebergeordnet: "PzBtl 613", name: "1. Kp", fahrzeug: "kpz_leo2a7v" });
     expect(et.panzer.map((p) => [p.name, p.pos])).toEqual([["1/1", [55, 412]], ["1/2", [55, 365]], ["1/3", [55, 470]], ["1/4", [50, 530]]]);
     expect(et.panzer.every((p) => p.hdg === 0)).toBe(true); // Blick nach Osten
     // Sprite eigen in drei Zuständen, Zeichen Kampfpanzer
@@ -43,12 +43,13 @@ describe("Szenario 2.5: F1 eigene Truppe", () => {
     for (const s of [f.sprite, f.sprite_eingeschraenkt, f.sprite_wrack]) expect(atlas.frames[s!], String(s)).toBeDefined();
     // kein Gefechtsstand, keine Züge mehr
     expect((et as unknown as Record<string, unknown>).zuege).toBeUndefined();
-    expect(inh.szenario.kraefte.filter((k) => k.zugehoerigkeit === "eigen").map((k) => k.name)).toEqual(["1./PzKp WOLF"]);
+    expect(inh.szenario.kraefte.filter((k) => k.zugehoerigkeit === "eigen").map((k) => k.name)).toEqual(["1./PzBtl 613"]);
+    expect(inh.fahrzeuge.pz_zug.symbol?.groesse).toBe("E"); // F5: Größenangabe Kompanie
   });
 
-  it("F1.4: Wirkmittel „1. Zug (Kanone 120 mm)“ – 5 m, ca. 5 s, unbegrenzt, bis zum Bach, je Fahrzeug ein Schuss", async () => {
+  it("F1.4: Wirkmittel „1. Kp (Kanone 120 mm)“ – 5 m, ca. 5 s, unbegrenzt, bis zum Bach, je Fahrzeug ein Schuss", async () => {
     const inh = await inhalte();
-    expect(inh.wirkmittel.PZA).toMatchObject({ name: "1. Zug (Kanone 120 mm)", kurz: "Kanone", wirkradius_m: 5, vorlauf_s: 5, bestand: null, einsatzbereich: { x_max: 500 }, zug: { art: "je_fahrzeug" } });
+    expect(inh.wirkmittel.PZA).toMatchObject({ name: "1. Kp (Kanone 120 mm)", kurz: "Kanone", wirkradius_m: 5, vorlauf_s: 5, bestand: null, einsatzbereich: { x_max: 500 }, zug: { art: "je_fahrzeug" } });
   });
 
   it("F1.5: Hintergrundgefecht schießt von den Panzern; N2 und das Wrack an der Brücke bleiben", async () => {
@@ -61,7 +62,7 @@ describe("Szenario 2.5: F1 eigene Truppe", () => {
   });
 });
 
-describe("Szenario 2.5: F2 Feindfeuer auf den Zug", () => {
+describe("Szenario 2.5: F2 Feindfeuer auf die eigenen Panzer", () => {
   it("F2.3: Einschießen deterministisch – direkt 1–2 daneben, 3 nah, ab 4 jeder zweite, ab 8 jeder; Steilfeuer 1–2 daneben, ab 3 im Ziel", async () => {
     const vr = (await inhalte()).regeln.verluste!;
     expect(Array.from({ length: 10 }, (_, i) => einschuss(vr, "direkt", i + 1))).toEqual(
@@ -192,10 +193,10 @@ describe("Szenario 2.5: F2 Feindfeuer auf den Zug", () => {
     expect(zs.bereit + zs.ausgefallen).toBe(4);
   });
 
-  it("F2.7: Druckmeldungen je Panzer vom 1. Zug, höchstens 140 Zeichen; I-07 nennt 1/4, I-06 den Zug, I-13 den getroffenen Panzer", async () => {
+  it("F2.7: Druckmeldungen je Panzer von der 1. Kp, höchstens 140 Zeichen; I-07 nennt 1/4, I-06 die Kp, I-13 den getroffenen Panzer", async () => {
     const inh = await inhalte();
     const vm = inh.szenario.verluste!.meldungen!;
-    expect(vm.von).toBe("1. Zug");
+    expect(vm.von).toBe("1. Kp");
     const ev = zeitlinie(inh, { "Z-06": 400 }, 600, []);
     const dm = druckmeldungen(inh, ev);
     expect(dm.length).toBeGreaterThan(5);
@@ -206,18 +207,20 @@ describe("Szenario 2.5: F2 Feindfeuer auf den Zug", () => {
       expect(m.text).not.toMatch(/\{\w+\}/);
     }
     const inj = Object.fromEntries(inh.szenario.injects.map((i) => [i.id, i]));
-    expect(inj["I-07"]).toMatchObject({ von: "1. Zug", verluste_panzer: "pz4" });
+    expect(inj["I-07"]).toMatchObject({ von: "1. Kp", verluste_panzer: "pz4" });
     expect(inj["I-07"].text).toContain("{pz}");
-    expect(inj["I-06"].text).toContain("{bereit}/4");
+    expect(inj["I-06"].text).toContain("Kp {bereit}/4");
     expect(inj["I-13"]).toMatchObject({ verluste_panzer: "durchbruch" });
-    for (const id of ["I-06", "I-07", "I-13"]) expect(inj[id].von, id).toBe("1. Zug");
+    for (const id of ["I-06", "I-07", "I-13"]) expect(inj[id].von, id).toBe("1. Kp");
   });
 });
 
 describe("Szenario 2.5: F3 und alte Bezeichnungen", () => {
   const VERBOTEN = /2\. ?Kp\b|PzGrenBtl|Schule mit Sportplatz|Panzergrenadier/;
+  // F5 (Folgeauftrag 02.11. abends): eigene Kräfte heißen 1./PzBtl 613 bzw. 1. Kp; die alten Namen nirgends mehr sichtbar
+  const VERBOTEN_F5 = /WOLF|PzKp W|1\. Zug|PzBtl \(Übung\)|Panzerbataillon \(Übung\)|Zug \{|Zug: \d|am eigenen Zug|der Zug hält|eigenen? Zug(es)?\b/;
   const dateien = (ordner: string, endungen: RegExp): string[] =>
-    readdirSync(ordner).flatMap((n) => {
+    readdirSync(ordner).filter((n) => n !== "node_modules").flatMap((n) => {
       const p = join(ordner, n);
       return statSync(p).isDirectory() ? dateien(p, endungen) : endungen.test(n) ? [p] : [];
     });
@@ -228,6 +231,19 @@ describe("Szenario 2.5: F3 und alte Bezeichnungen", () => {
     for (const p of quellen) {
       readFileSync(p, "utf-8").split("\n").forEach((z, i) => {
         if (VERBOTEN.test(z)) funde.push(`${p.slice(WURZEL.length)}:${i + 1}: ${z.trim().slice(0, 100)}`);
+      });
+    }
+    expect(funde).toEqual([]);
+  });
+
+  it("F5: nirgends mehr „1./PzKp WOLF“, „PzKp WOLF“, „1. Zug“, „PzBtl (Übung)“ – Daten, Beispieldaten, Oberfläche und Werkzeuge (ohne die Bau-Nachweise)", () => {
+    const funde: string[] = [];
+    const quellen = [...dateien(join(WURZEL, "public/daten"), /\.json$/), ...dateien(join(WURZEL, "public/demo"), /\.json$/),
+      ...dateien(join(WURZEL, "src"), /\.(ts|tsx|css)$/), join(WURZEL, "index.html"),
+      ...dateien(join(WURZEL, "tools"), /\.(py|ts|mjs)$/).filter((p) => !/bau_szenario_v\d+\.py$/.test(p))];
+    for (const p of quellen) {
+      readFileSync(p, "utf-8").split("\n").forEach((z, i) => {
+        if (VERBOTEN_F5.test(z)) funde.push(`${p.slice(WURZEL.length)}:${i + 1}: ${z.trim().slice(0, 100)}`);
       });
     }
     expect(funde).toEqual([]);

@@ -9,7 +9,7 @@
 //
 // Was eine Rolle sehen darf, entscheidet `sichtbar`:
 //  • Spielleitung und Auflösung: alles.
-//  • G1, G2, G3: eigene Wirkungen, Feindartillerie, Rauch und das Feindfeuer auf den eigenen Zug; Wirkungen des Hintergrundgefechts und von
+//  • G1, G2, G3: eigene Wirkungen, Feindartillerie, Rauch und das Feindfeuer auf die eigene Kp; Wirkungen des Hintergrundgefechts und von
 //    E-01 nur auf Ziele, die diese Rolle aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes
 //    Ziel); der Mündungsblitz eines Schützen nur, wenn die Rolle auch den Schützen kennt.
 //  • Plenum während des Spiels („umgebung“): nur Feindartillerie und Rauch.
@@ -81,7 +81,7 @@ export const LEUCHTSPUR_S = 0.6;
 const WESTRAND_X = -40;
 
 /**
- * Startpunkt der Kanone des eigenen Zuges (Mündung ca. 5 m vor dem Panzer). Seit 2.5 (F1.4/F1.5) vom Panzer: der vorgesehene
+ * Startpunkt der Kanone der eigenen Kp (Mündung ca. 5 m vor dem Panzer). Seit 2.5 (F1.4/F1.5) vom Panzer: der vorgesehene
  * (kraft, Hintergrundgefecht), wenn er zur Zeit t nicht ausgefallen ist, sonst der nächste einsatzbereite zum Ziel.
  * Ohne eigene Truppe im Szenario wie früher vom Westrand auf Höhe der Kraft.
  */
@@ -182,7 +182,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   const out: Effekt[] = [];
   const kennt = (ziel: string | undefined) => sichtbar === "alle" || (sichtbar !== "umgebung" && !!ziel && sichtbar.has(ziel));
 
-  // Hintergrundgefecht: Feindartillerie und Rauch (für alle), Kanone des eigenen Zuges (wenn sie wirkt)
+  // Hintergrundgefecht: Feindartillerie und Rauch (für alle), Kanone der eigenen Kp (wenn sie wirkt)
   for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
     if (h.art === "feindartillerie") {
       h.einschlaege.forEach(([t, x, y], i) => {
@@ -203,7 +203,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     }
   }
 
-  // Feindfeuer auf den eigenen Zug (seit 2.5, F2.6): für alle sichtbar – eigene Truppe, verrät kein Ziel. Fehlschuss = Einschlag mit
+  // Feindfeuer auf die eigene Kp (seit 2.5, F2.6): für alle sichtbar – eigene Truppe, verrät kein Ziel. Fehlschuss = Einschlag mit
   // Staub neben dem Panzer (Steilfeuer daneben: Einschlag wie Feindartillerie), Treffer = Funken und Rauchwölkchen am Panzer,
   // ausgefallen = Rauch am Panzer. Die Feindartillerie selbst steht schon oben (Hintergrundgefecht), hier nur ihr Treffer.
   const vl = verlustLage(inh, z);
@@ -296,7 +296,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
         const o = nr % 2 ? 1.6 : -1.6;
         out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "moerser" }, t: ts, pos: [pv[0] + Math.cos(w) * o, pv[1] + Math.sin(w) * o], nr });
       } else {
-        // Kanone im direkten Feuer auf den eigenen Zug: Richtung des Panzers, auf den feuert[].auf zeigt, sonst des nächsten (seit 2.5)
+        // Kanone im direkten Feuer auf die eigene Kp: Richtung des Panzers, auf den feuert[].auf zeigt, sonst des nächsten (seit 2.5)
         const f = ziel.feuert.find((x) => x.von_s <= ts && ts < x.bis_s);
         const pz = (f?.auf ? pmap.get(f.auf) : undefined) ?? schuetze(inh, null, ts, pv);
         const ziel2 = pz ? pz.pos : westrand(inh, undefined, pv[1]);

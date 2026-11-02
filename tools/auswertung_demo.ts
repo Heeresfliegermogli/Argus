@@ -23,7 +23,7 @@ const NOTIZEN: Record<number, { t: number; fall?: string; text: string }[]> = {
   1: [
     { t: 560, fall: "S1", text: "G1 laut: „Kalt und keine Spuren – das ist eine Attrappe.“" },
     { t: 1060, fall: "S3", text: "G3 liest I-04 vor und schickt sofort den Lagehinweis, G1 und G2 nicken." },
-    { t: 1340, fall: "S3", text: "G2 empfiehlt die Kanone des 1. Zuges, G3 lehnt mit Verweis auf I-04 ab." },
+    { t: 1340, fall: "S3", text: "G2 empfiehlt die Kanone der 1. Kp, G3 lehnt mit Verweis auf I-04 ab." },
   ],
   2: [
     { t: 925, fall: "S2", text: "G1 hat das Rote Kreuz gesehen, aber gedacht, „der Feind tarnt sich so“." },

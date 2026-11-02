@@ -71,8 +71,8 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
       const d = e.daten;
       if (d.art === "feindartillerie") return `Hintergrund ${d.id}: Feindartillerie schlägt ein`;
       if (d.art === "rauch") return `Hintergrund ${d.id}: Feind nebelt ein`;
-      if (!d.wirkt) return `Hintergrund ${d.id}: Kanone des 1. Zuges auf ${d.ziel} entfällt (${d.grund ?? "?"})`;
-      return `Hintergrund ${d.id}: Kanone des 1. Zuges trifft ${d.ziel} – ${d.folge === "ausser_gefecht" ? "außer Gefecht" : "zerstört"}`;
+      if (!d.wirkt) return `Hintergrund ${d.id}: Kanone der 1. Kp auf ${d.ziel} entfällt (${d.grund ?? "?"})`;
+      return `Hintergrund ${d.id}: Kanone der 1. Kp trifft ${d.ziel} – ${d.folge === "ausser_gefecht" ? "außer Gefecht" : "zerstört"}`;
     }
     case "durchbruch": {
       const d = e.daten;
@@ -89,7 +89,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
     case "inject": {
       const i = inh.injects[e.daten.inject];
       // seit 2.3: Druckmeldung der eigenen Truppe (K-…) mit Text und Stufe aus dem Protokoll
-      if (!i && e.daten.text) return `Druckmeldung ${e.daten.inject} des 1. Zuges an ${empfaenger("G3")}${e.daten.stufe ? ` (Stufe ${e.daten.stufe})` : ""}: „${e.daten.text}“`;
+      if (!i && e.daten.text) return `Druckmeldung ${e.daten.inject} der 1. Kp an ${empfaenger("G3")}${e.daten.stufe ? ` (Stufe ${e.daten.stufe})` : ""}: „${e.daten.text}“`;
       return `Inject ${e.daten.inject} an ${empfaenger(i?.an)} (${i?.von ?? "?"})${e.daten.manuell ? " – manuell" : ""}`;
     }
     case "inject_quittiert":

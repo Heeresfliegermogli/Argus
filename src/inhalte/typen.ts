@@ -62,7 +62,7 @@ export interface Ziel {
   feuert?: Feuer[];
   /** Seit 2.1: Kampffahrzeug ohne Durchbruch (Auftrag, z. B. Beobachtungsposten); nur Text für die Prüfung */
   kein_durchbruch?: string;
-  /** Seit 2.5 (F2): steht in Bereitstellung (sammelt für den Angriff über den Bach) – kein Direktfeuer auf den Zug, bis es durchbricht */
+  /** Seit 2.5 (F2): steht in Bereitstellung (sammelt für den Angriff über den Bach) – kein Direktfeuer auf die eigenen Panzer, bis es durchbricht */
   bereitstellung?: boolean;
   /** Seit 2.4 (S6): Personen, die aus einem Fahrzeug kommen (abgesessene Schützen) – erscheinen dort, nicht am Kartenrand */
   herkunft?: string;
@@ -195,7 +195,7 @@ export interface Inject {
   bedingung?: Bedingung | BedingungDurchbruch;
   /**
    * Seit 2.5 (F2.7): Der Text nennt den Stand dieses Panzers ({pz}, {zustand}, {treffer}, {verw}, {lage}) bzw. „durchbruch“ (der
-   * Panzer, den der erste Durchbruch traf); {bereit}, {gesamt}, {zug_verw} für den Zug.
+   * Panzer, den der erste Durchbruch traf); {bereit}, {gesamt}, {zug_verw} für die Kp.
    */
   verluste_panzer?: string;
 }
@@ -230,7 +230,7 @@ export interface HgArtillerie {
   text: string;
 }
 
-/** Kanone des eigenen Zuges (art „panzerabwehr“): wirkt nur, wenn das Ziel dann noch steht und diesseits der Einsatzgrenze liegt. */
+/** Kanone der eigenen Kp (art „panzerabwehr“): wirkt nur, wenn das Ziel dann noch steht und diesseits der Einsatzgrenze liegt. */
 export interface HgPanzerabwehr {
   id: string;
   t_s: number;
@@ -309,7 +309,7 @@ export interface Zone {
   kurz?: string;
 }
 
-/** Seit 2.5 (F1): ein Kampfpanzer des eigenen 1. Zuges, einzeln in Stellung am Westrand (1/1 … 1/4). */
+/** Seit 2.5 (F1): ein Kampfpanzer der eigenen 1. Kp, einzeln in Stellung am Westrand (1/1 … 1/4). */
 export interface EigenerPanzer {
   id: string;
   /** Kennung „1/1“ */
@@ -327,12 +327,12 @@ export interface EigenerPanzer {
 
 export interface EigeneTruppe {
   hinweis?: string;
-  /** „1./PzKp WOLF“ */
+  /** „1./PzBtl 613“ */
   einheit: string;
   kompanie?: string;
-  /** „PzBtl (Übung)“ */
+  /** „PzBtl 613“ */
   uebergeordnet?: string;
-  /** „1. Zug“ – Absender und Kopfzeile */
+  /** „1. Kp“ – Absender und Kopfzeile */
   name: string;
   /** Fahrzeugtyp im Katalog (Sprite in Stellung) */
   fahrzeug: string;
@@ -433,7 +433,7 @@ export interface Szenario {
   verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
   /** Seit 2.1: Gruppen, die durchbrechen, wenn sie nicht aufgehalten werden */
   durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[] };
-  /** Seit 2.3 eigene Truppe am Westrand; seit 2.5 (F1) der 1. Zug mit vier Panzern */
+  /** Seit 2.3 eigene Truppe am Westrand; seit 2.5 (F1) die 1. Kp (1./PzBtl 613) mit vier Panzern */
   eigene_truppe?: EigeneTruppe;
   /** Seit 2.3 (D2): szenariobezogene Teile des Verlustmodells */
   verluste?: SzenarioVerluste;
