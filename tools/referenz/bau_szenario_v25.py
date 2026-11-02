@@ -224,15 +224,14 @@ lg["plenum"]["absaetze"] = [
     "Übungslage, alles fiktiv. Russische Kräfte greifen seit dem Morgen nach Westen an. Im Raum KRÄHE erwarten wir eine verstärkte "
     "Kompanie mit Kampf- und Schützenpanzern.",
     "Unser Panzerbataillon (Übung) verteidigt westlich von KRÄHE. Am Westrand hält der 1. Zug der Panzerkompanie WOLF mit vier Kampfpanzern "
-    "Leopard 2A7V (1/1 bis 1/4) die Brücke ELSTER und die Furt Nord.",
+    "Leopard 2A7V (1/1 bis 1/4) Brücke ELSTER und Furt Nord.",
     "Auftrag: Der Feind darf den Bach ELSTER nicht überschreiten, vor allem nicht an der Brücke ELSTER. Östlich des Bachs liegen die "
     "Ortschaft KRÄHE und die Schule; dort sind noch Zivilpersonen.",
     # Drohne und Teams aus 2.4, gekürzt, damit die Lage im Plenum in 1530 × 800 ohne Rollbalken steht (ca. 80 s Vorlesezeit)
     "Die Drohne „Milan“ klärt den Raum östlich des Bachs auf. Ihre Bilder wertet das KI-System ARGUS aus: Klasse, Konfidenz und eine "
     "Empfehlung. Laut Hersteller liegt ARGUS in 94 % der Fälle richtig.",
     "Jedes Team ist die Zielbearbeitung des Bataillons: G1 Aufklärung prüft jede ARGUS-Meldung, G2 Zielprüfung die Einsatzregeln und das "
-    "Wirkmittel, G3 Führung gibt frei. Ohne Freigabe von G3 wird nichts bekämpft. Alle Teams spielen dieselbe Lage, Spieluhr 10:00–10:25 "
-    "in Echtzeit.",
+    "Wirkmittel, G3 Führung gibt frei. Ohne Freigabe von G3 wird nichts bekämpft. Alle Teams spielen dieselbe Lage, 25 Minuten in Echtzeit.",
 ]
 ersetze(lg["G2"]["absaetze"], 0, "Die eigene 2. Kompanie liegt mit drei Zügen am Westrand der Karte (blau).",
         "Der eigene 1. Zug steht mit vier Kampfpanzern (1/1–1/4) am Westrand der Karte (blau).")
