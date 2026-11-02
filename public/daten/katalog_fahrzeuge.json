@@ -1,6 +1,6 @@
 {
-  "version": "1.5",
-  "hinweis": "Spielkatalog. Ein neues Fahrzeug ist ein Eintrag plus Zeichenfunktion. 'generator' nennt die Zeichenfunktion in tools/assets/fahrzeuge.py; daraus entstehen Sprite, Wrack-Sprite und das Fahrzeug in den Drohnenbildern (tools/assets/gen_assets.py). 'sprite' und 'sprite_wrack' sind Bildnamen im Sprite-Atlas (assets/sprites/fahrzeuge.json). Keine Leistungsdaten, nur Größe und Darstellung. 'symbol.sidc' ist der Funktionsteil des taktischen Zeichens (MIL-STD-2525C/APP-6, milsymbol), 'symbol.groesse' die Größenangabe; Zugehörigkeit und Status setzt die Oberfläche. Seit 1.3: 'symbol.einheit' ist das Zeichen der Einheit (APP-6) für zugweise Meldungen mit Größenangabe (groesse_nach_anzahl); 'sprite_fahrt' der Sprite während der Fahrt (Mörsertrupp auf Lkw). Seit 1.5 (Szenario 2.4, E6.2): ARGUS kennt nur drei Klassen (`klassen`): Panzer (gepanzert), Fahrzeug (ungepanzert, auch zivil) und Infanterie (Personen, Mörsertrupps, Beobachter); `argus_klasse` ist die Klasse, die ARGUS für den Typ meldet. `klassen[k].sidc` ist das taktische Zeichen dieser Klasse auf den Karten der Spieler, `einheit` das Zeichen einer zugweisen Meldung. `feuer_effekt: keiner` – das Ziel feuert nicht selbst (Beobachter lenkt Artillerie). `personen_im_fahrzeug` (Szenario) zählen für die Trefferregel, im Bild sitzen sie im Fahrzeug.",
+  "version": "1.6",
+  "hinweis": "Spielkatalog. Ein neues Fahrzeug ist ein Eintrag plus Zeichenfunktion. 'generator' nennt die Zeichenfunktion in tools/assets/fahrzeuge.py; daraus entstehen Sprite, Wrack-Sprite und das Fahrzeug in den Drohnenbildern (tools/assets/gen_assets.py). 'sprite' und 'sprite_wrack' sind Bildnamen im Sprite-Atlas (assets/sprites/fahrzeuge.json). Keine Leistungsdaten, nur Größe und Darstellung. 'symbol.sidc' ist der Funktionsteil des taktischen Zeichens (MIL-STD-2525C/APP-6, milsymbol), 'symbol.groesse' die Größenangabe; Zugehörigkeit und Status setzt die Oberfläche. Seit 1.3: 'symbol.einheit' ist das Zeichen der Einheit (APP-6) für zugweise Meldungen mit Größenangabe (groesse_nach_anzahl); 'sprite_fahrt' der Sprite während der Fahrt (Mörsertrupp auf Lkw). Seit 1.5 (Szenario 2.4, E6.2): ARGUS kennt nur drei Klassen (`klassen`): Panzer (gepanzert), Fahrzeug (ungepanzert, auch zivil) und Infanterie (Personen, Mörsertrupps, Beobachter); `argus_klasse` ist die Klasse, die ARGUS für den Typ meldet. `klassen[k].sidc` ist das taktische Zeichen dieser Klasse auf den Karten der Spieler, `einheit` das Zeichen einer zugweisen Meldung. `feuer_effekt: keiner` – das Ziel feuert nicht selbst (Beobachter lenkt Artillerie). `personen_im_fahrzeug` (Szenario) zählen für die Trefferregel, im Bild sitzen sie im Fahrzeug. Seit 1.6 (Szenario 2.5, F1): Die eigene Truppe sind vier Kampfpanzer Leopard 2A7V (kpz_leo2a7v, fiktiv gestaltet, kein Ziel, nie gemeldet) mit drei Bildern: intakt, eingeschränkt (Kette bzw. Optik beschädigt) und ausgefallen (Rauch, Gerät, keine Personen). Der Schützenpanzer der eigenen Kompanie (spz_eigen) entfällt.",
   "fahrzeuge": [
     {
       "id": "kpz_t72",
@@ -141,30 +141,6 @@
       "sprite_wrack": "traktor_wrack.png"
     },
     {
-      "id": "spz_eigen",
-      "name": "Schützenpanzer (eigen)",
-      "argus_klasse": null,
-      "gepanzert": true,
-      "groesse_m": [7.4, 3.6],
-      "symbol": {"art": "panzergrenadiere", "sidc": "UCIZ", "einheit": "UCIZ"},
-      "generator": "spz_eigen",
-      "sprite": "spz_eigen.png",
-      "sprite_wrack": "spz_eigen_wrack.png",
-      "farbe": "dreifarbig gefleckt (fiktiv)",
-      "hinweis": "Seit 1.4 (Szenario 2.3, D1): Fahrzeuge der eigenen Züge in Stellung (fiktiv gestaltet). Kein Ziel, nie gemeldet."
-    },
-    {
-      "id": "pzgren_kp",
-      "name": "Panzergrenadierkompanie (eigen)",
-      "argus_klasse": null,
-      "gepanzert": true,
-      "groesse_m": [100, 100],
-      "symbol": {"art": "panzergrenadiere", "sidc": "UCIZ", "groesse": "E"},
-      "generator": "Lagekarte (Rechteck)",
-      "sprite": null,
-      "sprite_wrack": null
-    },
-    {
       "id": "pkw_zivil",
       "name": "Pkw (zivil), Familie, Gepäck auf dem Dach",
       "argus_klasse": "Fahrzeug",
@@ -213,6 +189,32 @@
       "sprite_wrack": "verwundete_leer.png",
       "feuer_effekt": "keiner",
       "hinweis": "Seit 1.5 (S6): vier Soldaten mit weißen Verbänden, zwei liegen, zwei sitzen, keine Waffen. Getroffen: nur Verbandszeug (keine Personen)."
+    },
+    {
+      "id": "pz_zug",
+      "name": "Panzerzug (eigen)",
+      "argus_klasse": null,
+      "gepanzert": true,
+      "groesse_m": [100, 100],
+      "symbol": {"art": "kampfpanzer", "sidc": "UCA", "groesse": "D"},
+      "generator": "Lagekarte (Rechteck)",
+      "sprite": null,
+      "sprite_wrack": null,
+      "hinweis": "Seit 1.6 (Szenario 2.5): Kraft „1./PzKp WOLF“ (szenario.kraefte); die Panzer stehen einzeln."
+    },
+    {
+      "id": "kpz_leo2a7v",
+      "name": "Kampfpanzer Leopard 2A7V (eigen)",
+      "argus_klasse": null,
+      "gepanzert": true,
+      "groesse_m": [7.7, 3.8],
+      "symbol": {"art": "kampfpanzer", "sidc": "EVAT", "einheit": "UCA"},
+      "generator": "kpz_leo2a7v",
+      "sprite": "kpz_leo2a7v.png",
+      "sprite_eingeschraenkt": "kpz_leo2a7v_eingeschraenkt.png",
+      "sprite_wrack": "kpz_leo2a7v_ausgefallen.png",
+      "farbe": "dreifarbig gefleckt (fiktiv)",
+      "hinweis": "Seit 1.6 (Szenario 2.5, F1): Kampfpanzer des eigenen 1. Zuges in Stellung (fiktiv gestaltet). Kein Ziel, nie gemeldet. Wanne 7,7 m (groesse_m), mit Rohr 10,9 m. Bilder: intakt, eingeschränkt (Kette neben dem Panzer, Optik zerschlagen), ausgefallen (Turm verdreht, Rußflecken – Gerät, kein Brand)."
     }
   ],
   "personen": [

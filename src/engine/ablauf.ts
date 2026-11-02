@@ -5,14 +5,14 @@
 //   • Meldungen mit Fast-Track-Weiche; eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört oder
 //     abgezogen ist – beim Erscheinen oder später in der Kette (meldung_entfaellt bei G1, G2 oder G3).
 //   • Wirkung zum Einschlagzeitpunkt, Treffer nach der Lage beim Einschlag (kern/regeln.ts).
-//   • Hintergrundgefecht (szenario.hintergrund): eigene Panzerabwehr wirkt nur, wenn das Ziel dann noch steht.
+//   • Hintergrundgefecht (szenario.hintergrund): Kanone des eigenen Zuges wirkt nur, wenn das Ziel dann noch steht.
 //   • Skriptereignis E-01 (polnischer Gegenangriff) mit Abbruch durch eine Freigabe auf Z-15–17.
 //   • Verstärkungen: die Welt des Teams (kern/welt.ts) enthält ihre Ziele und Meldungen.
 //   • Seit Szenario 2.1: Durchbruch nicht aufgehaltener Gruppen (kern/durchbruch.ts) nach ihrem Angriffszeitpunkt,
 //     Lagemeldung I-13, sobald das erste Fahrzeug über dem Bach ist.
-//   • Seit Szenario 2.3 (D2/D3): Druckmeldungen der Kompanie (K-01 …) aus dem Verlustmodell (kern/verluste.ts) als
-//     Lagemeldung an die Führung mit Text, Zug und Stufe; Lagemeldungen mit Platzhaltern (I-07, I-06, I-13) nennen den
-//     Stand dieses Teams zur Zeit der Meldung. Die Verluste selbst stehen nicht im Protokoll, jedes Fenster rechnet sie.
+//   • Seit Szenario 2.3 (D2/D3): Druckmeldungen der eigenen Truppe (K-01 …) aus dem Verlustmodell (kern/verluste.ts) als
+//     Lagemeldung an die Führung mit Text, Panzer (Feld `zug`) und Stufe; Lagemeldungen mit Platzhaltern (I-07, I-06, I-13)
+//     nennen den Stand dieses Teams zur Zeit der Meldung. Die Verluste stehen nicht im Protokoll, jedes Fenster rechnet sie.
 //
 // Gleichzeitigkeit (deterministisch, wie simuliere_durchlauf.py): Zerstörungen zum Zeitpunkt T gelten für
 // Entscheidungen zum Zeitpunkt T schon. Was davon abhängt, dass bis T keine Freigabe kam (E-01, I-08b),
@@ -26,7 +26,7 @@ import type { Einschlag } from "../kern/regeln";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
 import { argusBei } from "../kern/eloka";
 import { uhrzeit } from "../kern/uhr";
-import { fuelle, stand, verlustLage } from "../kern/verluste";
+import { fuelle, verlustLage } from "../kern/verluste";
 import type { Spielzustand } from "../kern/zustand";
 
 export { alleWeg, einschlaegeVon, einschlagVon, freigaben, wegAb, weltFuer };
@@ -192,7 +192,7 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
   const mitText = (id: string, tI: number) => {
     const plan = inh.injects[id];
     if (!plan || !plan.text.includes("{") || !vl.ereignisse) return { inject: id };
-    return { inject: id, text: fuelle(vl.welt, plan.text, stand(vl.welt, vl.ereignisse, tI), "verluste_zug" in plan ? plan.verluste_zug : undefined) };
+    return { inject: id, text: fuelle(vl.welt, plan.text, vl.ereignisse, tI, "verluste_panzer" in plan ? plan.verluste_panzer : undefined) };
   };
   for (const i of sz.injects) {
     if (z.injects[i.id]) continue;
@@ -237,7 +237,7 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     if (t >= tInject) liste.push(entwurf("inject", mitText(i.id, tInject), { t_geplant: tInject }));
   }
 
-  // 6b Druckmeldungen der Kompanie (seit 2.3, D3): aus der Zeitlinie der Verluste bis jetzt, in ihrer Reihenfolge
+  // 6b Druckmeldungen des Zuges (seit 2.3, je Panzer seit 2.5): aus der Zeitlinie der Verluste bis jetzt, in ihrer Reihenfolge
   for (const k of vl.meldungen) {
     if (k.t > t) break;
     if (z.injects[k.id]) continue;

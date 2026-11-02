@@ -301,6 +301,52 @@ def spz_eigen(lw, L, B, zustand=None):
         _muendungsfeuer(lw, L / 2 + 1.15, 0.0, 0.6)
 
 
+@zeichner("kpz_leo2a7v")
+def kpz_leo2a7v(lw, L, B, zustand=None):
+    """Eigener Kampfpanzer Leopard 2A7V (seit Szenario 2.5, F1; fiktiv gestaltet, Flecktarn): lange Wanne mit Seitenschürzen,
+    keilförmiger Turm mit Zusatzpanzerung, 120-mm-Kanone. Zustände (eigene Sprites): eingeschränkt (linke Kette liegt neben dem
+    Panzer, Optik zerschlagen) und ausgefallen (dazu Turm verdreht, Rußflecken, matter – Gerät, kein Brand; der Rauch ist ein Effekt).
+    Keine Personen, nie Ziel. sprite_wrack ist das Bild „ausgefallen“."""
+    ausgefallen = lw.wrack or zustand == "ausgefallen"
+    kette_ab = ausgefallen or zustand == "eingeschraenkt"
+    if kette_ab:                                   # linke Kette liegt gestreckt neben dem Panzer
+        lw.kasten(-L / 2 - 0.3, L / 2 - 0.9, -B / 2 - 1.0, -B / 2 - 0.42, KETTE)
+        for k in range(12):
+            x = -L / 2 - 0.2 + k * 0.6
+            lw.linie([(x, -B / 2 - 1.0), (x, -B / 2 - 0.42)], (64, 64, 58), 0.06)
+    _ketten(lw, L, B, breite=0.62, unterbrochen=(-1, (-L / 2, L / 2)) if kette_ab else None)
+    b = B / 2 - 0.06
+    basis = hell(EIGEN_BASIS, 0.78) if ausgefallen else EIGEN_BASIS
+    lw.poly([(-L / 2 + 0.05, -b), (L / 2 - 0.9, -b), (L / 2 - 0.05, -b + 0.35), (L / 2 - 0.05, b - 0.35), (L / 2 - 0.9, b),
+             (-L / 2 + 0.05, b)], hell(basis, 0.86), koerper=True)                                       # Schürzen
+    lw.poly([(-L / 2 + 0.2, -b + 0.55), (L / 2 - 1.0, -b + 0.55), (L / 2 - 0.25, -b + 0.85), (L / 2 - 0.25, b - 0.85),
+             (L / 2 - 1.0, b - 0.55), (-L / 2 + 0.2, b - 0.55)], basis, koerper=True)                      # Wannendach
+    for k in range(5):                                                                                     # Motordeck
+        x = -L / 2 + 0.45 + k * 0.32
+        lw.linie([(x, -b + 0.75), (x, b - 0.75)], hell(basis, 0.55), 0.05)
+    lw.kasten(L / 2 - 1.05, L / 2 - 0.55, -0.35, 0.35, hell(basis, 0.72))                                # Fahrerluke
+    lw.tarnung([hell(c, 0.8) for c in EIGEN_TARN] if ausgefallen else EIGEN_TARN, flecken=46, groesse=(0.35, 0.8))
+    kw = dict(dx=-0.25, dy=0.0, rot=25.0 if ausgefallen else 0.0)        # ausgefallen: Turm steht verdreht
+    # 120-mm-Kanone mit Rauchabsauger, Turm keilförmig (Zusatzpanzerung vorn)
+    lw.linie([(1.6, 0.0), (L / 2 + 3.25, 0.0)], hell(basis, 0.5), 0.15, **kw)
+    lw.linie([(L / 2 + 0.9, 0.0), (L / 2 + 1.5, 0.0)], hell(basis, 0.45), 0.24, **kw)
+    turm = [(2.35, -0.05), (1.4, -1.18), (-1.55, -1.2), (-1.85, -0.95), (-1.85, 0.95), (-1.55, 1.2), (1.4, 1.18), (2.35, 0.05)]
+    lw.poly(turm, hell(basis, 0.8), koerper=True, **kw)
+    lw.poly([(x * 0.86 - 0.05, y * 0.86) for x, y in turm], hell(basis, 1.04), koerper=True, **kw)
+    lw.kasten(-1.75, -1.2, -1.05, 1.05, hell(basis, 0.7), **kw)                                          # Staukorb hinten
+    optik = (60, 66, 70) if zustand == "eingeschraenkt" or ausgefallen else hell(basis, 0.62)
+    lw.kasten(0.55, 1.0, -0.95, -0.55, optik, **kw)                                                      # Richtschützenoptik
+    lw.ell(-0.55, 0.55, 0.28, 0.28, hell(basis, 0.68), **kw)                                             # Kommandantenperiskop
+    lw.ell(-0.55, -0.55, 0.24, 0.24, hell(basis, 0.74), **kw)                                            # Ladeschützenluke
+    if zustand == "eingeschraenkt":
+        lw.linie([(0.5, -1.0), (1.05, -0.5)], (40, 40, 40), 0.06, **kw)                                  # Optik zerschlagen
+    if ausgefallen:
+        for cx, cy, r in ((0.9, 0.5, 0.45), (-1.3, -0.4, 0.35), (2.4, -1.0, 0.3)):                       # Rußflecken (Gerät, kein Brand)
+            lw.ell(cx, cy, r, r * 0.8, (44, 42, 38))
+    if zustand == "feuert":
+        _muendungsfeuer(lw, L / 2 + 3.3, 0.0, 0.7)
+
+
 # ====================================================================== Radfahrzeuge
 def _raeder(lw, xs, B, breite=0.38, laenge=1.0, c=REIFEN):
     for x in xs:
@@ -797,7 +843,8 @@ SPRITE_PX_PRO_M = {"pkw_zivil": 24, "pkw_presse": 24, "beobachter_trupp": 48, "v
 
 # Zustände, die das Fahrzeug selbst verändern (eigene Sprites); „feuert“ ist ein Effekt (muendungsblitz),
 # „kisten“ liegt am Boden, „furt“ ist Gischt im Standbild.
-ZUSTAND_SPRITES = {"kpz_t72": ("luk_offen", "kette_ab"), "kpz_pt91": ("luk_offen", "kette_ab"), "spaehpz_brdm2": ("luk_offen",)}
+ZUSTAND_SPRITES = {"kpz_t72": ("luk_offen", "kette_ab"), "kpz_pt91": ("luk_offen", "kette_ab"), "spaehpz_brdm2": ("luk_offen",),
+                   "kpz_leo2a7v": ("eingeschraenkt", "ausgefallen")}
 
 
 def zustand_sprite(sprite, zustand):
@@ -808,9 +855,9 @@ def zustand_sprite(sprite, zustand):
 def ausdehnung(typ, L, B, wrack=False):
     """Halbe Leinwandgröße in Metern (vorn/hinten symmetrisch), inkl. Rohr und Rand."""
     vorn = L / 2 + {"kpz_t72": 2.7, "kpz_pt91": 2.7, "spz_bmp2": 1.1, "spw_btr80": 0.95, "attrappe_kpz": 1.9,
-                    "spaehpz_brdm2": 0.1, "spz_eigen": 1.25}.get(typ, 0.0)
-    hinten = L / 2 + (0.6 if typ in ("kpz_t72", "kpz_pt91") else 0.0)
-    hy = B / 2 + (1.3 if typ in ("kpz_t72", "kpz_pt91") else 0.1)
+                    "spaehpz_brdm2": 0.1, "spz_eigen": 1.25, "kpz_leo2a7v": 3.3}.get(typ, 0.0)
+    hinten = L / 2 + (0.6 if typ in ("kpz_t72", "kpz_pt91") else 0.3 if typ == "kpz_leo2a7v" else 0.0)
+    hy = B / 2 + (1.3 if typ in ("kpz_t72", "kpz_pt91") else 1.0 if typ == "kpz_leo2a7v" else 0.1)
     if typ == "eloka_lkw":
         vorn, hy = max(vorn, 3.6), max(hy, 3.3)
     if typ in ("verwundete", "beobachter_trupp"):

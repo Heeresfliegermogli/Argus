@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Probe Änderungen D1–D5 (Szenario 2.3, „mehr Druck“): eigene Züge, Verluste, Druckmeldungen, Preis des Abwartens.
+"""Probe Änderungen F (Szenario 2.5, „Panzerzug“) auf der Oberfläche; bis 2.4 prüfte sie D1–D5 mit drei Zügen.
 
 Ein Team im Direktaufruf (SL, Aufklärung, Zielprüfung, Führung, Plenum; lokaler Sync), Uhr über die Steuerung der SL,
-ohne Entscheidungen der Rollen (der Zeitplan läuft, die Kompanie nimmt Schaden):
-  D1  Alle Rollen sehen die drei eigenen Züge auf der Karte (Zeichen, Beschriftung „1. Zug nn %“), die Kontrollkarte
-      gezoomt die Fahrzeuge in Stellung (Sprites); Feinde nach Ground Truth nur auf der Kontrollkarte.
-  D2  Kopfzeile in jedem Fenster „2. Kp nn % · n Verwundete“, in allen Fenstern gleich; Farbe nach den Schwellen.
-  D3  Druckmeldungen K-… im Postfach der Führung (≤ 140 Zeichen mit Absender, dringende rot), I-07 nennt den 3. Zug und
-      seine Verwundeten; Treffer an der Stellung lassen das Zeichen des Zuges flackern (Tempo ×1).
+ohne Entscheidungen der Rollen (der Zeitplan läuft, der 1. Zug nimmt Schaden):
+  F1  Alle Rollen sehen die vier Panzer 1/1–1/4 auf der Karte (Zeichen, Beschriftung), gezoomt als Sprites in Stellung
+      (intakt, eingeschränkt, ausgefallen); Feinde nach Ground Truth nur auf der Kontrollkarte.
+  F2.6 Kopfzeile in jedem Fenster „1. Zug: b/4 einsatzbereit · n Verwundete“ mit einem Balken je Panzer, überall gleich;
+      ein getroffener Panzer blinkt (Tempo ×1).
+  F2.7 Druckmeldungen K-… vom „1. Zug“ je Panzer im Postfach der Führung (≤ 140 Zeichen mit Absender), I-07 nennt 1/4.
   D4  Empfehlungskarte der Führung kompakt (eine Meldung durch die Kette).
-  D5  Auswertung (Beispiel, 5 Teams): Kapitel „Preis des Abwartens“ mit Kurven, Marken S4/N4/S3, Leitfragen, Offenlegung.
+  F2.9 Auswertung (Beispiel, 5 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
 Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
@@ -144,79 +144,88 @@ def main():
         foto(g3, "d4_empfehlungskarte")
         g3.get_by_test_id("g3-ablehnen").click()
 
-        # ---------------------------------------------------------------- D2 Kopfzeile, D1 Karten
-        print("D1/D2 – eigene Züge und Kopfzeile (18:40, ohne Entscheidungen)")
+        # ---------------------------------------------------------------- F2.6 Kopfzeile, F1 Karten
+        print("F1/F2.6 – vier Panzer und Kopfzeile (18:40, ohne Entscheidungen)")
         zeit("18:40")
         time.sleep(1.5)
         stand = {}
         for s, n in [(sl, "SL"), (g1, "Aufklärung"), (g2, "Zielprüfung"), (g3, "Führung"), (pl, "Plenum")]:
             warte(lambda: s.get_by_test_id("kp-stand").count() == 1, 10, f"Kopfzeile {n}")
             b = s.get_by_test_id("kp-stand")
-            stand[n] = (b.get_attribute("data-kampfkraft"), b.get_attribute("data-verwundete"), b.inner_text(), b.get_attribute("class"))
-        werte = {v[:2] for v in stand.values()}
-        pruefe(len(werte) == 1, f"Kopfzeile in allen Fenstern gleich: {stand['Führung'][2]} ({len(werte)} Werte)")
-        kk = int(stand["Führung"][0])
-        soll = "schlecht" if kk < 55 else "warn" if kk < 75 else "eigen"
-        pruefe(soll in stand["Führung"][3], f"Farbe nach Schwelle: {kk} % → {soll}")
-        pruefe(stand["Führung"][2].startswith("2. Kp ") and "Verwundete" in stand["Führung"][2] or "Verwundeter" in stand["Führung"][2], "Text „2. Kp nn % · n Verwundete“")
+            balken = s.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => `${e.dataset.pz}:${e.dataset.stufe}:${e.dataset.zustand}`)")
+            stand[n] = (b.get_attribute("data-bereit"), b.get_attribute("data-verwundete"), tuple(balken), b.inner_text(), b.get_attribute("class"))
+        werte = {v[:3] for v in stand.values()}
+        pruefe(len(werte) == 1, f"Kopfzeile in allen Fenstern gleich: {stand['Führung'][3]} {stand['Führung'][2]} ({len(werte)} Werte)")
+        txt = stand["Führung"][3]
+        pruefe(txt.startswith("1. Zug: ") and "/4 einsatzbereit" in txt and ("Verwundete" in txt or "Verwundeter" in txt or "keine Verwundeten" in txt),
+               f"Text „1. Zug: b/4 einsatzbereit · n Verwundete“: {txt}")
+        pruefe([x.split(":")[0] for x in stand["Führung"][2]] == ["1/1", "1/2", "1/3", "1/4"], "je Panzer ein Balken (1/1–1/4)")
+        bereit = int(stand["Führung"][0])
         for s, k, n in karten:
-            warte(lambda: (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("zeichen", 0) + (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("sprites", 0) > 0, 10, f"eigene Züge {n}")
+            warte(lambda: (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("zeichen", 0) + (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("sprites", 0) > 0, 10, f"eigene Panzer {n}")
             d = s.evaluate(KARTE_JS, k)["eigene"]
-            pruefe(len(d["texte"]) == 3 and all(t[:1] in "123" and t.endswith("%") for t in d["texte"]), f"{n}: drei eigene Züge mit Kampfkraft {d['texte']}")
-        foto(g3, "d1_fuehrung_1840")
-        foto(sl, "d1_kontrollkarte_1840")
-        foto(g1, "d1_aufklaerung_1840")
+            pruefe(sorted(d["texte"]) == ["1/1", "1/2", "1/3", "1/4"], f"{n}: vier Panzer beschriftet {d['texte']} {d['stufen']}")
+        foto(g3, "f1_fuehrung_1840")
+        foto(sl, "f1_kontrollkarte_1840")
+        foto(g1, "f1_aufklaerung_1840")
 
-        # gezoomt: Fahrzeuge in Stellung (Kontrollkarte, 1. Zug)
-        sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([300, 464], 5) }")
+        # gezoomt: Panzer in Stellung (Sprites)
+        sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }")
         time.sleep(1.2)
         d = sl.evaluate(KARTE_JS, "kontrollkarte")["eigene"]
-        pruefe(d["sprites"] >= 3, f"Kontrollkarte gezoomt: Fahrzeuge in Stellung als Sprites ({d['sprites']})")
-        foto(sl, "d1_stellung_gezoomt")
-        g3.evaluate("() => { const e = document.querySelector('[data-testid=lagekarte] .karte-leinwand'); e.argusKarte.zeigeAuf([200, 450], 4.5) }")
+        pruefe(d["sprites"] >= 3, f"Kontrollkarte gezoomt: Panzer in Stellung als Sprites ({d['sprites']}, {d['stufen']})")
+        foto(sl, "f1_stellung_gezoomt")
+        g3.evaluate("() => { const e = document.querySelector('[data-testid=lagekarte] .karte-leinwand'); e.argusKarte.zeigeAuf([70, 440], 4.5) }")
         time.sleep(1.2)
         d = g3.evaluate(KARTE_JS, "lagekarte")["eigene"]
-        pruefe(d["sprites"] >= 3, f"Führung gezoomt: Fahrzeuge in Stellung ({d['sprites']})")
+        pruefe(d["sprites"] >= 3, f"Führung gezoomt: Panzer in Stellung ({d['sprites']})")
+        foto(g3, "f1_fuehrung_gezoomt")
         g3.evaluate("() => { const e = document.querySelector('[data-testid=lagekarte] .karte-leinwand'); e.argusKarte.ganzeKarte() }")
 
-        # ---------------------------------------------------------------- D3 Druckmeldungen und Flackern
-        print("D3 – Druckmeldungen und Treffer an der Stellung")
+        # ---------------------------------------------------------------- F2.7 Druckmeldungen und Blinken
+        print("F2.7 – Druckmeldungen je Panzer und Treffer am Panzer")
         km = g3.locator("[data-testid=postfach] [data-inject^='K-']")
-        pruefe(km.count() >= 3, f"Postfach der Führung: {km.count()} Druckmeldungen der Kompanie")
+        pruefe(km.count() >= 3, f"Postfach der Führung: {km.count()} Druckmeldungen des Zuges")
         texte = g3.evaluate("""() => [...document.querySelectorAll("[data-testid=postfach] [data-inject]")].map(e => ({
             id: e.dataset.inject, von: e.querySelector('.kopfzeile span')?.textContent.split(' · ').slice(1).join(' · '),
             text: (e.querySelector('.text') || e.querySelector('.einzeilig'))?.textContent, dringend: e.classList.contains('dringend') }))""")
         lang = [t for t in texte if len(f"{t['von']}: {t['text']}") > 140]
         pruefe(not lang, f"alle {len(texte)} Lagemeldungen im Postfach ≤ 140 Zeichen mit Absender" + (f" – zu lang: {lang[:2]}" if lang else ""))
         i07 = next((t for t in texte if t["id"] == "I-07"), None)
-        pruefe(bool(i07) and i07["text"].startswith("3. Zug unter Mörserfeuer aus Hof RABE,"), f"I-07 nennt den 3. Zug: {i07 and i07['text']}")
-        pruefe(all(t["von"] == "2. Kp" for t in texte if t["id"].startswith("K-")), "Druckmeldungen von „2. Kp“")
-        foto(g3, "d3_postfach_1840")
-        # Flackern: 3. Zug liegt unter Mörserfeuer aus Hof RABE (Treffer alle paar Sekunden), Tempo ×1
+        pruefe(bool(i07) and i07["text"].startswith("1/4 unter Mörserfeuer aus Hof RABE,"), f"I-07 nennt 1/4: {i07 and i07['text']}")
+        k_texte = [t for t in texte if t["id"].startswith("K-")]
+        pruefe(all(t["von"] == "1. Zug" for t in k_texte), "Druckmeldungen vom „1. Zug“")
+        pruefe(all(any(n in (t["text"] or "") for n in ("1/1", "1/2", "1/3", "1/4")) for t in k_texte), "jede Druckmeldung nennt ihren Panzer")
+        foto(g3, "f2_postfach_1840")
+        # Blinken: 1/4 liegt unter Mörserfeuer aus Hof RABE (eine Salve alle 30 s), Tempo ×1
         zeit("18:41", tempo=1)
         sl.get_by_role("button", name="▶ Start").click()
         gesehen = set()
-        ende = time.time() + 25
-        while time.time() < ende and "zug3" not in gesehen:
+        ende = time.time() + 40
+        while time.time() < ende and not gesehen:
             for s, k, _ in karten[:1] + karten[3:]:
                 gesehen |= set(s.evaluate(KARTE_JS, k)["eigene"]["flackern"])
             time.sleep(0.05)
-        pruefe("zug3" in gesehen, f"Zeichen flackert bei Treffer (gesehen: {sorted(gesehen)})")
+        pruefe(bool(gesehen), f"Zeichen blinkt bei Treffer (gesehen: {sorted(gesehen)})")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
         warte(lambda: not zustand()["laeuft"], 5, "Uhr steht")
 
-        # spät im Spiel: dringende Meldungen, Kopfzeile rot oder bernstein
+        # spät im Spiel: Panzer ausgefallen (grau), Untergrenze
         zeit("24:50")
         time.sleep(1.5)
         b = g3.get_by_test_id("kp-stand")
-        kk2 = int(b.get_attribute("data-kampfkraft"))
-        pruefe(kk2 < kk, f"Kampfkraft sinkt ohne Abwehr: {kk} % → {kk2} %")
-        pruefe(kk2 >= 40, f"Kompanie hält (Untergrenze): {kk2} %")
-        foto(g3, "d3_fuehrung_2450")
-        foto(pl, "d1_plenum_2450")
+        bereit2 = int(b.get_attribute("data-bereit"))
+        zst = g3.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => [e.dataset.stufe, Number(e.dataset.zustand)])")
+        pruefe(bereit2 <= bereit and bereit2 >= 2, f"ohne Abwehr: {bereit}/4 → {bereit2}/4 einsatzbereit, höchstens zwei ausgefallen")
+        pruefe(all(z >= 40 for st, z in zst if st != "ausgefallen"), f"Zug hält (Untergrenze): {zst}")
+        foto(g3, "f2_fuehrung_2450")
+        foto(pl, "f1_plenum_2450")
+        sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }")
+        time.sleep(1.2)
+        foto(sl, "f2_stellung_gezoomt_2450")
 
         # ---------------------------------------------------------------- D5 Auswertung
-        print("D5 – Auswertung „Preis des Abwartens“ (Beispiel, 5 Teams)")
+        print("F2.9 – Auswertung „Preis des Abwartens“ (Beispiel, 5 Teams)")
         aw = seite("Auswertung", f"{a.basis}?auswertung=demo")
         warte(lambda: aw.locator("button[data-kapitel=preis]").count() == 1, 30, "Kapitel Preis")
         aw.click("button[data-kapitel=preis]")
@@ -224,7 +233,9 @@ def main():
         time.sleep(0.6)
         n_kurven = aw.locator(".preis-kurve").count()
         n_marken = aw.locator(".preis-marke").count()
-        pruefe(n_kurven == 5, f"fünf Kurven der Kampfkraft ({n_kurven})")
+        pruefe(n_kurven == 5, f"fünf Kurven (mittlerer Zustand der vier Panzer) ({n_kurven})")
+        n_pz = aw.locator(".preis-panzer").count()
+        pruefe(n_pz == 5, f"Zustand der vier Panzer je Team ({n_pz} Zeilen)")
         pruefe(n_marken >= 10, f"Marken S4/N4/S3 auf den Kurven ({n_marken})")
         lf = aw.get_by_test_id("preis-leitfragen").inner_text()
         pruefe("um welchen Preis" in lf and "war das richtig" in lf, "Leitfragen „um welchen Preis?“ / „war das richtig?“")
@@ -235,7 +246,7 @@ def main():
         pruefe(klein * (svg_f if svg_f < 1 else 1) >= 13, f"kleinste Schrift ≥ 13 px (≈ {klein * min(svg_f, 1):.1f} px)")
         budget = aw.get_by_test_id("zeitbudget").inner_text()
         pruefe("01:00" in budget and "12:00" in budget, f"Zeitbudget Kapitel 1:00, gesamt 12:00 ({budget.split()})")
-        foto(aw, "d5_preis_des_abwartens")
+        foto(aw, "f2_preis_des_abwartens")
 
         browser.close()
 
@@ -247,7 +258,7 @@ def main():
     if fehler or konsole:
         print(f"{len(fehler)} Fehler, {len(konsole)} Konsolenfehler")
         sys.exit(1)
-    print("OK – D1–D5: eigene Züge, Kopfzeile, Druckmeldungen, Flackern, Empfehlungskarte, Preis des Abwartens, alles in 1530×800")
+    print("OK – F: vier Panzer, Kopfzeile je Panzer, Druckmeldungen, Blinken, Empfehlungskarte, Preis des Abwartens, alles in 1530×800")
 
 
 if __name__ == "__main__":

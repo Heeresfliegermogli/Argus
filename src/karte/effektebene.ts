@@ -5,7 +5,8 @@
 //               danach krater · PZA: Flug leuchtspur, Einschlag treffer_direkt
 //   Hintergrund feindartillerie: einschlag_artillerie, danach krater · panzerabwehr: leuchtspur, treffer_direkt
 //               · rauch: Fläche aus mehreren nebel
-//   Wrack       zerstoert: feuer und rauch · ausser_gefecht: nichts
+//   Wrack       zerstoert: feuer und rauch · ausser_gefecht: nichts · eigen_ausgefallen (seit 2.5): rauch am eigenen Panzer
+//   Feindfeuer  (seit 2.5) fehlschuss: einschlag_staub · treffer_panzer: Funken und Rauchwölkchen
 //   feuert      kanone: muendungsblitz · moerser: muendungsblitz_steil
 //   abschuss    (seit 2.1) danach Abschussrauch: abschussrauch · fahrt: staub hinter fahrenden Fahrzeugen
 // Fehlt die Zuordnung (ältere Assets), gilt der Effekt aus katalog_wirkmittel.json (`effekt`) bzw. eine
@@ -25,7 +26,7 @@ import { STAUB_N, STAUB_TAKT_S } from "../kern/effekte";
 const MIN_PX: Record<string, number> = {
   explosion_mittel: 34, explosion_klein: 24, treffer_direkt: 20, einschlag_artillerie: 36, feuer: 12, rauch: 26,
   krater: 7, lm_flug: 22, leuchtspur: 34, muendungsblitz: 16, muendungsblitz_steil: 20, nebel: 40,
-  abschussrauch: 22, staub: 14,
+  abschussrauch: 22, staub: 14, einschlag_staub: 22, treffer_panzer: 18,
 };
 /** Wie lange eine Schleife am Wrack läuft (Spielzeit, s); danach blendet sie aus. */
 const WRACK_DAUER: Record<string, number> = { feuer: 150, rauch: 420 };
@@ -40,8 +41,10 @@ const VORGABE: EffektZuordnung = {
     feindartillerie: { einschlag: "explosion_mittel", danach: ["krater"] },
     panzerabwehr: { einschlag: "treffer_direkt" },
     rauch: { flaeche: "rauch" },
+    fehlschuss: { einschlag: "treffer_direkt" },
+    treffer_panzer: { einschlag: "treffer_direkt" },
   },
-  wrack: { zerstoert: ["feuer", "rauch"], ausser_gefecht: [] },
+  wrack: { zerstoert: ["feuer", "rauch"], ausser_gefecht: [], eigen_ausgefallen: ["rauch"] },
   feuert: {},
   abschuss: {},
 };

@@ -1,6 +1,6 @@
 // Effekte auf der Karte (Schritt 7): was wann wo zu sehen ist, wer es sehen darf, und dass jede Quelle eine
 // Animation im Asset-Manifest hat (effekte.zuordnung aus Schritt 5b). Gespielt mit den Modellteams naiv und ideal.
-import { verlustLage } from "../src/kern/verluste";
+import { panzer, verlustLage } from "../src/kern/verluste";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -49,9 +49,9 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(f!.echtzeit_s).toBeUndefined();
       } else if (wm.einsatzbereich) {
         expect(f?.echtzeit_s).toBeGreaterThan(0);
-        // seit 2.3 (D1.2): aus der Stellung eines eigenen Zuges (westlich des Bachs), vorher vom Westrand
-        const vonZug = inh.szenario.eigene_truppe!.zuege.some((z) => z.fahrzeuge.some((p) => Math.hypot(p[0] - f!.von![0], p[1] - f!.von![1]) < 6));
-        expect(vonZug, id).toBe(true);
+        // seit 2.5 (F1.5): Kanone eines Panzers des 1. Zuges (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
+        const vonPanzer = panzer(inh).some((p) => Math.hypot(p.pos[0] - f!.von![0], p.pos[1] - f!.von![1]) < 6);
+        expect(vonPanzer, id).toBe(true);
       } else {
         expect(f).toBeUndefined();
       }
@@ -74,27 +74,53 @@ describe("Effekte (kern/effekte.ts)", () => {
       const spur = fx.find((e) => e.id === `${h.id}-s`);
       expect(!!spur, h.id).toBe(!!naiv.z.hintergrund[h.id]?.wirkt);
       if (spur) {
-        // seit 2.3 (D1.2): Leuchtspur aus der Stellung des schießenden Zuges (≤ 6 m vor einem seiner Fahrzeuge)
-        const zug = inh.szenario.eigene_truppe!.zuege.find((z) => z.id === h.von)!;
-        expect(zug, h.id).toBeDefined();
-        expect(Math.min(...zug.fahrzeuge.map((f) => Math.hypot(f[0] - spur.von![0], f[1] - spur.von![1]))), h.id).toBeLessThan(6);
+        // seit 2.5 (F1.5): Leuchtspur aus der Kanone des vorgesehenen Panzers (h.von, ≤ 6 m vor ihm), ist er ausgefallen, des nächsten
+        const pl = panzer(inh);
+        expect(pl.some((p) => p.id === h.von), h.id).toBe(true);
+        expect(Math.min(...pl.map((p) => Math.hypot(p.pos[0] - spur.von![0], p.pos[1] - spur.von![1]))), h.id).toBeLessThan(6);
+        const aus = verlustLage(naiv.inh, naiv.z).ereignisse.some((v) => v.panzer === h.von && v.ausgefallen && v.t <= h.t_s);
+        if (!aus) {
+          const p = pl.find((x) => x.id === h.von)!;
+          expect(Math.hypot(p.pos[0] - spur.von![0], p.pos[1] - spur.von![1]), h.id).toBeLessThan(6);
+        }
       }
     }
   });
 
-  it("Treffer an den Stellungen der eigenen Züge (seit 2.3, D3.3): je Schadensereignis ein Einschlag am Zug, Feindartillerie nur einmal", async () => {
+  it("Feindfeuer auf den 1. Zug (seit 2.5, F2.6): Fehlschuss neben dem Panzer, Treffer am Panzer, ausgefallen = Rauch am Panzer", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const v = verlustLage(m.inh, m.z).ereignisse;
+      const pl = new Map(panzer(inh).map((p) => [p.id, p]));
       expect(v.length).toBeGreaterThan(20);
       for (const sicht of ["alle", "umgebung", new Set<string>()] as const) {
         const fx = effekte(inh, m.z, sicht);
-        const eigen = fx.filter((e) => e.id.startsWith("V-"));
-        expect(eigen.length, String(sicht)).toBe(v.filter((e) => e.art !== "artillerie").length);
+        const eigen = fx.filter((e) => e.id.startsWith("V-") && !e.id.endsWith("-e"));
+        // je Schuss ein Einschlag; Feindartillerie daneben steht schon im Hintergrundgefecht
+        expect(eigen.length, String(sicht)).toBe(v.filter((e) => e.ergebnis === "treffer" || e.art !== "artillerie").length);
         for (const e of eigen) {
-          const zug = inh.szenario.eigene_truppe!.zuege.find((z) => z.fahrzeuge.some((f) => Math.hypot(f[0] - e.pos[0], f[1] - e.pos[1]) < 40));
-          expect(zug, e.id).toBeDefined();
+          const ev = v.find((x) => `V-${x.art}-${x.quelle}-${x.nr}-${x.panzer}` === e.id)!;
+          expect(ev, e.id).toBeDefined();
+          const p = pl.get(ev.panzer)!;
+          if (ev.ergebnis === "treffer") {
+            expect(e.quelle.hintergrund, e.id).toBe("treffer_panzer");
+            expect(e.pos, e.id).toEqual(p.pos);
+          } else {
+            expect(e.quelle.hintergrund, e.id).toBe(ev.art === "direkt" ? "fehlschuss" : "feindartillerie");
+            const d = Math.hypot(e.pos[0] - p.pos[0], e.pos[1] - p.pos[1]);
+            expect(d, e.id).toBeGreaterThan(3); // daneben: nicht am Panzer …
+            expect(d, e.id).toBeLessThan(120); // … aber sichtbar in seiner Nähe (Steilfeuer daneben bis ca. 85 m)
+          }
+          expect(e.t).toBe(ev.t);
         }
+        // Steilfeuer, Beobachter und Attrappe treffen: zusätzlich der Einschlag wie Feindartillerie
+        const steil = v.filter((x) => x.ergebnis === "treffer" && ["steil", "beobachter", "attrappe"].includes(x.art));
+        expect(fx.filter((e) => e.id.startsWith("V-") && e.id.endsWith("-e")).length).toBe(steil.length);
+        // ausgefallene Panzer: Rauch am Panzer ab dem Ausfall, keine Wrackflammen
+        const aus = new Map<string, number>();
+        for (const x of v) if (x.ausgefallen && !aus.has(x.panzer)) aus.set(x.panzer, x.t);
+        const rauch = art(fx, "wrack").filter((e) => e.quelle.folge === "eigen_ausgefallen");
+        expect(rauch.map((e) => [e.id, e.t, e.pos])).toEqual([...aus].map(([pid, t]) => [`${pid}-aus`, t, pl.get(pid)!.pos]));
       }
     }
   });
@@ -103,7 +129,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const fx = effekte(inh, m.z, "alle");
-      const wracks = art(fx, "wrack");
+      const wracks = art(fx, "wrack").filter((e) => e.quelle.folge !== "eigen_ausgefallen"); // eigene Panzer: Test oben
       // seit 2.4: Personen-Gruppen (Beobachter Z-42, Verwundete Z-45; feuer_effekt „keiner“) brennen nicht
       const brennt = (id: string) => inh.fahrzeuge[inh.ziele[id].typ]?.feuer_effekt !== "keiner";
       expect(wracks.filter((e) => e.quelle.folge === "zerstoert").map((e) => e.id.slice(0, -2)).sort()).toEqual(Object.keys(m.z.zerstoert).filter(brennt).sort());
@@ -134,7 +160,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Treffer an den eigenen Stellungen", async () => {
+  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf den 1. Zug", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id));
@@ -150,8 +176,10 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(fx.some((e) => e.id.startsWith("E-01-0-") && e.art !== "muendung")).toBe(false);
       }
       const pl = effekte(inh, m.z, "umgebung");
-      // seit 2.3 auch Treffer an den Stellungen der eigenen Züge (V-…): eigene Truppe, verrät kein Ziel
-      expect(pl.every((e) => e.quelle.hintergrund === "feindartillerie" || e.art === "nebel" || e.id.startsWith("V-"))).toBe(true);
+      // seit 2.3 auch Feuer auf die eigene Truppe (V-…, seit 2.5 je Panzer, Rauch an ausgefallenen Panzern): verrät kein Ziel
+      const erlaubt = (e: Effekt) =>
+        e.quelle.hintergrund === "feindartillerie" || e.art === "nebel" || e.id.startsWith("V-") || e.quelle.folge === "eigen_ausgefallen";
+      expect(pl.filter((e) => !erlaubt(e)).map((e) => e.id)).toEqual([]);
     }
   });
 

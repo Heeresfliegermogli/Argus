@@ -10,6 +10,7 @@ import { effekte } from "../kern/effekte";
 import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
+import { panzerName } from "../kern/verluste";
 import { verstaerkungStand } from "../kern/welt";
 import { fahrwegeAlle, verstaerkungVorschau } from "../kern/fahrwege";
 import { zielNr } from "../kern/zielnummern";
@@ -104,7 +105,7 @@ export function SLAnsicht(p: { s: Sicht }) {
       liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${an === "g1" || an === "g2" || an === "g3" ? ROLLEN_NAME[an] : i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
     }
     for (const h of sz.hintergrund?.ereignisse ?? []) {
-      const art = h.art === "panzerabwehr" ? `eigene PzAbw → ${h.ziel}` : h.art === "feindartillerie" ? "Feindartillerie" : "Rauch";
+      const art = h.art === "panzerabwehr" ? `Kanone ${panzerName(inh, h.von)} → ${h.ziel}` : h.art === "feindartillerie" ? "Feindartillerie" : "Rauch";
       liste.push({ art: "hintergrund", id: h.id, t: h.t_s, text: `Hintergrund: ${art}`, zusatz: h.text.length > 70 ? `${h.text.slice(0, 68)} …` : h.text });
     }
     return liste.sort((a, b) => a.t - b.t);
@@ -115,6 +116,12 @@ export function SLAnsicht(p: { s: Sicht }) {
     if (!m) return s.hinweis("warnung", "Spielzeit als mm:ss eingeben, z. B. 08:30");
     s.senden("uhr", { befehl: "setzen", t_s: Number(m[1]) * 60 + Number(m[2]) });
     setZeitEingabe("");
+  };
+
+  // Lagemeldung mit Platzhaltern (seit 2.5 {pz}, {treffer}, {bereit} …): nach dem Auslösen der gefüllte Text aus dem Protokoll
+  const zusatzText = (x: Plan) => {
+    const gefuellt = x.art === "inject" ? z.injects[x.id]?.text : undefined;
+    return gefuellt ? (gefuellt.length > 70 ? `${gefuellt.slice(0, 68)} …` : gefuellt) : x.zusatz;
   };
 
   // Zeitplan: nächsten Eintrag sichtbar halten
@@ -269,7 +276,7 @@ export function SLAnsicht(p: { s: Sicht }) {
                   <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
                     <td class="zahl klein">{uhrzeit(start, x.t)}</td>
                     <td style="white-space:nowrap">{x.art === "meldung" ? (zielNr(inh, z, x.id) === x.id ? <b>{x.id}</b> : <><b>Ziel {zielNr(inh, z, x.id)}</b> <span class="sehr-leise klein">{x.id}</span></>) : <b>{x.id}</b>}{x.fall && <span class="badge" style="margin-left:4px">{x.fall}</span>}</td>
-                    <td class="klein">{x.text}<div class="sehr-leise">{x.zusatz}</div></td>
+                    <td class="klein">{x.text}<div class="sehr-leise">{zusatzText(x)}</div></td>
                     <td class="klein" style="white-space:nowrap">{erschienen ? <>{uhrzeit(start, erschienen.t_s)}<br />{status}</> : ""}</td>
                     <td style="text-align:right">
                       {!erschienen && x.art !== "hintergrund" && (

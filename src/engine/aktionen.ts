@@ -1,6 +1,6 @@
 // Prüft eine Aktion gegen Rechte und Spielstand und macht daraus Ereignisse.
 // Was nicht passt, wird nicht verworfen, sondern als „aktion_abgelehnt“ protokolliert.
-import { fuelle, mitVerlusten, stand, verlustLage } from "../kern/verluste";
+import { fuelle, mitVerlusten, verlustLage } from "../kern/verluste";
 import type { Inhalte } from "../inhalte/typen";
 import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
@@ -165,7 +165,7 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       // seit 2.3: Platzhalter (Verluste dieses Teams) zur Zeit des Auslösens füllen
       if (i.text.includes("{") && mitVerlusten(inh)) {
         const vl = verlustLage(inh, z);
-        const text = fuelle(vl.welt, i.text, stand(vl.welt, vl.ereignisse, t), "verluste_zug" in i ? i.verluste_zug : undefined);
+        const text = fuelle(vl.welt, i.text, vl.ereignisse, t, "verluste_panzer" in i ? i.verluste_panzer : undefined);
         return ja(entwurf("inject", { inject: i.id, manuell: true, text }));
       }
       return ja(entwurf("inject", { inject: i.id, manuell: true }));

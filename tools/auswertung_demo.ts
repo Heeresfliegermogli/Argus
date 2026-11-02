@@ -17,13 +17,13 @@ const NAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia"]
 const NOTIZEN: Record<number, { t: number; fall?: string; text: string }[]> = {
   0: [
     { t: 650, fall: "S1", text: "G1 hat Sensordaten nicht aufgeklappt, nur auf die 93 % geschaut." },
-    { t: 1240, fall: "S4", text: "G3: „Der 3. Zug hat schon Verwundete, wir müssen schießen.“ ARGUS-Warnung vorgelesen, trotzdem frei." },
+    { t: 1240, fall: "S4", text: "G3: „1/4 ist schon getroffen, wir müssen schießen.“ ARGUS-Warnung vorgelesen, trotzdem frei." },
     { t: 1340, fall: "S3", text: "Fast-Track an seit 14:30, G3 hat I-04 erst nach dem Einschlag gelesen." },
   ],
   1: [
     { t: 560, fall: "S1", text: "G1 laut: „Kalt und keine Spuren – das ist eine Attrappe.“" },
     { t: 1060, fall: "S3", text: "G3 liest I-04 vor und schickt sofort den Lagehinweis, G1 und G2 nicken." },
-    { t: 1340, fall: "S3", text: "G2 empfiehlt PzAbw, G3 lehnt mit Verweis auf I-04 ab." },
+    { t: 1340, fall: "S3", text: "G2 empfiehlt die Kanone des 1. Zuges, G3 lehnt mit Verweis auf I-04 ab." },
   ],
   2: [
     { t: 925, fall: "S2", text: "G1 hat das Rote Kreuz gesehen, aber gedacht, „der Feind tarnt sich so“." },

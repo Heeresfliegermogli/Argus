@@ -12,14 +12,14 @@ Seit 2.0: Trefferregel nach der Lage beim Einschlag (argus_lib.wirkung), Hinterg
 Zugmeldungen (Meldung entfällt erst, wenn jedes Fahrzeug zerstört ist) und auf Wunsch Verstärkungen.
 Seit 2.1: Durchbruch nicht aufgehaltener Gruppen (Welt zur Zeit T, Lagemeldung I-13, Kennzahl durchgebrochen).
 Seit 2.2: Loitering Munition trifft nur das bekämpfte Fahrzeug (wirkung(..., ziel=…), Wirkmittel mit nur_zielfahrzeug).
-Seit 2.3: Verluste der eigenen Kompanie (verluste.py) aus Zerstörungen, Attrappen-Treffer und Durchbrüchen; Druckmeldungen K-…
-als Lagemeldungen, I-07/I-06/I-13 mit dem Stand des Teams; Kalibrierung D2.6 (kalibrierung()).
+Seit 2.3: Verluste der eigenen Truppe (verluste.py) aus Zerstörungen, Attrappen-Treffer und Durchbrüchen; Druckmeldungen K-…
+als Lagemeldungen, I-07/I-06/I-13 mit dem Stand des Teams; seit 2.5 je Panzer mit Einschießen, Kalibrierung F2.9 (kalibrierung()).
 Prüft: Reihenfolge und Zeitbedarf, Wirkmittelbestand, Treffer auf geschützte Objekte, bedingte Injects, ob jedes Team
 alle Schlüssel- und Nebenfälle erreicht.
 
 Aufruf: python3 simuliere_durchlauf.py [--verstaerkung]   (mit Verstärkungen und Robustheit gegen langsamere Teams)
 
-Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.3.
+Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.5.
 Im Repository dient sie als
 Referenz für die Engine: tools/referenz/erzeuge_referenz.py schreibt die Ergebnisse nach tests/referenz_durchlauf.json,
 tests/durchlauf.test.ts spielt dieselben Modellteams mit der echten Engine und vergleicht.
@@ -35,7 +35,6 @@ REIHENFOLGE = ["PZA", "ART", "MRS", "PRZ", "LM"]   # nicht vorhandene Wirkmittel
 FT_NACH_ANGEBOT_S = 30
 VERSTAERKUNG_STANDARD = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960}          # alle vier Minuten bis 10:16
 VERSTAERKUNG_ZU_SPAET = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960, "V-5": 1200}   # zusätzlich V-5 um 10:20
-VORSCHLAG = {"ideal": (50, 62), "naiv": (60, 72)}   # Kalibrierung E2.2 (2.3: ideal 60–70, naiv 75–85)
 ROBUSTHEIT = [(35, 40, 30), (40, 40, 30), (35, 45, 30), (45, 40, 30), (40, 45, 30), (35, 50, 30), (40, 50, 40)]       # Bearbeitungszeiten G1, G2, G3
 
 
@@ -355,7 +354,7 @@ def lauf(d, team, detail=None, einspielen=None):
         if b and b["typ"] == "durchbruch" and erste_ueber is not None and erste_ueber + b["verzoegerung_s"] <= dauer:
             injects.append(f"{i['id']} um {L.mmss(erste_ueber + b['verzoegerung_s'])}")
             det.append({"inject": i["id"], "t": erste_ueber + b["verzoegerung_s"]})
-    # Verluste der eigenen Kompanie (seit 2.3, D2/D3): Zeitlinie aus den Zerstörungen, dem ersten Treffer auf die Attrappe und den
+    # Verluste der eigenen Truppe (seit 2.5 je Panzer, F2): Zeitlinie aus den Zerstörungen, dem ersten Treffer auf die Attrappe und den
     # Durchbrüchen; Druckmeldungen K-… kommen als Lagemeldungen dazu, I-07/I-06/I-13 nennen den Stand dieses Teams.
     if (d["regeln"].get("verluste") and sz.get("eigene_truppe")):
         dw = welt(dauer)
@@ -369,9 +368,9 @@ def lauf(d, team, detail=None, einspielen=None):
         texte = {i["id"]: i for i in sz["injects"]}
         for e in det:
             if "inject" in e and e["inject"] in texte and "{" in texte[e["inject"]]["text"]:
-                e["text"] = V.fuelle(texte[e["inject"]]["text"], dw, V.stand(dw, ev, e["t"]), texte[e["inject"]].get("verluste_zug"))
+                e["text"] = V.fuelle(texte[e["inject"]]["text"], dw, ev, e["t"], texte[e["inject"]].get("verluste_panzer"))
         st = V.stand(dw, ev)
-        det.append({"verluste": st, "kompanie": V.kompanie(dw, st), "ereignisse": len(ev),
+        det.append({"verluste": st, "zug": V.zug(dw, st), "ereignisse": len(ev), "treffer": sum(1 for e in ev if e["ergebnis"] == "treffer"),
                     "verlauf": V.verlauf(dw, ev), "zeitlinie": ev})
     rest = {k: (v if v < 10 ** 5 else "∞") for k, v in bestand.items()}
     letzte = max([e["t_g3"] for e in det if "t_g3" in e] or [0])
@@ -452,7 +451,7 @@ LAEUFE_FUENF = [("naiv", None), ("ideal", None), ("naiv", VERSTAERKUNG_STANDARD)
 
 
 def verluste_lauf(d, team, einspielen=None):
-    """Verluste eines Modelllaufs (seit 2.3): dict(verluste je Zug, kompanie, meldungen K-…, verlauf, zeitlinie) oder None."""
+    """Verluste eines Modelllaufs (seit 2.5 je Panzer): dict(verluste je Panzer, zug, meldungen K-…, verlauf, zeitlinie) oder None."""
     det = []
     lauf(d, team, det, einspielen)
     v = next((e for e in det if "verluste" in e), None)
@@ -464,35 +463,51 @@ def verluste_lauf(d, team, einspielen=None):
     return v
 
 
+def schwere(v):
+    """Ordnung für „spürbar schlechter“: mehr ausgefallen, dann mehr eingeschränkt, dann weniger Zustand in Summe."""
+    return (v["zug"]["ausgefallen"], v["zug"]["eingeschraenkt"], -sum(s["zustand"] for s in v["verluste"].values()))
+
+
 def kalibrierung(d):
-    """Kalibrierung D2.6 (seit 2.4 E2.2 mit mehr Druck): Team „ideal“ hat mehr eigene Verluste als „naiv“ (Kampfkraft der Kompanie am
-    Ende niedriger), in keinem der fünf Modellläufe fällt ein Zug unter die Untergrenze (ungedeckelter Verlust). Vorschlag: VORSCHLAG.
-    Liefert dict(ok, laeufe=[(name, kp_kampfkraft, verwundete, {zug: (kampfkraft, roh_prozent, verwundete)}, k_meldungen)], text)."""
+    """Kalibrierung F2.9 (seit 2.5): Team „ideal“ (wartet bei S4, S5, N4, lehnt S3 ab) endet spürbar schlechter als „naiv“ – mehr
+    Panzer ausgefallen bzw. eingeschränkt –, die Untergrenze hält in allen fünf Modellläufen (höchstens hoechstens_ausgefallen Panzer
+    ausgefallen, die übrigen ≥ untergrenze_prozent), und kein Panzer fällt vor seinem dritten Treffer aus (ein T-72 braucht drei).
+    Vorschlag: ideal mindestens 1 Panzer ausgefallen, naiv keiner.
+    Liefert dict(ok, vorschlag, laeufe=[(name, zug, {panzer: (zustand, stufe, treffer, verwundete, roh)}, k_meldungen)], text)."""
     vr = d["regeln"].get("verluste")
     if not vr or not d["szenario"].get("eigene_truppe"):
-        return {"ok": True, "laeufe": [], "text": ["kein Verlustmodell"]}
-    unter = vr["untergrenze_prozent"]
-    out, kp = [], {}
-    roh_ok = True
+        return {"ok": True, "vorschlag": True, "laeufe": [], "text": ["kein Verlustmodell"]}
+    name_pz = {p["id"]: p["name"] for p in V.panzer(d["szenario"])}
+    out, ref = [], {}
+    grenze_ok, dritter_ok = True, True
     for team, ein in LAEUFE_FUENF:
         v = verluste_lauf(d, team, ein)
         name = team + (f" + V-1…V-{len(ein)}" if ein else "")
-        zuege = {z: (s["kampfkraft"], (1000 - s["roh"]) / 10, s["verwundete"]) for z, s in v["verluste"].items()}
-        roh_ok = roh_ok and all(r >= unter for _, r, _ in zuege.values())
-        out.append((name, v["kompanie"]["kampfkraft"], v["kompanie"]["verwundete"], zuege, len(v["meldungen"])))
+        pz = {k: (s["zustand"], s["stufe"], s["treffer"], s["verwundete"], s["roh"]) for k, s in v["verluste"].items()}
+        grenze_ok = grenze_ok and v["zug"]["ausgefallen"] <= vr["hoechstens_ausgefallen"] and all(
+            s["zustand"] >= vr["untergrenze_prozent"] for s in v["verluste"].values() if not s["ausgefallen"])
+        # Treffer bis zum Ausfall je Panzer
+        n = {}
+        for e in v["zeitlinie"]:
+            if e["ergebnis"] == "treffer":
+                n[e["panzer"]] = n.get(e["panzer"], 0) + 1
+                if e["ausgefallen"] and n[e["panzer"]] < 3:
+                    dritter_ok = False
+        out.append((name, v["zug"], pz, len(v["meldungen"])))
         if not ein:
-            kp[team] = v["kompanie"]["kampfkraft"]
-    mehr = kp["ideal"] < kp["naiv"]
-    # seit 2.4 (E2.2): Druck spürbar höher als in 2.3 (ideal 67 %, naiv 75 %) – Vorschlag ideal 50–62 %, naiv 60–72 %
-    vi, vn = VORSCHLAG["ideal"], VORSCHLAG["naiv"]
-    vorschlag = vi[0] <= kp["ideal"] <= vi[1] and vn[0] <= kp["naiv"] <= vn[1]
-    text = [f"Kalibrierung D2.6/E2.2: ideal {kp['ideal']} % / naiv {kp['naiv']} % – ideal mehr Verluste: {'ja' if mehr else 'NEIN'}; "
-            f"Untergrenze {unter} % hält in allen fünf Läufen (ungedeckelt): {'ja' if roh_ok else 'NEIN'}; "
-            f"im Vorschlag (ideal {vi[0]}–{vi[1]}, naiv {vn[0]}–{vn[1]}): {'ja' if vorschlag else 'nein'}"]
-    for name, k, w, zuege, n in out:
-        text.append(f"  {name:22} Kp {k:3} %, {w:2} Verwundete, {n:2} Druckmeldungen | " +
-                    " | ".join(f"{z} {kk} % ({vw} V, ungedeckelt {r:.1f} %)" for z, (kk, r, vw) in zuege.items()))
-    return {"ok": mehr and roh_ok, "vorschlag": vorschlag, "laeufe": out, "text": text}
+            ref[team] = v
+    schlechter = schwere(ref["ideal"]) > schwere(ref["naiv"])
+    vorschlag = ref["ideal"]["zug"]["ausgefallen"] >= 1 and ref["naiv"]["zug"]["ausgefallen"] == 0
+    zi, zn = ref["ideal"]["zug"], ref["naiv"]["zug"]
+    text = [f"Kalibrierung F2.9: ideal {zi['ausgefallen']} ausgefallen, {zi['eingeschraenkt']} eingeschränkt / naiv {zn['ausgefallen']} ausgefallen, "
+            f"{zn['eingeschraenkt']} eingeschränkt – ideal spürbar schlechter: {'ja' if schlechter else 'NEIN'}; Untergrenze (höchstens "
+            f"{vr['hoechstens_ausgefallen']} ausgefallen, übrige ≥ {vr['untergrenze_prozent']} %) hält in allen fünf Läufen: {'ja' if grenze_ok else 'NEIN'}; "
+            f"kein Ausfall vor dem dritten Treffer: {'ja' if dritter_ok else 'NEIN'}; im Vorschlag (ideal ≥ 1 ausgefallen, naiv keiner): "
+            f"{'ja' if vorschlag else 'nein'}"]
+    for name, zg, pz, nm in out:
+        text.append(f"  {name:22} {zg['bereit']}/{zg['gesamt']} einsatzbereit, {zg['verwundete']:2} Verwundete, {nm:2} Druckmeldungen | " +
+                    " | ".join(f"{name_pz[k]} {zu} % {st} ({tr} Treffer)" for k, (zu, st, tr, vw, r) in pz.items()))
+    return {"ok": schlechter and grenze_ok and dritter_ok, "vorschlag": vorschlag, "laeufe": out, "text": text}
 
 
 if __name__ == "__main__":

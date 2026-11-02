@@ -106,7 +106,7 @@ export interface EreignisDaten {
   /** Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. */
   ereignis: { ereignis: string; nr?: number; von?: string; ziel?: string; wirkt?: boolean; entfaellt?: boolean; grund?: string };
   /**
-   * Lagemeldung an die Führung. Seit 2.3 (D3): Druckmeldungen der Kompanie (K-01 …) und Lagemeldungen mit Platzhaltern
+   * Lagemeldung an die Führung. Seit 2.3 (D3): Druckmeldungen der eigenen Truppe (K-01 …) und Lagemeldungen mit Platzhaltern
    * (I-07, I-06, I-13) tragen den Text mit dem Stand dieses Teams, Druckmeldungen dazu Zug und Stufe der Dringlichkeit.
    */
   inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number };

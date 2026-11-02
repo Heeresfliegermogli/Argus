@@ -62,8 +62,8 @@ export interface Ziel {
   feuert?: Feuer[];
   /** Seit 2.1: Kampffahrzeug ohne Durchbruch (Auftrag, z. B. Beobachtungsposten); nur Text für die Prüfung */
   kein_durchbruch?: string;
-  /** Seit 2.3 (D2): Schaden je Schuss an den eigenen Zügen in Promille, abweichend vom Typ (regeln.verluste.waffen) */
-  verlust_promille?: number;
+  /** Seit 2.5 (F2): steht in Bereitstellung (sammelt für den Angriff über den Bach) – kein Direktfeuer auf den Zug, bis es durchbricht */
+  bereitstellung?: boolean;
   /** Seit 2.4 (S6): Personen, die aus einem Fahrzeug kommen (abgesessene Schützen) – erscheinen dort, nicht am Kartenrand */
   herkunft?: string;
   /** Seit 2.4 (S7): steigt in diesem Gebäude der Karte auf (Beobachter im Kirchturm) – erscheint dort, nicht am Kartenrand */
@@ -193,8 +193,11 @@ export interface Inject {
   fall?: string;
   aktion?: string;
   bedingung?: Bedingung | BedingungDurchbruch;
-  /** Seit 2.3 (D3.2): Der Text nennt den Stand dieses Zuges ({zug}, {kk}, {verw}); {kp_kk}, {kp_verw} für die Kompanie */
-  verluste_zug?: string;
+  /**
+   * Seit 2.5 (F2.7): Der Text nennt den Stand dieses Panzers ({pz}, {zustand}, {treffer}, {verw}, {lage}) bzw. „durchbruch“ (der
+   * Panzer, den der erste Durchbruch traf); {bereit}, {gesamt}, {zug_verw} für den Zug.
+   */
+  verluste_panzer?: string;
 }
 
 export interface ReserveInject {
@@ -227,12 +230,12 @@ export interface HgArtillerie {
   text: string;
 }
 
-/** Eigene Panzerabwehr: wirkt nur, wenn das Ziel dann noch steht und diesseits der Einsatzgrenze liegt. */
+/** Kanone des eigenen Zuges (art „panzerabwehr“): wirkt nur, wenn das Ziel dann noch steht und diesseits der Einsatzgrenze liegt. */
 export interface HgPanzerabwehr {
   id: string;
   t_s: number;
   art: "panzerabwehr";
-  /** schießende Kraft: seit 2.3 ein Zug der eigenen Truppe (Leuchtspur aus seiner Stellung), früher kraefte[].id (Westrand) */
+  /** schießende Kraft: seit 2.5 ein Panzer der eigenen Truppe (fällt er aus, der nächste einsatzbereite), früher ein Zug bzw. kraefte[].id */
   von: string;
   ziel: string;
   folge: "zerstoert" | "ausser_gefecht";
@@ -306,37 +309,43 @@ export interface Zone {
   kurz?: string;
 }
 
-/** Seit 2.3 (D1): Zug der eigenen 2. Kompanie in Stellung am Westrand. */
-export interface EigenerZug {
+/** Seit 2.5 (F1): ein Kampfpanzer des eigenen 1. Zuges, einzeln in Stellung am Westrand (1/1 … 1/4). */
+export interface EigenerPanzer {
   id: string;
+  /** Kennung „1/1“ */
   name: string;
-  kurz: string;
+  /** z. B. „Zugführer“ */
+  rolle?: string;
   ort: string;
-  /** Fahrzeugpositionen in Metern */
-  fahrzeuge: Punkt[];
+  /** Position in Metern */
+  pos: Punkt;
   /** Blickrichtung in Grad (0 = Osten) */
   hdg: number;
-  /** Gefechtsstreifen [y_von, y_bis): Feinde darin schießen auf diesen Zug */
-  streifen?: [number, number];
+  /** Druckmeldung beim Wechsel nach eingeschränkt („Kette getroffen“) */
+  schaden_eingeschraenkt?: string;
 }
 
 export interface EigeneTruppe {
   hinweis?: string;
-  kompanie: string;
+  /** „1./PzKp WOLF“ */
+  einheit: string;
+  kompanie?: string;
+  /** „PzBtl (Übung)“ */
+  uebergeordnet?: string;
+  /** „1. Zug“ – Absender und Kopfzeile */
   name: string;
   /** Fahrzeugtyp im Katalog (Sprite in Stellung) */
   fahrzeug: string;
-  gefechtsstand: { name: string; pos: Punkt };
-  zuege: EigenerZug[];
+  panzer: EigenerPanzer[];
 }
 
-/** Seit 2.3 (D2, D3, D5): szenariobezogene Teile des Verlustmodells. */
+/** Szenariobezogene Teile des Verlustmodells (seit 2.3; seit 2.5 je Panzer). */
 export interface SzenarioVerluste {
   hinweis?: string;
-  /** Wirkung auf die Attrappe verrät die Stellung: Einschläge [dt_s, dx, dy] relativ zur Zugmitte ab Einschlag + verzoegerung_s */
-  attrappe?: { ziel: string; zug: string; verzoegerung_s: number; einschlaege: RoutenPunkt[] };
-  /** Übergang (Brücke ELSTER, Furt Nord) → Zug, den ein Durchbruch trifft */
-  durchbruch?: Record<string, string>;
+  /** Wirkung auf die Attrappe verrät die Stellung: Einschläge [dt_s, dx, dy] relativ zum Panzer ab Einschlag + verzoegerung_s */
+  attrappe?: { ziel: string; panzer: string; verzoegerung_s: number; einschlaege: RoutenPunkt[] };
+  /** Übergang (Brücke ELSTER, Furt Nord) → Panzer, die ein Durchbruch im Wechsel trifft */
+  durchbruch?: Record<string, string[]>;
   /** Herkunft des Feuers in den Meldungen („aus Hof RABE“) */
   orte?: { text: string; pos: Punkt; radius_m?: number }[];
   meldungen?: {
@@ -345,6 +354,8 @@ export interface SzenarioVerluste {
     texte: Record<string, string>;
     waffe: Record<string, string>;
     forderung: Record<string, string>;
+    /** Schaden je Art der Reihe nach („Treffer am Turm, Panzerung hält“) */
+    schaden?: Record<string, string[]>;
   };
   auswertung?: { titel: string; leitfragen: { weniger: string; mehr: string }; offenlegung: string; bezuege: string[] };
 }
@@ -422,7 +433,7 @@ export interface Szenario {
   verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
   /** Seit 2.1: Gruppen, die durchbrechen, wenn sie nicht aufgehalten werden */
   durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[] };
-  /** Seit 2.3 (D1): eigene 2. Kompanie mit drei Zügen am Westrand */
+  /** Seit 2.3 eigene Truppe am Westrand; seit 2.5 (F1) der 1. Zug mit vier Panzern */
   eigene_truppe?: EigeneTruppe;
   /** Seit 2.3 (D2): szenariobezogene Teile des Verlustmodells */
   verluste?: SzenarioVerluste;
@@ -497,6 +508,8 @@ export interface Fahrzeug {
   sprite_wrack: string | null;
   /** Seit Katalog 1.3: Sprite während der Fahrt (Mörsertrupp auf Lkw); im Stand `sprite` */
   sprite_fahrt?: string | null;
+  /** Seit Katalog 1.6: eigener Kampfpanzer eingeschränkt (Kette bzw. Optik beschädigt); ausgefallen = sprite_wrack */
+  sprite_eingeschraenkt?: string | null;
   /** Seit Katalog 1.5: „keiner“ – das Ziel feuert nicht selbst (Beobachter lenkt Artillerie): kein Mündungsblitz */
   feuer_effekt?: string;
   farbe?: string;
@@ -569,24 +582,30 @@ export interface Regeln {
   wirkung: { trefferregel: string; begruendung: string; bewegung_mvp?: string; unbearbeitet: string; durchbruch?: string };
   kennzahlen: { id: string; text: string }[];
   eigene_kraefte?: string;
-  /** Seit 2.3 (D2): Verlustmodell der eigenen Kompanie */
+  /** Seit 2.3 (D2): Verlustmodell der eigenen Truppe (seit 2.5 je Panzer) */
   verluste?: RegelnVerluste;
 }
 
 export type VerlustArt = "direkt" | "steil" | "artillerie" | "attrappe" | "durchbruch" | "beobachter";
 
+/** Verlustmodell der eigenen Truppe (regeln.json `verluste`, seit 2.5 je Panzer, F2). */
 export interface RegelnVerluste {
   hinweis?: string;
+  zustand_start: number;
+  stufen: { einsatzbereit_ab: number; ausgefallen_unter: number };
+  hoechstens_ausgefallen: number;
   untergrenze_prozent: number;
-  promille_je_verwundeter: number;
-  schwellen_prozent: number[];
+  verwundete: Record<string, number>;
+  /** Direktschützen schießen erst ab hier (Ostufer, Brücke Ost) */
+  feuer_ab_x: number;
   verzug_s: { direkt: number; steil: number; beobachter?: number };
-  waffen: Record<string, { art: "direkt" | "steil" | "beobachter"; promille: number; takt_s?: number; feuerbereit_s?: number; reichweite_m?: number }>;
-  feindartillerie: { promille: number; radius_m: number };
-  attrappe: { promille: number };
-  durchbruch: { promille: number };
-  versatz_m: Punkt[];
-  meldungen: { je_verwundete: number; abstand_zug_s: number; abstand_alle_s: number; abstand_limit_s: number; fenster_s: number; sofort?: string[] };
+  einschiessen: { direkt: { daneben: number; nah: number; jeder_zweite_ab: number; jeder_ab: number }; steil: { daneben: number } };
+  ablage_m: { daneben: [number, number]; nah: [number, number]; steil_daneben: [number, number] };
+  waffen: Record<string, { art: "direkt" | "steil" | "beobachter"; treffer_prozent: number; takt_s?: number; feuerbereit_s?: number }>;
+  feindartillerie: { treffer_prozent: number; radius_m: number };
+  attrappe: { treffer_prozent: number; radius_m: number };
+  durchbruch?: { treffer_prozent: number };
+  meldungen: { abstand_alle_s: number; abstand_panzer_s: number; abstand_limit_s: number; sofort?: string[] };
 }
 
 // ---------------------------------------------------------------- Geladene Inhalte

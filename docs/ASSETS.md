@@ -50,6 +50,18 @@ Pressefahrzeug. **EloKa** (E4): Die Standbilder zur EloKa-Zeit (M09, M25, M10, M
 `SL-Z44` (Pkw der Familie, nur Kontakt, Lage an der Schule; nur Spielleitung). Geprüft mit `tools/drohne_probe.py` Teil 6 (alle Merkmale
 mit Lupe) und Teil 7 (EloKa).
 
+Szenario 2.5 (02.11.2026, Änderungen F1, F2.6, F3): neuer Sprite **`kpz_leo2a7v.png`** (Kampfpanzer Leopard 2A7V des eigenen
+1. Zuges, fiktiv gestaltet: lange Wanne mit Seitenschürzen, keilförmige Turmfront, Rohr 120 mm, dreifarbiger Flecktarn; Katalog 1.6,
+nie Ziel, nie gemeldet) in drei Zuständen – Gerät, keine Personen: **intakt**, **eingeschränkt** (`_eingeschraenkt`: Kette neben der
+Wanne, zerschlagene Optik) und **ausgefallen** (`_ausgefallen`: Turm verdreht, Rußflecken, Kette ab – kein ausgebranntes Wrack,
+kein Feuer; auf der Karte nur Rauch). Neue Effekte im Effekt-Atlas: **`einschlag_staub`** (Fehlschuss neben dem Panzer: Erdfontäne
+und Staub, 12 × 16 fps, 12 m) und **`treffer_panzer`** (Treffer am Panzer: Funken und kleines Rauchwölkchen, 12 × 18 fps, 7 m);
+`zuordnung.hintergrund.fehlschuss`/`treffer_panzer`, Wrack `eigen_ausgefallen` → `rauch`. Die beschriftete Lagekarte zeigt statt
+der drei Züge und des Gefechtsstands die vier Panzer 1/1–1/4 mit Zeichen und „1./PzKp WOLF“, die Zone heißt „SCHULE“ (F3). Die
+Luftbild-Kacheln tragen keine Schrift, die Kartenbeschriftung im Spiel kommt aus den Daten. Drohnenbilder byte-gleich neu erzeugt
+(die Panzer stehen in keinem Drohnenbild, dort steht kein Schriftzug). `spz_eigen` (eigener SPz bis 2.4) ist aus Katalog und Atlas
+entfallen, sein Zeichner bleibt in `fahrzeuge.py`.
+
 ## Inhalt von `public/assets/`
 
 | Pfad | Inhalt | Größe |
@@ -161,12 +173,15 @@ Die Ziele V1-1 … V5-2 stehen im Ziel-Index mit Bild und Sprite.
 | `abschussrauch` (neu 2.1) | Rauch nach jedem Schuss eines feindlichen Mörsers oder einer Kanone | 16 × 6 fps | 18 m | nach dem Mündungsblitz am selben Ort abspielen (Echtzeit); zieht nach Südost ab |
 | `staub` (neu 2.1) | Staub hinter fahrenden Fahrzeugen | 4 Varianten (statisch) | 11 m | je Wolke eine Variante, mit dem Alter größer und blasser; Karte und Live-Drohnenbild |
 | `einschlag_artillerie` (neu) | Feindartillerie (H-01, H-04, H-12) | 18 × 14 fps | 44 m | danach krater; Staub zieht nach Südost |
+| `einschlag_staub` (neu 2.5) | Fehlschuss des Feindes neben einem eigenen Panzer | 12 × 16 fps | 12 m | Erdfontäne, Staub zieht nach Südost |
+| `treffer_panzer` (neu 2.5) | Treffer am eigenen Panzer | 12 × 18 fps | 7 m | Funken und kleines Rauchwölkchen |
 | `nebel` (neu) | Rauch-/Nebelwand (H-03), Schleife | 16 × 6 fps | 64 m | mehrere Instanzen über die Fläche (radius_m) verteilen, ein- und ausblenden |
 
 `effekte.zuordnung` im Manifest: Wirkmittel (MRS: Einschlag `explosion_mittel`; LM: Flug `lm_flug`,
 Einschlag `explosion_klein`; PZA: Flug `leuchtspur`, Einschlag `treffer_direkt`, danach `krater`),
 Hintergrund (`feindartillerie` → `einschlag_artillerie` + `krater`, `panzerabwehr` → `leuchtspur` +
-`treffer_direkt`, `rauch` → `nebel` als Fläche), Wracks (`feuer`, `rauch`), feuernde Fahrzeuge
+`treffer_direkt`, `rauch` → `nebel` als Fläche; seit 2.5 `fehlschuss` → `einschlag_staub`, `treffer_panzer` → `treffer_panzer`),
+Wracks (`feuer`, `rauch`; seit 2.5 `eigen_ausgefallen` → `rauch`), feuernde Fahrzeuge
 (`feuert`: `muendungsblitz`, Mörser `muendungsblitz_steil`; seit 2.1 `abschuss`: `abschussrauch`) und fahrende
 Fahrzeuge (seit 2.1 `fahrt`: `staub`). Der Wirkradius bleibt ein Kreis nach Spielregel.
 

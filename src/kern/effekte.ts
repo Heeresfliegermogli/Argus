@@ -9,7 +9,7 @@
 //
 // Was eine Rolle sehen darf, entscheidet `sichtbar`:
 //  • Spielleitung und Auflösung: alles.
-//  • G1, G2, G3: eigene Wirkungen, Feindartillerie und Rauch; Wirkungen des Hintergrundgefechts und von
+//  • G1, G2, G3: eigene Wirkungen, Feindartillerie, Rauch und das Feindfeuer auf den eigenen Zug; Wirkungen des Hintergrundgefechts und von
 //    E-01 nur auf Ziele, die diese Rolle aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes
 //    Ziel); der Mündungsblitz eines Schützen nur, wenn die Rolle auch den Schützen kennt.
 //  • Plenum während des Spiels („umgebung“): nur Feindartillerie und Rauch.
@@ -18,7 +18,7 @@
 // Abschussrauch), solange sie stehen und nicht zerstört sind – sichtbar für Rollen, die das Fahrzeug kennen. Fahrende
 // Fahrzeuge wirbeln Staub auf: staubSpur() liefert dafür je Fahrzeug die Staubwolken hinter ihm (Karte und
 // Live-Drohnenbild zeichnen sie, Aussehen aus dem Asset-Manifest, effekte.zuordnung.fahrt).
-import { verlustLage, zielZug, zuege, zugMitte } from "./verluste";
+import { panzer, schuetze, verlustLage } from "./verluste";
 import type { Feuer, Inhalte, Punkt, RoutenPunkt, Ziel } from "../inhalte/typen";
 import { geschwindigkeit, position, vorhanden, weg } from "./geometrie";
 import { einschlaegeVon } from "./lage";
@@ -77,23 +77,21 @@ export type Sichtbarkeit = "alle" | "umgebung" | Set<string>;
 /** Leuchtspur: Flugdauer in Echtzeit (s) bis zum Treffer. */
 export const LEUCHTSPUR_S = 0.6;
 
-/** Eigene Panzerabwehr schießt aus Stellungen westlich des Kartenrands (Pfeil der Kompanie). */
+/** Ohne eigene Truppe: Kanone vom Westrand (Pfeil der eigenen Kraft). */
 const WESTRAND_X = -40;
 
 /**
- * Startpunkt der eigenen Panzerabwehr. Seit 2.3 (D1.2) aus der Stellung: das Fahrzeug des schießenden Zuges (kraft = Zug)
- * bzw. des Zuges im Gefechtsstreifen des Ziels, das dem Ziel am nächsten steht (Mündung ca. 5 m vor dem Fahrzeug).
- * Ohne eigene Truppe im Szenario wie bisher vom Westrand auf Höhe der Kompanie.
+ * Startpunkt der Kanone des eigenen Zuges (Mündung ca. 5 m vor dem Panzer). Seit 2.5 (F1.4/F1.5) vom Panzer: der vorgesehene
+ * (kraft, Hintergrundgefecht), wenn er zur Zeit t nicht ausgefallen ist, sonst der nächste einsatzbereite zum Ziel.
+ * Ohne eigene Truppe im Szenario wie früher vom Westrand auf Höhe der Kraft.
  */
-export function abschussOrt(inh: Inhalte, kraft: string | undefined, ziel: Punkt): Punkt {
-  const zl = zuege(inh);
-  if (!zl.length) return westrand(inh, kraft, ziel[1]);
-  const zug = zl.find((x) => x.id === kraft) ?? zielZug(zl, ziel) ?? zl[0];
-  const fz = [...zug.fahrzeuge].sort((a, b) => Math.hypot(a[0] - ziel[0], a[1] - ziel[1]) - Math.hypot(b[0] - ziel[0], b[1] - ziel[1]))[0];
-  return muendung(fz, ziel);
+export function abschussOrt(inh: Inhalte, z: Spielzustand | null, t: number, kraft: string | undefined, ziel: Punkt): Punkt {
+  const pz = schuetze(inh, z, t, ziel, kraft);
+  if (!pz) return westrand(inh, kraft, ziel[1]);
+  return muendung(pz.pos, ziel);
 }
 
-/** Startpunkt der eigenen Panzerabwehr ohne eigene Truppe: Westrand auf Höhe der schießenden Kompanie, sonst der nächsten. */
+/** Startpunkt des direkten Feuers ohne eigene Truppe: Westrand auf Höhe der schießenden Kraft, sonst der nächsten. */
 export function westrand(inh: Inhalte, kraft: string | undefined, y: number): Punkt {
   const eigene = inh.szenario.kraefte.filter((x) => x.zugehoerigkeit === "eigen");
   const k = eigene.find((x) => x.id === kraft)
@@ -184,7 +182,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   const out: Effekt[] = [];
   const kennt = (ziel: string | undefined) => sichtbar === "alle" || (sichtbar !== "umgebung" && !!ziel && sichtbar.has(ziel));
 
-  // Hintergrundgefecht: Feindartillerie und Rauch (für alle), eigene Panzerabwehr (wenn sie wirkt)
+  // Hintergrundgefecht: Feindartillerie und Rauch (für alle), Kanone des eigenen Zuges (wenn sie wirkt)
   for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
     if (h.art === "feindartillerie") {
       h.einschlaege.forEach(([t, x, y], i) => {
@@ -200,18 +198,34 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
       const wirkt = stand ? !!stand.wirkt : !weg(ziel, h.t_s, z.zerstoert);
       if (!wirkt) continue;
       const pos = position(ziel, h.t_s);
-      out.push({ id: `${h.id}-s`, art: "flug", quelle: { hintergrund: h.art }, t: h.t_s, pos, von: abschussOrt(inh, h.von, pos), echtzeit_s: LEUCHTSPUR_S });
+      out.push({ id: `${h.id}-s`, art: "flug", quelle: { hintergrund: h.art }, t: h.t_s, pos, von: abschussOrt(inh, z, h.t_s, h.von, pos), echtzeit_s: LEUCHTSPUR_S });
       out.push({ id: `${h.id}-x`, art: "einschlag", quelle: { hintergrund: h.art }, t: h.t_s, pos, nr: variante(h.id, 3) });
     }
   }
 
-  // Treffer an den Stellungen der eigenen Züge (seit 2.3, D3.3): für alle sichtbar – eigene Truppe, verrät kein Ziel.
-  // Feindartillerie steht schon oben (Hintergrundgefecht); hier Mörser, direktes Feuer, Attrappe und Durchbruch.
-  for (const v of verlustLage(inh, z).ereignisse) {
-    if (v.art === "artillerie") continue;
-    const q = v.art === "direkt" || v.art === "durchbruch" ? { hintergrund: "panzerabwehr" } : { hintergrund: "feindartillerie" };
-    out.push({ id: `V-${v.art}-${v.quelle}-${v.nr}`, art: "einschlag", quelle: q, t: v.t, pos: v.pos, nr: variante(`${v.quelle}${v.nr}`, 3),
-      bleibt_s: KRATER_STELLUNG_S });
+  // Feindfeuer auf den eigenen Zug (seit 2.5, F2.6): für alle sichtbar – eigene Truppe, verrät kein Ziel. Fehlschuss = Einschlag mit
+  // Staub neben dem Panzer (Steilfeuer daneben: Einschlag wie Feindartillerie), Treffer = Funken und Rauchwölkchen am Panzer,
+  // ausgefallen = Rauch am Panzer. Die Feindartillerie selbst steht schon oben (Hintergrundgefecht), hier nur ihr Treffer.
+  const vl = verlustLage(inh, z);
+  const pmap = new Map(panzer(inh).map((p) => [p.id, p]));
+  for (const v of vl.ereignisse) {
+    const id = `V-${v.art}-${v.quelle}-${v.nr}-${v.panzer}`;
+    if (v.ergebnis === "treffer") {
+      const p = pmap.get(v.panzer);
+      out.push({ id, art: "einschlag", quelle: { hintergrund: "treffer_panzer" }, t: v.t, pos: p ? p.pos : v.pos, nr: variante(id, 3) });
+      if (v.art === "steil" || v.art === "beobachter" || v.art === "attrappe") {
+        out.push({ id: `${id}-e`, art: "einschlag", quelle: { hintergrund: "feindartillerie" }, t: v.t, pos: v.pos, nr: variante(id, 3), bleibt_s: KRATER_STELLUNG_S });
+      }
+    } else if (v.art !== "artillerie") {
+      const q = v.art === "direkt" ? { hintergrund: "fehlschuss" } : { hintergrund: "feindartillerie" };
+      out.push({ id, art: "einschlag", quelle: q, t: v.t, pos: v.pos, nr: variante(id, 3), bleibt_s: KRATER_STELLUNG_S });
+    }
+  }
+  const ausAb = new Map<string, number>();
+  for (const v of vl.ereignisse) if (v.ausgefallen && !ausAb.has(v.panzer)) ausAb.set(v.panzer, v.t);
+  for (const [pid, t] of ausAb) {
+    const p = pmap.get(pid);
+    if (p) out.push({ id: `${pid}-aus`, art: "wrack", quelle: { folge: "eigen_ausgefallen" }, t, pos: p.pos, nr: variante(pid, 4) });
   }
 
   if (sichtbar === "umgebung") return out;
@@ -233,8 +247,8 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
       if (wm.flug) {
         out.push({ id: `${k}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + nr * abstand + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
       } else if (wm.einsatzbereich) {
-        // direktes Feuer aus den Stellungen der eigenen Züge (seit 2.3; vorher vom Westrand)
-        out.push({ id: `${k}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
+        // direktes Feuer: Kanone des nächsten einsatzbereiten Panzers (seit 2.5; vorher aus der Zugstellung bzw. vom Westrand)
+        out.push({ id: `${k}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, z, e.t, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
       }
       out.push({ id: `${k}-x`, art: "einschlag", quelle: q, t: e.t, pos: e.pos, nr: variante(k, 3) });
     });
@@ -259,6 +273,14 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     });
   }
 
+  // Direktschützen ohne feuert (seit 2.5): Mündungsblitz zum beschossenen Panzer zu jedem Schuss des Verlustmodells
+  for (const v of vl.ereignisse) {
+    if (v.art !== "direkt" || !v.von || !kennt(v.quelle) || inh.ziele[v.quelle]?.feuert?.length) continue;
+    const p = pmap.get(v.panzer);
+    if (!p) continue;
+    out.push({ id: `${v.quelle}-v${v.nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: v.ts, pos: muendung(v.von, p.pos), richtung: grad(v.von, p.pos), nr: v.nr });
+  }
+
   // Feuer nach Schussrhythmus (seit 2.1): Mündungsblitz (danach Abschussrauch), solange das Fahrzeug steht
   for (const ziel of inh.szenario.ziele) {
     if (!ziel.feuert?.length || !kennt(ziel.id)) continue;
@@ -274,9 +296,10 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
         const o = nr % 2 ? 1.6 : -1.6;
         out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "moerser" }, t: ts, pos: [pv[0] + Math.cos(w) * o, pv[1] + Math.sin(w) * o], nr });
       } else {
-        // Kanone im direkten Feuer auf den eigenen Zug im Gefechtsstreifen (seit 2.3; vorher Richtung Westrand)
-        const zug = zielZug(zuege(inh), pv);
-        const ziel2 = zug ? zugMitte(zug) : westrand(inh, undefined, pv[1]);
+        // Kanone im direkten Feuer auf den eigenen Zug: Richtung des Panzers, auf den feuert[].auf zeigt, sonst des nächsten (seit 2.5)
+        const f = ziel.feuert.find((x) => x.von_s <= ts && ts < x.bis_s);
+        const pz = (f?.auf ? pmap.get(f.auf) : undefined) ?? schuetze(inh, null, ts, pv);
+        const ziel2 = pz ? pz.pos : westrand(inh, undefined, pv[1]);
         out.push({ id: `${ziel.id}-s${nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: ts, pos: muendung(pv, ziel2), richtung: grad(pv, ziel2), nr });
       }
     }

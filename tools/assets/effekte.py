@@ -26,7 +26,7 @@ EFFEKTE = {
     "krater": (3, 96, 12.0, 0, False),
     # Schritt 5b (Konzept v2: Live-Lage, Hintergrundgefecht)
     "lm_flug": (8, 64, 3.2, 16, True),                 # Loitering Munition im Flug (Blick nach Osten)
-    "leuchtspur": (6, 256, 24.0, 20, True),            # Leuchtspur der eigenen PzAbw, Kopf vorn (Osten)
+    "leuchtspur": (6, 256, 24.0, 20, True),            # Leuchtspur (eigene Kanone; seit 2.5 auch Feindfeuer), Kopf vorn (Osten)
     "muendungsblitz": (6, 120, 10.0, 24, False),       # Kanone/Maschinenkanone, Rohr nach Osten
     "muendungsblitz_steil": (8, 96, 12.0, 16, False),  # Mörser (Steilfeuer), ringförmig (2.1: größer, besser sichtbar)
     "einschlag_artillerie": (18, 224, 44.0, 14, False),  # Feindartillerie: Erdfontäne, Staub
@@ -34,6 +34,9 @@ EFFEKTE = {
     # Szenario 2.1 (A8: dynamische Animationen)
     "abschussrauch": (16, 128, 18.0, 6, False),        # Rauch nach dem Abschuss (Mörser, Kanone): quillt auf, zieht ab
     "staub": (4, 96, 11.0, 0, False),                  # Staubwolke hinter fahrenden Fahrzeugen (4 Varianten)
+    # Szenario 2.5 (F2.6: Feindfeuer auf den eigenen Zug)
+    "einschlag_staub": (12, 128, 12.0, 16, False),     # Fehlschuss neben dem Panzer: Erdspritzer und Staub, kein Feuer
+    "treffer_panzer": (12, 96, 7.0, 18, False),        # Treffer am eigenen Panzer: Funken und ein Rauchwölkchen
 }
 
 # Abweichende Form und Anker (Anteil der Bildbreite/-höhe); sonst quadratisch, Anker Mitte.
@@ -48,6 +51,8 @@ FORM = {
     "nebel": {"hinweis": "mehrere Instanzen über die Fläche (radius_m) verteilen, ein- und ausblenden"},
     "abschussrauch": {"hinweis": "nach dem Mündungsblitz am selben Ort abspielen (Echtzeit); zieht nach Südost ab"},
     "staub": {"hinweis": "Varianten (fps 0): je Wolke eine, mit dem Alter größer und blasser zeichnen; Wind nach Südost"},
+    "einschlag_staub": {"hinweis": "Fehlschuss (direktes Feuer daneben oder nah): am Einschlagort neben dem Panzer"},
+    "treffer_panzer": {"hinweis": "Treffer am eigenen Panzer (Gerät, keine Personen): am Panzer; das Zeichen blinkt dazu"},
 }
 
 # Welche Animation wofür (Oberfläche, Schritt 6b/7). Wirkmittel-IDs wie in katalog_wirkmittel.json,
@@ -62,8 +67,11 @@ ZUORDNUNG = {
         "feindartillerie": {"einschlag": "einschlag_artillerie", "danach": ["krater"]},
         "panzerabwehr": {"flug": "leuchtspur", "einschlag": "treffer_direkt"},
         "rauch": {"flaeche": "nebel"},
+        # seit 2.5 (F2.6): Feindfeuer auf den eigenen Zug – Fehlschuss mit Staub, Treffer mit Funken
+        "fehlschuss": {"einschlag": "einschlag_staub"},
+        "treffer_panzer": {"einschlag": "treffer_panzer"},
     },
-    "wrack": {"zerstoert": ["feuer", "rauch"], "ausser_gefecht": []},
+    "wrack": {"zerstoert": ["feuer", "rauch"], "ausser_gefecht": [], "eigen_ausgefallen": ["rauch"]},
     "feuert": {"kanone": "muendungsblitz", "moerser": "muendungsblitz_steil"},
     # Szenario 2.1: Rauch nach dem Abschuss, Staub hinter fahrenden Fahrzeugen
     "abschuss": {"kanone": "abschussrauch", "moerser": "abschussrauch"},
@@ -429,6 +437,67 @@ def staub(n_var, n, groesse_m, rng):
     return bilder
 
 
+def einschlag_staub(n_bilder, n, rng):
+    """Fehlschuss neben dem Panzer, von oben (seit 2.5): Erdspritzer als kurze dunkle Strahlen, sandfarbene Staubwolke, die sich
+    ausbreitet und nach Südost verweht; kein Blitz, kein Feuer."""
+    xx, yy, rr, ww = _raster(n)
+    rausch = [fraktal(n, n, np.random.default_rng(int(rng.integers(1 << 30))), zelle=n / 5, oktaven=3) for _ in range(2)]
+    strahlen = [(rng.uniform(0, 2 * math.pi), rng.uniform(0.35, 0.7), rng.uniform(0.06, 0.12)) for _ in range(10)]
+    bilder = []
+    for i in range(n_bilder):
+        t = i / (n_bilder - 1)
+        rgb = np.zeros((n, n, 3), np.float32)
+        a = np.zeros((n, n), np.float32)
+        cx = cy = 0.14 * t
+        rs = 0.2 + 0.6 * t ** 0.6
+        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / rs - 0.45 * (rausch[0] - 0.5)
+        ad = glatt_stufe(-d, -1.0, -0.45) * (0.95 - 0.8 * t) * min(1.0, 0.4 + t * 8)
+        g = rausch[1]
+        rgb, a = _ueber(rgb, a, np.dstack([196 + 30 * g, 178 + 26 * g, 140 + 22 * g]), ad)
+        if t < 0.55:
+            tr = t / 0.55
+            for w0, laenge, breite in strahlen:
+                L = laenge * min(1.0, tr * 2.5)
+                dw = np.angle(np.exp(1j * (ww - w0)))
+                band = np.exp(-(dw / breite) ** 2) * (rr < L) * np.clip(1 - rr / max(L, 1e-3), 0, 1) ** 0.5
+                rgb, a = _ueber(rgb, a, _voll((n, n), (92, 76, 58)), np.clip(band * 0.8 * (1 - tr), 0, 1))
+        bilder.append(_rgba(rgb, a))
+    return bilder
+
+
+def treffer_panzer(n_bilder, n, rng):
+    """Treffer am eigenen Panzer, von oben (seit 2.5): heller Blitz, Funken nach allen Seiten, danach ein graues Rauchwölkchen,
+    das nach Südost zieht. Zeigt Gerät, keine Personen."""
+    xx, yy, rr, ww = _raster(n)
+    funken = [(rng.uniform(0, 2 * math.pi), rng.uniform(0.5, 1.0)) for _ in range(22)]
+    rausch = fraktal(n, n, rng, zelle=n / 5, oktaven=3)
+    bilder = []
+    for i in range(n_bilder):
+        t = i / (n_bilder - 1)
+        rgb = np.zeros((n, n, 3), np.float32)
+        a = np.zeros((n, n), np.float32)
+        if t > 0.15:
+            ts = (t - 0.15) / 0.85
+            cx = cy = 0.18 * ts
+            d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / (0.22 + 0.4 * ts ** 0.7) - 0.4 * (rausch - 0.5)
+            ar = glatt_stufe(-d, -1, -0.5) * 0.85 * (1 - ts) ** 0.8
+            g = 92 + 60 * rausch
+            rgb, a = _ueber(rgb, a, np.dstack([g, g, g * 0.97]), ar)
+        if t < 0.55:
+            for w0, v in funken:
+                r0 = v * (0.1 + t * 1.5)
+                for k in range(4):
+                    rk = r0 - 0.1 * k / 4
+                    x0, y0 = rk * math.cos(w0), rk * math.sin(w0)
+                    af = np.clip(1 - np.sqrt((xx - x0) ** 2 + (yy - y0) ** 2) / 0.03, 0, 1) * (1 - t / 0.55)
+                    rgb, a = _ueber(rgb, a, _voll((n, n), (255, 214, 110)), af)
+        if t < 0.22:
+            ab = np.clip(1 - rr / 0.4, 0, 1) ** 1.2 * (1 - t / 0.22)
+            rgb, a = _ueber(rgb, a, _voll((n, n), (255, 248, 210)), ab)
+        bilder.append(_rgba(rgb, a))
+    return bilder
+
+
 def alle(seed=11):
     rng = np.random.default_rng(seed)
     out = {}
@@ -463,6 +532,10 @@ def alle(seed=11):
             b = abschussrauch(nb, px, gm, neu)
         elif name == "staub":
             b = staub(nb, px, gm, neu)
+        elif name == "einschlag_staub":
+            b = einschlag_staub(nb, px, neu)
+        elif name == "treffer_panzer":
+            b = treffer_panzer(nb, px, neu)
         else:
             raise ValueError(name)
         out[name] = b

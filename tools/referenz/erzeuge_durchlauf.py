@@ -4,8 +4,9 @@
 tests/durchlauf.test.ts spielt dieselben fünf Läufe (= fünf Teams einer Sitzung) mit der echten Engine
 (Host, Zeitplan, Trefferregel beim Einschlag, Hintergrundgefecht, E-01, Verstärkungen, seit 2.1 Durchbruch) und vergleicht
 je Meldung Ausgang und Zeitpunkte, Wirkmittel, Einschlag und Treffer, dazu bedingte Injects, Restbestand,
-Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle; seit 2.3 auch die Verluste der eigenen Kompanie
-(Kampfkraft und Verwundete je Zug, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem Stand des Teams).
+Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle; seit 2.3 auch die Verluste der eigenen Truppe (seit 2.5 je
+Panzer: jeder Schuss mit Einschießen und Zustand, Stand je Panzer und des Zuges, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem
+Stand des Teams).
 
 Aufruf (im Repo-Wurzelordner): python3 tools/referenz/erzeuge_durchlauf.py
 """
@@ -62,9 +63,13 @@ def lauf_export(d, team, ein):
     faelle = {k: ok for k, (ok, _) in S.faelle_erreicht(d, team, ein).items()}
     v = next((e for e in det if "verluste" in e), None)
     verluste = None if v is None else {
-        "zuege": {z: {"verlust": s["verlust"], "kampfkraft": s["kampfkraft"], "verwundete": s["verwundete"]} for z, s in v["verluste"].items()},
-        "kompanie": v["kompanie"],
+        "panzer": {k: {"zustand": s["zustand"], "roh": s["roh"], "stufe": s["stufe"], "treffer": s["treffer"], "verwundete": s["verwundete"],
+                       "ausgefallen": s["ausgefallen"]} for k, s in v["verluste"].items()},
+        "zug": v["zug"],
         "ereignisse": v["ereignisse"],
+        # seit 2.5: jeder Schuss mit Einschießen, Ergebnis, Zustand danach und Einschlagort (Engine = Simulation bitgenau)
+        "zeitlinie": [[e["t"], e["panzer"], e["quelle"], e["art"], e["k"], e["ergebnis"], e["schaden"], e["zustand"], e["ausgefallen"], e["pos"]]
+                      for e in v["zeitlinie"]],
         "meldungen": [{"inject": e["inject"], "t": zahl(e["t"]), "zug": e["zug"], "stufe": e["stufe"], "text": e["text"]}
                       for e in det if "inject" in e and "stufe" in e],
         "texte": {e["inject"]: e["text"] for e in det if "inject" in e and "text" in e and "stufe" not in e},

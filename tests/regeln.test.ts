@@ -123,12 +123,12 @@ describe("Trefferregel beim Einschlag wie argus_lib.py (einschlag, wirkung)", ()
     }
   });
 
-  it("LM: Flugzeit hängt vom Ziel ab (5 s Start, 30 m/s ab Startpunkt westlich der Karte), Mörser 35 s, PzAbw 10 s", async () => {
+  it("LM: Flugzeit hängt vom Ziel ab (5 s Start, 30 m/s ab Startpunkt westlich der Karte), Mörser 35 s, Kanone des 1. Zuges 5 s", async () => {
     const inh = await inhalte();
     const lm = inh.wirkmittel.LM;
     expect(flugzeit(lm, [lm.flug!.start[0] + 300, lm.flug!.start[1]])).toBeCloseTo(15, 6);
     expect(flugzeit(inh.wirkmittel.MRS, [900, 300])).toBe(35);
-    expect(flugzeit(inh.wirkmittel.PZA, [400, 300])).toBe(10);
+    expect(flugzeit(inh.wirkmittel.PZA, [400, 300])).toBe(5); // seit 2.5 (F1.4)
     // N4: BMP-2 fährt während des LM-Anflugs zur Schule – Einschlag am Schulgebäude, Warnung R2 erst beim Einschlag
     const m17 = inh.meldungen.M17;
     const e = einschlag(inh, m17.ziele, "LM", m17.t_s + 60);

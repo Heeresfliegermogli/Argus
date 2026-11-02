@@ -8,7 +8,7 @@ import type { Inhalte } from "../../inhalte/typen";
 import { DIREKT_TEAM } from "../../kern/sitzungen";
 import { ROLLEN_NAME } from "../../kern/sichten";
 import { mmss, phaseZu, uhrzeit } from "../../kern/uhr";
-import { verlustStand, verwText, zuege } from "../../kern/verluste";
+import { panzer, PANZER_STUFE_TEXT, trefferText, verlustStand, verwText } from "../../kern/verluste";
 import { type Spielzustand, fingerabdruck } from "../../kern/zustand";
 import type { Sicht } from "../../sitzung/sicht";
 import { istVeraltet } from "../../sync/adapter";
@@ -48,8 +48,9 @@ export function UhrAnzeige(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: 
 }
 
 /**
- * Zustand der eigenen Kompanie (seit 2.3, D2.1): „2. Kp 87 % · 4 Verwundete“, Bernstein unter der ersten, Rot unter der zweiten
- * Schwelle; beim Zeigen je Zug. Für alle Rollen gleich (Verlustmodell aus kern/verluste.ts, keine Punkte).
+ * Zustand der eigenen Truppe (seit 2.5, F2.6): „1. Zug: 3/4 einsatzbereit · 4 Verwundete“ und je Panzer ein kleiner Balken
+ * (Zustand in %, gelb eingeschränkt, grau ausgefallen); beim Zeigen je Panzer. Einsatzbereit zählt, wer nicht ausgefallen ist
+ * (eingeschränkte schießen weiter). Für alle Rollen gleich (Verlustmodell aus kern/verluste.ts, keine Punkte).
  */
 export function KompanieStand(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: string | null }) {
   const et = p.inh.szenario.eigene_truppe ?? p.inh.basis?.szenario.eigene_truppe;
@@ -57,12 +58,23 @@ export function KompanieStand(p: { inh: Inhalte; z: Spielzustand; t: number; lau
   if (!et || !vr || !p.lauf) return null;
   const v = verlustStand(p.inh, p.z, Math.min(p.t, p.inh.szenario.spieluhr.dauer_s));
   if (!v) return null;
-  const kk = v.kompanie.kampfkraft;
-  const kl = kk < vr.schwellen_prozent[1] ? "schlecht" : kk < vr.schwellen_prozent[0] ? "warn" : "eigen";
-  const titel = zuege(p.inh).map((zug) => `${zug.name} (${zug.ort}): ${v.zuege[zug.id].kampfkraft} %, ${verwText(v.zuege[zug.id].verwundete)}`).join("\n");
+  const zg = v.zug;
+  const kl = zg.ausgefallen ? "kp-ausgefallen" : zg.eingeschraenkt ? "kp-eingeschraenkt" : "";
+  const pl = panzer(p.inh);
+  const titel = pl.map((pz) => {
+    const s = v.panzer[pz.id];
+    return `${pz.name} (${pz.rolle ? `${pz.rolle}, ` : ""}${pz.ort}): ${s.zustand} % ${PANZER_STUFE_TEXT[s.stufe]} · ${trefferText(s.treffer)}`;
+  }).join("\n");
   return (
-    <span class={`badge kp-stand ${kl}`} data-testid="kp-stand" data-kampfkraft={kk} data-verwundete={v.kompanie.verwundete} title={`Eigene Kompanie – Kampfkraft und Verwundete\n${titel}`}>
-      {et.name} {kk} % · {verwText(v.kompanie.verwundete)}
+    <span class={`badge kp-stand eigen ${kl}`} data-testid="kp-stand" data-bereit={zg.bereit} data-gesamt={zg.gesamt} data-verwundete={zg.verwundete}
+      title={`${et.einheit} – Zustand der Panzer\n${titel}`}>
+      {et.name}: {zg.bereit}/{zg.gesamt} einsatzbereit · {verwText(zg.verwundete)}
+      <span class="pz-balken-reihe" aria-hidden="true">
+        {pl.map((pz) => {
+          const s = v.panzer[pz.id];
+          return <span key={pz.id} class="pz-balken" data-pz={pz.name} data-stufe={s.stufe} data-zustand={s.zustand}><i style={{ width: `${s.ausgefallen ? 100 : s.zustand}%` }} /></span>;
+        })}
+      </span>
     </span>
   );
 }

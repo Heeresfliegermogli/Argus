@@ -1,5 +1,5 @@
 {
-  "version": "2.4",
+  "version": "2.5",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -68,13 +68,13 @@
       },
       {
         "id": "R2",
-        "text": "Kein Wirkradius darf eine No-Strike-Zone berühren (Schule mit Sportplatz).",
+        "text": "Kein Wirkradius darf eine No-Strike-Zone berühren (Schule).",
         "prueft": "G2",
         "maschinell": true
       },
       {
         "id": "R3",
-        "text": "Berührt der Wirkradius das Einschränkungsgebiet Ortschaft (KRÄHE mit Hof RABE), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, PzAbw).",
+        "text": "Berührt der Wirkradius das Einschränkungsgebiet Ortschaft (KRÄHE mit Hof RABE), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, Kanone).",
         "prueft": "G2",
         "maschinell": true
       },
@@ -88,15 +88,15 @@
     "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Die Warnung gilt für den vorausberechneten Einschlagort. Jeder Verstoß wird protokolliert."
   },
   "wirkung": {
-    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (seit 2.4 bei Zugmeldungen je Fahrzeug, siehe zug; Mörser dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, PzAbw ca. 10 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
+    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (seit 2.4 bei Zugmeldungen je Fahrzeug, siehe zug; Mörser dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, Kanone des 1. Zuges ca. 5 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
     "begruendung": "Fahrzeuge bewegen sich während der Flugzeit weiter. Wer freigibt, verantwortet auch, wo die Wirkung tatsächlich einschlägt: Ein Ziel kann während des Anflugs an der Schule vorbeifahren oder Zivilpersonen können in den Wirkradius kommen.",
     "vorhersage": "Die Warnungen bei G2 und G3 rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
     "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
-    "hintergrund": "Die eigene 2. Kompanie und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
+    "hintergrund": "Der eigene 1. Zug und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist; fällt der schießende Panzer aus, schießt der nächste einsatzbereite. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
     "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
     "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren.",
     "praezision": "Präzisionswirkmittel (Loitering Munition, katalog_wirkmittel: nur_zielfahrzeug) treffen genau das bekämpfte Fahrzeug: Andere Fahrzeuge im Wirkradius bleiben stehen. Personen im Wirkradius sind betroffen; R2, R3 und die Warnungen gelten wie bei jedem Wirkmittel. Der Mörser trifft weiter alles im Wirkradius.",
-    "zug": "Seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug. Loitering Munition: 1 LM je noch stehendem Fahrzeug (der Bestand sinkt um n; reicht er nicht, werden nur so viele Fahrzeuge bekämpft, wie LM da sind – Warnung „nur k von n“). Panzerabwehr: ein Schuss je Fahrzeug nacheinander. Mörser: ein Einschlag am ersten Fahrzeug, getroffen ist alles im Wirkradius. Jeder Einschlag schlägt am Ort seines Fahrzeugs zum Einschlagzeitpunkt ein; Warnungen gelten für jeden Einschlag."
+    "zug": "Seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug. Loitering Munition: 1 LM je noch stehendem Fahrzeug (der Bestand sinkt um n; reicht er nicht, werden nur so viele Fahrzeuge bekämpft, wie LM da sind – Warnung „nur k von n“). Kanone des 1. Zuges: ein Schuss je Fahrzeug nacheinander. Mörser: ein Einschlag am ersten Fahrzeug, getroffen ist alles im Wirkradius. Jeder Einschlag schlägt am Ort seines Fahrzeugs zum Einschlagzeitpunkt ein; Warnungen gelten für jeden Einschlag."
   },
   "kennzahlen": [
     {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},
@@ -111,32 +111,29 @@
     {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"},
     {"id": "k_vergleich", "text": "Teamvergleich je Schlüsselfall: richtig / falsch / nicht erreicht"}
   ],
-  "eigene_kraefte": "Seit 2.3 steht die 2. Kompanie mit drei Zügen am Westrand der Karte (szenario.eigene_truppe). Ein Sicherheitsabstand wird nicht geprüft; Wirkungen liegen alle östlich des Bachs.",
+  "eigene_kraefte": "Seit 2.5 steht der 1. Zug der Panzerkompanie WOLF mit vier Kampfpanzern ganz am Westrand der Karte (szenario.eigene_truppe). Ein Sicherheitsabstand wird nicht geprüft; Wirkungen liegen alle östlich des Bachs.",
   "verluste": {
-    "hinweis": "Verlustmodell der eigenen Kompanie (seit 2.3, D2). Ganzzahlig in Promille Kampfkraft je Zug. Ein Schuss zählt, wenn der Schütze dann noch steht (im Raum, nicht zerstört, Feind und legitim); der Schaden kommt verzug_s später an der Stellung an. waffen je Fahrzeugtyp: art steil (Mörser, nur nach feuert, Zug aus feuert[].auf) oder direkt (im Halt seit feuerbereit_s, alle takt_s auf den nächsten Zug in reichweite_m; Fahrzeuge mit feuert nur nach feuert). Feindartillerie je Einschlag auf den nächsten Zug in radius_m. Attrappe und Durchbruch siehe szenario.verluste. Untergrenze je Zug (die Kompanie hält immer), Verwundete = Verlust / promille_je_verwundeter. Meldungen: Regeln der Druckmeldungen (D3). Seit 2.4 (E2): art beobachter – ein Beobachter (S7) lenkt Artilleriefeuer nach feuert auf feuert[].auf, Schaden verzug_s.beobachter nach dem „Schuss“ (Feuerkommando); Werte neu kalibriert (Drehbuch, Abschnitt 9).",
+    "hinweis": "Verlustmodell der eigenen Truppe seit 2.5 (F2): vier Kampfpanzer des 1. Zuges mit Zustand je Panzer (100 %). Direktschützen (waffen mit art direkt, ohne feuert) schießen erst, wenn sie das Ostufer bzw. die Brücke Ost erreicht haben (x ≤ feuer_ab_x) und mindestens feuerbereit_s stehen, alle takt_s auf den nächsten einsatzbereiten Panzer. Schützen mit feuert (Mörser, Beobachter, Schutzschild-SPz) wirken nach Drehbuch: eine Salve des Schussrhythmus = ein Schuss, auf feuert[].auf. Einschießen je Schütze und Ziel (einschiessen): direkt Schuss 1–2 daneben, 3 nah, ab 4 jeder zweite Treffer, ab 8 jeder; Steilfeuer und gelenktes Feuer Salve 1–2 daneben, ab 3 im Ziel; Zielwechsel beginnt neu. Treffer kosten treffer_prozent; ab stufen.einsatzbereit_ab einsatzbereit, darunter eingeschränkt, unter stufen.ausgefallen_unter ausgefallen. Höchstens hoechstens_ausgefallen Panzer fallen aus, die übrigen bleiben bei untergrenze_prozent (der Zug hält immer). Verwundete je Stufe fest, keine Gefallenen. Feindartillerie und Attrappe treffen im Umkreis radius_m, ein Durchbruch trifft je Fahrzeug mit durchbruch.treffer_prozent. Ziele mit bereitstellung (sammeln für den Angriff über den Bach) schießen nicht direkt. Der Schaden kommt verzug_s nach dem Schuss an. Bis 2.4: drei Züge mit Kampfkraft in Promille.",
+    "zustand_start": 100,
+    "stufen": {"einsatzbereit_ab": 70, "ausgefallen_unter": 40},
+    "hoechstens_ausgefallen": 2,
     "untergrenze_prozent": 40,
-    "promille_je_verwundeter": 30,
-    "schwellen_prozent": [75, 55],
+    "verwundete": {"einsatzbereit": 0, "eingeschraenkt": 1, "ausgefallen": 3},
+    "feuer_ab_x": 560,
     "verzug_s": {"direkt": 4, "steil": 20, "beobachter": 25},
+    "einschiessen": {"direkt": {"daneben": 2, "nah": 1, "jeder_zweite_ab": 4, "jeder_ab": 8}, "steil": {"daneben": 2}},
+    "ablage_m": {"daneben": [20, 40], "nah": [3, 8], "steil_daneben": [60, 100]},
     "waffen": {
-      "kpz_t72": {"art": "direkt", "promille": 3, "takt_s": 20, "feuerbereit_s": 10, "reichweite_m": 800},
-      "spz_bmp2": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 800},
-      "spw_btr80": {"art": "direkt", "promille": 2, "takt_s": 15, "feuerbereit_s": 10, "reichweite_m": 600},
-      "moerser_trupp": {"art": "steil", "promille": 7, "reichweite_m": 3000},
-      "beobachter_trupp": {"art": "beobachter", "promille": 5, "reichweite_m": 3000}
+      "kpz_t72": {"art": "direkt", "treffer_prozent": 25, "takt_s": 15, "feuerbereit_s": 20},
+      "spz_bmp2": {"art": "direkt", "treffer_prozent": 5, "takt_s": 10, "feuerbereit_s": 60},
+      "spw_btr80": {"art": "direkt", "treffer_prozent": 2, "takt_s": 12, "feuerbereit_s": 60},
+      "moerser_trupp": {"art": "steil", "treffer_prozent": 4},
+      "beobachter_trupp": {"art": "beobachter", "treffer_prozent": 4}
     },
-    "feindartillerie": {"promille": 4, "radius_m": 70},
-    "attrappe": {"promille": 6},
-    "durchbruch": {"promille": 25},
-    "versatz_m": [[0, 0], [8, -6], [-7, 5], [5, 9], [-9, -7], [11, 3], [-4, 11], [3, -10]],
-    "meldungen": {
-      "je_verwundete": 2,
-      "abstand_zug_s": 60,
-      "abstand_alle_s": 25,
-      "abstand_limit_s": 120,
-      "fenster_s": 60,
-      "sofort": ["attrappe"]
-    }
+    "feindartillerie": {"treffer_prozent": 4, "radius_m": 10},
+    "attrappe": {"treffer_prozent": 4, "radius_m": 10},
+    "durchbruch": {"treffer_prozent": 8},
+    "meldungen": {"abstand_alle_s": 20, "abstand_panzer_s": 45, "abstand_limit_s": 90, "sofort": ["attrappe"]}
   },
   "spielleitung": {
     "verstaerkung_menue": false,

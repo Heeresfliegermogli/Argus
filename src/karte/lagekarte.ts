@@ -227,14 +227,14 @@ export class Lagekarte {
     gezeigt: string[]; staub: number;
     /** Zeichenzeit je Bild in ms (Mittel und Höchstwert der letzten Sekunde, mit Rendern) */
     bildMs: { mittel: number; max: number };
-    /** seit 2.3 (D1, D3.3): im letzten Bild gezeichnete eigene Züge (Zeichen bzw. Fahrzeuge in Stellung), flackernde Züge, Beschriftungen */
-    eigene: { zeichen: number; sprites: number; flackern: string[]; texte: string[] };
+    /** seit 2.5 (F1, F2.6): im letzten Bild gezeichnete eigene Panzer (Zeichen bzw. Sprites), blinkende, Beschriftungen, Stufe je Panzer */
+    eigene: { zeichen: number; sprites: number; flackern: string[]; texte: string[]; stufen: string[] };
     } {
     return {
       effekte: this.effekte.anzahl, effektAtlas: !!this.effektTexturen, spriteAtlas: !!this.atlasTexturen, renderer: this.renderer,
       fps: this.bilderProSekunde, animationen: this.effekte.geladen, bildMs: this.bildMs,
       gezeigt: [...this.effekte.gezeigt], staub: this.effekte.staubWolken,
-      eigene: { ...this.eigenGezeigt, flackern: [...this.eigenGezeigt.flackern], texte: [...this.eigenGezeigt.texte] },
+      eigene: { ...this.eigenGezeigt, flackern: [...this.eigenGezeigt.flackern], texte: [...this.eigenGezeigt.texte], stufen: [...this.eigenGezeigt.stufen] },
     };
   }
 
@@ -557,16 +557,10 @@ export class Lagekarte {
       return;
     }
     c.style.cursor = this.zoomFaktor > 1 ? "grab" : "";
-    const eig = this.lb.eigene?.zuege.find((q) => q.fahrzeuge.some((f) => nahe(this.bs(f), p) < 12) || nahe(this.bs(q.pos), p) < 16);
+    const eig = this.lb.eigene?.panzer.find((q) => nahe(this.bs(q.pos), p) < 16);
     if (eig) {
       const [sx, sy] = this.bs(eig.pos);
       this.opt.onInfo?.({ x: sx, y: sy, titel: eig.titel, zeilen: eig.zeilen });
-      return;
-    }
-    const gs = this.lb.eigene?.gefechtsstand;
-    if (gs && nahe(this.bs(gs.pos), p) < 14) {
-      const [sx, sy] = this.bs(gs.pos);
-      this.opt.onInfo?.({ x: sx, y: sy, titel: gs.titel, zeilen: [] });
       return;
     }
     const pers = this.lb.personen.find((q) => nahe(this.bs(this.posJetzt.get(q.id) ?? q.pos), p) < 10);
@@ -1087,83 +1081,91 @@ export class Lagekarte {
   }
 
   /**
-   * Eigene Züge (seit 2.3, D1): Zeichen „Panzergrenadiere, Zug“ in Blau mit Kampfkraft, beim Hineinzoomen die Fahrzeuge in
-   * Stellung (Sprite mit Erdwall). Bei einem Treffer flackert das Zeichen kurz (D3.3); die Beschriftung färbt sich ab den
-   * Schwellen (Bernstein, Rot). Der Gefechtsstand des Kompaniechefs dahinter.
+   * Eigene Panzer (seit 2.5, F1/F2.6): je Panzer das Zeichen „Kampfpanzer“ in Blau mit Kennung (1/1 …) und einem Zustandsbalken
+   * darunter (blau einsatzbereit, gelb eingeschränkt, grau ausgefallen); ausgefallen: Zeichen grau mit Querstrich, Rauch als Effekt.
+   * Beim Hineinzoomen der Panzer in Stellung (Sprite intakt, eingeschränkt oder ausgefallen, Erdwall zum Feind). Bei einem Treffer
+   * blinkt das Zeichen kurz.
    */
-  private eigenGezeigt: { zeichen: number; sprites: number; flackern: string[]; texte: string[] } = { zeichen: 0, sprites: 0, flackern: [], texte: [] };
+  private eigenGezeigt: { zeichen: number; sprites: number; flackern: string[]; texte: string[]; stufen: string[] } = { zeichen: 0, sprites: 0, flackern: [], texte: [], stufen: [] };
 
   private eigeneZeichnen(d: Graphics, t: number | null): void {
     const e = this.lb.eigene;
-    this.eigenGezeigt = { zeichen: 0, sprites: 0, flackern: [], texte: [] };
+    this.eigenGezeigt = { zeichen: 0, sprites: 0, flackern: [], texte: [], stufen: [] };
     if (!e) return;
     const groesse = this.opt.zeichenGroesse ?? 20;
-    const fzTyp = this.inh.szenario.eigene_truppe?.fahrzeug;
-    const sprite = fzTyp ? this.inh.fahrzeuge[fzTyp]?.sprite : null;
-    const tex = sprite ? this.atlasTexturen?.[sprite] : undefined;
-    const spritesZeigen = !!tex && this.s >= SPRITES_AB;
+    const fzTyp = (this.inh.basis ?? this.inh).szenario.eigene_truppe?.fahrzeug;
+    const fz = fzTyp ? this.inh.fahrzeuge[fzTyp] : undefined;
+    const texVon = (name?: string | null) => (name ? this.atlasTexturen?.[name] : undefined);
+    const texIntakt = texVon(fz?.sprite);
+    const spritesZeigen = !!texIntakt && this.s >= SPRITES_AB;
     const hell = this.hell();
-    if (e.gefechtsstand) {
-      const [x, y] = this.bs(e.gefechtsstand.pos);
-      const z = this.zeichenSprite("eigen-gs", e.gefechtsstand.sidc, Math.round(groesse * 0.75), x, y, 0.95);
-      this.belegt.push([x - z.breite * z.ax, y - z.hoehe * z.ay, x + z.breite * (1 - z.ax), y + z.hoehe * (1 - z.ay)]);
-    }
-    for (const zug of e.zuege) {
-      const [x, y] = this.bs(zug.pos);
-      const flackern = t !== null && zug.treffer.some((h) => t >= h && t - h < 1.4);
-      const alpha = flackern ? 0.3 + 0.7 * Math.abs(Math.sin(performance.now() / 65)) : 1;
-      if (flackern) this.eigenGezeigt.flackern.push(zug.id);
-      let oben = groesse * 0.6;
-      let unten = groesse * 0.6;
-      if (spritesZeigen && tex) {
-        zug.fahrzeuge.forEach((f, i) => {
-          const [fx, fy] = this.bs(f);
-          const w = (zug.hdg * Math.PI) / 180;
-          // Erdwall vor dem Fahrzeug (Stellung), zum Feind hin
-          d.arc(fx, fy, 5 * this.s, w - 1.15, w + 1.15).stroke({ width: 1.6 * this.s, color: 0x6e5c3c, alpha: 0.85, cap: "round" });
-          const schl = `eigen-${zug.id}-${i}`;
-          let sp = this.fahrzeugSprites.get(schl);
-          if (!sp) {
-            sp = new Sprite(tex);
-            sp.anchor.set(0.5);
-            this.fahrzeugSprites.set(schl, sp);
-            this.spriteEbene.addChild(sp);
-          }
-          sp.texture = tex;
-          sp.scale.set(this.s / (this.man?.fahrzeuge.px_pro_m ?? 12));
-          sp.rotation = w;
-          sp.position.set(fx, fy);
-          sp.alpha = alpha;
-          sp.visible = true;
-          let sch = this.schattenSprites.get(schl);
-          if (!sch) {
-            sch = new Sprite(tex);
-            sch.anchor.set(0.5);
-            sch.tint = 0x000000;
-            sch.alpha = 0.45;
-            this.schattenSprites.set(schl, sch);
-            this.schattenEbene.addChild(sch);
-          }
-          sch.texture = tex;
-          sch.scale.copyFrom(sp.scale);
-          sch.rotation = w;
-          sch.position.set(fx + 1.2 * this.s, fy + 1.2 * this.s);
-          sch.visible = true;
-          this.benutzt.add(`fs:${schl}`);
-          this.eigenGezeigt.sprites++;
-        });
-        oben = unten = 8 * this.s;
+    for (const pz of e.panzer) {
+      const [x, y] = this.bs(pz.pos);
+      const blinken = t !== null && pz.treffer.some((h) => t >= h && t - h < 1.4);
+      const alpha = blinken ? 0.3 + 0.7 * Math.abs(Math.sin(performance.now() / 65)) : 1;
+      if (blinken) this.eigenGezeigt.flackern.push(pz.id);
+      this.eigenGezeigt.stufen.push(`${pz.name}:${pz.stufe}`);
+      let oben: number;
+      let unten: number;
+      let rechts: number;
+      if (spritesZeigen) {
+        const tex = (pz.ausgefallen ? texVon(fz?.sprite_wrack) : pz.stufe === "eingeschraenkt" ? texVon(fz?.sprite_eingeschraenkt) : undefined) ?? texIntakt!;
+        const w = (pz.hdg * Math.PI) / 180;
+        // Erdwall vor dem Panzer (Stellung hinter der Hecke), zum Feind hin
+        d.arc(x, y, 6.5 * this.s, w - 1.1, w + 1.1).stroke({ width: 1.8 * this.s, color: 0x6e5c3c, alpha: 0.85, cap: "round" });
+        const schl = `eigen-${pz.id}`;
+        let sp = this.fahrzeugSprites.get(schl);
+        if (!sp) {
+          sp = new Sprite(tex);
+          sp.anchor.set(0.5);
+          this.fahrzeugSprites.set(schl, sp);
+          this.spriteEbene.addChild(sp);
+        }
+        sp.texture = tex;
+        sp.scale.set(this.s / (this.man?.fahrzeuge.px_pro_m ?? 12));
+        sp.rotation = w;
+        sp.position.set(x, y);
+        sp.alpha = alpha;
+        sp.visible = true;
+        let sch = this.schattenSprites.get(schl);
+        if (!sch) {
+          sch = new Sprite(tex);
+          sch.anchor.set(0.5);
+          sch.tint = 0x000000;
+          sch.alpha = 0.45;
+          this.schattenSprites.set(schl, sch);
+          this.schattenEbene.addChild(sch);
+        }
+        sch.texture = tex;
+        sch.scale.copyFrom(sp.scale);
+        sch.rotation = w;
+        sch.position.set(x + 1.2 * this.s, y + 1.2 * this.s);
+        sch.visible = true;
+        this.benutzt.add(`fs:${schl}`);
+        this.eigenGezeigt.sprites++;
+        oben = unten = 4 * this.s;
+        rechts = 6 * this.s;
       } else {
-        const z = this.zeichenSprite(`eigen-${zug.id}`, zug.sidc, groesse, x, y, alpha);
+        const z = this.zeichenSprite(`eigen-${pz.id}`, pz.sidc, groesse, x, y, alpha, undefined, pz.ausgefallen ? "#8a8f96" : undefined);
         this.eigenGezeigt.zeichen++;
         oben = z.hoehe * z.ay;
         unten = z.hoehe * (1 - z.ay);
-        this.belegt.push([x - z.breite * z.ax, y - oben, x + z.breite * (1 - z.ax), y + unten]);
+        rechts = z.breite * (1 - z.ax);
+        this.belegt.push([x - z.breite * z.ax, y - oben, x + rechts, y + unten]);
       }
-      const farbe = zug.stufe >= 2 ? (hell ? 0xb5281f : 0xff8a80) : zug.stufe === 1 ? (hell ? 0x9a5b00 : 0xffc56b) : (hell ? 0x1f4f99 : 0xb9d4ff);
-      this.eigenGezeigt.texte.push(`${zug.name} ${zug.kampfkraft} %`);
-      this.beschriften(`eigen-${zug.id}`, `${zug.name} ${zug.kampfkraft} %`, this.stil(11.5, "700", farbe), [
-        [x, y + unten + 1, 0.5, 0], [x, y - oben - 1, 0.5, 1], [x + groesse * 0.8, y, 0, 0.5],
+      // Zustandsbalken (F2.6): Füllung = Zustand in %, gelb eingeschränkt, grau ausgefallen
+      const bw = Math.round(Math.max(18, groesse * 1.1));
+      const bh = 5;
+      const bx = Math.round(x - bw / 2);
+      const by = Math.round(y + unten + 2);
+      const fuell = pz.ausgefallen ? 0x8a8f96 : pz.stufe === "eingeschraenkt" ? 0xf2c14e : hell ? 0x2f6fd0 : 0x7fc8ff;
+      d.rect(bx, by, bw, bh).fill({ color: hell ? 0xffffff : 0x0b1520, alpha: 0.9 }).stroke({ width: 1, color: hell ? 0x1f4f99 : 0xb9d4ff, alpha: 0.9 });
+      d.rect(bx + 1, by + 1, Math.max(1, (bw - 2) * (pz.ausgefallen ? 1 : pz.zustand / 100)), bh - 2).fill({ color: fuell });
+      this.belegt.push([bx, by, bx + bw, by + bh]);
+      const farbe = pz.ausgefallen ? (hell ? 0x5b6168 : 0xb7bcc2) : pz.stufe === "eingeschraenkt" ? (hell ? 0x9a5b00 : 0xffc56b) : (hell ? 0x1f4f99 : 0xb9d4ff);
+      this.eigenGezeigt.texte.push(pz.name);
+      this.beschriften(`eigen-${pz.id}`, pz.name, this.stil(11.5, "700", farbe), [
+        [x + rechts + 3, y, 0, 0.5], [x, y - oben - 1, 0.5, 1], [x + bw / 2 + 3, by + bh / 2, 0, 0.5],
       ]);
     }
   }

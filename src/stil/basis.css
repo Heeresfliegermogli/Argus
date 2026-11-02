@@ -173,9 +173,17 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 /* seit 2.3 (D3): dringende Druckmeldung der Kompanie (Stufe ≥ 2) */
 .inject.dringend { border-left-color: var(--schlecht); }
 .inject.dringend.neu { background: var(--schlecht-flaeche); }
-/* seit 2.3 (D2.1): Zustand der eigenen Kompanie in der Kopfzeile */
-.badge.kp-stand { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* seit 2.3 (D2.1), seit 2.5 je Panzer (F2.6): Zustand der eigenen Truppe in der Kopfzeile mit einem Balken je Panzer */
+.badge.kp-stand { font-variant-numeric: tabular-nums; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
 .badge.kp-stand.eigen { color: #d6e6ff; background: #1d3a66; }
+.badge.kp-stand.kp-eingeschraenkt { box-shadow: inset 0 0 0 1.5px #f2c14e; }
+.badge.kp-stand.kp-ausgefallen { box-shadow: inset 0 0 0 1.5px #ff8a80; }
+.pz-balken-reihe { display: inline-flex; gap: 3px; }
+.pz-balken { position: relative; display: inline-block; width: 16px; height: 7px; border-radius: 2px; background: rgba(255,255,255,.2); overflow: hidden; }
+.pz-balken > i { position: absolute; left: 0; top: 0; bottom: 0; background: #7fc8ff; }
+.pz-balken[data-stufe="eingeschraenkt"] > i { background: #f2c14e; }
+.pz-balken[data-stufe="ausgefallen"] > i { background: #8a8f96; }
+.pz-balken[data-stufe="ausgefallen"]::after { content: ""; position: absolute; left: -2px; right: -2px; top: 3px; height: 1px; background: #2b2f35; transform: rotate(-20deg); }
 
 .hinweise { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 40; max-width: 440px; }
 .hinweis { padding: 9px 12px; border-radius: 6px; background: #234467; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 14px; }
@@ -772,6 +780,11 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .preis-tabelle .ausgang-zelle { font-size: 19px; font-weight: 700; text-align: center; }
 .preis-tabelle .ausgang-zelle.richtig { color: #8fdcab; }
 .preis-tabelle .ausgang-zelle.falsch { color: #ff8f86; }
+/* seit 2.5 (F2.9): die vier Panzer je Team als Balken (Zustand, gelb eingeschränkt, grau ausgefallen) */
+.preis-tabelle td.preis-panzer { white-space: nowrap; }
+.preis-tabelle td.preis-panzer .pz-balken { width: 26px; height: 12px; margin-right: 4px; vertical-align: middle; }
+.preis-tabelle td.preis-panzer .pz-balken[data-stufe="ausgefallen"]::after { top: 5px; }
+.preis-bereit { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-left: 4px; }
 .preis-fragen p { margin: 0 0 8px; font-size: 18px; line-height: 1.32; }
 .preis-offenlegung { border-left: 4px solid var(--plenum); padding: 4px 0 4px 14px; }
 .preis-offenlegung p { margin: 0 0 6px; font-size: 17.5px; line-height: 1.35; color: #f2eee2; }

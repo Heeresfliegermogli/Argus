@@ -24,9 +24,11 @@ interface RefLauf {
   durchbruch: { gruppe: string; t: number; durch: boolean }[]; durchgebrochen: string[];
   treffer_schutz: string[]; faelle: Record<string, boolean>; log: string[];
   verluste: {
-    zuege: Record<string, { verlust: number; kampfkraft: number; verwundete: number }>; kompanie: { kampfkraft: number; verwundete: number };
-    ereignisse: number; meldungen: { inject: string; t: number; zug: string; stufe: number; text: string }[];
-    texte: Record<string, string>; verlauf: [number, number, number][];
+    panzer: Record<string, { zustand: number; roh: number; stufe: string; treffer: number; verwundete: number; ausgefallen: boolean }>;
+    zug: { bereit: number; gesamt: number; eingeschraenkt: number; ausgefallen: number; verwundete: number };
+    ereignisse: number; zeitlinie: [number, string, string, string, number, string, number, number, boolean, [number, number]][];
+    meldungen: { inject: string; t: number; zug: string; stufe: number; text: string }[];
+    texte: Record<string, string>; verlauf: [number, number[], number, number][];
   } | null;
 }
 const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
@@ -152,20 +154,23 @@ describe("Drehbuch mit fünf Teams wie simuliere_durchlauf.py", () => {
       }
       expect(durchgebrochen(weltFuer(m.inh, z), z.durchbrueche, z.zerstoert, z.verstaerkungen).fahrzeuge, `${name} durchgebrochen`).toEqual(r.durchgebrochen);
 
-      // Verluste der eigenen Kompanie (seit 2.3, D2/D3): gleiche Zeitlinie, gleicher Stand je Zug, gleiche Druckmeldungen mit
-      // Text und Stufe, gleiche Texte der Lagemeldungen mit Platzhaltern; deterministisch und nie unter der Untergrenze
+      // Verluste der eigenen Truppe (seit 2.3; seit 2.5 je Panzer, F2): gleiche Zeitlinie Schuss für Schuss (Einschießen, Ergebnis,
+      // Zustand, Einschlagort), gleicher Stand je Panzer und des Zuges, gleiche Druckmeldungen mit Text und Stufe, gleiche Texte der
+      // Lagemeldungen mit Platzhaltern; deterministisch, höchstens zwei Panzer ausgefallen, die übrigen ≥ Untergrenze
       if (r.verluste) {
         const v = r.verluste;
+        const vr = m.inh.regeln.verluste!;
         const lage = verlustLage(m.inh, z);
-        expect(lage.ereignisse.length, `${name} Schadensereignisse`).toBe(v.ereignisse);
+        expect(lage.ereignisse.length, `${name} Schüsse auf den Zug`).toBe(v.ereignisse);
+        expect(lage.ereignisse.map((e) => [e.t, e.panzer, e.quelle, e.art, e.k, e.ergebnis, e.schaden, e.zustand, e.ausgefallen, e.pos]), `${name} Zeitlinie`)
+          .toEqual(v.zeitlinie);
         const st = verlustStand(m.inh, z, 1500)!;
-        for (const [zug, soll] of Object.entries(v.zuege)) {
-          expect(st.zuege[zug].verlust, `${name} ${zug} Verlust`).toBe(soll.verlust);
-          expect(st.zuege[zug].kampfkraft, `${name} ${zug} Kampfkraft`).toBe(soll.kampfkraft);
-          expect(st.zuege[zug].verwundete, `${name} ${zug} Verwundete`).toBe(soll.verwundete);
-          expect(st.zuege[zug].kampfkraft, `${name} ${zug} Untergrenze`).toBeGreaterThanOrEqual(m.inh.regeln.verluste!.untergrenze_prozent);
+        for (const [pz, soll] of Object.entries(v.panzer)) {
+          expect(st.panzer[pz], `${name} ${pz}`).toEqual(soll);
+          if (!soll.ausgefallen) expect(st.panzer[pz].zustand, `${name} ${pz} Untergrenze`).toBeGreaterThanOrEqual(vr.untergrenze_prozent);
         }
-        expect(st.kompanie, `${name} Kompanie`).toEqual(v.kompanie);
+        expect(st.zug, `${name} Zug`).toEqual(v.zug);
+        expect(st.zug.ausgefallen, `${name} höchstens ${vr.hoechstens_ausgefallen} ausgefallen`).toBeLessThanOrEqual(vr.hoechstens_ausgefallen);
         const km = z.injectReihenfolge.map((id) => z.injects[id]).filter((i) => i.stufe !== undefined);
         expect(km.map((i) => [i.id, i.zug, i.stufe, i.text]), `${name} Druckmeldungen`).toEqual(v.meldungen.map((k) => [k.inject, k.zug, k.stufe, k.text]));
         km.forEach((i, k) => expect(i.erschienen.t_s, `${name} ${i.id}`).toBeCloseTo(v.meldungen[k].t, 1));

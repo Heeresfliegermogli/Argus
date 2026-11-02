@@ -206,7 +206,8 @@ def main():
             warte(lambda: offen_g3() == "M01", 10, "Ziel 1 offen")
             g3.get_by_role("button", name="FREIGABE").click()
             ein = g3.get_by_text(re.compile(r"^Einschlag \d\d:\d\d$"))   # Spieluhr 00:00–25:00 (B4)
-            warte(lambda: ein.count() == 1 and ein.is_visible(), 15, "Spielzeit des Einschlags auf der Karte")
+            # seit 2.4 (E3) je Fahrzeug ein Einschlag: Ziel 1 sind zwei Spähpanzer, also zwei Marken „Einschlag mm:ss“
+            warte(lambda: ein.count() >= 1 and ein.first.is_visible(), 15, "Spielzeit des Einschlags auf der Karte")
 
         def f_3():
             g3.get_by_placeholder("Hinweis an Aufklärung und Zielprüfung").fill("Schule NS-01 ist belegt")

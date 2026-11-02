@@ -237,11 +237,12 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
             if "Druck war gebaut" not in offen:
                 fehler.append("Preis des Abwartens: Offenlegung fehlt")
             if plan and all("auswertung" in t and (t["auswertung"].get("kennzahlen") or {}).get("verluste") for t in plan["teams"]):
-                ist = s.eval_on_selector_all(".preis-tabelle tbody tr", "rs => rs.map(r => [...r.querySelectorAll('td.zahl')].slice(0, 2).map(c => parseInt(c.textContent)))")
-                soll = sorted([t["auswertung"]["kennzahlen"]["verluste"]["kampfkraft"], t["auswertung"]["kennzahlen"]["verluste"]["verwundete"]] for t in plan["teams"])
+                # seit 2.5 (F2.9): einsatzbereite Panzer b/4 und Verwundete je Team
+                ist = s.eval_on_selector_all(".preis-tabelle tbody tr", "rs => rs.map(r => [parseInt(r.querySelector('.preis-bereit').textContent), parseInt(r.querySelector('td.zahl').textContent)])")
+                soll = sorted([t["auswertung"]["kennzahlen"]["verluste"]["bereit"], t["auswertung"]["kennzahlen"]["verluste"]["verwundete"]] for t in plan["teams"])
                 protokoll.append(("preis Werte", 0, {"ist": sorted(ist), "soll": soll}))
                 if demo and sorted(ist) != soll:          # im Beispiel exakt wie im Prozess; nach einem Lauf im Browser verschieben Klickzeiten die Verluste
-                    fehler.append(f"Preis des Abwartens: Kampfkraft/Verwundete {sorted(ist)} / im Prozess {soll}")
+                    fehler.append(f"Preis des Abwartens: einsatzbereit/Verwundete {sorted(ist)} / im Prozess {soll}")
             print(f"  preis: {n_kurven} Kurven, {n_marken} Marken (S4/N4/S3), Leitfragen und Offenlegung da")
         elif k == "schluss":
             if "ihr oder ARGUS" not in s.get_by_test_id("schluss").inner_text():

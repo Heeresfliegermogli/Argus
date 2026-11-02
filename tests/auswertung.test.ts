@@ -67,7 +67,7 @@ describe("Auswertung: Fälle", () => {
     expect(s3.kette.glieder.find((g) => g.entscheidend)?.stufe).toBe("g3");
     expect(s3.kette.einschlag?.fehl).toBe(true);
     expect(s3.kette.einschlag?.text).toContain("Z-15 verbündet");
-    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (PzAbw)", "→ Verbündete getroffen"]);
+    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (Kanone)", "→ Verbündete getroffen"]); // seit 2.5: Kanone des 1. Zuges, ca. 5 s
     const s4 = a.teams[1].faelle.S4;
     expect(s4.kette.glieder[1].zeichen).toBe("◷");
     // seit 2.4: M23 ist „Ziel 31“; sein Einschlag (24:56) liegt vor Spielende, M18 entfällt damit bei der Zielprüfung
@@ -76,7 +76,7 @@ describe("Auswertung: Fälle", () => {
     // neue Fälle (2.4): Schutzschilde abwarten, Verwundete und Presse ablehnen
     expect(a.teams[1].faelle.S5.zeilen).toEqual(["Zielprüfung stellt zurück 18:10", "entfallen bei der Zielprüfung – Fahrzeug zerstört", "Ziel 27 FREIGABE 21:50"]);
     expect(a.teams[0].faelle.S5.zeilen).toEqual(["FREIGABE 18:40 (LM)", "→ Zivilpersonen getroffen"]);
-    expect(a.teams[0].faelle.S6.zeilen).toEqual(["FREIGABE 22:00 (PzAbw)", "→ Wehrlose getroffen"]);
+    expect(a.teams[0].faelle.S6.zeilen).toEqual(["FREIGABE 22:00 (Kanone)", "→ Wehrlose getroffen"]);
     expect(a.teams[1].faelle.S6.text).toBe("Aufklärung lehnt ab 20:05");
     expect(a.teams[0].faelle.S8.zeilen).toEqual(["FREIGABE 21:20 (Mrs)", "→ Zivilpersonen getroffen"]);
     expect(a.teams[1].faelle.S8.zeilen).toEqual(["Aufklärung lehnt ab 19:30", "Ziel 30 FREIGABE 23:35"]);
@@ -164,9 +164,9 @@ describe("Replay", () => {
     expect(n).toBe(ereignisseBis(p, 1330));
     expect(z.meldungen.M20.stufe).toBe("g3");
     expect(z.zerstoert["Z-15"]).toBeUndefined();
-    expect(zustandBis(inh, p, 1365).z.zerstoert["Z-15"]).toBeUndefined();
+    expect(zustandBis(inh, p, 1362).z.zerstoert["Z-15"]).toBeUndefined();
     const spaeter = zustandBis(inh, p, 1380).z;
-    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1370, 0);
+    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1365, 0); // seit 2.5: Kanone ca. 5 s bis zum Einschlag (vorher PzAbw 10 s)
   });
 });
 

@@ -1,11 +1,11 @@
 {
  "version": 1,
- "erzeugt": "2026-11-01",
+ "erzeugt": "2026-11-02",
  "generator": "tools/assets/gen_assets.py",
  "hinweis": "Alle Pfade relativ zu assets/. Übungslage, alles fiktiv und prozedural erzeugt. Drohnenbilder ohne HUD und ohne ARGUS-Markierung: Die Oberfläche zeichnet Rahmen (ziele[].box, Pixel im Bild), Klasse, Konfidenz und Uhrzeit aus Szenario und Manifest.",
  "szenario": {
   "id": "kraehe-01",
-  "version": "2.4",
+  "version": "2.5",
   "datei": "szenario_kraehe_01.json"
  },
  "koordinaten": "Meter, x nach Osten, y nach Süden, Ursprung oben links; hdg in Grad, 0 = Osten, im Uhrzeigersinn",
@@ -15,9 +15,9 @@
   "drohne_ebenen": 1994914,
   "karte_start": 649192,
   "karte_kacheln": 1294782,
-  "karte_sonst": 472082,
-  "fahrzeuge": 621195,
-  "effekte": 555030
+  "karte_sonst": 469428,
+  "fahrzeuge": 613686,
+  "effekte": 603035
  },
  "karte": {
   "id": "raum_kraehe",
@@ -64,7 +64,7 @@
    "m_pro_px": 0.6667,
    "breite": 1500,
    "hoehe": 1050,
-   "bytes": 364410,
+   "bytes": 361756,
    "hinweis": "Vorschau/Rückfall mit eingebrannter Schrift; im Spiel zeichnet die Karte Raster, Zonen und Namen selbst."
   },
   "gelaende": {
@@ -76,8 +76,8 @@
   "bild": "sprites/fahrzeuge.png",
   "json": "sprites/fahrzeuge.json",
   "breite": 1024,
-  "hoehe": 1008,
-  "bytes": 621195,
+  "hoehe": 1016,
+  "bytes": 613686,
   "px_pro_m": 12,
   "ausrichtung": "Blick nach Osten (hdg 0), Anker Bildmitte = Fahrzeugmitte; um hdg im Uhrzeigersinn drehen",
   "schatten": "nicht eingebrannt: denselben Rahmen schwarz (Alpha ca. 0,45) um 1,2 m nach Südost versetzt darunter zeichnen",
@@ -298,24 +298,6 @@
      6.92
     ]
    },
-   "spz_eigen.png": {
-    "typ": "spz_eigen",
-    "wrack": false,
-    "px_pro_m": 12,
-    "groesse_m": [
-     10.5,
-     4.42
-    ]
-   },
-   "spz_eigen_wrack.png": {
-    "typ": "spz_eigen",
-    "wrack": true,
-    "px_pro_m": 12,
-    "groesse_m": [
-     14.08,
-     8.0
-    ]
-   },
    "pkw_zivil.png": {
     "typ": "pkw_zivil",
     "wrack": false,
@@ -386,6 +368,25 @@
     "groesse_m": [
      11.38,
      10.38
+    ]
+   },
+   "kpz_leo2a7v.png": {
+    "typ": "kpz_leo2a7v",
+    "wrack": false,
+    "px_pro_m": 12,
+    "groesse_m": [
+     14.92,
+     6.42
+    ]
+   },
+   "kpz_leo2a7v_ausgefallen.png": {
+    "typ": "kpz_leo2a7v",
+    "wrack": false,
+    "zustand": "ausgefallen",
+    "px_pro_m": 12,
+    "groesse_m": [
+     14.92,
+     6.42
     ]
    },
    "person_zivil.png": {
@@ -484,6 +485,16 @@
     "groesse_m": [
      6.58,
      3.17
+    ]
+   },
+   "kpz_leo2a7v_eingeschraenkt.png": {
+    "typ": "kpz_leo2a7v",
+    "wrack": false,
+    "zustand": "eingeschraenkt",
+    "px_pro_m": 12,
+    "groesse_m": [
+     14.92,
+     6.42
     ]
    },
    "person_zivil_c0.png": {
@@ -712,8 +723,8 @@
   "bild": "sprites/effekte.webp",
   "json": "sprites/effekte.json",
   "breite": 2048,
-  "hoehe": 2040,
-  "bytes": 555030,
+  "hoehe": 2236,
+  "bytes": 603035,
   "animationen": {
    "explosion_mittel": {
     "bilder": 16,
@@ -850,6 +861,24 @@
     "schleife": false,
     "px_pro_m": 8.727,
     "hinweis": "Varianten (fps 0): je Wolke eine, mit dem Alter größer und blasser zeichnen; Wind nach Südost"
+   },
+   "einschlag_staub": {
+    "bilder": 12,
+    "px": 128,
+    "groesse_m": 12.0,
+    "fps": 16,
+    "schleife": false,
+    "px_pro_m": 10.667,
+    "hinweis": "Fehlschuss (direktes Feuer daneben oder nah): am Einschlagort neben dem Panzer"
+   },
+   "treffer_panzer": {
+    "bilder": 12,
+    "px": 96,
+    "groesse_m": 7.0,
+    "fps": 18,
+    "schleife": false,
+    "px_pro_m": 13.714,
+    "hinweis": "Treffer am eigenen Panzer (Gerät, keine Personen): am Panzer; das Zeichen blinkt dazu"
    }
   },
   "zuordnung": {
@@ -887,6 +916,12 @@
     },
     "rauch": {
      "flaeche": "nebel"
+    },
+    "fehlschuss": {
+     "einschlag": "einschlag_staub"
+    },
+    "treffer_panzer": {
+     "einschlag": "treffer_panzer"
     }
    },
    "wrack": {
@@ -894,7 +929,10 @@
      "feuer",
      "rauch"
     ],
-    "ausser_gefecht": []
+    "ausser_gefecht": [],
+    "eigen_ausgefallen": [
+     "rauch"
+    ]
    },
    "feuert": {
     "kanone": "muendungsblitz",

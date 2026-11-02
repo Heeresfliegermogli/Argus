@@ -24,7 +24,7 @@ import { gemeldetePosition } from "./regeln";
 import { argusBei } from "./eloka";
 import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
-import { stand as verlustZugStand, stufeFuer, verlustLage, zuege as eigeneZuege, zugMitte } from "./verluste";
+import { panzer as eigenePanzer, PANZER_STUFE_TEXT, type Stufe, stand as verlustPanzerStand, trefferText, verlustLage, verwText, zug as zugStand, type ZugStand } from "./verluste";
 import { zielNr } from "./zielnummern";
 import type { MeldungsStand, Spielzustand } from "./zustand";
 import type { TrefferDaten } from "./ereignisse";
@@ -115,60 +115,59 @@ export interface WirkungsMarke {
   geplant?: boolean;
 }
 
-/** Seit 2.3 (D1): ein Zug der eigenen Kompanie auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
-export interface EigenerZugMarke {
+/** Seit 2.5 (F1/F2.6): ein Kampfpanzer des eigenen 1. Zuges auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
+export interface EigenerPanzerMarke {
   id: string;
+  /** „1/1“ */
   name: string;
-  /** Mitte des Zuges (Zeichen) */
   pos: Punkt;
-  fahrzeuge: Punkt[];
   hdg: number;
   sidc: string;
-  kampfkraft: number;
+  zustand: number;
+  stufe: Stufe;
+  ausgefallen: boolean;
   verwundete: number;
-  /** 0 normal, 1 unter erster Schwelle, 2 unter zweiter, 3 Untergrenze */
-  stufe: number;
-  /** Spielzeiten von Treffern um die Lagezeit (das Zeichen flackert kurz) */
+  /** Spielzeiten von Treffern um die Lagezeit (das Zeichen blinkt kurz) */
   treffer: number[];
   titel: string;
   zeilen: string[];
 }
 
 export interface EigeneLage {
-  zuege: EigenerZugMarke[];
-  gefechtsstand?: { pos: Punkt; sidc: string; titel: string };
+  panzer: EigenerPanzerMarke[];
+  zug: ZugStand;
 }
 
 export interface Lagebild {
   objekte: KartenObjekt[];
   personen: PersonenMarke[];
   wirkungen: WirkungsMarke[];
-  /** seit 2.3: eigene Züge mit Zustand (fehlt ohne eigene Truppe) */
+  /** seit 2.3: eigene Truppe mit Zustand, seit 2.5 vier Panzer (fehlt ohne eigene Truppe) */
   eigene?: EigeneLage;
 }
 
-/** Zeichen eines eigenen Zuges: Panzergrenadiere, Zug (●●●); Gefechtsstand mit Stab (APP-6 Modifikator A, Kompanie). */
-export const ZEICHEN_EIGENER_ZUG = "SFGPUCIZ---D---";
-export const ZEICHEN_GEFECHTSSTAND = "SFGPUCIZ--AE---";
+/** Zeichen eines eigenen Kampfpanzers (APP-6 Gerät „Kampfpanzer“, eigen); ausgefallen: beschädigt (Querstrich), grau gezeichnet. */
+export const ZEICHEN_EIGENER_PANZER = "SFGPEVAT-------";
+export const ZEICHEN_EIGENER_PANZER_AUS = "SFGDEVAT-------";
 
-/** Eigene Züge zur Lagezeit t (D1): Stellung, Kampfkraft und Verwundete aus dem Verlustmodell (kern/verluste.ts). */
+/** Eigene Panzer zur Lagezeit t (F1): Stellung, Zustand, Stufe und Verwundete aus dem Verlustmodell (kern/verluste.ts). */
 export function eigeneLage(inh: Inhalte, z: Spielzustand, t: number): EigeneLage | undefined {
   const et = (inh.basis ?? inh).szenario.eigene_truppe;
   if (!et) return undefined;
   const vr = inh.regeln.verluste;
   const l = vr ? verlustLage(inh, z) : null;
-  const st = l ? verlustZugStand(l.welt, l.ereignisse, t) : {};
-  const zuege = eigeneZuege(inh).map((zug) => {
-    const s = st[zug.id] ?? { verlust: 0, kampfkraft: 100, verwundete: 0 };
-    const treffer = (l?.ereignisse ?? []).filter((e) => e.zug === zug.id && e.t > t - 3 && e.t <= t + 2).map((e) => e.t);
+  const st = l ? verlustPanzerStand(l.welt, l.ereignisse, t) : {};
+  const marken = eigenePanzer(inh).map((pz) => {
+    const s = st[pz.id] ?? { zustand: 100, stufe: "einsatzbereit" as Stufe, ausgefallen: false, verwundete: 0, treffer: 0, roh: 100 };
+    const treffer = (l?.ereignisse ?? []).filter((e) => e.panzer === pz.id && e.ergebnis === "treffer" && e.t > t - 3 && e.t <= t + 2).map((e) => e.t);
     return {
-      id: zug.id, name: zug.name, pos: zugMitte(zug), fahrzeuge: zug.fahrzeuge, hdg: zug.hdg, sidc: ZEICHEN_EIGENER_ZUG,
-      kampfkraft: s.kampfkraft, verwundete: s.verwundete, stufe: vr ? stufeFuer(vr, s.verlust) : 0, treffer,
-      titel: `${zug.name} (eigen) · ${zug.ort}`,
-      zeilen: [`Kampfkraft ${s.kampfkraft} % · ${s.verwundete === 1 ? "1 Verwundeter" : `${s.verwundete} Verwundete`}`],
+      id: pz.id, name: pz.name, pos: pz.pos, hdg: pz.hdg, sidc: s.ausgefallen ? ZEICHEN_EIGENER_PANZER_AUS : ZEICHEN_EIGENER_PANZER,
+      zustand: s.zustand, stufe: s.stufe, ausgefallen: s.ausgefallen, verwundete: s.verwundete, treffer,
+      titel: `${pz.name} (eigen${pz.rolle ? `, ${pz.rolle}` : ""}) · ${pz.ort}`,
+      zeilen: [`${et.einheit} · Kampfpanzer`, `${PANZER_STUFE_TEXT[s.stufe]} · ${s.zustand} % · ${trefferText(s.treffer)}${s.verwundete ? ` · ${verwText(s.verwundete)}` : ""}`],
     };
   });
-  return { zuege, gefechtsstand: { pos: et.gefechtsstand.pos, sidc: ZEICHEN_GEFECHTSSTAND, titel: `${et.gefechtsstand.name} (${et.name})` } };
+  return { panzer: marken, zug: zugStand(Object.fromEntries(marken.map((m) => [m.id, st[m.id] ?? { zustand: 100, roh: 100, ausgefallen: false, treffer: 0, stufe: "einsatzbereit" as Stufe, verwundete: 0 }]))) };
 }
 
 export const LEER: Lagebild = { objekte: [], personen: [], wirkungen: [] };
@@ -569,6 +568,6 @@ export function lagebildSchluessel(lb: Lagebild): string {
     lb.objekte.map((o) => `${o.id}@${ort(o)}:${o.sidc}:${o.zustand}:${o.text}:${o.menge ?? ""}:${o.sprite ? `${o.sprite.name}${o.sprite.wrackAb ?? ""}${o.sprite.zustandAb ?? ""}` : ""}:${o.zeilen.join("/")}`).join(";"),
     lb.personen.map((p) => `${p.id}@${ort(p)}:${p.getroffen ? 1 : 0}`).join(";"),
     lb.wirkungen.map((w) => `${w.id}${w.geplant ? "?" : ""}`).join(";"),
-    (lb.eigene?.zuege ?? []).map((e) => `${e.id}:${e.kampfkraft}:${e.verwundete}:${e.treffer.join(",")}`).join(";"),
+    (lb.eigene?.panzer ?? []).map((e) => `${e.id}:${e.zustand}:${e.stufe}:${e.treffer.join(",")}`).join(";"),
   ].join("|");
 }

@@ -11,12 +11,12 @@ import { argusBei, bildalter, elokaAktiv, elokaStoerung } from "../src/kern/elok
 import type { Absender, Ereignis } from "../src/kern/ereignisse";
 import { dist, position, vorhanden } from "../src/kern/geometrie";
 import { einschlaege, einschlag, pruefeWirkmittel, stehende, vorhersage, wirkungBeimEinschlag } from "../src/kern/regeln";
-import { stand, zeitlinie } from "../src/kern/verluste";
+import { zeitlinie } from "../src/kern/verluste";
 import { anwenden, zustandAus } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
 
 const ref = JSON.parse(readFileSync(new URL("./referenz_durchlauf.json", import.meta.url), "utf-8")) as {
-  laeufe: { team: string; einspielen: Record<string, number>; faelle: Record<string, boolean>; verluste: { zuege: Record<string, { kampfkraft: number }>; kompanie: { kampfkraft: number } } }[];
+  laeufe: { team: string; einspielen: Record<string, number>; faelle: Record<string, boolean>; verluste: { panzer: Record<string, { zustand: number; ausgefallen: boolean }>; zug: { bereit: number; eingeschraenkt: number; ausgefallen: number } } }[];
 };
 
 const SYS: Absender = { rolle: "system" };
@@ -34,7 +34,7 @@ const NEU = ["S5", "S6", "S7", "S8"];
 describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
   it("E1: das Menü „Verstärkung“ ist per Schalter in den Regeln aus", async () => {
     const inh = await inhalte();
-    expect(inh.szenario.version).toBe("2.4");
+    expect(["2.4", "2.5"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F)
     expect(inh.regeln.spielleitung?.verstaerkung_menue).toBe(false);
     // die Verstärkungen bleiben in den Daten (Schalter, kein Löschen)
     expect(inh.szenario.verstaerkungen?.gruppen.length).toBeGreaterThan(0);
@@ -144,7 +144,7 @@ describe("Szenario 2.4: BEKÄMPFEN wirkt auf den Zug (E3)", () => {
     expect(z.bestand.LM).toBe(20 - 3);
     // Host-Takt bis nach dem letzten Einschlag
     const bis = d.einschlaege[2].t + 1;
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 200; i++) {
       const n = faellig(inh, z, bis)[0];
       if (!n) break;
       z = anwenden(z, { seq: z.seq + 1, typ: n.typ, ts: 0, t_s: n.t_geplant ?? bis, von: SYS, daten: n.daten } as Ereignis, inh);
@@ -257,7 +257,7 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
     expect(inh.fahrzeuge[z45.typ].feuer_effekt).toBe("keiner");
   });
 
-  it("S7 Kirchturm: legitimes Ziel im Kulturgut – Mörser verstößt (Ortschaft), LM nicht; Dauerverluste beim 2. Zug, bis er bekämpft ist", async () => {
+  it("S7 Kirchturm: legitimes Ziel im Kulturgut – Mörser verstößt (Ortschaft), LM nicht; gelenktes Feuer auf 1/2, bis er bekämpft ist", async () => {
     const inh = await inhalte();
     const z42 = inh.ziele["Z-42"];
     expect(z42.im_gebaeude).toBe("kirchturm");
@@ -268,7 +268,9 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
     expect(inh.meldungen.M31.loesung?.wirkmittel).toEqual(["LM"]);
     const ohne = zeitlinie(inh, {}, null, []).filter((x) => x.quelle === "Z-42");
     expect(ohne.length).toBeGreaterThan(10);
-    expect(new Set(ohne.map((x) => x.zug))).toEqual(new Set(["zug2"]));
+    // seit 2.5 (F2.8): Beobachter Kirchturm → 1/2; ist 1/2 schon ausgefallen (ohne jede Bekämpfung: Mörser Z-06 um 10:10), auf den nächsten
+    expect(zeitlinie(inh, { "Z-06": 400 }, null, []).filter((x) => x.quelle === "Z-42")[0].panzer).toBe("pz2");
+    expect(ohne[0].panzer).not.toBe("pz2");
     expect(new Set(ohne.map((x) => x.art))).toEqual(new Set(["beobachter"]));
     const mit = zeitlinie(inh, { "Z-42": 1000 }, null, []).filter((x) => x.quelle === "Z-42");
     expect(mit.length).toBeLessThan(ohne.length / 3);
@@ -286,11 +288,10 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
       expect(Math.max(...t.slice(1).map((x, i) => x - t[i])), id).toBeLessThanOrEqual(60);
       expect(t[t.length - 1], id).toBeGreaterThan(1400);
     }
-    // bekämpft um 16:40: weniger Schaden beim 2. Zug (ohne Entscheidungen erreicht er die Untergrenze, daher vor dem Deckel gezählt)
+    // bekämpft um 16:40: weniger Schaden an 1/1 (S5) und 1/2 (S7)
     const frueh = zeitlinie(inh, { "Z-41": 1000, "Z-42": 1000 }, null, []);
-    const summe = (ev: typeof alle) => ev.filter((x) => x.zug === "zug2").length;
-    expect(summe(frueh)).toBeLessThan(summe(alle));
-    expect(stand(inh, frueh, 1100).zug2.verlust).toBeLessThan(stand(inh, alle, 1100).zug2.verlust);
+    const summe = (ev: typeof alle) => ev.filter((x) => x.quelle === "Z-41" || x.quelle === "Z-42").reduce((a, x) => a + x.schaden, 0);
+    expect(summe(frueh)).toBeLessThan(summe(alle) / 5);
   });
 
   it("S8 Presse und Familie: das Pressefahrzeug ist zivil, die Familie im Pkw wird nie gemeldet; Treffer bringen I-15 / I-16", async () => {
@@ -319,15 +320,17 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
   });
 });
 
-describe("Szenario 2.4: Kalibrierung (E2.3)", () => {
-  it("ideal hat mehr Verluste als naiv, die Untergrenze 40 % hält in allen Läufen (Werte im Drehbuch)", () => {
+describe("Kalibrierung (seit 2.5 je Panzer, F2.9; vorher E2.3)", () => {
+  it("ideal endet spürbar schlechter als naiv (ideal ≥ 1 Panzer ausgefallen, naiv keiner), die Untergrenze hält in allen Läufen", () => {
     const naiv = ref.laeufe[0];
     const ideal = ref.laeufe[1];
     expect([naiv.team, ideal.team]).toEqual(["naiv", "ideal"]);
-    expect(ideal.verluste.kompanie.kampfkraft).toBeLessThan(naiv.verluste.kompanie.kampfkraft);
-    for (const l of ref.laeufe) for (const [zug, s] of Object.entries(l.verluste.zuege)) expect(s.kampfkraft, `${l.team} ${zug}`).toBeGreaterThanOrEqual(40);
-    // spürbar mehr Druck als 2.3 (ideal 64 %, naiv 72 %)
-    expect(ideal.verluste.kompanie.kampfkraft).toBeLessThanOrEqual(62);
-    expect(naiv.verluste.kompanie.kampfkraft).toBeLessThanOrEqual(70);
+    expect(naiv.verluste.zug.ausgefallen).toBe(0);
+    expect(ideal.verluste.zug.ausgefallen).toBeGreaterThanOrEqual(1);
+    expect(ideal.verluste.zug.ausgefallen * 10 + ideal.verluste.zug.eingeschraenkt).toBeGreaterThan(naiv.verluste.zug.ausgefallen * 10 + naiv.verluste.zug.eingeschraenkt);
+    for (const l of ref.laeufe) {
+      expect(l.verluste.zug.ausgefallen, l.team).toBeLessThanOrEqual(2);
+      for (const [pz, s] of Object.entries(l.verluste.panzer)) if (!s.ausgefallen) expect(s.zustand, `${l.team} ${pz}`).toBeGreaterThanOrEqual(40);
+    }
   });
 });

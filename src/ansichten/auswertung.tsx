@@ -26,6 +26,7 @@ import { gemeldetePosition } from "../kern/regeln";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { ROLLEN_NAME, ROLLEN_ZEICHEN } from "../kern/sichten";
 import { zielNr } from "../kern/zielnummern";
+import { PANZER_STUFE_TEXT } from "../kern/verluste";
 
 /** „Ziel 8“ – in allen Teams dieselbe Nummer (B7). */
 function zielText(inh: Inhalte, id: string): string {
@@ -854,32 +855,46 @@ function FallZeitleiste(p: {
 /** Fälle, an denen sich Abwarten und eigene Verluste gegenüberstehen (Marken auf den Kurven). */
 const PREIS_FAELLE = ["S4", "N4", "S3"];
 
+/** Mittel des Zustands der Panzer zu einem Eintrag des Verlaufs (abgerundet). */
+function mittel(zs: number[]): number {
+  return zs.length ? Math.floor(zs.reduce((x, y) => x + y, 0) / zs.length) : 100;
+}
+
+/** Ordnung für weniger/mehr Verluste: ausgefallen, dann eingeschränkt, dann Mittel des Zustands. */
+function schwere(v: NonNullable<TeamAuswertung["kennzahlen"]["verluste"]>): number {
+  return v.ausgefallen * 10000 + v.eingeschraenkt * 1000 + (100 - v.zustand);
+}
+
 /**
- * „Preis des Abwartens“ (D5.1/D5.2): Kampfkraft der eigenen Kompanie je Team über die Spielzeit, markiert mit den
- * Entscheidungen bei S4, N4 und S3 (✓ richtig, ✕ falsch); daneben je Team Kampfkraft, Verwundete und Fehlbekämpfungen,
- * die Leitfragen und die Offenlegung, dass der Druck gebaut war. Verluste sind Lage, keine Wertung – keine Rangliste.
+ * „Preis des Abwartens“ (D5.1/D5.2, seit 2.5 F2.9): Zustand der vier Panzer des eigenen Zuges je Team über die Spielzeit (Mittel,
+ * Linien bei 70 % einsatzbereit und 40 % ausgefallen), markiert mit den Entscheidungen bei S4, N4 und S3 (✓ richtig, ✕ falsch);
+ * daneben je Team die vier Panzer (Balken nach Zustand und Stufe), einsatzbereite, Verwundete und Fehlbekämpfungen, die Leitfragen
+ * und die Offenlegung, dass der Druck gebaut war. Verluste sind Lage, keine Wertung – keine Rangliste.
  */
 function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
   const { a, inh } = p;
   const sz = inh.basis?.szenario ?? inh.szenario;
   const text = sz.verluste?.auswertung;
+  const zugName = sz.eigene_truppe?.name ?? "eigene Truppe";
   const dauer = sz.spieluhr.dauer_s;
-  const unter = inh.regeln.verluste?.untergrenze_prozent ?? 40;
+  const vr = inh.regeln.verluste;
+  const unter = vr?.stufen.ausgefallen_unter ?? 40;
+  const voll = vr?.stufen.einsatzbereit_ab ?? 70;
   const teams = a.teams.filter((t) => t.kennzahlen.verluste);
   const W = 900, H = 640, L = 64, R = 178, O = 30, U = 54;
   const X = (t: number) => L + (t / dauer) * (W - L - R);
-  const ymin = Math.min(unter, 10 * Math.floor(Math.min(100, ...teams.flatMap((t) => t.kennzahlen.verluste!.verlauf.map((v) => v[1]))) / 10));
+  const ymin = Math.min(unter - 10, 10 * Math.floor(Math.min(100, ...teams.flatMap((t) => t.kennzahlen.verluste!.verlauf.map((v) => mittel(v[1])))) / 10));
   const Y = (v: number) => O + ((100 - v) / (100 - ymin)) * (H - O - U);
-  const amOrt = (verlauf: [number, number, number][], t: number) => {
-    let kk = 100;
-    for (const [tv, k] of verlauf) {
+  const amOrt = (verlauf: [number, number[], number, number][], t: number) => {
+    let m = 100;
+    for (const [tv, zs] of verlauf) {
       if (tv > t) break;
-      kk = k;
+      m = mittel(zs);
     }
-    return kk;
+    return m;
   };
   // Beschriftungen am Kurvenende ohne Überlappung (von oben nach unten, mind. 22 px Abstand)
-  const enden = teams.map((t) => ({ t, y: Y(t.kennzahlen.verluste!.kampfkraft) })).sort((x, y) => x.y - y.y);
+  const enden = teams.map((t) => ({ t, y: Y(t.kennzahlen.verluste!.zustand) })).sort((x, y) => x.y - y.y);
   for (let i = 1; i < enden.length; i++) enden[i].y = Math.max(enden[i].y, enden[i - 1].y + 22);
   const fmtT = (t: number) => `${String(Math.floor(t / 60)).padStart(2, "0")}:00`;
   // Marken S4/N4/S3 je Team; Beschriftung nur, wo sie frei steht (über, sonst unter der Marke), sonst nur Tooltip
@@ -901,28 +916,30 @@ function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
       break;
     }
   }
-  const maxKk = Math.max(...teams.map((t) => t.kennzahlen.verluste!.kampfkraft));
-  const minKk = Math.min(...teams.map((t) => t.kennzahlen.verluste!.kampfkraft));
-  const oben = teams.filter((t) => t.kennzahlen.verluste!.kampfkraft === maxKk);
-  const unten = teams.filter((t) => t.kennzahlen.verluste!.kampfkraft === minKk && minKk < maxKk);
+  const sMin = Math.min(...teams.map((t) => schwere(t.kennzahlen.verluste!)));
+  const sMax = Math.max(...teams.map((t) => schwere(t.kennzahlen.verluste!)));
+  const oben = teams.filter((t) => schwere(t.kennzahlen.verluste!) === sMin);
+  const unten = teams.filter((t) => schwere(t.kennzahlen.verluste!) === sMax && sMax > sMin);
   const fehlText = (t: TeamAuswertung) => t.kennzahlen.fehl.wirkungen === 1 ? "1 Fehlbekämpfung" : `${t.kennzahlen.fehl.wirkungen} Fehlbekämpfungen`;
+  const zugText = (t: TeamAuswertung) => `${t.kennzahlen.verluste!.bereit}/${t.kennzahlen.verluste!.gesamt} einsatzbereit`;
   return (
     <section class="tafel tafel-preis" data-testid="preis">
       <div class="preis-diagramm">
-        <h1>{text?.titel ?? "Preis des Abwartens"}: Kampfkraft der 2. Kp je Team</h1>
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Kampfkraft der eigenen Kompanie über die Spielzeit, ${teams.length} Teams, Marken bei ${PREIS_FAELLE.join(", ")}`}>
-          {[100, 90, 80, 70, 60, 50, 40, 30].filter((v) => v >= ymin).map((v) => (
-            <g key={v}><line x1={L} x2={X(dauer)} y1={Y(v)} y2={Y(v)} class={`kd-gitter ${v === unter ? "untergrenze" : ""}`} />
+        <h1>{text?.titel ?? "Preis des Abwartens"}: Zustand der Panzer des {zugName}es je Team</h1>
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Zustand der vier eigenen Panzer über die Spielzeit (Mittel), ${teams.length} Teams, Marken bei ${PREIS_FAELLE.join(", ")}`}>
+          {[100, 90, 80, 70, 60, 50, 40, 30, 20].filter((v) => v >= ymin).map((v) => (
+            <g key={v}><line x1={L} x2={X(dauer)} y1={Y(v)} y2={Y(v)} class={`kd-gitter ${v === unter || v === voll ? "untergrenze" : ""}`} />
               <text x={L - 10} y={Y(v) + 5} class="kd-tick rechts">{v} %</text></g>
           ))}
-          <text x={X(dauer)} y={Y(unter) - 6} class="kd-tick rechts">Untergrenze – die Kompanie hält</text>
+          <text x={X(dauer)} y={Y(voll) - 6} class="kd-tick rechts">darunter eingeschränkt</text>
+          <text x={X(dauer)} y={Y(unter) - 6} class="kd-tick rechts">darunter ausgefallen – höchstens zwei, der Zug hält</text>
           {[0, 300, 600, 900, 1200, 1500].map((t) => (
             <g key={t}><line x1={X(t)} x2={X(t)} y1={H - U} y2={H - U + 5} class="kd-achse" /><text x={X(t)} y={H - U + 24} class="kd-tick mitte">{fmtT(t)}</text></g>
           ))}
           <text x={(L + X(dauer)) / 2} y={H - 6} class="kd-bereich mitte">Spielzeit</text>
           {teams.map((t) => {
             const v = t.kennzahlen.verluste!.verlauf;
-            const pts = v.map(([tv, kk]) => `${X(tv).toFixed(1)},${Y(kk).toFixed(1)}`).join(" ");
+            const pts = v.map(([tv, zs]) => `${X(tv).toFixed(1)},${Y(mittel(zs)).toFixed(1)}`).join(" ");
             return <polyline key={t.id} points={pts} class="preis-kurve" style={{ stroke: t.farbe }} data-team={t.name} />;
           })}
           {marken.map((m) => (
@@ -933,23 +950,28 @@ function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
             </g>
           ))}
           {enden.map(({ t, y }) => (
-            <text key={t.id} x={X(dauer) + 10} y={y + 5} class="preis-ende" style={{ fill: t.farbe }}>{t.name} {t.kennzahlen.verluste!.kampfkraft} %</text>
+            <text key={t.id} x={X(dauer) + 10} y={y + 5} class="preis-ende" style={{ fill: t.farbe }}>{t.name} {t.kennzahlen.verluste!.bereit}/{t.kennzahlen.verluste!.gesamt}</text>
           ))}
         </svg>
         <div class="kd-legende">
           <span><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" class="preis-legende richtig" /></svg>Entscheidung richtig</span>
           <span><svg width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" transform="rotate(45 8 8)" class="preis-legende falsch" /></svg>falsch (Fehlbekämpfung oder Regelverstoß)</span>
-          <span class="sehr-leise">Kampfkraft in % · Verluste sind Lage, keine Wertung</span>
+          <span class="sehr-leise">Zustand der Panzer im Mittel · Verluste sind Lage, keine Wertung</span>
         </div>
       </div>
       <aside class="preis-aussage">
         <table class="preis-tabelle">
-          <thead><tr><th>Team</th><th>Kampfkraft</th><th>Verwundete</th><th>Fehlbekämpfungen</th>{PREIS_FAELLE.map((f) => <th key={f}>{f}</th>)}</tr></thead>
+          <thead><tr><th>Team</th><th>Panzer</th><th>Verw.</th><th>Fehl</th>{PREIS_FAELLE.map((f) => <th key={f}>{f}</th>)}</tr></thead>
           <tbody>
             {teams.map((t) => (
               <tr key={t.id} data-team={t.name}>
                 <td><TeamMarke name={t.name} farbe={t.farbe} klein /></td>
-                <td class="zahl">{t.kennzahlen.verluste!.kampfkraft} %</td>
+                <td class="preis-panzer" title={`${zugText(t)}\n${t.kennzahlen.verluste!.panzer.map((x) => `${x.name}: ${x.zustand} % ${PANZER_STUFE_TEXT[x.stufe]}`).join("\n")}`}>
+                  {t.kennzahlen.verluste!.panzer.map((x) => (
+                    <span key={x.id} class="pz-balken" data-pz={x.name} data-stufe={x.stufe}><i style={{ width: `${x.stufe === "ausgefallen" ? 100 : x.zustand}%` }} /></span>
+                  ))}
+                  <span class="preis-bereit">{t.kennzahlen.verluste!.bereit}/{t.kennzahlen.verluste!.gesamt}</span>
+                </td>
                 <td class="zahl">{t.kennzahlen.verluste!.verwundete}</td>
                 <td class={`zahl ${t.kennzahlen.fehl.wirkungen ? "rot" : ""}`} title={t.kennzahlen.fehl.arten.map((x) => `${FEHL_TEXT[x.art] ?? x.art} ${x.anzahl}`).join(", ")}>{t.kennzahlen.fehl.wirkungen}</td>
                 {PREIS_FAELLE.map((f) => {
@@ -964,8 +986,8 @@ function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
           <div class="preis-fragen" data-testid="preis-leitfragen">
             {oben.length > 0 && unten.length > 0 ? (
               <>
-                <p><b>{oben.map((t) => t.name).join(", ")}</b> <span class="leise">({maxKk} %, {oben.map(fehlText).join(" / ")})</span><br />{text.leitfragen.weniger}</p>
-                <p><b>{unten.map((t) => t.name).join(", ")}</b> <span class="leise">({minKk} %, {unten.map(fehlText).join(" / ")})</span><br />{text.leitfragen.mehr}</p>
+                <p><b>{oben.map((t) => t.name).join(", ")}</b> <span class="leise">({zugText(oben[0])}, {oben.map(fehlText).join(" / ")})</span><br />{text.leitfragen.weniger}</p>
+                <p><b>{unten.map((t) => t.name).join(", ")}</b> <span class="leise">({zugText(unten[0])}, {unten.map(fehlText).join(" / ")})</span><br />{text.leitfragen.mehr}</p>
               </>
             ) : (
               <><p>{text.leitfragen.weniger}</p><p>{text.leitfragen.mehr}</p></>

@@ -1,8 +1,8 @@
 {
   "id": "raum_kraehe",
   "titel": "Raum KRÄHE (fiktiv)",
-  "version": "1.3",
-  "hinweis": "Fiktives Gelände. Koordinaten in Metern, x nach Osten, y nach Süden, Ursprung oben links. Vektoren stammen aus claude/tools/gen_raum_kraehe.py; Linien mit glatt=true werden als Catmull-Rom-Kurve durch die Stützpunkte gezeichnet. Seit 1.3 (Szenario 2.4): Kirche mit Turm am Ostende der Ortschaft (S7, Kirchturm-Beobachter) und ein Wohnhaus an der Hauptstraße (S5, Schutzschilde).",
+  "version": "1.4",
+  "hinweis": "Fiktives Gelände. Koordinaten in Metern, x nach Osten, y nach Süden, Ursprung oben links. Vektoren stammen aus claude/tools/gen_raum_kraehe.py; Linien mit glatt=true werden als Catmull-Rom-Kurve durch die Stützpunkte gezeichnet. Seit 1.3 (Szenario 2.4): Kirche mit Turm am Ostende der Ortschaft (S7, Kirchturm-Beobachter) und ein Wohnhaus an der Hauptstraße (S5, Schutzschilde). Seit Szenario 2.5 (F3, Karte 1.4): Das Schulgelände heißt sichtbar nur noch „Schule“.",
   "ausdehnung_m": {"breite": 1000, "hoehe": 700},
   "raster": {
     "zelle_m": 100,
@@ -106,7 +106,7 @@
     },
     {
       "id": "schulgelaende",
-      "name": "Schule mit Sportplatz",
+      "name": "Schule",
       "art": "schule",
       "punkte": [[578, 438], [712, 424], [726, 592], [590, 606]]
     },

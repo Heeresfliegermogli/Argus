@@ -1,5 +1,5 @@
 // Szenario 2.1 (Änderungsliste A1–A9 nach dem Solo-Durchlauf am 25.10.2026): Durchbruch nicht aufgehaltener Gruppen
-// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die 2. Kp.
+// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die 2. Kp (seit 2.5: der 1. Zug der PzKp WOLF).
 // Gespielt mit den Modellteams naiv und ideal (wie tools/referenz/simuliere_durchlauf.py).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -26,11 +26,11 @@ async function lauf(): Promise<Modellteam[]> {
 }
 
 describe("Szenario 2.1: Daten", () => {
-  it("nur noch die 2. Kompanie, Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
+  it("nur eine eigene Kraft (seit 2.5 der 1. Zug der PzKp WOLF), Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
     const inh = await inhalte();
     const sz = inh.szenario;
     expect(Number(sz.version)).toBeGreaterThanOrEqual(2.1); // 2.2 baut auf 2.1 auf
-    expect(sz.kraefte.map((k) => k.id)).toEqual(["K-2"]);
+    expect(sz.kraefte.map((k) => k.id)).toEqual(["K-1"]); // bis 2.4: K-2 (2. Kompanie)
     expect(sz.zonen.map((z) => z.kurz)).toEqual(["Schule", "Ortschaft"]);
     expect(sz.durchbruch?.gruppen.length).toBeGreaterThanOrEqual(8);
     expect(sz.injects.find((i) => i.id === "I-13")?.bedingung?.typ).toBe("durchbruch");
@@ -83,7 +83,7 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     expect(d.fahrzeuge).toEqual(["Z-20", "Z-27", "Z-28"]); // seit 2.4 auch Z-20 (wie simuliere_durchlauf.py)
     expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
     expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
-    // die Achse NORD hat die 2. Kp zerschlagen (aufgehalten)
+    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; seit 2.5 die Kanonen des 1. Zuges)
     expect(naiv.z.durchbrueche["D-01"]).toMatchObject({ durch: false });
     expect(naiv.z.durchbrueche["D-01"].grund).toMatch(/zerstört/);
     // die Spielleitung sieht den Stand je Gruppe
@@ -117,7 +117,7 @@ describe("Szenario 2.1: Animationen (A8)", () => {
     // Zielprüfung kennt Z-06 aus M05, das Plenum (Umgebung) sieht keine Schüsse
     expect(effekte(inh, naiv.z, bekannteZiele(inh, naiv.z, "g2")).some((e) => e.id.startsWith("Z-06-s"))).toBe(true);
     expect(effekte(inh, naiv.z, "umgebung").some((e) => e.id.startsWith("Z-06-s"))).toBe(false);
-    // BMP-2 an der Brücke: Kanone nach Westen (Richtung 2. Kp)
+    // BMP-2 an der Brücke: Kanone nach Westen (Richtung eigene Truppe)
     const z18 = effekte(inh, naiv.z, "alle").filter((e) => e.id.startsWith("Z-18-s"));
     expect(z18.length).toBeGreaterThan(0);
     expect(z18.every((e) => e.quelle.feuert === "kanone" && Math.abs(Math.abs(e.richtung!) - 180) < 30)).toBe(true);

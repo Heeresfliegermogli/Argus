@@ -114,6 +114,10 @@ Zusätzlich beim Bedientest beobachten (ohne Aufgabe):
 - Seit 2.2: Erkennen die Personen die gelben **Kontakte** (Bewegung ohne Meldung bei der Rolle) und dass ein Kontakt
   zur Zielmeldung wird, sobald die Meldung bei ihnen ankommt? Fällt ihnen die Ankündigung neuer Meldungen auf
   („neu: Ziel n“ im Eingang, Ring am Zeichen)?
+- Seit 2.5: Bemerken die Personen die vier eigenen Panzer am Westrand (blau, 1/1–1/4) und ihren Zustand in der Kopfzeile
+  („1. Zug: 4/4 einsatzbereit · keine Verwundeten“, ein kleiner Balken je Panzer)? Ab ca. 05:20 liegt 1/2 unter Mörserfeuer:
+  Sieht die Führung die Druckmeldung des 1. Zuges („1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben …“) und
+  die Einschläge neben dem Panzer, später das Blinken bei einem Treffer?
 - Nach den Aufgaben, nur mit Unbeteiligten, die nicht am Lehrgang teilnehmen: SL setzt die Spielzeit auf 18:20, die
   Aufklärung öffnet Ziel 21 (S4) – erkennt sie mit der Lupe die zwei Kinder? Im Live-Bild sind sie kleinere Figuren
   in Draufsicht.

@@ -50,7 +50,7 @@ describe("Taktische Zeichen", () => {
     expect(zeichenZiel(inh, inh.ziele["Z-22"], false)).toBe("SNGPEVCF-------"); // Traktor zivil
     expect(zeichenZiel(inh, inh.ziele["Z-24"], false)).toBe("SHGDEVAT-------"); // außer Gefecht
     expect(zeichenZiel(inh, inh.ziele["Z-01"], true)).toBe("SHGXUCRVA------"); // zerstört
-    expect(zeichenKraft(inh, "pzgren_kp", "eigen")).toBe("SFGPUCIZ---E---");
+    expect(zeichenKraft(inh, "pz_zug", "eigen")).toBe("SFGPUCA----D---"); // seit 2.5: Panzerzug (eigen)
     const attrappe = zeichenZiel(inh, inh.ziele["Z-07"], false);
     expect(attrappe).toBe("SHGPEVAT--G----"); // Attrappe: Täuschungszeichen über dem Feindzeichen
     expect(new ms.Symbol(attrappe).isValid()).toBe(true);

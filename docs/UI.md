@@ -1,4 +1,4 @@
-# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9 und D1–D5)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9, D1–D5 und F)
 
 Fünf Ansichten in 1530 × 800 ohne Rollbalken: Aufklärung, Zielprüfung, Führung, Spielleitung und Plenum.
 Jede Rolle hat eine Einweisung (im Spiel als Folien, als Druck A5 quer).
@@ -35,6 +35,19 @@ I-13 nennen den Stand dieses Teams. Alle Lagemeldungen höchstens 140 Zeichen (D
 zwei Zeilen „Ziel n · Klasse · Konfidenz · ARGUS-Empfehlung“ und „Zielprüfung BEKÄMPFEN mit …“, die Begründung höchstens zwei Zeilen
 (ganzer Text beim Zeigen), darunter „Freigabe jetzt: Einschlag …“ mit den Warnungen. **Auswertung:** Kapitel „Preis des Abwartens“
 (siehe [`AUSWERTUNG.md`](AUSWERTUNG.md)).
+**Änderungen F (02.11.2026, Szenario 2.5, „Panzerzug“):** Statt der Kompanie mit drei Zügen steht der **1. Zug der Panzerkompanie
+WOLF** (fiktiv) mit **vier Kampfpanzern Leopard 2A7V** einzeln ganz am Westrand: 1/2 am Waldrand FUCHS, 1/1 (Zugführer) an der
+Hauptstraße, 1/3 und 1/4 südlich davon – bei allen Rollen, auf der Kontrollkarte und jetzt auch im Plenum (Lage und Einweisungskarte).
+Zeichen Kampfpanzer blau (`SFGPEVAT`) mit Kennung und Zustandsbalken (blau einsatzbereit, gelb eingeschränkt), ausgefallen grau mit
+Schrägstrich (`SFGDEVAT`); gezoomt der Sprite intakt, eingeschränkt oder ausgefallen. Feindfeuer ist sichtbar: Fehlschüsse als
+Einschlag mit Staub neben dem Panzer, Treffer als Funken und Rauchwölkchen am Panzer, das Zeichen **blinkt** kurz; ausgefallen raucht.
+Zeigen auf einen Panzer: Kennung, Stufe, Zustand, Treffer, Verwundete. **Kopfzeile aller Rollen:** „1. Zug: 3/4 einsatzbereit ·
+4 Verwundete“ mit einem kleinen Balken je Panzer (einsatzbereit = nicht ausgefallen; Rahmen gelb, sobald einer eingeschränkt, rot,
+sobald einer ausgefallen ist). **Führung:** Druckmeldungen je Panzer vom „1. Zug“ („1/3 unter Panzerfeuer von der Brücke Ost,
+Treffer an der Kette. Panzer bekämpfen!“), I-07 nennt 1/4, I-06 den Stand des Zuges, I-13 den getroffenen Panzer. Wirkmittel
+„1. Zug (Kanone 120 mm)“ (kurz „Kanone“) statt „Panzerabwehr 2. Kp“; die Leuchtspur kommt vom schießenden Panzer. Die Zone heißt
+„Schule“. Die Spielleitung sieht im Zeitplan nach dem Auslösen den gefüllten Text der Lagemeldung. Auswertung: „Preis des Abwartens“
+mit dem Zustand der vier Panzer je Team.
 Seit Schritt 7 bewegt sich die Lage (Routen, Tracking, Effekte; siehe [`ENGINE.md`](ENGINE.md)). Seit
 Schritt 6b ist die **Karte die Arbeitsfläche für Aufklärung, Zielprüfung und Führung** (Konzept v2, Abschnitt 6): Meldungen als
 Marken am Ziel, kein Verlauf, der Eingang nur als Zahl, bei der Aufklärung das Drohnenbild live am Ort. Seit Schritt 8 die
@@ -186,10 +199,11 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
   Sprite mit Fahrtrichtung, ab der Zerstörung Wrack, Z-24 ab 10:19:30 mit abgesprungener Kette), alle Effekte, Feind/verbündet/zivil/außer Gefecht, Attrappe mit Täuschungszeichen, Sanitätsfahrzeug mit
   Rotem Kreuz, ungemeldete Ziele violett umrandet, Personen (Zivil weiß, Soldaten rot, Besatzung mit
   weißem Tuch blau umrandet, getroffen = Kreuz), Wirkungen grau bzw. rot bei Fehltreffer.
-* **Eigene Züge (seit 2.3, D1):** bei allen Rollen und auf der Kontrollkarte – Zeichen `SFGPUCIZ---D---` (Zug) und
-  `SFGPUCIZ--AE---` (Gefechtsstand) mit Kampfkraft, ab 2,6 px/m (wie die Sprites der Kontrollkarte) die drei Schützenpanzer je Zug in Stellung
-  (`spz_eigen`), Treffer lassen das Zeichen flackern; Zustand aus `src/kern/verluste.ts` (`eigeneLage` im Lagebild).
-  Die Karte meldet an `argusKarte.diagnose.eigene` Zeichen, Sprites, flackernde Züge und Beschriftungen (für die Proben).
+* **Eigene Panzer (seit 2.5, F1; 2.3/2.4 eigene Züge):** bei allen Rollen, auf der Kontrollkarte und im Plenum – je Panzer das Zeichen
+  `SFGPEVAT-------` (Kampfpanzer, eigen; ausgefallen `SFGDEVAT-------` grau mit Schrägstrich) mit Kennung 1/1–1/4 und Zustandsbalken,
+  ab 2,6 px/m der Sprite `kpz_leo2a7v` (intakt, `_eingeschraenkt`, `_ausgefallen`) mit Erdwall zum Feind; Treffer lassen das Zeichen
+  blinken; Zustand aus `src/kern/verluste.ts` (`eigeneLage` im Lagebild). Die Karte meldet an `argusKarte.diagnose.eigene` Zeichen,
+  Sprites, blinkende Panzer, Beschriftungen und Stufen (für die Proben).
 * Raster, Planquadrate, Zonen, Gelände- und Wegenamen, eigene Kräfte (bis 2.2 als Pfeil am Westrand) kommen aus
   `karte_kraehe.json` und dem Szenario. Hintergrund topografische Karte oder Luftbild (Knopf), ab 2 px/m
   Luftbild-Kacheln (nur Webseite). Zoom mit Mausrad, Doppelklick, Knöpfen; Zeigen öffnet einen Tooltip.
