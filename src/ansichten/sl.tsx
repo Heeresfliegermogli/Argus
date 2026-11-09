@@ -1,6 +1,6 @@
-// Spielleitung: Uhr, Kontrollkarte (Ground Truth), bedingte Injects und Reserve, Zeitplan mit
-// manuellem Auslösen, Teilnehmer, Notiz und das vollständige Protokoll (mit Export). Das Fenster der
-// steuernden Spielleitung ist zugleich der Host.
+// Spielleitung für ein Team: Uhr, Kontrollkarte (Ground Truth), bedingte Lagemeldungen und Reserve, Zeitplan mit manuellem Auslösen,
+// Fenster, Notiz und das Protokoll (mit Export). Seit 2.6 (H1) rechnet der Team-Laptop das Spiel; die Spielleitung sieht das
+// hochgeladene Protokoll (mit Verzug) und schickt ihre Befehle als Aktionen an den Team-Laptop.
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { bedingtStand } from "../engine/ablauf";
 import { pruefeInhalte } from "../inhalte/pruefen";
@@ -8,15 +8,15 @@ import { absenderText, beschreibe } from "../kern/beschreibung";
 import { TEXT_MAX } from "../kern/ereignisse";
 import { effekte } from "../kern/effekte";
 import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
-import { ROLLEN_NAME, STUFE_TEXT } from "../kern/sichten";
+import { ROLLEN_NAME, standText } from "../kern/sichten";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { panzerName } from "../kern/verluste";
 import { verstaerkungStand } from "../kern/welt";
 import { fahrwegeAlle, verstaerkungVorschau } from "../kern/fahrwege";
 import { zielNr } from "../kern/zielnummern";
 import { istVeraltet } from "../sync/adapter";
+import { protokollDatei, speichereDatei } from "../sitzung/ablage";
 import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
-import { rollenAnzeige } from "../kern/sitzungen";
 import { AktionsKnopf, BestaetigenKnopf, Leer, Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
@@ -34,23 +34,10 @@ interface Plan {
 
 function exportieren(s: Sicht): void {
   const st = s.stand;
-  const daten = {
-    format: "argus-protokoll/1",
-    szenario: s.inh.szenario.id,
-    version: s.inh.szenario.version,
-    sitzung: st.raum,
-    team: st.teamName,
-    lauf: st.lauf,
-    exportiert: new Date().toISOString(),
-    protokoll: st.protokoll,
-  };
-  const blob = new Blob([JSON.stringify(daten, null, 1)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  const team = st.teamName.replace(/[^A-Za-z0-9ÄÖÜäöüß-]+/g, "_");
-  a.download = `argus-protokoll-${st.raum}-${team}-${st.lauf ?? "ohne-lauf"}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  const sz = s.inh.szenario;
+  speichereDatei(protokollDatei({
+    szenario: sz.id, version: sz.version, sitzung: st.raum, team: st.teamName, team_id: st.team, farbe: st.teamFarbe, lauf: st.lauf, protokoll: st.protokoll,
+  }));
 }
 
 export function plenumOeffnen(): void {
@@ -60,11 +47,9 @@ export function plenumOeffnen(): void {
   window.open(u.toString(), "argus-plenum");
 }
 
-/** Reihenfolge in der Fensterleiste: Spielleitung, Aufklärung, Zielprüfung, Führung, Plenum. */
+/** Reihenfolge in der Fensterleiste: Spielleitung, Team, Plenum. */
 function fensterRang(x: SichtTeilnehmer): number {
-  if (x.art === "sl") return 0;
-  if (x.art === "plenum") return 9;
-  return 1 + ["g1", "g2", "g3"].indexOf(x.rollen[0] ?? "g3");
+  return x.art === "sl" ? 0 : x.art === "plenum" ? 9 : 1;
 }
 
 const STATUS_TEXT = { wartet: "wartet", erfuellt: "kommt", ausgeloest: "ausgelöst", entfaellt: "entfällt" } as const;
@@ -101,8 +86,7 @@ export function SLAnsicht(p: { s: Sicht }) {
     });
     for (const i of sz.injects) {
       if (i.t_s === undefined) continue;
-      const an = i.an.toLowerCase();
-      liste.push({ art: "inject", id: i.id, t: i.t_s, text: `${i.von} → ${an === "g1" || an === "g2" || an === "g3" ? ROLLEN_NAME[an] : i.an}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
+      liste.push({ art: "inject", id: i.id, t: i.t_s, text: `Lagemeldung ${i.von}`, zusatz: i.text.length > 70 ? `${i.text.slice(0, 68)} …` : i.text, fall: i.fall });
     }
     for (const h of sz.hintergrund?.ereignisse ?? []) {
       const art = h.art === "panzerabwehr" ? `Kanone ${panzerName(inh, h.von)} → ${h.ziel}` : h.art === "feindartillerie" ? "Feindartillerie" : "Rauch";
@@ -158,11 +142,8 @@ export function SLAnsicht(p: { s: Sicht }) {
                 onKeyDown={(e) => e.key === "Enter" && zeitSetzen()} data-testid="sl-zeit" />
               <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={zeitSetzen}>Spielzeit setzen</button>
             </div>
-            <div class="zeile zwischen">
-              <span class="klein">Fast-Track <b>{z.fastTrack ? "EIN" : "AUS"}</b> <span class="sehr-leise">(auf Zuruf der Führung)</span></span>
-              <AktionsKnopf s={s} wartet={s.wartetAuf("fast_track")} klasse="klein" onClick={() => s.senden("fast_track", { an: !z.fastTrack })}>
-                {z.fastTrack ? "aus" : "ein"}
-              </AktionsKnopf>
+            <div class="klein sehr-leise" data-testid="sl-netz">
+              Protokoll hier: {z.seq} Einträge{st.upload.fehler ? ` · ${st.upload.fehler}` : ""} · rechnet: {st.rechnerName ?? "kein Team-Laptop da"}
             </div>
             <div class="knopf-reihe">
               <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
@@ -178,7 +159,7 @@ export function SLAnsicht(p: { s: Sicht }) {
             )}
           </div>
         </Panel>
-        <Panel titel="Bedingte Injects, E-01, Durchbruch, Reserve, Verstärkung" liste>
+        <Panel titel="Bedingte Lagemeldungen, E-01, Durchbruch, Reserve" liste>
           <div class="bedingt-liste" data-testid="bedingt">
             {bedingt.map((b) => {
               const inj = inh.injects[b.id];
@@ -201,14 +182,14 @@ export function SLAnsicht(p: { s: Sicht }) {
               return (
                 <div class={`bedingt ${da ? "ausgeloest" : ""}`} key={r.id} data-reserve={r.id} title={`${r.von}: „${r.text}“`}>
                   <div>
-                    <div><b>{r.id}</b> <span class="status">· Reserve an {r.an}{da ? ` · ausgelöst ${uhrzeit(start, da.erschienen.t_s)}` : ""}</span></div>
+                    <div><b>{r.id}</b> <span class="status">· Reserve{da ? ` · ausgelöst ${uhrzeit(start, da.erschienen.t_s)}` : ""}</span></div>
                     <div class="status">{r.einsatz}</div>
                   </div>
                   {!da && <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={() => s.senden("inject_ausloesen", { inject: r.id })}>auslösen</button>}
                 </div>
               );
             })}
-            {verstaerkungStand(inh, z.verstaerkungen, Math.min(t, sz.spieluhr.dauer_s)).map((v) => (
+            {(inh.regeln.spielleitung?.verstaerkung_menue ? verstaerkungStand(inh, z.verstaerkungen, Math.min(t, sz.spieluhr.dauer_s)) : []).map((v) => (
               <div class={`bedingt ${v.eingespielt !== undefined ? "ausgeloest" : v.gesperrtBis !== undefined ? "entfaellt" : ""} ${vorschauV === v.id ? "vorschau" : ""}`} key={v.id} data-verstaerkung-sl={v.id}
                 title={`${v.name} (${v.kurz}): ${v.zweck}`}
                 onMouseEnter={() => v.eingespielt === undefined && setVorschauV(v.id)} onMouseLeave={() => setVorschauV((x) => (x === v.id ? null : x))}>
@@ -229,8 +210,8 @@ export function SLAnsicht(p: { s: Sicht }) {
           <div class="fenster-liste" data-testid="fenster">
             {[...st.teilnehmer].sort((a, b) => fensterRang(a) - fensterRang(b) || a.name.localeCompare(b.name)).map((x) => {
               const alter = Math.max(0, Math.round((jetzt - x.puls) / 1000));
-              const marke = x.art === "tt" ? (x.rollen[0] ?? "sl") : x.art;
-              const kurz = x.art === "plenum" ? "Plenum" : x.art === "sl" ? "SL" : rollenAnzeige(x.rollen);
+              const marke = x.art === "tt" ? "zb" : x.art;
+              const kurz = x.art === "plenum" ? "Plenum" : x.art === "sl" ? "SL" : "Team";
               return (
                 <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`}
                   title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""} · letzte Rückmeldung vor ${alter} s`}>
@@ -243,7 +224,7 @@ export function SLAnsicht(p: { s: Sicht }) {
         </Panel>
         <Panel titel="Notiz ins Protokoll" klasse="flach">
           <div class="zeile" style="flex-wrap:nowrap">
-            <input class="feld" maxLength={TEXT_MAX.notiz} placeholder="Beobachtung, z. B. „Führung diskutiert I-04“" value={notiz}
+            <input class="feld" maxLength={TEXT_MAX.notiz} placeholder="Beobachtung, z. B. „Team diskutiert I-04“" value={notiz}
               onInput={(e) => setNotiz((e.target as HTMLInputElement).value)}
               onKeyDown={(e) => { if (e.key === "Enter" && notiz.trim()) { s.senden("notiz", { text: notiz.trim() }); setNotiz(""); } }} />
             <button type="button" class="knopf" disabled={!notiz.trim()} onClick={() => { s.senden("notiz", { text: notiz.trim() }); setNotiz(""); }}>+</button>
@@ -270,8 +251,8 @@ export function SLAnsicht(p: { s: Sicht }) {
                 const is = x.art === "inject" ? z.injects[x.id] : undefined;
                 const hs = x.art === "hintergrund" ? z.hintergrund[x.id] : undefined;
                 const erschienen = erschienenVon(x);
-                const status = ms ? STUFE_TEXT[ms.stufe] + (ms.fastTrack ? " · FT" : "")
-                  : is ? (is.quittiert ? "quittiert" : "ausgelöst") : hs ? (hs.wirkt === false ? `entfällt` : "") : "";
+                const status = ms ? standText(ms)
+                  : is ? (is.quittiert ? "angeklickt" : "ausgelöst") : hs ? (hs.wirkt === false ? `entfällt` : "") : "";
                 return (
                   <tr key={x.id} data-plan={x.id} style={erschienen ? "opacity:.55" : x.id === naechster ? "background:#2a2d24" : ""}>
                     <td class="zahl klein">{uhrzeit(start, x.t)}</td>

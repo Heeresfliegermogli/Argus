@@ -278,6 +278,7 @@ export class EffektEbene {
           }
           if (!imBild(p) && !imBild(q, 0)) break;
           const a = x.haupt;
+          this.gezeigt.add(a ? a.name : e.echtzeit_s ? "leuchtspur" : "lm_flug");
           if (a) {
             const bild = schleifenBild(a, 0);
             if (!e.echtzeit_s) {

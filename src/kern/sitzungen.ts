@@ -1,16 +1,17 @@
 // Sitzung, Teams und Rollen (Schritt 4b): Codes, Teamnamen, Teamfarben und die Frage „wer sitzt wo“.
 // Reine Funktionen ohne Netz, damit Lobby, Spielleitung, Adapter und Tests dieselben Regeln nutzen.
 //
-// Eine Sitzung hat einen kurzen Code aus drei Zeichen (z. B. K7P). Die Teilnehmer geben ihn auf der Startseite
-// ein und bilden in der Lobby Teams à drei (Aufklärung, Zielprüfung, Führung; intern g1, g2, g3). Fehlt jemand,
-// übernimmt eine Person zwei oder drei Rollen (Doppelrolle). Jedes Team spielt dieselbe Lage in einem eigenen Spielstand.
+// Eine Sitzung hat einen kurzen Code aus drei Zeichen (z. B. K7P). Die Teilnehmer geben ihn auf der Startseite ein und bilden in
+// der Lobby Teams. Seit 2.6 (Änderungen H) hat jedes Team eine Rolle, die Zielbearbeitung (intern zb), und einen Laptop: 2–3
+// Personen sitzen davor. Der Laptop, der dem Team zuerst beigetreten ist, rechnet das Spiel des Teams (Host); ein zweites Fenster
+// desselben Teams sieht nur zu, bis der Team-Laptop weg ist. Jedes Team spielt dieselbe Lage in einem eigenen Spielstand.
 import { type Rolle, zufall } from "./ereignisse";
 
-export type GruppenRolle = "g1" | "g2" | "g3";
-export const GRUPPEN_ROLLEN: GruppenRolle[] = ["g1", "g2", "g3"];
+export type GruppenRolle = "zb";
+export const GRUPPEN_ROLLEN: GruppenRolle[] = ["zb"];
 
 export function istGruppenRolle(r: unknown): r is GruppenRolle {
-  return r === "g1" || r === "g2" || r === "g3";
+  return r === "zb";
 }
 
 // ---------------------------------------------------------------- Codes
@@ -25,7 +26,7 @@ export const SITZUNG_MUSTER = /^[a-z0-9-]{3,32}$/;
 export const TEAM_MUSTER = /^t[a-z0-9]{4,8}$/;
 export const TEAMNAME_MAX = 24;
 export const SPIELERNAME_MAX = 40;
-/** Team des Direktaufrufs …/?rolle=g1&raum=… (ein Team, ohne Lobby, wie bis Schritt 6). */
+/** Team des Direktaufrufs …/?rolle=zb&raum=… bzw. ?rolle=sl&raum=… (ein Team, ohne Lobby, für Tests und Probeläufe). */
 export const DIREKT_TEAM = "traum";
 
 /**
@@ -91,8 +92,8 @@ export function teamnameBereinigt(name: string): string | null {
 }
 
 /**
- * Teamfarben: gut unterscheidbar auf dunklem Grund und weder Rollenfarbe (G1 blau, G2 violett,
- * G3 türkis) noch Signalfarbe (ARGUS-Bernstein, Rot, Grün). Erscheinen nie ohne den Teamnamen.
+ * Teamfarben: gut unterscheidbar auf dunklem Grund und weder Rollenfarbe noch Signalfarbe (ARGUS-Bernstein, Rot, Grün).
+ * Erscheinen nie ohne den Teamnamen.
  */
 export const TEAMFARBEN = ["#e8839b", "#e3d36b", "#a6cf5b", "#5ccfe0", "#8b93f0", "#d77ad6", "#d8dde3", "#b88b62"];
 
@@ -104,7 +105,7 @@ export function freieFarbe(belegt: string[]): string {
 
 // ---------------------------------------------------------------- Rollen im Team
 
-/** Rollen als Text in der Datenbank: „g1“ oder „g1,g2“ (fest sortiert). */
+/** Rollen als Text in der Datenbank: „zb“ (seit 2.6; bis 2.5 „g1“ oder „g1,g2“). */
 export function rollenText(rollen: GruppenRolle[]): string {
   return GRUPPEN_ROLLEN.filter((r) => rollen.includes(r)).join(",");
 }
@@ -115,10 +116,10 @@ export function rollenAus(text: string | undefined | null): GruppenRolle[] {
   return GRUPPEN_ROLLEN.filter((r) => teile.includes(r));
 }
 
-/** Rollen ohne G-Nummern (B3); kurz genug für Knöpfe und Chips. */
-export const ROLLEN_KURZ: Record<GruppenRolle, string> = { g1: "Aufklärung", g2: "Zielprüfung", g3: "Führung" };
+/** Kurz genug für Knöpfe und Chips. */
+export const ROLLEN_KURZ: Record<GruppenRolle, string> = { zb: "Zielbearbeitung" };
 
-/** „Aufklärung · Zielprüfung“ */
+/** „Zielbearbeitung“ */
 export function rollenAnzeige(rollen: GruppenRolle[]): string {
   return rollen.map((r) => ROLLEN_KURZ[r]).join(" · ");
 }

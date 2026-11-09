@@ -1,36 +1,25 @@
 # ARGUS – Planspiel „Auswirkungen von KI auf die Entscheidungsfindung“
 
-Browserbasiertes Planspiel für den Lehrgang OL TrD (Politische Bildung, Militärethik). Fünf Teams à
-drei bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen des fiktiven KI-Systems
-ARGUS: Aufklärung, Zielprüfung, Führung. Die Spielleitung steuert alle Teams aus einem Fenster.
+Browserbasiertes Planspiel für den Lehrgang OL TrD (Politische Bildung, Militärethik). Sieben Teams (15 TT, je 2–3 Personen
+an einem Laptop) bearbeiten parallel – jedes in einem eigenen Spielstand – Zielmeldungen des fiktiven KI-Systems ARGUS: je Meldung
+eine Entscheidung (BEKÄMPFEN mit Mörser / LM / Kanone, ZURÜCKSTELLEN, ABLEHNEN) unter Zeitdruck. **Jeder Team-Laptop rechnet sein
+Spiel selbst**; die Spielleitung startet alle Teams, sieht ihren Stand und wertet aus.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Änderungen C1–C9 nach dem 2. Solo-Durchlauf (28.10.2026, Szenario 2.2) – Fahrzeuge fahren vom Kartenrand ein und
-sind ab dort als gelber **Kontakt** auf der Karte, bis eine Meldung sie zum „Ziel n“ macht; keine Meldelücke über 60 s (neue
-Meldungen M28–M30); neue Meldungen blinken am Ort, „neu: Ziel n“ am Eingang, Pfeil am Kartenrand, Ton auf Wunsch (`?ton=1`);
-Loitering Munition trifft genau ein Fahrzeug; Zug-Zeichen mit Größenangabe nach APP-6, das Zeichen folgt den
-verbliebenen Fahrzeugen, getroffene bekommen ein eigenes durchgestrichenes Zeichen; EloKa-Meldung M25 „Ziel unbekannt“.
-Offen: C2 (Lagemeldung) – nach dem Test am 29.10. Überblick: [`docs/ENGINE.md`](docs/ENGINE.md), [`docs/UI.md`](docs/UI.md).
-Davor Szenario 2.1 (A1–A9, 26.10.2026: Durchbruch über Brücke und Furt, Feuer, Zonennamen) und
-Änderungen B1–B12 nach dem Solo-Durchlauf (25.10.2026) – Startseite mit zwei Knöpfen, Codes aus drei
-Zeichen, Rollen ohne G-Nummern, Spieluhr 00:00–25:00, „Ziel 1, 2, 3 …“, Einweisung als Folien, Drohnenbild
-verschiebbar und schließbar, Drohne verfolgt das Ziel, Fahrwege und Vorschau der Verstärkung für die Spielleitung,
-im Test ohne Lobby alle Rollen bedienbar (Eintrag in `claude/Entscheidungen.md`; intern heißen die Rollen weiter
-`g1`/`g2`/`g3`, die Meldungen `M07`). Davor Schritt 8 „Auswertung mit Teamvergleich“ – Auflösung im Plenum über alle Teams: Teamvergleich der
-Schlüssel- und Nebenfälle (wer an welcher Stufe entschieden hat), Kennzahlen je Team, Kernaussage zur Konfidenz,
-Replay je Schlüsselfall mit Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben und Drohnenbild, wie die Aufklärung es sah,
-Notizen der SL 2, Export ohne Namen; Üben mit `?auswertung=demo`. Überblick: [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
-Davor Schritt 6b „Oberfläche neu“ ([`docs/UI.md`](docs/UI.md)) und Schritt 7 „Engine und Live-Lage“ – Trefferregel nach der Lage beim Einschlag mit Vorausrechnung
-der Warnungen, Bewegung entlang der Routen, Tracking gemeldeter Ziele, Hintergrundgefecht H-01–H-12,
-Zustandswechsel, „Meldung entfällt“, E-01 automatisch, Verstärkung V-1–V-5 im Menü der Spielleitung,
-Effekte auf der Karte (Einschlag, LM-Flug, Leuchtspur, Feindartillerie, Wrack, Rauch). Überblick:
-[`docs/ENGINE.md`](docs/ENGINE.md). Davor Schritt 4b „Sitzung, Lobby und Teams“
-([`docs/SITZUNG.md`](docs/SITZUNG.md)), Ansichten: [`docs/UI.md`](docs/UI.md).
+Stand: Änderungen H (09.11.2026, Szenario **2.6**) nach dem Test auf Bundeswehr-Laptops – eine Rolle „Zielbearbeitung“ je Team
+statt Aufklärung/Zielprüfung/Führung, Tempo statt Arbeitsteilung (Sekunden je Entscheidung im Protokoll und in der Auswertung);
+die Engine läuft im Browser des Teams (kein Desync mehr), das Netz trägt nur Lobby, Start, Statusmeldungen und den Upload des
+Protokolls (ausfallsicher, mit Datei als Rückfall); Fast-Track entfällt, Phase 5 heißt „Krise“, weniger Artilleriemeldungen;
+Einweisung als Übersicht mit Pfeilen auf der Oberfläche; LM treffen sichtbar das Fahrzeug, Countdown bis zum Einschlag, Feuer auf die
+eigenen Panzer deutlich. **Die Firebase-Regeln müssen dafür neu veröffentlicht werden** ([`docs/SITZUNG.md`](docs/SITZUNG.md)).
+Überblick: [`docs/SITZUNG.md`](docs/SITZUNG.md), [`docs/UI.md`](docs/UI.md), [`docs/ENGINE.md`](docs/ENGINE.md),
+[`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md). Die Geschichte davor (A–F, Schritte 4b–8) steht in diesen Dateien und in
+`claude/Entscheidungen.md`.
 
-Inhalte: Szenario KRÄHE-01 **v2.2** (Schritt 2b, Konzept v2, geändert mit A1–A9 und C1–C9): russischer Angriff in fünf Phasen,
-30 Meldungen (davon 7 zugweise), realistische Routen, Hintergrundgefecht, Verstärkungen V-1 bis V-5,
-Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`)
-und `tools/referenz/simuliere_durchlauf.py`.
+Inhalte: Szenario KRÄHE-01 **v2.6** (Konzept v2, geändert mit A1–A9, C1–C9, D, E-a, F und H): russischer Angriff in fünf Phasen,
+36 Meldungen, realistische Routen, Hintergrundgefecht, eigene 1. Kp mit vier Kampfpanzern und Verlustmodell, Verstärkungen V-1 bis
+V-5, Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`),
+`tools/referenz/verluste.py` und `tools/referenz/simuliere_durchlauf.py`.
 
 ## Spielen
 
@@ -39,32 +28,32 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
 1. **Spielleitung:** **Spielleitung** → Name, **Neue Sitzung anlegen** → Übersicht mit Code (drei Zeichen,
    z. B. `K7P`), **Plenum öffnen** für das Smartboard. Die zuletzt genutzte Sitzung bietet die Seite unter
    **Spielleitung** zum Fortsetzen an.
-2. **Teilnehmer:** Seite öffnen, **Ich spiele mit**, Code eingeben, **Beitreten** → Lobby: Team erstellen (Name frei, 🎲
-   schlägt einen vor) oder einem Team beitreten, Rolle wählen; zu zweit übernimmt eine Person zwei
-   Rollen (**+ dazu**).
-3. **Spielleitung:** **Spiel öffnen – alle Teams** (Ansichten mit Einweisung als Folien erscheinen), dann
-   **▶ Uhr starten – alle**. „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte mit Fahrwegen) oder Zuschauen
-   bei Aufklärung, Zielprüfung, Führung (◉, nur lesen, blau umrandet).
+2. **Teilnehmer:** je Team ein Laptop – Seite öffnen, **Ich spiele mit**, Code eingeben, **Beitreten** → Lobby: Namen, Teamname
+   (🎲 schlägt einen vor), **Team anlegen** – dieser Laptop spielt für das Team. Ein zweites Fenster desselben Teams sieht nur zu.
+3. **Spielleitung:** **Spiel öffnen – alle Teams** (am Team-Laptop erscheinen Ansicht und Einweisung), dann **▶ Start für alle**.
+   „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte) oder Zuschauen bei der Zielbearbeitung (◉, nur lesen).
 4. **Zweite Spielleitung:** Startseite → **Spielleitung** → Bestehende Sitzung öffnen → Code → **als Spielleitung**; beobachtet und kann
    „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst). In der Teamansicht **✎ Notiz** je Fall.
 5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum die Auswertung (Bild ↓ / Presenter: Teamvergleich,
-   Kennzahlen, Konfidenz, S3, S2, S1, S4, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
-   Übersicht. Üben ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
+   Kennzahlen, Konfidenz, S3, S2, S1, S4, Preis des Abwartens, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
+   Übersicht; fehlt ein Protokoll (Netz), **Protokoll laden** mit der Datei, die das Team mit **⇩ Protokoll** gespeichert hat. Üben
+   ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
 
 | Fenster | Adresse |
 |---|---|
 | Teilnehmer | `…/Argus/?sitzung=K7P` |
 | Spielleitung | `…/Argus/?sitzung=K7P&rolle=sl` |
 | Plenum (Smartboard) | `…/Argus/?sitzung=K7P&rolle=plenum` |
-| Test ohne Lobby, allein in einem Fenster (Steuerung und alle drei Rollen bedienbar) | `…/Argus/?rolle=sl&raum=kraehe` |
-| Test ohne Lobby, ein Fenster je Rolle | `…/Argus/?rolle=g1&raum=kraehe` (g1 Aufklärung, g2 Zielprüfung, g3 Führung, sl, plenum) |
+| Test ohne Lobby, allein in einem Fenster (das Team steuert die Uhr oben rechts) | `…/Argus/?rolle=zb&raum=kraehe` |
+| Test ohne Lobby, Team und Spielleitung | `…/Argus/?rolle=zb&raum=kraehe`, `…?rolle=sl&raum=kraehe` (auch `plenum`) |
 
-Druckfassung der Einweisungskarten (mit den Folien je Rolle), A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
+Druckfassung der Einweisungskarten (Team und Spielleitung), A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
 Unbeteiligten: [`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
 
 Weitere Parameter: `sync=lokal` (alle Fenster an einem PC, ohne Netz), `transport=auto`
 (WebSocket zulassen; Standard ist Long-Polling, weil WebSocket im Hörsaalnetz gesperrt ist),
-`db=…` (andere Firebase-Datenbank), `szenario=…json`, `name=…` (Name der Spielleitung).
+`db=…` (andere Firebase-Datenbank), `szenario=…json`, `name=…` (Name der Spielleitung), `verzug=5000` (künstlicher Netzverzug in
+ms je Richtung, nur für Tests und Vorführung).
 
 **Rückfall ohne Netz (Variante C):** `argus-offline.html` (liegt auf der Seite und im Build) per
 Doppelklick öffnen, Sitzung anlegen, weitere Fenster derselben Datei öffnen und den Code eingeben.
@@ -96,34 +85,39 @@ python3 tools/e2e_vier_fenster.py http://localhost:4173/ --sync firebase --trans
   --db "http://localhost:5555?ns=argus-test"                                   # Firebase-Nachbildung mit Regeln
 ```
 
-Sitzung, Lobby und Teams mit 16 echten Browserfenstern (5 Teams à 3 + Spielleitung, alles über die
-Oberfläche) und die Aufgaben der Lobby nur über sichtbare Beschriftungen:
+Sitzung, Lobby und Teams mit echten Browserfenstern (7 Team-Laptops, ein Zuschauer, Spielleitung, Plenum – alles über die
+Oberfläche; mit `--verzug 5000` über die Firebase-Nachbildung mit künstlichem Netzverzug) und die Aufgaben der Lobby nur über
+sichtbare Beschriftungen:
 
 ```bash
 python3 tools/e2e_teams.py http://localhost:4173/                                # lokaler Sync
 python3 tools/e2e_teams.py file://$PWD/dist/argus-offline.html                   # Offline-Datei
 python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport auto \
-  --db "http://localhost:5555?ns=argus-test"                                      # Firebase-Nachbildung mit Regeln
+  --db "http://localhost:5555?ns=argus-test" --verzug 5000                        # Firebase-Nachbildung mit Regeln und 5 s Verzug
 python3 tools/lobby_probe.py http://localhost:4173/                              # 20 Aufgaben Startseite und Lobby
 ```
 
-Oberfläche in 1530 × 800 (seit 6b Karte als Arbeitsfläche; kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
+Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
 
 ```bash
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
-python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, viele Marken, lange Texte
-python3 tools/bedientest_probe.py http://localhost:4173/                  # 18 Aufgaben des Bedientests lösbar?
+python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, voller Eingang, Countdown, lange Notiz
+python3 tools/bedientest_probe.py http://localhost:4173/                  # 13 Aufgaben des Bedientests lösbar?
+python3 tools/verluste_probe.py http://localhost:4173/ --bilder verluste  # vier Panzer, Beschuss sichtbar, Lagemeldungen, Preis
 python3 tools/livelage_probe.py http://localhost:4173/ --bilder live      # Effekte, Tracking, Verstärkung, Bildrate
 python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne      # Live-Drohnenbild: Ebenen, Schlüsselfälle, Kamera folgt, Bildrate
 ```
 
-Das ganze Drehbuch mit fünf Teams (Schritt 7): `tests/durchlauf.test.ts` spielt die fünf Läufe von
-`simuliere_durchlauf.py` (naiv, ideal, mit Verstärkungen) mit der echten Engine und vergleicht je Meldung;
-im Browser mit 18 Fenstern (5 × 3, zwei Spielleiter, Plenum):
+Das ganze Drehbuch mit fünf Teams: `tests/durchlauf.test.ts` spielt die fünf Läufe von `simuliere_durchlauf.py` (naiv 20 s,
+ideal 35 s je Entscheidung, mit Verstärkungen) mit der echten Engine und vergleicht je Meldung; im Browser mit 8 Fenstern
+(5 Team-Laptops, zwei Spielleiter, Plenum):
 
 ```bash
-python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --bilder e2e-drehbuch   # ca. 12 min
+python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --bilder e2e-drehbuch   # ca. 6 min
 ```
+
+Lasttest (7 Team-Laptops + Spielleitung + Plenum über Firebase bzw. die Nachbildung, mit Verzug und Trennung):
+`…/Argus/lasttest.html`, Probe `tools/lasttest_probe.py` (siehe `tools/lasttest/README.md`).
 
 Nach Änderungen an Szenario oder Simulation: `python3 tools/referenz/erzeuge_durchlauf.py`.
 
@@ -136,10 +130,10 @@ Nach Änderungen an Szenario oder Regeln: `python3 tools/referenz/erzeuge_refere
 * **Spielseite:** Jeder Push auf `main` baut und veröffentlicht über GitHub Actions
   (`.github/workflows/pages.yml`). Einmalig: Repository → Settings → Pages → Source „GitHub Actions“.
 * **Firebase-Regeln** (`firebase/database.rules.json`): Firebase-Konsole → Projekt `argus-sync-e9fbc`
-  → Realtime Database → Regeln → Inhalt ersetzen → Veröffentlichen. Die Regeln ersetzen den
-  Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…` (Code aus drei Zeichen
-  `ACEFHJKMNPRTVWXY34679`, klein gespeichert, oder ein Raum des Tests ohne Lobby mit 4–32 Zeichen; Info, Teams,
-  Anwesenheit, Host, Läufe je Team) und der Sync-Test (`rooms/…`) sind beschreibbar, eine Liste aller
+  → Realtime Database → Regeln → Inhalt ersetzen → Veröffentlichen. **Seit 2.6 neu zu veröffentlichen** (Rolle `zb`, Pfad
+  `status/<team>`). Die Regeln ersetzen den Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…`
+  (Code aus drei Zeichen `ACEFHJKMNPRTVWXY34679`, klein gespeichert, oder ein Raum des Tests ohne Lobby mit 4–32 Zeichen; Info,
+  Teams, Status, Anwesenheit, Host, Läufe je Team) und der Sync-Test (`rooms/…`) sind beschreibbar, eine Liste aller
   Sitzungen ist nicht lesbar, Protokoll und Aktionen nur anhängbar, Formate werden geprüft.
 
 ## Inhalte pflegen

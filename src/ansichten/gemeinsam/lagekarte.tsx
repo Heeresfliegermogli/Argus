@@ -21,7 +21,7 @@ import type { MeldungsStand } from "../../kern/zustand";
 import type { Hintergrund, KartenBild, KartenInfo, KartenUhr, Lagekarte, Rechteck, Vorschau } from "../../karte/lagekarte";
 import { MODIFIKATOR_ATTRAPPE, ZEICHEN_KONTAKT, sidc } from "../../karte/zeichen";
 
-/** Marke über der Karte: Meldung (Knopf) oder geplante Wirkung (Uhrzeit des Einschlags). */
+/** Marke über der Karte: Meldung (Knopf) oder bekämpftes Ziel (Countdown bis zum Einschlag, H5.3). */
 export interface KartenMarke {
   /** Meldung (z. B. „M05“) bzw. geplante Wirkung „W-M05“ */
   id: string;
@@ -108,30 +108,40 @@ export function fensterLage(p: Punkt, w: number, h: number, bw: number, bh: numb
 }
 
 /**
- * Marken der offenen Meldungen einer Rolle: ein Knopf je Meldung am Zeichen („Ziel 7“, B7), Klick öffnet. Zurückgestellte
- * bleiben als Marke stehen („· zurückgestellt“); `zusatz` hängt einen kurzen Hinweis an (z. B. „⚠“ bei der Führung).
+ * Marken der Meldungen im Eingang: ein Knopf je Meldung am Zeichen („Ziel 7“, B7), Klick öffnet. Zurückgestellte bleiben als
+ * Marke stehen („· zurückgestellt“).
  */
 export function meldungsMarken(offen: MeldungsStand[], gewaehlt: string | null, waehle: (id: string) => void,
-  name: (id: string) => string, zusatz?: (st: MeldungsStand) => string | undefined): KartenMarke[] {
+  name: (id: string) => string): KartenMarke[] {
   return offen.map((st) => {
-    const z = st.beobachten ? "zurückgestellt" : zusatz?.(st);
     const n = name(st.id);
-    const text = z ? `${n} · ${z}` : n;
+    const text = st.zurueckgestellt ? `${n} · zurückgestellt` : n;
     return {
       id: st.id, text, mass: text,
-      art: st.id === gewaehlt ? "gewaehlt" : st.beobachten ? "zurueck" : "offen",
+      art: st.id === gewaehlt ? "gewaehlt" : st.zurueckgestellt ? "zurueck" : "offen",
       titel: st.id === gewaehlt ? `${n} ist geöffnet` : `${n} öffnen`,
       onClick: () => waehle(st.id),
     };
   });
 }
 
-/** Marken der freigegebenen Wirkungen: Uhrzeit des Einschlags am gestrichelten Kreis. */
-export function wirkungsMarken(lb: Lagebild): KartenMarke[] {
-  return lb.wirkungen.filter((w) => w.geplant).map((w) => {
-    const text = `Einschlag ${w.text.split(" · ").pop()}`;
-    return { id: w.id, text, mass: text, art: "wirkung" as const, titel: w.zeilen.join(" · ") };
-  });
+/** Countdown „Einschlag in 0:23“, zählt selbst (ohne die Ansicht neu zu zeichnen). */
+export function Countdown(p: { t: number; jetzt: () => number; vor?: string }) {
+  const [, setN] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setN((x) => x + 1), 250);
+    return () => clearInterval(id);
+  }, []);
+  const rest = Math.max(0, Math.round(p.t - p.jetzt()));
+  return <>{p.vor ?? "Einschlag in "}{Math.floor(rest / 60)}:{String(rest % 60).padStart(2, "0")}</>;
+}
+
+/** Marken der bekämpften Ziele, deren Einschlag noch aussteht: Countdown am Ziel (H5.3). */
+export function wirkungsMarken(lb: Lagebild, jetzt: () => number): KartenMarke[] {
+  return lb.wirkungen.filter((w) => w.geplant).map((w) => ({
+    id: w.id, text: w.t_einschlag !== undefined ? <Countdown t={w.t_einschlag} jetzt={jetzt} /> : "Einschlag", mass: "Einschlag in 0:00",
+    art: "wirkung" as const, titel: w.zeilen.join(" · "),
+  }));
 }
 
 /** Fenster ganz in die Karte schieben (Rand wie bei der automatischen Lage). */
@@ -182,15 +192,13 @@ function LegendeLeiste(p: { art: Legende }) {
   );
   if (p.art === "gelaende") return <div class="karte-legende">{zonen}</div>;
   if (p.art === "ziele") {
+    // seit 2.6 (H5.4): einfach – Meldung, Kontakt, bekämpft (Einschlag folgt / getroffen), Zonen
     return (
-      <div class="karte-legende">
-        <span><MiniZeichen code={sidc("H", "EVAT")} />Zielmeldung (ARGUS-Klasse)</span>
-        <span><MiniZeichen code={sidc("H", "UCA", { groesse: "D" })} />Zug</span>
-        <span><MiniZeichen code={sidc("U", "EV")} />ARGUS unsicher</span>
-        <span title="Bewegung erkannt, (noch) keine Meldung bei dir"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
-        <span style="opacity:.5"><MiniZeichen code={sidc("H", "EVAI")} />erledigt</span>
-        <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />freigegeben, Einschlag folgt</span>
-        <span><b style="color:#7a1b14">✕</b>bekämpft</span>
+      <div class="karte-legende" data-testid="legende">
+        <span><MiniZeichen code={sidc("H", "EVAT")} />Meldung (ARGUS)</span>
+        <span title="Bewegung erkannt, (noch) keine Meldung"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
+        <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />bekämpft, Einschlag folgt</span>
+        <span><b style="color:#d8443a">✕</b>bekämpft</span>
         {zonen}
       </div>
     );

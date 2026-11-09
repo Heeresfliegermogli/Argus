@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Probelauf des Bedientests (docs/BEDIENTEST.md, Teil B): löst jede Aufgabe nur über sichtbare Beschriftungen
-(Knopftexte, Feldhinweise, Marken auf der Karte), so wie eine Testperson es täte. Ersetzt den Test mit Menschen nicht, zeigt
-aber, dass jede Aufgabe mit dem, was auf dem Bildschirm steht, lösbar ist.
+"""Probelauf des Bedientests (docs/BEDIENTEST.md, Teil B, seit 2.6: eine Rolle „Zielbearbeitung“): löst jede Aufgabe nur über
+sichtbare Beschriftungen (Knopftexte, Zeilen im Eingang, Zahlen in der Kopfzeile), so wie eine Testperson es täte. Ersetzt den
+Test mit Menschen nicht, zeigt aber, dass jede Aufgabe mit dem, was auf dem Bildschirm steht, lösbar ist.
 
-Seit den Änderungen B1–B11 (25.10.2026): Rollen Aufklärung, Zielprüfung, Führung; Ziele heißen „Ziel 1, 2, 3 …“;
-Spieluhr 00:00–25:00; kein Vermerk; Einweisung als Folien (überspringbar); Drohnenbild verschiebbar und schließbar;
-im Test ohne Lobby bedient ein Fenster alle drei Rollen (Teil S).
+Aufbau wie im Test: „Test ohne Lobby“ mit zwei Fenstern – Spielleitung (Testleiter, steuert die Uhr) und Zielbearbeitung
+(Testperson). Die Einweisung (Übersicht mit Pfeilen, dann Folien) öffnet sich bei der Zielbearbeitung von selbst. Teil S:
+„Allein testen (ein Fenster)“ – das Team steuert die Uhr selbst.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/bedientest_probe.py http://localhost:4173/
@@ -22,6 +22,8 @@ from playwright.sync_api import sync_playwright
 
 from ui_bilder import H, W, adresse, warte
 
+HIER = os.path.dirname(os.path.abspath(__file__))
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -29,6 +31,8 @@ def main():
     ap.add_argument("--raum", default=f"bedien-{int(time.time()) % 100000}")
     a = ap.parse_args()
     ergebnis = []
+    kat = json.load(open(os.path.join(HIER, "..", "public", "daten", "katalog_wirkmittel.json"), encoding="utf-8"))
+    lm_voll = next(w["bestand"] for w in kat["wirkmittel"] if w["id"] == "LM")
 
     def aufgabe(name, f):
         t0 = time.time()
@@ -41,207 +45,154 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
         ctx = browser.new_context(viewport={"width": W, "height": H})
-        s = {}
-        for r in ["sl", "g1", "g2", "g3"]:
-            pg = ctx.new_page()
-            pg.goto(adresse(a.basis, r, a.raum))
-            s[r] = pg
-            if r == "sl":
-                warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
-        sl, g1, g2, g3 = s["sl"], s["g1"], s["g2"], s["g3"]
+        sl = ctx.new_page()
+        sl.goto(adresse(a.basis, "sl", a.raum))
+        warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
+        zb = ctx.new_page()
+        zb.goto(adresse(a.basis, "zb", a.raum))
 
-        def offen(s):
-            return s.get_by_test_id("offene-meldung").get_attribute("data-meldung")
+        def offen():
+            return zb.get_by_test_id("offene-meldung").get_attribute("data-meldung")
 
-        def eingang(s):
-            """Zahl neben „Eingang“ (der Eingang steht nur als Zahl da)."""
-            return int(re.search(r"Eingang\s*(\d+)", s.locator(".eingang-leiste").inner_text()).group(1))
+        def eingang():
+            """Zahl neben „Eingang“."""
+            return int(zb.get_by_test_id("eingang-zahl").inner_text())
 
-        def marke(s, text):
-            return s.get_by_role("button", name=text, exact=True)
+        def zeile(ziel):
+            """Zeile im Eingang mit dem sichtbaren Zielnamen („Ziel 3“)."""
+            return zb.get_by_test_id("eingang").locator("button.eingang-zeile", has=zb.get_by_text(ziel, exact=True))
 
-        def klick(s, loc):
-            """Mausklick auf die Mitte einer sichtbaren Beschriftung (auch wenn sie selbst nicht klickbar ist)."""
-            warte(lambda: loc.is_visible(), 10, "Beschriftung sichtbar")
-            bb = loc.bounding_box()
-            s.mouse.click(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2)
-
-        # Einweisung: Aufklärung blättert die Folien durch, Zielprüfung und Führung überspringen
+        # Einweisung: Übersicht auf der Oberfläche Schritt für Schritt, dann Folien bis „Verstanden“
         def e0():
+            warte(lambda: zb.get_by_test_id("tour").count() == 1, 15, "Übersicht")
+            schritte = 1
+            ziele = [zb.get_by_test_id("tour").get_attribute("data-schritt")]
+            while zb.get_by_role("button", name="weiter zur Einweisung ›").count() == 0:
+                zb.get_by_role("button", name="weiter ›").click()
+                schritte += 1
+                ziele.append(zb.get_by_test_id("tour").get_attribute("data-schritt"))
+                assert schritte <= 9, "mehr als acht Schritte"
+            for z in ["eingang", "entscheiden", "panzer", "feed", "bestand"]:
+                assert z in ziele, f"Übersicht ohne „{z}“"
+            zb.get_by_role("button", name="weiter zur Einweisung ›").click()
             folien = 1
-            while g1.get_by_role("button", name="Verstanden – zur Ansicht").count() == 0:
-                g1.get_by_role("button", name="weiter ›").click()
+            while zb.get_by_role("button", name="Verstanden – zur Ansicht").count() == 0:
+                zb.get_by_role("button", name="weiter ›").click()
                 folien += 1
                 assert folien <= 6, "mehr als fünf Folien"
             assert 3 <= folien <= 5, f"{folien} Folien"
-            g1.get_by_role("button", name="Verstanden – zur Ansicht").click()
-            for pg in (g2, g3):
-                pg.get_by_role("button", name="Überspringen").click()
-            for pg in (g1, g2, g3):
-                warte(lambda: pg.get_by_role("button", name="Überspringen").count() == 0, 5, "Einweisung zu")
+            text = zb.get_by_test_id("einweisung-zb").inner_text()
+            for verboten in ["Kleingedruckt", "Regelungen", "Gegenangriff"]:
+                assert verboten not in text, f"„{verboten}“ in der Einweisung"
+            zb.get_by_role("button", name="Verstanden – zur Ansicht").click()
+            warte(lambda: zb.get_by_test_id("einweisung-zb").count() == 0, 5, "Einweisung zu")
 
-        aufgabe("E-0 Einweisung: Folien oder überspringen", e0)
+        aufgabe("E-0 Einweisung: Übersicht mit Pfeilen, dann Folien", e0)
 
-        # Uhr bis kurz vor Ziel 3 vorstellen (der echte Test läuft in Echtzeit; seit 2.2 ist Ziel 3 M28 um 02:10)
-        sl.get_by_placeholder("00:00").fill("02:05")
+        # Uhr bis kurz nach Ziel 3 vorstellen (der echte Test läuft in Echtzeit; Ziel 3 ist M28 um 02:10)
+        sl.get_by_test_id("sl-zeit").fill("02:05")
         sl.get_by_role("button", name="Spielzeit setzen").click()
-        sl.get_by_role("button", name="▶ Start").click()
         sl.get_by_role("button", name="×10").click()
-        warte(lambda: marke(g1, "Ziel 3").count() > 0, 30, "Ziel 3 bei der Aufklärung")
+        sl.get_by_role("button", name="▶ Start").click()
+        warte(lambda: zeile("Ziel 3").count() == 1, 30, "Ziel 3 im Eingang")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
-
-        # Aufklärung (Karte als Arbeitsfläche – Meldungen als Marken, Drohnenbild am Ort, Eingang als Zahl)
-        def a_1():
-            warte(lambda: offen(g1) == "M01", 10, "Ziel 1 offen")
-            assert g1.get_by_placeholder(re.compile("Vermerk")).count() == 0, "Vermerkfeld noch da (B6)"
-            g1.get_by_role("button", name="ANNEHMEN").click()
-            warte(lambda: offen(g1) == "M02", 10, "nächste Meldung offen")
-
-        def a_2():
-            warte(lambda: eingang(g1) == 2, 10, "Eingang 2")
-
-        def a_3():
-            marke(g1, "Ziel 3").click()
-            warte(lambda: offen(g1) == "M28", 10, "Ziel 3 offen")
-            box = g1.locator("[data-testid=argus-box]").inner_text()
-            assert "%" in box and "Ziel 3" in box, box
-            zeile = g1.get_by_role("row", name=re.compile("^Bewegung"))   # Sensordaten: Zeile „Bewegung“
-            assert zeile.count() == 1 and zeile.inner_text().strip() != "Bewegung", zeile.all_inner_texts()
-
-        def a_4():
-            warte(lambda: g1.locator("[data-fenster=M28]").is_visible(), 10, "Drohnenbild am Ort")
-            # Klick auf das Bild dort, wo der sichtbare Hinweis „Klick: groß mit Lupe“ steht
-            klick(g1, g1.get_by_text("Klick: groß mit Lupe"))
-            r = g1.locator("[data-testid=vergroesserung] .argus-rahmen").first
-            warte(lambda: r.is_visible(), 10, "ARGUS-Markierung")
-            bb = r.bounding_box()
-            g1.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2)
-            warte(lambda: g1.get_by_test_id("lupe").count() == 1, 5, "Lupe")
-            g1.get_by_role("button", name="Schließen (Esc)").click()
-
-        def a_5():
-            fenster = g1.locator("[data-fenster=M28]")
-            vorher = fenster.bounding_box()
-            # an der Kopfleiste ziehen (Hinweis beim Zeigen: „Kopfleiste ziehen: verschieben“)
-            kopf = fenster.get_by_text(re.compile("UAV-2"))
-            kb = kopf.bounding_box()
-            # Richtung nach dem freien Platz auf der Karte: Das Fenster öffnet neben dem Ziel (seit 2.2 ist Ziel 3 der Tigr Z-03)
-            kt = g1.get_by_test_id("lagekarte").bounding_box()
-            sx = -1 if vorher["x"] + vorher["width"] / 2 > kt["x"] + kt["width"] / 2 else 1
-            g1.mouse.move(kb["x"] + 40, kb["y"] + kb["height"] / 2)
-            g1.mouse.down()
-            for i in range(1, 11):
-                g1.mouse.move(kb["x"] + 40 + sx * 18 * i, kb["y"] + kb["height"] / 2 + 12 * i)
-            g1.mouse.up()
-            nachher = fenster.bounding_box()
-            assert sx * (nachher["x"] - vorher["x"]) > 150 and nachher["y"] - vorher["y"] > 100, f"nicht verschoben: {vorher} → {nachher}"
-            assert g1.get_by_test_id("vergroesserung").count() == 0, "Ziehen hat die Vergrößerung geöffnet"
-            g1.get_by_role("button", name="Drohnenbild schließen").click()
-            warte(lambda: not fenster.is_visible() and g1.get_by_text("Drohnenbild geschlossen").count() == 1, 5, "geschlossen")
-            marke(g1, "Ziel 3").click()
-            warte(lambda: fenster.is_visible(), 5, "über die Marke wieder offen")
-
-        def a_6():
-            g1.get_by_role("button", name="ANNEHMEN").click()
-            warte(lambda: offen(g1) == "M02", 10, "Ziel 2 offen")
-            g1.get_by_role("button", name="ABLEHNEN").click()
-            warte(lambda: eingang(g1) == 0, 10, "Eingang leer")
-
-        def a_7():
-            assert g1.get_by_role("heading", name="Lagehinweise der Führung").count() == 1
-
-        for n, f in [("A-1 annehmen (ohne Vermerk)", a_1), ("A-2 Eingang ablesen", a_2), ("A-3 Ziel 3 öffnen, Konfidenz/Bewegung", a_3),
-                     ("A-4 Lupe im Drohnenbild", a_4), ("A-5 Drohnenbild schieben, schließen, öffnen", a_5),
-                     ("A-6 annehmen, ablehnen", a_6), ("A-7 Lagehinweise finden", a_7)]:
-            aufgabe(n, f)
-
-        # Zielprüfung
-        warte(lambda: g2.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "Karte Zielprüfung")
+        warte(lambda: zb.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "Karte bereit")
 
         def z_1():
-            marke(g2, "Ziel 1").click()
-            warte(lambda: offen(g2) == "M01", 10, "Ziel 1 offen")
-            assert "Vermerk" not in g2.get_by_test_id("offene-meldung").inner_text(), "Vermerk wird noch angezeigt (B6)"
-            g2.get_by_text("Loitering Munition (Präzision)").click()
-            assert g2.get_by_text("keine Warnung").count() > 0
-            g2.get_by_role("button", name="BEKÄMPFEN mit LM").click()
-            warte(lambda: marke(g2, "Ziel 1").count() == 0, 10, "Marke Ziel 1 weg")
+            # Eingang ablesen: Zahl und Wartezeit der ältesten Meldung (m:ss)
+            assert eingang() == 3, f"Eingang {eingang()}"
+            zeit = zeile("Ziel 1").locator(".ez-zeit").inner_text()
+            assert re.fullmatch(r"\d+:\d\d", zeit), zeit
 
         def z_2():
-            marke(g2, "Ziel 3").click()
-            warte(lambda: offen(g2) == "M28", 10, "Ziel 3 offen")
-            g2.get_by_text("Mörser 120 mm (Steilfeuer)").click()
-            assert "R3" in g2.locator("[data-testid=karte-banner]").inner_text()
+            zeile("Ziel 3").click()
+            warte(lambda: offen() == "M28", 10, "Ziel 3 offen")
+            argus = zb.get_by_test_id("argus-klasse").inner_text()
+            assert "%" in argus, argus
 
         def z_3():
-            g2.get_by_role("button", name="BEOBACHTEN").click()
-            warte(lambda: marke(g2, "Ziel 3 · zurückgestellt").count() == 1, 10, "Marke „zurückgestellt“")
-            marke(g2, "Ziel 3 · zurückgestellt").click()
-            warte(lambda: offen(g2) == "M28" and "zurückgestellt" in g2.get_by_test_id("offene-meldung").inner_text(), 10, "Ziel 3 wieder offen")
+            klick = zb.get_by_text("Klick: groß mit Lupe")
+            warte(lambda: klick.is_visible(), 10, "Hinweis „Klick: groß mit Lupe“")
+            klick.click()
+            r = zb.locator("[data-testid=vergroesserung] .argus-rahmen").first
+            warte(lambda: r.is_visible(), 10, "ARGUS-Markierung")
+            bb = r.bounding_box()
+            zb.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2)
+            warte(lambda: zb.get_by_test_id("lupe").count() == 1, 5, "Lupe")
+            zb.get_by_role("button", name="Schließen (Esc)").click()
+            warte(lambda: zb.get_by_test_id("vergroesserung").count() == 0, 5, "Vergrößerung zu")
 
         def z_4():
-            kat = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "daten", "katalog_wirkmittel.json"),
-                                 encoding="utf-8"))
-            lm = next(w["bestand"] for w in kat["wirkmittel"] if w["id"] == "LM")      # vor der Freigabe noch voller Bestand
-            text = g2.locator("label[data-wm=LM]").get_by_text("übrig").inner_text().strip()
-            assert text.startswith(str(lm)), text
+            zb.locator("label[data-wm=MRS]").click()
+            assert "R3" in zb.get_by_test_id("karte-banner").inner_text(), zb.get_by_test_id("karte-banner").inner_text()
+            assert zb.locator("label[data-wm=MRS]").get_by_text(re.compile("R3")).count() >= 1, "Warnung R3 nicht am Wirkmittel"
 
-        for n, f in [("Z-1 bekämpfen ohne Warnung", z_1), ("Z-2 Warnung R3", z_2), ("Z-3 zurückstellen, wieder öffnen", z_3),
-                     ("Z-4 Bestand LM", z_4)]:
+        def z_5():
+            zb.get_by_role("button", name=re.compile("^ZURÜCKSTELLEN")).click()
+            warte(lambda: zb.get_by_test_id("zurueck-zahl").count() == 1, 10, "„+ 1 zurückgestellt“")
+            zeile("Ziel 3").click()
+            warte(lambda: offen() == "M28" and "zurückgestellt" in zb.get_by_test_id("offene-meldung").inner_text(), 10, "Ziel 3 wieder offen")
+
+        def z_6():
+            zeile("Ziel 1").click()
+            warte(lambda: offen() == "M01", 10, "Ziel 1 offen")
+            lm = zb.locator("label[data-wm=LM]")
+            assert lm.get_by_text("keine Warnung").count() == 1, lm.inner_text()
+            lm.click()
+            knopf = zb.get_by_test_id("zb-bekaempfen")
+            assert re.search(r"BEKÄMPFEN mit LM", knopf.inner_text()) and "Bestand" in knopf.inner_text(), knopf.inner_text()
+            knopf.click()
+            ein = zb.locator("[data-unterwegs=M01]")
+            warte(lambda: ein.count() == 1 and re.search(r"Einschlag in \d+:\d\d", ein.inner_text()) is not None, 10, "Countdown „Einschlag in m:ss“")
+
+        def z_7():
+            lm = zb.get_by_test_id("bestand").locator("[data-wm=LM]")
+            zahl = int(lm.locator("b").inner_text())
+            verbraucht = zb.evaluate("() => (window.argus.stand.zustand.meldungen.M01.freigabe?.einschlaege?.length) ?? 1")
+            assert zahl == lm_voll - verbraucht, f"Kopfzeile LM {zahl}, erwartet {lm_voll - verbraucht}"
+
+        def z_8():
+            zeile("Ziel 2").click()
+            warte(lambda: offen() == "M02", 10, "Ziel 2 offen")
+            vorher = eingang()
+            zb.get_by_role("button", name=re.compile("^ABLEHNEN")).click()
+            warte(lambda: eingang() == vorher - 1, 10, "Eingang eins weniger")
+
+        def z_9():
+            # Lagemeldungen: die neue steht oben und rutscht nach ca. 8 s in „frühere Meldungen“; dort noch einmal lesen
+            knopf = zb.get_by_test_id("feed-frueher")
+            warte(lambda: knopf.is_enabled(), 20, "frühere Meldungen")
+            knopf.click()
+            m = zb.locator(".feed-liste .feed-meldung").first
+            m.click()
+            warte(lambda: "ganz" in (m.get_attribute("class") or ""), 5, "Lagemeldung ganz zu lesen")
+
+        def z_10():
+            leiste = zb.get_by_test_id("panzer-leiste")
+            text = leiste.inner_text()
+            for pz in ["1/1", "1/2", "1/3", "1/4"]:
+                assert pz in text, f"{pz} fehlt in der Kopfzeile: {text}"
+
+        for n, f in [("Z-1 Eingang und Wartezeit ablesen", z_1), ("Z-2 Ziel 3 öffnen, was meldet ARGUS", z_2),
+                     ("Z-3 Lupe im Drohnenbild", z_3), ("Z-4 Mörser: Warnung R3", z_4), ("Z-5 zurückstellen, wieder öffnen", z_5),
+                     ("Z-6 bekämpfen ohne Warnung, Countdown", z_6), ("Z-7 Bestand LM in der Kopfzeile", z_7),
+                     ("Z-8 ablehnen", z_8), ("Z-9 frühere Lagemeldung lesen", z_9), ("Z-10 die vier Panzer", z_10)]:
             aufgabe(n, f)
 
-        # Führung (Ziel 1 liegt vor; für ZURÜCK braucht die Führung eine zweite Empfehlung – Testleiter empfiehlt Ziel 3)
-        g2.get_by_text("Loitering Munition (Präzision)").click()
-        g2.get_by_role("button", name="BEKÄMPFEN mit LM").click()
+        def z_11():
+            # „? Einweisung“ oben rechts öffnet die Übersicht wieder
+            zb.get_by_role("button", name="? Einweisung").click()
+            warte(lambda: zb.get_by_test_id("tour").count() == 1, 10, "Übersicht wieder offen")
+            zb.keyboard.press("Escape")
+            zb.get_by_role("button", name="Überspringen").click()
+            warte(lambda: zb.get_by_test_id("tour").count() == 0 and zb.get_by_test_id("einweisung-zb").count() == 0, 5, "zu")
 
-        def offen_g3():
-            return g3.get_by_test_id("g3-entscheiden").get_attribute("data-meldung")
+        aufgabe("Z-11 Einweisung wieder aufrufen", z_11)
 
-        def f_1():
-            g3.get_by_role("button", name="Gelesen").first.click()
-            warte(lambda: g3.get_by_text("gelesen ✓").count() >= 1, 10, "quittiert")
-
-        def f_2():
-            marke(g3, "Ziel 1").click()
-            warte(lambda: offen_g3() == "M01", 10, "Ziel 1 offen")
-            g3.get_by_role("button", name="FREIGABE").click()
-            ein = g3.get_by_text(re.compile(r"^Einschlag \d\d:\d\d$"))   # Spieluhr 00:00–25:00 (B4)
-            # seit 2.4 (E3) je Fahrzeug ein Einschlag: Ziel 1 sind zwei Spähpanzer, also zwei Marken „Einschlag mm:ss“
-            warte(lambda: ein.count() >= 1 and ein.first.is_visible(), 15, "Spielzeit des Einschlags auf der Karte")
-
-        def f_3():
-            g3.get_by_placeholder("Hinweis an Aufklärung und Zielprüfung").fill("Schule NS-01 ist belegt")
-            g3.get_by_label("Aufklärung", exact=True).uncheck()
-            g3.get_by_role("button", name="Senden").click()
-            warte(lambda: g2.get_by_text("Schule NS-01 ist belegt").count() == 1, 10, "Hinweis bei der Zielprüfung")
-            assert g1.get_by_text("Schule NS-01 ist belegt").count() == 0
-
-        def f_4():
-            warte(lambda: marke(g3, "Ziel 3").count() == 1, 10, "Marke Ziel 3 bei der Führung")
-            marke(g3, "Ziel 3").click()
-            warte(lambda: offen_g3() == "M28", 10, "Ziel 3 offen")
-            g3.get_by_role("button", name="ZURÜCK").click()
-            warte(lambda: marke(g2, "Ziel 3").count() == 1, 10, "Ziel 3 wieder bei der Zielprüfung")
-
-        def f_5():
-            g3.get_by_role("button", name="einschalten").click()
-            warte(lambda: g3.get_by_test_id("fasttrack-status").inner_text() == "EIN", 10, "EIN")
-            g3.get_by_role("button", name="ausschalten").click()
-            warte(lambda: g3.get_by_test_id("fasttrack-status").inner_text() == "AUS", 10, "AUS")
-
-        for n, f in [("F-1 Lagemeldung gelesen", f_1), ("F-2 Freigabe, Einschlag ablesen", f_2), ("F-3 Hinweis nur an Zielprüfung", f_3),
-                     ("F-4 zurück an die Zielprüfung", f_4), ("F-5 Fast-Track ein/aus", f_5)]:
-            aufgabe(n, f)
-
-        # Teil S: Test ohne Lobby allein in einem Fenster (B11) – Startseite → Spielleitung → Allein testen
-        for pg in (g1, g2, g3, sl):
+        # Teil S: allein in einem Fenster (Startseite → Spielleitung → Test ohne Lobby → Allein testen)
+        for pg in (zb, sl):
             pg.close()
         solo = ctx.new_page()
-
-        def weg_mit_einweisung(pg):
-            """Die Einweisung kommt im neuen Fenster beim ersten Öffnen jeder Rolle."""
-            warte(lambda: pg.get_by_role("button", name="Überspringen").count() == 1, 15, "Einweisung")
-            pg.get_by_role("button", name="Überspringen").click()
 
         def s_1():
             solo.goto(f"{a.basis}{'&' if '?' in a.basis else '?'}{urllib.parse.urlencode({'sync': 'lokal'})}")
@@ -249,21 +200,19 @@ def main():
             solo.get_by_text("Test ohne Lobby").click()
             solo.get_by_label("Raum").fill(f"{a.raum}-solo")
             solo.get_by_role("link", name="Allein testen (ein Fenster)").click()
-            warte(lambda: solo.locator(".rahmen[data-host='1']").count() == 1, 20, "Steuerung im Solo-Fenster")
-            solo.get_by_placeholder("00:00").fill("00:25")
-            solo.get_by_role("button", name="Spielzeit setzen").click()
+            warte(lambda: solo.get_by_role("button", name="Übersicht überspringen").count() == 1, 20, "Übersicht im Solo-Fenster")
+            solo.get_by_role("button", name="Übersicht überspringen").click()
+            solo.get_by_role("button", name="Überspringen").click()
+            assert solo.get_by_test_id("nur-lesen").count() == 0, "Solo-Fenster ist Zuschauen"
+            solo.get_by_role("button", name="×20").click()
             solo.get_by_role("button", name="▶ Start").click()
-            solo.get_by_role("tab", name="Aufklärung").click()
-            weg_mit_einweisung(solo)
-            warte(lambda: marke(solo, "Ziel 1").count() == 1, 15, "Ziel 1 bei der Aufklärung")
-            assert solo.get_by_text("Zuschauen – nur lesen").count() == 0, "Solo-Fenster ist Zuschauen"
-            warte(lambda: offen(solo) == "M01", 10, "Ziel 1 offen")
-            solo.get_by_role("button", name="ANNEHMEN").click()
-            solo.get_by_role("tab", name="Zielprüfung").click()
-            weg_mit_einweisung(solo)
-            warte(lambda: marke(solo, "Ziel 1").count() == 1, 10, "Ziel 1 bei der Zielprüfung")
+            warte(lambda: solo.get_by_test_id("offene-meldung").get_attribute("data-meldung") == "M01", 20, "Ziel 1 offen")
+            solo.get_by_role("button", name="❚❚").click()
+            solo.locator("label[data-wm=MRS]").click()
+            solo.get_by_test_id("zb-bekaempfen").click()
+            warte(lambda: solo.locator("[data-unterwegs=M01]").count() == 1, 10, "Ziel 1 bekämpft")
 
-        aufgabe("S-1 allein testen: Aufklärung bedienbar, Ziel geht weiter", s_1)
+        aufgabe("S-1 allein testen: Uhr oben rechts, Ziel 1 bekämpfen", s_1)
         if not ergebnis[-1][1]:
             solo.screenshot(path="bedientest-solo-fehler.png")
         browser.close()

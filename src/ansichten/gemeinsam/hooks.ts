@@ -4,11 +4,21 @@ import { meldeSicht } from "../../sitzung/fehlersuche";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
 import { zielName } from "../../kern/zielnummern";
 
-/** Stand der Sicht; die Komponente zeichnet bei jeder Änderung neu. */
+/**
+ * Stand der Sicht; die Komponente zeichnet bei jeder Änderung neu. Hat sich der Stand zwischen Zeichnen und Abonnieren geändert
+ * (z. B. der Host des Team-Laptops ist gerade gestartet), wird gleich noch einmal gezeichnet.
+ */
 export function useStand(s: Sicht): SichtStand {
   const [, setZaehler] = useState(0);
-  useEffect(() => s.abonnieren(() => setZaehler((n) => n + 1)), [s]);
-  return s.stand;
+  const st = s.stand;
+  const gezeichnet = useRef(st);
+  gezeichnet.current = st;
+  useEffect(() => {
+    const ab = s.abonnieren(() => setZaehler((n) => n + 1));
+    if (s.stand !== gezeichnet.current) setZaehler((n) => n + 1);
+    return ab;
+  }, [s]);
+  return st;
 }
 
 /**
@@ -34,13 +44,12 @@ export function useSpielzeit(s: Sicht, intervallMs = 250): number {
 }
 
 /**
- * „Meldung entfällt“ (Schritt 7): Fallen bei dieser Rolle Meldungen weg, weil jedes ihrer Fahrzeuge zerstört
- * oder abgezogen ist, sagt ein kurzer Hinweis unten rechts, welche und warum – sonst verschwände die gerade
- * geprüfte Meldung kommentarlos aus dem Eingang.
+ * „Meldung entfällt“ (Schritt 7): Fallen Meldungen im Eingang weg, weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist, sagt
+ * ein kurzer Hinweis unten rechts, welche und warum – sonst verschwände die gerade geöffnete Meldung kommentarlos.
  */
-export function useEntfallHinweis(s: Sicht, st: SichtStand, rolle: "g1" | "g2" | "g3"): void {
+export function useEntfallHinweis(s: Sicht, st: SichtStand): void {
   const z = st.zustand;
-  const ids = z.reihenfolge.filter((id) => z.meldungen[id].entfallen?.stufe === rolle);
+  const ids = z.reihenfolge.filter((id) => z.meldungen[id].entfallen);
   const bekannt = useRef<Set<string> | null>(null);
   const schl = ids.join(",");
   useEffect(() => {
@@ -57,9 +66,9 @@ export function useEntfallHinweis(s: Sicht, st: SichtStand, rolle: "g1" | "g2" |
 }
 
 /**
- * Offene Meldung einer Rolle (Schritt 6b): Eine gewählte Meldung bleibt offen, solange sie bei der Rolle liegt
- * (`alle`, auch zurückgestellte); sonst öffnet sich von selbst die älteste neue (`auto`, ohne zurückgestellte).
- * wahl(null) gibt die Auswahl frei – nach einer Entscheidung oder BEOBACHTEN kommt dann die nächste neue.
+ * Geöffnete Meldung (Schritt 6b): Eine gewählte Meldung bleibt offen, solange sie im Eingang liegt (`alle`, auch
+ * zurückgestellte); sonst öffnet sich von selbst die älteste neue (`auto`, ohne zurückgestellte). wahl(null) gibt die
+ * Auswahl frei – nach einer Entscheidung kommt dann die nächste neue.
  */
 export function useAuswahl(auto: string[], alle: string[] = auto): [string | null, (id: string | null) => void] {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
@@ -70,11 +79,15 @@ export function useAuswahl(auto: string[], alle: string[] = auto): [string | nul
 /** Stand einer Sitzung (Lobby, Spielleitung); zeichnet bei jeder Änderung neu, auch bei Spielständen der Teams. */
 export function useSitzung(s: Sitzung): SitzungsStand {
   const [, setZaehler] = useState(0);
+  const st = s.stand;
+  const gezeichnet = useRef(st);
+  gezeichnet.current = st;
   useEffect(() => {
     const ab = [s.abonnieren(() => setZaehler((n) => n + 1)), s.hinweise.abonnieren(() => setZaehler((n) => n + 1))];
+    if (s.stand !== gezeichnet.current) setZaehler((n) => n + 1);
     return () => ab.forEach((f) => f());
   }, [s]);
-  return s.stand;
+  return st;
 }
 
 /** Takt für Anzeigen, die die Uhr mehrerer Teams zeigen (Übersicht der Spielleitung). */

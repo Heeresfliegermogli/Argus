@@ -152,8 +152,11 @@ export interface Meldung {
     /** Seit 2.4 (E6.3): Merkmale, die im Bild erkennbar sind (Attrappe, Rotes Kreuz, Kinder, Verwundete, PRESS …) */
     merkmale?: BildMerkmal[];
   };
-  /** wirkmittel (seit 2.4): Wirkmittel der Lösung (Modellteam „ideal“ nimmt nur diese) */
-  loesung: { G1: string; G2: string; G3: string; wirkmittel?: string[] };
+  /**
+   * Seit 2.6 (H2): eine Entscheidung je Meldung (bis 2.5 je Stufe G1/G2/G3) mit Begründung; wirkmittel (seit 2.4): Wirkmittel der
+   * Lösung (Modellteam „ideal“ nimmt nur diese).
+   */
+  loesung: { entscheid: "BEKÄMPFEN" | "ZURÜCKSTELLEN" | "ABLEHNEN"; text?: string; wirkmittel?: string[] };
   zweck: string;
   /** nur Meldungen einer Verstärkung: Gruppe (V-1 …), gesetzt beim Einspielen (src/kern/welt.ts) */
   verstaerkung?: string;
@@ -377,7 +380,10 @@ export interface Phase {
   name: string;
   von_s: number;
   bis_s: number;
+  /** Absicht des Feindes (Spielleitung, Drehbuch) */
   absicht: string;
+  /** ein Satz für die Einweisung der Teams (seit 2.6, H4.2; ohne Lösungshinweis) */
+  kurz?: string;
 }
 
 export interface Lagetext {
@@ -572,7 +578,8 @@ export interface Regeln {
   };
   /** Seit 2.4 (E1): Schalter der Spielleitung */
   spielleitung?: { verstaerkung_menue: boolean; hinweis?: string };
-  fast_track: { schwelle: number; standard: boolean; schaltet: string; wirkung: string; mvp?: string };
+  /** Seit 2.6 (H5.5, H5.6): Lagemeldung so lange oben (s, Echtzeit), Bestand ab so wenig als knapp je Wirkmittel */
+  anzeige?: { lagemeldung_s: number; bestand_knapp?: Record<string, number>; hinweis?: string };
   ablauf: unknown[];
   einsatzregeln: {
     regeln: { id: string; text: string; prueft: string; maschinell?: boolean }[];
@@ -605,7 +612,16 @@ export interface RegelnVerluste {
   feindartillerie: { treffer_prozent: number; radius_m: number };
   attrappe: { treffer_prozent: number; radius_m: number };
   durchbruch?: { treffer_prozent: number };
-  meldungen: { abstand_alle_s: number; abstand_panzer_s: number; abstand_limit_s: number; sofort?: string[] };
+  meldungen: {
+    abstand_alle_s: number; abstand_panzer_s: number; abstand_limit_s: number; sofort?: string[];
+    /** seit 2.6 (H3.3): Arten „Artillerie und Mörser“ – höchstens eine Meldung je Panzer, Schütze und Stufe, insgesamt je artillerie_abstand_s */
+    artillerie?: string[]; artillerie_abstand_s?: number;
+    /** seit 2.6 (H3.3): diese Arten (Feindartillerie des Hintergrunds) melden sich nur beim Stufenwechsel */
+    nur_stufenwechsel?: string[];
+    /** seit 2.6 (H5.7): der erste Beschuss eines Panzers kommt immer als Meldung */
+    erster_beschuss?: boolean;
+    hinweis?: string;
+  };
 }
 
 // ---------------------------------------------------------------- Geladene Inhalte

@@ -1,7 +1,7 @@
-// Sicht: was eine Ansicht (G1, G2, G3, Spielleitung, Plenum) bekommt – der Spielstand EINES Teams
+// Sicht: was eine Ansicht (Zielbearbeitung, Spielleitung, Plenum) bekommt – der Spielstand EINES Teams
 // aus der Perspektive EINER Rolle. Die Ansichten kennen weder Sitzung noch Lobby noch Adapter-Details.
-//   • Teilnehmer mit Doppelrolle: je Rolle eine Sicht auf dasselbe Spiel (umschalten im Kopf).
-//   • Spielleitung: Sicht „sl“ je Team; Zuschauen = Sicht g1/g2/g3 mit nurLesen.
+//   • Team-Laptop: Sicht „zb“ auf das eigene Spiel, das dieses Fenster selbst rechnet (seit 2.6).
+//   • Spielleitung: Sicht „sl“ je Team; Zuschauen = Sicht „zb“ mit nurLesen (hochgeladenes Protokoll, mit Verzug).
 //   • Aktionen gehen mit der Rolle dieser Sicht als Absender an den Host des Teams.
 import type { Inhalte } from "../inhalte/typen";
 import { weltFuer } from "../kern/lage";
@@ -11,7 +11,7 @@ import type { Spielzustand } from "../kern/zustand";
 import type { Abmelden, FensterArt, HostInfo, SyncAdapter, Verbindung } from "../sync/adapter";
 import type { Hinweis } from "./hinweise";
 import type { Sitzung } from "./sitzung";
-import type { Spiel } from "./spiel";
+import type { Spiel, UploadStand } from "./spiel";
 
 export interface SichtTeilnehmer {
   client: string;
@@ -45,6 +45,17 @@ export interface SichtStand {
   hinweise: Hinweis[];
   /** Zuschauen: nichts senden */
   nurLesen: boolean;
+  /** dieses Fenster rechnet das Spiel des Teams (Team-Laptop) */
+  rechnet: boolean;
+  upload: UploadStand;
+  /** Firebase-Regeln lehnen ab (Banner, H1.5) */
+  regelFehler: boolean;
+  /** Direktaufruf ohne Lobby (Test) */
+  direkt: boolean;
+  /** Name des Fensters, das das Spiel des Teams rechnet (Team-Fenster, das nur zusieht) */
+  rechnerName: string | null;
+  /** dieser Team-Laptop ist gerade verbunden */
+  rechnerOnline: boolean;
 }
 
 export class Sicht {
@@ -82,7 +93,7 @@ export class Sicht {
     const st = this.berechne();
     const k = this.vergleich(st);
     if (this.letzte && k === this.schluessel && this.letzte.zustand === st.zustand && this.letzte.offen === st.offen
-      && this.letzte.hinweise === st.hinweise && this.letzte.host === st.host) return this.letzte;
+      && this.letzte.hinweise === st.hinweise && this.letzte.host === st.host && this.letzte.upload === st.upload) return this.letzte;
     this.letzte = st;
     this.schluessel = k;
     return st;
@@ -115,6 +126,12 @@ export class Sicht {
       istHost: ss.istHost,
       hinweise: this.sitzung.hinweise.liste,
       nurLesen: this.nurLesen,
+      rechnet: sp.rechnet,
+      upload: sp.upload,
+      regelFehler: ss.regelFehler,
+      direkt: ss.direkt,
+      rechnerName: team?.rechner ? team.spieler.find((x) => x.client === team.rechner)?.name ?? null : null,
+      rechnerOnline: !!team?.rechnerOnline,
     };
   }
 
@@ -123,6 +140,7 @@ export class Sicht {
     return [
       st.lauf, st.geladen ? 1 : 0, st.istHost ? 1 : 0, st.host?.id ?? "", st.verbindung.verbunden ? 1 : 0, st.verbindung.fehler ?? "",
       st.teamName, st.teamFarbe, st.name, st.teilnehmer.map((t) => `${t.client}${t.rollen.join("")}`).join(","),
+      st.rechnet ? 1 : 0, st.regelFehler ? 1 : 0, st.rechnerName ?? "", st.rechnerOnline ? 1 : 0,
     ].join("|");
   }
 
@@ -169,5 +187,10 @@ export class Sicht {
   /** Spielleitung: neuen Lauf für dieses Team beginnen. */
   async neuesSpiel(): Promise<void> {
     await this.sitzung.neuesSpiel(this.spiel.team);
+  }
+
+  /** Team-Fenster, das nur zusieht: das Spiel hier weiterführen (der Team-Laptop ist weg). */
+  async uebernehmenTeam(): Promise<void> {
+    await this.sitzung.uebernehmenTeam();
   }
 }

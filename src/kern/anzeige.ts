@@ -30,7 +30,7 @@ export function rollenImText(text: string): string {
 const KENNUNGEN = new Set([
   "id", "ziele", "typ", "kategorie", "art", "klasse", "empfehlung", "datei", "an", "ziel", "fall", "meldung", "folge_von",
   "start", "gruppe", "bei", "folge", "phase", "aktion", "version", "stand", "anzeige", "karte", "fahrzeuge", "wirkmittel",
-  "regeln", "zugehoerigkeit", "seite", "schritt", "regel_id", "stufe", "prueft", "schaltet",
+  "regeln", "zugehoerigkeit", "seite", "schritt", "regel_id", "stufe", "prueft", "schaltet", "entscheid",
 ]);
 
 function wandle<T>(wert: T, f: (s: string) => string, schluessel?: string): T {

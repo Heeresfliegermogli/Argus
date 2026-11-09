@@ -6,6 +6,7 @@
 //   p info · p host · p anw:<client>
 //   p team:<team>:kopf · p team:<team>:lauf · p team:<team>:sp:<client>
 //   p lauf:<team>:<lauf>:p:e000001 · p lauf:<team>:<lauf>:a:<id>
+//   p status:<team>   Statusmeldung des Team-Fensters (seit 2.6)
 // Kopf, Lauf und jeder Spieler liegen unter eigenen Schlüsseln, damit zwei Fenster gleichzeitig
 // schreiben können, ohne sich zu überschreiben (localStorage ist je Schlüssel atomar).
 //
@@ -16,6 +17,7 @@
 // seines Teams nicht). Das storage-Ereignis kommt erst, wenn die Änderung im Fenster lesbar ist.
 import type { Aktion, Ereignis } from "../kern/ereignisse";
 import { protokollSchluessel, zufall } from "../kern/ereignisse";
+import type { TeamStatus } from "../kern/uebersicht";
 import {
   type Abmelden, type HostInfo, PULS_INTERVALL_MS, type SitzungsInfo, type SpielerEintrag, type SyncAdapter,
   type TeamDaten, type TeamKopf, type Teilnehmer, type Verbindung, istVeraltet,
@@ -27,7 +29,8 @@ type Nachricht =
   | { t: "teams" }
   | { t: "info" }
   | { t: "anw" }
-  | { t: "host" };
+  | { t: "host" }
+  | { t: "status" };
 
 export interface KanalFabrik {
   (name: string): { postMessage(m: unknown): void; onmessage: ((ev: { data: unknown }) => void) | null; close(): void };
@@ -47,6 +50,7 @@ export class LokalAdapter implements SyncAdapter {
   private infoHoerer = new Set<(i: SitzungsInfo | null) => void>();
   private anwHoerer = new Set<(l: Teilnehmer[]) => void>();
   private hostHoerer = new Set<(h: HostInfo | null) => void>();
+  private statusHoerer = new Set<(s: Record<string, TeamStatus>) => void>();
   private timer: ReturnType<typeof setInterval>[] = [];
   private anwesenheit: Omit<Teilnehmer, "puls"> | null = null;
   private hostId: string | null = null;
@@ -191,6 +195,46 @@ export class LokalAdapter implements SyncAdapter {
     this.senden({ t: "p", team, lauf, e });
   }
 
+  async schreibeEreignisse(team: string, lauf: string, liste: Ereignis[]): Promise<void> {
+    // erst prüfen, dann schreiben: ganz oder gar nicht wie bei Firebase
+    for (const e of liste) {
+      if (this.ablage.getItem(`${this.p}lauf:${team}:${lauf}:p:${protokollSchluessel(e.seq)}`) !== null) throw new Error(`seq ${e.seq} ist schon belegt (zweiter Host?)`);
+    }
+    for (const e of liste) await this.schreibeEreignis(team, lauf, e);
+  }
+
+  // ---------------------------------------------------------------- Statusmeldungen
+
+  async schreibeStatus(team: string, st: TeamStatus): Promise<void> {
+    this.ablage.setItem(`${this.p}status:${team}`, JSON.stringify(st));
+    this.meldeStatus();
+    this.senden({ t: "status" });
+  }
+
+  aufStatus(cb: (liste: Record<string, TeamStatus>) => void): Abmelden {
+    this.statusHoerer.add(cb);
+    cb(this.statusLesen());
+    return () => this.statusHoerer.delete(cb);
+  }
+
+  private statusLesen(): Record<string, TeamStatus> {
+    const praefix = `${this.p}status:`;
+    const out: Record<string, TeamStatus> = {};
+    for (let i = 0; i < this.ablage.length; i++) {
+      const k = this.ablage.key(i);
+      if (!k?.startsWith(praefix)) continue;
+      const st = this.json<TeamStatus>(k);
+      if (st) out[k.slice(praefix.length)] = st;
+    }
+    return out;
+  }
+
+  private meldeStatus(): void {
+    if (!this.statusHoerer.size) return;
+    const s = this.statusLesen();
+    this.statusHoerer.forEach((cb) => cb(s));
+  }
+
   // ---------------------------------------------------------------- Aktionen
 
   async sendeAktion(team: string, lauf: string, a: Aktion): Promise<void> {
@@ -269,6 +313,9 @@ export class LokalAdapter implements SyncAdapter {
       case "host":
         this.meldeHost();
         break;
+      case "status":
+        this.meldeStatus();
+        break;
     }
   }
 
@@ -281,6 +328,7 @@ export class LokalAdapter implements SyncAdapter {
       this.meldeInfo();
       this.meldeAnw();
       this.meldeHost();
+      this.meldeStatus();
       return;
     }
     if (!ev.key.startsWith(this.p)) return;
@@ -289,6 +337,7 @@ export class LokalAdapter implements SyncAdapter {
     else if (rest === "info") this.meldeInfo();
     else if (rest.startsWith("anw:")) this.meldeAnw();
     else if (rest === "host") this.meldeHost();
+    else if (rest.startsWith("status:")) this.meldeStatus();
     else if (rest.startsWith("lauf:") && ev.newValue) {
       // Rückfallweg für Ereignisse und Aktionen (doppelte Zustellung ist erlaubt und wird übergangen)
       const [, team, lauf, art] = rest.split(":");

@@ -10,6 +10,7 @@ import {
 } from "firebase/database";
 import type { Aktion, Ereignis } from "../kern/ereignisse";
 import { bereinigt, protokollSchluessel, zufall } from "../kern/ereignisse";
+import type { TeamStatus } from "../kern/uebersicht";
 import {
   type Abmelden, type HostInfo, PULS_INTERVALL_MS, type SitzungsInfo, type SpielerEintrag, type SyncAdapter,
   type TeamDaten, type TeamKopf, type Teilnehmer, type Verbindung, istVeraltet,
@@ -169,6 +170,19 @@ export class FirebaseAdapter implements SyncAdapter {
     await set(this.r(`laeufe/${team}/${lauf}/protokoll/${protokollSchluessel(e.seq)}`), bereinigt(e));
   }
 
+  async schreibeEreignisse(team: string, lauf: string, liste: Ereignis[]): Promise<void> {
+    if (!liste.length) return;
+    // Ein Schreibvorgang über mehrere Pfade: ganz oder gar nicht (die Regel „nur anlegen“ prüft jedes Ereignis).
+    const werte: Record<string, unknown> = {};
+    for (const e of liste) werte[protokollSchluessel(e.seq)] = bereinigt(e);
+    try {
+      await update(this.r(`laeufe/${team}/${lauf}/protokoll`), werte);
+    } catch (e) {
+      this.fehler(e as Error);
+      throw e;
+    }
+  }
+
   // ---------------------------------------------------------------- Aktionen
 
   async sendeAktion(team: string, lauf: string, a: Aktion): Promise<void> {
@@ -178,6 +192,21 @@ export class FirebaseAdapter implements SyncAdapter {
   aufAktionen(team: string, lauf: string, cb: (a: Aktion) => void): Abmelden {
     const q = query(this.r(`laeufe/${team}/${lauf}/aktionen`), orderByKey());
     return this.abo(onChildAdded(q, (s) => cb(s.val() as Aktion), (e) => this.fehler(e)));
+  }
+
+  // ---------------------------------------------------------------- Statusmeldungen (seit 2.6)
+
+  async schreibeStatus(team: string, st: TeamStatus): Promise<void> {
+    try {
+      await set(this.r(`status/${team}`), bereinigt(st));
+    } catch (e) {
+      this.fehler(e as Error);
+      throw e;
+    }
+  }
+
+  aufStatus(cb: (liste: Record<string, TeamStatus>) => void): Abmelden {
+    return this.abo(onValue(this.r("status"), (s) => cb((s.val() ?? {}) as Record<string, TeamStatus>), (e) => this.fehler(e)));
   }
 
   // ---------------------------------------------------------------- Anwesenheit

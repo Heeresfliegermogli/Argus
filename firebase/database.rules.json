@@ -98,7 +98,7 @@
                       ".validate": "newData.isString() && newData.val().length <= 40"
                     },
                     "rollen": {
-                      ".validate": "newData.isString() && newData.val().matches(/^(g1|g2|g3)(,(g1|g2|g3)){0,2}$/)"
+                      ".validate": "newData.isString() && newData.val().matches(/^zb$/)"
                     },
                     "seit": {
                       ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= now + 600000"
@@ -107,6 +107,69 @@
                       ".validate": false
                     }
                   }
+                },
+                "$weiteres": {
+                  ".validate": false
+                }
+              }
+            },
+            "status": {
+              "$team": {
+                ".write": "($s.matches(/^[acefhjkmnprtvwxy34679]{3}$/) || $s.matches(/^[a-z0-9-]{4,32}$/)) && $team.matches(/^t[a-z0-9]{4,8}$/)",
+                ".validate": "newData.hasChildren(['client', 'lauf', 'seq', 'hoch', 'ts', 't_s', 'laeuft', 'tempo', 'ende'])",
+                "client": {
+                  ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9]{6}$/)"
+                },
+                "lauf": {
+                  ".validate": "newData.isString() && newData.val().matches(/^[0-9]{8}-[0-9]{4}-[a-z0-9]{4}$/)"
+                },
+                "seq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
+                },
+                "hoch": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
+                },
+                "ts": {
+                  ".validate": "newData.isNumber() && newData.val() <= now + 600000"
+                },
+                "t_s": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+                },
+                "laeuft": {
+                  ".validate": "newData.isBoolean()"
+                },
+                "tempo": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+                },
+                "ende": {
+                  ".validate": "newData.isBoolean()"
+                },
+                "eingang": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+                },
+                "zurueck": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+                },
+                "meldungen": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+                },
+                "wirkungen": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+                },
+                "fehl": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+                },
+                "faelle": {
+                  ".validate": "newData.isString() && newData.val().length <= 200"
+                },
+                "panzer": {
+                  ".validate": "newData.isString() && newData.val().length <= 100"
+                },
+                "bereit": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99"
+                },
+                "verwundete": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
                 },
                 "$weiteres": {
                   ".validate": false
@@ -143,7 +206,7 @@
                       "von": {
                         ".validate": "newData.hasChild('rolle')",
                         "rolle": {
-                          ".validate": "newData.isString() && newData.val().matches(/^(g1|g2|g3|sl|plenum|system)$/)"
+                          ".validate": "newData.isString() && newData.val().matches(/^(zb|sl|plenum|system)$/)"
                         },
                         "client": {
                           ".validate": "newData.isString() && newData.val().length <= 12"
@@ -188,7 +251,7 @@
                       "von": {
                         ".validate": "newData.hasChildren(['rolle', 'client'])",
                         "rolle": {
-                          ".validate": "newData.isString() && newData.val().matches(/^(g1|g2|g3|sl|plenum)$/)"
+                          ".validate": "newData.isString() && newData.val().matches(/^(zb|sl|plenum)$/)"
                         },
                         "client": {
                           ".validate": "newData.isString() && newData.val().length <= 12"

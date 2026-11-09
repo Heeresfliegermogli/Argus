@@ -25,7 +25,7 @@ describe("Szenario 2.2: Daten", () => {
   it("C1: jedes Fahrzeug erscheint am Kartenrand (nur was bei Spielbeginn dasteht, steht mitten im Bild)", async () => {
     const inh = await inhalte();
     const { breite: w, hoehe: h } = inh.karte.ausdehnung_m;
-    expect(["2.2", "2.3", "2.4", "2.5"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5), 2.4 auf 2.3 (E-a), 2.5 auf 2.4 (F)
+    expect(["2.2", "2.3", "2.4", "2.5", "2.6"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5), 2.4 auf 2.3 (E-a), 2.5 auf 2.4 (F), 2.6 auf 2.5 (H)
     for (const z of inh.szenario.ziele) {
       const a = abS(z);
       if (a <= 0 && !z.bewegung?.route?.length) continue; // Attrappe Z-07 steht seit Spielbeginn
@@ -114,7 +114,7 @@ describe("Szenario 2.2: Kontakte auf der Karte der Spieler", () => {
     // je Meldung: kurz vor der Meldezeit steht jedes ihrer Fahrzeuge schon als Kontakt (oder im Wald / seit Spielbeginn)
     const gesehen = new Set<string>();
     for (const m of inh.szenario.meldungen) {
-      const lb = lagebildZielmeldungen(inh, leer, "g1", m.t_s - 1);
+      const lb = lagebildZielmeldungen(inh, leer, m.t_s - 1);
       for (const id of m.ziele) {
         if (gesehen.has(id)) continue;
         gesehen.add(id);
@@ -133,7 +133,7 @@ describe("Szenario 2.2: Kontakte auf der Karte der Spieler", () => {
     const { breite: w, hoehe: h } = inh.karte.ausdehnung_m;
     const erstmals = new Map<string, [number, number]>();
     for (let t = 0; t <= 1500; t += 2) {
-      for (const o of lagebildZielmeldungen(inh, leer, "g1", t).objekte) {
+      for (const o of lagebildZielmeldungen(inh, leer, t).objekte) {
         if (o.art === "kontakt" && !erstmals.has(o.id)) erstmals.set(o.id, o.pos);
       }
     }

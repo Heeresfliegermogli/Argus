@@ -31,7 +31,7 @@ async function alleLaeufe(): Promise<{ name: string; ev: Pick<VerlustEreignis, "
 describe("Szenario 2.5: F1 eigene Truppe", () => {
   it("F1.1/F1.2/F5: 1./PzBtl 613, vier Leopard 2A7V einzeln am Westrand (1/2 55,365 · 1/1 55,412 · 1/3 55,470 · 1/4 50,530)", async () => {
     const inh = await inhalte();
-    expect(inh.szenario.version).toBe("2.5");
+    expect(["2.5", "2.6"]).toContain(inh.szenario.version); // 2.6 baut auf 2.5 auf (H)
     const et = inh.szenario.eigene_truppe!;
     expect(et).toMatchObject({ einheit: "1./PzBtl 613", uebergeordnet: "PzBtl 613", name: "1. Kp", fahrzeug: "kpz_leo2a7v" });
     expect(et.panzer.map((p) => [p.name, p.pos])).toEqual([["1/1", [55, 412]], ["1/2", [55, 365]], ["1/3", [55, 470]], ["1/4", [50, 530]]]);

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Erzeugt tests/referenz_durchlauf.json aus simuliere_durchlauf.py (Modellteams naiv und ideal).
 
-tests/durchlauf.test.ts spielt dieselben fünf Läufe (= fünf Teams einer Sitzung) mit der echten Engine
+tests/durchlauf.test.ts spielt dieselben fünf Läufe (= fünf Teams, seit 2.6 je Team eine lokale Engine) mit der echten Engine
 (Host, Zeitplan, Trefferregel beim Einschlag, Hintergrundgefecht, E-01, Verstärkungen, seit 2.1 Durchbruch) und vergleicht
-je Meldung Ausgang und Zeitpunkte, Wirkmittel, Einschlag und Treffer, dazu bedingte Injects, Restbestand,
+je Meldung Ausgang, Entscheidung und Zeitpunkte (seit 2.6 eine Entscheidung je Meldung mit Sekunden ab Eingang und ab Öffnen),
+Wirkmittel, Einschlag und Treffer, dazu bedingte Injects, Restbestand,
 Hintergrundgefecht, E-01 und die erreichten Schlüssel- und Nebenfälle; seit 2.3 auch die Verluste der eigenen Truppe (seit 2.5 je
 Panzer: jeder Schuss mit Einschießen und Zustand, Stand je Panzer und der Kp, Druckmeldungen K-… mit Text, I-07/I-06/I-13 mit dem
 Stand des Teams).
@@ -45,9 +46,9 @@ def lauf_export(d, team, ein):
         if "m" not in e:
             continue
         meldungen.append({
-            "meldung": e["m"], "t_meld": e["t_meld"], "ft": bool(e.get("ft")), "ende": e.get("ende", "?"),
-            "t_g1": zahl(e.get("t_g1")), "g1": e.get("g1"), "t_g2": zahl(e.get("t_g2")), "g2": e.get("g2"),
-            "t_g3": zahl(e.get("t_g3")), "g3": e.get("g3"), "wm": e.get("wm"),
+            "meldung": e["m"], "t_meld": e["t_meld"], "ende": e.get("ende", "?"),
+            "t_offen": zahl(e.get("t_offen")), "t_entscheid": zahl(e.get("t_entscheid")), "entscheid": e.get("entscheid"),
+            "sek_eingang": zahl(e.get("sek_eingang")), "sek_offen": zahl(e.get("sek_offen")), "wm": e.get("wm"),
             "t_wirkung": zahl(e.get("t_wirkung")), "ziel": e.get("ziel"),
             "pos": [zahl(v) for v in e["pos"]] if e.get("pos") else None,
             "getroffen": sorted(f"{g[0]}|{g[2]}" for g in e.get("getroffen", [])),
@@ -57,7 +58,6 @@ def lauf_export(d, team, ein):
     hg = [{"id": e["hintergrund"], "t": e["t"], "wirkt": e.get("wirkt")} for e in det if "hintergrund" in e]
     e01 = [{"entfaellt": True} if e.get("entfaellt") else {"t": e["t"], "von": e["von"], "ziel": e["ziel"]}
            for e in det if "ereignis" in e]
-    ft = next((e["fast_track"] for e in det if "fast_track" in e), None)
     durchbruch = [{"gruppe": e["durchbruch"], "t": e["t"], "durch": e["durch"]} for e in det if "durchbruch" in e]
     durchgebrochen = next((e["durchgebrochen"] for e in det if "durchgebrochen" in e), [])
     faelle = {k: ok for k, (ok, _) in S.faelle_erreicht(d, team, ein).items()}
@@ -76,9 +76,9 @@ def lauf_export(d, team, ein):
         "verlauf": v["verlauf"],
     }
     return {
-        "team": team, "einspielen": ein or {}, "fast_track_ab": ft, "meldungen": meldungen, "injects": inj,
+        "team": team, "einspielen": ein or {}, "meldungen": meldungen, "injects": inj,
         "hintergrund": hg, "e01": e01, "durchbruch": durchbruch, "durchgebrochen": durchgebrochen, "rest": rest, "treffer_schutz": schutz, "faelle": faelle,
-        "letzte_freigabe": letzte, "log": [f"{a}: {b}" for a, b in log], "verluste": verluste,
+        "letzte_bekaempfung": letzte, "log": [f"{a}: {b}" for a, b in log], "verluste": verluste,
     }
 
 
@@ -96,7 +96,7 @@ def main():
         "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario "
                    f"{d['szenario']['id']} v{d['szenario']['version']}). Nicht von Hand ändern.",
         "szenario": d["szenario"]["version"],
-        "zeiten": {"G1": S.T_G1, "G2": S.T_G2, "G3": S.T_G3, "ft_nach_angebot": S.FT_NACH_ANGEBOT_S},
+        "zeiten": {"naiv": S.T_NAIV, "ideal": S.T_IDEAL},
         "reihenfolge_wirkmittel": S.REIHENFOLGE,
         "laeufe": [lauf_export(d, team, ein) for team, ein in LAEUFE],
     }

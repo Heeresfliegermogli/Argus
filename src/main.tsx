@@ -5,7 +5,7 @@
 //   ?sitzung=CODE&rolle=plenum   Smartboard
 //   ?rolle=g1&raum=kraehe        Direktaufruf ohne Lobby (ein Team, für Tests und Probeläufe)
 //   ?druck=einweisung            Einweisungskarten zum Drucken
-//   ?auswertung=demo             Auswertung mit fünf Beispielteams (Üben der Auflösung, ohne Sitzung; nur Webseite)
+//   ?auswertung=demo             Auswertung mit sieben Beispielteams (Üben der Auflösung, ohne Sitzung; nur Webseite)
 import { render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { AuswertungAnsicht } from "./ansichten/auswertung";

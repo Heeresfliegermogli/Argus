@@ -1,18 +1,22 @@
 # ARGUS – Engine und Live-Lage (Schritt 7)
 
-Stand 02.11.2026 (Szenario 2.5, Änderungen F „Panzerzug“: eigene Truppe ist die 1./PzBtl 613 – Absender und Kopfzeile „1. Kp“, Folgeauftrag F5 – mit vier
-Kampfpanzern, Feindfeuer mit Einschießen und Zustand je Panzer, „Schule“; davor 2.4 mit E1–E8 „Ethik“ Teil E-a, 2.3 mit D1–D5
-„mehr Druck“, 2.2 mit C1–C9 und 2.1 mit A1–A9). Grundlage: Konzept v2 (§4–§6), Szenario KRÄHE-01 v2.5 (`anforderungen_technik`),
-Referenz `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`), `tools/referenz/verluste.py` (Verlustmodell) und
-`tools/referenz/simuliere_durchlauf.py`. Alles ist eine reine Funktion von Inhalten, Protokoll und Spielzeit:
+Stand 09.11.2026 (Szenario 2.6, Änderungen H „eine Rolle, jeder Laptop rechnet“: eine Entscheidung je Meldung, die Engine eines
+Teams läuft im Browser des Team-Laptops, Fast-Track entfällt, Phase 5 heißt „Krise“, weniger Artilleriemeldungen, LM treffen das
+Fahrzeug, wo es beim Einschlag ist, Feuer auf die eigenen Panzer deutlich; davor 2.5 mit F „Panzerzug“, 2.4 mit E1–E8 „Ethik“
+Teil E-a, 2.3 mit D1–D5 „mehr Druck“, 2.2 mit C1–C9 und 2.1 mit A1–A9). Grundlage: Konzept v2 (§4–§6), Szenario KRÄHE-01 v2.6
+(`anforderungen_technik`), Referenz `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`), `tools/referenz/verluste.py`
+(Verlustmodell) und `tools/referenz/simuliere_durchlauf.py`. Alles ist eine reine Funktion von Inhalten, Protokoll und Spielzeit:
 gleiches Protokoll ⇒ gleicher Stand, gleiche Karte, gleiche Effekte in jedem Fenster.
+
+Die Abschnitte unten beschreiben die Engine mit ihrer Geschichte; wo bis 2.5 von G1, G2, G3 (Aufklärung, Zielprüfung, Führung) die
+Rede ist, gilt seit 2.6 die eine Ansicht Zielbearbeitung (Abschnitt „Szenario 2.6“).
 
 ## Ergebnis
 
 | Teil | Umsetzung | Modul |
 |---|---|---|
 | Trefferregel beim Einschlag | Einschlag = Freigabe + Flugzeit (Mörser 35 s, LM 5 s Start + Flug mit 30 m/s ab `flug.start`, PzAbw 10 s), Ort = Position des ersten bei der Freigabe noch stehenden Fahrzeugs der Meldung zum Einschlagzeitpunkt (Fixpunkt-Iteration beim LM). Getroffen ist alles im Wirkradius nach der Lage beim Einschlag, dazu das bekämpfte Fahrzeug; R2, R3 und Einsatzbereich gelten am Einschlagort. Seit 2.2 (C6): Ein Wirkmittel mit `nur_zielfahrzeug` (LM) trifft von den Fahrzeugen nur das bekämpfte, Personen im Wirkradius trifft es weiter (S4, N2). | `src/kern/regeln.ts` (`flugzeit`, `einschlag`, `wirkungBeimEinschlag`, `vorhersage`) |
-| Vorausrechnung der Warnungen | G2: je Wirkmittel „Einschlag in n s (Uhrzeit)“, Warnungen, Vorschau am Einschlagort mit gestrichelter Linie vom Ziel jetzt dorthin, Abstände am Einschlagort. G3: „Freigabe jetzt: Einschlag …“ live, dazu die Warnungen von G2. Der Host rechnet bei der Freigabe den Einschlag (Zeit, Ort, bekämpftes Fahrzeug) und schreibt ihn ins Protokoll. | `src/engine/aktionen.ts`, `src/ansichten/g2.tsx`, `g3.tsx` |
+| Vorausrechnung der Warnungen | Seit 2.6 an der geöffneten Meldung der Zielbearbeitung: je Wirkmittel Bestand, „Einschlag in m:ss“ (Countdown, H5.3), Warnungen und „nur k von n Fahrzeugen“, Vorschau am Einschlagort mit gestrichelter Linie vom Ziel jetzt dorthin, Abstände am Einschlagort. Der Host rechnet bei BEKÄMPFEN den Einschlag (Zeit, Ort, bekämpftes Fahrzeug) und schreibt ihn ins Protokoll (`entscheid.einschlag`, `einschlaege`). | `src/engine/aktionen.ts`, `src/ansichten/zb.tsx` |
 | Bewegung | Routen `[t_s, x, y]` mit Halten; Objekte nur zwischen `ab_s` und `bis_s`; zerstörte Fahrzeuge bleiben als Wrack an der Trefferstelle. Die Karte rechnet die Position in jedem Bild aus der Bahn (`bahnLage`), das Lagebild nur bei neuen Ereignissen und im Sekundentakt. | `src/kern/geometrie.ts`, `src/kern/lagebild.ts`, `src/karte/lagekarte.ts` |
 | Tracking | Gemeldete Ziele bleiben bei G1, G2, G3 als Zeichen der ARGUS-Klasse (nie Ground Truth) und fahren mit – am ersten noch stehenden Fahrzeug der Meldung, Zahl = noch stehende Fahrzeuge. Nach der eigenen Wirkung bleibt das Zeichen durchgestrichen beim bekämpften Fahrzeug am Einschlagort (den Rest eines Zuges meldet ARGUS neu). Abgezogene Ziele verschwinden, sobald die Meldung erledigt ist. Seit 6b hat auch G1 die Karte. **Seit 2.2 (C7, C8):** Das Zeichen bleibt am ersten noch stehenden Fahrzeug, Zahl und Größenangabe (●● 2 Fz, ●●● ab 3, `groesse_nach_anzahl` im Fahrzeugkatalog) zählen die noch stehenden im Umkreis von 40 m (`GRUPPE_RADIUS_M`); jedes getroffene Fahrzeug bekommt am Einschlagort ein eigenes durchgestrichenes Zeichen (`nr~Z-xx`), ein Fahrzeug weiter als 40 m vom Zeichen ein kleines eigenes Zeichen (`nr+Z-xx`). Durchgestrichen ist das Hauptzeichen erst, wenn kein Fahrzeug der Meldung mehr steht. | `src/kern/lagebild.ts` (`weitereZeichen`), `src/karte/zeichen.ts` |
 | Kontakte (seit 2.2, C1) | Jedes Fahrzeug mit Route (auch aus einer Verstärkung), das im Raum ist, noch steht und keiner Meldung angehört, die bei der Rolle angekommen ist, steht bei G1, G2, G3 als Kontakt (`?Z-xx`, Zeichen „unbekannt“ `SUGP`, keine Klasse, keine Nummer) – nicht im Wald (dort sieht die Drohne nichts), nie die ungemeldeten Ziele (Z-27/Z-28). Mit der Meldung wird daraus „Ziel n“. Da jedes Fahrzeug vom Kartenrand einfährt (Szenario 2.2), taucht nichts mehr mitten im Bild auf. Die Position folgt der Ground Truth (Bewegung erkannt), aber nichts über Art, Freund oder Feind. | `src/kern/lagebild.ts` (`imWald`), `src/karte/lagekarte.ts` |
@@ -55,7 +59,7 @@ Spielzeit (er ist Teil der Regel). Schleifen laufen auch bei stehender Uhr weite
 | Ansicht | Effekte |
 |---|---|
 | Spielleitung (Kontrollkarte), Plenum nach Spielende | alle |
-| G1, G2, G3 | eigene Wirkungen, Feindartillerie, Nebel; Hintergrundgefecht, E-01 und Wracks nur zu Zielen, die die Rolle aus einer Meldung kennt (`bekannteZiele`); Mündungsblitz nur, wenn sie auch den Schützen kennt |
+| Zielbearbeitung (bis 2.5 G1, G2, G3) | eigene Wirkungen, Feindartillerie, Nebel, Feuer auf die eigenen Panzer (Mündungsblitz am Schützen, Leuchtspur, Treffer – seit 2.6 immer, H5.7); Hintergrundgefecht, E-01 und Wracks nur zu Zielen, die das Team aus einer Meldung kennt (`bekannteZiele`); Mündungsblitz nach Schussrhythmus nur, wenn es auch den Schützen kennt |
 | Plenum während des Spiels | nur Feindartillerie und Nebel (nichts verrät ein Ziel) |
 
 ## Gleichzeitigkeit (wie `simuliere_durchlauf.py`)
@@ -65,7 +69,12 @@ Spielzeit (er ist Teil der Regel). Schleifen laufen auch bei stehender Uhr weite
   überschritten hat – eine Freigabe genau um T zählt also noch.
 * Bei gleichem Zeitpunkt wirkt das Drehbuch (Hintergrundgefecht) vor den eigenen Einschlägen.
 * Die Spielzeit einer Aktion ist die des Klicks; kommt sie später an (Netz), rechnet der Host mit der
-  Klickzeit, nie vor dem letzten Ereignis.
+  Klickzeit, nie vor dem letzten Ereignis. Seit 2.6 kommen Entscheidungen ohne Netz an (Klick → Ereignis in Millisekunden);
+  über das Netz kommen nur noch Aktionen der Spielleitung. Das Startsignal wirkt ab der Serverzeit des Klicks (`ab_ts`).
+* Gleichstände auf die Sekunde (Modellteams entscheiden genau nach 20 bzw. 35 s): Erscheint eine Meldung im selben Augenblick,
+  in dem ihr Fahrzeug zerstört wird, entfällt sie beim Erscheinen; kommt eine Entscheidung im selben Augenblick wie das Entfallen
+  der Meldung, gilt die Reihenfolge der Verarbeitung. Ein Klick Sekundenbruchteile später dreht das um – `tools/e2e_drehbuch.py`
+  weist solche Gleichstände als Hinweis aus, nicht als Fehler.
 
 ## Protokoll (neu in Schritt 7)
 
@@ -214,6 +223,37 @@ nirgends mehr in Daten, Beispieldaten, Oberfläche und Werkzeugen stehen.
 | angepasst | `tests/szenario23.test.ts` (D4 mit den neuen Platzhaltern, Druckmeldungen und Preis des Abwartens je Panzer), `tests/szenario24.test.ts` (S5/S7 auf 1/1 bzw. 1/2, Kalibrierung), `tests/effekte.test.ts` (Feindfeuer auf den Zug, Rauch bei Ausfall, Kanone vom Panzer), `tests/auswertung.test.ts`, `tests/lagebild.test.ts`, `tests/regeln.test.ts` (Kanone 5 s) |
 | `tools/e2e_drehbuch.py` (×5) | **Zwei Teams** (naiv, ideal; 9 Fenster): alle Aktionen gesendet, Protokolle wie die Engine im Prozess, **Druckmeldungen je Panzer genau wie im Prozess** (20 bzw. 25, Panzer und Stufe), größte Zeitabweichung 2,7–3,1 s, Klick → Protokoll Median 3–4 ms; Zeichenzeit je Bild ähnlich wie auf main im selben Vergleichslauf (Ø G2 12,7 gegen 13,6 ms, G3 15,3 gegen 11,2 ms, SL 2 14,8 gegen 14,4 ms, Plenum 1,7 gegen 0,8 ms – es zeichnet jetzt Panzer und Feuer; Verzug der Modellpersonen höchstens 3,1 gegen 1,6 s). **Fünf Teams** (18 Fenster an 2 Kernen ohne Grafikkarte): bis Spielende und Auswertung, aber die Modellpersonen kommen nicht hinterher (viele Aktionen nicht gesendet) – main 9967f44 brach im selben Vergleichslauf nach 17:42 ab (Fenster der SL 2 30 s ohne Antwort); Grenze der Testumgebung, nicht von F. Gemeldet werden außerdem nur vorbestehende Punkte von E-a/E-b: Teamvergleich 2244 px breit, sechs falsche Empfehlungen im Konfidenz-Kapitel, 24 statt 16 Zellen in der Übersicht der SL |
 | Gesamt | 176 automatische Tests, Build |
+
+## Szenario 2.6 (09.11.2026, Änderungen H „eine Rolle, jeder Laptop rechnet“): Nachweis
+
+Was sich geändert hat (Einzelheiten im Eintrag in `claude/Entscheidungen.md` und in `claude/Zwischenstand_H.md`, Werte im Drehbuch,
+Bau in `tools/referenz/bau_szenario_v26.py BASIS25 OUT` – aus main 27b1b05 gebaut gleich `public/daten/`; gepflegt wird die JSON-Datei):
+
+| Teil | Umsetzung | Modul |
+|---|---|---|
+| H1 Team-Laptop rechnet | Der Host eines Teams läuft im Browser des Team-Laptops (frühestes Fenster des Teams nach `seit`), nimmt die Entscheidungen direkt an (ohne Netz) und die Aktionen der Spielleitung über das Netz; Ablage jedes Ereignisses im `localStorage`, Upload in Stücken (≤ 100 Ereignisse), Statusmeldung `status/<team>` bei Änderung, sonst alle 5 s. Start für alle mit der Serverzeit des Klicks (`ab_ts`, höchstens 60 s nachgeholt). **Kein Fenster übernimmt von selbst** (ein Laptop ohne Netz spielt weiter; ein zweites Fenster finge sonst einen zweiten Spielstand an) – nur von Hand. Spielleitung und Plenum rechnen kein Spiel, sie folgen den hochgeladenen Protokollen | `src/engine/host.ts`, `src/sitzung/spiel.ts`, `src/sitzung/ablage.ts`, `src/sitzung/sitzung.ts`, `src/kern/uebersicht.ts`, `src/sync/verzug.ts` |
+| H2 Eine Rolle | Ereignis `entscheid {meldung, entscheid: bekaempfen/zurueckstellen/ablehnen, wirkmittel?, warnungen?, einschlag?, einschlaege?, t_offen?, sek_eingang?, sek_offen?}`; Rechte `entscheid`, `inject_quittiert`: `zb`; ZURÜCKSTELLEN lässt die Meldung offen (hinten im Eingang), eine zweite Entscheidung folgt. Ereignisse älterer Versionen (`g1_entscheid` … `fast_track`) zählen nur für die Laufnummer | `src/engine/aktionen.ts`, `src/kern/zustand.ts`, `src/kern/ereignisse.ts` |
+| H3.3 Artilleriemeldungen | Druckmeldungen wegen Artillerie und Mörser höchstens eine je Panzer, Schütze und Stufe und insgesamt höchstens eine je 120 s (ausgefallen immer); H-01, H-04, H-12 nur beim Stufenwechsel; der erste Beschuss jedes Panzers immer (H5.7). Engine = `verluste.py` | `src/kern/verluste.ts` = `tools/referenz/verluste.py` |
+| H5.2 LM-Flug | Flugbahn auf den vorausberechneten Einschlagort (Position des Fahrzeugs zum Einschlagzeitpunkt), im Endanflug auf das Fahrzeug nachgeführt; Einschlag genau am Fahrzeug, auch im Replay | `src/kern/effekte.ts`, `src/karte/effektebene.ts` |
+| H5.7 Feuer auf die eigenen Panzer | für alle sichtbar: Mündungsblitz am Schützen, Leuchtspur zum Panzer, `einschlag_staub` daneben oder `treffer_panzer` am Panzer; Kachel blinkt rot, kurzer roter Rand; `diagnose.gezeigt` meldet seit 2.6 auch `leuchtspur` und `lm_flug` (Probe) | `src/kern/effekte.ts`, `src/karte/effektebene.ts`, `src/ansichten/gemeinsam/rahmen.tsx` |
+
+| Prüfung | Ergebnis |
+|---|---|
+| `pruefe_szenario.py` (neu: keine Fast-Track-Reste, Phase „Krise“, Lösung je Meldung mit einer Entscheidung, Lagemeldungen an das Team) | OK, keine Fehler, keine Warnung; längste Lagemeldung 138 Zeichen; Lösungen: BEKÄMPFEN 26, ZURÜCKSTELLEN 3, ABLEHNEN 7 |
+| `simuliere_durchlauf.py` (eine Rolle: naiv 20 s, ideal 35 s je Entscheidung) | naiv und ideal erreichen alle Fälle S1–S8, N1–N4 (auch mit V-1…V-4). **Kalibrierung (H2.5):** naiv 4/4 einsatzbereit (0 eingeschränkt, 0 Verwundete, 6 Druckmeldungen), **ideal 3/4** (1/1 ausgefallen, 2 eingeschränkt, 5 Verwundete, 14 Druckmeldungen), naiv + V-1…V-4 4/4 (1 Verwundeter), ideal + V-1…V-4 3/4 (6), naiv + V-1…V-5 4/4; Untergrenze hält, kein Ausfall vor dem dritten Treffer. **Robustheit:** naiv erreicht alle Fälle bis 35 s je Entscheidung, ideal bis 40 s; bei ideal mit 45 s bleibt N1 offen, mit 50 s N1 und N2. *ideal* hat ab ca. 22:00 keine LM mehr und stellt die Folgemeldung von S4 (M23) und M19, M22 zurück |
+| `tests/durchlauf.test.ts` (fünf Teams an einem Taktgeber, Referenz mit `erzeuge_durchlauf.py` neu) | Engine = Simulation: je Meldung Entscheidung, Zeiten, Wirkmittel, Einschläge mit Ort und Fahrzeug, Treffer, Verstöße, Injects, Hintergrundgefecht, E-01, Durchbruch, Bestand; jede Zeile der Verlust-Zeitlinie bitgleich, Druckmeldungen mit Text |
+| Gesamt | **184 automatische Tests** (21 Dateien, mit der Firebase-Nachbildung), Typprüfung von App und Lasttest-Seite, Build |
+| `tools/lasttest_probe.py` (Lasttest-Seite, **7 Team-Laptops + SL + Plenum** über die Firebase-Nachbildung) | 0 s / 5 s / 15 s Verzug je Richtung, Trennung der Laptops 20 s bzw. 60 s: Klick → eigener Stand höchstens 2–4 ms, Spanne der Spielzeiten nach dem Start ≤ 0,4 s, Spielleitung bei Spielende vollständig nach 3,8 / 18,8 / 43,8 s, Auswertung 7/7 Teams mit denselben Fällen wie ohne Netz |
+| `tools/e2e_drehbuch.py` (8 Fenster: 5 Team-Laptops über Lobby und Code, SL, SL 2, Plenum; ×5; Modellteams naiv/ideal mit und ohne Verstärkungen) | alle fünf Teams bis Spielende, **Protokolle wie die Engine im Prozess** (Meldungen, Entscheidungen, Einschläge mit Ort und Fahrzeug, Treffer, Verstöße, Injects, Hintergrundgefecht, E-01, Verstärkungen), **Druckmeldungen je Panzer genau wie im Prozess** (6, 14, 8, 15, 8), gleicher Bestand und dieselben zerstörten Fahrzeuge; größte Zeitabweichung 1,0–3,5 s (Klickverzug der Modellpersonen bei ×5), **Klick → Protokoll Median 0 ms, höchstens 52 ms** (lokal, ohne Netz); Spanne der Uhren nach „Start für alle“ 0,33 s; SL 2 notiert zu S3 (vorgewählt); Auswertung im Plenum wie im Prozess (Teamvergleich, Kennzahlen, Replay S3/S2/S1/S4, Preis des Abwartens, Export ohne Namen); alle Fenster in 1530 × 800, keine Konsolenfehler. Hinweis (kein Fehler): Gleichstand Ziel 3/M28 (erscheint, als sein Fahrzeug getroffen wird) |
+| `tools/e2e_teams.py` (7 Team-Laptops + Zuschauer + SL + Plenum über die Oberfläche, Firebase-Nachbildung mit 5 s Verzug je Richtung) | bestanden: je Team ein eigener Lauf mit gleicher Laufnummer und gleichem Fingerabdruck am Laptop, im zweiten Fenster und bei der Spielleitung; die Spielleitung rechnet nicht, Entscheidungen bleiben am Laptop (gespeicherte Aktionen nur von der Spielleitung); Spanne der Uhren nach „Start für alle“ 0,00 s; jedes Team entscheidet Ziel 1 anders, die Stände unterscheiden sich wie gespielt; alle Fenster in 1530 × 800, keine Konsolenfehler (Laufzeit 401 s, je Beitritt ca. 20 s wegen des Verzugs) |
+| `tools/livelage_probe.py` (Rückfall Canvas; Teil A und B auch mit WebGL) | 19 Prüfpunkte erfüllt: Verstärkung über die Sitzung (Menü aus), Feindartillerie, LM mit Countdown in der Vorschau, Flug zum vorausberechneten Einschlagort und Einschlag dort, V-2 gesperrt, Mörser Z-06 feuert (Feuerstoß 07:10), Leuchtspur H-02, Nebel, Wrack, Z-24 „Kette ab“, E-01, Übersicht mit zwei Teams; Bildrate (Canvas) SL, Team und Plenum gleichzeitig 10–30 Bilder/s, Kontrollkarte allein ×1 10–30, ×10 28–30, gezoomt 17–30, Zeichenzeit Ø 1–9 ms. Teil C läuft seit 2.6 mit dem Team-Laptop daneben (er rechnet das Spiel) |
+
+**Befund Bildrate (SwiftShader):** In der Testumgebung (2 Kerne, keine Grafikkarte, WebGL nur per Software) teilen sich alle Fenster
+eines Browsers den Software-Grafikprozess. Mit dem Team-Laptop daneben (er rechnet seit 2.6 das Spiel) fiel die Kontrollkarte ab dem
+Hauptangriff auf 0–2 Bilder/s, Klicks brauchten bis über 30 s; allein (Team-Fenster nach dem Start geschlossen) zeichnet sie 9–11
+Bilder/s, im Rückfall Canvas 10–30. Die Zeichenzeit je Bild bleibt klein (Ø 1–4 ms): Grenze ist das Füllen der Software-Rasterung bei
+den vielen Effekten des Hauptangriffs (seit 2.6 mehr Feuer an den Panzern, H5.7), nicht die Karte. Im Hörsaal hat jeder Laptop seine
+Grafikkarte; Bildrate am Dienst-Laptop bestätigen (Kopfzeile ab 14:00, `data-fps` an der Karte).
 
 ## Oberfläche (Schritt 6b, umgesetzt)
 

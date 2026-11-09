@@ -6,15 +6,18 @@
 // Ein Adapter gehört zu genau einer Sitzung (Code). Datenmodell (Firebase-Pfad
 // argus/v1/sitzungen/<code>/, lokal entsprechend):
 //   info                            { code, szenario, version, titel, erstellt, von }  einmal angelegt
-//   host                            { id, name, puls }  steuernde Spielleitung (genau eine, für alle Teams)
+//   host                            { id, name, puls }  steuernde Spielleitung (Start, Pause, Spiel öffnen)
 //   anwesenheit/<client>            { client, art, name, puls, version, team? }
 //   teams/<team>                    { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen, seit } }
-//   laeufe/<team>/<lauf>/protokoll/<e…>   Ereignisse, nur der Host schreibt, nur anhängen
-//   laeufe/<team>/<lauf>/aktionen/<id>    Aktionen der Ansichten, nur anhängen
+//   status/<team>                   Statusmeldung des Team-Laptops an die Spielleitung, etwa alle 5 s (seit 2.6, H1.2)
+//   laeufe/<team>/<lauf>/protokoll/<e…>   Ereignisse, nur anhängen. Seit 2.6 (H1) rechnet der Team-Laptop sein Spiel selbst und
+//                                         lädt das Protokoll in Stücken hoch (Upload); Spielleitung und Plenum lesen es.
+//   laeufe/<team>/<lauf>/aktionen/<id>    Aktionen an den Team-Laptop (Start, Pause, Tempo, Reserve, Notiz der Spielleitung)
 // Die Teamliste ist klein (Lobby), die Protokolle liegen getrennt darunter: Wer die Lobby zeigt,
 // lädt keine Protokolle. Eine Liste aller Sitzungen gibt es nicht. Alte Läufe bleiben erhalten
 // (Testlauf und echter Durchlauf lassen sich später auswerten).
 import type { Aktion, Ereignis } from "../kern/ereignisse";
+import type { TeamStatus } from "../kern/uebersicht";
 
 export type Abmelden = () => void;
 
@@ -59,7 +62,7 @@ export interface HostInfo {
 
 export interface SpielerEintrag {
   name: string;
-  /** „g1“ oder „g1,g2“ (Doppelrolle), siehe rollenText() */
+  /** seit 2.6 immer „zb“ (Zielbearbeitung, eine Rolle je Team), siehe rollenText() */
   rollen: string;
   /**
    * Serverzeit (ms) der letzten Rollenwahl. Greifen zwei Fenster gleichzeitig dieselbe Rolle,
@@ -118,9 +121,19 @@ export interface SyncAdapter {
   aufProtokoll(team: string, lauf: string, abSeq: number, cb: (e: Ereignis) => void): Abmelden;
   /** Nur Host. Schlägt fehl, wenn die seq schon belegt ist (zweiter Host). */
   schreibeEreignis(team: string, lauf: string, e: Ereignis): Promise<void>;
+  /**
+   * Upload des Team-Laptops (seit 2.6): mehrere Ereignisse in einem Schreibvorgang, ganz oder gar nicht. Schlägt fehl, wenn eine
+   * seq schon belegt ist oder die Regeln das Ereignis ablehnen.
+   */
+  schreibeEreignisse(team: string, lauf: string, liste: Ereignis[]): Promise<void>;
   sendeAktion(team: string, lauf: string, a: Aktion): Promise<void>;
   /** Alle Aktionen des Laufs (vorhandene und künftige), in Eingangsreihenfolge. Nur Host. */
   aufAktionen(team: string, lauf: string, cb: (a: Aktion) => void): Abmelden;
+
+  // ---- Statusmeldungen der Team-Laptops (seit 2.6, H1.2)
+  schreibeStatus(team: string, s: TeamStatus): Promise<void>;
+  /** Statusmeldungen aller Teams (Spielleitung, Plenum); die letzte je Team. */
+  aufStatus(cb: (liste: Record<string, TeamStatus>) => void): Abmelden;
 
   // ---- Anwesenheit und Host (für die ganze Sitzung)
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void;
@@ -132,31 +145,41 @@ export interface SyncAdapter {
 }
 
 /**
- * Kanal zu einem Team-Spiel: was Spiel (Fenster) und Host (Spielleitung) von einem Team brauchen.
+ * Kanal zu einem Team-Spiel: was Spiel (Fenster) und Host (Team-Laptop) von einem Team brauchen.
  * Ein dünner Aufsatz auf den Adapter; so bleiben Host und Spielstand unabhängig von Sitzung und Lobby.
  */
 export interface TeamKanal {
   readonly team: string;
+  /** Art des Adapters: lokal liegt das hochgeladene Protokoll schon im Speicher dieses Rechners */
+  readonly art: SyncAdapter["art"];
   serverJetzt(): number;
   neueId(): string;
   ladeProtokoll(lauf: string): Promise<Ereignis[]>;
   aufProtokoll(lauf: string, abSeq: number, cb: (e: Ereignis) => void): Abmelden;
-  schreibeEreignis(lauf: string, e: Ereignis): Promise<void>;
+  schreibeEreignisse(lauf: string, liste: Ereignis[]): Promise<void>;
   sendeAktion(lauf: string, a: Aktion): Promise<void>;
   aufAktionen(lauf: string, cb: (a: Aktion) => void): Abmelden;
+  schreibeStatus(s: TeamStatus): Promise<void>;
 }
 
 export function teamKanal(a: SyncAdapter, team: string): TeamKanal {
   return {
     team,
+    art: a.art,
     serverJetzt: () => a.serverJetzt(),
     neueId: () => a.neueId(),
     ladeProtokoll: (lauf) => a.ladeProtokoll(team, lauf),
     aufProtokoll: (lauf, abSeq, cb) => a.aufProtokoll(team, lauf, abSeq, cb),
-    schreibeEreignis: (lauf, e) => a.schreibeEreignis(team, lauf, e),
+    schreibeEreignisse: (lauf, liste) => a.schreibeEreignisse(team, lauf, liste),
     sendeAktion: (lauf, x) => a.sendeAktion(team, lauf, x),
     aufAktionen: (lauf, cb) => a.aufAktionen(team, lauf, cb),
+    schreibeStatus: (s) => a.schreibeStatus(team, s),
   };
+}
+
+/** Fehlertext von Firebase, wenn die Regeln einen Schreibvorgang ablehnen (z. B. alte Regeln ohne Rolle „zb“). */
+export function regelFehler(e: unknown): boolean {
+  return /permission[_ ]denied/i.test(String((e as Error)?.message ?? e));
 }
 
 /** Nach dieser Zeit ohne Puls gilt ein Host oder Teilnehmer als weg. */

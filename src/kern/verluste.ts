@@ -448,18 +448,30 @@ export function format(vorlage: string, werte: Record<string, string | number>):
   return vorlage.replace(/\{([A-Za-z_]\w*)\}/g, (m, k) => (k in werte ? String(werte[k]) : m));
 }
 
-/** Druckmeldungen der Kp je Panzer (F2.7) aus der Zeitlinie, wie verluste.meldungen. */
+/**
+ * Druckmeldungen der Kp je Panzer (F2.7) aus der Zeitlinie, wie verluste.meldungen. Seit 2.6 (H3.3, H5.7): der erste Beschuss eines
+ * Panzers kommt immer (erster_beschuss); Artillerie und Mörser (artillerie) höchstens einmal je Panzer, Schütze und Stufe und insgesamt
+ * höchstens einmal je artillerie_abstand_s (ausgefallen immer); die Feindartillerie des Hintergrunds (nur_stufenwechsel) nur beim
+ * Stufenwechsel.
+ */
 export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldung[] {
   const vr = inh.regeln.verluste;
   const sz = (inh.basis ?? inh).szenario;
   const vm = sz.verluste?.meldungen;
   if (!vr || !vm) return [];
   const regel = vr.meldungen;
+  const artArten = new Set<string>(regel.artillerie ?? []);
+  const artAbstand = regel.artillerie_abstand_s ?? 0;
+  const nurWechsel = new Set<string>(regel.nur_stufenwechsel ?? []);
+  const ersterBeschuss = !!regel.erster_beschuss;
   const pl = panzer(inh);
   const pmap = new Map(pl.map((p) => [p.id, p]));
-  const zst = new Map(pl.map((p) => [p.id, { zustand: vr.zustand_start, aus: false, t: null as number | null, treffer: 0, arten: new Set<string>() }]));
+  const zst = new Map(pl.map((p) => [p.id, {
+    zustand: vr.zustand_start, aus: false, t: null as number | null, treffer: 0, arten: new Set<string>(), beschossen: false, artSchl: new Set<string>(),
+  }]));
   const out: Druckmeldung[] = [];
   let tAlle: number | null = null;
+  let tArt: number | null = null;
   for (const e of ev) {
     const s = zst.get(e.panzer)!;
     const vorher = stufe(vr, s.zustand, s.aus);
@@ -472,16 +484,26 @@ export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldun
     const freiPz = s.t === null || t - s.t >= regel.abstand_panzer_s;
     const ersteArt = e.ergebnis === "treffer" && (regel.sofort ?? []).includes(e.art) && !s.arten.has(e.art);
     if (e.ergebnis === "treffer") s.arten.add(e.art);
+    const erster = ersterBeschuss && !s.beschossen && !nurWechsel.has(e.art);
+    if (!nurWechsel.has(e.art)) s.beschossen = true;
     const nAus = [...zst.values()].filter((x) => x.aus).length;
     let schl: string;
     let st: number;
     if (nachher === "ausgefallen" && vorher !== "ausgefallen") [schl, st] = [nAus >= vr.hoechstens_ausgefallen ? "limit" : "ausgefallen", 3];
     else if (nachher === "eingeschraenkt" && vorher === "einsatzbereit") [schl, st] = ["eingeschraenkt", 2];
+    else if (nurWechsel.has(e.art)) continue;
     else if (ersteArt) [schl, st] = ["sofort", nachher === "einsatzbereit" ? 1 : 2];
+    else if (erster) [schl, st] = e.ergebnis === "treffer" ? (nachher === "einsatzbereit" ? ["treffer", 1] : ["erneut", 2]) : ["beschuss", 0];
     else if (e.ergebnis === "treffer" && nachher === "einsatzbereit" && freiAlle && freiPz) [schl, st] = ["treffer", 1];
     else if (e.ergebnis === "treffer" && nachher === "eingeschraenkt" && freiAlle && (s.t === null || t - s.t >= regel.abstand_limit_s)) [schl, st] = ["erneut", 2];
     else if (e.k === 1 && e.ergebnis !== "treffer" && freiAlle && freiPz) [schl, st] = ["beschuss", 0];
     else continue;
+    if (artArten.has(e.art)) {
+      const k = `${nachher}|${e.quelle}`;
+      if (st < 3 && (s.artSchl.has(k) || (tArt !== null && t - tArt < artAbstand))) continue;
+      s.artSchl.add(k);
+      tArt = t;
+    }
     const pz = pmap.get(e.panzer)!;
     const bereit = [...zst.values()].filter((x) => !x.aus).length;
     const liste = vm.schaden?.[e.art] ?? [""];
@@ -525,10 +547,10 @@ function zerstoertMitEinschlag(z: Spielzustand): { zer: Record<string, number>; 
   const teile: string[] = [];
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
-    if (st.stufe !== "wirkung" || !st.g3) continue;
+    if (st.stufe !== "wirkung" || !st.freigabe) continue;
     // seit 2.4 (E3): je Einschlag eines Zuges, der noch aussteht
     const da = new Set((st.wirkungen ?? []).map((w) => w.nr));
-    const liste = st.g3.einschlaege?.length ? st.g3.einschlaege.map((e) => ({ t: e.t, ziel: e.ziel })) : st.g3.einschlag ? [st.g3.einschlag] : [];
+    const liste = st.freigabe.einschlaege?.length ? st.freigabe.einschlaege.map((e) => ({ t: e.t, ziel: e.ziel })) : st.freigabe.einschlag ? [st.freigabe.einschlag] : [];
     liste.forEach((e, nr) => {
       if (da.has(nr) || (zer[e.ziel] ?? Infinity) <= e.t) return;
       if (zer === z.zerstoert) zer = { ...zer };
@@ -622,13 +644,13 @@ export function schuetze(basis: Inhalte, z: Spielzustand | null, t: number, ziel
   return naechster(pl, ziel, aus) ?? pl[0];
 }
 
-/** Was eine Lagemeldung im Postfach zeigt: Absender und Text (Druckmeldungen und gefüllte Platzhalter aus dem Protokoll). */
+/** Was eine Lagemeldung im Feed zeigt: Absender und Text (Druckmeldungen und gefüllte Platzhalter aus dem Protokoll). */
 export function injectAnzeige(inh: Inhalte, i: InjectStand): { von: string; text: string; an: string } {
   const plan = inh.injects[i.id];
   const vm = (inh.basis ?? inh).szenario.verluste?.meldungen;
   return {
     von: plan?.von ?? (vm?.von || "1. Kp"),
     text: i.text ?? plan?.text ?? "",
-    an: plan?.an ?? "G3",
+    an: plan?.an ?? "Team",
   };
 }

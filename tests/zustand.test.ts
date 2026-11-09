@@ -3,7 +3,7 @@ import { faellig } from "../src/engine/ablauf";
 import { verarbeiteAktion } from "../src/engine/aktionen";
 import { pruefeInhalte } from "../src/inhalte/pruefen";
 import type { Absender, Aktion, Ereignis } from "../src/kern/ereignisse";
-import { warteschlange, zielmeldung } from "../src/kern/sichten";
+import { warteschlange, zielNummer } from "../src/kern/sichten";
 import { spieluhrImText, spielzeit, uhrzeit } from "../src/kern/uhr";
 import { ProtokollLuecke, anfangsZustand, anwenden, fingerabdruck, zustandAus } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
@@ -24,29 +24,45 @@ describe("Inhalte", () => {
 });
 
 describe("Spielstand aus dem Protokoll", () => {
-  it("Kette G1 → G2 → G3 → Wirkung, Bestand und Zerstörung", async () => {
+  it("eine Entscheidung je Meldung (2.6): BEKÄMPFEN → Wirkung, Bestand, Zerstörung, Sekunden ab Eingang und ab Öffnen", async () => {
     const inh = await inhalte();
     seq = 0;
     const p: Ereignis[] = [
-      e("spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "1.3", titel: "x" }),
+      e("spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "2.6", titel: "x" }),
       e("uhr", { befehl: "start", laeuft: true, t_s: 0, tempo: 1 }),
       e("meldung", { meldung: "M01" }, 60),
-      e("g1_entscheid", { meldung: "M01", entscheid: "annehmen", vermerk: "heiß, fährt" }, 75, { aktion: "a1" }),
-      e("g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "LM" }, 90, { aktion: "a2" }),
-      e("g3_entscheid", { meldung: "M01", entscheid: "freigabe", wirkmittel: "LM" }, 100, { aktion: "a3" }),
+      e("entscheid", { meldung: "M01", entscheid: "bekaempfen", wirkmittel: "LM", warnungen: [], t_offen: 70, sek_eingang: 40, sek_offen: 30 }, 100, { aktion: "a1" }),
       e("wirkung", { meldung: "M01", wirkmittel: "LM", pos: [960, 215], t_freigabe: 100, getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 220),
     ];
     const z = zustandAus(p, inh);
     expect(z.meldungen.M01.stufe).toBe("erledigt");
     expect(z.meldungen.M01.ergebnis).toBe("bekaempft");
+    expect(z.meldungen.M01.freigabe?.wirkmittel).toBe("LM");
+    expect(z.meldungen.M01.entscheid).toMatchObject({ entscheid: "bekaempfen", t_offen: 70, sek_eingang: 40, sek_offen: 30, t_s: 100 });
     expect(z.bestand.LM).toBe(inh.wirkmittel.LM.bestand! - 1); // ein Einschlag im Protokoll (ohne einschlaege): eine LM
     expect(z.zerstoert["Z-01"]).toBe(220);
-    expect(z.aktionen).toEqual({ a1: 4, a2: 5, a3: 6 });
-    expect(z.meldungen.M01.verlauf).toEqual([3, 4, 5, 6, 7]);
-    // Vermerk steht weiter im Protokoll (ältere Läufe), die Zielmeldung zeigt ihn seit B6 nicht mehr; Zielnummer statt M01
-    expect(z.meldungen.M01.g1?.vermerk).toBe("heiß, fährt");
-    expect(zielmeldung(inh, z, "M01").zielNr).toBe("Ziel 1 (2 Fz)");
+    expect(z.aktionen).toEqual({ a1: 4 });
+    expect(z.meldungen.M01.verlauf).toEqual([3, 4, 5]);
+    expect(zielNummer(inh, inh.meldungen.M01)).toContain("1");
     expect(fingerabdruck(z)).toBe(fingerabdruck(zustandAus(p, inh)));
+  });
+
+  it("ABLEHNEN schließt ab, ZURÜCKSTELLEN bleibt offen und steht hinten im Eingang", async () => {
+    const inh = await inhalte();
+    seq = 0;
+    const z = zustandAus([
+      e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
+      e("meldung", { meldung: "M15" }, 960),
+      e("meldung", { meldung: "M16" }, 1020),
+      e("meldung", { meldung: "M17" }, 1055),
+      e("entscheid", { meldung: "M15", entscheid: "ablehnen", sek_eingang: 70 }, 1030),
+      e("entscheid", { meldung: "M16", entscheid: "zurueckstellen", sek_eingang: 40 }, 1060),
+    ], inh);
+    expect(z.meldungen.M15.stufe).toBe("erledigt");
+    expect(z.meldungen.M15.ergebnis).toBe("abgelehnt");
+    expect(z.meldungen.M16.stufe).toBe("offen");
+    expect(z.meldungen.M16.zurueckgestellt).toBe(true);
+    expect(warteschlange(z).map((m) => m.id)).toEqual(["M17", "M16"]);
   });
 
   it("Zug-Bekämpfung (2.4, E3): eine LM je Einschlag, die Wirkung steht fest, wenn alle Einschläge da sind", async () => {
@@ -55,10 +71,8 @@ describe("Spielstand aus dem Protokoll", () => {
     const p: Ereignis[] = [
       e("spiel_neu", { lauf: "20261125-0930-test", szenario: "kraehe-01", version: "2.4", titel: "x" }),
       e("meldung", { meldung: "M01" }, 20),
-      e("g1_entscheid", { meldung: "M01", entscheid: "annehmen" }, 60, { aktion: "a1" }),
-      e("g2_empfehlung", { meldung: "M01", empfehlung: "bekaempfen", wirkmittel: "LM" }, 90, { aktion: "a2" }),
-      e("g3_entscheid", {
-        meldung: "M01", entscheid: "freigabe", wirkmittel: "LM", einschlag: { t: 140, pos: [900, 380], ziel: "Z-01" },
+      e("entscheid", {
+        meldung: "M01", entscheid: "bekaempfen", wirkmittel: "LM", warnungen: [], einschlag: { t: 140, pos: [900, 380], ziel: "Z-01" },
         einschlaege: [{ t: 140, x: 900, y: 380, ziel: "Z-01" }, { t: 143, x: 880, y: 390, ziel: "Z-02" }],
       }, 100, { aktion: "a3" }),
       e("wirkung", { meldung: "M01", wirkmittel: "LM", pos: [900, 380], t_freigabe: 100, t_einschlag: 140, ziel: "Z-01", nr: 0, anzahl: 2, getroffen: [{ ziel: "Z-01", was: "fahrzeug", kategorie: "feind" }] }, 140),
@@ -86,20 +100,16 @@ describe("Spielstand aus dem Protokoll", () => {
     expect(() => anwenden(z, e("notiz", { text: "x" }), inh)).toThrow(ProtokollLuecke);
   });
 
-  it("BEOBACHTEN hält die Meldung bei G2, zurückgestellte stehen hinten", async () => {
+  it("Startsignal mit Verzug (H1.4): die Uhr läuft ab der Serverzeit des Klicks (ab_ts)", async () => {
     const inh = await inhalte();
     seq = 0;
     const z = zustandAus([
       e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
-      e("meldung", { meldung: "M15" }, 990),
-      e("meldung", { meldung: "M16" }, 1095),
-      e("meldung", { meldung: "M17" }, 1140),
-      e("g1_entscheid", { meldung: "M16", entscheid: "annehmen" }, 1100),
-      e("g1_entscheid", { meldung: "M17", entscheid: "annehmen" }, 1145),
-      e("g2_empfehlung", { meldung: "M16", empfehlung: "beobachten" }, 1150),
+      e("uhr", { befehl: "start", laeuft: true, t_s: 0, tempo: 1, ab_ts: 985_000 }, 0),
     ], inh);
-    expect(warteschlange(z, "g2").map((m) => m.id)).toEqual(["M17", "M16"]);
-    expect(warteschlange(z, "g1").map((m) => m.id)).toEqual(["M15"]);
+    // Ereignis geschrieben bei ts 1_000_000, Klick der Spielleitung 15 s früher: Die Uhr steht schon bei 15 s
+    expect(z.uhr.ts).toBe(985_000);
+    expect(spielzeit(z.uhr, 1_000_000)).toBe(15);
   });
 
   it("Spieluhr rechnet aus dem Uhrstand", () => {
@@ -115,35 +125,19 @@ describe("Spielstand aus dem Protokoll", () => {
 });
 
 describe("Zeitplan und Aktionen", () => {
-  it("Fast-Track schickt M20 (96 %) an G1 vorbei, M16 (88 %) nicht", async () => {
-    const inh = await inhalte();
-    seq = 0;
-    const z = zustandAus([
-      e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
-      e("fast_track", { an: true }, 870),
-    ], inh);
-    const f = faellig(inh, z, 1216).filter((x) => x.typ === "meldung");
-    const m16 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M16")!;
-    const m20 = f.find((x) => x.typ === "meldung" && x.daten.meldung === "M20")!;
-    expect(m16.daten).toEqual({ meldung: "M16" });
-    expect(m20.daten).toEqual({ meldung: "M20", fast_track: true });
-  });
-
   it("I-08b kommt nur ohne Freigabe auf die PT-91, I-08a nach Freigabe +60 s", async () => {
     const inh = await inhalte();
     seq = 0;
     const basis = [
       e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
       e("meldung", { meldung: "M20" }, 1215),
-      e("g1_entscheid", { meldung: "M20", entscheid: "annehmen" }, 1230),
-      e("g2_empfehlung", { meldung: "M20", empfehlung: "bekaempfen", wirkmittel: "PZA" }, 1240),
     ];
     const ohne = zustandAus(basis, inh);
     const injectsOhne = faellig(inh, ohne, 1490).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
     expect(injectsOhne).toContain("I-08b");
     expect(injectsOhne).not.toContain("I-08a");
 
-    const mit = zustandAus([...basis, e("g3_entscheid", { meldung: "M20", entscheid: "freigabe", wirkmittel: "PZA" }, 1250)], inh);
+    const mit = zustandAus([...basis, e("entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", warnungen: [] }, 1250)], inh);
     const injectsMit = faellig(inh, mit, 1311).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
     expect(injectsMit).toContain("I-08a");
     expect(faellig(inh, mit, 1490).some((x) => x.typ === "inject" && x.daten.inject === "I-08b")).toBe(false);
@@ -160,9 +154,7 @@ describe("Zeitplan und Aktionen", () => {
       let z = zustandAus([
         e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
         e("meldung", { meldung: mid }, t),
-        e("g1_entscheid", { meldung: mid, entscheid: "annehmen" }, t + 5),
-        e("g2_empfehlung", { meldung: mid, empfehlung: "bekaempfen", wirkmittel: wm }, t + 10),
-        e("g3_entscheid", { meldung: mid, entscheid: "freigabe", wirkmittel: wm }, t + 15),
+        e("entscheid", { meldung: mid, entscheid: "bekaempfen", wirkmittel: wm, warnungen: [] }, t + 15),
       ], inh);
       // Zeitplan bis 60 s nach der Freigabe abarbeiten wie der Host (Einschlag zuerst, dann der bedingte Inject)
       for (let i = 0; i < 200; i++) {
@@ -175,22 +167,32 @@ describe("Zeitplan und Aktionen", () => {
     }
   });
 
-  it("Aktionen werden nach Rolle und Stufe geprüft, Warnungen kommen vom Host", async () => {
+  it("Aktionen werden nach Rolle geprüft, Warnungen und Sekunden kommen vom Host (H2.4)", async () => {
     const inh = await inhalte();
     seq = 0;
     const z = zustandAus([
       e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
       e("meldung", { meldung: "M12" }, 795),
-      e("g1_entscheid", { meldung: "M12", entscheid: "annehmen" }, 800),
     ], inh);
     const von = (rolle: Absender["rolle"]): Absender => ({ rolle, client: "c" });
     const a = (typ: Aktion["typ"], daten: unknown, rolle: Absender["rolle"]) => ({ id: "x", typ, von: von(rolle), ts: 0, daten }) as Aktion;
-    expect(verarbeiteAktion(inh, z, a("g1_entscheid", { meldung: "M12", entscheid: "annehmen" }, "g1"), 801))
-      .toEqual({ ok: false, grund: "Meldung M12 ist nicht (mehr) bei der Aufklärung" });
-    expect(verarbeiteAktion(inh, z, a("g2_empfehlung", { meldung: "M12", empfehlung: "bekaempfen", wirkmittel: "LM" }, "g3"), 801).ok).toBe(false);
-    const mrs = verarbeiteAktion(inh, z, a("g2_empfehlung", { meldung: "M12", empfehlung: "bekaempfen", wirkmittel: "MRS" }, "g2"), 801);
-    expect(mrs.ok && mrs.entwuerfe[0].typ === "g2_empfehlung" && mrs.entwuerfe[0].daten.warnungen?.some((w) => w.startsWith("R2"))).toBe(true);
-    const lm = verarbeiteAktion(inh, z, a("g2_empfehlung", { meldung: "M12", empfehlung: "bekaempfen", wirkmittel: "LM" }, "g2"), 801);
-    expect(lm.ok && lm.entwuerfe[0].typ === "g2_empfehlung" && lm.entwuerfe[0].daten.warnungen).toEqual([]);
+    // nur die Zielbearbeitung entscheidet
+    expect(verarbeiteAktion(inh, z, a("entscheid", { meldung: "M12", entscheid: "ablehnen" }, "sl"), 801).ok).toBe(false);
+    expect(verarbeiteAktion(inh, z, a("entscheid", { meldung: "M12", entscheid: "bekaempfen" }, "zb"), 801)).toEqual({ ok: false, grund: "Wirkmittel fehlt" });
+    const mrs = verarbeiteAktion(inh, z, a("entscheid", { meldung: "M12", entscheid: "bekaempfen", wirkmittel: "MRS", t_offen: 798 }, "zb"), 801);
+    expect(mrs.ok && mrs.entwuerfe[0].typ === "entscheid" && mrs.entwuerfe[0].daten.warnungen?.some((w) => w.startsWith("R2"))).toBe(true);
+    expect(mrs.ok && mrs.entwuerfe[0].typ === "entscheid" && mrs.entwuerfe[0].daten).toMatchObject({ sek_eingang: 6, sek_offen: 3, t_offen: 798 });
+    const lm = verarbeiteAktion(inh, z, a("entscheid", { meldung: "M12", entscheid: "bekaempfen", wirkmittel: "LM" }, "zb"), 801);
+    expect(lm.ok && lm.entwuerfe[0].typ === "entscheid" && lm.entwuerfe[0].daten.warnungen).toEqual([]);
+    // Öffnen vor dem Eingang zählt ab Eingang
+    const frueh = verarbeiteAktion(inh, z, a("entscheid", { meldung: "M12", entscheid: "ablehnen", t_offen: 500 }, "zb"), 801);
+    expect(frueh.ok && frueh.entwuerfe[0].daten).toMatchObject({ t_offen: 795, sek_offen: 6, sek_eingang: 6 });
+    // zweimal zurückstellen geht nicht, nach einer Entscheidung ist die Meldung zu
+    const zur = zustandAus([...[
+      e("spiel_neu", { lauf: "l", szenario: "s", version: "v", titel: "t" }),
+      e("meldung", { meldung: "M12" }, 795),
+    ].map((x, i) => ({ ...x, seq: i + 1 })), { seq: 3, typ: "entscheid", ts: 0, t_s: 801, von: SYS, daten: { meldung: "M12", entscheid: "zurueckstellen" } } as Ereignis], inh);
+    expect(verarbeiteAktion(inh, zur, a("entscheid", { meldung: "M12", entscheid: "zurueckstellen" }, "zb"), 802)).toEqual({ ok: false, grund: "Meldung M12 ist schon zurückgestellt" });
+    expect(verarbeiteAktion(inh, zur, a("entscheid", { meldung: "M12", entscheid: "ablehnen" }, "zb"), 802).ok).toBe(true);
   });
 });

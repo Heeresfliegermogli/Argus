@@ -1,67 +1,47 @@
-// Messung des Lasttests. Bots und Host laufen in EINER Seite, jeder mit eigener Firebase-Verbindung, aber mit
-// derselben Uhr (performance.now()). So lässt sich der Weg jeder Aktion genau zerlegen:
+// Messung des Lasttests (seit 2.6, H1.6). Alle Fenster laufen in EINER Seite, jedes mit eigener Firebase-Verbindung, aber mit
+// derselben Uhr (performance.now()). Gemessen wird, was die Änderung H1 verspricht:
 //
-//   Klick (Bot ruft senden)  → Server bestätigt die Aktion (Schreiben des Bots fertig)
-//                            → Host empfängt die Aktion (onChildAdded auf der Verbindung des Hosts)
-//                            → Host schreibt das Ereignis ins Protokoll
-//                            → Ereignis kommt im eigenen Fenster an (Verbindung des Bots)   = „Klick → Protokoll“
-//                            → … und bei den beiden Teamkameraden (deren Verbindungen)
+//   • Spiel des Teams flüssig: Klick (Bot entscheidet am Team-Laptop) → Ereignis im eigenen Spielstand. Ohne Netz, daher
+//     Millisekunden – auch bei Verzug und Trennung. Dazu der Verzug der Ereignisschleife dieser Seite (Rechenzeit).
+//   • SL-Übersicht holt auf: je Ereignis die Zeit vom Entstehen am Team-Laptop (ts, Serverzeit) bis es bei der Spielleitung
+//     (und beim Plenum) im Protokoll steht; alle 500 ms das Alter der letzten Statusmeldung und der Rückstand des Protokolls.
+//   • Start für alle: Klick der Spielleitung → Uhr läuft am Team-Laptop, und die Spanne der Spielzeiten danach (H1.4).
 //
-// Dazu für JEDES Ereignis (auch die des Zeitplans): Host schreibt → Ereignis bei jedem Bot des Teams.
-// MessAdapter ist der echte FirebaseAdapter der App, nur mit Zeitstempeln an den Übergaben.
-import type { Aktion, Ereignis } from "../../src/kern/ereignisse";
-import type { Abmelden, Verbindung } from "../../src/sync/adapter";
+// Gemessen wird an den Spielständen (Spiel.abonnieren) – also mit dem künstlichen Verzug, den VerzugAdapter um die Verbindung legt.
+// MessAdapter ist der echte FirebaseAdapter der App; er merkt sich nur, wann die Verbindung stand oder abriss.
+import type { Abmelden } from "../../src/sync/adapter";
 import { FirebaseAdapter, type FirebaseEinstellungen } from "../../src/sync/firebase";
 
-export type VerbindungsArt = "host" | "bot" | "beobachter";
+export type VerbindungsArt = "sl" | "laptop" | "plenum";
 
 export interface VerbindungsStand {
   kennung: string;
   art: VerbindungsArt;
   name: string;
-  /** Team-Nummer 1…n (nur Bots) */
+  /** Team-Nummer 1…n (nur Team-Laptops) */
   teamNr?: number;
-  rolle?: string;
   verbunden: boolean;
   warVerbunden: boolean;
   abbrueche: number;
   fehler: string[];
 }
 
-export interface AktionsMessung {
+export interface KlickMessung {
+  nr: number;
   id: string;
   typ: string;
-  /** Kennung der Verbindung, die gesendet hat */
-  sender: string;
-  /** Team-Kennung (Pfad) */
-  team: string;
-  rolle?: string;
   meldung?: string;
-  /** Spielzeit beim Klick und geplante Spielzeit (Bots) */
-  tSpiel?: number;
-  plan?: number;
+  /** Spielzeit beim Klick und geplante Spielzeit */
+  tSpiel: number;
+  plan: number;
   tKlick: number;
-  tBestaetigt?: number;
-  tHost?: number;
-  /** erstes Ereignis zu dieser Aktion */
-  seq?: number;
-  tGeschrieben?: number;
+  /** Ereignis zur Aktion im eigenen Spielstand (performance.now()) */
+  tLokal?: number;
   abgelehnt?: string;
-  fehler?: string;
 }
 
-export interface EreignisMessung {
-  team: string;
-  seq: number;
-  typ: string;
-  t_s: number;
-  aktion?: string;
-  /** nur auf dem Gerät mit Host bekannt */
-  tGeschrieben?: number;
-  tBestaetigt?: number;
-  /** Kennung → Ankunftszeit */
-  ankunft: Map<string, number>;
-}
+/** Probe je Team: [s seit Start der Uhren (Echtzeit), Alter der Statusmeldung s, Rückstand Protokoll SL s, Rückstand Plenum s] */
+export type Probe = [number, number | null, number | null, number | null];
 
 export interface Kennzahlen {
   n: number;
@@ -83,134 +63,73 @@ const jetzt = () => performance.now();
 
 export class Messung {
   readonly verbindungen = new Map<string, VerbindungsStand>();
-  readonly aktionen = new Map<string, AktionsMessung>();
-  readonly ereignisse = new Map<string, EreignisMessung>();
-  /** Verzug der Ereignisschleife dieser Seite: [Zeit seit Messbeginn ms, Verzug ms] */
+  /** Team-Nr → seq → performance.now(), als das Ereignis am Team-Laptop entstand (nur Teams dieses Geräts) */
+  readonly lokal = new Map<number, Map<number, number>>();
+  /** "sl" | "plenum" → Team-Nr → seq → ms vom Entstehen (ts) bis zur Ankunft (Serverzeit des Empfängers) */
+  readonly ankunft = new Map<string, Map<number, Map<number, number>>>();
+  readonly klicks: KlickMessung[] = [];
+  readonly proben = new Map<number, Probe[]>();
+  /** Startsignal: ms vom Klick der Spielleitung bis die Uhr am Team-Laptop läuft */
+  readonly start = new Map<number, number>();
+  /** größte Differenz der Spielzeiten der Teams dieses Geräts kurz nach dem Start (s) */
+  startSpanne: number | null = null;
+  /** Echtzeit (s seit Start der Uhren) der simulierten Trennung */
+  trennung: { von: number; bis: number | null } | null = null;
+  /** Verzug der Ereignisschleife dieser Seite: [performance.now() ms, Verzug ms] */
   readonly schleife: [number, number][] = [];
-  /** Zeiten, in denen die Seite verdeckt war (Zeitgeber werden dann gedrosselt) */
   verdecktMs = 0;
   private verdecktSeit: number | null = null;
   private schleifenTimer: ReturnType<typeof setInterval> | null = null;
-  private beginn = jetzt();
-
-  private schluessel(team: string, seq: number): string {
-    return `${team}|${seq}`;
-  }
 
   anmelden(v: Omit<VerbindungsStand, "verbunden" | "warVerbunden" | "abbrueche" | "fehler">): void {
     this.verbindungen.set(v.kennung, { ...v, verbunden: false, warVerbunden: false, abbrueche: 0, fehler: [] });
   }
 
-  verbindungsStand(kennung: string, v: Verbindung): void {
+  verbindungsStand(kennung: string, v: { verbunden: boolean; fehler?: string }): void {
     const s = this.verbindungen.get(kennung);
     if (!s) return;
     if (s.verbunden && !v.verbunden) s.abbrueche += 1;
     s.verbunden = v.verbunden;
     if (v.verbunden) s.warVerbunden = true;
-    if (v.fehler && !s.fehler.includes(v.fehler)) s.fehler.push(v.fehler);
+    if (v.fehler && !s.fehler.includes(v.fehler) && s.fehler.length < 5) s.fehler.push(v.fehler);
   }
 
-  // ---------------------------------------------------------------- Aktionen
-
-  aktionGesendet(kennung: string, team: string, a: Aktion): void {
-    if (this.aktionen.has(a.id)) return;
-    const d = a.daten as { meldung?: string };
-    this.aktionen.set(a.id, { id: a.id, typ: a.typ, sender: kennung, team, rolle: a.von.rolle, meldung: d.meldung, tKlick: jetzt() });
-  }
-
-  aktionBestaetigt(id: string): void {
-    const m = this.aktionen.get(id);
-    if (m && m.tBestaetigt === undefined) m.tBestaetigt = jetzt();
-  }
-
-  aktionFehler(id: string, text: string): void {
-    const m = this.aktionen.get(id);
-    if (m) m.fehler = text;
-  }
-
-  /** Planangaben des Bots zur Aktion (Spielzeit beim Klick, geplante Zeit). */
-  notiere(id: string, extra: Pick<AktionsMessung, "tSpiel" | "plan">): void {
-    const m = this.aktionen.get(id);
-    if (m) Object.assign(m, extra);
-  }
-
-  aktionBeimHost(a: Aktion): void {
-    const m = this.aktionen.get(a?.id);
-    if (m && m.tHost === undefined) m.tHost = jetzt();
-  }
-
-  // ---------------------------------------------------------------- Ereignisse
-
-  private ereignis(team: string, e: Ereignis): EreignisMessung {
-    const k = this.schluessel(team, e.seq);
-    let x = this.ereignisse.get(k);
-    if (!x) {
-      x = { team, seq: e.seq, typ: e.typ, t_s: e.t_s, aktion: e.aktion, ankunft: new Map() };
-      this.ereignisse.set(k, x);
+  /** Neues Ereignis im Spielstand des Team-Laptops (Teams dieses Geräts). */
+  lokalesEreignis(nr: number, seq: number, aktion: string | undefined, abgelehnt: string | undefined, t = jetzt()): void {
+    let m = this.lokal.get(nr);
+    if (!m) this.lokal.set(nr, (m = new Map()));
+    if (!m.has(seq)) m.set(seq, t);
+    if (!aktion) return;
+    const k = this.klicks.find((x) => x.id === aktion);
+    if (k && k.tLokal === undefined) {
+      k.tLokal = t;
+      if (abgelehnt) k.abgelehnt = abgelehnt;
     }
-    return x;
   }
 
-  /** Erstes Ereignis zu einer eigenen Aktion merken (auf jedem Gerät, auch ohne Host). */
-  private verknuepfe(e: Ereignis, t?: number): void {
-    if (!e.aktion) return;
-    const m = this.aktionen.get(e.aktion);
-    if (!m || (m.seq !== undefined && m.seq <= e.seq)) return;
-    m.seq = e.seq;
-    if (t !== undefined) m.tGeschrieben = t;
-    if (e.typ === "aktion_abgelehnt") m.abgelehnt = (e.daten as { grund: string }).grund;
+  /** Ereignis kommt bei der Spielleitung oder beim Plenum an: Verzug vom Entstehen (ts) bis jetzt (Serverzeit). */
+  angekommen(wer: "sl" | "plenum", nr: number, seq: number, ms: number): void {
+    let w = this.ankunft.get(wer);
+    if (!w) this.ankunft.set(wer, (w = new Map()));
+    let m = w.get(nr);
+    if (!m) w.set(nr, (m = new Map()));
+    if (!m.has(seq)) m.set(seq, Math.max(0, ms));
   }
 
-  ereignisGeschrieben(team: string, e: Ereignis): void {
-    const x = this.ereignis(team, e);
-    if (x.tGeschrieben !== undefined) return;
-    x.tGeschrieben = jetzt();
-    this.verknuepfe(e, x.tGeschrieben);
-  }
-
-  ereignisBestaetigt(team: string, seq: number): void {
-    const x = this.ereignisse.get(this.schluessel(team, seq));
-    if (x && x.tBestaetigt === undefined) x.tBestaetigt = jetzt();
-  }
-
-  ereignisEmpfangen(kennung: string, team: string, e: Ereignis, t = jetzt()): void {
-    if (!e || typeof e.seq !== "number") return;
-    const x = this.ereignis(team, e);
-    if (!x.ankunft.has(kennung)) x.ankunft.set(kennung, t);
-    this.verknuepfe(e);
-  }
-
-  // ---------------------------------------------------------------- Auswertung je Aktion
-
-  /** Zeit, zu der das Ereignis der Aktion im Fenster des Senders ankam. */
-  zurueck(m: AktionsMessung): number | undefined {
-    if (m.seq === undefined) return undefined;
-    return this.ereignisse.get(this.schluessel(m.team, m.seq))?.ankunft.get(m.sender);
-  }
-
-  /** Spätester Eingang bei den Teamkameraden (nur wenn alle es haben). */
-  beiTeam(m: AktionsMessung, kameraden: string[]): number | undefined {
-    if (m.seq === undefined || !kameraden.length) return undefined;
-    const x = this.ereignisse.get(this.schluessel(m.team, m.seq));
-    if (!x) return undefined;
-    let spaet = -Infinity;
-    for (const k of kameraden) {
-      const t = x.ankunft.get(k);
-      if (t === undefined) return undefined;
-      spaet = Math.max(spaet, t);
-    }
-    return spaet;
+  probe(nr: number, p: Probe): void {
+    let l = this.proben.get(nr);
+    if (!l) this.proben.set(nr, (l = []));
+    l.push(p);
   }
 
   // ---------------------------------------------------------------- Seite selbst
 
   starteSeitenMessung(): void {
-    this.beginn = jetzt();
     let letzte = jetzt();
     const takt = 100;
     this.schleifenTimer = setInterval(() => {
       const t = jetzt();
-      this.schleife.push([Math.round(t - this.beginn), Math.max(0, Math.round(t - letzte - takt))]);
+      this.schleife.push([Math.round(t), Math.max(0, Math.round(t - letzte - takt))]);
       letzte = t;
     }, takt);
     document.addEventListener("visibilitychange", this.sichtbarkeit);
@@ -240,8 +159,8 @@ export class Messung {
 }
 
 /**
- * Der Firebase-Adapter der App mit Zeitstempeln an den Übergaben. Jede Instanz ist eine eigene
- * Firebase-App und damit eine eigene Verbindung (bei transport "lp" Long-Polling wie im Hörsaal).
+ * Der Firebase-Adapter der App, der sich nur den Verbindungsstand merkt. Jede Instanz ist eine eigene Firebase-App und damit
+ * eine eigene Verbindung (bei transport "lp" Long-Polling wie im Hörsaal).
  */
 export class MessAdapter extends FirebaseAdapter {
   private abVerbindung: Abmelden | null = null;
@@ -259,43 +178,5 @@ export class MessAdapter extends FirebaseAdapter {
     this.abVerbindung?.();
     this.abVerbindung = null;
     super.trennen();
-  }
-
-  override async sendeAktion(team: string, lauf: string, a: Aktion): Promise<void> {
-    this.mess.aktionGesendet(this.kennung, team, a);
-    try {
-      await super.sendeAktion(team, lauf, a);
-      this.mess.aktionBestaetigt(a.id);
-    } catch (e) {
-      this.mess.aktionFehler(a.id, (e as Error).message);
-      throw e;
-    }
-  }
-
-  override aufAktionen(team: string, lauf: string, cb: (a: Aktion) => void): Abmelden {
-    return super.aufAktionen(team, lauf, (a) => {
-      this.mess.aktionBeimHost(a);
-      cb(a);
-    });
-  }
-
-  override async schreibeEreignis(team: string, lauf: string, e: Ereignis): Promise<void> {
-    this.mess.ereignisGeschrieben(team, e);
-    await super.schreibeEreignis(team, lauf, e);
-    this.mess.ereignisBestaetigt(team, e.seq);
-  }
-
-  override async ladeProtokoll(team: string, lauf: string): Promise<Ereignis[]> {
-    const liste = await super.ladeProtokoll(team, lauf);
-    const t = performance.now();
-    for (const e of liste) this.mess.ereignisEmpfangen(this.kennung, team, e, t);
-    return liste;
-  }
-
-  override aufProtokoll(team: string, lauf: string, abSeq: number, cb: (e: Ereignis) => void): Abmelden {
-    return super.aufProtokoll(team, lauf, abSeq, (e) => {
-      this.mess.ereignisEmpfangen(this.kennung, team, e);
-      cb(e);
-    });
   }
 }

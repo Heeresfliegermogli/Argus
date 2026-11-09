@@ -120,3 +120,22 @@ svg.streifen { display: block; }
 .diagnose li { color: var(--text-2); }
 .diagnose li.ok { color: var(--text); }
 .diagnose li.warn { color: var(--warn); }
+
+/* 2.6 (H1.6): drei Ampeln, Verlauf je Team */
+.lauf .ergebnis { grid-template-columns: 1fr 1fr 1fr 360px; }
+.box { border-radius: 8px; border: 2px solid; padding: 6px 12px; display: grid; gap: 1px; align-content: center; }
+.box-kopf { font-size: 14px; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.box-kopf .zeichen { font-size: 20px; }
+.box-zahl { font-family: var(--mono); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.box.ampel-gruen .box-kopf { color: #7fe07f; }
+.box.ampel-gelb .box-kopf { color: var(--warn); }
+.box.ampel-rot .box-kopf { color: #ff8a84; }
+.kopf .meta b.verzug { color: var(--argus); font-family: var(--schrift); }
+.teams td.zahl { font-size: 13px; }
+.teams thead th.zahl { line-height: 1.2; }
+.streifen .trennung { fill: var(--text-3); opacity: .25; }
+.streifen .rueckstand { fill: none; stroke: var(--argus); stroke-width: 2; }
+.streifen .status { fill: none; stroke: var(--text-2); stroke-width: 1; }
+.unten { grid-template-columns: 1fr; }
+.unten .diagnose { grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.teams td.diagramm { width: 610px; }

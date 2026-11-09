@@ -1,10 +1,10 @@
 // Startseite (Änderung B1, 25.10.2026): zuerst nur zwei große Knöpfe „Ich spiele mit“ und „Spielleitung“.
 //   • Ich spiele mit: Code eingeben (drei Zeichen), beitreten – mehr nicht. Danach kommt die Lobby.
 //   • Spielleitung: alles für die Sitzung – zuletzt genutzte Sitzung fortsetzen, neue Sitzung anlegen, bestehende
-//     öffnen (zweite Spielleitung, Plenum), Synchronisation, Test ohne Lobby (allein in einem Fenster oder vier
-//     Fenster), Auswertung üben, Einweisungskarten, Lasttest.
-// Eine Spielleitung führt alle Teams einer Sitzung (ein Fenster ist Host für alle). Die Wahl steht im Anker der
-// Adresse (#mitspielen, #spielleitung), damit Neuladen und Zurück funktionieren.
+//     öffnen (zweite Spielleitung, Plenum), Synchronisation, Test ohne Lobby (ein Team allein oder Team und Spielleitung),
+//     Auswertung üben, Einweisungskarten, Lasttest.
+// Seit 2.6 rechnet jeder Team-Laptop sein Spiel selbst; die Spielleitung steuert Start und Pause für alle. Die Wahl steht im Anker
+// der Adresse (#mitspielen, #spielleitung), damit Neuladen und Zurück funktionieren.
 import { useEffect, useState } from "preact/hooks";
 import { type Einstellungen, adresseFuer, gemerkterWert, letzteSitzung, merke, merken, sitzungsAdresse } from "../config";
 import { ladeInhalte } from "../inhalte/laden";
@@ -16,10 +16,8 @@ import { Sitzung } from "../sitzung/sitzung";
 import { adapterFuer, sitzungVorhanden } from "../sync/fabrik";
 
 const ROLLEN_TEXT: Record<Rolle, string> = {
-  g1: "ARGUS-Meldungen prüfen",
-  g2: "Einsatzregeln, Wirkmittel",
-  g3: "Freigabe, Lagemeldungen",
-  sl: "Uhr, Kontrollkarte, Protokoll",
+  zb: "das Team: Meldungen entscheiden",
+  sl: "Start, Kontrollkarte, Protokoll",
   plenum: "Smartboard: Einweisung, Auflösung",
 };
 
@@ -142,9 +140,9 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
     }
   };
 
-  const vierFenster = () => {
+  const zweiFenster = () => {
     merken(direkt);
-    (["sl", "g1", "g2", "g3"] as const).forEach((r, i) => {
+    (["sl", "zb"] as const).forEach((r, i) => {
       window.open(adresseFuer(direkt, r), `argus-${r}`, `popup,width=1530,height=860,left=${40 * i},top=${30 * i}`);
     });
   };
@@ -171,7 +169,7 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
             </div>
           )}
           <div class="stapel" style="gap:8px">
-            <div class="klein leise">{letzte ? "Oder neu anlegen – die Spielleitung führt dann alle Teams dieser Sitzung" : "Neue Sitzung – die Spielleitung führt alle Teams dieser Sitzung"}</div>
+            <div class="klein leise">{letzte ? "Oder neu anlegen – die Spielleitung steuert dann alle Teams dieser Sitzung" : "Neue Sitzung – die Spielleitung steuert alle Teams dieser Sitzung"}</div>
             <div class="zeile" style="flex-wrap:nowrap">
               <input class="feld" placeholder="Name, z. B. SL 1" maxLength={SPIELERNAME_MAX} value={slName}
                 onInput={(ev) => setSlName((ev.target as HTMLInputElement).value)} data-testid="sl-name" />
@@ -212,19 +210,19 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
       </div>
 
       <details class="start-karte start-test">
-        <summary>Test ohne Lobby: ein Team, jede Rolle bedienbar</summary>
+        <summary>Test ohne Lobby: ein Team</summary>
         <div class="stapel" style="gap:10px;margin-top:10px">
           <div class="zeile" style="flex-wrap:nowrap">
             <label for="raum" class="klein leise">Raum</label>
             <input id="raum" class="feld" style="width:180px" value={raum} onInput={(ev) => setRaum((ev.target as HTMLInputElement).value.trim().toLowerCase())} />
             {!raumOk && <span class="klein warnung">4–32 Zeichen: Kleinbuchstaben, Ziffern, Bindestrich</span>}
             <span style="flex:1" />
-            <a class={`knopf klein weiter ${raumOk ? "" : "aus"}`} href={raumOk ? adresseFuer(direkt, "sl") : undefined} onClick={() => merken(direkt)}
-              title="Ein Fenster: Steuerung und alle drei Rollen bedienbar (oben links umschalten)" data-testid="solo">Allein testen (ein Fenster)</a>
-            <button type="button" class="knopf klein" disabled={!raumOk} onClick={vierFenster}>Alle vier Fenster öffnen</button>
+            <a class={`knopf klein weiter ${raumOk ? "" : "aus"}`} href={raumOk ? adresseFuer(direkt, "zb") : undefined} onClick={() => merken(direkt)}
+              title="Ein Fenster: das Team spielt allein, die Uhr startet oben rechts" data-testid="solo">Allein testen (ein Fenster)</a>
+            <button type="button" class="knopf klein" disabled={!raumOk} onClick={zweiFenster}>Team und Spielleitung öffnen</button>
           </div>
           <div class="rollenwahl">
-            {(["g1", "g2", "g3", "sl", "plenum"] as const).map((r) => (
+            {(["zb", "sl", "plenum"] as const).map((r) => (
               <a key={r} href={raumOk ? adresseFuer(direkt, r) : undefined} class={`rolle-${r}`} onClick={() => merken(direkt)}>
                 {ROLLEN_NAME[r]}<span>{ROLLEN_TEXT[r]}</span>
               </a>
@@ -237,7 +235,7 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
         <button type="button" class="knopf klein leise" onClick={p.zurueck}>◂ zurück</button>
         <span class="zeile klein" style="gap:14px">
           {!__ARGUS_OFFLINE__ && <a style="color:var(--info)" href={`${location.pathname}?auswertung=demo`} target="_blank" rel="noopener" data-testid="auswertung-demo"
-            title="Auswertung mit fünf Beispielteams (Modellteams des Drehbuchs) – zum Üben der Auflösung ohne Spiel">Auswertung üben (Beispiel, 5 Teams)</a>}
+            title="Auswertung mit sieben Beispielteams (Modellteams des Drehbuchs) – zum Üben der Auflösung ohne Spiel">Auswertung üben (Beispiel, 7 Teams)</a>}
           <a style="color:var(--info)" href={`${location.pathname}?druck=einweisung`} target="_blank" rel="noopener">Einweisungskarten drucken (A5)</a>
           {!__ARGUS_OFFLINE__ && <a style="color:var(--info)" href={`${location.pathname.replace(/[^/]*$/, "")}lasttest.html`} target="_blank" rel="noopener"
             title="Lasttest gegen Firebase: Bots spielen das Drehbuch in n Teams">Lasttest</a>}

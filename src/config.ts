@@ -5,7 +5,7 @@
 //   …/?sitzung=K7P&rolle=sl           Spielleitung (Übersicht aller Teams, Steuerung)
 //   …/?sitzung=K7P&rolle=plenum       Smartboard
 // Direktaufruf ohne Lobby, ein Team (wie bis Schritt 6, z. B. für Tests und Probeläufe):
-//   …/?rolle=g1&raum=kraehe           rolle g1 | g2 | g3 | sl | plenum
+//   …/?rolle=zb&raum=kraehe           rolle zb | sl | plenum
 // Weitere Parameter:
 //   ich        Kennung des Teilnehmer-Fensters (wird beim Beitreten gesetzt; Neuladen führt zurück)
 //   sync       firebase | lokal    (Standard: firebase; in der Offline-Datei lokal)
@@ -15,6 +15,9 @@
 //   szenario   Szenario-Datei in daten/, Standard szenario_kraehe_01.json
 //   fps        höchste Bildrate der Lagekarte (1–30, Standard 30). Für schwache Rechner und Variante C mit vielen
 //              Fenstern an einem PC; wird im Browser gemerkt, fps=30 stellt zurück.
+//   verzug     künstlicher Netzverzug in ms (0–60000) um den Adapter dieses Fensters, für den Nachweis H1.6 und Vorführungen
+//              (window.argusVerzug.trennenSimuliert(true) trennt zeitweise). Nicht für das Seminar.
+// Direktaufruf: …/?rolle=zb&raum=kraehe (Team allein, Uhr selbst starten), …/?rolle=sl&raum=kraehe (steuert dasselbe Team).
 import { STANDARD_SZENARIO } from "./inhalte/laden";
 import { RAUM_MUSTER, ROLLEN, type Rolle } from "./kern/ereignisse";
 import { SITZUNG_MUSTER } from "./kern/sitzungen";
@@ -36,6 +39,8 @@ export interface Einstellungen {
   szenario: string;
   /** höchste Bildrate der Lagekarte */
   fps: number;
+  /** künstlicher Netzverzug in ms (0 = aus) */
+  verzug: number;
 }
 
 function gemerkt(k: string): string | null {
@@ -101,11 +106,13 @@ export function leseEinstellungen(search: string = location.search): Einstellung
     name: (q.get("name") ?? "").slice(0, 40),
     szenario: q.get("szenario") ?? STANDARD_SZENARIO,
     fps: Math.max(1, Math.min(30, Math.round(Number(q.get("fps") ?? gemerkt("fps") ?? 30)) || 30)),
+    verzug: Math.max(0, Math.min(60000, Math.round(Number(q.get("verzug") ?? 0)) || 0)),
   };
 }
 
 function technik(e: Einstellungen, q: URLSearchParams): void {
   q.set("sync", e.sync);
+  if (e.verzug) q.set("verzug", String(e.verzug));
   if (e.db !== FIREBASE_DB) q.set("db", e.db);
   if (e.transport !== "lp") q.set("transport", e.transport);
   if (e.szenario !== STANDARD_SZENARIO) q.set("szenario", e.szenario);

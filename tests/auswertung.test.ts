@@ -1,4 +1,4 @@
-// Auswertung (Schritt 8) mit den fünf Teams des Drehbuchs: Fälle je Team, Kennzahlen, Konfidenz, Replay, Export.
+// Auswertung mit den fünf Teams des Drehbuchs (2.6, eine Rolle): Fälle je Team, Kennzahlen, Konfidenz, Replay, Export.
 // Die Ausgänge stimmen mit tools/referenz/simuliere_durchlauf.py überein (naiv trifft die Fallen, ideal nicht).
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -18,7 +18,10 @@ let a: Auswertung;
 
 beforeAll(async () => {
   inh = await inhalte();
-  const notizen = { 1: [{ t: 1300, fall: "S3", text: "G3 liest I-04 vor, G1 ruft „das sind keine Russen“" }] };
+  const notizen = {
+    0: [{ t: 600, fall: "S1", text: "kein Feuer auf Attrappen – Lupe nicht benutzt" }],
+    1: [{ t: 1300, fall: "S3", text: "Team liest I-04 vor, einer ruft „das sind keine Russen“" }],
+  };
   const teams = spieleDurch(inh, drehbuchTeams(ref, notizen));
   laeufe = teams.map((m, i) => ({ id: `t${i}`, name: ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia"][i], farbe: "#888888", zustand: m.z, protokoll: m.kanal.protokoll }));
   a = auswerten(inh, laeufe);
@@ -41,96 +44,101 @@ describe("Auswertung: Fälle", () => {
     expect(sollBekaempfen(inh.meldungen.M04)).toBe(true);
   });
 
-  it("naive Teams treffen die Fallen, ideale stoppen an der richtigen Stufe", () => {
-    const tabelle = Object.fromEntries(a.teams.map((t) => [t.name, Object.fromEntries(a.faelle.map((f) => [f.id, `${t.faelle[f.id].ausgang}${t.faelle[f.id].stufe ? `@${t.faelle[f.id].stufe}` : ""}`]))]));
-    // seit 2.4: S7 (Kirchturm) ist ein legitimes Ziel – mit LM richtig, auch für naiv; N4: naiv ist bei der dichteren
-    // Meldelage erst um 20:00 bei der Freigabe, der BMP-2 hat die Schule verlassen (ohne Warnung, richtig)
+  it("naive Teams treffen die Fallen, ideale nicht – eine Entscheidung je Meldung (H2)", () => {
+    const tabelle = Object.fromEntries(a.teams.map((t) => [t.name, Object.fromEntries(a.faelle.map((f) => [f.id, t.faelle[f.id].ausgang]))]));
+    // 2.6: naiv entscheidet in 20 s – S7 (Kirchturm, legitim) mit LM richtig, N4 trifft die Schule (früher dran als mit drei Rollen)
     expect(tabelle["Falke Nord"]).toEqual({
-      S3: "falsch@g3", S2: "falsch@g3", S1: "falsch@g3", S4: "falsch@g3", S5: "falsch@g3", S6: "falsch@g3", S7: "richtig@g3", S8: "falsch@g3",
-      N1: "richtig@g1", N2: "falsch@g3", N3: "richtig@g3", N4: "richtig@g3",
+      S3: "falsch", S2: "falsch", S1: "falsch", S4: "falsch", S5: "falsch", S6: "falsch", S7: "richtig", S8: "falsch",
+      N1: "richtig", N2: "falsch", N3: "richtig", N4: "falsch",
     });
-    expect(tabelle["Löwe 2"]).toEqual({
-      S3: "richtig@g3", S2: "richtig@g1", S1: "richtig@g1", S4: "richtig@g2", S5: "richtig@g2", S6: "richtig@g1", S7: "richtig@g3", S8: "richtig@g1",
-      N1: "richtig@g1", N2: "richtig@g1", N3: "richtig@g3", N4: "richtig@g2",
-    });
-    // naiv + 4 Verstärkungen: später dran – bei S5 sind die Zivilpersonen schon weg (richtig), dafür trifft N4 die Schule
-    expect(tabelle["Team Ömer & Co"].S3).toBe("falsch@g3");
-    expect(tabelle["Team Ömer & Co"].S5).toBe("richtig@g3");
-    expect(tabelle["Team Ömer & Co"].N4).toBe("falsch@g3");
-    expect(tabelle.Kassiopeia.N2).toBe("offen");
+    for (const n of ["Löwe 2", "Wega"]) expect(Object.values(tabelle[n]).every((x) => x === "richtig"), n).toBe(true);
+    expect(tabelle["Team Ömer & Co"]).toEqual(tabelle["Falke Nord"]);
+    // alle Fälle erreicht (H2.5): kein Fall „nicht erreicht“ oder „offen“
+    for (const t of a.teams) for (const f of a.faelle) expect(["richtig", "falsch"], `${t.name} ${f.id}`).toContain(t.faelle[f.id].ausgang);
   });
 
-  it("Kette: Fast-Track überspringt G1, entscheidende Stufe markiert, Einschlag mit Treffern", () => {
+  it("Entscheidung mit Sekunden ab Eingang; Einschlag mit Treffern; Folgemeldungen", () => {
     const s3 = a.teams[0].faelle.S3;
-    expect(s3.fastTrack).toBe(true);
-    expect(s3.kette.glieder.map((g) => g.zeichen)).toEqual(["FT", "✓", "✓"]);
-    expect(s3.kette.glieder.find((g) => g.entscheidend)?.stufe).toBe("g3");
+    expect(s3.kette.glied).toMatchObject({ zeichen: "✓", was: "bekaempfen", wirkmittel: "PZA", sek: 20, sekOffen: 20 });
     expect(s3.kette.einschlag?.fehl).toBe(true);
-    expect(s3.kette.einschlag?.text).toContain("Z-15 verbündet");
-    expect(s3.zeilen).toEqual(["FREIGABE 22:40 (Kanone)", "→ Verbündete getroffen"]); // seit 2.5: Kanone der 1. Kp, ca. 5 s
-    const s4 = a.teams[1].faelle.S4;
-    expect(s4.kette.glieder[1].zeichen).toBe("◷");
-    // seit 2.4: M23 ist „Ziel 31“; sein Einschlag (24:56) liegt vor Spielende, M18 entfällt damit bei der Zielprüfung
-    expect(s4.zeilen).toEqual(["Zielprüfung stellt zurück 20:10", "entfallen bei der Zielprüfung – Fahrzeug zerstört", "Ziel 31 FREIGABE 24:15"]);
-    expect(a.teams[1].faelle.S1.text).toBe("Aufklärung lehnt ab 09:05");
-    // neue Fälle (2.4): Schutzschilde abwarten, Verwundete und Presse ablehnen
-    expect(a.teams[1].faelle.S5.zeilen).toEqual(["Zielprüfung stellt zurück 18:10", "entfallen bei der Zielprüfung – Fahrzeug zerstört", "Ziel 27 FREIGABE 21:50"]);
-    expect(a.teams[0].faelle.S5.zeilen).toEqual(["FREIGABE 18:40 (LM)", "→ Zivilpersonen getroffen"]);
-    expect(a.teams[0].faelle.S6.zeilen).toEqual(["FREIGABE 22:00 (Kanone)", "→ Wehrlose getroffen"]);
-    expect(a.teams[1].faelle.S6.text).toBe("Aufklärung lehnt ab 20:05");
-    expect(a.teams[0].faelle.S8.zeilen).toEqual(["FREIGABE 21:20 (Mrs)", "→ Zivilpersonen getroffen"]);
-    expect(a.teams[1].faelle.S8.zeilen).toEqual(["Aufklärung lehnt ab 19:30", "Ziel 30 FREIGABE 23:35"]);
-    expect(a.teams[0].faelle.S7.zeilen).toEqual(["FREIGABE 16:40 (LM)", "ohne Fehltreffer"]);
+    expect(s3.kette.einschlag?.text).toContain("verbündet");
+    expect(s3.zeilen).toEqual(["BEKÄMPFEN 20:35 (Kanone) · 20 s", "→ Verbündete getroffen"]);
+    expect(s3.sek).toBe(20);
+    const ideal = a.teams[1].faelle;
+    expect(ideal.S3.zeilen).toEqual(["ABLEHNEN 21:15 · 60 s"]); // M20 kam, während das Team noch an M36 saß
+    expect(ideal.S3.kette.glied).toMatchObject({ zeichen: "✕", was: "ablehnen", sek: 60, sekOffen: 35 });
+    expect(ideal.S1.zeilen).toEqual(["ABLEHNEN 09:05 · 35 s"]);
+    expect(ideal.S1.text).toContain("ABLEHNEN 09:05");
+    expect(ideal.S2.zeilen).toEqual(["ABLEHNEN 13:50 · 35 s"]);
+    // S4: zurückstellen – Ziel 31 (M23) ist dasselbe Fahrzeug später; das ideale Team hat dann keine LM mehr (Bestand)
+    expect(ideal.S4.zeilen).toEqual(["ZURÜCKSTELLEN 18:55 · 40 s", "Ziel 31 zurückgestellt"]);
+    expect(ideal.S4.kette.glied.zeichen).toBe("◷");
+    // S5: zurückstellen, das Fahrzeug fällt später; Ziel 27 (M36) bekämpft
+    expect(ideal.S5.zeilen).toEqual(["ZURÜCKSTELLEN 17:10 · 40 s", "entfallen – Fahrzeug zerstört", "Ziel 27 BEKÄMPFEN 20:40"]);
+    expect(ideal.S6.zeilen).toEqual(["ABLEHNEN 20:05 · 50 s"]);
+    expect(ideal.S7.zeilen).toEqual(["BEKÄMPFEN 15:25 (LM) · 40 s", "ohne Fehltreffer"]);
+    expect(ideal.S8.zeilen).toEqual(["ABLEHNEN 19:30 · 45 s", "Ziel 30 BEKÄMPFEN 22:25"]);
+    const naiv = a.teams[0].faelle;
+    expect(naiv.S1.zeilen).toEqual(["BEKÄMPFEN 08:50 (Kanone) · 20 s", "→ Attrappe getroffen"]);
+    expect(naiv.S4.zeilen).toEqual(["BEKÄMPFEN 18:35 (LM) · 20 s", "→ Zivilpersonen getroffen"]);
+    expect(naiv.S5.zeilen).toEqual(["BEKÄMPFEN 16:50 (LM) · 20 s", "→ Zivilpersonen getroffen"]);
+    expect(naiv.S6.zeilen).toEqual(["BEKÄMPFEN 19:35 (Kanone) · 20 s", "→ Wehrlose getroffen"]);
+    expect(naiv.S7.zeilen).toEqual(["BEKÄMPFEN 15:05 (LM) · 20 s", "ohne Fehltreffer"]);
+    expect(naiv.S8.zeilen).toEqual(["BEKÄMPFEN 19:05 (Mrs) · 20 s", "→ Zivilpersonen getroffen"]);
+    // keine Stufen, kein Fast-Track mehr
+    expect(JSON.stringify(a)).not.toMatch(/fastTrack|"g[123]"|Fast-Track/);
   });
 });
 
 describe("Auswertung: Kennzahlen", () => {
-  it("Fehlbekämpfungen nach Art, Freigaben trotz Warnung", () => {
+  it("Fehlbekämpfungen nach Art, Bekämpfungen trotz Warnung", () => {
     const k = a.teams[0].kennzahlen;
-    expect(k.fehl.wirkungen).toBe(8);
-    // seit 2.4: Zivilpersonen in S4, S5, S8 (Presse); Wehrlose in N2 und S6 (Verwundete)
-    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 3, verbuendet: 1, ausser_gefecht: 2 });
-    expect(k.fehl.liste.map((x) => x.meldung)).toEqual(["M08", "M12", "M32", "M18", "M33", "M35", "M20", "M21"]);
-    expect(k.trotzWarnung).toBe(0); // N4 ohne Warnung (siehe oben)
-    expect(a.teams[2].kennzahlen.trotzWarnung).toBe(2); // naiv + Verstärkungen: N4 (Schule) u. a.
+    expect(k.fehl.wirkungen).toBe(9);
+    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 4, verbuendet: 1, ausser_gefecht: 2 });
+    expect(k.fehl.liste.map((x) => x.meldung)).toEqual(["M08", "M12", "M32", "M18", "M33", "M35", "M20", "M21", "M26"]);
+    expect(k.trotzWarnung).toBe(4); // M17, M19, M22, M27 mit R2/R3-Warnung
+    expect(a.teams[2].kennzahlen.trotzWarnung).toBe(5);
     expect(a.teams[1].kennzahlen.fehl.wirkungen).toBe(0);
     expect(a.teams[1].kennzahlen.trotzWarnung).toBe(0);
     expect(a.teams[3].kennzahlen.trotzWarnung).toBe(0); // der Hinweis „nur k von n – Bestand reicht nicht“ ist keine Regelwarnung
     expect(regelWarnung("R3: Einschlag im Wirkradius Ortschaft – beim Einschlag 10:18:20")).toBe(true);
     expect(regelWarnung("nur 3 von 4 Fahrzeugen – Bestand LM reicht nicht")).toBe(false);
     expect(regelWarnung("Bestand LM aufgebraucht")).toBe(false);
+    expect(k.freigaben).toEqual({ gesamt: 26, wieArgus: 22 });
+    expect(k.meldungen).toEqual({ erschienen: 29, bearbeitet: 29, gesamt: 36, offenEnde: 0 });
+    expect(a.teams[1].kennzahlen.meldungen).toEqual({ erschienen: 33, bearbeitet: 28, gesamt: 36, offenEnde: 2 });
   });
 
   it("Widerspruch gegen ARGUS: zu Recht und zu Unrecht", () => {
     const ideal = a.teams[1].kennzahlen.widerspruch;
-    expect(ideal.liste.map((w) => `${w.meldung}:${w.stufe}`)).toEqual(["M08:g1", "M12:g1", "M32:g2", "M17:g2", "M33:g1", "M35:g1", "M20:g3", "M21:g1"]);
-    expect([ideal.zuRecht, ideal.zuUnrecht]).toEqual([8, 0]);
-    // naiv: M18 trotz NICHT BEKÄMPFEN freigegeben, Zivilpersonen getroffen → zu Unrecht
+    expect(ideal.liste.map((w) => `${w.meldung}:${w.recht}`)).toEqual([
+      "M08:true", "M12:true", "M32:true", "M17:true", "M33:true", "M35:true", "M20:true", "M21:true",
+      "M23:false", "M19:false", // zurückgestellt, weil die LM aufgebraucht war – ARGUS hatte recht
+    ]);
+    expect([ideal.zuRecht, ideal.zuUnrecht]).toEqual([8, 2]);
+    // naiv: M18 trotz NICHT BEKÄMPFEN bekämpft, Zivilpersonen getroffen → zu Unrecht
     const naiv = a.teams[0].kennzahlen.widerspruch;
     expect(naiv.liste.map((w) => `${w.meldung}:${w.recht}`)).toEqual(["M18:false"]);
   });
 
-  it("Bearbeitungszeit je Stufe (Median) wie die Modellpersonen, getrennt nach Konfidenz", () => {
+  it("Sekunden je Entscheidung (Median) ab Eingang und ab Öffnen, getrennt nach Konfidenz (H2.4)", () => {
     const z = a.teams[1].kennzahlen.zeiten;
-    expect(z.alle.g1).toBe(40);
-    expect(z.alle.g3).toBe(30);
-    expect(z.schwelle).toBe(90);
-    expect(z.hoch.n.g1 + z.niedrig.n.g1).toBe(z.alle.n.g1);
+    expect(z.alle).toEqual({ eingang: 40, offen: 35, n: 30 });
+    expect(z.hoch.n + z.niedrig.n).toBe(z.alle.n);
+    expect([z.schwelle, z.kuerzeste, z.laengste, z.unter20]).toEqual([90, 35, 75, 0]);
+    const naiv = a.teams[0].kennzahlen.zeiten;
+    expect(naiv.alle).toEqual({ eingang: 20, offen: 20, n: 29 });
+    expect(naiv.unter20).toBe(29);
+    // Team 4 (ideal + Verstärkungen): mehr Meldungen, längere Wartezeit im Eingang bei gleicher Bearbeitungszeit
+    expect(a.teams[3].kennzahlen.zeiten.alle).toEqual({ eingang: 70, offen: 35, n: 31 });
   });
 
-  it("Fast-Track wann, I-04 gelesen wann, Lagehinweise", () => {
-    const naiv = a.teams[0].kennzahlen;
-    expect(naiv.fastTrack).toMatchObject({ an: true, seit: 870, angebot: 840, meldungen: 3 }); // seit 2.4: M36, M20, M21 (≥ 90 %)
-    expect(naiv.lagemeldungen[0]).toEqual({ id: "I-04", fall: "S3", erschienen: 1020, gelesen: 1290 });
-    expect(naiv.lagehinweise.anzahl).toBe(0);
-    const ideal = a.teams[1].kennzahlen;
-    expect(ideal.fastTrack.an).toBe(false);
-    expect(ideal.lagemeldungen[0].gelesen).toBe(1040);
-    expect(ideal.lagehinweise.ersterNach).toBe(1055);
-    // Team 3 warnt G1/G2 nach I-04 – und trifft die PT-91 trotzdem
-    const t3 = a.teams[2];
-    expect(t3.kennzahlen.lagehinweise.anzahl).toBe(1);
-    expect(t3.faelle.S3.ausgang).toBe("falsch");
+  it("Lagemeldung I-04 angeklickt wann", () => {
+    expect(a.teams[0].kennzahlen.lagemeldungen[0]).toEqual({ id: "I-04", fall: "S3", erschienen: 1020, gelesen: 1290 });
+    expect(a.teams[1].kennzahlen.lagemeldungen[0].gelesen).toBe(1040);
+    // Team 3 klickt I-04 nach einer Minute an – und trifft die PT-91 trotzdem
+    expect(a.teams[2].kennzahlen.lagemeldungen[0].gelesen).toBe(1080);
+    expect(a.teams[2].faelle.S3.ausgang).toBe("falsch");
   });
 });
 
@@ -139,34 +147,34 @@ describe("Auswertung: Konfidenz", () => {
     const k = a.konfidenz;
     expect([k.richtig, k.falsch, k.mittelFalsch, k.mittelRichtig]).toEqual([30, 6, 92.3, 88.2]);
     expect(k.punkte.filter((p) => p.falsch).map((p) => p.meldung)).toEqual(["M08", "M12", "M33", "M35", "M20", "M21"]);
-    // Die Teams folgten den falschen Empfehlungen nur bei hoher Konfidenz (seit 2.4 ab 88 %: Presse M33)
+    // Die Teams folgten den falschen Empfehlungen nur bei hoher Konfidenz (ab 88 %: Presse M33)
     expect(k.fehl.min).toBeGreaterThanOrEqual(88);
     expect(k.punkte.find((p) => p.meldung === "M20")!.bekaempft).toBe(3);
   });
 });
 
 describe("Replay", () => {
-  it("Zeitleiste je Team und Fall: Meldung → G1 → G2 → G3 → Einschlag, I-04 gelesen, Lagehinweis, Notiz", () => {
+  it("Zeitleiste je Team und Fall: Meldung → Entscheidung mit Sekunden → Einschlag, I-04 angeklickt, Notiz", () => {
     const f = a.faelle[0];
     const [von, bis] = fallFenster(inh, a.teams, f);
-    expect(von).toBeLessThanOrEqual(1000);
-    expect(bis).toBeGreaterThanOrEqual(1435);
+    expect(von).toBeLessThanOrEqual(1020);
+    expect(bis).toBeGreaterThanOrEqual(1300);
     const ideal = zeitleiste(inh, a.teams[1], f).map((m) => m.zeichen);
-    expect(ideal).toEqual(expect.arrayContaining(["✉", "▲", "28", "A✓", "Z✓", "F✕", "✎"])); // M20 ist seit 2.4 „Ziel 28“
+    expect(ideal).toEqual(["✉", "28", "✕ 60 s", "✎"]); // M20 ist „Ziel 28“
     const naiv = zeitleiste(inh, a.teams[0], f);
+    expect(naiv.map((m) => `${m.art}:${m.zeichen}`)).toEqual(["gelesen:✉", "meldung:28", "entscheid:✓ 20 s", "einschlag:✸"]);
     expect(naiv.find((m) => m.art === "einschlag")?.klasse).toBe("fehl");
-    expect(naiv.find((m) => m.art === "meldung")?.klasse).toBe("ft");
   });
 
   it("Stand zur Spielzeit t aus dem Protokoll (Karte zum Durchscrubben)", () => {
     const p = laeufe[0].protokoll;
-    const { z, n } = zustandBis(inh, p, 1330);
-    expect(n).toBe(ereignisseBis(p, 1330));
-    expect(z.meldungen.M20.stufe).toBe("g3");
+    const { z, n } = zustandBis(inh, p, 1237);
+    expect(n).toBe(ereignisseBis(p, 1237));
+    expect(z.meldungen.M20.stufe).toBe("wirkung"); // bekämpft 20:35, Kanone ca. 5 s
     expect(z.zerstoert["Z-15"]).toBeUndefined();
-    expect(zustandBis(inh, p, 1362).z.zerstoert["Z-15"]).toBeUndefined();
-    const spaeter = zustandBis(inh, p, 1380).z;
-    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1365, 0); // seit 2.5: Kanone ca. 5 s bis zum Einschlag (vorher PzAbw 10 s)
+    const spaeter = zustandBis(inh, p, 1260).z;
+    expect(spaeter.meldungen.M20.stufe).toBe("erledigt");
+    expect(spaeter.zerstoert["Z-15"]).toBeCloseTo(1240, 0);
   });
 });
 
@@ -196,7 +204,7 @@ describe("Export (anonym)", () => {
     const txt = JSON.stringify(e);
     for (const n of ["Falke", "Löwe", "Ömer", "Wega", "Kassiopeia", "Modell", "mod\"", "slmod", "kein Feuer", "keine Russen"]) expect(txt, n).not.toContain(n);
     expect(e.teams.map((t) => t.team)).toEqual(["Team A", "Team B", "Team C", "Team D", "Team E"]);
-    expect(e.teams[1].faelle.S1).toMatchObject({ ausgang: "richtig", entschieden_von: "g1" });
+    expect(e.teams[1].faelle.S1).toMatchObject({ ausgang: "richtig", entscheid: "ablehnen", sekunden_ab_eingang: 35, sekunden_ab_oeffnen: 35 });
     const mit = JSON.stringify(exportAnonym(inh, laeufe, a, { freitext: true }));
     expect(mit).toContain("kein Feuer");
     expect(mit).toContain("keine Russen");
@@ -214,16 +222,16 @@ describe("Notiz der Spielleitung zu einem Fall", () => {
     const { anwenden, anfangsZustand } = await import("../src/kern/zustand");
     const z = anfangsZustand(inh);
     const von = { rolle: "sl" as const, client: "abc123", name: "SL 2" };
-    const ok = verarbeiteAktion(inh, z, { id: "a1", typ: "notiz", von, ts: 0, daten: { text: "G3 liest I-04 vor", fall: "S3" } }, 100);
-    expect(ok.ok && ok.entwuerfe[0].daten).toEqual({ text: "G3 liest I-04 vor", fall: "S3" });
+    const ok = verarbeiteAktion(inh, z, { id: "a1", typ: "notiz", von, ts: 0, daten: { text: "Team liest I-04 vor", fall: "S3" } }, 100);
+    expect(ok.ok && ok.entwuerfe[0].daten).toEqual({ text: "Team liest I-04 vor", fall: "S3" });
     const nein = verarbeiteAktion(inh, z, { id: "a2", typ: "notiz", von, ts: 0, daten: { text: "x", fall: "S9" } }, 100);
     expect(nein.ok).toBe(false);
     const ohne = verarbeiteAktion(inh, z, { id: "a3", typ: "notiz", von, ts: 0, daten: { text: "allgemein" } }, 100);
     expect(ohne.ok && ohne.entwuerfe[0].daten).toEqual({ text: "allgemein" });
-    const z2 = anwenden(z, { seq: 1, typ: "notiz", ts: 0, t_s: 100, von, daten: { text: "G3 liest I-04 vor", fall: "S3" } }, inh);
-    expect(z2.notizen).toEqual([{ seq: 1, t_s: 100, ts: 0, von, text: "G3 liest I-04 vor", fall: "S3" }]);
+    const z2 = anwenden(z, { seq: 1, typ: "notiz", ts: 0, t_s: 100, von, daten: { text: "Team liest I-04 vor", fall: "S3" } }, inh);
+    expect(z2.notizen).toEqual([{ seq: 1, t_s: 100, ts: 0, von, text: "Team liest I-04 vor", fall: "S3" }]);
     // in der Auswertung beim Fall
     const t = { ...laeufe[0], zustand: { ...laeufe[0].zustand, notizen: z2.notizen } };
-    expect(auswerten(inh, [t]).teams[0].notizen).toEqual([{ t: 100, fall: "S3", text: "G3 liest I-04 vor" }]);
+    expect(auswerten(inh, [t]).teams[0].notizen).toEqual([{ t: 100, fall: "S3", text: "Team liest I-04 vor" }]);
   });
 });

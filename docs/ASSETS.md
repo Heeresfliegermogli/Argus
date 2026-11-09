@@ -86,7 +86,7 @@ Größenbudget (Leitplanke „schnell ladbar am Dienst-PC“, geprüft in `tests
 - Standbild ≤ 150 KB, jede Ebene ≤ 110 KB (Boden) bzw. 60 KB (Kronen, Störung), alle Ebenen einer
   Meldung zusammen ≤ 200 KB. Der Generator senkt sonst die Qualität.
 - Was jedes Fenster lädt (Standbilder, Kartenstart, Atlanten): 2,8 MB, Test < 6 MB.
-- Live-Ebenen (lädt nur G1, jeweils für die offene Meldung): 1,6 MB für alle 32 Meldungen, Test < 6 MB.
+- Live-Ebenen (lädt nur die Zielbearbeitung, bis 2.5 G1, jeweils für die offene Meldung): 1,6 MB für alle 32 Meldungen, Test < 6 MB.
 - Offline-Datei (Variante C) bettet alles außer Kacheln und Vorschau ein: 8,5 MB (vorher ca. 6 MB; läuft per Doppelklick von der Platte).
 
 ## Fertig-Kriterien
@@ -280,7 +280,7 @@ erzeugen und `npm test` laufen lassen.
 - **Manifest laden:** `ladeManifest()` aus `src/assets/assets.ts`, Bildadresse mit `assetUrl(pfad)`
   (Webseite: `assets/…`; Offline-Datei: eingebettete data:-Adresse). Atlas für PixiJS:
   `atlas(man, "fahrzeuge" | "effekte")` liefert JSON (mit Anker je Rahmen) und Bildadresse.
-- **Drohnenbild am Ort (G1, umgesetzt in 6b):** live aus den Ebenen mit `src/drohne/livebild.ts`
+- **Live-Drohnenbild (bis 2.5 bei G1 am Ort, seit 2.6 an der geöffneten Meldung der Zielbearbeitung):** live aus den Ebenen mit `src/drohne/livebild.ts`
   (Umsetzung von `live.py` mit Canvas 2D; zur Meldezeit 2,4–4,2 Graustufen vom Standbild, geprüft mit
   `tools/drohne_probe.py`), Lupe auf derselben Szene; hat das Ziel den Ausschnitt verlassen, das Standbild
   `drohne[M].datei` als „Aufnahme“ mit Eckrahmen (`ziele[].box`). Vorladen mit `drohnenEbenen(man, id)`;

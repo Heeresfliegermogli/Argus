@@ -409,18 +409,31 @@ def meldungen(d, ev):
     der Kp, abstand_panzer_s seit der letzten dieses Panzers): ein Treffer an einem einsatzbereiten Panzer (Stufe 1), der erste
     Schuss eines neuen Schützen auf einen Panzer (Stufe 0, „Einschläge noch daneben“); ein weiterer Treffer an einem eingeschränkten
     Panzer höchstens alle abstand_limit_s (Stufe 2).
+
+    Seit 2.6 (H3.3, H5.7):
+      * erster_beschuss: Der erste Beschuss eines Panzers kommt immer als Meldung (ohne Abstand) – außer durch die Feindartillerie des
+        Hintergrunds (nur_stufenwechsel).
+      * nur_stufenwechsel (Feindartillerie H-01, H-04, H-12): meldet sich nur beim Wechsel nach eingeschränkt oder ausgefallen.
+      * artillerie (Mörser, gelenktes Feuer, Feindartillerie, Attrappe): höchstens eine Meldung je Panzer, Schütze und Stufe und
+        insgesamt höchstens eine je artillerie_abstand_s; „ausgefallen“ kommt immer.
     """
     sz, vr = d["szenario"], d["regeln"]["verluste"]
     vm = (sz.get("verluste") or {}).get("meldungen")
     if not vm:
         return []
     regel = vr["meldungen"]
+    art_arten = set(regel.get("artillerie", []))
+    art_abstand = regel.get("artillerie_abstand_s", 0)
+    nur_wechsel = set(regel.get("nur_stufenwechsel", []))
+    erster_beschuss = bool(regel.get("erster_beschuss"))
     pl = panzer(sz)
     pmap = {p["id"]: p for p in pl}
-    zst = {p["id"]: {"zustand": vr["zustand_start"], "aus": False, "t": None, "treffer": 0, "arten": set()} for p in pl}
+    zst = {p["id"]: {"zustand": vr["zustand_start"], "aus": False, "t": None, "treffer": 0, "arten": set(), "beschossen": False,
+                     "art_schl": set()} for p in pl}
     hoechstens = vr["hoechstens_ausgefallen"]
     out = []
     t_alle = None
+    t_art = None
     for e in ev:
         s = zst[e["panzer"]]
         vorher = stufe(vr, s["zustand"], s["aus"])
@@ -434,13 +447,21 @@ def meldungen(d, ev):
         erste_art = e["ergebnis"] == "treffer" and e["art"] in regel.get("sofort", []) and e["art"] not in s["arten"]
         if e["ergebnis"] == "treffer":
             s["arten"].add(e["art"])
+        erster = erster_beschuss and not s["beschossen"] and e["art"] not in nur_wechsel
+        if e["art"] not in nur_wechsel:
+            s["beschossen"] = True
         n_aus = sum(1 for x in zst.values() if x["aus"])
         if nachher == "ausgefallen" and vorher != "ausgefallen":
             schl, st = ("limit" if n_aus >= hoechstens else "ausgefallen"), 3
         elif nachher == "eingeschraenkt" and vorher == "einsatzbereit":
             schl, st = "eingeschraenkt", 2
+        elif e["art"] in nur_wechsel:
+            continue
         elif erste_art:
             schl, st = "sofort", 1 if nachher == "einsatzbereit" else 2
+        elif erster:
+            schl, st = ("treffer", 1) if e["ergebnis"] == "treffer" and nachher == "einsatzbereit" else \
+                ("erneut", 2) if e["ergebnis"] == "treffer" else ("beschuss", 0)
         elif e["ergebnis"] == "treffer" and nachher == "einsatzbereit" and frei_alle and frei_pz:
             schl, st = "treffer", 1
         elif e["ergebnis"] == "treffer" and nachher == "eingeschraenkt" and frei_alle and (s["t"] is None or t - s["t"] >= regel["abstand_limit_s"]):
@@ -449,6 +470,12 @@ def meldungen(d, ev):
             schl, st = "beschuss", 0         # ein neuer Schütze schießt sich ein: erst daneben
         else:
             continue
+        if e["art"] in art_arten:
+            schl_art = (nachher, e["quelle"])
+            if st < 3 and (schl_art in s["art_schl"] or (t_art is not None and t - t_art < art_abstand)):
+                continue
+            s["art_schl"].add(schl_art)
+            t_art = t
         pz = pmap[e["panzer"]]
         bereit = sum(1 for x in zst.values() if not x["aus"])
         verw = vr["verwundete"].get(nachher, 0)

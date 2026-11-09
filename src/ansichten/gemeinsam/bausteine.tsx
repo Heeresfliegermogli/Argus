@@ -1,11 +1,6 @@
 // Kleine wiederverwendbare Bausteine der Ansichten.
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { Inhalte } from "../../inhalte/typen";
-import type { Rolle } from "../../kern/ereignisse";
-import { ROLLEN_NAME, type Zielmeldung, injectsFuer, lagehinweiseFuer } from "../../kern/sichten";
-import { uhrzeit } from "../../kern/uhr";
-import type { Spielzustand } from "../../kern/zustand";
 import type { Hinweis } from "../../sitzung/hinweise";
 import type { Sicht } from "../../sitzung/sicht";
 
@@ -76,29 +71,6 @@ export function Konfidenz(p: { wert: number }) {
   );
 }
 
-/**
- * Kopf des Meldungsfelds (Schritt 6b): Eingang nur als Zahl – keine Liste, kein Verlauf. Die Meldungen selbst
- * stehen als Marken auf der Karte.
- */
-export function EingangLeiste(p: {
-  anzahl: number; zurueck?: number; testid: string; titel?: string; children?: ComponentChildren;
-  /** Seit 2.2 (C4): offene Meldungen in Eingangsreihenfolge – kommt eine neue dazu, steht 6 s „neu: Ziel n“ statt „Eingang“ */
-  offen?: string[];
-  name?: (id: string) => string;
-}) {
-  const neu = useNeueMeldung(p.offen);
-  return (
-    <div class="eingang-leiste">
-      <Schritt nr={1} />
-      {neu && p.name ? <span class="eingang-neu" data-testid="eingang-neu" role="status">neu: {p.name(neu)}</span>
-        : <span class="eingang-titel">{p.titel ?? "Eingang"}</span>}
-      <span class={`eingang-zahl ${p.anzahl ? "neu" : ""} ${neu ? "puls" : ""}`} data-testid={p.testid} title="offene Meldungen bei dir">{p.anzahl}</span>
-      {!!p.zurueck && <span class="klein leise" data-testid="zurueck-zahl">+ {p.zurueck} zurückgestellt</span>}
-      <span class="eingang-rechts">{p.children}</span>
-    </div>
-  );
-}
-
 /** Ton bei neuer Meldung nur auf Wunsch (?ton=1, im Browser gemerkt) – im Hörsaal mit 15 Rechnern sonst zu laut. */
 function tonAn(): boolean {
   try {
@@ -127,8 +99,8 @@ function ton(): void {
   }
 }
 
-/** Neueste neu eingegangene Meldung der letzten 6 s (was beim ersten Bild schon da ist, gilt als gesehen). */
-function useNeueMeldung(offen?: string[]): string | null {
+/** Neueste neu eingegangene Meldung der letzten 6 s (was beim ersten Bild schon da ist, gilt als gesehen); Ton auf Wunsch. */
+export function useNeueMeldung(offen?: string[]): string | null {
   const gesehen = useRef<Set<string> | null>(null);
   const zaehler = useRef(0);
   const [neu, setNeu] = useState<string | null>(null);
@@ -150,60 +122,6 @@ function useNeueMeldung(offen?: string[]): string | null {
     }, 6000);
   }, [schl]);
   return neu && offen?.includes(neu) ? neu : null;
-}
-
-/** Die Zielmeldung, wie Zielprüfung und Führung sie sehen (kein Bild, keine Sensordaten) – kompakt im Meldungsfeld. */
-export function ZielmeldungKompakt(p: { zm: Zielmeldung }) {
-  const zm = p.zm;
-  return (
-    <div class="zielkompakt" data-testid="zielmeldung">
-      <span class="feldname">Ziel · Lage</span><span class="wert"><b>{zm.zielNr}</b> · {zm.lage}</span>
-      <span class="feldname">Klasse</span><span class="wert"><b>{zm.klasse}</b></span>
-      <span class="feldname">Konfidenz</span><span class="wert"><Konfidenz wert={zm.konfidenz} /></span>
-      <span class="feldname">ARGUS</span><span class="wert"><Empfehlung wert={zm.argusEmpfehlung} />
-        {zm.fastTrack && <span class="badge warn" style="margin-left:6px" title="Fast-Track: kam ohne Prüfung durch die Aufklärung">Fast-Track</span>}</span>
-    </div>
-  );
-}
-
-/** Lagehinweise der Führung an Aufklärung/Zielprüfung und Meldungen „an alle“ (z. B. Reserve-Inject R-01 des ARGUS-Systems). */
-function lagehinweisEintraege(inh: Inhalte, z: Spielzustand, rolle: Rolle) {
-  return [
-    ...lagehinweiseFuer(z, rolle).map((l) => ({ schl: `l${l.seq}`, seq: l.seq, t: l.t_s, von: ROLLEN_NAME.g3, an: `an ${l.an.map((r) => ROLLEN_NAME[r]).join(", ")}`, text: l.text })),
-    ...injectsFuer(inh, z, rolle).filter((i) => inh.injects[i.id]?.an === "alle")
-      .map((i) => ({ schl: `i${i.id}`, seq: i.erschienen.seq, t: i.erschienen.t_s, von: inh.injects[i.id].von, an: "an alle", text: inh.injects[i.id].text })),
-  ].sort((a, b) => b.seq - a.seq);
-}
-
-/**
- * Lagehinweise auf der Karte (Aufklärung, Zielprüfung; Schritt 6b): Kasten oben links. Der neueste Hinweis steht ganz da, ältere
- * einzeilig (Klick zeigt sie ganz); ohne Hinweis nur eine Zeile.
- */
-export function KartenLagehinweise(p: { inh: Inhalte; z: Spielzustand; rolle: Rolle }) {
-  const start = p.inh.szenario.spieluhr.start;
-  const eintraege = lagehinweisEintraege(p.inh, p.z, p.rolle);
-  const [offen, setOffen] = useState<string | null>(null);
-  return (
-    <section class={`karten-hinweise ${eintraege.length ? "voll" : "leer"}`} data-testid="lagehinweise">
-      <h2>Lagehinweise <span class="leise" style="font-weight:500">der Führung</span>
-        {eintraege.length > 0 ? <span class="badge info" data-testid="lagehinweise-zahl">{eintraege.length}</span>
-          : <span class="klein sehr-leise" style="font-weight:500">· noch keine</span>}
-      </h2>
-      {eintraege.length > 0 && (
-        <div class="karten-hinweise-liste rolle-liste">
-          {eintraege.map((l, i) => {
-            const ganz = i === 0 || offen === l.schl;
-            return (
-              <div class={`inject ${ganz ? "" : "zu"}`} key={l.schl} onClick={() => setOffen(offen === l.schl ? null : l.schl)} title={ganz ? undefined : "Klick: ganzen Text zeigen"}>
-                <div class="kopfzeile"><span>{uhrzeit(start, l.t)} · {l.von}</span><span>{l.an}</span></div>
-                <div class={ganz ? "text" : "einzeilig"}>{l.text}</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
 }
 
 export function Platzhalter(p: { titel: string; text: string; stil?: string }) {

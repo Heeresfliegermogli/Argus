@@ -1,5 +1,5 @@
 {
-  "version": "2.5",
+  "version": "2.6",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -15,43 +15,18 @@
     "eloka": "Seit 2.4 (E4): Solange ein EloKa-Fahrzeug (szenario.eloka) im Raum steht und nicht zerstört ist, ist der Datenlink gestört: Alle Drohnenbilder rauschen und haben Streifen, das Bildalter steigt, ARGUS ist unsicherer (Konfidenz − konfidenz_minus; darunter „unbekannt“). Maßgeblich ist der Stand zur Meldezeit; Zerstören stellt das Bild sofort wieder her.",
     "bildalter_s": 3
   },
-  "fast_track": {
-    "schwelle": 90,
-    "standard": false,
-    "schaltet": "G3",
-    "wirkung": "Meldungen mit Konfidenz ≥ 90 % und Empfehlung BEKÄMPFEN gehen ohne G1 direkt als Zielmeldung an G2. G1 prüft sie nicht.",
-    "mvp": "G3 schaltet Fast-Track in der eigenen Ansicht (je Team). Auf Papier legt SL 1 diese Meldekarten mit Vermerk FT direkt bei G2 ab (nur die Zielmeldung)."
-  },
   "ablauf": [
     {"stufe": "ARGUS", "aktion": "Meldung erzeugen"},
     {
-      "stufe": "G1",
-      "aktionen": ["ANNEHMEN", "ABLEHNEN"],
+      "stufe": "Team (Zielbearbeitung)",
+      "aktionen": ["BEKÄMPFEN mit <Wirkmittel>", "ZURÜCKSTELLEN", "ABLEHNEN"],
       "sieht": [
-        "Drohnenbild mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung), Lupe",
-        "ARGUS: Klasse (Panzer, Fahrzeug, Infanterie), Zugehörigkeit, Konfidenz, Empfehlung",
-        "Bildalter",
-        "Ziel-Nr."
-      ]
-    },
-    {
-      "stufe": "G2",
-      "aktionen": ["BEKÄMPFEN mit <Wirkmittel>", "BEOBACHTEN (zurückstellen)", "NICHT BEKÄMPFEN"],
-      "zusatz": "Begründung (1 Zeile)",
-      "sieht": [
-        "Zielmeldung: Ziel-Nr., PQ, ARGUS-Klasse, Konfidenz; bei Zügen ×n",
-        "Lagekarte mit Zonen, Spuren der gemeldeten Ziele, Wirkradius-Vorschau am vorausberechneten Einschlagort",
-        "Wirkmittelbestand"
-      ]
-    },
-    {
-      "stufe": "G3",
-      "aktionen": ["FREIGABE", "ABLEHNEN", "ZURÜCK AN G2"],
-      "zusatz": "Lagehinweis an G1/G2 jederzeit (2 Zeilen); Fast-Track ein/aus",
-      "sieht": [
-        "Empfehlung G2 mit Zielmeldung",
-        "Lagekarte (wie G2) mit Warnungen zum Einschlag",
-        "Lagemeldungen (Injects)"
+        "Eingang mit Wartezeit je Meldung",
+        "Drohnenbild live mit ARGUS-Markierung (oft teilweise verdeckt: Wolken, Rauch, Bäume, Bildstörung), Lupe",
+        "ARGUS: Klasse (Panzer, Fahrzeug, Infanterie), Zugehörigkeit, Konfidenz, Empfehlung, Bildalter",
+        "Lagekarte mit Zonen, Spuren der gemeldeten Ziele, Kontakten, eigenen Panzern; Wirkradius-Vorschau am vorausberechneten Einschlagort",
+        "Wirkmittel mit Bestand, Einschlag als Countdown, Warnungen; bei Zügen ×n",
+        "Lagemeldungen (Brigade, Nachbarn, 1. Kp) im Feed"
       ]
     },
     {
@@ -64,37 +39,37 @@
       {
         "id": "R1",
         "text": "Bekämpft wird nur ein positiv als militärisches Ziel identifiziertes Objekt.",
-        "prueft": "G1"
+        "prueft": "Team"
       },
       {
         "id": "R2",
         "text": "Kein Wirkradius darf eine No-Strike-Zone berühren (Schule).",
-        "prueft": "G2",
+        "prueft": "System warnt, Team entscheidet",
         "maschinell": true
       },
       {
         "id": "R3",
         "text": "Berührt der Wirkradius das Einschränkungsgebiet Ortschaft (KRÄHE mit Hof RABE), sind nur Wirkmittel mit Wirkradius ≤ 50 m zulässig (LM, Kanone).",
-        "prueft": "G2",
+        "prueft": "System warnt, Team entscheidet",
         "maschinell": true
       },
       {
         "id": "R4",
         "text": "Sanitätspersonal und -fahrzeuge, Zivilpersonen und wehrlose Gegner (z. B. die sich ergeben) werden nicht bekämpft.",
-        "prueft": "alle"
+        "prueft": "Team"
       },
-      {"id": "R5", "text": "Wirkung nur mit Freigabe G3.", "prueft": "G3"}
+      {"id": "R5", "text": "Wirkung nur mit der Entscheidung BEKÄMPFEN des Teams.", "prueft": "Team"}
     ],
-    "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert die Freigabe aber nicht. Die Warnung gilt für den vorausberechneten Einschlagort. Jeder Verstoß wird protokolliert."
+    "verstoss": "Das System warnt bei R2 und R3 und wenn ein Ziel außerhalb des Einsatzbereichs eines Wirkmittels liegt, verhindert das Bekämpfen aber nicht. Die Warnung gilt für den vorausberechneten Einschlagort. Jeder Verstoß wird protokolliert."
   },
   "wirkung": {
-    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (seit 2.4 bei Zugmeldungen je Fahrzeug, siehe zug; Mörser dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: Freigabe durch G3 plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, Kanone der 1. Kp ca. 5 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
+    "trefferregel": "Die Wirkung gilt dem gemeldeten Ziel (seit 2.4 bei Zugmeldungen je Fahrzeug, siehe zug; Mörser dem ersten Fahrzeug, das bei der Freigabe noch steht) und schlägt an seinem Ort zum Einschlagzeitpunkt ein: BEKÄMPFEN durch das Team plus Zeit bis zum Einschlag (Mörser ca. 35 s, LM Start plus Flug ab Startpunkt westlich des Kartenrands, Kanone der 1. Kp ca. 5 s). Getroffen ist das Ziel selbst und alles im Wirkradius um den Einschlagort, und zwar nach der Lage beim Einschlag. R2, R3 und Einsatzbereich gelten am Einschlagort.",
     "begruendung": "Fahrzeuge bewegen sich während der Flugzeit weiter. Wer freigibt, verantwortet auch, wo die Wirkung tatsächlich einschlägt: Ein Ziel kann während des Anflugs an der Schule vorbeifahren oder Zivilpersonen können in den Wirkradius kommen.",
-    "vorhersage": "Die Warnungen bei G2 und G3 rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
-    "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf den Karten von G1, G2 und G3 und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
+    "vorhersage": "Die Warnungen am Wirkmittel rechnen den Einschlagort voraus (Freigabe jetzt plus Zeit bis zum Einschlag, Position des Ziels entlang seiner Bewegung). Spielvereinfachung: Die Vorhersage kennt die Route; die Meldung nennt Fahrtrichtung und Geschwindigkeit, sodass sie für die TT nachvollziehbar bleibt.",
+    "bewegung": "Fahrzeuge bewegen sich entlang ihrer Routen mit Spielwerten: Spähfahrzeuge 20–30 km/h auf Straßen, im Angriff 10–15 km/h im Gelände, dazu Halte in Feuerstellungen. Gemeldete Ziele bleiben als Spur auf der Lagekarte des Teams und bewegen sich mit (angezeigt wird die ARGUS-Klasse, nicht die Ground Truth).",
     "hintergrund": "Die eigene 1. Kp und die Feindartillerie wirken nach Drehbuch (szenario.hintergrund). Eine Wirkung des Hintergrundgefechts entfällt, wenn das Ziel schon zerstört ist; fällt der schießende Panzer aus, schießt der nächste einsatzbereite. Das Gefecht ist nicht zu verlieren; die Auswertung bleibt bei der Ethik.",
-    "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf außer Fast-Track. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
-    "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. G3 bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren.",
+    "unbearbeitet": "Unbearbeitete Meldungen bleiben im Eingang. Es gibt keinen Zeitablauf. Ist jedes Fahrzeug einer Meldung zerstört, entfällt sie.",
+    "durchbruch": "Wird eine Feindgruppe nicht aufgehalten (bis zu ihrem Angriffszeitpunkt kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild: durchgebrochen. Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. Das Team bekommt eine Lagemeldung; in der Auswertung zählt der Durchbruch als Kennzahl, nicht als Punkte. Das Gefecht bleibt nicht zu verlieren.",
     "praezision": "Präzisionswirkmittel (Loitering Munition, katalog_wirkmittel: nur_zielfahrzeug) treffen genau das bekämpfte Fahrzeug: Andere Fahrzeuge im Wirkradius bleiben stehen. Personen im Wirkradius sind betroffen; R2, R3 und die Warnungen gelten wie bei jedem Wirkmittel. Der Mörser trifft weiter alles im Wirkradius.",
     "zug": "Seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug. Loitering Munition: 1 LM je noch stehendem Fahrzeug (der Bestand sinkt um n; reicht er nicht, werden nur so viele Fahrzeuge bekämpft, wie LM da sind – Warnung „nur k von n“). Kanone der 1. Kp: ein Schuss je Fahrzeug nacheinander. Mörser: ein Einschlag am ersten Fahrzeug, getroffen ist alles im Wirkradius. Jeder Einschlag schlägt am Ort seines Fahrzeugs zum Einschlagzeitpunkt ein; Warnungen gelten für jeden Einschlag."
   },
@@ -102,12 +77,15 @@
     {"id": "k_bearbeitet", "text": "Meldungen bearbeitet / gesamt (je Team)"},
     {"id": "k_feind", "text": "Feindziele bekämpft / gemeldet"},
     {"id": "k_fehl", "text": "Fehlbekämpfungen nach Art (verbündet, geschützt, zivil, Attrappe, außer Gefecht)"},
-    {"id": "k_verstoss", "text": "Freigaben trotz RoE-Warnung (am vorausberechneten Einschlagort)"},
+    {"id": "k_verstoss", "text": "Bekämpfungen trotz RoE-Warnung (am vorausberechneten Einschlagort)"},
     {
       "id": "k_durchbruch",
       "text": "Durchbruch: Feindfahrzeuge, die nicht aufgehalten wurden und über den Bach durchgebrochen sind (Kennzahl, keine Wertung)"
     },
-    {"id": "k_zeit", "text": "Durchlaufzeit je Stufe (Median), getrennt nach Konfidenz ≥ 90 % und < 90 %"},
+    {
+      "id": "k_zeit",
+      "text": "Wie lange habt ihr hingeschaut? Sekunden je Entscheidung ab Eingang und ab Öffnen (Median), getrennt nach Konfidenz"
+    },
     {"id": "k_widerspruch", "text": "Wie oft hat ein Mensch ARGUS widersprochen – zu Recht und zu Unrecht?"},
     {"id": "k_vergleich", "text": "Teamvergleich je Schlüsselfall: richtig / falsch / nicht erreicht"}
   ],
@@ -133,11 +111,26 @@
     "feindartillerie": {"treffer_prozent": 4, "radius_m": 10},
     "attrappe": {"treffer_prozent": 4, "radius_m": 10},
     "durchbruch": {"treffer_prozent": 8},
-    "meldungen": {"abstand_alle_s": 20, "abstand_panzer_s": 45, "abstand_limit_s": 90, "sofort": ["attrappe"]}
+    "meldungen": {
+      "abstand_alle_s": 20,
+      "abstand_panzer_s": 45,
+      "abstand_limit_s": 90,
+      "sofort": ["attrappe"],
+      "artillerie": ["steil", "beobachter", "artillerie", "attrappe"],
+      "artillerie_abstand_s": 120,
+      "nur_stufenwechsel": ["artillerie"],
+      "erster_beschuss": true,
+      "hinweis": "Seit 2.6 (H3.3, H5.7): Wegen Artillerie und Mörser (artillerie) höchstens eine Druckmeldung je Panzer, Schütze und Stufe und insgesamt höchstens eine je artillerie_abstand_s (ausgefallen kommt immer); die Feindartillerie des Hintergrunds (nur_stufenwechsel) meldet sich nur beim Stufenwechsel. Der erste Beschuss eines Panzers kommt immer (erster_beschuss)."
+    }
   },
   "spielleitung": {
     "verstaerkung_menue": false,
     "hinweis": "Seit 2.4 (E1): Das Menü „Verstärkung“ in Übersicht und Teamansicht der Spielleitung ist ausgeblendet; der Druck kommt aus dem Drehbuch selbst, damit alle Teams gleich spielen. Der Code bleibt, true blendet es wieder ein."
   },
-  "sensordaten": "Seit 2.4 (E6.3): Sensordaten und Infrarot entfallen für die Spieler. Ob etwas fährt, zeigt das Live-Drohnenbild; was bisher nur in den Sensordaten stand, ist im Bild erkennbar (meldungen[].bild.merkmale). meldungen[].sensor bleibt für Spielleitung und Drehbuch."
+  "sensordaten": "Seit 2.4 (E6.3): Sensordaten und Infrarot entfallen für die Spieler. Ob etwas fährt, zeigt das Live-Drohnenbild; was bisher nur in den Sensordaten stand, ist im Bild erkennbar (meldungen[].bild.merkmale). meldungen[].sensor bleibt für Spielleitung und Drehbuch.",
+  "anzeige": {
+    "lagemeldung_s": 8,
+    "bestand_knapp": {"LM": 4, "MRS": 3},
+    "hinweis": "Seit 2.6: Eine neue Lagemeldung steht lagemeldung_s Sekunden (Echtzeit) oben im Feed und rutscht dann ohne Klick in die einklappbare Liste „frühere Meldungen“; ein Klick liest sie sofort. Bestand ab bestand_knapp und weniger: Warnung in Kopfzeile und am Knopf."
+  }
 }

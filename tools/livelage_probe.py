@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Probe Schritt 7 „Live-Lage“: Effekte, Bewegung, Tracking, Verstärkung – nur über sichtbare Bedienelemente.
+"""Probe Schritt 7 „Live-Lage“: Effekte, Bewegung, Tracking, Verstärkung – über die sichtbare Oberfläche (seit 2.6 eine Rolle).
 
-Teil A – ein Team im Direktaufruf (SL, G1, G2, G3, Plenum; lokaler Sync), Uhr über die Steuerung der SL:
-  A1  Verstärkung V-1 um 10:04:00 über „einspielen“ in der Teamansicht der SL → im Protokoll, V1-M1 kommt bei G1.
-  A2  Feindartillerie H-01 (10:05:04, angehalten): Einschläge am Westrand auf Kontrollkarte und Plenum.
-  A3  Eine Meldung durch die Kette (G1 annehmen, G2 LM, G3 Freigabe) – über die Knöpfe; LM fliegt sichtbar vom
-      Westrand zum vorausberechneten Einschlagort (G2, G3, SL), Warnung „Freigabe jetzt: Einschlag …“ bei G3.
-  A4  V-2 um 10:07:00 gesperrt (käme Schule/Sanität zu nahe, Szenario 2.1): Knopf gesperrt, Grund im Text.
-  A4b Szenario 2.1 (A8): Mörser Z-06 feuert nach Schussrhythmus (Mündungsblitz, Abschussrauch), fahrende Fahrzeuge
-      wirbeln Staub auf (Kontrollkarte).
-  A5  Leuchtspur der eigenen PzAbw auf Z-11 (H-02, 10:09:15,8, angehalten), danach Nebel H-03 und brennendes Wrack
-      an der Brücke (10:10:00, Kontrollkarte gezoomt mit Sprites).
-  A6  Bildrate: 10:13:30–10:14:20 bei Tempo ×1 (Feindartillerie H-04, Bewegung, Flug) in SL, G2, G3 und Plenum.
-  A7  Z-24 außer Gefecht (10:19:35): Zustands-Sprite „Kette ab“, kein Brand.
-  A8  E-01 (10:23:30,3, angehalten): Mündungsblitz am PT-91, Treffer auf Z-27; Auflösung im Plenum.
-Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung:
-  B1  Menü „Verstärkung ▾“: V-1 „an alle“ → in beiden Protokollen; V-3 nur an Team B; Zeile zeigt „+n V“.
-  B2  V-2 um 10:12:00 für alle gesperrt (Szenario 2.1: 10:11:15–10:17:15).
-Teil C – Bildrate der Kontrollkarte allein (wie am Rechner der Spielleitung), Tempo ×1 und ×10, gezoomt mit Sprites.
+Teil A – ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync), Uhr über die Steuerung der SL:
+  A1  Verstärkung V-1 um 04:00 (das Menü der SL ist seit 2.6 ausgeblendet, H6/E1.1 – eingespielt über die Sitzung) → im
+      Protokoll, V1-M1 kommt in den Eingang der Zielbearbeitung.
+  A2  Feindartillerie H-01 (05:04, angehalten): Einschläge am Westrand auf Kontrollkarte und Plenum.
+  A3  Eine Meldung mit LM bekämpfen – über die Knöpfe; die Vorschau rechnet den Einschlag voraus („Einschlag in m:ss“),
+      die LM fliegt sichtbar vom Westrand zum vorausberechneten Einschlagort (Zielbearbeitung, SL) und trifft dort.
+  A4  V-2 um 07:00 gesperrt (käme Schule/Sanität zu nahe, Szenario 2.1): die Aktion wird mit Grund abgelehnt.
+  A4b Mörser Z-06 feuert nach Schussrhythmus (seit 2.5 Feuerstöße; Mündungsblitz, Abschussrauch), fahrende Fahrzeuge wirbeln Staub auf.
+  A5  Leuchtspur der eigenen PzAbw auf Z-11 (H-02, 09:15,8, angehalten), danach Nebel H-03 und brennendes Wrack
+      an der Brücke (10:00, Kontrollkarte gezoomt mit Sprites).
+  A6  Bildrate: 13:30–14:15 bei Tempo ×1 (Feindartillerie, Bewegung, Flug) in SL, Zielbearbeitung und Plenum.
+  A7  Z-24 außer Gefecht (19:35): Zustands-Sprite „Kette ab“, kein Brand.
+  A8  E-01 (23:30,3, angehalten): Mündungsblitz am PT-91, Treffer auf Z-27; Auflösung im Plenum.
+Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung (ohne Verstärkungsmenü):
+  B1  V-1 an beide Teams, V-3 nur an Team B (über die Sitzung) → in den Protokollen; die Zeile zeigt „+n V“.
+  B2  V-2 um 12:00 für alle gesperrt (Szenario 2.1: 11:15–17:15) – abgelehnt mit Grund.
+Teil C – Bildrate der Kontrollkarte allein (wie am Rechner der Spielleitung), Tempo ×1 und ×10, gezoomt mit Sprites; seit 2.6
+  läuft der Team-Laptop (rechnet das Spiel) in einem kleinen Fenster daneben.
 Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 Karten mit WebGL über SwiftShader (Standard) oder im Rückfall Canvas (--renderer canvas).
 
@@ -117,20 +118,23 @@ def main():
         print(f"Teil A – ein Team, Direktaufruf ({a.renderer})")
         sl = seite("SL", url(rolle="sl", raum=a.raum, name="SL 1"))
         warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 30, "SL steuert")
-        g1, g2, g3, pl = (seite(r.upper(), url(rolle=r, raum=a.raum)) for r in ["g1", "g2", "g3", "plenum"])
-        for s, r in [(g1, "g1"), (g2, "g2"), (g3, "g3")]:
-            warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 20, f"Einweisung {r}")
-            s.get_by_test_id("einweisung-ueberspringen").click()
-        for s, k in [(sl, "kontrollkarte"), (g2, "lagekarte"), (g3, "lagekarte")]:
+        zb, pl = (seite(n, url(rolle=r, raum=a.raum)) for n, r in [("ZB", "zb"), ("Plenum", "plenum")])
+        warte(lambda: zb.get_by_test_id("tour").count() == 1, 20, "Übersicht")
+        zb.get_by_test_id("tour-ueberspringen").click()
+        zb.get_by_test_id("einweisung-ueberspringen").click()
+        for s, k in [(sl, "kontrollkarte"), (zb, "lagekarte")]:
             warte(lambda: s.locator(f"[data-testid={k}][data-bereit='1']").count() == 1, 20, f"Karte {k} bereit")
 
         def zustand():
             return sl.evaluate("() => { const z = window.argus.stand.zustand; return { t: window.argus.spielzeit(), laeuft: z.uhr.laeuft, v: z.verstaerkungen, h: z.hintergrund, zerstoert: z.zerstoert, ereignisse: z.ereignisse, meldungen: Object.fromEntries(Object.entries(z.meldungen).map(([k, m]) => [k, m.stufe])), ende: z.ende } }")
 
         def zeit(mmss, tempo=None):
+            # Seit 2.6 rechnet der Team-Laptop: Ein „Anhalten“ kommt mit kurzem Verzug zurück – nur klicken, wenn der Knopf da ist
             if zustand()["laeuft"]:
-                sl.get_by_role("button", name="❚❚ Anhalten").click()
-                warte(lambda: not zustand()["laeuft"], 5, "Uhr steht")
+                knopf = sl.get_by_role("button", name="❚❚ Anhalten")
+                if knopf.count():
+                    knopf.click()
+                warte(lambda: not zustand()["laeuft"], 10, "Uhr steht")
             sl.fill("[data-testid=sl-zeit]", mmss)
             sl.get_by_role("button", name="Spielzeit setzen").click()
             m, s_ = mmss.split(":")
@@ -144,13 +148,16 @@ def main():
             sl.get_by_role("button", name="❚❚ Anhalten").click()
             warte(lambda: not zustand()["laeuft"], 5, "Uhr steht")
 
-        # A1 Verstärkung über die Teamansicht der SL
+        def abgelehnt():
+            return sl.evaluate("() => window.argus.stand.zustand.abgelehnt.map((x) => x.grund)")
+
+        # A1 Verstärkung (Menü ausgeblendet, H6/E1.1 – über die Sitzung wie tools/e2e_drehbuch.py)
         zeit("04:00", tempo=1)
-        knopf = sl.locator("[data-verstaerkung-sl=V-1] button", has_text="einspielen")
-        knopf.click()
+        pruefe(sl.locator("[data-verstaerkung-sl]").count() == 0, "A1 kein Verstärkungsmenü in der Teamansicht der SL (verstaerkung_menue: false)")
+        sl.evaluate("() => window.argus.senden('verstaerkung_einspielen', { gruppe: 'V-1' })")
         warte(lambda: any(v["gruppe"] == "V-1" for v in zustand()["v"]), 5, "V-1 im Protokoll")
         v1 = next(v for v in zustand()["v"] if v["gruppe"] == "V-1")
-        pruefe(abs(v1["t0"] - 240) < 1, f"A1 V-1 eingespielt um t0 = {v1['t0']} s (10:04:00)")
+        pruefe(abs(v1["t0"] - 240) < 1, f"A1 V-1 eingespielt um t0 = {v1['t0']} s (04:00)")
         foto(sl, "A1_sl_verstaerkung")
 
         # A2 Feindartillerie H-01
@@ -165,31 +172,22 @@ def main():
         dp = pl.evaluate(KARTE_JS, "lagekarte")
         pruefe(dp and dp["effekte"] >= 7, f"A2 Plenum zeigt das Gefecht ringsum ({dp['effekte'] if dp else 0} Effekte)")
 
-        # A3 Kette über die Knöpfe, LM im Flug
-        warte(lambda: g1.get_by_test_id("g1-offen").inner_text() != "0", 10, "Meldung bei G1")
-        offen = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1')")
+        # A3 eine Meldung mit LM bekämpfen, LM im Flug
+        warte(lambda: zb.get_by_test_id("eingang-zahl").inner_text() != "0", 10, "Meldung im Eingang")
+        offen = zb.evaluate("() => { const z = window.argus.stand.zustand; return z.reihenfolge.filter((id) => z.meldungen[id].stufe === 'offen' && !z.meldungen[id].zurueckgestellt) }")
         mid = offen[-1]
-        g1.locator(f".kmarke[data-meldung={mid}]").first.click()
-        g1.get_by_test_id("g1-annehmen").click()
-        warte(lambda: g2.locator(f".kmarke[data-meldung={mid}]").count() > 0, 10, f"{mid} bei G2")
-        g2.locator(f".kmarke[data-meldung={mid}]").first.click()
-        g2.locator("label[data-wm=LM]").click()
-        g2.wait_for_timeout(400)
-        banner = g2.get_by_test_id("karte-banner").inner_text()
-        pruefe("Einschlag" in banner, f"A3 G2 rechnet den Einschlag voraus: „{banner}“")
-        foto(g2, "A3_g2_vorschau_lm")
-        g2.get_by_test_id("g2-bekaempfen").click()
-        warte(lambda: g3.locator(f".kmarke[data-meldung={mid}]").count() > 0, 10, f"{mid} bei G3")
-        g3.locator(f".kmarke[data-meldung={mid}]").first.click()
-        g3.wait_for_timeout(300)
-        jetzt = g3.get_by_test_id("g3-jetzt").inner_text()
-        pruefe("Freigabe jetzt: Einschlag" in jetzt, f"A3 G3 sieht die Warnung zum Einschlag: „{jetzt.splitlines()[0]}“")
-        g3.get_by_test_id("g3-freigabe").click()
-        warte(lambda: zustand()["meldungen"].get(mid) == "wirkung", 10, f"{mid} freigegeben")
-        einschlag = sl.evaluate(f"() => window.argus.stand.zustand.meldungen['{mid}'].g3.einschlag")
+        zb.locator(f"[data-testid=eingang] button[data-meldung={mid}]").click()
+        zb.locator("label[data-wm=LM]").click()
+        zb.wait_for_timeout(400)
+        banner = zb.get_by_test_id("karte-banner").inner_text()
+        pruefe("Einschlag in" in banner, f"A3 Vorschau rechnet den Einschlag voraus (Countdown): „{banner}“")
+        foto(zb, "A3_zb_vorschau_lm")
+        zb.get_by_test_id("zb-bekaempfen").click()
+        warte(lambda: zustand()["meldungen"].get(mid) == "wirkung", 10, f"{mid} bekämpft")
+        einschlag = sl.evaluate(f"() => {{ const f = window.argus.stand.zustand.meldungen['{mid}'].freigabe; return f.einschlaege?.[0] ?? f.einschlag }}")
         t_frei = zustand()["t"]
         laufen_bis(t_frei + 18)
-        for s, n in [(sl, "sl"), (g2, "g2"), (g3, "g3")]:
+        for s, n in [(sl, "sl"), (zb, "zb")]:
             s.wait_for_timeout(400)
             foto(s, f"A3_{n}_lm_im_flug")
         pruefe(einschlag["t"] > t_frei + 25, f"A3 LM: Freigabe {t_frei:.1f} s, Einschlag {einschlag['t']:.1f} s am vorausberechneten Ort {einschlag['pos']}")
@@ -200,17 +198,18 @@ def main():
         w = sl.evaluate(f"() => window.argus.stand.zustand.meldungen['{mid}'].wirkung")
         pruefe(w and abs(w["t_einschlag"] - einschlag["t"]) < 0.05 and w["pos"] == einschlag["pos"], f"A3 Einschlag wie vorausberechnet: {w and w['getroffen']}")
 
-        # A4 V-2 gesperrt (Szenario 2.1: 10:06:30–10:07:15 und 10:11:15–10:17:15)
+        # A4 V-2 gesperrt (Szenario 2.1: 06:30–07:15 und 11:15–17:15)
         zeit("07:00", tempo=1)
-        sl.wait_for_timeout(600)
-        knopf2 = sl.locator("[data-verstaerkung-sl=V-2] button", has_text="einspielen")
-        text2 = sl.locator("[data-verstaerkung-sl=V-2]").inner_text()
-        pruefe(knopf2.is_disabled() and "gesperrt" in text2, f"A4 V-2 um 10:07:00 gesperrt: „{text2.splitlines()[-2] if len(text2.splitlines()) > 1 else text2}“")
+        sl.evaluate("() => window.argus.senden('verstaerkung_einspielen', { gruppe: 'V-2' })")
+        warte(lambda: any("V-2" in g for g in abgelehnt()), 5, "V-2 abgelehnt")
+        grund = next(g for g in abgelehnt() if "V-2" in g)
+        pruefe("jetzt nicht" in grund and not any(v["gruppe"] == "V-2" for v in zustand()["v"]), f"A4 V-2 um 07:00 gesperrt: „{grund}“")
 
-        # A4b Feuer und Staub (Szenario 2.1, A8): Mörser Z-06 schießt um 10:07:08 (Feuerstoß 10:06:56–10:07:08 im Takt 4 s)
-        # Uhr direkt 0,2 s nach den Schuss um 428 s stellen (der Blitz dauert 0,44 s Echtzeit, beim Anhalten wäre er vorbei)
-        sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", 428.2)
-        warte(lambda: abs(zustand()["t"] - 428.2) < 0.05, 5, "Spielzeit 428,2 s")
+        # A4b Feuer und Staub: Mörser Z-06 schießt seit 2.5 (F2.8) in Feuerstößen – 2 Schuss im Takt 2 s, dann 28 s Pause, ab 05:02
+        # (05:02, 05:04, 05:34, 05:36 … 07:10, 07:12). Uhr direkt 0,2 s nach den Schuss um 430 s stellen (der Blitz dauert 0,44 s
+        # Echtzeit, beim Anhalten wäre er vorbei).
+        sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", 430.2)
+        warte(lambda: abs(zustand()["t"] - 430.2) < 0.05, 5, "Spielzeit 430,2 s")
         sl.wait_for_timeout(300)
         d = sl.evaluate(KARTE_JS, "kontrollkarte")
         foto(sl, "A4b_sl_moerser_feuert")
@@ -231,7 +230,7 @@ def main():
         sl.wait_for_timeout(500)
         foto(sl, "A5_sl_nebel_wrack")
         foto(pl, "A5_plenum_nebel")
-        foto(g2, "A5_g2_tracking")
+        foto(zb, "A5_zb_tracking")
         sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.zeigeAuf([520, 330], 4)")
         sl.wait_for_timeout(1500)
         foto(sl, "A5_sl_bruecke_gezoomt")
@@ -241,17 +240,18 @@ def main():
         # A6 Bildrate bei laufender Uhr
         zeit("13:30", tempo=1)
         sl.get_by_role("button", name="▶ Start").click()
-        proben = {n: [] for n in ["SL", "G2", "G3", "Plenum"]}
+        proben = {n: [] for n in ["SL", "ZB", "Plenum"]}
         ende = time.time() + 45
         while time.time() < ende:
             time.sleep(5)
-            for n, s, k in [("SL", sl, "kontrollkarte"), ("G2", g2, "lagekarte"), ("G3", g3, "lagekarte"), ("Plenum", pl, "lagekarte")]:
+            for n, s, k in [("SL", sl, "kontrollkarte"), ("ZB", zb, "lagekarte"), ("Plenum", pl, "lagekarte")]:
                 d = s.evaluate(KARTE_JS, k)
                 if d:
                     proben[n].append({"fps": d["fps"], "ms": d["bildMs"]})
         foto(sl, "A6_sl_laufend")
-        foto(g2, "A6_g2_laufend")
+        foto(zb, "A6_zb_laufend")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
+        warte(lambda: not zustand()["laeuft"], 10, "Uhr steht")
         for n, l in proben.items():
             l = l[1:]  # erste Messung enthält den Start
             if not l:
@@ -274,7 +274,7 @@ def main():
         laufen_bis(1410.25)
         sl.wait_for_timeout(300)
         foto(sl, "A8_sl_e01")
-        foto(g3, "A8_g3_e01")
+        foto(zb, "A8_zb_e01")
         e01 = zustand()["ereignisse"].get("E-01", {})
         pruefe(e01.get("wirkungen", {}).get("0", {}).get("wirkt") is True, f"A8 E-01: PT-91 trifft Z-27 ({e01.get('wirkungen', {}).get('0')})")
         zeit("24:58", tempo=1)
@@ -282,9 +282,9 @@ def main():
         warte(lambda: zustand()["ende"], 20, "Spielende")
         pl.wait_for_timeout(1500)
         foto(pl, "A8_plenum_aufloesung")
-        v1m1 = g1.evaluate("() => window.argus.stand.zustand.meldungen['V1-M1']")
-        pruefe(v1m1 is not None, f"A1 V1-M1 ist bei G1 angekommen ({v1m1 and v1m1['stufe']})")
-        for s in [sl, g1, g2, g3, pl]:
+        v1m1 = zb.evaluate("() => window.argus.stand.zustand.meldungen['V1-M1']")
+        pruefe(v1m1 is not None, f"A1 V1-M1 ist bei der Zielbearbeitung angekommen ({v1m1 and v1m1['stufe']})")
+        for s in [sl, zb, pl]:
             s.close()
 
         # ---------------------------------------------------------------- Teil B
@@ -303,11 +303,15 @@ def main():
             s.get_by_role("button", name="Beitreten").click()
             warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, "Lobby")
             s.get_by_placeholder("Teamname").fill(name)
-            s.get_by_role("button", name="Aufklärung", exact=True).click()
+            s.get_by_role("button", name="Team anlegen").click()
             warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"{name} erstellt")
             tt.append(s)
         warte(lambda: len(sl.evaluate("() => window.argusTeams()")) == 2, 20, "zwei Teams")
         sl.get_by_test_id("alle-oeffnen").click()
+        for s in tt:
+            warte(lambda: s.get_by_test_id("tour").count() == 1, 20, "Übersicht")
+            s.get_by_test_id("tour-ueberspringen").click()
+            s.get_by_test_id("einweisung-ueberspringen").click()
         warte(lambda: all(x["seq"] >= 2 for x in sl.evaluate("() => window.argusTeams()")), 20, "Spiele offen")
         sl.get_by_test_id("alle-zeit").fill("04:00")
         sl.get_by_role("button", name="Spielzeit setzen").click()
@@ -317,56 +321,76 @@ def main():
         def verst(team):
             return [e["daten"]["gruppe"] for e in sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll", ids[team]) if e["typ"] == "verstaerkung"]
 
-        sl.get_by_test_id("verstaerkung-menue").click()
-        sl.wait_for_timeout(300)
-        foto(sl, "B1_uebersicht_menue")
-        sl.locator("[data-alle=V-1]").click()
-        warte(lambda: verst("Team A") == ["V-1"] and verst("Team B") == ["V-1"], 5, "V-1 an alle")
-        pruefe(True, "B1 V-1 „an alle“: in beiden Protokollen")
-        sl.get_by_test_id("verstaerkung-menue").click()
-        sl.locator("[data-team-verstaerkung='Team B:V-3']").click()
-        warte(lambda: verst("Team B") == ["V-1", "V-3"], 5, "V-3 an Team B")
+        pruefe(sl.get_by_test_id("verstaerkung-menue").count() == 0, "B1 Übersicht ohne Verstärkungsmenü (verstaerkung_menue: false)")
+        sl.evaluate("(ids) => window.argusSitzung.sendenAn(ids, 'verstaerkung_einspielen', { gruppe: 'V-1' })", list(ids.values()))
+        warte(lambda: verst("Team A") == ["V-1"] and verst("Team B") == ["V-1"], 10, "V-1 an alle")
+        pruefe(True, "B1 V-1 an beide Teams: in beiden Protokollen")
+        sl.evaluate("(id) => window.argusSitzung.sendenAn([id], 'verstaerkung_einspielen', { gruppe: 'V-3' })", ids["Team B"])
+        warte(lambda: verst("Team B") == ["V-1", "V-3"], 10, "V-3 an Team B")
         pruefe(verst("Team A") == ["V-1"], "B1 V-3 nur an Team B")
         sl.wait_for_timeout(500)
         za = sl.locator("[data-team-zeile='Team A'] [data-verstaerkungen]").inner_text()
-        zb = sl.locator("[data-team-zeile='Team B'] [data-verstaerkungen]").inner_text()
-        pruefe("+1 V" in za and "+2 V" in zb, f"B1 Übersicht zeigt eingespielte Verstärkungen ({za.strip()} / {zb.strip()})")
+        zb_ = sl.locator("[data-team-zeile='Team B'] [data-verstaerkungen]").inner_text()
+        pruefe("+1 V" in za and "+2 V" in zb_, f"B1 Übersicht zeigt eingespielte Verstärkungen ({za.strip()} / {zb_.strip()})")
         sl.get_by_test_id("alle-zeit").fill("12:00")
         sl.get_by_role("button", name="Spielzeit setzen").click()
         warte(lambda: all(x["uhr"]["t_s"] >= 720 for x in sl.evaluate("() => window.argusTeams()")), 10, "Spielzeit 12:00")
-        sl.get_by_test_id("verstaerkung-menue").click()
-        sl.wait_for_timeout(300)
-        alle2 = sl.locator("[data-alle=V-2]")
-        pruefe(alle2.is_disabled() and "gesperrt" in (alle2.get_attribute("title") or ""), f"B2 V-2 um 10:12:00 gesperrt: „{alle2.get_attribute('title')}“")
-        foto(sl, "B2_uebersicht_gesperrt")
-        sl.keyboard.press("Escape")
+        sl.evaluate("(ids) => window.argusSitzung.sendenAn(ids, 'verstaerkung_einspielen', { gruppe: 'V-2' })", list(ids.values()))
+
+        def abgelehnt_b(team):
+            return [e["daten"]["grund"] for e in sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll", ids[team]) if e["typ"] == "aktion_abgelehnt"]
+        warte(lambda: all(any("V-2" in g for g in abgelehnt_b(t)) for t in ids), 10, "V-2 abgelehnt")
+        pruefe(all("V-2" not in verst(t) for t in ids), f"B2 V-2 um 12:00 für alle gesperrt: „{abgelehnt_b('Team A')[-1]}“")
+        foto(sl, "B2_uebersicht")
         for x in [sl] + tt:
             x.close()
 
         # ---------------------------------------------------------------- Teil C
         # Bildrate wie am Rechner der Spielleitung: ein Fenster allein (Kontrollkarte, Gesamtansicht und gezoomt)
-        print(f"Teil C – Bildrate der Kontrollkarte allein ({a.renderer})")
+        # Seit 2.6 (H1) rechnet der Team-Laptop das Spiel, die Spielleitung nicht: Ein Team-Fenster läuft mit – klein (480 × 320) und
+        # mit höchstens 1 Bild/s (fps=1), damit es die gemeinsame Software-Grafik (SwiftShader) kaum belastet.
+        print(f"Teil C – Bildrate der Kontrollkarte allein ({a.renderer}, Team-Laptop klein daneben, 1 Bild/s)")
         sl = seite("SL-C", url(rolle="sl", raum=f"{a.raum}-c", name="SL 1"))
         warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 30, "SL steuert")
+        zbc = seite("ZB-C", url(rolle="zb", raum=f"{a.raum}-c", fps=1))
+        warte(lambda: zbc.get_by_test_id("tour").count() == 1, 20, "Übersicht")
+        zbc.get_by_test_id("tour-ueberspringen").click()
+        zbc.get_by_test_id("einweisung-ueberspringen").click()
+        zbc.set_viewport_size({"width": 480, "height": 320})
         warte(lambda: sl.locator("[data-testid=kontrollkarte][data-bereit='1']").count() == 1, 20, "Kontrollkarte bereit")
+        warte(lambda: zustand()["t"] == 0 and sl.evaluate("() => window.argus.stand.protokoll.length") > 0, 20, "Spiel des Teams offen")
+        # Uhr direkt über die Sitzung (wie die Knöpfe): Unter SwiftShader ist die Seite mit zwei Fenstern so träge, dass Klicks
+        # über 30 s brauchen können (Grenze der Software-Grafik, siehe ENGINE.md „Bildrate“).
+        def uhr(befehl, **d):
+            sl.evaluate("(a) => window.argus.senden('uhr', a)", {"befehl": befehl, **d})
+
         for tempo, zoom, name in [(1, None, "SL allein ×1"), (10, None, "SL allein ×10"), (1, ([520, 330], 4), "SL allein ×1 gezoomt")]:
-            zeit("13:30", tempo=tempo)
+            if zustand()["laeuft"]:
+                uhr("pause")
+                warte(lambda: not zustand()["laeuft"], 30, "Uhr steht")
+            uhr("setzen", t_s=810)
+            warte(lambda: abs(zustand()["t"] - 810) < 0.5, 30, "Spielzeit 13:30")
+            uhr("tempo", tempo=tempo)
             if zoom:
                 sl.evaluate("(z) => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.zeigeAuf(z[0], z[1])", list(zoom))
-            sl.get_by_role("button", name="▶ Start").click()
+            uhr("start")
+            warte(lambda: zustand()["laeuft"], 30, "Uhr läuft")
             l = []
             for _ in range(5):
                 time.sleep(4)
                 d = sl.evaluate(KARTE_JS, "kontrollkarte")
                 if d:
                     l.append({"fps": d["fps"], "ms": d["bildMs"]})
-            sl.get_by_role("button", name="❚❚ Anhalten").click()
+            uhr("pause")
             l = l[1:]
             messung[name] = {"fps_min": min(x["fps"] for x in l), "fps_mittel": round(sum(x["fps"] for x in l) / len(l), 1),
                              "ms_mittel": round(sum(x["ms"]["mittel"] for x in l) / len(l), 1), "ms_max": max(x["ms"]["max"] for x in l)}
             print(f"  C {name:<22} {messung[name]['fps_min']}–{max(x['fps'] for x in l)} Bilder/s (Ziel je nach Lage 12–30), Zeichenzeit Ø {messung[name]['ms_mittel']} ms, max {messung[name]['ms_max']} ms")
             if zoom:
-                foto(sl, "C_sl_gezoomt_laufend")
+                try:
+                    foto(sl, "C_sl_gezoomt_laufend")
+                except Exception as ex:  # noqa: BLE001 – Foto unter SwiftShader zu langsam: kein Prüfpunkt
+                    print("  (Foto C ausgelassen:", str(ex).splitlines()[0], ")")
                 sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.ganzeKarte()")
         browser.close()
 

@@ -1,8 +1,9 @@
 // Auswertung (Schritt 8): Teamvergleich, Kennzahlen, Konfidenz und Replay aus den Protokollen der Teams.
 //
 // Reine Funktionen von Inhalten und Protokollen – dieselben Zahlen in jedem Fenster (Plenum, Spielleitung)
-// und im Export. Die Auswertung bleibt bei der Ethik: Sie zeigt, wer im Team an welcher Stufe was entschieden
-// hat und was beim Einschlag wirklich getroffen wurde – nie Namen von Personen, nur Teams.
+// und im Export. Die Auswertung bleibt bei der Ethik: Sie zeigt, was das Team je Meldung entschieden hat, wie lange es
+// hingeschaut hat (seit 2.6: Sekunden ab Eingang und ab Öffnen, H2.4) und was beim Einschlag wirklich getroffen wurde – nie
+// Namen von Personen, nur Teams.
 //
 // Begriffe
 //  • Fall: Schlüsselfall (S1–S8, Reihenfolge der Auflösung aus den Daten) oder Nebenfall (N1–N4). Zu einem Fall
@@ -10,27 +11,26 @@
 //    Seit 2.4 (E5) sind S5–S8 `zuschaltbar`: Sie stehen im Teamvergleich, das Replay zeigt sie nur, wenn die
 //    Spielleitung sie zuschaltet (replayPlan, Budget 12 min bleibt).
 //  • Ausgang eines Falls je Team:
-//      falsch          – eine Freigabe traf Verbündete, Geschütztes, Zivilpersonen, die Attrappe oder Wehrlose,
+//      falsch          – eine Bekämpfung traf Verbündete, Geschütztes, Zivilpersonen, die Attrappe oder Wehrlose,
 //                        oder schlug unter Verstoß gegen R2/R3 ein (Lage beim Einschlag)
-//      richtig         – nichts davon; das Team hat gestoppt, zurückgestellt oder (bei echtem Ziel) sauber bekämpft
+//      richtig         – nichts davon; das Team hat abgelehnt, zurückgestellt oder (bei echtem Ziel) sauber bekämpft
 //      verpasst        – echtes Ziel, das nach der Lösung bekämpft werden sollte, aber abgelehnt wurde (N3)
-//      offen           – bei Spielende noch in der Kette
-//      entfallen       – Fahrzeug zerstört oder abgezogen, bevor jemand entschied
+//      offen           – bei Spielende noch im Eingang
+//      entfallen       – Fahrzeug zerstört oder abgezogen, bevor das Team entschied
 //      nicht_erreicht  – die Meldung kam nicht (Spiel vorher beendet)
-//  • Widerspruch gegen ARGUS: Das Team hat am Ende anders gehandelt, als ARGUS empfahl – BEKÄMPFEN, aber ein Mensch
-//    hat gestoppt (G1 ABLEHNEN, G2 NICHT BEKÄMPFEN/BEOBACHTEN, G3 ABLEHNEN/ZURÜCK) und es kam zu keiner Wirkung;
-//    oder NICHT BEKÄMPFEN, aber das Team hat bekämpft. Zu Recht, wenn die Lösung im Szenario das Stoppen verlangt
-//    bzw. die Wirkung ohne Fehltreffer und ohne Regelverstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man
-//    widersprechen könnte.
+//  • Widerspruch gegen ARGUS: Das Team hat anders gehandelt, als ARGUS empfahl – BEKÄMPFEN, aber das Team hat abgelehnt oder
+//    zurückgestellt und es kam zu keiner Wirkung; oder NICHT BEKÄMPFEN, aber das Team hat bekämpft. Zu Recht, wenn die Lösung im
+//    Szenario das verlangt bzw. die Wirkung ohne Fehltreffer und ohne Regelverstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der
+//    man widersprechen könnte.
 import { mitVerlusten, panzer, type Stufe, verlustStand, verlustVerlauf } from "./verluste";
 import type { Inhalte, Meldung, Nebenfall, Schluesselfall } from "../inhalte/typen";
-import type { Ereignis } from "./ereignisse";
+import type { Entscheid, Ereignis } from "./ereignisse";
 import { gtBei } from "./geometrie";
 import { durchgebrochen } from "./durchbruch";
 import { elokaAktiv } from "./eloka";
 import { weltFuer } from "./lage";
 import { FEHL } from "./lagebild";
-import { ROLLEN_DATIV, ROLLEN_NAME, ROLLEN_ZEICHEN } from "./sichten";
+import { ENTSCHEID_TEXT } from "./sichten";
 import { uhrzeit } from "./uhr";
 import { zielNr } from "./zielnummern";
 import { type Spielzustand, anfangsZustand, anwenden } from "./zustand";
@@ -49,7 +49,6 @@ export interface TeamLauf {
   protokoll: Ereignis[];
 }
 
-export type Stufe3 = "g1" | "g2" | "g3";
 export type FallAusgang = "richtig" | "falsch" | "verpasst" | "offen" | "entfallen" | "nicht_erreicht";
 
 export const AUSGANG_TEXT: Record<FallAusgang, string> = {
@@ -158,16 +157,16 @@ export function replayPlan(inh: Inhalte, auswahl?: string[] | null, mitPreis = f
 
 // ---------------------------------------------------------------- Verlauf je Meldung aus dem Protokoll
 
+/** Eine Entscheidung des Teams (seit 2.6 eine je Meldung; nach ZURÜCKSTELLEN kann eine zweite folgen). */
 export interface Entscheidung {
-  stufe: Stufe3;
   t: number;
-  /** annehmen, ablehnen · bekaempfen, beobachten, nicht_bekaempfen · freigabe, ablehnen, zurueck */
-  was: string;
+  was: Entscheid;
   wirkmittel?: string;
-  /** Vermerk, Begründung, Bemerkung (Freitext) */
-  text?: string;
-  /** Regelwarnungen, die diese Stufe gesehen hat (G2, G3) */
+  /** Regelwarnungen beim BEKÄMPFEN (am vorausberechneten Einschlagort) */
   warnungen?: string[];
+  /** Sekunden ab Eingang (Erscheinen) und ab Öffnen bis zu dieser Entscheidung (H2.4) */
+  sekEingang?: number;
+  sekOffen?: number;
 }
 
 export type FehlArt = "verbuendet" | "geschuetzt" | "zivil" | "attrappe" | "ausser_gefecht";
@@ -177,7 +176,7 @@ export const FEHL_TEXT: Record<FehlArt, string> = {
   geschuetzt: "Sanität",
   zivil: "Zivilpersonen",
   attrappe: "Attrappe",
-  ausser_gefecht: "Wehrlose", // Besatzung, die sich ergibt (N1), Verwundete am Wrack (S6)
+  ausser_gefecht: "Wehrlose", // Besatzung, die sich ergibt (N2), Verwundete am Wrack (S6)
 };
 
 export interface WirkungInfo {
@@ -197,13 +196,13 @@ export interface WirkungInfo {
 export interface MeldungsVerlauf {
   id: string;
   t: number;
-  fastTrack: boolean;
   entscheidungen: Entscheidung[];
   wirkung?: WirkungInfo;
-  entfallen?: { t: number; stufe: Stufe3 | "meldung"; grund: string };
+  /** entfallen (vor einer Entscheidung oder während sie zurückgestellt war); beimErscheinen: schon beim Erscheinen */
+  entfallen?: { t: number; grund: string; beimErscheinen?: boolean };
   /** Stand bei Spielende */
   stufe: string;
-  /** zurückgestellt (BEOBACHTEN) und bei Spielende noch bei G2 */
+  /** zurückgestellt und bei Spielende noch offen */
   zurueckgestellt: boolean;
 }
 
@@ -225,25 +224,22 @@ export function meldungsVerlaeufe(team: TeamLauf): Map<string, MeldungsVerlauf> 
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
     out.set(id, {
-      id, t: st.erschienen.t_s, fastTrack: st.fastTrack, entscheidungen: [], stufe: st.stufe,
-      zurueckgestellt: st.stufe === "g2" && st.beobachten,
-      ...(st.stufe === "entfallen" && !st.entfallen ? { entfallen: { t: st.erschienen.t_s, stufe: "meldung" as const, grund: "schon beim Erscheinen" } } : {}),
+      id, t: st.erschienen.t_s, entscheidungen: [], stufe: st.stufe,
+      zurueckgestellt: st.stufe === "offen" && st.zurueckgestellt,
+      ...(st.stufe === "entfallen" && !st.entfallen ? { entfallen: { t: st.erschienen.t_s, grund: "schon beim Erscheinen", beimErscheinen: true } } : {}),
     });
   }
   for (const e of team.protokoll) {
-    if (e.typ === "g1_entscheid" || e.typ === "g2_empfehlung" || e.typ === "g3_entscheid") {
+    if (e.typ === "entscheid") {
       const mv = out.get(e.daten.meldung);
       if (!mv) continue;
-      // Vermerk der Aufklärung gibt es seit B6 nicht mehr (ältere Läufe: wird nicht mehr gezeigt)
-      if (e.typ === "g1_entscheid") mv.entscheidungen.push({ stufe: "g1", t: e.t_s, was: e.daten.entscheid });
-      else if (e.typ === "g2_empfehlung") {
-        mv.entscheidungen.push({ stufe: "g2", t: e.t_s, was: e.daten.empfehlung, wirkmittel: e.daten.wirkmittel, text: e.daten.begruendung, warnungen: e.daten.warnungen ?? [] });
-      } else {
-        mv.entscheidungen.push({ stufe: "g3", t: e.t_s, was: e.daten.entscheid, wirkmittel: e.daten.wirkmittel, text: e.daten.bemerkung, warnungen: e.daten.warnungen ?? [] });
-      }
+      mv.entscheidungen.push({
+        t: e.t_s, was: e.daten.entscheid, wirkmittel: e.daten.wirkmittel, warnungen: e.daten.warnungen ?? [],
+        sekEingang: e.daten.sek_eingang, sekOffen: e.daten.sek_offen,
+      });
     } else if (e.typ === "meldung_entfaellt") {
       const mv = out.get(e.daten.meldung);
-      if (mv && !mv.entfallen) mv.entfallen = { t: e.t_s, stufe: e.daten.stufe, grund: e.daten.grund };
+      if (mv && !mv.entfallen) mv.entfallen = { t: e.t_s, grund: e.daten.grund };
     }
   }
   for (const id of z.reihenfolge) {
@@ -265,11 +261,11 @@ export function meldungsVerlaeufe(team: TeamLauf): Map<string, MeldungsVerlauf> 
   return out;
 }
 
-/** Letzte Entscheidung einer Stufe (und ob es davor schon eine andere gab). */
-function letzte(mv: MeldungsVerlauf, stufe: Stufe3): { e: Entscheidung; vorher?: Entscheidung } | null {
-  const liste = mv.entscheidungen.filter((x) => x.stufe === stufe);
-  if (!liste.length) return null;
-  return { e: liste[liste.length - 1], vorher: liste.length > 1 ? liste[0] : undefined };
+/** Letzte Entscheidung (und ob es davor eine andere gab, z. B. erst zurückgestellt). */
+function letzte(mv: MeldungsVerlauf): { e: Entscheidung; vorher?: Entscheidung } | null {
+  const l = mv.entscheidungen;
+  if (!l.length) return null;
+  return { e: l[l.length - 1], vorher: l.length > 1 ? l[0] : undefined };
 }
 
 /** Wurde die Meldung bekämpft, und war das fehlerhaft (Fehltreffer oder Regelverstoß beim Einschlag)? */
@@ -277,16 +273,9 @@ export function wirkungFehlerhaft(w: WirkungInfo | undefined): boolean {
   return !!w && (w.fehl.length > 0 || w.verstoesse.some((v) => v.startsWith("R2") || v.startsWith("R3")));
 }
 
-/**
- * Soll die Meldung nach der Lösung im Szenario bekämpft werden? Nein, wenn G1 ablehnen, G2 zurückstellen oder nicht
- * bekämpfen oder G3 ablehnen bzw. nicht freigeben soll (z. B. S3: G1/G2 nehmen an, G3 lehnt ab).
- */
+/** Soll die Meldung nach der Lösung im Szenario bekämpft werden? (seit 2.6 eine Entscheidung je Meldung) */
 export function sollBekaempfen(m: Meldung): boolean {
-  const l = m.loesung ?? { G1: "ANNEHMEN", G2: "BEKÄMPFEN", G3: "FREIGABE" };
-  if (/^ABLEHNEN/i.test(l.G1.trim())) return false;
-  if (/^(BEOBACHTEN|NICHT)/i.test(l.G2.trim())) return false;
-  if (/^(ABLEHNEN|keine|nicht)/i.test(l.G3.trim())) return false;
-  return true;
+  return (m.loesung?.entscheid ?? "BEKÄMPFEN") === "BEKÄMPFEN";
 }
 
 /** Hat ARGUS falsch empfohlen? (BEKÄMPFEN, aber das Ziel war zur Meldezeit nicht legitim – wie pruefe_szenario.py.) */
@@ -295,77 +284,71 @@ export function argusFalsch(inh: Inhalte, m: Meldung): boolean {
   return !m.ziele.every((id) => !inh.ziele[id] || gtBei(inh.ziele[id], m.t_s).legitim);
 }
 
-// ---------------------------------------------------------------- Kette und Fall
+// ---------------------------------------------------------------- Entscheidung und Fall
 
-export type GliedArt = "weiter" | "halt" | "warten" | "ft" | "leer" | "offen";
+export type GliedArt = "weiter" | "halt" | "warten" | "leer" | "offen";
 
+/** Die Entscheidung des Teams zu einer Meldung, wie Teamvergleich und Replay sie zeigen. */
 export interface KettenGlied {
-  stufe: Stufe3;
-  /** kurz: ✓ ✕ ◷ ↩ FT – … */
+  /** kurz: ✓ (bekämpft) ✕ (abgelehnt) ◷ (zurückgestellt) … – */
   zeichen: string;
   art: GliedArt;
   /** ausführlich (Tooltip, Replay) */
   titel: string;
   t?: number;
-  /** diese Stufe hat den Ausgang entschieden */
-  entscheidend?: boolean;
-  /** davor anders entschieden (z. B. erst zurückgestellt) */
+  was?: Entscheid;
+  wirkmittel?: string;
+  /** Sekunden ab Eingang bis zu dieser Entscheidung */
+  sek?: number;
+  /** Sekunden ab Öffnen */
+  sekOffen?: number;
+  /** davor anders entschieden (erst zurückgestellt) */
   vorher?: string;
 }
 
 export interface Kette {
   meldung: string;
-  glieder: KettenGlied[];
+  glied: KettenGlied;
   /** Einschlag: ✸, Fehltreffer rot */
   einschlag?: { t: number; fehl: boolean; text: string; regel: boolean };
 }
 
-const WAS_TEXT: Record<string, string> = {
-  annehmen: "ANNEHMEN", ablehnen: "ABLEHNEN", bekaempfen: "BEKÄMPFEN", beobachten: "BEOBACHTEN (zurückgestellt)",
-  nicht_bekaempfen: "NICHT BEKÄMPFEN", freigabe: "FREIGABE", zurueck: "ZURÜCK AN ZIELPRÜFUNG",
-};
+const WAS_TEXT: Record<Entscheid, string> = { bekaempfen: "BEKÄMPFEN", zurueckstellen: "ZURÜCKSTELLEN", ablehnen: "ABLEHNEN" };
+const WAS_ZEICHEN: Record<Entscheid, string> = { bekaempfen: "✓", zurueckstellen: "◷", ablehnen: "✕" };
+const WAS_ART: Record<Entscheid, GliedArt> = { bekaempfen: "weiter", zurueckstellen: "warten", ablehnen: "halt" };
 
-/** Kette Aufklärung → Zielprüfung → Führung → Einschlag einer Meldung, wie das Team sie durchlaufen hat. */
+/** Sekunden lesbar: „14 s“. */
+export function sekText(s: number | undefined | null): string {
+  return s === undefined || s === null ? "" : `${Math.round(s)} s`;
+}
+
+/** Die Entscheidung des Teams zu einer Meldung und der Einschlag. */
 export function kette(inh: Inhalte, mv: MeldungsVerlauf | undefined, meldung: string): Kette {
   const start = (inh.basis ?? inh).szenario.spieluhr.start;
   const uz = (t?: number) => (t === undefined ? "" : ` ${uhrzeit(start, t)}`);
-  const R = ROLLEN_NAME;
-  if (!mv) return { meldung, glieder: (["g1", "g2", "g3"] as Stufe3[]).map((s) => ({ stufe: s, zeichen: "–", art: "leer" as const, titel: `${R[s]}: Meldung kam nicht` })) };
-  const glieder: KettenGlied[] = [];
-  // Aufklärung
-  const g1 = letzte(mv, "g1");
-  if (mv.fastTrack) glieder.push({ stufe: "g1", zeichen: "FT", art: "ft", titel: `${R.g1}: Fast-Track – die Aufklärung hat die Meldung nicht gesehen` });
-  else if (g1) glieder.push({ stufe: "g1", zeichen: g1.e.was === "annehmen" ? "✓" : "✕", art: g1.e.was === "annehmen" ? "weiter" : "halt", t: g1.e.t, titel: `${R.g1}: ${WAS_TEXT[g1.e.was]}${uz(g1.e.t)}` });
-  else glieder.push({ stufe: "g1", zeichen: mv.stufe === "g1" ? "…" : "–", art: mv.stufe === "g1" ? "offen" : "leer", titel: mv.stufe === "g1" ? `${R.g1}: bei Spielende noch offen` : `${R.g1}: –` });
-  // Zielprüfung
-  const g2 = letzte(mv, "g2");
-  if (g2) {
-    const e = g2.e;
-    const art: GliedArt = e.was === "bekaempfen" ? "weiter" : e.was === "beobachten" ? "warten" : "halt";
-    const vorher = g2.vorher && g2.vorher.was !== e.was ? `erst ${WAS_TEXT[g2.vorher.was]}${uz(g2.vorher.t)}` : undefined;
-    glieder.push({
-      stufe: "g2", zeichen: e.was === "bekaempfen" ? "✓" : e.was === "beobachten" ? "◷" : "✕",
-      art, t: e.t, vorher,
-      titel: `${R.g2}: ${WAS_TEXT[e.was]}${e.wirkmittel ? ` mit ${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel}` : ""}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` · Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
-    });
-  } else glieder.push({ stufe: "g2", zeichen: mv.stufe === "g2" ? "…" : "–", art: mv.stufe === "g2" ? "offen" : "leer", titel: mv.stufe === "g2" ? `${R.g2}: bei Spielende noch offen` : `${R.g2}: –` });
-  // Führung
-  const g3 = letzte(mv, "g3");
-  if (g3) {
-    const e = g3.e;
-    const vorher = g3.vorher && g3.vorher.was !== e.was ? `erst ${WAS_TEXT[g3.vorher.was]}${uz(g3.vorher.t)}` : undefined;
-    glieder.push({
-      stufe: "g3", zeichen: e.was === "freigabe" ? "✓" : e.was === "zurueck" ? "↩" : "✕", art: e.was === "freigabe" ? "weiter" : e.was === "zurueck" ? "warten" : "halt",
-      t: e.t, vorher,
-      titel: `${R.g3}: ${WAS_TEXT[e.was]}${uz(e.t)}${vorher ? ` (${vorher})` : ""}${e.warnungen?.length ? ` trotz Warnung: ${e.warnungen[0]}` : ""}${e.text ? ` – „${e.text}“` : ""}`,
-    });
-  } else glieder.push({ stufe: "g3", zeichen: mv.stufe === "g3" ? "…" : "–", art: mv.stufe === "g3" ? "offen" : "leer", titel: mv.stufe === "g3" ? `${R.g3}: bei Spielende noch offen` : `${R.g3}: –` });
+  if (!mv) return { meldung, glied: { zeichen: "–", art: "leer", titel: "Meldung kam nicht" } };
+  const l = letzte(mv);
+  let glied: KettenGlied;
+  if (l) {
+    const e = l.e;
+    const vorher = l.vorher && l.vorher.was !== e.was ? `erst ${WAS_TEXT[l.vorher.was]}${uz(l.vorher.t)}` : undefined;
+    const wm = e.wirkmittel ? ` mit ${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel}` : "";
+    const sek = e.sekEingang !== undefined ? ` nach ${sekText(e.sekEingang)}${e.sekOffen !== undefined ? ` (${sekText(e.sekOffen)} angesehen)` : ""}` : "";
+    glied = {
+      zeichen: WAS_ZEICHEN[e.was], art: WAS_ART[e.was], t: e.t, was: e.was, wirkmittel: e.wirkmittel, sek: e.sekEingang, sekOffen: e.sekOffen, vorher,
+      titel: `${WAS_TEXT[e.was]}${wm}${uz(e.t)}${sek}${vorher ? ` (${vorher})` : ""}${e.warnungen?.some(regelWarnung) ? ` trotz Warnung: ${e.warnungen.find(regelWarnung)}` : ""}`,
+    };
+  } else {
+    glied = mv.stufe === "offen"
+      ? { zeichen: "…", art: "offen", titel: "bei Spielende noch im Eingang" }
+      : { zeichen: "–", art: "leer", titel: mv.entfallen ? `entfallen – ${mv.entfallen.grund}` : "–" };
+  }
   const w = mv.wirkung;
   const einschlag = w ? {
     t: w.t, fehl: w.fehl.length > 0, regel: w.verstoesse.length > 0,
     text: `Einschlag${uz(w.t)} (${inh.wirkmittel[w.wirkmittel]?.kurz ?? w.wirkmittel}): ${w.treffer.length ? w.treffer.join(", ") : "nichts getroffen"}${w.verstoesse.length ? ` · ${w.verstoesse.map((v) => v.split(" – ")[0]).join(", ")}` : ""}`,
   } : undefined;
-  return { meldung, glieder, einschlag };
+  return { meldung, glied, einschlag };
 }
 
 export interface FallErgebnis {
@@ -375,18 +358,15 @@ export interface FallErgebnis {
   text: string;
   /** zwei kurze Zeilen für die Zelle im Teamvergleich: was entschieden wurde, und was folgte */
   zeilen: string[];
-  /** Stufe, die den Ausgang entschieden hat */
-  stufe?: Stufe3;
   t?: number;
-  /** Kette der Meldung des Falls (Folgemeldungen in `folge`) */
+  /** Sekunden ab Eingang bis zur Entscheidung der Fall-Meldung (H2.4) */
+  sek?: number;
+  /** Entscheidung zur Meldung des Falls (Folgemeldungen in `folge`) */
   kette: Kette;
   folge: Kette[];
-  fastTrack: boolean;
 }
 
-const STUFE_HALT: Record<string, string> = {
-  ablehnen: "lehnt ab", nicht_bekaempfen: "nicht bekämpfen", beobachten: "stellt zurück", zurueck: "zurück an die Zielprüfung",
-};
+const HALT: Partial<Record<Entscheid, string>> = { ablehnen: "ABLEHNEN", zurueckstellen: "ZURÜCKSTELLEN" };
 
 /** Ausgang eines Falls für ein Team. */
 export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlauf>, f: FallDef, zSpielende: boolean): FallErgebnis {
@@ -396,44 +376,40 @@ export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlau
   const ids = [f.meldung, ...f.folge];
   const k = kette(inh, haupt, f.meldung);
   const folge = f.folge.map((id) => kette(inh, verlaeufe.get(id), id));
-  const markiere = (stufe: Stufe3 | undefined, kt: Kette = k) => {
-    for (const g of kt.glieder) g.entscheidend = g.stufe === stufe;
-  };
-  const basis = { fall: f.id, kette: k, folge, fastTrack: !!haupt?.fastTrack };
+  const basis = { fall: f.id, kette: k, folge, sek: k.glied.sek };
   const wmKurz = (w: WirkungInfo) => inh.wirkmittel[w.wirkmittel]?.kurz ?? w.wirkmittel;
-  const erg = (ausgang: FallAusgang, zeilen: (string | undefined)[], stufe?: Stufe3, t?: number): FallErgebnis => {
+  const erg = (ausgang: FallAusgang, zeilen: (string | undefined)[], t?: number): FallErgebnis => {
     const z = zeilen.filter((x): x is string => !!x);
-    return { ...basis, ausgang, zeilen: z, text: z.join(" · "), stufe, t };
+    return { ...basis, ausgang, zeilen: z, text: z.join(" · "), t };
   };
+  const nach = (g: KettenGlied) => (g.sek !== undefined ? ` · ${sekText(g.sek)}` : "");
 
-  // falsch: eine Freigabe im Fall traf, was nicht bekämpft werden durfte, oder verstieß beim Einschlag gegen R2/R3
+  // falsch: eine Bekämpfung im Fall traf, was nicht bekämpft werden durfte, oder verstieß beim Einschlag gegen R2/R3
   for (const id of ids) {
     const mv = verlaeufe.get(id);
     if (!mv?.wirkung || !wirkungFehlerhaft(mv.wirkung)) continue;
     const w = mv.wirkung;
     const kt = id === f.meldung ? k : folge[f.folge.indexOf(id)];
-    markiere("g3", kt);
     const was = w.fehl.length ? `→ ${w.fehl.map((x) => FEHL_TEXT[x]).join(", ")} getroffen` : `→ Verstoß ${w.verstoesse.map((v) => v.split(":")[0]).join(", ")}`;
-    return erg("falsch", [`${id !== f.meldung ? `${zielText(inh, id)} ` : ""}FREIGABE ${uz(w.t_freigabe)} (${wmKurz(w)})`, was], "g3", w.t_freigabe);
+    return erg("falsch", [`${id !== f.meldung ? `${zielText(inh, id)} ` : ""}BEKÄMPFEN ${uz(w.t_freigabe)} (${wmKurz(w)})${nach(kt.glied)}`, was], w.t_freigabe);
   }
   if (!haupt) return erg("nicht_erreicht", [zSpielende ? `${zielText(inh, f.meldung)} kam vor Spielende nicht` : `${zielText(inh, f.meldung)} kommt noch`]);
   const m = inh.meldungen[f.meldung];
   const soll = m ? sollBekaempfen(m) : true;
-  // Wer hat gestoppt? (letzte stoppende Entscheidung, falls am Ende keine Wirkung)
   const stopp = stoppVon(haupt);
-  const stoppText = (e: Entscheidung) => `${ROLLEN_NAME[e.stufe]} ${STUFE_HALT[e.was] ?? e.was} ${uz(e.t)}`;
+  const stoppText = (e: Entscheidung) => `${HALT[e.was] ?? WAS_TEXT[e.was]} ${uz(e.t)}${e.sekEingang !== undefined ? ` · ${sekText(e.sekEingang)}` : ""}`;
   const folgeText = () => {
     const teile: string[] = [];
     for (const id of f.folge) {
       const mv = verlaeufe.get(id);
       if (!mv) continue;
       const zt = zielText(inh, id);
-      if (mv.wirkung) teile.push(`${zt} FREIGABE ${uz(mv.wirkung.t_freigabe)}`);
+      if (mv.wirkung) teile.push(`${zt} BEKÄMPFEN ${uz(mv.wirkung.t_freigabe)}`);
       else if (mv.entfallen) teile.push(`${zt} entfallen`);
-      else if (mv.stufe === "g1" || mv.stufe === "g2" || mv.stufe === "g3") teile.push(`${zt} offen bei ${ROLLEN_DATIV[mv.stufe]}`);
+      else if (mv.stufe === "offen") teile.push(`${zt} ${mv.zurueckgestellt ? "zurückgestellt" : "offen"}`);
       else {
         const s = stoppVon(mv);
-        teile.push(s ? `${zt}: ${ROLLEN_NAME[s.stufe]} ${STUFE_HALT[s.was] ?? s.was}` : `${zt} erledigt`);
+        teile.push(s ? `${zt}: ${HALT[s.was] ?? WAS_TEXT[s.was]}` : `${zt} erledigt`);
       }
     }
     return teile.length ? teile.join(", ") : undefined;
@@ -441,63 +417,58 @@ export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlau
 
   if (haupt.wirkung) {
     // bekämpft ohne Fehltreffer und ohne Verstoß: echtes Ziel, sauber getroffen
-    markiere("g3");
-    return erg("richtig", [`FREIGABE ${uz(haupt.wirkung.t_freigabe)} (${wmKurz(haupt.wirkung)})`, folgeText() ?? "ohne Fehltreffer"], "g3", haupt.wirkung.t_freigabe);
+    return erg("richtig", [`BEKÄMPFEN ${uz(haupt.wirkung.t_freigabe)} (${wmKurz(haupt.wirkung)})${nach(k.glied)}`, folgeText() ?? "ohne Fehltreffer"], haupt.wirkung.t_freigabe);
   }
   if (haupt.stufe === "erledigt" && stopp) {
-    markiere(stopp.stufe);
-    return soll ? erg("verpasst", [stoppText(stopp), "Ziel war echt"], stopp.stufe, stopp.t) : erg("richtig", [stoppText(stopp), folgeText()], stopp.stufe, stopp.t);
+    return soll ? erg("verpasst", [stoppText(stopp), "Ziel war echt"], stopp.t) : erg("richtig", [stoppText(stopp), folgeText()], stopp.t);
   }
   if (haupt.zurueckgestellt && stopp) {
-    markiere("g2");
-    return erg("richtig", [stoppText(stopp), folgeText() ?? "bis Spielende zurückgestellt"], "g2", stopp.t);
+    return erg("richtig", [stoppText(stopp), folgeText() ?? "bis Spielende zurückgestellt"], stopp.t);
   }
   if (haupt.entfallen) {
-    if (stopp) markiere(stopp.stufe);
-    const wo = haupt.entfallen.stufe !== "meldung" ? ` bei ${ROLLEN_DATIV[haupt.entfallen.stufe]}` : "";
-    return erg(stopp && !soll ? "richtig" : "entfallen", [stopp ? stoppText(stopp) : undefined, `entfallen${wo} – ${haupt.entfallen.grund}`, folgeText()], stopp?.stufe, stopp?.t);
+    return erg(stopp && !soll ? "richtig" : "entfallen", [stopp ? stoppText(stopp) : undefined, `entfallen – ${haupt.entfallen.grund}`, folgeText()], stopp?.t);
   }
-  if (haupt.stufe === "wirkung") return erg("offen", ["freigegeben", "Einschlag nach Spielende"], "g3");
-  return erg("offen", [`${zSpielende ? "bei Spielende" : "jetzt"} bei ${haupt.stufe === "g1" || haupt.stufe === "g2" || haupt.stufe === "g3" ? ROLLEN_DATIV[haupt.stufe] : haupt.stufe}`, folgeText()]);
+  if (haupt.stufe === "wirkung") return erg("offen", ["bekämpft", "Einschlag nach Spielende"]);
+  return erg("offen", [`${zSpielende ? "bei Spielende" : "jetzt"} im Eingang`, folgeText()]);
 }
 
+/** Letzte Entscheidung, die nicht bekämpft hat (ABLEHNEN oder ZURÜCKSTELLEN). */
 function stoppVon(mv: MeldungsVerlauf): Entscheidung | undefined {
-  return [...mv.entscheidungen].reverse().find((e) => (e.stufe === "g1" && e.was === "ablehnen") || (e.stufe === "g2" && e.was !== "bekaempfen")
-    || (e.stufe === "g3" && e.was !== "freigabe"));
+  return [...mv.entscheidungen].reverse().find((e) => e.was !== "bekaempfen");
 }
 
 // ---------------------------------------------------------------- Kennzahlen
 
-export interface StufenZeiten {
-  g1: number | null;
-  g2: number | null;
-  g3: number | null;
-  n: { g1: number; g2: number; g3: number };
+/** Ab dieser Konfidenz trennt die Kennzahl „Wie lange habt ihr hingeschaut?“ (wie die frühere Fast-Track-Schwelle). */
+export const KONFIDENZ_HOCH = 90;
+
+export interface TempoZeiten {
+  /** Median der Sekunden ab Eingang bzw. ab Öffnen bis zur Entscheidung */
+  eingang: number | null;
+  offen: number | null;
+  n: number;
 }
 
 export interface Widerspruch {
   meldung: string;
-  stufe: Stufe3;
   t: number;
   argus: string;
   recht: boolean;
 }
 
 export interface Kennzahlen {
-  meldungen: { erschienen: number; bearbeitet: number; gesamt: number };
+  meldungen: { erschienen: number; bearbeitet: number; gesamt: number; offenEnde: number };
   feind: { bekaempft: number; gemeldet: number };
   fehl: { wirkungen: number; arten: { art: FehlArt; anzahl: number }[]; liste: { meldung: string; t: number; arten: FehlArt[]; konfidenz: number }[] };
-  /** Freigaben, obwohl G3 eine Regelwarnung zum Einschlag sah */
+  /** Bekämpfungen, obwohl das System eine Regelwarnung zum Einschlag zeigte */
   trotzWarnung: number;
-  /** Freigaben durch G3 (je Meldung) und davon solche, bei denen ARGUS BEKÄMPFEN empfahl */
+  /** Bekämpfungen (je Meldung) und davon solche, bei denen ARGUS BEKÄMPFEN empfahl */
   freigaben: { gesamt: number; wieArgus: number };
   widerspruch: { gesamt: number; zuRecht: number; zuUnrecht: number; liste: Widerspruch[] };
-  /** Median der Bearbeitungszeit je Stufe (s): alle, Konfidenz ≥ Schwelle, darunter */
-  zeiten: { alle: StufenZeiten; hoch: StufenZeiten; niedrig: StufenZeiten; schwelle: number };
-  fastTrack: { an: boolean; seit?: number; angebot?: number; wechsel: { t: number; an: boolean }[]; meldungen: number };
-  /** Lagemeldungen zu einem Fall (I-04, I-07): erschienen, gelesen (quittiert) */
+  /** Wie lange habt ihr hingeschaut? (H2.4) – alle, Konfidenz ≥ KONFIDENZ_HOCH, darunter; dazu die schnellste und die längste Entscheidung */
+  zeiten: { alle: TempoZeiten; hoch: TempoZeiten; niedrig: TempoZeiten; schwelle: number; kuerzeste: number | null; laengste: number | null; unter20: number };
+  /** Lagemeldungen zu einem Fall (I-04, I-07): erschienen, angeklickt */
   lagemeldungen: { id: string; fall: string; erschienen?: number; gelesen?: number }[];
-  lagehinweise: { anzahl: number; liste: { t: number; an: string[]; text: string }[]; ersterNach?: number };
   /** Seit 2.1: Feindfahrzeuge, die nicht aufgehalten wurden und über den Bach durchbrachen (Kennzahl, keine Wertung) */
   durchbruch: { fahrzeuge: string[]; gruppen: string[]; erstesUeber: number | null };
   /**
@@ -521,27 +492,11 @@ function median(werte: number[]): number | null {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-/** Bearbeitungszeiten einer Meldung je Stufe: Eingang bei der Stufe bis zur ersten Entscheidung dort (jede Runde). */
-function bearbeitung(mv: MeldungsVerlauf): { stufe: Stufe3; dauer: number }[] {
-  const out: { stufe: Stufe3; dauer: number }[] = [];
-  let bei: Stufe3 | null = mv.fastTrack ? "g2" : "g1";
-  let seit = mv.t;
-  for (const e of mv.entscheidungen) {
-    if (e.stufe !== bei) continue;
-    out.push({ stufe: e.stufe, dauer: Math.max(0, e.t - seit) });
-    seit = e.t;
-    if (e.stufe === "g1") bei = e.was === "annehmen" ? "g2" : null;
-    else if (e.stufe === "g2") bei = e.was === "bekaempfen" ? "g3" : e.was === "beobachten" ? "g2" : null;
-    else bei = e.was === "zurueck" ? "g2" : null;
-  }
-  return out;
-}
-
-function stufenZeiten(listen: { stufe: Stufe3; dauer: number }[]): StufenZeiten {
-  const je = (s: Stufe3) => listen.filter((x) => x.stufe === s).map((x) => x.dauer);
+function tempoZeiten(liste: Entscheidung[]): TempoZeiten {
   return {
-    g1: median(je("g1")), g2: median(je("g2")), g3: median(je("g3")),
-    n: { g1: je("g1").length, g2: je("g2").length, g3: je("g3").length },
+    eingang: median(liste.map((e) => e.sekEingang).filter((x): x is number => x !== undefined)),
+    offen: median(liste.map((e) => e.sekOffen).filter((x): x is number => x !== undefined)),
+    n: liste.length,
   };
 }
 
@@ -557,7 +512,6 @@ export function fallInjects(inh: Inhalte): { id: string; fall: string; t: number
 export function kennzahlen(basis: Inhalte, team: TeamLauf, verlaeufe = meldungsVerlaeufe(team)): Kennzahlen {
   const z = team.zustand;
   const inh = weltFuer(basis, z);
-  const schwelle = inh.regeln.fast_track.schwelle;
   const liste = [...verlaeufe.values()];
   // Fehlbekämpfungen
   const arten = new Map<FehlArt, number>();
@@ -585,52 +539,47 @@ export function kennzahlen(basis: Inhalte, team: TeamLauf, verlaeufe = meldungsV
     if (emp === "BEKÄMPFEN" && !mv.wirkung && mv.stufe !== "wirkung") {
       const s = stoppVon(mv);
       if (!s || !(mv.stufe === "erledigt" || mv.zurueckgestellt || mv.entfallen)) continue;
-      widerspruch.push({ meldung: mv.id, stufe: s.stufe, t: s.t, argus: emp, recht: !sollBekaempfen(m) });
+      widerspruch.push({ meldung: mv.id, t: s.t, argus: emp, recht: !sollBekaempfen(m) });
     } else if (emp === "NICHT BEKÄMPFEN" && (mv.wirkung || mv.stufe === "wirkung")) {
-      const g3 = letzte(mv, "g3");
-      widerspruch.push({ meldung: mv.id, stufe: "g3", t: g3?.e.t ?? mv.t, argus: emp, recht: !!mv.wirkung && !wirkungFehlerhaft(mv.wirkung) });
+      const l = letzte(mv);
+      widerspruch.push({ meldung: mv.id, t: l?.e.t ?? mv.t, argus: emp, recht: !!mv.wirkung && !wirkungFehlerhaft(mv.wirkung) });
     }
   }
-  // Zeiten
-  const alle: { stufe: Stufe3; dauer: number }[] = [];
-  const hoch: { stufe: Stufe3; dauer: number }[] = [];
-  const niedrig: { stufe: Stufe3; dauer: number }[] = [];
+  // Wie lange habt ihr hingeschaut? (je Entscheidung)
+  const alle: Entscheidung[] = [];
+  const hoch: Entscheidung[] = [];
+  const niedrig: Entscheidung[] = [];
   for (const mv of liste) {
     const k = inh.meldungen[mv.id]?.argus.konfidenz ?? 0;
-    for (const b of bearbeitung(mv)) {
-      alle.push(b);
-      (k >= schwelle ? hoch : niedrig).push(b);
+    for (const e of mv.entscheidungen) {
+      alle.push(e);
+      (k >= KONFIDENZ_HOCH ? hoch : niedrig).push(e);
     }
   }
-  // Fast-Track
-  const wechsel = team.protokoll.filter((e) => e.typ === "fast_track").map((e) => ({ t: e.t_s, an: (e.daten as { an: boolean }).an }));
-  const angebotId = inh.szenario.injects.find((i) => i.aktion === "fast_track_angebot")?.id;
-  const letzterAn = [...wechsel].reverse().find((w) => w.an);
-  // Lagemeldungen zum Fall und Lagehinweise
+  const sekAlle = alle.map((e) => e.sekEingang).filter((x): x is number => x !== undefined);
   const lm = fallInjects(inh).map((i) => ({ id: i.id, fall: i.fall, erschienen: z.injects[i.id]?.erschienen.t_s, gelesen: z.injects[i.id]?.quittiert?.t_s }));
-  const ersteLm = lm[0]?.erschienen;
-  const hinweise = z.lagehinweise.map((l) => ({ t: l.t_s, an: l.an, text: l.text }));
+  const bekaempfung = (mv: MeldungsVerlauf) => mv.entscheidungen.some((e) => e.was === "bekaempfen");
   return {
     meldungen: {
       erschienen: z.reihenfolge.filter((id) => !(z.meldungen[id].stufe === "entfallen" && !z.meldungen[id].entfallen)).length,
       bearbeitet: liste.filter((mv) => mv.entscheidungen.length > 0 && (mv.stufe === "erledigt" || mv.stufe === "wirkung" || mv.zurueckgestellt)).length,
       gesamt: inh.szenario.meldungen.length,
+      offenEnde: liste.filter((mv) => mv.stufe === "offen" && !mv.zurueckgestellt).length,
     },
     feind: { bekaempft: bekaempft.size, gemeldet: gemeldet.size },
     fehl: { wirkungen: fehlListe.length, arten: [...arten].map(([art, anzahl]) => ({ art, anzahl })), liste: fehlListe },
-    trotzWarnung: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe" && (e.warnungen ?? []).some(regelWarnung))).length,
+    trotzWarnung: liste.filter((mv) => mv.entscheidungen.some((e) => e.was === "bekaempfen" && (e.warnungen ?? []).some(regelWarnung))).length,
     freigaben: {
-      gesamt: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe")).length,
-      wieArgus: liste.filter((mv) => mv.entscheidungen.some((e) => e.stufe === "g3" && e.was === "freigabe") && inh.meldungen[mv.id]?.argus.empfehlung === "BEKÄMPFEN").length,
+      gesamt: liste.filter(bekaempfung).length,
+      wieArgus: liste.filter((mv) => bekaempfung(mv) && inh.meldungen[mv.id]?.argus.empfehlung === "BEKÄMPFEN").length,
     },
     widerspruch: { gesamt: widerspruch.length, zuRecht: widerspruch.filter((w) => w.recht).length, zuUnrecht: widerspruch.filter((w) => !w.recht).length, liste: widerspruch },
-    zeiten: { alle: stufenZeiten(alle), hoch: stufenZeiten(hoch), niedrig: stufenZeiten(niedrig), schwelle },
-    fastTrack: {
-      an: z.fastTrack, seit: z.fastTrack ? letzterAn?.t : undefined, angebot: angebotId ? z.injects[angebotId]?.erschienen.t_s : undefined,
-      wechsel, meldungen: liste.filter((mv) => mv.fastTrack).length,
+    zeiten: {
+      alle: tempoZeiten(alle), hoch: tempoZeiten(hoch), niedrig: tempoZeiten(niedrig), schwelle: KONFIDENZ_HOCH,
+      kuerzeste: sekAlle.length ? Math.min(...sekAlle) : null, laengste: sekAlle.length ? Math.max(...sekAlle) : null,
+      unter20: sekAlle.filter((x) => x <= 20).length,
     },
     lagemeldungen: lm,
-    lagehinweise: { anzahl: hinweise.length, liste: hinweise, ersterNach: ersteLm !== undefined ? hinweise.find((h) => h.t >= ersteLm)?.t : undefined },
     durchbruch: durchgebrochen(inh, z.durchbrueche ?? {}, z.zerstoert, z.verstaerkungen),
     verluste: verlusteKennzahl(basis, z),
   };
@@ -760,7 +709,7 @@ export function auswerten(basis: Inhalte, teams: TeamLauf[]): Auswertung {
 
 // ---------------------------------------------------------------- Replay
 
-export type MarkenArt = "meldung" | "g1" | "g2" | "g3" | "einschlag" | "gelesen" | "hinweis" | "ft" | "notiz";
+export type MarkenArt = "meldung" | "entscheid" | "einschlag" | "gelesen" | "notiz";
 
 export interface ZeitMarke {
   t: number;
@@ -796,13 +745,7 @@ export function fallFenster(basis: Inhalte, teams: TeamAuswertung[], f: FallDef)
   return [von, bis];
 }
 
-const MARKE_G: Record<string, { zeichen: string; klasse: string }> = {
-  annehmen: { zeichen: "✓", klasse: "weiter" }, ablehnen: { zeichen: "✕", klasse: "halt" },
-  bekaempfen: { zeichen: "✓", klasse: "weiter" }, beobachten: { zeichen: "◷", klasse: "warten" }, nicht_bekaempfen: { zeichen: "✕", klasse: "halt" },
-  freigabe: { zeichen: "✓", klasse: "freigabe" }, zurueck: { zeichen: "↩", klasse: "warten" },
-};
-
-/** Marken eines Teams für die Zeitleiste eines Falls: Meldung → Aufklärung → Zielprüfung → Führung → Einschlag, Lagemeldungen gelesen, Lagehinweise. */
+/** Marken eines Teams für die Zeitleiste eines Falls: Meldung → Entscheidung (mit Sekunden) → Einschlag, Lagemeldungen angeklickt, Notizen. */
 export function zeitleiste(basis: Inhalte, t: TeamAuswertung, f: FallDef): ZeitMarke[] {
   const inh = basis.basis ?? basis;
   const start = inh.szenario.spieluhr.start;
@@ -812,27 +755,23 @@ export function zeitleiste(basis: Inhalte, t: TeamAuswertung, f: FallDef): ZeitM
     const mv = t.verlaeufe.get(id);
     if (!mv) continue;
     const zt = zielText(inh, id);
-    out.push({ t: mv.t, art: "meldung", zeichen: zielNr(inh, null, id), text: `${zt} erscheint ${uz(mv.t)}${mv.fastTrack ? " – Fast-Track direkt an die Zielprüfung" : ""}`, klasse: mv.fastTrack ? "ft" : "info", meldung: id });
+    out.push({ t: mv.t, art: "meldung", zeichen: zielNr(inh, null, id), text: `${zt} im Eingang ${uz(mv.t)}`, klasse: "info", meldung: id });
     for (const e of mv.entscheidungen) {
-      const g = MARKE_G[e.was] ?? { zeichen: "•", klasse: "info" };
+      const sek = e.sekEingang !== undefined ? ` nach ${sekText(e.sekEingang)}${e.sekOffen !== undefined ? ` (${sekText(e.sekOffen)} angesehen)` : ""}` : "";
       out.push({
-        t: e.t, art: e.stufe, zeichen: `${ROLLEN_ZEICHEN[e.stufe]}${g.zeichen}`, klasse: g.klasse, meldung: id,
-        text: `${zt} · ${ROLLEN_NAME[e.stufe]}: ${WAS_TEXT[e.was] ?? e.was}${e.wirkmittel ? ` (${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel})` : ""} ${uz(e.t)}${e.text ? ` – „${e.text}“` : ""}`,
+        t: e.t, art: "entscheid", zeichen: `${WAS_ZEICHEN[e.was]}${e.sekEingang !== undefined ? ` ${Math.round(e.sekEingang)} s` : ""}`, klasse: WAS_ART[e.was] === "weiter" ? "weiter" : WAS_ART[e.was], meldung: id,
+        text: `${zt}: ${ENTSCHEID_TEXT[e.was]}${e.wirkmittel ? ` mit ${inh.wirkmittel[e.wirkmittel]?.kurz ?? e.wirkmittel}` : ""} ${uz(e.t)}${sek}`,
       });
     }
     if (mv.wirkung) {
       const w = mv.wirkung;
       out.push({ t: w.t, art: "einschlag", zeichen: "✸", klasse: wirkungFehlerhaft(w) ? "fehl" : "ok", meldung: id, text: kette(inh, mv, id).einschlag?.text ?? "Einschlag" });
     }
-    if (mv.entfallen && mv.entfallen.stufe !== "meldung") out.push({ t: mv.entfallen.t, art: "meldung", zeichen: "∅", klasse: "entfallen", meldung: id, text: `${zt} entfällt ${uz(mv.entfallen.t)} – ${mv.entfallen.grund}` });
+    if (mv.entfallen && !mv.entfallen.beimErscheinen) out.push({ t: mv.entfallen.t, art: "meldung", zeichen: "∅", klasse: "entfallen", meldung: id, text: `${zt} entfällt ${uz(mv.entfallen.t)} – ${mv.entfallen.grund}` });
   }
   for (const lm of t.kennzahlen.lagemeldungen.filter((x) => x.fall === f.id)) {
-    if (lm.gelesen !== undefined) out.push({ t: lm.gelesen, art: "gelesen", zeichen: "✉", klasse: "info", text: `Die Führung hat ${lm.id} gelesen ${uz(lm.gelesen)}${lm.erschienen !== undefined ? ` (${Math.round(lm.gelesen - lm.erschienen)} s nach Eingang)` : ""}` });
+    if (lm.erschienen !== undefined) out.push({ t: lm.erschienen, art: "gelesen", zeichen: "✉", klasse: "info", text: `Lagemeldung ${lm.id} ${uz(lm.erschienen)}${lm.gelesen !== undefined ? ` – angeklickt nach ${Math.round(lm.gelesen - lm.erschienen)} s` : ""}` });
   }
-  for (const h of t.kennzahlen.lagehinweise.liste) {
-    out.push({ t: h.t, art: "hinweis", zeichen: "▲", klasse: "hinweis", text: `Lagehinweis Führung → ${h.an.map((r) => ROLLEN_NAME[r as Stufe3] ?? r).join(", ")} ${uz(h.t)}: „${h.text}“` });
-  }
-  for (const w of t.kennzahlen.fastTrack.wechsel) out.push({ t: w.t, art: "ft", zeichen: w.an ? "FT ein" : "FT aus", klasse: "ft", text: `Fast-Track ${w.an ? "EIN" : "AUS"} ${uz(w.t)}` });
   for (const n of t.notizen.filter((x) => x.fall === f.id)) out.push({ t: n.t, art: "notiz", zeichen: "✎", klasse: "notiz", text: `Notiz SL: ${n.text}` });
   return out.sort((a, b) => a.t - b.t);
 }
@@ -873,19 +812,19 @@ export function teamKennung(i: number): string {
 
 /**
  * Ergebnisse für die Seminarauswertung ohne Personen- und Teamnamen, ohne Kennungen der Fenster und ohne Uhrzeit des
- * Seminars (nur Spielzeit). Freitexte nur auf Wunsch (sie können Namen enthalten).
+ * Seminars (nur Spielzeit). Freitexte (Notizen der Spielleitung) nur auf Wunsch (sie können Namen enthalten).
  */
 export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, opt: ExportOptionen) {
   const inh = basis.basis ?? basis;
   const sz = inh.szenario;
   const r1 = (x: number | null | undefined) => (x === null || x === undefined ? null : Math.round(x * 10) / 10);
+  const tz = (z: TempoZeiten) => ({ ab_eingang: r1(z.eingang), ab_oeffnen: r1(z.offen), n: z.n });
   return {
     art: "ARGUS-Auswertung (anonym)",
     szenario: { id: sz.id, version: sz.version, titel: sz.titel },
     erzeugt: new Date().toISOString().slice(0, 10),
-    hinweis: "Spielzeit in s ab Spielbeginn (Spieluhr 00:00, Ende 25:00). Rollen: g1 Aufklärung, g2 Zielprüfung, g3 Führung. Ziele wie im Spiel (ziel: „Ziel 8“), dazu die Kennung der Meldung. Keine Namen von Personen oder Teams, keine Kennungen der Rechner."
+    hinweis: "Spielzeit in s ab Spielbeginn (Spieluhr 00:00, Ende 25:00). Eine Rolle je Team (Zielbearbeitung), eine Entscheidung je Meldung: bekaempfen, zurueckstellen, ablehnen; dazu die Sekunden ab Eingang und ab Öffnen. Ziele wie im Spiel (ziel: „Ziel 8“), dazu die Kennung der Meldung. Keine Namen von Personen oder Teams, keine Kennungen der Rechner."
       + (opt.freitext ? " Freitexte sind enthalten." : " Ohne Freitexte."),
-    rollen: { g1: ROLLEN_NAME.g1, g2: ROLLEN_NAME.g2, g3: ROLLEN_NAME.g3 },
     faelle: a.faelle.map((f) => ({ id: f.id, art: f.art, titel: f.titel, meldung: f.meldung, ziel: zielText(inh, f.meldung), folge: f.folge })),
     argus: {
       richtig: a.konfidenz.richtig, falsch: a.konfidenz.falsch, konfidenz_falsch_mittel: a.konfidenz.mittelFalsch, konfidenz_richtig_bekaempfen_mittel: a.konfidenz.mittelRichtig,
@@ -899,18 +838,15 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
         spielende: t.ende,
         verstaerkungen: lauf.zustand.verstaerkungen.map((v) => ({ gruppe: v.gruppe, t: r1(v.t0) })),
         kennzahlen: {
-          meldungen_erschienen: k.meldungen.erschienen, meldungen_bearbeitet: k.meldungen.bearbeitet, meldungen_gesamt: k.meldungen.gesamt,
+          meldungen_erschienen: k.meldungen.erschienen, meldungen_bearbeitet: k.meldungen.bearbeitet, meldungen_gesamt: k.meldungen.gesamt, meldungen_offen_ende: k.meldungen.offenEnde,
           feind_bekaempft: k.feind.bekaempft, feind_gemeldet: k.feind.gemeldet,
           fehlbekaempfungen: k.fehl.wirkungen, fehl_arten: Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl])),
-          freigaben_trotz_warnung: k.trotzWarnung,
+          bekaempft: k.freigaben.gesamt, bekaempft_wie_argus: k.freigaben.wieArgus, bekaempft_trotz_warnung: k.trotzWarnung,
           widerspruch: k.widerspruch.gesamt, widerspruch_zu_recht: k.widerspruch.zuRecht, widerspruch_zu_unrecht: k.widerspruch.zuUnrecht,
-          widerspruch_liste: k.widerspruch.liste.map((w) => ({ meldung: w.meldung, stufe: w.stufe, t: r1(w.t), argus: w.argus, zu_recht: w.recht })),
-          zeit_median_s: { alle: { g1: r1(k.zeiten.alle.g1), g2: r1(k.zeiten.alle.g2), g3: r1(k.zeiten.alle.g3) },
-            konfidenz_hoch: { g1: r1(k.zeiten.hoch.g1), g2: r1(k.zeiten.hoch.g2), g3: r1(k.zeiten.hoch.g3) },
-            konfidenz_niedrig: { g1: r1(k.zeiten.niedrig.g1), g2: r1(k.zeiten.niedrig.g2), g3: r1(k.zeiten.niedrig.g3) }, schwelle: k.zeiten.schwelle },
-          fast_track: { an: k.fastTrack.an, seit: r1(k.fastTrack.seit), angebot: r1(k.fastTrack.angebot), wechsel: k.fastTrack.wechsel.map((w) => ({ t: r1(w.t), an: w.an })), meldungen: k.fastTrack.meldungen },
-          lagemeldungen: k.lagemeldungen.map((l) => ({ inject: l.id, fall: l.fall, erschienen: r1(l.erschienen), gelesen: r1(l.gelesen) })),
-          lagehinweise: k.lagehinweise.anzahl, lagehinweis_erster_nach_lagemeldung: r1(k.lagehinweise.ersterNach),
+          widerspruch_liste: k.widerspruch.liste.map((w) => ({ meldung: w.meldung, t: r1(w.t), argus: w.argus, zu_recht: w.recht })),
+          sekunden_median: { alle: tz(k.zeiten.alle), konfidenz_hoch: tz(k.zeiten.hoch), konfidenz_niedrig: tz(k.zeiten.niedrig), schwelle: k.zeiten.schwelle },
+          sekunden_kuerzeste: r1(k.zeiten.kuerzeste), sekunden_laengste: r1(k.zeiten.laengste), entscheidungen_bis_20_s: k.zeiten.unter20,
+          lagemeldungen: k.lagemeldungen.map((l) => ({ inject: l.id, fall: l.fall, erschienen: r1(l.erschienen), angeklickt: r1(l.gelesen) })),
           durchgebrochen: k.durchbruch.fahrzeuge.length, durchbruch_gruppen: k.durchbruch.gruppen, durchbruch_erstes_ueber_bach: r1(k.durchbruch.erstesUeber),
           // seit 2.3 (D5.3), seit 2.5 je Panzer: eigene Verluste (Zustand, Stufe, Verwundete) und Verlauf je Minute
           ...(k.verluste ? {
@@ -922,22 +858,22 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
         },
         faelle: Object.fromEntries(a.faelle.map((f) => {
           const e = t.faelle[f.id];
+          const g = e.kette.glied;
           return [f.id, {
-            ausgang: e.ausgang, entschieden_von: e.stufe ?? null, t: r1(e.t), fast_track: e.fastTrack,
-            kette: e.kette.glieder.map((g) => ({ stufe: g.stufe, zeichen: g.zeichen, t: r1(g.t) })),
+            ausgang: e.ausgang, t: r1(e.t), entscheid: g.was ?? null, ...(g.wirkmittel ? { wirkmittel: g.wirkmittel } : {}),
+            sekunden_ab_eingang: r1(g.sek), sekunden_ab_oeffnen: r1(g.sekOffen), ...(g.vorher ? { vorher: g.vorher } : {}),
             einschlag: e.kette.einschlag ? { t: r1(e.kette.einschlag.t), fehl: e.kette.einschlag.fehl, regelverstoss: e.kette.einschlag.regel } : null,
           }];
         })),
         meldungen: [...t.verlaeufe.values()].map((mv) => ({
-          meldung: mv.id, ziel: `Ziel ${zielNr(inh, lauf.zustand, mv.id)}`, t: r1(mv.t), fast_track: mv.fastTrack, stand: mv.zurueckgestellt ? "zurueckgestellt" : mv.stufe,
+          meldung: mv.id, ziel: `Ziel ${zielNr(inh, lauf.zustand, mv.id)}`, t: r1(mv.t), stand: mv.zurueckgestellt ? "zurueckgestellt" : mv.stufe,
           entscheidungen: mv.entscheidungen.map((e) => ({
-            stufe: e.stufe, t: r1(e.t), entscheid: e.was, ...(e.wirkmittel ? { wirkmittel: e.wirkmittel } : {}),
-            warnungen: e.warnungen?.length ?? 0, ...(opt.freitext && e.text ? { text: e.text } : {}),
+            t: r1(e.t), entscheid: e.was, ...(e.wirkmittel ? { wirkmittel: e.wirkmittel } : {}),
+            sekunden_ab_eingang: r1(e.sekEingang), sekunden_ab_oeffnen: r1(e.sekOffen), warnungen: e.warnungen?.length ?? 0,
           })),
           wirkung: mv.wirkung ? { t_freigabe: r1(mv.wirkung.t_freigabe), t: r1(mv.wirkung.t), wirkmittel: mv.wirkung.wirkmittel, treffer: mv.wirkung.treffer, fehl: mv.wirkung.fehl, verstoesse: mv.wirkung.verstoesse.map((v) => v.split(":")[0]) } : null,
-          entfallen: mv.entfallen ? { t: r1(mv.entfallen.t), stufe: mv.entfallen.stufe } : null,
+          entfallen: mv.entfallen ? { t: r1(mv.entfallen.t), grund: mv.entfallen.grund } : null,
         })),
-        lagehinweise: k.lagehinweise.liste.map((h) => ({ t: r1(h.t), an: h.an, ...(opt.freitext ? { text: h.text } : {}) })),
         ...(opt.freitext ? { notizen_spielleitung: t.notizen.map((n) => ({ t: r1(n.t), fall: n.fall ?? null, text: n.text })) } : {}),
       };
     }),
@@ -947,9 +883,10 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
 /** Kennzahlen und Fälle je Team als CSV (Semikolon, für Excel), anonym. */
 export function exportCsv(a: Auswertung): string {
   const kopf = [
-    "team", "meldungen_bearbeitet", "meldungen_erschienen", "fehlbekaempfungen", "fehl_arten", "freigaben_trotz_warnung",
-    "widerspruch", "zu_recht", "zu_unrecht", "median_aufklaerung_s", "median_zielpruefung_s", "median_fuehrung_s", "fast_track_seit_s", "lagemeldung", "gelesen_s",
-    "lagehinweise", "durchgebrochen", "einsatzbereit_ende", "ausgefallen_ende", "verwundete_ende", ...a.faelle.map((f) => f.id),
+    "team", "meldungen_bearbeitet", "meldungen_erschienen", "offen_ende", "fehlbekaempfungen", "fehl_arten", "bekaempft", "trotz_warnung",
+    "widerspruch", "zu_recht", "zu_unrecht", "median_s_ab_eingang", "median_s_ab_oeffnen", "median_s_konfidenz_hoch", "median_s_konfidenz_niedrig", "bis_20_s",
+    "lagemeldung", "angeklickt_s", "durchgebrochen", "einsatzbereit_ende", "ausgefallen_ende", "verwundete_ende",
+    ...a.faelle.flatMap((f) => [f.id, `${f.id}_s`]),
   ];
   const zelle = (v: unknown) => {
     const s = v === null || v === undefined ? "" : typeof v === "number" ? String(Math.round(v * 10) / 10).replace(".", ",") : String(v);
@@ -959,11 +896,13 @@ export function exportCsv(a: Auswertung): string {
     const k = t.kennzahlen;
     const lm = k.lagemeldungen[0];
     return [
-      teamKennung(i), k.meldungen.bearbeitet, k.meldungen.erschienen, k.fehl.wirkungen, k.fehl.arten.map((x) => `${x.art} ${x.anzahl}`).join(", "),
-      k.trotzWarnung, k.widerspruch.gesamt, k.widerspruch.zuRecht, k.widerspruch.zuUnrecht, k.zeiten.alle.g1, k.zeiten.alle.g2, k.zeiten.alle.g3,
-      k.fastTrack.seit ?? null, lm?.id ?? null, lm?.gelesen ?? null, k.lagehinweise.anzahl, k.durchbruch.fahrzeuge.length,
-      k.verluste?.bereit ?? null, k.verluste?.ausgefallen ?? null, k.verluste?.verwundete ?? null, ...a.faelle.map((f) => t.faelle[f.id].ausgang),
+      teamKennung(i), k.meldungen.bearbeitet, k.meldungen.erschienen, k.meldungen.offenEnde, k.fehl.wirkungen, k.fehl.arten.map((x) => `${x.art} ${x.anzahl}`).join(", "),
+      k.freigaben.gesamt, k.trotzWarnung, k.widerspruch.gesamt, k.widerspruch.zuRecht, k.widerspruch.zuUnrecht,
+      k.zeiten.alle.eingang, k.zeiten.alle.offen, k.zeiten.hoch.eingang, k.zeiten.niedrig.eingang, k.zeiten.unter20,
+      lm?.id ?? null, lm?.gelesen !== undefined && lm?.erschienen !== undefined ? lm.gelesen - lm.erschienen : null, k.durchbruch.fahrzeuge.length,
+      k.verluste?.bereit ?? null, k.verluste?.ausgefallen ?? null, k.verluste?.verwundete ?? null,
+      ...a.faelle.flatMap((f) => [t.faelle[f.id].ausgang, t.faelle[f.id].sek ?? null]),
     ].map(zelle).join(";");
   });
-  return `﻿${[kopf.join(";"), ...zeilen].join("\r\n")}\r\n`;
+  return `\ufeff${[kopf.join(";"), ...zeilen].join("\r\n")}\r\n`;
 }

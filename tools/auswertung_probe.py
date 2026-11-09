@@ -2,13 +2,15 @@
 """Probe der Auswertung (Schritt 8): die Auflösung so durchgehen, wie die Spielleitung es am Smartboard tut.
 
 Ablauf (1530 × 800, wie die Dienstrechner und das Smartboard):
-  1. Auswertung öffnen – Beispiel (…/?auswertung=demo, fünf Modellteams des Drehbuchs) oder das Plenum einer Sitzung
+  1. Auswertung öffnen – Beispiel (…/?auswertung=demo, sieben Modellteams: fünf des Drehbuchs, zwei mit anderem Tempo) oder das
+     Plenum einer Sitzung
      (Adresse mit sitzung=…&rolle=plenum; nach Spielende schaltet es selbst auf die Auswertung).
   2. Kapitel für Kapitel mit der Taste „Bild ↓“ (wie ein Presenter): Teamvergleich, Kennzahlen, Konfidenz, S3, S2, S1, S4,
      Schlussfrage. Je Kapitel: Foto, nichts abgeschnitten (kein Rollbalken, kein Feld zu klein), kleinste Schrift,
      Zeit bis das Kapitel steht.
-  3. Inhalte: Ausgang je Team und Fall und die Kennzahlen gegen die Auswertung im Prozess (tools/drehbuch_plan.ts,
-     dieselben Modellteams); Konfidenz (falsche Empfehlungen M08, M12, M20, M21, Kernaussage); Leitfragen je Fall.
+  3. Inhalte (seit 2.6 eine Rolle je Team): Ausgang je Team und Fall mit der Entscheidung und den Sekunden bis dahin und die
+     Kennzahlen gegen die Auswertung im Prozess (tools/drehbuch_plan.ts, dieselben Modellteams); Konfidenz (falsche Empfehlungen,
+     Kernaussage); Leitfragen je Fall. Der Teamvergleich (Fälle als Zeilen, Teams als Spalten) passt mit 7 Teams in 1530 px.
   4. Replay je Schlüsselfall: ▶ (läuft im Tempo des Falls, ca. 45 s je Fall), Team per Klick und Ziffer, Sprung über
      eine Marke der Zeitleiste, Karte steht und zeichnet, Drohnenbild groß mit Lupe (Esc schließt), Notizen der SL 2.
   5. Export: JSON ohne Freitexte (keine Team- und Personennamen), mit Freitexten, CSV.
@@ -39,7 +41,7 @@ LAYOUT_JS = """
   const de = document.documentElement;
   const zuGross = [];
   const main = document.querySelector('[data-testid=auswertung]');
-  for (const el of [main, ...main.querySelectorAll('.tafel, .replay, .replay-links, .replay-rechts, .panel > .rumpf, .fall-kopf, .leitfragen, .g1-bild')]) {
+  for (const el of [main, ...main.querySelectorAll('.tafel, .replay, .replay-links, .replay-rechts, .panel > .rumpf, .fall-kopf, .leitfragen, .g1-bild, .vergleich')]) {
     if (!el) continue;
     if (el.scrollHeight > el.clientHeight + 2) zuGross.push(`${el.className}: Höhe ${el.scrollHeight} > ${el.clientHeight}`);
     if (el.scrollWidth > el.clientWidth + 2) zuGross.push(`${el.className}: Breite ${el.scrollWidth} > ${el.clientWidth}`);
@@ -97,7 +99,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     fehler, protokoll = [], []
     schritte = 0
     a = argparse.Namespace(bilder=bilder)
-    teams = s.eval_on_selector_all("[data-testid=teamvergleich] tbody tr", "rs => rs.map(r => ({ id: r.dataset.team, name: r.querySelector('.team-marke span').textContent }))")
+    teams = s.eval_on_selector_all("[data-testid=teamvergleich] thead th[data-team]", "hs => hs.map(h => ({ id: h.dataset.team, name: h.querySelector('.team-marke span').textContent }))")
     print("Teams:", ", ".join(t["name"] for t in teams))
 
     def foto(name):
@@ -137,29 +139,37 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
         # ---------------------------------------------------------------- Inhalte je Kapitel
         if k == "teams":
             ist = s.eval_on_selector_all("[data-testid=teamvergleich] td[data-fall]",
-                                         "cs => cs.map(c => ({ team: c.closest('tr').dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, stufe: c.querySelector('.glied.entscheidend')?.className.match(/\\bg-(g[123])\\b/)?.[1] ?? null }))")
+                                         "cs => cs.map(c => ({ team: c.dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, text: c.textContent ?? '' }))")
             tabelle = {}
             for c in ist:
                 tabelle.setdefault(c["team"], {})[c["fall"]] = c
+            breite = s.evaluate("() => { const t = document.querySelector('[data-testid=teamvergleich]'); return [t.scrollWidth, t.clientWidth, t.getBoundingClientRect().right]; }")
+            if breite[2] > W:
+                fehler.append(f"Teamvergleich ragt über 1530 px hinaus ({breite})")
             for i, t in enumerate(teams):
                 zeile = tabelle[t["id"]]
-                print(f"  {t['name'][:18]:<18} " + "  ".join(f"{f}:{z['ausgang'][:7]:<7}{('@' + z['stufe']) if z['stufe'] else '':<4}" for f, z in zeile.items()))
+                print(f"  {t['name'][:18]:<18} " + "  ".join(f"{f}:{z['ausgang'][:7]:<7}" for f, z in zeile.items()))
+                if not any(re.search(r"\b\d+ s\b", z["text"]) for z in zeile.values()):
+                    fehler.append(f"Teamvergleich {t['name']}: keine Sekunden bis zur Entscheidung in den Zellen")
                 if plan and i < len(plan["teams"]):
                     soll = plan["teams"][i]["auswertung"]["faelle"]
                     for f, z in soll.items():
-                        if zeile[f]["ausgang"] != z["ausgang"] or (z["stufe"] and (zeile[f]["stufe"] or "").lower() != z["stufe"]):
-                            fehler.append(f"Teamvergleich {t['name']} {f}: {zeile[f]['ausgang']}@{zeile[f]['stufe']} / im Prozess {z['ausgang']}@{z['stufe']}")
+                        if zeile[f]["ausgang"] != z["ausgang"]:
+                            fehler.append(f"Teamvergleich {t['name']} {f}: {zeile[f]['ausgang']} / im Prozess {z['ausgang']}")
         elif k == "kennzahlen":
             kz = s.eval_on_selector_all("[data-testid=kennzahlen] tbody tr", """rs => rs.map(r => {
                 const w = (k) => r.querySelector(`[data-kz=${k}] .wert`)?.textContent.trim();
                 return { team: r.dataset.team, fehl: w('fehl'), warnung: w('warnung'), widerspruch: w('widerspruch'),
-                         recht: r.querySelector('[data-kz=widerspruch] .unter')?.textContent, ft: w('ft'), lm: w('lm'), hinweise: w('hinweise') }; })""")
+                         recht: r.querySelector('[data-kz=widerspruch] .unter')?.textContent, zeit: w('zeit'), lm: w('lm') }; })""")
             for i, x in enumerate(kz):
-                print(f"  {teams[i]['name'][:18]:<18} Fehl {x['fehl']} · trotz Warnung {x['warnung']} · Widerspruch {x['widerspruch']} ({x['recht']}) · FT {x['ft']} · I-04 {x['lm']} · Hinweise {x['hinweise']}")
+                print(f"  {teams[i]['name'][:18]:<18} Fehl {x['fehl']} · trotz Warnung {x['warnung']} · Widerspruch {x['widerspruch']} ({x['recht']}) · Median {x['zeit']} · I-04 {x['lm']}")
+                if not re.match(r"^\d+(,\d)? s$", x["zeit"] or ""):
+                    fehler.append(f"Kennzahlen {teams[i]['name']}: Sekunden je Entscheidung fehlen ({x['zeit']})")
                 if plan and i < len(plan["teams"]):
                     soll = plan["teams"][i]["auswertung"]["kennzahlen"]
-                    pruef = [("fehl", str(soll["fehl"])), ("warnung", str(soll["warnung"])), ("widerspruch", str(soll["widerspruch"])),
-                             ("ft", "EIN" if soll["ft"] else "aus"), ("hinweise", str(soll["lagehinweise"]))]
+                    pruef = [("fehl", str(soll["fehl"])), ("warnung", str(soll["warnung"])), ("widerspruch", str(soll["widerspruch"]))]
+                    if soll.get("sek_median") is not None and demo:
+                        pruef.append(("zeit", f"{soll['sek_median']} s".replace(".", ",")))
                     for feld, wert in pruef:
                         if x[feld] != wert:
                             fehler.append(f"Kennzahlen {teams[i]['name']} {feld}: {x[feld]} / im Prozess {wert}")
@@ -167,7 +177,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                         fehler.append(f"Kennzahlen {teams[i]['name']}: {x['recht']} / im Prozess {soll['zu_recht']} zu Recht")
         elif k == "konfidenz":
             falsch = s.eval_on_selector_all("[data-falsch]", "gs => gs.map(g => g.dataset.falsch)")
-            if sorted(falsch) != ["M08", "M12", "M20", "M21"]:
+            if not {"M08", "M12", "M20", "M21"} <= set(falsch):
                 fehler.append(f"Konfidenz: falsche Empfehlungen {falsch}")
             if "Konfidenz sagt nicht" not in s.get_by_test_id("kernaussage").inner_text():
                 fehler.append("Konfidenz: Kernaussage fehlt")
@@ -197,8 +207,10 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
             if len(teams) > 2:
                 s.keyboard.press("3")
                 warte(lambda: r.get_attribute("data-team") == teams[2]["id"], 5, f"{k}: Team 3 per Ziffer")
-            # Sprung über die Marke „Einschlag“ oder die letzte Entscheidung der Führung
-            marke = s.locator(".zl-zeile.an .zl-marke[data-art=einschlag], .zl-zeile.an .zl-marke[data-art=g3]").last
+            # Sprung über die Marke „Einschlag“ oder die Entscheidung des Teams (seit 2.6 eine je Meldung, mit Sekunden)
+            marke = s.locator(".zl-zeile.an .zl-marke[data-art=einschlag], .zl-zeile.an .zl-marke[data-art=entscheid]").last
+            if s.locator(".zl-marke[data-art=entscheid]").count() == 0:
+                fehler.append(f"{k}: keine Entscheidung in der Zeitleiste")
             if marke.count():
                 soll_t = marke.get_attribute("title")
                 marke.dispatch_event("pointerdown")
@@ -206,7 +218,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                 foto(f"{nr + 1}_{k}_sprung")
                 protokoll.append((f"{k} Sprung", 0, {"titel": soll_t, "t": r.get_attribute("data-t")}))
             # Drohnenbild groß mit Lupe, Esc schließt
-            s.locator("[data-testid=g1-bild] [data-testid=drohnenbild]").click()
+            s.locator("[data-testid=team-bild] [data-testid=drohnenbild]").click()
             warte(lambda: s.locator("[data-testid=vergroesserung]").count() == 1, 5, f"{k}: Vergrößerung")
             s.mouse.move(W / 2, H / 2)
             s.wait_for_timeout(500)
@@ -254,7 +266,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     s.keyboard.press("Home")
     warte(lambda: s.locator("[data-testid=auswertung][data-kapitel='teams']").count() == 1, 5, "Pos1 zum Teamvergleich")
     # Klick auf eine Zelle im Teamvergleich öffnet das Replay dieses Falls für dieses Team
-    zelle = s.locator(f"[data-testid=teamvergleich] tr[data-team='{teams[-1]['id']}'] td[data-fall='S1']")
+    zelle = s.locator(f"[data-testid=teamvergleich] td[data-team='{teams[-1]['id']}'][data-fall='S1']")
     zelle.click()
     warte(lambda: s.locator("section.replay[data-fall='S1']").count() == 1, 10, "Zelle → Replay S1")
     if s.locator("section.replay").get_attribute("data-team") != teams[-1]["id"]:
@@ -281,7 +293,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
         fehler.append(f"Export: Teams {[t['team'] for t in ex['teams']]}")
     if '"text"' in downloads["json"] or "notizen_spielleitung" in downloads["json"]:
         fehler.append("Export ohne Freitexte enthält Freitexte")
-    if demo and "Attrappe" not in downloads["json-freitext"]:
+    if demo and "Lupe" not in downloads["json-freitext"]:
         fehler.append("Export mit Freitexten: Notizen fehlen")
     print(f"Export: JSON {len(downloads['json']) // 1024} KB, mit Freitexten {len(downloads['json-freitext']) // 1024} KB, CSV {len(downloads['csv'].splitlines())} Zeilen – keine Namen")
 

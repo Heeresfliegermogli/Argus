@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.5",
-  "stand": "2026-11-02",
+  "version": "2.6",
+  "stand": "2026-11-09",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -18,35 +18,40 @@
       "name": "Aufklärung",
       "von_s": 0,
       "bis_s": 300,
-      "absicht": "Zwei Spähtrupps klären über die Felder auf: HAUPT südlich der Ortschaft an der Schule vorbei, NORD westlich der Ortschaft; beide fahren bis zur Brücke vor, einer bleibt dort. Erste Meldung nach 20 s. Bedienung lernen, Vertrauen in ARGUS aufbauen."
+      "absicht": "Zwei Spähtrupps klären über die Felder auf: HAUPT südlich der Ortschaft an der Schule vorbei, NORD westlich der Ortschaft; beide fahren bis zur Brücke vor, einer bleibt dort. Erste Meldung nach 20 s. Bedienung lernen, Vertrauen in ARGUS aufbauen.",
+      "kurz": "Feindliche Spähtrupps klären auf; die ersten Meldungen kommen – Zeit, die Bedienung kennenzulernen."
     },
     {
       "nr": 2,
       "name": "Gefechtsaufklärung",
       "von_s": 300,
       "bis_s": 660,
-      "absicht": "Feuervorbereitung auf die 1. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch. Ab 10:00 stört ein EloKa-Fahrzeug den Datenlink: Alle Bilder rauschen, ARGUS wird unsicherer, bis es zerstört ist oder verlegt."
+      "absicht": "Feuervorbereitung auf die 1. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch. Ab 10:00 stört ein EloKa-Fahrzeug den Datenlink: Alle Bilder rauschen, ARGUS wird unsicherer, bis es zerstört ist oder verlegt.",
+      "kurz": "Der Feind greift mit einzelnen Kräften an und tastet eure Stellungen ab."
     },
     {
       "nr": 3,
       "name": "Bergung",
       "von_s": 660,
       "bis_s": 840,
-      "absicht": "Ein BTR-80 sichert, das Sanitätsfahrzeug holt die Verwundeten des Zuges 60 m vor der Schule ab (S2). Der Störsender verlegt um 12:40 nach Osten, wenn er nicht vorher bekämpft wurde."
+      "absicht": "Ein BTR-80 sichert, das Sanitätsfahrzeug holt die Verwundeten des Zuges 60 m vor der Schule ab (S2). Der Störsender verlegt um 12:40 nach Osten, wenn er nicht vorher bekämpft wurde.",
+      "kurz": "Kurze Atempause: Der Feind ordnet sich und holt zurück, was liegen geblieben ist."
     },
     {
       "nr": 4,
       "name": "Hauptangriff",
       "von_s": 840,
       "bis_s": 1200,
-      "absicht": "Fast-Track-Angebot (I-05), Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf drei Achsen (NORD, ORT, SÜD). Ein Beobachter im Kirchturm lenkt Artillerie auf 1/2 (S7), ein SPz versteckt sich hinter Zivilpersonen (S5), ein Kamerateam filmt eine Reservekolonne (S8), der Mörser im Hof RABE unterstützt (S4), ein BMP-2 sucht Deckung an der Schule (N4), am Ostufer liegen Verwundete (S6). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04)."
+      "absicht": "Feuervorbereitung, dann greift die Kompanie breit an: T-72 vorn, BMP-2 dahinter, auf drei Achsen (NORD, ORT, SÜD). Ein Beobachter im Kirchturm lenkt Artillerie auf 1/2 (S7), ein SPz versteckt sich hinter Zivilpersonen (S5), ein Kamerateam filmt eine Reservekolonne (S8), der Mörser im Hof RABE unterstützt (S4), ein BMP-2 sucht Deckung an der Schule (N4), am Ostufer liegen Verwundete (S6). Mitten im Druck kommt die Lagemeldung zum polnischen Gegenangriff (I-04).",
+      "kurz": "Der Feind greift mit der ganzen Kompanie auf mehreren Achsen an – viele Meldungen in kurzer Zeit."
     },
     {
       "nr": 5,
-      "name": "Krise und Gegenangriff",
+      "name": "Krise",
       "von_s": 1200,
       "bis_s": 1500,
-      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 1. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1). Eine Familie flieht im Pkw an der Kolonne vorbei (S8); die Bewohner verlassen das Haus am Schutzschild-SPz (S5)."
+      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 1. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1). Eine Familie flieht im Pkw an der Kolonne vorbei (S8); die Bewohner verlassen das Haus am Schutzschild-SPz (S5).",
+      "kurz": "Die Lage spitzt sich zu: Der Feind drängt mit allem, was er hat, zum Bach; die 1. Kp braucht Feuer."
     }
   ],
   "vorbild": {
@@ -61,17 +66,17 @@
     {
       "phase": "Einweisung",
       "dauer_min": 3,
-      "inhalt": "Lage im Plenum (Spielleitung liest vor), Einweisungskarten je Rolle, Bedienung"
+      "inhalt": "Lage im Plenum (Spielleitung liest vor), Einweisung am Team-Laptop: Übersicht der Ansicht, Phasen, Klassen, Wirkmittel"
     },
     {
       "phase": "Spiel",
       "dauer_min": 25,
-      "inhalt": "Spieluhr 10:00–10:25, alle Teams parallel; Meldungen, Injects und Hintergrundgefecht nach Zeitleiste, Verstärkungen nach Lage"
+      "inhalt": "Spieluhr 00:00–25:00, alle Teams parallel, jeder Team-Laptop rechnet sein Spiel selbst; Meldungen, Lagemeldungen und Hintergrundgefecht nach Zeitleiste"
     },
     {
       "phase": "Auswertung",
       "dauer_min": 12,
-      "inhalt": "Teamvergleich, dann die vier Schlüsselfälle in der Reihenfolge S3, S2, S1, S4"
+      "inhalt": "Teamvergleich, dann die Schlüsselfälle in der Reihenfolge S3, S2, S1, S4"
     }
   ],
   "argus_system": {
@@ -83,44 +88,28 @@
   },
   "lage": {
     "plenum": {
-      "titel": "Lage für alle (Spielleitung liest vor, ca. 90 s)",
+      "titel": "Lage für alle (Spielleitung liest vor, ca. 80 s)",
       "absaetze": [
         "Übungslage, alles fiktiv. Russische Kräfte greifen seit dem Morgen nach Westen an. Im Raum KRÄHE erwarten wir eine verstärkte Kompanie mit Kampf- und Schützenpanzern.",
         "Unser Panzerbataillon 613 verteidigt westlich von KRÄHE. Am Westrand hält die 1./PzBtl 613 mit vier Kampfpanzern Leopard 2A7V (1/1 bis 1/4) Brücke ELSTER und Furt Nord.",
         "Auftrag: Der Feind darf den Bach ELSTER nicht überschreiten, vor allem nicht an der Brücke ELSTER. Östlich des Bachs liegen die Ortschaft KRÄHE und die Schule; dort sind noch Zivilpersonen.",
         "Die Drohne „Milan“ klärt den Raum östlich des Bachs auf. Ihre Bilder wertet das KI-System ARGUS aus: Klasse, Konfidenz und eine Empfehlung. Laut Hersteller liegt ARGUS in 94 % der Fälle richtig.",
-        "Jedes Team ist die Zielbearbeitung des Bataillons: G1 Aufklärung prüft jede ARGUS-Meldung, G2 Zielprüfung die Einsatzregeln und das Wirkmittel, G3 Führung gibt frei. Ohne Freigabe von G3 wird nichts bekämpft. Alle Teams spielen dieselbe Lage, 25 Minuten in Echtzeit."
+        "Jedes Team ist die Zielbearbeitung des Bataillons und entscheidet jede ARGUS-Meldung: BEKÄMPFEN (mit Mörser, Loitering Munition oder der Kanone der 1. Kp), ZURÜCKSTELLEN oder ABLEHNEN. Ohne eure Entscheidung wird nichts bekämpft. Alle Teams spielen dieselbe Lage, 25 Minuten in Echtzeit."
       ]
     },
-    "G1": {
-      "titel": "G1 Aufklärung",
+    "team": {
+      "titel": "Zielbearbeitung",
       "absaetze": [
-        "Du siehst jede ARGUS-Meldung zuerst: das Drohnenbild mit ARGUS-Markierung und was ARGUS meldet – Klasse (Panzer, Fahrzeug oder Infanterie), Zugehörigkeit, Konfidenz und Empfehlung. Mit der Lupe prüfst du das Bild. Wolken, Rauch und Bewuchs verdecken oft Teile davon.",
-        "Du entscheidest ANNEHMEN (die Meldung geht als Ziel an die Zielprüfung) oder ABLEHNEN.",
-        "Die Zielprüfung und Führung sehen nur deine Zielmeldung, nicht das Bild."
-      ]
-    },
-    "G2": {
-      "titel": "G2 Zielprüfung",
-      "absaetze": [
-        "Du bekommst die angenommenen Ziele als Zielmeldung: Ziel-Nr., Lage, ARGUS-Klasse und Konfidenz. Auf der Karte siehst du die Schule (No-Strike-Zone) und die Ortschaft (Einschränkungsgebiet). Die eigene 1. Kp steht mit vier Kampfpanzern (1/1–1/4) am Westrand der Karte (blau).",
-        "Du prüfst die Einsatzregeln R2 und R3, wählst ein Wirkmittel (Mörser, Loitering Munition oder die Kanone der 1. Kp) und gibst G3 eine Empfehlung: BEKÄMPFEN mit …, BEOBACHTEN (zurückstellen) oder NICHT BEKÄMPFEN.",
-        "Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt. Bei einem Zug wirkt BEKÄMPFEN auf alle Fahrzeuge: LM und Kanone je Fahrzeug, der Mörser als Fläche."
-      ]
-    },
-    "G3": {
-      "titel": "G3 Führung",
-      "absaetze": [
-        "Du führst das Gefecht des Bataillons. Du bekommst die Empfehlungen von G2 und gibst FREIGABE, lehnst ab oder gibst ZURÜCK AN G2.",
-        "Nur du bekommst Lagemeldungen von Brigade, Nachbarn und der 1. Kp; sie meldet auch Treffer und Ausfälle ihrer Panzer. Du kannst jederzeit einen Lagehinweis an G1 und G2 geben (zwei Zeilen).",
-        "Du verantwortest jede Wirkung."
+        "Ihr seid zu zweit oder zu dritt an einem Laptop. Jede ARGUS-Meldung kommt in euren Eingang, die Wartezeit läuft mit. Ihr seht das Drohnenbild live mit Lupe und was ARGUS meldet: Klasse (Panzer, Fahrzeug oder Infanterie), Zugehörigkeit, Konfidenz und Empfehlung.",
+        "Ihr entscheidet: BEKÄMPFEN mit Mörser, Loitering Munition (LM) oder der Kanone der 1. Kp, ZURÜCKSTELLEN (beobachten) oder ABLEHNEN. Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt; bei einem Zug wirken LM und Kanone je Fahrzeug, der Mörser als Fläche.",
+        "Am Rand laufen die Lagemeldungen von Brigade, Nachbarn und der 1. Kp. In der Kopfzeile stehen eure vier Panzer mit ihrem Zustand und der Bestand der Wirkmittel. Ihr verantwortet jede Wirkung."
       ]
     },
     "spielleitung": {
       "titel": "Spielleitung (2 Personen)",
       "absaetze": [
-        "SL 1 steuert: Teams starten, Uhr und Injects (für alle Teams oder ein einzelnes), Verstärkungen V-1 bis V-5 einspielen (Standard an alle Teams), Reserve-Injects nach Lage.",
-        "SL 2 beobachtet: Übersicht aller Teams (Eingang, Schlüsselfälle offen/richtig/falsch), schaut einzelnen Teams zu und notiert je Schlüsselfall: Wer hat was wann gesehen und entschieden? Was wurde gesagt?",
+        "SL 1 steuert: Spiel für alle Teams öffnen und mit „Start für alle“ starten, bei Bedarf anhalten und weiter, Reserve-Lagemeldungen nach Lage. Jeder Team-Laptop rechnet sein Spiel selbst; die Übersicht zeigt die Statusmeldungen der Teams (Uhr, Eingang, Schlüsselfälle, Panzer).",
+        "SL 2 beobachtet: schaut einzelnen Teams zu und notiert je Schlüsselfall: Was hat das Team gesehen, wie lange hat es hingeschaut, was hat es entschieden? Was wurde gesagt?",
         "Nicht eingreifen und keine Hinweise geben. Fragen zur Bedienung beantworten, Fragen zur Lage nicht."
       ]
     }
@@ -1183,7 +1172,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Einlaufen: erste Meldung schon nach 20 s, Spähtrupp als Paar (zugweise Meldung). Der Spähtrupp fährt über die Felder südlich der Ortschaft und hält östlich der Schule: Bei der Meldung ist der Mörser zulässig, beim Einschlag nicht mehr (Schule und Ortschaft im Wirkradius). Die Vorausrechnung zeigt das früh."
     },
     {
@@ -1212,7 +1201,7 @@
         "sicht": [{"art": "wolke", "anteil": 0.45, "lage": "rechts", "ziel_anteil": 0.12}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Zweiter Spähtrupp über die Felder westlich der Ortschaft Richtung Brücke. Weit genug von der Ortschaft ist der Mörser zulässig; je näher der Spähtrupp der Brücke kommt, desto eher nur noch LM."
     },
     {
@@ -1236,7 +1225,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Folgemeldung: Der Spähtrupp NORD teilt sich, ein Fahrzeug fährt über die Felder an die Brücke vor. Füllt die Pause nach den ersten Meldungen; je näher es der Brücke kommt, desto eher nur LM oder Kanone."
     },
     {
@@ -1268,9 +1257,8 @@
         "merkmale": []
       },
       "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher; zwei Soldaten mit Fernglas am Geländewagen, Ziel 2 bestätigt)",
-        "G2": "BEKÄMPFEN",
-        "G3": "FREIGABE"
+        "entscheid": "BEKÄMPFEN",
+        "text": "ARGUS unsicher; zwei Soldaten mit Fernglas am Geländewagen, Ziel 2 bestätigt"
       },
       "zweck": "Folgemeldung: Der zweite Tigr des Spähtrupps NORD hält unter Bäumen in Beobachtung. ARGUS ist so unsicher, dass es nichts empfiehlt (UNKLAR) – das Ziel ist trotzdem echt; Sensordaten und die erste Meldung des Spähtrupps bestätigen es. Gegenstück zum Traktor (N1): UNKLAR heißt weder harmlos noch gefährlich."
     },
@@ -1297,7 +1285,7 @@
         "personen": [{"bei": "Z-02", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Folgemeldung: ein Fahrzeug des Spähtrupps HAUPT ist zwischen Ortschaft und Schule hindurch zur Brücke gefahren und beobachtet. Nähe zur Ortschaft schließt den Mörser aus (LM oder Kanone)."
     },
     {
@@ -1330,9 +1318,8 @@
         ]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Heck eines Kettenfahrzeugs und frische Kettenspuren im Bild)",
-        "G2": "BEKÄMPFEN",
-        "G3": "FREIGABE"
+        "entscheid": "BEKÄMPFEN",
+        "text": "ARGUS unsicher, aber Heck eines Kettenfahrzeugs und frische Kettenspuren im Bild"
       },
       "zweck": "ARGUS ist unsicher, aber richtig. Die Sensordaten bestätigen das Ziel."
     },
@@ -1356,7 +1343,7 @@
         "sicht": [{"art": "rauch", "anteil": 0.25, "lage": "Ziel"}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (Mörser zulässig)", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "Mörser zulässig"},
       "zweck": "Die Feindartillerie liegt auf der 1. Kp, der Mörser am Waldrand MARDER eröffnet das Feuer: Beginn der Gefechtsaufklärung. Mörser zulässig."
     },
     {
@@ -1379,7 +1366,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Spitze des verstärkten Zuges (Gefechtsaufklärung): Panzer vorn."
     },
     {
@@ -1408,7 +1395,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "SPz-Teil des verstärkten Zuges, zugweise gemeldet."
     },
     {
@@ -1439,11 +1426,10 @@
         ]
       },
       "loesung": {
-        "G1": "ABLEHNEN (Netz hängt durch, Holzrohr, keine Spuren, keine Besatzung, bewegt sich nie: Attrappe)",
-        "G2": "falls angenommen: alle Wirkmittel zulässig, Fehler nicht erkennbar",
-        "G3": "falls empfohlen: FREIGABE nicht erkennbar falsch"
+        "entscheid": "ABLEHNEN",
+        "text": "Attrappe: Netz hängt durch, Holzrohr, keine Spuren, keine Besatzung, bewegt sich nie"
       },
-      "zweck": "Schlüsselfall Attrappe. Sie gehört zur Täuschung der Gefechtsaufklärung: Ein Feindpanzer westlich des Bachs, also scheinbar schon durchgebrochen, soll das eigene Feuer herauslocken. Die Information liegt nur bei G1 in den Sensordaten."
+      "zweck": "Schlüsselfall Attrappe. Sie gehört zur Täuschung der Gefechtsaufklärung: Ein Feindpanzer westlich des Bachs, also scheinbar schon durchgebrochen, soll das eigene Feuer herauslocken. Die Hinweise stehen nur im Bild (Lupe)."
     },
     {
       "id": "M30",
@@ -1467,11 +1453,7 @@
         "personen": [{"bei": "Z-37", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}],
         "merkmale": []
       },
-      "loesung": {
-        "G1": "ANNEHMEN",
-        "G2": "BEKÄMPFEN (LM: Ortschaft, Kanone außerhalb des Einsatzbereichs)",
-        "G3": "FREIGABE"
-      },
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "LM: Ortschaft, Kanone außerhalb des Einsatzbereichs"},
       "zweck": "Vorgeschobener Beobachter der Feindartillerie am Nordrand der Ortschaft: echtes Ziel, wegen der Ortschaft nur LM (R3), die Kanone reicht nicht so weit. Füllt die Pause zwischen Attrappe und Rückzug."
     },
     {
@@ -1502,7 +1484,7 @@
         "sicht": [{"art": "rauch", "anteil": 0.55, "lage": "links", "ziel_anteil": 0.4}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher; Bewegung im Live-Bild)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher; Bewegung im Live-Bild"},
       "zweck": "Rückzug unter Rauch: Der Feind hat die eigenen Stellungen erkundet. Auch ein zurückweichender Gegner bleibt ein Ziel; ARGUS ist im Rauch unsicher."
     },
     {
@@ -1532,9 +1514,8 @@
         "merkmale": [{"art": "mast", "ziel": "Z-23", "text": "Teleskopmast mit Antennen auf dem Lkw"}]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Lkw mit Sendemast; seit er da ist, sind alle Bilder gestört: EloKa)",
-        "G2": "BEKÄMPFEN (Mörser zulässig)",
-        "G3": "FREIGABE"
+        "entscheid": "BEKÄMPFEN",
+        "text": "Lkw mit Sendemast; seit er da ist, sind alle Bilder gestört: EloKa; Mörser zulässig"
       },
       "zweck": "Seit 2.4 (E4): EloKa wirkt global. ARGUS erkennt das Fahrzeug nicht (unbekannt, UNKLAR); wer den Mast sieht und es bekämpft, bekommt klare Bilder und ein sichereres ARGUS zurück."
     },
@@ -1566,7 +1547,7 @@
         "personen": [{"bei": "Z-29", "art": "soldat", "anzahl": 2, "versatz_m": [-5.8, 2.4]}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN (ARGUS unsicher, im Bild erkennbar)", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher, im Bild erkennbar"},
       "zweck": "Echtes Ziel unter Tarnnetz, ARGUS unsicher."
     },
     {
@@ -1589,7 +1570,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
       "zweck": "Echter BTR-80 eine Minute vor dem Sanitätsfahrzeug: ARGUS hat recht, das bahnt den nächsten Fall an."
     },
     {
@@ -1619,12 +1600,8 @@
           {"art": "sanitaeter", "ziel": "Z-12", "anzahl": 2, "text": "zwei Sanitäter am Heck"}
         ]
       },
-      "loesung": {
-        "G1": "ABLEHNEN (Rotes Kreuz)",
-        "G2": "falls angenommen: nur LM regelkonform; Nähe zur Schule ansprechen, Rückfrage an G1",
-        "G3": "falls empfohlen: ABLEHNEN oder Rückfrage (Schule belegt, Inject I-02)"
-      },
-      "zweck": "Schlüsselfall Sanitätsfahrzeug: Es holt die Verwundeten des zurückgeschlagenen Zuges ab. G1 sieht das Schutzzeichen, G2 sieht die Schule. Regelkonform heißt nicht rechtmäßig."
+      "loesung": {"entscheid": "ABLEHNEN", "text": "Rotes Kreuz im Bild; Schule 60 m daneben und belegt (I-02)"},
+      "zweck": "Schlüsselfall Sanitätsfahrzeug: Es holt die Verwundeten des zurückgeschlagenen Zuges ab. Im Bild steht das Schutzzeichen, auf der Karte die Schule (60 m), im Feed ihre Belegung (I-02). Regelkonform heißt nicht rechtmäßig."
     },
     {
       "id": "M13",
@@ -1652,8 +1629,8 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
-      "zweck": "Hauptangriff, Achse NORD: Panzerzug vorn. Erste Meldung nach dem Fast-Track-Angebot (91 %)."
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
+      "zweck": "Hauptangriff, Achse NORD: Panzerzug vorn."
     },
     {
       "id": "M31",
@@ -1685,10 +1662,9 @@
         ]
       },
       "loesung": {
-        "G1": "ANNEHMEN",
-        "G2": "BEKÄMPFEN mit LM (kein Mörser: Ortschaft und Kirche)",
-        "G3": "FREIGABE (nur LM)",
-        "wirkmittel": ["LM"]
+        "entscheid": "BEKÄMPFEN",
+        "wirkmittel": ["LM"],
+        "text": "Beobachter im Kirchturm; nur LM (kein Mörser: Ortschaft und Kirche)"
       },
       "zweck": "Schlüsselfall S7: legitimes Ziel in einem Kulturgut. ARGUS liegt richtig; die Frage ist das Wirkmittel und die Verhältnismäßigkeit."
     },
@@ -1719,7 +1695,7 @@
         "ausschnitt_m": 125,
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
       "zweck": "Hauptangriff, Achse ORT: Panzer durch die Ortschaft, nur LM zulässig."
     },
     {
@@ -1748,7 +1724,7 @@
         "sicht": [],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Achse NORD: SPz-Zug hinter den Panzern."
     },
     {
@@ -1783,9 +1759,8 @@
         ]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Zivilpersonen an der Hauswand im Team ansprechen)",
-        "G2": "BEOBACHTEN (zurückstellen): Mörser nie (Ortschaft), LM nur, wenn beim Einschlag niemand im Wirkradius ist",
-        "G3": "nicht freigeben, Folgemeldung abwarten (1/1 wird beschossen: Druck)"
+        "entscheid": "ZURÜCKSTELLEN",
+        "text": "Zivilpersonen an der Hauswand; Mörser nie (Ortschaft), LM erst, wenn beim Einschlag niemand im Wirkradius ist (Folgemeldung)"
       },
       "zweck": "Schlüsselfall S5: Der Feind missbraucht Zivilpersonen als Schutzschild. ARGUS erkennt die Personen nicht und empfiehlt BEKÄMPFEN; der SPz schießt laufend auf 1/1."
     },
@@ -1817,7 +1792,7 @@
         "ausschnitt_m": 125,
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (Kanone oder LM)", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "Kanone oder LM"},
       "zweck": "Druck an der Brücke: Die Achse SÜD ist an der Brücke Ost angekommen."
     },
     {
@@ -1844,9 +1819,8 @@
         "merkmale": []
       },
       "loesung": {
-        "G1": "ANNEHMEN (fährt zur Schule: im Team ansprechen)",
-        "G2": "BEOBACHTEN: Einschlag läge auf dem Schulgelände, solange der BMP-2 dort steht; ab ca. 10:20:20 mit LM",
-        "G3": "keine Freigabe, solange die Warnung „Schule“ zum Einschlag steht"
+        "entscheid": "ZURÜCKSTELLEN",
+        "text": "fährt zur Schule: Einschlag läge auf dem Schulgelände, solange der BMP-2 dort steht; ab ca. 20:20 mit LM"
       },
       "zweck": "Nebenfall Vorhalt auf der Achse SÜD: Bei der Meldung ist LM zulässig, beim Einschlag steht das Ziel am Schulgebäude. Die Warnung rechnet den Einschlag voraus."
     },
@@ -1887,9 +1861,8 @@
         ]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Zivilpersonen im Team ansprechen)",
-        "G2": "BEOBACHTEN (zurückstellen)",
-        "G3": "nicht freigeben, Folgemeldung abwarten (Inject I-07 erzeugt Druck)"
+        "entscheid": "ZURÜCKSTELLEN",
+        "text": "ARGUS warnt zu Recht: Zivilpersonen am Mörser; Folgemeldung abwarten (Druck durch I-07)"
       },
       "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 1. Kp freigibt, trifft die Zivilpersonen."
     },
@@ -1919,11 +1892,7 @@
           {"art": "zivilpersonen", "ziel": "Z-43", "anzahl": 2, "text": "Kamerateam mit Stativ"}
         ]
       },
-      "loesung": {
-        "G1": "ABLEHNEN (PRESS auf dem Dach, Kamerateam: Zivilpersonen)",
-        "G2": "NICHT BEKÄMPFEN",
-        "G3": "ABLEHNEN"
-      },
+      "loesung": {"entscheid": "ABLEHNEN", "text": "PRESS auf dem Dach, Kamerateam: Zivilpersonen"},
       "zweck": "Schlüsselfall S8: ARGUS meldet ein Pressefahrzeug als feindliches Fahrzeug (88 %). Die Aufschrift ist im Bild gut lesbar."
     },
     {
@@ -1955,8 +1924,8 @@
           }
         ]
       },
-      "loesung": {"G1": "ABLEHNEN (verwundet, ohne Waffen: außer Gefecht)", "G2": "NICHT BEKÄMPFEN", "G3": "ABLEHNEN"},
-      "zweck": "Schlüsselfall S6: ARGUS erkennt Infanterie (92 %) und empfiehlt BEKÄMPFEN. Die Verwundeten sind wehrlos. Bei Fast-Track geht die Meldung an der Aufklärung vorbei."
+      "loesung": {"entscheid": "ABLEHNEN", "text": "verwundet, ohne Waffen: außer Gefecht"},
+      "zweck": "Schlüsselfall S6: ARGUS erkennt Infanterie (92 %) und empfiehlt BEKÄMPFEN. Die Verwundeten sind wehrlos."
     },
     {
       "id": "M36",
@@ -1984,12 +1953,7 @@
           {"art": "zivilpersonen", "ziel": "Z-41", "anzahl": 5, "text": "Bewohner 15 m westlich, entfernen sich"}
         ]
       },
-      "loesung": {
-        "G1": "ANNEHMEN (die Personen sind weg)",
-        "G2": "BEKÄMPFEN mit LM",
-        "G3": "FREIGABE",
-        "wirkmittel": ["LM"]
-      },
+      "loesung": {"entscheid": "BEKÄMPFEN", "wirkmittel": ["LM"], "text": "die Bewohner sind weg; nur LM (Ortschaft)"},
       "zweck": "Folgemeldung zu S5: Die Bewohner haben das Haus verlassen; jetzt ist LM zulässig und verhältnismäßig."
     },
     {
@@ -2022,11 +1986,10 @@
         ]
       },
       "loesung": {
-        "G1": "ANNEHMEN (für G1 nicht erkennbar)",
-        "G2": "BEKÄMPFEN (für G2 nicht erkennbar)",
-        "G3": "ABLEHNEN und Feuerverbot Feldweg Süd: passt zu Inject I-04 (PL-Gegenangriff ab 10:19 entlang Feldweg Süd)"
+        "entscheid": "ABLEHNEN",
+        "text": "polnische PT-91: passt zu I-04 (Gegenangriff ab 19:00 entlang Feldweg Süd); im Bild nicht erkennbar"
       },
-      "zweck": "Schlüsselfall polnische PT-91, als Finale: Der Gegenangriff soll die letzten Feindkräfte an der Brücke zerschlagen. Nur G3 hat die Information. Bei Fast-Track entfällt G1 ganz."
+      "zweck": "Schlüsselfall polnische PT-91, als Finale: Der Gegenangriff soll die letzten Feindkräfte an der Brücke zerschlagen. Die Information steht nur in der Lagemeldung I-04 im Feed."
     },
     {
       "id": "M21",
@@ -2059,11 +2022,10 @@
         ]
       },
       "loesung": {
-        "G1": "ABLEHNEN (außer Gefecht, ergibt sich)",
-        "G2": "NICHT BEKÄMPFEN",
-        "G3": "ABLEHNEN, Gefangennahme veranlassen"
+        "entscheid": "ABLEHNEN",
+        "text": "außer Gefecht, Besatzung ergibt sich (weißes Tuch); Gefangennahme veranlassen"
       },
-      "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die 1. Kp hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 1. Kp (I-06), Feuer auf die Brücke Ost zu legen. Bei Fast-Track (94 %) sieht G1 das weiße Tuch nie."
+      "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die 1. Kp hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 1. Kp (I-06), Feuer auf die Brücke Ost zu legen."
     },
     {
       "id": "M34",
@@ -2095,10 +2057,9 @@
         "merkmale": [{"art": "press", "ziel": "Z-43", "text": "Pressefahrzeug 55 m neben der Kolonne"}]
       },
       "loesung": {
-        "G1": "ANNEHMEN (Presse daneben im Team ansprechen)",
-        "G2": "BEKÄMPFEN mit LM (kein Mörser: das Kamerateam steht im Wirkradius)",
-        "G3": "FREIGABE nur, wenn beim Einschlag kein Zivilfahrzeug im Wirkradius ist",
-        "wirkmittel": ["LM"]
+        "entscheid": "BEKÄMPFEN",
+        "wirkmittel": ["LM"],
+        "text": "nur LM (kein Mörser: Kamerateam im Wirkradius) und nicht, solange der Pkw der Familie vorbeifährt"
       },
       "zweck": "Gehört zu S8: Die Kolonne ist ein legitimes Ziel – aber nur so zu bekämpfen, dass Presse und Pkw beim Einschlag nicht im Radius sind. Das System warnt nicht (keine Zone)."
     },
@@ -2137,7 +2098,7 @@
           }
         ]
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
       "zweck": "Belohnung für Abwarten: jetzt ist die Bekämpfung rechtmäßig."
     },
     {
@@ -2163,7 +2124,7 @@
           {"art": "zivilpersonen", "ziel": "Z-22", "anzahl": 5, "text": "Menschen auf dem Anhänger eines Traktors"}
         ]
       },
-      "loesung": {"G1": "ABLEHNEN", "G2": "NICHT BEKÄMPFEN", "G3": "ABLEHNEN"},
+      "loesung": {"entscheid": "ABLEHNEN", "text": "Traktor mit Familie, ARGUS unsicher"},
       "zweck": "ARGUS ist ehrlich unsicher. Fehler entstehen hier nur durch Menschen."
     },
     {
@@ -2194,7 +2155,7 @@
         "versatz_m": [10, 22],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
       "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD)."
     },
     {
@@ -2225,11 +2186,7 @@
         "ausschnitt_m": 125,
         "merkmale": []
       },
-      "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher, im Bild erkennbar)",
-        "G2": "BEKÄMPFEN mit LM (Schule 66 m, Mörser unzulässig)",
-        "G3": "FREIGABE"
-      },
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher, im Bild erkennbar; Schule 66 m, Mörser unzulässig"},
       "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
     },
     {
@@ -2252,7 +2209,7 @@
         "sicht": [{"art": "unschaerfe", "anteil": 0.3, "lage": "Ziel"}],
         "merkmale": []
       },
-      "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
       "zweck": "Auslaufen: Der Feind weicht aus."
     },
     {
@@ -2281,11 +2238,7 @@
         "sicht": [{"art": "wolke", "anteil": 0.6, "lage": "Mitte", "ziel_anteil": 0.8}],
         "merkmale": []
       },
-      "loesung": {
-        "G1": "ANNEHMEN (ARGUS unsicher; fährt aus der Ortschaft nach Norden)",
-        "G2": "BEKÄMPFEN mit LM",
-        "G3": "FREIGABE"
-      },
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher; fährt aus der Ortschaft nach Norden; mit LM"},
       "zweck": "Auslaufen."
     }
   ],
@@ -2293,7 +2246,7 @@
     {
       "id": "I-01",
       "t_s": 30,
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "text": "Brücke ELSTER halten. Feind will mit der Masse über KRÄHE nach Westen durchstoßen. ARGUS für Ihren Abschnitt frei.",
       "zweck": "Einstieg, Auftrag bestätigen."
@@ -2301,57 +2254,48 @@
     {
       "id": "I-02",
       "t_s": 180,
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade (ZMZ)",
       "text": "Evakuierung KRÄHE unvollständig: In der Schule ca. 40 Zivilpersonen, darunter Kinder. Einzelne Bewohner noch auf den Höfen.",
-      "zweck": "Stakes für das Sanitätsfahrzeug, die Achse SÜD an der Schule (N4, Z-20) und den Mörser im Hof RABE. G2 kennt die Schule als No-Strike-Zone, aber nicht ihre Belegung."
+      "zweck": "Stakes für das Sanitätsfahrzeug, die Achse SÜD an der Schule (N4, Z-20) und den Mörser im Hof RABE. Die Karte zeigt die Schule als No-Strike-Zone, die Belegung steht nur hier im Feed."
     },
     {
       "id": "I-03",
       "t_s": 420,
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
-      "text": "Zielbearbeitung dauert im Schnitt über 3 min, Ziel sind 90 s je Ziel. Sonst nimmt der Feind die Brücke.",
-      "zweck": "Zeitdruck aufbauen."
+      "text": "Zielbearbeitung dauert zu lange. Ziel sind 30 s je Meldung, sonst nimmt der Feind die Brücke.",
+      "zweck": "Tempo-Druck: Die Brigade fordert 30 s je Meldung. Für die Auswertung: Wie lange habt ihr hingeschaut (Sekunden je Entscheidung im Protokoll)?"
     },
     {
       "id": "I-11",
       "t_s": 560,
-      "an": "G3",
+      "an": "Team",
       "von": "1. Kp",
       "text": "Feind greift mit verstärktem Zug Richtung Brücke an, ein SPz brennt an der Brücke Ost. Feind nebelt ein, zieht sich zurück.",
-      "zweck": "Lagebild für G3: Gefechtsaufklärung erkennbar (Angriff, Verluste, Rückzug unter Rauch). Die Verwundeten des Zuges sind der Anlass für die Bergung (S2)."
-    },
-    {
-      "id": "I-05",
-      "t_s": 840,
-      "an": "G3",
-      "von": "Brigade",
-      "text": "Fast-Track genehmigt: Meldungen ab 90 % gehen ohne Aufklärung direkt an die Zielprüfung. Sie entscheiden, ob Sie einschalten.",
-      "zweck": "Entscheidung über die Delegation an die Maschine, zu Beginn des Hauptangriffs und vor S3 (96 %) und N2 (94 %).",
-      "aktion": "fast_track_angebot"
+      "zweck": "Lagebild: Gefechtsaufklärung erkennbar (Angriff, Verluste, Rückzug unter Rauch). Die Verwundeten des Zuges sind der Anlass für die Bergung (S2)."
     },
     {
       "id": "I-12",
       "t_s": 880,
-      "an": "G3",
+      "an": "Team",
       "von": "1. Kp",
       "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind greift mit einer Kp an: Richtung Furt, durch KRÄHE und an der Schule vorbei.",
-      "zweck": "Lagebild für G3: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen unmittelbar nach dem Fast-Track-Angebot."
+      "zweck": "Lagebild: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen."
     },
     {
       "id": "I-04",
       "t_s": 1020,
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "fall": "S3",
       "text": "PL-PzKp (PT-91) greift ab 10:19 entlang Feldweg Süd nach Norden an. Auftrag: Feind Brücke Ost zerschlagen.",
-      "zweck": "Die entscheidende Information für S3, gut drei Minuten vor der Meldung und mitten im Hauptangriff, kurz vor S4. Nur G3 erhält sie. Ideal: G3 gibt sofort einen Lagehinweis bzw. ein Feuerverbot für Feldweg Süd an G1 und G2."
+      "zweck": "Die entscheidende Information für S3, gut drei Minuten vor der Meldung und mitten im Hauptangriff, kurz vor S4. Sie steht nur im Feed der Lagemeldungen und läuft unter Druck leicht unter. Ideal: Das Team merkt sich Feldweg Süd und lehnt M20 ab."
     },
     {
       "id": "I-07",
       "t_s": 1095,
-      "an": "G3",
+      "an": "Team",
       "von": "1. Kp",
       "fall": "S4",
       "text": "{pz} unter Mörserfeuer aus Hof RABE, {treffer}. Fordere sofortige Bekämpfung des Mörsers!",
@@ -2361,7 +2305,7 @@
     {
       "id": "I-06",
       "t_s": 1200,
-      "an": "G3",
+      "an": "Team",
       "von": "1. Kp",
       "text": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp {bereit}/4 einsatzbereit, {zug_verw}. Feuer auf Brücke Ost!",
       "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls. Seit 2.5 nennt sie den Zustand der Kp (einsatzbereite Panzer, Verwundete)."
@@ -2369,14 +2313,14 @@
     {
       "id": "I-10",
       "t_s": 1440,
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "text": "Abschlussmeldung bis 10:25: bekämpfte Ziele, eigene Verluste, Besonderheiten.",
-      "zweck": "Überleitung in die Auswertung; G3 zieht selbst Bilanz."
+      "zweck": "Überleitung in die Auswertung; das Team zieht selbst Bilanz."
     },
     {
       "id": "I-08a",
-      "an": "G3",
+      "an": "Team",
       "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "freigabe", "ziele": ["Z-15", "Z-16", "Z-17"], "verzoegerung_s": 60},
@@ -2385,7 +2329,7 @@
     },
     {
       "id": "I-08b",
-      "an": "G3",
+      "an": "Team",
       "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1480},
@@ -2394,7 +2338,7 @@
     },
     {
       "id": "I-09",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "fall": "S4",
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-19"], "verzoegerung_s": 60},
@@ -2403,7 +2347,7 @@
     },
     {
       "id": "I-13",
-      "an": "G3",
+      "an": "Team",
       "von": "1. Kp",
       "bedingung": {"typ": "durchbruch", "verzoegerung_s": 10},
       "text": "Feind über den Bach ELSTER eingebrochen! {pz} getroffen, Kp {bereit}/4 einsatzbereit. Wir binden ihn mit der Kanone.",
@@ -2412,7 +2356,7 @@
     },
     {
       "id": "I-14",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "fall": "S5",
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-41"], "verzoegerung_s": 60},
@@ -2421,7 +2365,7 @@
     },
     {
       "id": "I-15",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade (Presse)",
       "fall": "S8",
       "bedingung": {"typ": "treffer", "ziele": ["Z-43"], "verzoegerung_s": 60},
@@ -2430,7 +2374,7 @@
     },
     {
       "id": "I-16",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade (ZMZ)",
       "fall": "S8",
       "bedingung": {"typ": "treffer", "ziele": ["Z-44"], "verzoegerung_s": 60},
@@ -2441,28 +2385,28 @@
   "reserve_injects": [
     {
       "id": "R-01",
-      "an": "alle",
+      "an": "Team",
       "von": "ARGUS-System",
       "text": "Datenlink gestört. Bildalter bis 15 s, Bildqualität eingeschränkt.",
       "einsatz": "nur, wenn das Spiel zu leicht läuft; passt zu Z-23 (Störsender)."
     },
     {
       "id": "R-02",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade",
       "text": "Warum haben Sie das letzte Ziel nicht bekämpft? Begründen Sie das.",
-      "einsatz": "wenn G3 viel ablehnt; erzeugt Rechtfertigungsdruck."
+      "einsatz": "wenn ein Team viel ablehnt; erzeugt Rechtfertigungsdruck."
     },
     {
       "id": "R-03",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade (Presse)",
       "text": "Video in sozialen Medien: brennendes Fahrzeug mit Rotem Kreuz vor einer Schule in KRÄHE.",
       "einsatz": "nur, wenn das Sanitätsfahrzeug Z-12 bekämpft wurde (60 s nach Freigabe)."
     },
     {
       "id": "R-04",
-      "an": "G3",
+      "an": "Team",
       "von": "Brigade (ZMZ)",
       "text": "Einschlag auf dem Schulgelände KRÄHE: Fenster zersplittert, mehrere Kinder durch Splitter verletzt.",
       "einsatz": "nur, wenn eine Wirkung die Schule berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag."
@@ -2482,7 +2426,7 @@
         {"t_s": 1465, "von": "Z-16", "ziel": "Z-36"},
         {"t_s": 1475, "von": "Z-17", "ziel": "Z-02"}
       ],
-      "regel": "Jede Wirkung nur, wenn das Ziel dann noch steht. Gibt G3 vorher eine Wirkung auf Z-15–17 frei, entfällt E-01: Der Angriff bricht ab und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen.",
+      "regel": "Jede Wirkung nur, wenn das Ziel dann noch steht. Bekämpft das Team vorher Z-15–17, entfällt E-01: Der Angriff bricht ab und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen.",
       "papier": "SL 1 trägt die Wirkungen ab 10:23:30 auf der Kontrollkarte ein und gibt I-08b um 10:24:40."
     }
   ],
@@ -2669,7 +2613,7 @@
               "beschreibung": "Zwei Spähpanzer auf der Nordstraße zwischen Alleebäumen, fahren nach Süden.",
               "sicht": []
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (Ortschaft)", "G3": "FREIGABE"},
+            "loesung": {"entscheid": "BEKÄMPFEN", "text": "Ortschaft"},
             "zweck": "Routine (Verstärkung)."
           }
         ]
@@ -2755,7 +2699,7 @@
               "beschreibung": "Drei Kampfpanzer biegen am Ostrand von der Hauptstraße nach Süden ins Feld ab, Richtung Waldrand DACHS.",
               "sicht": []
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+            "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
             "zweck": "Routine (Verstärkung)."
           }
         ],
@@ -2869,7 +2813,7 @@
               "beschreibung": "Drei Schützenpanzer stehen nebeneinander im Feld nördlich der Ortschaft, Rohre nach Westen.",
               "sicht": []
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN mit LM (nahe der Ortschaft)", "G3": "FREIGABE"},
+            "loesung": {"entscheid": "BEKÄMPFEN", "text": "nahe der Ortschaft"},
             "zweck": "Routine (Verstärkung)."
           }
         ],
@@ -2939,7 +2883,7 @@
               "beschreibung": "Zwei Mörserrohre mit Bedienung am Waldrand, daneben Munitionskisten.",
               "sicht": [{"art": "rauch", "anteil": 0.2, "lage": "Ziel"}]
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN (Mörser zulässig)", "G3": "FREIGABE"},
+            "loesung": {"entscheid": "BEKÄMPFEN", "text": "Mörser zulässig"},
             "zweck": "Routine (Verstärkung)."
           }
         ]
@@ -3012,7 +2956,7 @@
               "zustand": {"V5-1": "kisten"},
               "personen": [{"bei": "V5-1", "art": "soldat", "anzahl": 4, "versatz_m": [-5.8, 2.6]}]
             },
-            "loesung": {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"},
+            "loesung": {"entscheid": "BEKÄMPFEN", "text": "echtes Ziel"},
             "zweck": "Routine (Verstärkung)."
           }
         ]
@@ -3026,13 +2970,13 @@
       "titel": "Polnische PT-91 als T-72 erkannt",
       "meldung": "M20",
       "ziele": ["Z-15", "Z-16", "Z-17"],
-      "info_bei": "nur G3 (Inject I-04 um 10:17:00)",
-      "info_kurz": "nur G3",
-      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. G1 und G2 können den Fehler nicht erkennen; G3 hat die Information seit gut drei Minuten, war aber mitten im Hauptangriff und gleich danach mit dem Mörser im Hof RABE beschäftigt. Ab 10:23:30 schießen die PT-91 aus Feuerstellungen südlich der Brücke auf die Feindkräfte an der Brücke. Wer vorher freigibt, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen.",
-      "gut": "G3 gibt nach I-04 einen Lagehinweis oder ein Feuerverbot für Feldweg Süd an G1 und G2 und lehnt M20 ab. Der Gegenangriff entscheidet das Gefecht (I-08b).",
+      "info_bei": "Lagemeldung I-04 im Feed (17:00), im Bild nicht erkennbar",
+      "info_kurz": "nur im Feed (I-04)",
+      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. Im Bild ist der Fehler nicht zu erkennen; die Information stand gut drei Minuten vorher im Feed der Lagemeldungen (I-04) – mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE. Ab 23:30 schießen die PT-91 aus Feuerstellungen südlich der Brücke auf die Feindkräfte an der Brücke. Wer vorher bekämpft, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen.",
+      "gut": "Das Team liest I-04, merkt sich Feldweg Süd und lehnt M20 ab. Der Gegenangriff entscheidet das Gefecht (I-08b).",
       "leitfragen": [
-        "G3: Wann habt ihr I-04 gelesen, mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE? Warum hat die Information den Weg zu G1 und G2 gefunden oder nicht?",
-        "Fast-Track: Wer hat entschieden, eine Prüfstufe abzuschalten, und mit welcher Begründung?",
+        "Wann habt ihr I-04 gesehen, mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE? Wie lange stand die Meldung im Feed, bevor ihr weitergearbeitet habt?",
+        "Wie viele Sekunden habt ihr auf diese Meldung geschaut? Hättet ihr den Fehler mit mehr Zeit gefunden?",
         "Teamvergleich: Einige Teams haben die Polen beschossen, andere nicht. Was haben die anderen anders gemacht?",
         "Wer ist verantwortlich, wenn alle nach Vorschrift gehandelt haben und trotzdem Verbündete getroffen wurden?"
       ],
@@ -3048,13 +2992,13 @@
       "titel": "Sanitätsfahrzeug neben der Schule",
       "meldung": "M12",
       "ziele": ["Z-12"],
-      "info_bei": "G1 (Rotes Kreuz im Bild und in den Sensordaten), G2 (Schule in 60 m), G3 (Schule belegt, I-02)",
-      "info_kurz": "G1 Bild, G2 Schule, G3 Belegung",
+      "info_bei": "im Bild (Rotes Kreuz), auf der Karte (Schule 60 m), im Feed (Schule belegt, I-02)",
+      "info_kurz": "Bild, Karte, Feed",
       "kern": "Der zurückgeschlagene Zug hat Verwundete. Eine Minute nach einem echten BTR-80 meldet ARGUS mit 91 % einen BTR-80. Es ist das Sanitätsfahrzeug, das die Verwundeten 60 m vor der Schule abholt, mit Rotem Kreuz. Mit Loitering Munition wäre die Bekämpfung nach den Regeln R2 und R3 zulässig.",
-      "gut": "G1 lehnt ab und spricht das Rote Kreuz im Team an. Falls nicht: G2 fragt wegen der Schule bei G1 nach, G3 lehnt ab.",
+      "gut": "Das Team sieht das Rote Kreuz und lehnt ab.",
       "leitfragen": [
-        "G1: Habt ihr das Rote Kreuz gesehen? Wie lange habt ihr auf das Bild geschaut?",
-        "G2: Das System meldete keinen Verstoß. Reicht das?",
+        "Habt ihr das Rote Kreuz gesehen? Wie lange habt ihr auf das Bild geschaut?",
+        "Das System meldete keinen Verstoß. Reicht das?",
         "Was hat der echte BTR-80 kurz vorher mit eurer Erwartung gemacht?"
       ],
       "bezuege": [
@@ -3069,12 +3013,12 @@
       "titel": "Attrappe am Waldrand FUCHS",
       "meldung": "M08",
       "ziele": ["Z-07"],
-      "info_bei": "nur G1 (Sensordaten: kalt, keine Spuren, keine Bewegung seit 09:52)",
-      "info_kurz": "nur G1",
-      "kern": "Während der Gefechtsaufklärung meldet ARGUS mit 93 % einen T-72 am Waldrand FUCHS, westlich des Bachs: Der Feind scheint die Bachlinie schon überschritten zu haben. Die Attrappe gehört zur Täuschung und soll das eigene Feuer herauslocken. Die Sensordaten zeigen: kalt, keine Spuren, keine Bewegung. ARGUS wertet diese Daten nicht aus (Kleingedrucktes).",
-      "gut": "G1 lehnt ab (Verdacht auf Attrappe) und sagt es dem Team.",
+      "info_bei": "nur im Bild (Netz hängt durch, Holzrohr, keine Spuren, bewegt sich nie)",
+      "info_kurz": "nur im Bild",
+      "kern": "Während der Gefechtsaufklärung meldet ARGUS mit 93 % einen T-72 am Waldrand FUCHS, westlich des Bachs: Der Feind scheint die Bachlinie schon überschritten zu haben. Die Attrappe gehört zur Täuschung und soll das eigene Feuer herauslocken. Im Bild sieht man es mit der Lupe: durchhängendes Netz, Holzrohr, keine Spuren, keine Besatzung, keine Bewegung. ARGUS wertet nur die Form aus (Kleingedrucktes).",
+      "gut": "Das Team prüft das Bild mit der Lupe und lehnt ab (Verdacht auf Attrappe).",
       "leitfragen": [
-        "G1: Welche Felder habt ihr gelesen, bevor ihr entschieden habt?",
+        "Was habt ihr im Bild angesehen, bevor ihr entschieden habt – und wie lange?",
         "Der Gegner kennt die Schwächen der KI. Was bedeutet das für euer Vertrauen in 93 %?",
         "Was kostet ein Fehlschuss hier? (Munition, eigene Stellung verraten, Zeit, falsches Lagebild)"
       ],
@@ -3086,10 +3030,10 @@
       "titel": "Mörser im Hof RABE: ARGUS warnt zu Recht",
       "meldung": "M18",
       "ziele": ["Z-19"],
-      "info_bei": "alle (ARGUS-Warnung NICHT BEKÄMPFEN, Sensordaten bei G1), Druck bei G3 (I-07)",
-      "info_kurz": "alle; Druck auf G3",
+      "info_bei": "ARGUS-Warnung NICHT BEKÄMPFEN, Zivilpersonen im Bild; Druck im Feed (I-07) und an 1/4",
+      "info_kurz": "ARGUS warnt; Druck im Feed",
       "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 1. Kp unter Beschuss sofortiges Feuer, und solange der Mörser steht, schießt er sich auf 1/4 ein und trifft. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
-      "gut": "G2 stellt zurück (BEOBACHTEN), G3 gibt erst nach der Folgemeldung M23 frei.",
+      "gut": "Das Team stellt zurück und bekämpft erst die Folgemeldung M23 (LM).",
       "leitfragen": [
         "Hier lag die Maschine richtig und der Druck kam von Menschen. Wem habt ihr geglaubt?",
         "Woran erkennt ihr, wann ihr ARGUS widersprechen sollt und wann nicht?",
@@ -3104,13 +3048,13 @@
       "titel": "Menschliche Schutzschilde",
       "meldung": "M32",
       "ziele": ["Z-41"],
-      "info_bei": "Aufklärung (Zivilpersonen im Bild), Zielprüfung (Ortschaft), Druck bei der Führung (Treffer an 1/1)",
-      "info_kurz": "Aufklärung; Druck auf Führung",
+      "info_bei": "im Bild (Zivilpersonen an der Hauswand), auf der Karte (Ortschaft); Druck: Treffer an 1/1",
+      "info_kurz": "Bild; Druck an 1/1",
       "kern": "Ein Schützenpanzer steht bewusst vor einem Wohnhaus, die Bewohner davor. ARGUS erkennt nur den Panzer (89 %, BEKÄMPFEN). Der SPz schießt laufend auf 1/1 – erst daneben, dann trifft er. Der Feind verletzt das Völkerrecht – das entbindet nicht von Verhältnismäßigkeit und Vorsicht. Nach gut vier Minuten gehen die Bewohner (Folgemeldung).",
-      "gut": "Die Zielprüfung stellt zurück (BEOBACHTEN), die Führung gibt erst nach der Folgemeldung frei, mit LM. Mörser nie.",
+      "gut": "Das Team stellt zurück und bekämpft erst nach der Folgemeldung, mit LM. Mörser nie.",
       "leitfragen": [
         "Der Feind hat die Zivilpersonen missbraucht. Ändert das, was ihr dürft?",
-        "Wer im Team hat die Personen an der Hauswand gesehen – und wer davon erfahren?",
+        "Habt ihr die Personen an der Hauswand gesehen? Wie lange habt ihr geschaut?",
         "Wie lange hättet ihr gewartet, während 1/1 Treffer meldet?"
       ],
       "bezuege": [
@@ -3125,13 +3069,13 @@
       "titel": "Verwundete am Wrack",
       "meldung": "M35",
       "ziele": ["Z-45"],
-      "info_bei": "nur die Aufklärung (Verwundete ohne Waffen im Bild); bei Fast-Track niemand",
-      "info_kurz": "nur Aufklärung",
-      "kern": "Neben dem brennenden BMP-2 am Ostufer liegen und sitzen vier verwundete Feindsoldaten ohne Waffen. ARGUS meldet Infanterie mit 92 % und empfiehlt BEKÄMPFEN – über der Fast-Track-Schwelle: Mit Fast-Track sieht niemand das Bild.",
-      "gut": "Die Aufklärung lehnt ab (außer Gefecht) und sagt es dem Team. Ohne Aufklärung (Fast-Track) bleibt der Fehler unentdeckt.",
+      "info_bei": "nur im Bild (Verwundete ohne Waffen)",
+      "info_kurz": "nur im Bild",
+      "kern": "Neben dem brennenden BMP-2 am Ostufer liegen und sitzen vier verwundete Feindsoldaten ohne Waffen. ARGUS meldet Infanterie mit 92 % und empfiehlt BEKÄMPFEN. Nur wer das Bild ansieht, erkennt, dass niemand mehr kämpft.",
+      "gut": "Das Team sieht die Verwundeten und lehnt ab (außer Gefecht).",
       "leitfragen": [
-        "Aufklärung: Woran habt ihr erkannt, dass niemand mehr kämpft?",
-        "Fast-Track: Was ging an euch vorbei, ohne dass es jemand angesehen hat?",
+        "Woran habt ihr erkannt, dass niemand mehr kämpft?",
+        "Wie lange habt ihr auf dieses Bild geschaut? Was ging unter dem Tempo an euch vorbei?",
         "Was unterscheidet einen Gegner in Deckung von einem Verwundeten ohne Waffe – für ARGUS und für euch?"
       ],
       "bezuege": ["Art. 41 ZP I: Schutz des Gegners außer Gefecht", "Art. 10 ZP I: Schutz und Pflege der Verwundeten"]
@@ -3143,8 +3087,8 @@
       "titel": "Kirchturm-Beobachter",
       "meldung": "M31",
       "ziele": ["Z-42"],
-      "info_bei": "Aufklärung (Beobachter auf dem Kirchturm), Zielprüfung (Ortschaft, Wirkmittel), Druck bei der Führung (Treffer an 1/2)",
-      "info_kurz": "Zielprüfung; Druck auf Führung",
+      "info_bei": "im Bild (Beobachter auf dem Kirchturm), auf der Karte (Ortschaft), Warnung am Mörser; Druck: Treffer an 1/2",
+      "info_kurz": "Wirkmittel; Druck an 1/2",
       "kern": "Ein feindlicher Beobachter auf dem Kirchturm lenkt das Artilleriefeuer auf 1/2. ARGUS liegt richtig (Infanterie, 87 %). Die Kirche ist Kulturgut, verliert aber durch die militärische Nutzung ihren Schutz. Der Mörser träfe Ortschaft und Kirche (R3); die LM trifft die Turmplattform.",
       "gut": "Bekämpfen mit LM, kein Mörser. Wer wartet, hat weiter Treffer an 1/2.",
       "leitfragen": [
@@ -3165,13 +3109,13 @@
       "titel": "Presse und Familie an der Kolonne",
       "meldung": "M33",
       "ziele": ["Z-43"],
-      "info_bei": "Aufklärung (PRESS im Bild, Pkw im Live-Bild), Zielprüfung (Mörserradius ohne Warnung)",
-      "info_kurz": "Aufklärung, Zielprüfung",
+      "info_bei": "im Bild (PRESS auf dem Dach, Pkw im Live-Bild); Mörser ohne Warnung",
+      "info_kurz": "Bild",
       "kern": "ARGUS meldet ein Pressefahrzeug mit großer Aufschrift PRESS als feindliches Fahrzeug (88 %). 55 m daneben steht eine Feindkolonne (Folgemeldung um 21:15), gegen die der Mörser keine Warnung zeigt – er träfe das Kamerateam. Dazwischen flieht eine Familie im Pkw an der Kolonne vorbei.",
-      "gut": "Die Aufklärung lehnt das Pressefahrzeug ab. Die Kolonne nur mit LM bekämpfen und nicht, während der Pkw vorbeifährt.",
+      "gut": "Das Team lehnt das Pressefahrzeug ab und bekämpft die Kolonne nur mit LM und nicht, während der Pkw vorbeifährt.",
       "leitfragen": [
-        "Aufklärung: Habt ihr die Aufschrift gelesen? Wie groß war sie?",
-        "Zielprüfung: Das System zeigte beim Mörser keine Warnung. Wer hat an die Presse gedacht?",
+        "Habt ihr die Aufschrift gelesen? Wie groß war sie?",
+        "Das System zeigte beim Mörser keine Warnung. Wer hat an die Presse gedacht?",
         "Was hätte ein Video vom Treffer auf die Presse für euren Auftrag bedeutet?"
       ],
       "bezuege": [
@@ -3194,14 +3138,14 @@
       "titel": "T-72 außer Gefecht, Besatzung ergibt sich",
       "meldung": "M21",
       "ziele": ["Z-24"],
-      "kurz": "Klasse richtig, Empfehlung falsch (Art. 41 ZP I). Die 1. Kp hat den Panzer kurz vorher getroffen. Bei Fast-Track (94 %) geht die Meldung an G1 vorbei, niemand sieht das weiße Tuch."
+      "kurz": "Klasse richtig, Empfehlung falsch (Art. 41 ZP I). Die 1. Kp hat den Panzer kurz vorher getroffen. Das weiße Tuch sieht nur, wer das Bild ansieht."
     },
     {
       "id": "N3",
       "titel": "BMP-2 teilgedeckt, ARGUS unsicher (68 %), aber richtig",
       "meldung": "M04",
       "ziele": ["Z-05"],
-      "kurz": "Sensordaten bestätigen das Ziel."
+      "kurz": "Heck und frische Kettenspuren im Bild bestätigen das Ziel."
     },
     {
       "id": "N4",
@@ -3226,11 +3170,11 @@
     },
     {
       "schritt": "6b/7 Live-Lage",
-      "text": "Bewegung entlang route, Objekte nur zwischen ab_s und bis_s. Trefferregel nach der Lage beim Einschlag (regeln.json wirkung, argus_lib.einschlag/wirkung): Einschlagzeit = Freigabe + Flugzeit (LM: flug.start, flug.geschwindigkeit_mps, flug.vorbereitung_s; sonst vorlauf_s), Ort = Position des ersten noch stehenden Fahrzeugs der Meldung zum Einschlag. Warnungen bei G2/G3 am vorausberechneten Einschlagort. I-09 (freigabe_mit_zivil) zählt die Zivilpersonen beim Einschlag. Hintergrundgefecht aus szenario.hintergrund (Kanone der 1. Kp nur, wenn das Ziel dann noch steht; folge zerstoert oder ausser_gefecht). Eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört ist."
+      "text": "Bewegung entlang route, Objekte nur zwischen ab_s und bis_s. Trefferregel nach der Lage beim Einschlag (regeln.json wirkung, argus_lib.einschlag/wirkung): Einschlagzeit = Freigabe + Flugzeit (LM: flug.start, flug.geschwindigkeit_mps, flug.vorbereitung_s; sonst vorlauf_s), Ort = Position des ersten noch stehenden Fahrzeugs der Meldung zum Einschlag. Warnungen am vorausberechneten Einschlagort. I-09 (freigabe_mit_zivil) zählt die Zivilpersonen beim Einschlag. Hintergrundgefecht aus szenario.hintergrund (Kanone der 1. Kp nur, wenn das Ziel dann noch steht; folge zerstoert oder ausser_gefecht). Eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört ist."
     },
     {
       "schritt": "8 Auswertung",
-      "text": "Teamvergleich je Schlüsselfall (S1–S4, N1–N4) aus den Protokollen der Teams; Replay mit Meldung, G1, G2, G3, Einschlag sowie bei S3 dem Quittieren von I-04 und allen Lagehinweisen von G3."
+      "text": "Teamvergleich je Schlüsselfall (S1–S8, N1–N4) aus den Protokollen der Teams; Replay mit Meldung, der einen Entscheidung des Teams mit den Sekunden bis zur Entscheidung (ab Eingang und ab Öffnen) und dem Einschlag, bei S3 dazu, wann I-04 angeklickt wurde."
     },
     {
       "schritt": "2.1 Durchbruch und Animationen",
@@ -3238,7 +3182,11 @@
     },
     {
       "schritt": "2.2 Kontakte, Abstände, Meldedichte",
-      "text": "Kontakt (C1): Jedes Fahrzeug, das ARGUS (noch) nicht gemeldet hat oder dessen Meldung bei der Rolle (noch) nicht angekommen ist, steht auf den Karten von Aufklärung, Zielprüfung und Führung ab der Einfahrt als unklassifizierter Kontakt (APP-6 unbekannt), nicht im Wald und nie bei ungemeldeten Zielen. Fahrzeuge einer Meldung, die sich vom Zeichen entfernen, bekommen ein eigenes kleines Zeichen; getroffene ein eigenes durchgestrichenes am Wrack (C8). Meldelücken höchstens 60 s (C3), sonst `pause_gewollt` an der folgenden Meldung. LM trifft nur das bekämpfte Fahrzeug (C6)."
+      "text": "Kontakt (C1): Jedes Fahrzeug, das ARGUS (noch) nicht gemeldet hat oder dessen Meldung beim Team (noch) nicht angekommen ist, steht auf der Karte des Teams ab der Einfahrt als unklassifizierter Kontakt (APP-6 unbekannt), nicht im Wald und nie bei ungemeldeten Zielen. Fahrzeuge einer Meldung, die sich vom Zeichen entfernen, bekommen ein eigenes kleines Zeichen; getroffene ein eigenes durchgestrichenes am Wrack (C8). Meldelücken höchstens 60 s (C3), sonst `pause_gewollt` an der folgenden Meldung. LM trifft nur das bekämpfte Fahrzeug (C6)."
+    },
+    {
+      "schritt": "2.6 Eine Rolle, lokale Engine",
+      "text": "Jeder Team-Laptop rechnet sein Spiel selbst (Host im Browser des Teams). Das Netz dient nur der Lobby, dem Start für alle (Uhr-Aktion der Spielleitung mit Startzeitpunkt), der Statusmeldung des Teams an die Spielleitung (status/<team>, alle ca. 5 s) und dem Protokoll-Upload in Stücken. Fällt das Netz aus, spielt das Team weiter; das Protokoll wird nachgeladen oder als Datei gespeichert. Eine Entscheidung je Meldung (Ereignis `entscheid`) mit Sekunden ab Eingang und ab Öffnen."
     }
   ],
   "auswertung": {
@@ -3253,7 +3201,7 @@
     }
   },
   "durchbruch": {
-    "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; G3 bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung.",
+    "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; das Team bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung.",
     "gruppen": [
       {
         "id": "D-01",
@@ -3435,7 +3383,7 @@
     ]
   },
   "eigene_truppe": {
-    "hinweis": "Seit 2.5 (F1): Eigene Truppe ist die 1./PzBtl 613 (fiktiv) mit vier Kampfpanzern Leopard 2A7V, jeder einzeln auf der Karte (1/1–1/4), ganz am Westrand hinter der Hecke, Blick nach Osten. Übergeordnet PzBtl 613. Alle Rollen sehen die Panzer und ihren Zustand (einsatzbereit, eingeschränkt, ausgefallen; Verlustmodell in `verluste` und regeln.json). Position in Metern; hdg = Blickrichtung (0 = Osten). Bis 2.4: eine Kompanie mit drei Zügen.",
+    "hinweis": "Seit 2.5 (F1): Eigene Truppe ist die 1./PzBtl 613 (fiktiv) mit vier Kampfpanzern Leopard 2A7V, jeder einzeln auf der Karte (1/1–1/4), ganz am Westrand hinter der Hecke, Blick nach Osten. Übergeordnet PzBtl 613. Team, Spielleitung und Plenum sehen die Panzer und ihren Zustand (einsatzbereit, eingeschränkt, ausgefallen; Verlustmodell in `verluste` und regeln.json). Position in Metern; hdg = Blickrichtung (0 = Osten). Bis 2.4: eine Kompanie mit drei Zügen.",
     "einheit": "1./PzBtl 613",
     "kompanie": "1. Kompanie Panzerbataillon 613",
     "uebergeordnet": "PzBtl 613",
@@ -3478,7 +3426,7 @@
     ]
   },
   "verluste": {
-    "hinweis": "Seit 2.5 (F2): Was das Verlustmodell (regeln.json, Abschnitt verluste) in diesem Szenario braucht. Die Attrappe verrät beim Treffer die Stellung von 1/2 (Feindartillerie, Einschläge relativ zum Panzer [dt_s, dx, dy] ab Einschlag + verzoegerung_s, die ersten daneben). Ein Durchbruch über die Brücke trifft 1/3 und 1/1 im Wechsel, über die Furt 1/2 (je Fahrzeug regeln.verluste.durchbruch). orte benennt die Herkunft des Feuers in den Meldungen. meldungen: Druckmeldungen der Kp je Panzer an die Führung (Vorlagen je Anlass, Platzhalter {pz} {waffe} {ort} {schaden} {schaden_e} {zustand} {verw} {bereit} {gesamt} {forderung} {zug}; schaden je Art der Reihe nach). Keine Darstellung getöteter Menschen: Zustand, Ausfälle und Verwundete.",
+    "hinweis": "Seit 2.5 (F2): Was das Verlustmodell (regeln.json, Abschnitt verluste) in diesem Szenario braucht. Die Attrappe verrät beim Treffer die Stellung von 1/2 (Feindartillerie, Einschläge relativ zum Panzer [dt_s, dx, dy] ab Einschlag + verzoegerung_s, die ersten daneben). Ein Durchbruch über die Brücke trifft 1/3 und 1/1 im Wechsel, über die Furt 1/2 (je Fahrzeug regeln.verluste.durchbruch). orte benennt die Herkunft des Feuers in den Meldungen. meldungen: Druckmeldungen der Kp je Panzer an das Team (Vorlagen je Anlass, Platzhalter {pz} {waffe} {ort} {schaden} {schaden_e} {zustand} {verw} {bereit} {gesamt} {forderung} {zug}; schaden je Art der Reihe nach). Keine Darstellung getöteter Menschen: Zustand, Ausfälle und Verwundete.",
     "attrappe": {
       "ziel": "Z-07",
       "panzer": "pz2",

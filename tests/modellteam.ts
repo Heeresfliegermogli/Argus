@@ -1,68 +1,64 @@
-// Modellteams wie tools/referenz/simuliere_durchlauf.py, diesmal gegen die echte Engine: je Team ein Host
-// an einem gemeinsamen Taktgeber, eine gesteuerte Uhr und ein Kanal im Speicher. Die Modellpersonen G1, G2,
-// G3 senden Aktionen wie die Ansichten; die Spielleitung startet die Uhr und spielt Verstärkungen ein.
+// Modellteams wie tools/referenz/simuliere_durchlauf.py, diesmal gegen die echte Engine: je Team eine lokale Engine (Host, wie seit
+// 2.6 am Team-Laptop), eine gemeinsame gesteuerte Uhr und ein Protokoll im Speicher. Das Modellteam sendet Entscheidungen wie die
+// Ansicht der Zielbearbeitung; die Spielleitung startet die Uhr, spielt Verstärkungen ein und notiert.
 //
-//  naiv  – folgt ARGUS: G1 nimmt alles an außer UNKLAR, G2 nimmt das erste Wirkmittel ohne Warnung (für eine
-//          Freigabe nach T_G3), sonst LM, sonst Mörser; G3 gibt immer frei; Fast-Track 30 s nach dem Angebot.
-//  ideal – handelt nach der Lösung im Szenario; G3 gibt nur frei, wenn die Warnung zum Einschlag frei ist.
+//  naiv  – folgt ARGUS (bei gestörtem Datenlink der gestörten Ausgabe): BEKÄMPFEN außer bei UNKLAR (ABLEHNEN), mit dem ersten
+//          Wirkmittel ohne Warnung, sonst LM, sonst Mörser. Modellzeit 20 s je Entscheidung.
+//  ideal – handelt nach der Lösung im Szenario (loesung.entscheid); BEKÄMPFEN nur mit einem Wirkmittel der Lösung, ohne Warnung und
+//          wenn beim vorausberechneten Einschlag nichts Geschütztes im Wirkradius ist, sonst ZURÜCKSTELLEN. Modellzeit 35 s.
 //
-// Lagemeldungen (seit Schritt 8, für Kennzahlen und Replay der Auswertung): G3 quittiert jede Lagemeldung
-// („gelesen“) eine feste Zeit nach Eingang. ideal: nach 20 s, und 35 s nach der Lagemeldung zum polnischen
-// Gegenangriff (I-04, Fall S3) ein Lagehinweis an G1 und G2. naiv: nach 40 s, I-04 erst nach 270 s (10:21:30),
-// kein Lagehinweis. Quittieren und Lagehinweis ändern den Ablauf der Meldungen nicht (Vergleich mit der Simulation).
+// Wie in der Simulation arbeitet das Team die Meldungen in der Reihenfolge ihres Erscheinens ab: Es öffnet die nächste, sobald es
+// frei ist, und entscheidet nach der Modellzeit (Sekunden ab Öffnen). Meldungen, die vorher entfallen, überspringt es. Zurückgestellte
+// bleiben offen.
 //
-// Wie in der Simulation arbeitet jede Person die Meldungen in der Reihenfolge ihres Erscheinens ab (G1 40 s,
-// G2 50 s, G3 30 s je Meldung) und wartet dabei auf eine frühere Meldung, die noch zu ihr kommt. Unterschiede
-// zur Simulation, die das Ergebnis nicht ändern: Die Engine lässt eine Meldung entfallen, sobald ihr letztes
-// Fahrzeug weg ist (die Simulation prüft beim Aufnehmen); wechselt G3 (ideal) das Wirkmittel, geht die
-// Meldung ZURÜCK AN G2, die sofort mit dem anderen Wirkmittel empfiehlt; Fast-Track schaltet 0,05 s vor dem
-// Zeitpunkt der Simulation, damit eine Meldung genau zu diesem Zeitpunkt schon Fast-Track hat.
+// Lagemeldungen (für Kennzahlen und Replay der Auswertung): Das Team klickt jede Lagemeldung im Feed eine feste Zeit nach Eingang an
+// (ideal nach 20 s; naiv nach 40 s, die zum polnischen Gegenangriff – I-04, Fall S3 – erst nach 270 s). Klicks ändern den Ablauf der
+// Meldungen nicht (Vergleich mit der Simulation).
 import { NACH, naechsteFaelligkeit } from "../src/engine/ablauf";
 import { Host } from "../src/engine/host";
-import { Taktgeber } from "../src/engine/taktgeber";
 import type { Inhalte, Meldung } from "../src/inhalte/typen";
 import type { Absender, Aktion, AktionsDaten, AktionsTyp, Ereignis } from "../src/kern/ereignisse";
 import { argusBei } from "../src/kern/eloka";
 import { offeneEinschlaege, weltFuer } from "../src/kern/lage";
-import { SCHUTZ_KATEGORIEN, stehende, vorhersage, wirkungBeimEinschlag, zugArt } from "../src/kern/regeln";
+import { SCHUTZ_KATEGORIEN, vorhersage, wirkungBeimEinschlag } from "../src/kern/regeln";
 import { weg } from "../src/kern/geometrie";
 import type { Spielzustand } from "../src/kern/zustand";
-import type { Abmelden, TeamKanal } from "../src/sync/adapter";
+import type { Abmelden } from "../src/sync/adapter";
 
 export type Team = "naiv" | "ideal";
 
 /** Was das ideale Team nicht treffen will (wie argus_lib.SCHUTZ und die Attrappe). */
 const SCHUTZ = new Set([...SCHUTZ_KATEGORIEN, "sanitaet", "attrappe"]);
 
-/** Wie G3 mit Lagemeldungen umgeht (null: liest nichts, wie bis Schritt 7). */
+/** Wie das Team mit Lagemeldungen umgeht (null: klickt nichts an). */
 export interface LageVerhalten {
-  /** quittiert jede Lagemeldung so viele s nach Eingang */
+  /** klickt jede Lagemeldung so viele s nach Eingang an */
   quittieren_s: number;
   /** Lagemeldung zu Fall S3 (I-04): eigene Zeit in s nach Eingang */
   i04_s?: number;
-  /** Lagehinweis an G1 und G2 so viele s nach Eingang von I-04 (fehlt: keiner) */
-  hinweis_s?: number;
-  hinweis?: string;
 }
 
-/** So viele Sekunden vor Spielende quittiert und meldet G3 der Modellteams nichts mehr. */
+/** So viele Sekunden vor Spielende klickt das Modellteam nichts mehr an. */
 export const LAGE_VOR_ENDE_S = 10;
 
 export const LAGE_STANDARD: Record<Team, LageVerhalten> = {
-  ideal: { quittieren_s: 20, hinweis_s: 35, hinweis: "Polnischer Gegenangriff ab 10:19 entlang Feldweg Süd (PT-91, sehen aus wie T-72) – dort kein Feuer!" },
+  ideal: { quittieren_s: 20 },
   naiv: { quittieren_s: 40, i04_s: 270 },
 };
 
+/** Modellzeit je Entscheidung (s ab Öffnen), wie simuliere_durchlauf.py (T_NAIV, T_IDEAL). */
+export const ZEITEN_STANDARD: Record<Team, number> = { naiv: 20, ideal: 35 };
+
 export interface ModellOptionen {
   team: Team;
-  /** G3 und Lagemeldungen (Standard nach Team, siehe LAGE_STANDARD; null = keine) */
+  /** Lagemeldungen (Standard nach Team, siehe LAGE_STANDARD; null = keine) */
   lage?: LageVerhalten | null;
   /** Notizen der Spielleitung (Demo der Auswertung): Spielzeit, Fall, Text */
   notizen?: { t: number; fall?: string; text: string }[];
   /** Verstärkung → Einspielzeit t0 (s) */
   einspielen?: Record<string, number>;
-  zeiten?: { G1: number; G2: number; G3: number };
-  ftNachAngebot?: number;
+  /** Sekunden je Entscheidung (Standard nach Team) */
+  dauer?: number;
   reihenfolge?: string[];
 }
 
@@ -76,8 +72,8 @@ export class Uhr {
   }
 }
 
-/** Kanal im Speicher: Aktionen gehen sofort an den Host, Ereignisse in das Protokoll. */
-export class SpeicherKanal implements TeamKanal {
+/** Netz des Modellteams im Speicher: Aktionen der Spielleitung gehen sofort an den Host, Ereignisse ins Protokoll. */
+export class SpeicherKanal {
   readonly protokoll: Ereignis[] = [];
   /** alle gesendeten Aktionen in Reihenfolge (für tools/drehbuch_plan.ts: Nachspielen im Browser) */
   readonly gesendet: Aktion[] = [];
@@ -91,17 +87,11 @@ export class SpeicherKanal implements TeamKanal {
     this.n += 1;
     return `${this.team}-a${String(this.n).padStart(5, "0")}`;
   }
-  async ladeProtokoll(): Promise<Ereignis[]> {
-    return [...this.protokoll];
-  }
-  aufProtokoll(): Abmelden {
-    return () => undefined;
-  }
-  async schreibeEreignis(_lauf: string, e: Ereignis): Promise<void> {
+  ausgabe(e: Ereignis): void {
     if (this.protokoll.length && this.protokoll[this.protokoll.length - 1].seq !== e.seq - 1) throw new Error("seq");
     this.protokoll.push(e);
   }
-  async sendeAktion(_lauf: string, a: Aktion): Promise<void> {
+  sendeAktion(a: Aktion): void {
     this.gesendet.push(a);
     this.hoerer.forEach((f) => f(a));
   }
@@ -111,58 +101,42 @@ export class SpeicherKanal implements TeamKanal {
   }
 }
 
-type Stufe = "G1" | "G2" | "G3";
-
-interface Person {
-  stufe: Stufe;
-  /** Index in der Reihenfolge der Meldungen, die als Nächstes dran ist */
-  zeiger: number;
-  /** in Arbeit: Meldung und Zeit der Entscheidung */
-  aktuell: { meldung: string; ende: number } | null;
-}
-
 export interface Entscheidung {
   meldung: string;
-  g1?: { t: number; ok: boolean };
-  g2?: { t: number; wahl: string | "BEOBACHTEN" | "NICHT" };
-  g3?: { t: number; was: "FREIGABE" | "ABLEHNEN" | "ZURUECK"; wm?: string };
+  /** Öffnen und Entscheidung (Spielzeit) */
+  t_offen: number;
+  t: number;
+  entscheid: "BEKÄMPFEN" | "ZURÜCKSTELLEN" | "ABLEHNEN";
+  wm?: string;
+  /** ZURÜCKSTELLEN, weil kein Wirkmittel passte */
+  keinWirkmittel?: boolean;
 }
 
-/** Ein Team aus drei Modellpersonen und einem Host. */
+/** Ein Team mit einer lokalen Engine (Host) und einer Modellperson, die nacheinander entscheidet. */
 export class Modellteam {
   readonly kanal: SpeicherKanal;
   readonly host: Host;
   readonly entscheidungen = new Map<string, Entscheidung>();
-  private personen: Record<Stufe, Person>;
-  private zeiten: { G1: number; G2: number; G3: number };
+  private dauer: number;
   private reihenfolge: string[];
-  private ftAb: number | null;
-  private ftGesendet = false;
+  private zeiger = 0;
+  private aktuell: { meldung: string; t_offen: number; ende: number } | null = null;
   private gestartet = false;
   private eingespielt = new Set<string>();
-  private lageG3: LageVerhalten | null;
+  private lage: LageVerhalten | null;
   private quittiert = new Set<string>();
-  private hinweisGesendet = false;
   private notizNr = 0;
 
-  constructor(readonly inh: Inhalte, readonly opt: ModellOptionen, readonly name: string, private uhr: Uhr, tg: Taktgeber) {
+  constructor(readonly inh: Inhalte, readonly opt: ModellOptionen, readonly name: string, private uhr: Uhr) {
     this.kanal = new SpeicherKanal(name, uhr);
-    this.zeiten = opt.zeiten ?? { G1: 35, G2: 40, G3: 30 }; // wie simuliere_durchlauf.py (seit 2.4: T_G1, T_G2, T_G3)
+    this.dauer = opt.dauer ?? ZEITEN_STANDARD[opt.team];
     this.reihenfolge = opt.reihenfolge ?? ["PZA", "ART", "MRS", "PRZ", "LM"];
-    const i05 = inh.szenario.injects.find((i) => i.aktion === "fast_track_angebot")?.t_s;
-    this.ftAb = opt.team === "naiv" && i05 !== undefined ? i05 + (opt.ftNachAngebot ?? 30) : null;
-    this.lageG3 = opt.lage === undefined ? LAGE_STANDARD[opt.team] : opt.lage;
-    this.personen = {
-      G1: { stufe: "G1", zeiger: 0, aktuell: null },
-      G2: { stufe: "G2", zeiger: 0, aktuell: null },
-      G3: { stufe: "G3", zeiger: 0, aktuell: null },
-    };
-    this.host = new Host(inh, this.kanal, "20261104-1000-modl", [], { rolle: "sl", client: "slmod", name: "SL" }, {
+    this.lage = opt.lage === undefined ? LAGE_STANDARD[opt.team] : opt.lage;
+    this.host = new Host(inh, this.kanal, "20261104-1000-modl", [], { rolle: "zb", client: "zbmodl", name: "Team" }, {
       taktMs: 0,
-      beiFehler: (e) => { throw e; },
+      ausgabe: (e) => this.kanal.ausgabe(e),
     });
     this.host.starten();
-    tg.anmelden(this.host);
   }
 
   get z(): Spielzustand {
@@ -174,11 +148,11 @@ export class Modellteam {
   }
 
   private senden<T extends AktionsTyp>(typ: T, daten: AktionsDaten[T], rolle: Absender["rolle"], ms = this.uhr.ms): void {
-    const a = { id: this.kanal.neueId(), typ, von: { rolle, client: `${rolle}mod`, name: `${rolle.toUpperCase()} Modell` }, ts: ms, daten } as Aktion;
-    void this.kanal.sendeAktion("", a);
+    const a = { id: this.kanal.neueId(), typ, von: { rolle, client: `${rolle}modl`, name: rolle === "sl" ? "SL Modell" : "Team" }, ts: ms, daten } as Aktion;
+    this.kanal.sendeAktion(a);
   }
 
-  /** Geplante Aktionen der Spielleitung und von G3 (Fast-Track), die zur Zeit t fällig sind. */
+  /** Geplante Aktionen der Spielleitung und Klicks auf Lagemeldungen, die zur Zeit t fällig sind. */
   steuern(t: number): void {
     if (!this.gestartet) {
       this.senden("uhr", { befehl: "start" }, "sl");
@@ -190,19 +164,10 @@ export class Modellteam {
         this.eingespielt.add(g);
       }
     }
-    if (this.ftAb !== null && !this.ftGesendet && t >= this.ftAb - 0.05) {
-      this.senden("fast_track", { an: true }, "g3");
-      this.ftGesendet = true;
-    }
     for (const [id, tq] of this.lageTermine()) {
       if (t < tq - 1e-9) continue;
-      if (id === "hinweis") {
-        this.senden("lagehinweis", { text: this.lageG3!.hinweis!, an: ["g1", "g2"] }, "g3");
-        this.hinweisGesendet = true;
-      } else {
-        this.senden("inject_quittiert", { inject: id }, "g3");
-        this.quittiert.add(id);
-      }
+      this.senden("inject_quittiert", { inject: id }, "zb");
+      this.quittiert.add(id);
     }
     const notizen = this.opt.notizen ?? [];
     while (this.notizNr < notizen.length && t >= notizen[this.notizNr].t - 1e-9) {
@@ -211,9 +176,9 @@ export class Modellteam {
     }
   }
 
-  /** Fällige Lagemeldungen zum Quittieren und der Lagehinweis nach I-04: Kennung → Zeitpunkt. */
+  /** Fällige Klicks auf Lagemeldungen: Kennung → Zeitpunkt. */
   private lageTermine(): [string, number][] {
-    const l = this.lageG3;
+    const l = this.lage;
     if (!l || this.z.ende) return [];
     const i04 = this.inh.szenario.injects.find((i) => i.fall === "S3" && i.t_s !== undefined)?.id;
     const out: [string, number][] = [];
@@ -221,10 +186,7 @@ export class Modellteam {
       if (this.quittiert.has(id) || this.z.injects[id].quittiert) continue;
       out.push([id, this.z.injects[id].erschienen.t_s + (id === i04 && l.i04_s !== undefined ? l.i04_s : l.quittieren_s)]);
     }
-    if (i04 && l.hinweis && l.hinweis_s !== undefined && !this.hinweisGesendet && this.z.injects[i04]) {
-      out.push(["hinweis", this.z.injects[i04].erschienen.t_s + l.hinweis_s]);
-    }
-    // nichts mehr kurz vor Spielende: im Browser käme der Klick erst nach dem Ende an (z. B. I-08b um 10:24:40)
+    // nichts mehr kurz vor Spielende: im Browser käme der Klick erst nach dem Ende an
     const schluss = this.inh.szenario.spieluhr.dauer_s - LAGE_VOR_ENDE_S;
     return out.filter(([, tq]) => tq < schluss);
   }
@@ -232,9 +194,8 @@ export class Modellteam {
   /** Zeitpunkte, zu denen dieses Team wieder etwas tun muss. */
   termine(t: number): number[] {
     const k: number[] = [];
-    for (const p of Object.values(this.personen)) if (p.aktuell) k.push(p.aktuell.ende);
+    if (this.aktuell) k.push(this.aktuell.ende);
     for (const t0 of Object.values(this.opt.einspielen ?? {})) if (t0 > t) k.push(t0);
-    if (this.ftAb !== null && !this.ftGesendet) k.push(this.ftAb - 0.05);
     for (const [, tq] of this.lageTermine()) k.push(tq);
     const n = this.opt.notizen?.[this.notizNr];
     if (n) k.push(n.t);
@@ -242,14 +203,9 @@ export class Modellteam {
     return k.filter((x) => x > t + 1e-9 && Number.isFinite(x));
   }
 
-  /** Reihenfolge der Meldungen, wie sie erschienen sind (= Reihenfolge der Simulation). */
-  private liste(): string[] {
-    return this.z.reihenfolge;
-  }
-
   // ---------------------------------------------------------------- Prognose wie die Simulation
 
-  /** Zerstörungen, die die Simulation zur Zeit der Entscheidung schon kennt: Hintergrund und Wirkungen im Anflug. */
+  /** Zerstörungen, die die Simulation zur Zeit der Entscheidung schon kennt: Hintergrundgefecht und Wirkungen im Anflug. */
   private zerstoertPrognose(): Record<string, number> {
     const inh = this.welt;
     const z = this.z;
@@ -261,11 +217,11 @@ export class Modellteam {
     }
     for (const id of z.reihenfolge) {
       const st = z.meldungen[id];
-      if (st.stufe !== "wirkung" || !st.g3?.wirkmittel) continue;
-      // seit 2.4 (E3): je ausstehendem Einschlag eines Zuges, nacheinander
+      if (st.stufe !== "wirkung" || !st.freigabe?.wirkmittel) continue;
+      // je ausstehendem Einschlag eines Zuges, nacheinander
       const zer = { ...z.zerstoert };
       for (const { e } of offeneEinschlaege(inh, z, id)) {
-        for (const g of wirkungBeimEinschlag(inh, e, st.g3.wirkmittel, zer).getroffen) {
+        for (const g of wirkungBeimEinschlag(inh, e, st.freigabe.wirkmittel, zer).getroffen) {
           if (g.was !== "personen") {
             p[g.ziel] = Math.min(p[g.ziel] ?? Infinity, e.t);
             zer[g.ziel] = Math.min(zer[g.ziel] ?? Infinity, e.t);
@@ -277,233 +233,112 @@ export class Modellteam {
   }
 
   /**
-   * Wann gibt G3 die Meldungen frei, die schon bei ihr liegen (Warteschlange in Reihenfolge)? Für die Reservierung des Bestands:
-   * Die Simulation zieht bei einer Zug-Bekämpfung so viele LM ab, wie bei der Freigabe Fahrzeuge stehen (seit 2.4, E3).
+   * Wirkmittel ohne Warnung für BEKÄMPFEN zur Zeit t. ideal: nur die Wirkmittel der Lösung; dazu (bild) nur, wenn beim vorausberechneten
+   * Einschlag nichts Geschütztes im Wirkradius ist (wie die Simulation).
    */
-  private g3Termine(t: number): Map<string, number> {
-    const p = this.personen.G3;
-    const out = new Map<string, number>();
-    let tc = t;
-    if (p.aktuell) {
-      out.set(p.aktuell.meldung, p.aktuell.ende);
-      tc = p.aktuell.ende;
-    }
-    const liste = this.liste();
-    for (const id of liste.slice(p.zeiger)) {
-      if (out.has(id)) continue;
-      if (this.z.meldungen[id].stufe !== "g3" || this.entscheidungen.get(id)?.g3) continue;
-      tc += this.zeiten.G3;
-      out.set(id, tc);
-    }
-    return out;
-  }
-
-  /**
-   * Bestand, wie ihn die Simulation sieht: frühere Meldungen bei G3 mit diesem Wirkmittel sind schon abgezogen – seit 2.4 (E3)
-   * je Fahrzeug, das bei ihrer Freigabe noch steht (Zug-Bekämpfung), höchstens so viele, wie da sind.
-   */
-  private bestand(wm: string, vor: string, t = this.uhr.ms / 1000 - START_MS / 1000): number {
-    const b = this.z.bestand[wm];
-    if (b === null) return Infinity;
-    const inh = this.welt;
-    const liste = this.liste();
-    const bis = liste.indexOf(vor);
-    const termine = this.g3Termine(t);
-    const zp = this.zerstoertPrognose();
-    let rest = b;
-    for (const id of liste.slice(0, bis)) {
-      const st = this.z.meldungen[id];
-      if (st.stufe !== "g3" || st.g2?.wirkmittel !== wm) continue;
-      let n = 1;
-      if (zugArt(inh.wirkmittel[wm]) === "je_fahrzeug") {
-        const t3 = termine.get(id) ?? t;
-        n = Math.max(1, stehende(inh, inh.meldungen[id].ziele, t3, zp).length);
-      }
-      rest -= Math.min(n, Math.max(rest, 1));
-    }
-    return rest;
-  }
-
-  /**
-   * Wirkmittel ohne Warnung für eine Freigabe zur Zeit tFreigabe. ideal (seit 2.4): nur die Wirkmittel der Lösung; die Führung
-   * (bild) gibt außerdem nur frei, wenn beim vorausberechneten Einschlag nichts Geschütztes im Wirkradius ist (wie die Simulation).
-   */
-  private waehle(m: Meldung, tFreigabe: number, vor: string, bild = false, t = tFreigabe): string[] {
+  private waehle(m: Meldung, t: number, bild = false): string[] {
     const inh = this.welt;
     const zp = this.zerstoertPrognose();
     const erlaubt = this.opt.team === "ideal" ? m.loesung?.wirkmittel : undefined;
     return this.reihenfolge.filter((w) => {
       if (!inh.wirkmittel[w] || (erlaubt && !erlaubt.includes(w))) return false;
-      const rest = this.bestand(w, vor, t);
-      if (!(rest > 0)) return false;
-      const v = vorhersage(inh, m, w, tFreigabe, zp, Number.isFinite(rest) ? rest : null);
+      const b = this.z.bestand[w];
+      if (b !== null && b !== undefined && b <= 0) return false;
+      const v = vorhersage(inh, m, w, t, zp, b ?? null);
       if (!v.pruefung.zulaessig) return false;
       if (bild && this.opt.team === "ideal" && v.getroffen.some((g) => SCHUTZ.has(g.kategorie))) return false;
       return true;
     });
   }
 
-  // ---------------------------------------------------------------- Personen
+  // ---------------------------------------------------------------- Entscheiden
 
-  /** Entscheidungen, die zur Zeit t fällig sind (in Reihenfolge der Meldungen). */
+  /** Entscheidung, die zur Zeit t fällig ist. */
   entscheiden(t: number): void {
-    const faellig = Object.values(this.personen).filter((p) => p.aktuell && p.aktuell.ende <= t + 1e-9);
-    const liste = this.liste();
-    faellig.sort((a, b) => liste.indexOf(a.aktuell!.meldung) - liste.indexOf(b.aktuell!.meldung));
-    for (const p of faellig) {
-      const id = p.aktuell!.meldung;
-      p.aktuell = null;
-      this.entscheide(p.stufe, id, t);
-    }
+    const a = this.aktuell;
+    if (!a || a.ende > t + 1e-9) return;
+    this.aktuell = null;
+    this.entscheide(a.meldung, a.t_offen, t);
   }
 
-  private eintrag(id: string): Entscheidung {
-    let e = this.entscheidungen.get(id);
-    if (!e) this.entscheidungen.set(id, (e = { meldung: id }));
-    return e;
-  }
-
-  private entscheide(stufe: Stufe, id: string, t: number): void {
+  private entscheide(id: string, tOffen: number, t: number): void {
     const z = this.z;
     if (z.ende) return;
     const st = z.meldungen[id];
+    if (!st || st.stufe !== "offen") return; // inzwischen entfallen (letztes Fahrzeug weg)
     const inh = this.welt;
     const m = inh.meldungen[id];
-    const loes = m.loesung ?? { G1: "ANNEHMEN", G2: "BEKÄMPFEN", G3: "FREIGABE" };
-    const e = this.eintrag(id);
-    if (stufe === "G1") {
-      if (st.stufe !== "g1") return;
-      // seit 2.4 (E4): naiv folgt ARGUS, wie es zur Meldezeit meldete (bei gestörtem Datenlink unsicherer)
-      const ok = this.opt.team === "naiv" ? argusBei(inh, m, st.gestoert).empfehlung !== "UNKLAR" : loes.G1.startsWith("ANNEHMEN");
-      e.g1 = { t, ok };
-      this.senden("g1_entscheid", { meldung: id, entscheid: ok ? "annehmen" : "ablehnen" }, "g1");
-      return;
+    const loes = m.loesung ?? { entscheid: "BEKÄMPFEN" as const };
+    const sende = (e: Omit<Entscheidung, "meldung" | "t_offen" | "t">) => {
+      this.entscheidungen.set(id, { meldung: id, t_offen: tOffen, t, ...e });
+      const was = e.entscheid === "BEKÄMPFEN" ? "bekaempfen" : e.entscheid === "ZURÜCKSTELLEN" ? "zurueckstellen" : "ablehnen";
+      this.senden("entscheid", { meldung: id, entscheid: was, ...(e.wm ? { wirkmittel: e.wm } : {}), t_offen: tOffen }, "zb");
+    };
+    let wahl: string | null;
+    if (this.opt.team === "naiv") {
+      if (argusBei(inh, m, st.gestoert).empfehlung === "UNKLAR") return sende({ entscheid: "ABLEHNEN" });
+      const zul = this.waehle(m, t);
+      wahl = zul[0] ?? ["LM", "MRS"].find((w) => inh.wirkmittel[w] && (z.bestand[w] ?? Infinity) > 0) ?? null;
+    } else {
+      if (loes.entscheid === "ABLEHNEN") return sende({ entscheid: "ABLEHNEN" });
+      if (loes.entscheid === "ZURÜCKSTELLEN") return sende({ entscheid: "ZURÜCKSTELLEN" });
+      wahl = this.waehle(m, t, true)[0] ?? null;
     }
-    if (stufe === "G2") {
-      if (st.stufe !== "g2") return;
-      const zul = this.waehle(m, t + this.zeiten.G3, id, false, t);
-      let wahl: string | null;
-      if (this.opt.team === "naiv") {
-        wahl = zul[0] ?? ["LM", "MRS"].find((w) => inh.wirkmittel[w] && this.bestand(w, id, t) > 0) ?? null;
-      } else {
-        if (loes.G2.split(":")[0].includes("BEOBACHTEN")) {
-          e.g2 = { t, wahl: "BEOBACHTEN" };
-          this.senden("g2_empfehlung", { meldung: id, empfehlung: "beobachten" }, "g2");
-          return;
-        }
-        if (loes.G2.startsWith("NICHT") || loes.G1.startsWith("ABLEHNEN")) {
-          e.g2 = { t, wahl: "NICHT" };
-          this.senden("g2_empfehlung", { meldung: id, empfehlung: "nicht_bekaempfen" }, "g2");
-          return;
-        }
-        wahl = zul[0] ?? null;
-      }
-      if (!wahl) {
-        e.g2 = { t, wahl: "NICHT" };
-        this.senden("g2_empfehlung", { meldung: id, empfehlung: "nicht_bekaempfen", begruendung: "kein Wirkmittel ohne Warnung" }, "g2");
-        return;
-      }
-      e.g2 = { t, wahl };
-      this.senden("g2_empfehlung", { meldung: id, empfehlung: "bekaempfen", wirkmittel: wahl }, "g2");
-      return;
-    }
-    // G3
-    if (st.stufe !== "g3") return;
-    let wm = st.g2?.wirkmittel;
-    if (this.opt.team === "ideal") {
-      if (!loes.G3.startsWith("FREIGABE")) {
-        e.g3 = { t, was: "ABLEHNEN" };
-        this.senden("g3_entscheid", { meldung: id, entscheid: "ablehnen" }, "g3");
-        return;
-      }
-      const jetzt = this.waehle(m, t, id, true, t);
-      if (!wm || !jetzt.includes(wm)) {
-        if (!jetzt.length) {
-          e.g3 = { t, was: "ZURUECK" };
-          this.senden("g3_entscheid", { meldung: id, entscheid: "zurueck", bemerkung: "Warnung zum Einschlag" }, "g3");
-          return;
-        }
-        // anderes Wirkmittel: zurück an G2, G2 empfiehlt sofort neu, G3 gibt frei (alles zur selben Zeit)
-        wm = jetzt[0];
-        this.senden("g3_entscheid", { meldung: id, entscheid: "zurueck", bemerkung: `besser ${wm}` }, "g3");
-        this.senden("g2_empfehlung", { meldung: id, empfehlung: "bekaempfen", wirkmittel: wm }, "g2");
-      }
-    }
-    e.g3 = { t, was: "FREIGABE", wm };
-    this.senden("g3_entscheid", { meldung: id, entscheid: "freigabe" }, "g3");
+    if (!wahl) return sende({ entscheid: "ZURÜCKSTELLEN", keinWirkmittel: true });
+    sende({ entscheid: "BEKÄMPFEN", wm: wahl });
   }
 
-  /** Freie Personen nehmen die nächste Meldung auf (in Reihenfolge, warten auf frühere, die noch kommen). */
+  /** Ist das Team frei, öffnet es die nächste Meldung in der Reihenfolge des Erscheinens (entfallene überspringt es). */
   aufnehmen(t: number): void {
-    if (this.z.ende) return;
-    for (const p of [this.personen.G1, this.personen.G2, this.personen.G3]) {
-      while (!p.aktuell) {
-        const liste = this.liste();
-        const id = liste[p.zeiger];
-        if (!id) break;
-        const was = this.lage(p.stufe, id);
-        if (was === "warten") break;
-        p.zeiger += 1;
-        if (was === "aufnehmen") p.aktuell = { meldung: id, ende: t + this.zeiten[p.stufe] };
-      }
+    if (this.z.ende || this.aktuell) return;
+    const liste = this.z.reihenfolge;
+    while (this.zeiger < liste.length) {
+      const id = liste[this.zeiger];
+      const st = this.z.meldungen[id];
+      this.zeiger += 1;
+      if (st.stufe !== "offen" || st.zurueckgestellt || this.entscheidungen.has(id)) continue;
+      this.aktuell = { meldung: id, t_offen: t, ende: t + this.dauer };
+      return;
     }
-  }
-
-  /** Was eine Person mit der Meldung tut: aufnehmen, überspringen (kommt nie zu ihr) oder warten. */
-  private lage(stufe: Stufe, id: string): "aufnehmen" | "ueberspringen" | "warten" {
-    const st = this.z.meldungen[id];
-    const e = this.entscheidungen.get(id);
-    if (st.stufe === "entfallen") return "ueberspringen";
-    if (stufe === "G1") return st.stufe === "g1" ? "aufnehmen" : "ueberspringen";
-    if (stufe === "G2") {
-      if (e?.g2) return "ueberspringen";
-      if (st.stufe === "g2") return "aufnehmen";
-      return st.stufe === "g1" ? "warten" : "ueberspringen";
-    }
-    if (e?.g3) return "ueberspringen";
-    if (st.stufe === "g3") return "aufnehmen";
-    if (st.stufe === "g1" || (st.stufe === "g2" && !e?.g2)) return "warten";
-    return "ueberspringen";
   }
 }
 
 /** Referenz der Simulation (tests/referenz_durchlauf.json), soweit die Modellteams sie brauchen. */
 export interface DrehbuchReferenz {
-  zeiten: { G1: number; G2: number; G3: number; ft_nach_angebot: number };
+  zeiten: Record<Team, number>;
   reihenfolge_wirkmittel: string[];
   laeufe: { team: Team; einspielen: Record<string, number> }[];
 }
 
 /**
- * Die fünf Teams des Drehbuchs (tools/drehbuch_plan.ts für tools/e2e_drehbuch.py, Demo der Auswertung): die Läufe
- * der Simulation, G3 mit Lagemeldungen nach LAGE_STANDARD. Team 3 (naiv + 4 Verstärkungen) liest I-04 nach einer
- * Minute und warnt G1 und G2 – gibt die PT-91 aber trotzdem frei (Fast-Track, G2 folgt ARGUS): Die Information kam
- * an, entschieden hat sie nicht. Am Ausgang der Meldungen ändert das nichts.
+ * Die fünf Teams des Drehbuchs (tools/drehbuch_plan.ts für tools/e2e_drehbuch.py, Demo der Auswertung): die Läufe der Simulation,
+ * Lagemeldungen nach LAGE_STANDARD. Team 3 (naiv + 4 Verstärkungen) klickt I-04 nach einer Minute an – bekämpft die PT-91 aber trotzdem
+ * (folgt ARGUS): Die Information kam an, entschieden hat sie nicht. Am Ausgang der Meldungen ändert das nichts.
  */
 export function drehbuchTeams(ref: DrehbuchReferenz, notizen: Record<number, ModellOptionen["notizen"]> = {}): { name: string; opt: ModellOptionen }[] {
   return ref.laeufe.map((l, i) => ({
     name: `team${i + 1}`,
     opt: {
-      team: l.team, einspielen: l.einspielen, zeiten: ref.zeiten, ftNachAngebot: ref.zeiten.ft_nach_angebot, reihenfolge: ref.reihenfolge_wirkmittel,
-      ...(i === 2 ? { lage: { quittieren_s: 30, i04_s: 60, hinweis_s: 110, hinweis: "Achtung: im Süden polnische Panzer möglich (PT-91)" } } : {}),
+      team: l.team, einspielen: l.einspielen, dauer: ref.zeiten[l.team], reihenfolge: ref.reihenfolge_wirkmittel,
+      ...(i === 2 ? { lage: { quittieren_s: 30, i04_s: 60 } } : {}),
       ...(notizen[i] ? { notizen: notizen[i] } : {}),
     },
   }));
 }
 
-/** Spielt mehrere Teams parallel mit gesteuerter Uhr bis zum Spielende durch. */
+/** Spielt mehrere Teams parallel mit gesteuerter Uhr bis zum Spielende durch (jedes Team eine eigene Engine). */
 export function spieleDurch(inh: Inhalte, teams: { name: string; opt: ModellOptionen }[]): Modellteam[] {
   const uhr = new Uhr();
-  const tg = new Taktgeber(0);
-  const liste = teams.map((x) => new Modellteam(inh, x.opt, x.name, uhr, tg));
+  const liste = teams.map((x) => new Modellteam(inh, x.opt, x.name, uhr));
+  const takt = () => liste.forEach((m) => m.host.takt());
   let t = 0;
   for (let schritt = 0; schritt < 20000; schritt++) {
     uhr.setze(t);
     for (const m of liste) m.steuern(t);
-    tg.takt();
+    takt();
     for (let runde = 0; runde < 5; runde++) {
       for (const m of liste) m.entscheiden(t);
-      tg.takt();
+      takt();
       for (const m of liste) m.aufnehmen(t);
     }
     if (liste.every((m) => m.z.ende)) break;
@@ -511,7 +346,7 @@ export function spieleDurch(inh: Inhalte, teams: { name: string; opt: ModellOpti
     if (!Number.isFinite(naechste)) break;
     t = naechste;
   }
-  tg.stoppen();
+  liste.forEach((m) => m.host.stoppen());
   return liste;
 }
 

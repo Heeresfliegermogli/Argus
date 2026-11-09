@@ -1,13 +1,10 @@
 // Fenster der Spielleitung und des Plenums in einer Sitzung.
 //
 // Spielleitung: Startet mit der Übersicht aller Teams (uebersicht.tsx). „ansehen ›“ öffnet ein Team:
-// „Steuerung“ ist die bekannte Spielleitungsansicht für dieses Team (Uhr, Kontrollkarte, Zeitplan,
-// Protokoll), Aufklärung · Zielprüfung · Führung zeigen die Ansicht der Rolle zum Zuschauen (nur lesen, deutlich
-// gekennzeichnet). Im Test ohne Lobby (ein Team, B11) sind die drei Rollen dort bedienbar: Eine Person kann allein
-// alle Rollen spielen. Die Leiste oben
-// links führt zurück zur Übersicht und wechselt Team und Ansicht, ohne Platz unter der Kopfzeile zu
-// brauchen (alles bleibt in 1530 × 800). Das steuernde Fenster führt die Hosts aller Teams – egal,
-// welche Ansicht es gerade zeigt.
+// „Steuerung“ ist die Spielleitungsansicht für dieses Team (Uhr, Kontrollkarte, Zeitplan, Protokoll), „Zielbearbeitung“ zeigt die
+// Ansicht des Teams zum Zuschauen (nur lesen, deutlich gekennzeichnet; aus dem hochgeladenen Protokoll, also mit Verzug). Die Leiste
+// oben links führt zurück zur Übersicht und wechselt Team und Ansicht, ohne Platz unter der Kopfzeile zu brauchen (alles bleibt in
+// 1530 × 800). Seit 2.6 (H1) rechnet jeder Team-Laptop sein Spiel selbst; die Spielleitung steuert nur.
 //
 // Plenum: zeigt ein Team (Wahl oben links); vor dem ersten Spiel Einweisung mit Code und Teams. Haben alle Teams das
 // Spielende erreicht, schaltet es von selbst auf die Auswertung über alle Teams (Schritt 8, auswertung.tsx).
@@ -16,8 +13,8 @@
 // bei der Spielleitung mit Notizfeld je Fall. Während des Spiels notiert SL 2 über „✎ Notiz“ in der Teamansicht.
 import { useMemo, useState } from "preact/hooks";
 import { type FallDef, type TeamLauf, faelle } from "../kern/auswertung";
-import { TEXT_MAX, type Rolle } from "../kern/ereignisse";
-import { DIREKT_TEAM, GRUPPEN_ROLLEN } from "../kern/sitzungen";
+import { TEXT_MAX } from "../kern/ereignisse";
+import { DIREKT_TEAM } from "../kern/sitzungen";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { seitenAdresse } from "../config";
 import { Sicht } from "../sitzung/sicht";
@@ -33,7 +30,7 @@ import { ANSICHTEN } from "./register";
 import { plenumOeffnen } from "./sl";
 import { Uebersicht } from "./uebersicht";
 
-type SLRolle = "sl" | "g1" | "g2" | "g3";
+type SLRolle = "sl" | "zb";
 interface Wahl {
   team: string;
   rolle: SLRolle;
@@ -61,7 +58,7 @@ function aktuellerFall(s: Sitzung, team: string): FallDef | null {
   const fs = faelle(s.inh);
   if (!z) return fs[0] ?? null;
   const erschienen = fs.filter((f) => z.meldungen[f.meldung]).sort((a, b) => z.meldungen[b.meldung].erschienen.seq - z.meldungen[a.meldung].erschienen.seq);
-  const offen = erschienen.filter((f) => ["g1", "g2", "g3", "wirkung"].includes(z.meldungen[f.meldung].stufe));
+  const offen = erschienen.filter((f) => ["offen", "wirkung"].includes(z.meldungen[f.meldung].stufe));
   return offen.find((f) => f.art === "schluessel") ?? offen[0] ?? erschienen[0] ?? fs[0] ?? null;
 }
 
@@ -88,13 +85,13 @@ function NotizKnopf(p: { s: Sitzung; team: string }) {
     <span class="menue-anker">
       <button type="button" class="knopf klein" onClick={oeffnen} data-testid="notiz-knopf" title="Beobachtung zu einem Fall notieren (erscheint in der Auswertung)">✎ Notiz</button>
       <Menue offen={offen} schliessen={() => setOffen(false)} testid="notiz-menue">
-        <div class="menue-kopf"><b>Notiz für {p.s.team(p.team)?.name ?? "Team"}</b> <span class="sehr-leise">erscheint im Plenum – Rollen statt Namen</span></div>
+        <div class="menue-kopf"><b>Notiz für {p.s.team(p.team)?.name ?? "Team"}</b> <span class="sehr-leise">erscheint im Plenum – keine Namen</span></div>
         <div class="zeile" style="gap:4px">
           {fs.map((f) => <button type="button" key={f.id} class={`knopf klein ${fall === f.id ? "an" : ""}`} onClick={() => setFall(f.id)} title={f.titel} data-notiz-fall={f.id}>{f.id}</button>)}
           <button type="button" class={`knopf klein ${fall === "" ? "an" : ""}`} onClick={() => setFall("")}>allgemein</button>
         </div>
         <textarea class="feld" rows={3} maxLength={TEXT_MAX.notiz} value={text} style="width:380px;resize:none" ref={(el) => el?.focus()}
-          placeholder="Welche Rolle hat was gesehen und entschieden? Was wurde gesagt?" onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
+          placeholder="Was hat das Team gesehen, wie lange hingeschaut, was entschieden? Was wurde gesagt?" onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); speichern(); } }} data-testid="notiz-text" />
         <button type="button" class="knopf klein gut" disabled={!text.trim()} onClick={speichern}>Speichern (Enter)</button>
       </Menue>
@@ -102,10 +99,7 @@ function NotizKnopf(p: { s: Sitzung; team: string }) {
   );
 }
 
-/**
- * Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder eine Rolle. Mit Lobby ist das
- * Zuschauen (nur lesen); im Test ohne Lobby (direkt) bedient die Spielleitung die Rollen selbst (B11).
- */
+/** Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder Zuschauen (Zielbearbeitung, nur lesen). */
 function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; direkt: boolean }) {
   const st = useSitzung(p.s);
   const teams = st.teams.filter((t) => t.lauf);
@@ -114,12 +108,11 @@ function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; 
       <button type="button" class="sl-zurueck" onClick={() => p.setze(null)} title="Übersicht aller Teams" data-testid="zur-uebersicht">◂ Übersicht</button>
       {!p.direkt && <TeamWahl teams={teams} team={p.wahl.team} setze={(team) => p.setze({ ...p.wahl, team })} testid="sl-teamwahl" />}
       <div class="sl-rollen" role="tablist">
-        {(["sl", ...GRUPPEN_ROLLEN] as SLRolle[]).map((r) => (
+        {(["sl", "zb"] as SLRolle[]).map((r) => (
           <button type="button" role="tab" key={r} aria-selected={r === p.wahl.rolle} class={`rolle-tab rolle-${r} ${r === p.wahl.rolle ? "an" : ""}`}
             onClick={() => p.setze({ ...p.wahl, rolle: r })} data-sl-rolle={r}
-            title={r === "sl" ? "Steuerung dieses Teams: Uhr, Kontrollkarte, Zeitplan, Protokoll"
-              : p.direkt ? `${ROLLEN_NAME[r]} bedienen (Test ohne Lobby)` : `Zuschauen: Ansicht ${ROLLEN_NAME[r]} dieses Teams (nur lesen)`}>
-            {r === "sl" ? "Steuerung" : p.direkt ? ROLLEN_NAME[r] : <><span class="auge" aria-hidden="true">◉</span>{ROLLEN_NAME[r]}</>}
+            title={r === "sl" ? "Steuerung dieses Teams: Uhr, Kontrollkarte, Zeitplan, Protokoll" : "Zuschauen: Ansicht des Teams (nur lesen, mit Verzug)"}>
+            {r === "sl" ? "Steuerung" : <><span class="auge" aria-hidden="true">◉</span>{ROLLEN_NAME.zb}</>}
           </button>
         ))}
       </div>
@@ -131,10 +124,9 @@ function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; 
 function TeamAnsicht(p: { s: Sitzung; spiel: Spiel; wahl: Wahl; setze: (w: Wahl | null) => void }) {
   const { s, spiel, wahl } = p;
   const direkt = s.stand.direkt;
-  // Zuschauen nur lesen; im Test ohne Lobby sind alle Rollen bedienbar (B11)
-  const sicht = useMemo(() => new Sicht(s, spiel, wahl.rolle, { nurLesen: wahl.rolle !== "sl" && !direkt }), [s, spiel, wahl.rolle, direkt]);
+  const sicht = useMemo(() => new Sicht(s, spiel, wahl.rolle, { nurLesen: wahl.rolle !== "sl" }), [s, spiel, wahl.rolle]);
   useMeldeSicht(sicht);
-  const Ansicht = ANSICHTEN[wahl.rolle as Rolle];
+  const Ansicht = ANSICHTEN[wahl.rolle];
   return (
     <Rahmen s={sicht} band={<SLLeiste s={s} wahl={wahl} setze={p.setze} direkt={direkt} />} teamImBand>
       <Ansicht s={sicht} />
@@ -215,7 +207,7 @@ function beitritt(s: Sitzung): Beitritt | undefined {
   return {
     code: st.code,
     adresse: seitenAdresse(),
-    teams: st.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, spieler: t.spieler.filter((x) => x.online).length })),
+    teams: st.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, spieler: t.rechner ? 1 : 0 })),
   };
 }
 
@@ -233,7 +225,7 @@ function PlenumTeam(p: { s: Sitzung; spiel: Spiel; teams: TeamStand[]; setze: (t
 
 export function PlenumFenster(p: { s: Sitzung }) {
   const { s } = p;
-  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.spieler.filter((y) => y.online).length}:${s.spiel(t.id) ? 1 : 0}:${s.spiel(t.id)?.stand.zustand.ende ? "E" : ""}`)].join("|"));
+  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.rechner ?? ""}:${s.spiel(t.id) ? 1 : 0}:${s.spiel(t.id)?.stand.zustand.ende ? "E" : ""}`)].join("|"));
   const [wahl, setWahl] = useState<string | null>(null);
   const mitLauf = st.teams.filter((t) => t.lauf && s.spiel(t.id));
   const team = mitLauf.find((t) => t.id === wahl) ?? mitLauf[0];

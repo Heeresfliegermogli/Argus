@@ -24,7 +24,7 @@ import sys
 import argus_lib as L
 import verluste as V
 
-FREIGABE_RICHTWERT_S = 120      # Meldung bis Freigabe bei zügiger Bearbeitung (G1 40 s, G2 50 s, G3 30 s)
+FREIGABE_RICHTWERT_S = 120      # Meldung bis Bekämpfung, wenn sich Meldungen stauen (seit 2.6 eine Rolle; Richtwert unverändert)
 FENSTER_S = (30, 300)           # Freigabe frühestens/spätestens so viele Sekunden nach der Meldung (Lösungshilfe)
 LUECKE_MAX_S = 60               # längste Pause ohne neue Meldung (seit 2.2, C3)
 RAND_M = 20                     # so nah am Kartenrand erscheint und verschwindet ein Fahrzeug (seit 2.2, C1)
@@ -217,12 +217,25 @@ def pruefe(d):
     n_inj = len({i["id"].rstrip("ab") for i in sz["injects"]})
     # seit 2.4 (E2, E5): mehr Druck – mehr Meldungen und bedingte Lagemeldungen zu den neuen Sonderfällen
     if not 8 <= n_inj <= 18:
-        warn.append(f"{n_inj} G3-Injects (Soll 8–18)")
+        warn.append(f"{n_inj} Lagemeldungen (Soll 8–18)")
     if not 25 <= len(sz["meldungen"]) <= 40:
         warn.append(f"{len(sz['meldungen'])} Meldungen (Soll ca. 25–40 Entscheidungen je Team ohne Verstärkung)")
     for p in sz.get("phasen", []):
         if p["bis_s"] <= p["von_s"]:
             fehler.append(f"Phase {p['nr']}: bis ≤ von")
+        # seit 2.6 (H3.2): Der Gegenangriff darf vorher nirgends sichtbar sein – auch nicht im Namen einer Phase
+        if "Gegenangriff" in p["name"]:
+            fehler.append(f"Phase {p['nr']} „{p['name']}“ verrät den Gegenangriff")
+    # seit 2.6 (H2): eine Rolle, eine Entscheidung je Meldung; kein Fast-Track mehr
+    for m in sz["meldungen"]:
+        lo = m.get("loesung") or {}
+        if lo.get("entscheid") not in ("BEKÄMPFEN", "ZURÜCKSTELLEN", "ABLEHNEN"):
+            fehler.append(f"{m['id']}: Lösung ohne Entscheidung BEKÄMPFEN/ZURÜCKSTELLEN/ABLEHNEN ({lo})")
+        for w in lo.get("wirkmittel") or []:
+            if w not in wm:
+                fehler.append(f"{m['id']}: Wirkmittel der Lösung {w} unbekannt")
+    if any(i.get("aktion") == "fast_track_angebot" for i in sz["injects"]) or "fast_track" in regeln:
+        fehler.append("Fast-Track gibt es seit 2.6 nicht mehr (Inject I-05, regeln.fast_track)")
     for m in sz["meldungen"]:
         ph = next((p for p in sz.get("phasen", []) if p["von_s"] <= m["t_s"] < p["bis_s"]), None)
         if ph and ph["nr"] != m.get("phase"):
@@ -710,7 +723,6 @@ def pruefe(d):
               if m["argus"]["empfehlung"] == "BEKÄMPFEN" and not bek[m["id"]]["argus_falsch"]]
     steil = max(wm.values(), key=lambda w: w["wirkradius_m"])["id"]
     praez = [w for w in wm if wm[w]["wirkradius_m"] <= 50 and not wm[w].get("einsatzbereich")]
-    i05 = next((i["t_s"] for i in sz["injects"] if i.get("aktion") == "fast_track_angebot"), 0)
     kz = {
         "lagemeldung_max": lage_max, "eigene_panzer": len((sz.get("eigene_truppe") or {}).get("panzer", [])),
         "artillerie_treffer": treffer_art if et and vr else 0,
@@ -720,10 +732,8 @@ def pruefe(d):
         "falsch_meldungen": [h["meldung"] for h in falsch],
         "konfidenz_falsch_mittel": round(statistics.mean(konf_f), 1) if konf_f else None,
         "konfidenz_richtig_bekaempfen_mittel": round(statistics.mean(konf_r), 1) if konf_r else None,
-        "fast_track_faellig": [m["id"] for m in sz["meldungen"]
-                               if m["argus"]["konfidenz"] >= regeln["fast_track"]["schwelle"] and m["argus"]["empfehlung"] == "BEKÄMPFEN"],
-        "fast_track_nach_angebot": [m["id"] for m in sz["meldungen"] if m["t_s"] >= i05
-                                    and m["argus"]["konfidenz"] >= regeln["fast_track"]["schwelle"] and m["argus"]["empfehlung"] == "BEKÄMPFEN"],
+        "loesung": {e: [m["id"] for m in sz["meldungen"] if (m.get("loesung") or {}).get("entscheid") == e]
+                    for e in ("BEKÄMPFEN", "ZURÜCKSTELLEN", "ABLEHNEN")},
         "ohne_zulaessiges_wm": [h["meldung"] for h in hilfe if not h["zulaessig"] and h["legitim"]],
         "steilfeuer": steil,
         "steilfeuer_zulaessig": [h["meldung"] for h in hilfe if steil in h["zulaessig"]],
@@ -763,7 +773,7 @@ def main():
           f"{kz['fahrzeuge_gemeldet']} gemeldeten Fahrzeugen, {kz['zielobjekte']} Zielobjekte, {n_inj} Injects")
     print(f"ARGUS richtig {kz['argus_richtig']}, falsch {kz['argus_falsch']} {kz['falsch_meldungen']}; "
           f"Ø Konfidenz falsch {kz['konfidenz_falsch_mittel']} % / richtig (BEKÄMPFEN) {kz['konfidenz_richtig_bekaempfen_mittel']} %")
-    print(f"Phasen {kz['phasen']}; Fast-Track-fähig nach Angebot: {kz['fast_track_nach_angebot']}")
+    print(f"Phasen {kz['phasen']}; Lösung je Meldung: " + ", ".join(f"{e} {len(v)}" for e, v in kz["loesung"].items()))
     print("Größte Meldelücken: " + ", ".join(f"{g['s']:.0f} s ab {g['von']} (bis {g['bis']})" for g in kz["groesste_luecken"]))
     print(f"{kz['steilfeuer']} zulässig (Einschlag bei Freigabe +{FREIGABE_RICHTWERT_S} s) bei {kz['steilfeuer_zulaessig']}")
     print(f"nur Präzision zulässig bei {len(kz['nur_praezision'])}: {kz['nur_praezision']}; ohne zulässiges Wirkmittel: {kz['ohne_zulaessiges_wm']}")

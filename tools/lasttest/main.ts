@@ -1,8 +1,8 @@
 // Lasttest-Seite (…/Argus/lasttest.html): Einstellungen, Start, Verlauf und Ergebnis.
-// Adresszeile (alles optional): db=…, transport=lp|auto, tempo=1|2|5|10|20, teams=1…5, beobachter=1,
-// aufteilung=alles|host|beitreten, hier=1,2 (Teams mit Bots auf diesem Gerät), code=K7P (beitreten),
-// start=1 (sofort starten, z. B. für tools/lasttest_probe.py).
-import { type Aufteilung, TEMPI, einstellungenHtml, laufHtml } from "./ansicht";
+// Adresszeile (alles optional): db=…, transport=lp|auto, tempo=1|2|5|10|20, teams=1…7, plenum=0|1, verzug=0|5|15 (s je Richtung),
+// trennen=30,20 (Team-Laptops ab 30 s nach dem Start für 20 s trennen), aufteilung=alles|sl|beitreten, hier=1,2 (Team-Laptops auf
+// diesem Gerät), code=K7P (beitreten), start=1 (sofort starten, z. B. für tools/lasttest_probe.py).
+import { type Aufteilung, TEMPI, einstellungenHtml, laufHtml, trennenWert } from "./ansicht";
 import { auswerten, rohdaten } from "./auswertung";
 import { type LastOptionen, Lasttest, STANDARD_OPTIONEN } from "./lauf";
 import { ANZAHL_LAEUFE } from "./plan";
@@ -15,25 +15,33 @@ function alleTeams(n: number): number[] {
   return Array.from({ length: n }, (_, i) => i + 1);
 }
 
+function trennenAus(text: string | null | undefined): LastOptionen["trennen"] {
+  const [ab, dauer] = (text ?? "").split(",").map(Number);
+  return Number.isFinite(ab) && Number.isFinite(dauer) && dauer > 0 ? { ab: Math.max(0, ab), dauer } : null;
+}
+
 function ausAdresse(): { opt: LastOptionen; auf: Aufteilung; sofort: boolean } {
   const q = new URLSearchParams(location.search);
   const zahl = (k: string, d: number) => (q.has(k) ? Number(q.get(k)) : d);
   const tempo = zahl("tempo", STANDARD_OPTIONEN.tempo);
   const teams = Math.max(1, Math.min(ANZAHL_LAEUFE, Math.round(zahl("teams", STANDARD_OPTIONEN.teams)) || STANDARD_OPTIONEN.teams));
   const aufRoh = q.get("aufteilung");
-  const auf: Aufteilung = q.has("code") ? "beitreten" : aufRoh === "host" || aufRoh === "beitreten" ? aufRoh : "alles";
-  const hier = (q.get("hier") ?? "").split(",").map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= teams);
+  const auf: Aufteilung = q.has("code") ? "beitreten" : aufRoh === "sl" || aufRoh === "beitreten" ? aufRoh : "alles";
+  const hier = (q.get("hier") ?? "").split(",").filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= teams);
+  const verzug = Math.max(0, Math.min(60, zahl("verzug", STANDARD_OPTIONEN.verzug / 1000)));
   return {
     opt: {
       ...STANDARD_OPTIONEN,
       db: (q.get("db") ?? STANDARD_OPTIONEN.db).trim().replace(/\/+$/, ""),
       transport: q.get("transport") === "auto" ? "auto" : "lp",
-      tempo: TEMPI.includes(tempo) ? tempo : STANDARD_OPTIONEN.tempo,
+      tempo: TEMPI.includes(tempo) || (tempo > 0 && tempo <= 30) ? tempo : STANDARD_OPTIONEN.tempo,
       teams,
       hier: auf === "alles" ? alleTeams(teams) : hier,
-      host: auf !== "beitreten",
+      sl: auf !== "beitreten",
       code: q.get("code"),
-      beobachter: q.get("beobachter") === "1" && auf !== "beitreten",
+      plenum: q.get("plenum") !== "0" && auf !== "beitreten",
+      verzug: verzug * 1000,
+      trennen: trennenAus(q.get("trennen")),
     },
     auf,
     sofort: q.get("start") === "1",
@@ -59,9 +67,11 @@ function einstellungenLesen(): void {
     transport: wert("transport") === "auto" ? "auto" : "lp",
     teams,
     hier: auf === "alles" ? alleTeams(teams) : gewaehlt.filter((n) => n <= teams),
-    host: auf !== "beitreten",
+    sl: auf !== "beitreten",
     code: (wert("code") ?? opt.code ?? "").trim() || null,
-    beobachter: auf !== "beitreten" && !!(document.getElementById("beobachter") as HTMLInputElement | null)?.checked,
+    plenum: auf !== "beitreten" && !!(document.getElementById("plenum") as HTMLInputElement | null)?.checked,
+    verzug: Number(wert("verzug") ?? opt.verzug / 1000) * 1000,
+    trennen: trennenAus(wert("trennen") ?? trennenWert(opt.trennen)),
   };
 }
 
@@ -88,7 +98,7 @@ function starten(): void {
     return;
   }
   if (auf === "beitreten" && !opt.code) {
-    alert("Bitte den Code der Sitzung vom Host-Gerät eingeben.");
+    alert("Bitte den Code der Sitzung vom Gerät der Spielleitung eingeben.");
     return;
   }
   if (auf === "beitreten" && !opt.hier.length) {
@@ -100,7 +110,9 @@ function starten(): void {
   q.set("teams", String(opt.teams));
   if (opt.transport === "auto") q.set("transport", "auto");
   if (opt.db !== STANDARD_OPTIONEN.db) q.set("db", opt.db);
-  if (opt.beobachter) q.set("beobachter", "1");
+  if (!opt.plenum && auf !== "beitreten") q.set("plenum", "0");
+  if (opt.verzug) q.set("verzug", String(opt.verzug / 1000));
+  if (opt.trennen) q.set("trennen", trennenWert(opt.trennen));
   if (auf !== "alles") {
     q.set("aufteilung", auf);
     q.set("hier", opt.hier.join(","));
@@ -157,11 +169,11 @@ wurzel.addEventListener("click", (ev) => {
 
 wurzel.addEventListener("change", (ev) => {
   const el = ev.target as HTMLInputElement;
-  if (el.id === "teams" || el.id === "beobachter" || el.name === "aufteilung" || el.name === "hier") {
+  if (el.id === "teams" || el.id === "plenum" || el.id === "verzug" || el.id === "trennen" || el.name === "aufteilung" || el.name === "hier") {
     const vorher = auf;
     einstellungenLesen();
-    // Vorschlag beim Wechsel der Aufteilung: Host-Gerät mit Team 1, weiteres Gerät mit den übrigen Teams
-    if (auf !== vorher && auf === "host") opt = { ...opt, hier: [1] };
+    // Vorschlag beim Wechsel der Aufteilung: Gerät der Spielleitung mit Team 1, weiteres Gerät mit den übrigen Teams
+    if (auf !== vorher && auf === "sl") opt = { ...opt, hier: [1] };
     if (auf !== vorher && auf === "beitreten") opt = { ...opt, hier: alleTeams(opt.teams).slice(1) };
     zeigeEinstellungen();
   }

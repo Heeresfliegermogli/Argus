@@ -34,7 +34,7 @@ const NEU = ["S5", "S6", "S7", "S8"];
 describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
   it("E1: das Menü „Verstärkung“ ist per Schalter in den Regeln aus", async () => {
     const inh = await inhalte();
-    expect(["2.4", "2.5"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F)
+    expect(["2.4", "2.5", "2.6"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H)
     expect(inh.regeln.spielleitung?.verstaerkung_menue).toBe(false);
     // die Verstärkungen bleiben in den Daten (Schalter, kein Löschen)
     expect(inh.szenario.verstaerkungen?.gruppen.length).toBeGreaterThan(0);
@@ -128,19 +128,19 @@ describe("Szenario 2.4: BEKÄMPFEN wirkt auf den Zug (E3)", () => {
     expect(inh.wirkmittel.LM.bestand).toBe(20);
   });
 
-  it("Engine: Freigabe schreibt alle Einschläge, Bestand je Einschlag, die Wirkung kommt je Einschlag; erledigt mit dem letzten", async () => {
+  it("Engine: BEKÄMPFEN schreibt alle Einschläge, Bestand je Einschlag, die Wirkung kommt je Einschlag; erledigt mit dem letzten", async () => {
     const inh = await inhalte();
     const m = inh.meldungen.M07;
-    let z = zustandAus([...START(), e("meldung", { meldung: "M07" }, m.t_s), e("g1_entscheid", { meldung: "M07", entscheid: "annehmen" }, m.t_s + 20),
-      e("g2_empfehlung", { meldung: "M07", empfehlung: "bekaempfen", wirkmittel: "LM" }, m.t_s + 40)], inh);
-    const t = m.t_s + 60;
-    const r = verarbeiteAktion(inh, z, { id: "a1", typ: "g3_entscheid", von: { rolle: "g3", client: "c1" }, ts: 0, daten: { meldung: "M07", entscheid: "freigabe" } }, t);
+    let z = zustandAus([...START(), e("meldung", { meldung: "M07" }, m.t_s)], inh);
+    const t = m.t_s + 20;
+    const r = verarbeiteAktion(inh, z, { id: "a1", typ: "entscheid", von: { rolle: "zb", client: "c1" }, ts: 0, daten: { meldung: "M07", entscheid: "bekaempfen", wirkmittel: "LM", t_offen: m.t_s + 5 } }, t);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const d = r.entwuerfe[0].daten as { einschlaege: { t: number; ziel: string }[]; einschlag: { t: number; ziel: string } };
     expect(d.einschlaege.map((x) => x.ziel)).toEqual(m.ziele);
     expect(d.einschlag.ziel).toBe(m.ziele[0]);
-    z = anwenden(z, { seq: z.seq + 1, typ: "g3_entscheid", ts: 0, t_s: t, von: { rolle: "g3", client: "c1" }, daten: r.entwuerfe[0].daten } as Ereignis, inh);
+    expect(r.entwuerfe[0].daten).toMatchObject({ entscheid: "bekaempfen", wirkmittel: "LM", sek_eingang: 20, sek_offen: 15, t_offen: m.t_s + 5 });
+    z = anwenden(z, { seq: z.seq + 1, typ: "entscheid", ts: 0, t_s: t, von: { rolle: "zb", client: "c1" }, daten: r.entwuerfe[0].daten } as Ereignis, inh);
     expect(z.bestand.LM).toBe(20 - 3);
     // Host-Takt bis nach dem letzten Einschlag
     const bis = d.einschlaege[2].t + 1;
@@ -209,7 +209,9 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
       expect(f.bezuege.length, id).toBeGreaterThanOrEqual(1);
       const m = inh.meldungen[f.meldung];
       expect(m.fall).toBe(id);
-      expect(Object.keys(m.loesung ?? {}), id).toEqual(expect.arrayContaining(["G1", "G2", "G3"]));
+      // seit 2.6 (H3.4): eine Lösung je Meldung – Entscheidung und Begründung
+      expect(m.loesung?.entscheid, id).toMatch(/^(BEKÄMPFEN|ZURÜCKSTELLEN|ABLEHNEN)$/);
+      expect(m.loesung?.text?.length ?? 0, id).toBeGreaterThan(10);
       expect(m.bild.merkmale?.length, id).toBeGreaterThan(0);
       for (const zid of f.ziele) expect(inh.ziele[zid].gt.text.length, `${id} ${zid}`).toBeGreaterThan(20);
     }

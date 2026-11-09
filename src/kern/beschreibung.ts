@@ -1,18 +1,17 @@
 // Kurzbeschreibung eines Ereignisses in Klartext (Protokollanzeige der Spielleitung). Seit B3/B7 (25.10.2026) mit
-// Rollennamen statt G1–G3 und „Ziel 7 (M07)“: die Nummer der Spieler, die interne Kennung für die Spielleitung dahinter.
+// „Ziel 7 (M07)“: die Nummer der Spieler, die interne Kennung für die Spielleitung dahinter. Seit 2.6 (H2) eine Rolle je
+// Team und eine Entscheidung je Meldung, mit den Sekunden ab Eingang und ab Öffnen.
 import type { Inhalte } from "../inhalte/typen";
 import type { Ereignis } from "./ereignisse";
 import { trefferText } from "./regeln";
-import { ENTSCHEID_TEXT, ROLLEN_DATIV, ROLLEN_NAME } from "./sichten";
+import { ENTSCHEID_TEXT, ROLLEN_NAME } from "./sichten";
 import { uhrzeit } from "./uhr";
 import { zielNr } from "./zielnummern";
 import type { Spielzustand } from "./zustand";
 
-/** Empfänger eines Injects („G3“, „alle“) als Rollenname. */
+/** Empfänger eines Injects (seit 2.6 immer das Team). */
 function empfaenger(an: string | undefined): string {
-  if (!an) return "?";
-  const r = an.toLowerCase();
-  return r === "g1" || r === "g2" || r === "g3" ? ROLLEN_NAME[r] : an;
+  return an || "Team";
 }
 
 export function absenderText(e: Ereignis): string {
@@ -39,20 +38,15 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
     }
     case "meldung": {
       const m = inh.meldungen[e.daten.meldung];
-      const zusatz = e.daten.entfaellt ? " – entfällt, Ziel schon zerstört oder weg" : e.daten.fast_track ? " – Fast-Track direkt an die Zielprüfung" : "";
+      const zusatz = e.daten.entfaellt ? " – entfällt, Ziel schon zerstört oder weg" : "";
       return `ARGUS ${ziel(e.daten.meldung)}: ${m?.argus.klasse ?? "?"} ${m?.argus.konfidenz ?? "?"} % ${m?.argus.empfehlung ?? ""}${zusatz}${e.daten.manuell ? " (manuell)" : ""}`;
     }
-    case "g1_entscheid":
-      return `${ziel(e.daten.meldung)} ${ENTSCHEID_TEXT[e.daten.entscheid]}`;
-    case "g2_empfehlung": {
-      const d = e.daten;
-      const w = d.warnungen?.length ? ` ⚠ ${d.warnungen.join("; ")}` : "";
-      return `${ziel(d.meldung)} ${ENTSCHEID_TEXT[d.empfehlung]}${d.wirkmittel ? ` mit ${wm(d.wirkmittel)}` : ""}${d.begruendung ? ` – „${d.begruendung}“` : ""}${w}`;
-    }
-    case "g3_entscheid": {
+    case "entscheid": {
       const d = e.daten;
       const w = d.warnungen?.length ? ` ⚠ trotz Warnung: ${d.warnungen.join("; ")}` : "";
-      return `${ziel(d.meldung)} ${ENTSCHEID_TEXT[d.entscheid]}${d.wirkmittel ? ` (${wm(d.wirkmittel)})` : ""}${d.bemerkung ? ` – „${d.bemerkung}“` : ""}${w}`;
+      const sek = d.sek_eingang !== undefined ? ` nach ${Math.round(d.sek_eingang)} s${d.sek_offen !== undefined ? ` (${Math.round(d.sek_offen)} s angesehen)` : ""}` : "";
+      const n = d.einschlaege?.length ?? 0;
+      return `${ziel(d.meldung)} ${ENTSCHEID_TEXT[d.entscheid]}${d.wirkmittel ? ` mit ${wm(d.wirkmittel)}${n > 1 ? ` ×${n}` : ""}` : ""}${sek}${w}`;
     }
     case "wirkung": {
       const d = e.daten;
@@ -62,7 +56,7 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
       return `Einschlag ${wm(d.wirkmittel)} auf ${ziel(d.meldung)}${d.ziel ? ` – ${d.ziel}` : ""}${spaet}: ${g.length ? g.map(trefferText).join(", ") : "nichts getroffen"}${v}`;
     }
     case "meldung_entfaellt":
-      return `${ziel(e.daten.meldung)} entfällt bei ${ROLLEN_DATIV[e.daten.stufe]} – ${e.daten.grund}`;
+      return `${ziel(e.daten.meldung)} entfällt im Eingang – ${e.daten.grund}`;
     case "verstaerkung": {
       const g = inh.szenario.verstaerkungen?.gruppen.find((x) => x.id === e.daten.gruppe) ?? inh.basis?.szenario.verstaerkungen?.gruppen.find((x) => x.id === e.daten.gruppe);
       return `Verstärkung ${e.daten.gruppe} eingespielt: ${g?.name ?? "?"} (${g?.kurz ?? "?"})`;
@@ -89,15 +83,11 @@ export function beschreibe(e: Ereignis, inh: Inhalte, z: Spielzustand | null = n
     case "inject": {
       const i = inh.injects[e.daten.inject];
       // seit 2.3: Druckmeldung der eigenen Truppe (K-…) mit Text und Stufe aus dem Protokoll
-      if (!i && e.daten.text) return `Druckmeldung ${e.daten.inject} der 1. Kp an ${empfaenger("G3")}${e.daten.stufe ? ` (Stufe ${e.daten.stufe})` : ""}: „${e.daten.text}“`;
+      if (!i && e.daten.text) return `Lagemeldung ${e.daten.inject} der 1. Kp${e.daten.stufe !== undefined ? ` (Stufe ${e.daten.stufe})` : ""}: „${e.daten.text}“`;
       return `Inject ${e.daten.inject} an ${empfaenger(i?.an)} (${i?.von ?? "?"})${e.daten.manuell ? " – manuell" : ""}`;
     }
     case "inject_quittiert":
-      return `Inject ${e.daten.inject} quittiert`;
-    case "lagehinweis":
-      return `Lagehinweis an ${e.daten.an.map((r) => ROLLEN_NAME[r]).join("/")}: „${e.daten.text}“`;
-    case "fast_track":
-      return `Fast-Track ${e.daten.an ? "EIN" : "AUS"}`;
+      return `Lagemeldung ${e.daten.inject} angeklickt`;
     case "notiz":
       return `Notiz${e.daten.fall ? ` zu ${e.daten.fall}` : ""}: ${e.daten.text}`;
     case "spielende":

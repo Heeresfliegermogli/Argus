@@ -35,11 +35,12 @@ describe("Szenario 2.3: Daten (D4)", () => {
     }
   });
 
-  it("D4.2: Schlüsselinformationen bleiben (Schule belegt, PT-91/Feldweg Süd/Zeit, Fast-Track ab 90 %, Mörser Hof RABE)", async () => {
+  it("D4.2: Schlüsselinformationen bleiben (Schule belegt, PT-91/Feldweg Süd/Zeit, Mörser Hof RABE); seit 2.6 ohne Fast-Track (H3.1)", async () => {
     const inh = await inhalte();
     expect(inh.injects["I-02"].text).toMatch(/Schule.*40 Zivilpersonen.*Kinder/);
     expect(inh.injects["I-04"].text).toMatch(/PT-91.*19:00.*Feldweg Süd.*Brücke Ost/);
-    expect(inh.injects["I-05"].text).toMatch(/Fast-Track.*90 %/);
+    expect(inh.injects["I-05"]).toBeUndefined();
+    expect(JSON.stringify(inh.szenario.injects)).not.toMatch(/Fast-Track/i);
     expect(inh.injects["I-07"].text).toMatch(/Mörserfeuer aus Hof RABE/);
   });
 });

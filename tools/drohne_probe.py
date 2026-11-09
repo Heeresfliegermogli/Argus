@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Probe des Live-Drohnenbilds (Schritt 6b) über die sichtbare Oberfläche von G1.
+"""Probe des Live-Drohnenbilds (Schritt 6b) über die sichtbare Oberfläche der Zielbearbeitung (seit 2.6 eine Rolle).
 
-Prüft im Browser (SL steuert die Uhr, G1 öffnet die Meldungen über ihre Marken auf der Karte):
+Prüft im Browser (SL steuert die Uhr, die Zielbearbeitung öffnet die Meldungen in ihrem Eingang):
 
 1. Zusammensetzen: Für jede Meldung setzt das Live-Bild zur Meldezeit die Ebenen so zusammen, dass es dem
    Standbild entspricht (mittlere Abweichung in Graustufen wie tools/assets/live.py `pruefe_ebenen`, Fahrzeuge
@@ -12,14 +12,14 @@ Prüft im Browser (SL steuert die Uhr, G1 öffnet die Meldungen über ihre Marke
    Fahrzeug bleibt an seiner Stelle im Bild, der Ausschnitt wandert. Wird das verfolgte Fahrzeug einer Gruppe
    zerstört, bleibt die Kamera ca. 0,5 s darauf, schwenkt dann mit kurzem Bildrauschen („◌ AUSRICHTUNG …“) zum
    nächsten Fahrzeug der Meldung und zeigt wieder „● LIVE“.
-4. Effekte und Wracks: Eine LM auf Z-02 (über M03, Freigabe durch G3) schlägt im Bild von M12 ein –
+4. Effekte und Wracks: Eine LM auf Z-02 (M03, BEKÄMPFEN mit LM) schlägt im Bild von M12 ein –
    Flug, Einschlag, danach Wrack mit Feuer.
 5. Bildrate bei laufender Uhr (×1 und ×10, M17 – das Ziel fährt im Bild): Fenster am Ort und Vergrößerung, dazu die Karte.
 6. Seit Szenario 2.4 (E6.3): Merkmale im Bild statt Sensordaten – für jedes `bild.merkmale` der Meldungen eines Falls
    (und der übrigen Meldungen mit Merkmalen) Lupe auf das Ziel, Merkmal im Bild gezählt (Figuren, Schrift PRESS,
    Verbände, Holz des Rohrs, Fernglas und Funkgerät), Fotos merkmal_<Meldung>_<Art>.png zum Ansehen.
 7. Seit Szenario 2.4 (E4): EloKa stört global – solange das EloKa-Fahrzeug steht, rauscht jedes Live-Bild (M09–M11, M25);
-   bekämpft (Kette G1 → G2 Mörser → G3), ist das nächste Bild (M11) klar und ARGUS meldet ungestört.
+   bekämpft (BEKÄMPFEN mit Mörser), ist das nächste Bild (M11) klar und ARGUS meldet ungestört.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne
@@ -95,10 +95,10 @@ def main():
         browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
 
         def raum(name):
-            """SL, G1, G2, G3 in einem neuen Raum; die Uhr steht bei 00:00."""
+            """Spielleitung und Zielbearbeitung in einem neuen Raum; die Uhr steht bei 00:00."""
             ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
             s = {}
-            for r in ["sl", "g1", "g2", "g3"]:
+            for r in ["sl", "zb"]:
                 pg = ctx.new_page()
                 pg.on("console", lambda m, r=r: konsole.append(f"{r}: {m.type}: {m.text}") if m.type in ("error", "warning") else None)
                 pg.on("pageerror", lambda e, r=r: konsole.append(f"{r}: pageerror: {e}"))
@@ -106,18 +106,27 @@ def main():
                 s[r] = pg
                 if r == "sl":
                     warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
-            for r in ["g1", "g2", "g3"]:
-                s[r].get_by_role("button", name="Überspringen").click()
-            return ctx, s["sl"], s["g1"], s["g2"], s["g3"]
+            s["zb"].get_by_role("button", name="Übersicht überspringen").click()
+            s["zb"].get_by_role("button", name="Überspringen").click()
+            return ctx, s["sl"], s["zb"]
 
         def zeit(sl, t):
             sl.get_by_test_id("sl-zeit").fill(f"{int(t) // 60:02d}:{int(t) % 60:02d}")
             sl.get_by_role("button", name="Spielzeit setzen").click()
 
-        def oeffne(g1, mid):
-            warte(lambda: g1.locator(f".kmarke[data-meldung={mid}]").count() == 1, 20, f"Marke {mid} bei G1")
-            g1.locator(f".kmarke[data-meldung={mid}]").click()
-            warte(lambda: g1.evaluate(f"() => {LIVE}?.argusLive?.meldung") == mid, 20, f"Live-Bild {mid}")
+        def oeffne(zb, mid):
+            zeile = zb.locator(f"[data-testid=eingang] button[data-meldung={mid}]")
+            warte(lambda: zeile.count() == 1, 20, f"{mid} im Eingang")
+            zeile.click()
+            warte(lambda: zb.evaluate(f"() => {LIVE}?.argusLive?.meldung") == mid, 20, f"Live-Bild {mid}")
+
+        def bekaempfen(zb, mid, wm):
+            """Meldung öffnen und mit dem Wirkmittel bekämpfen; Spielzeit des Einschlags auf das erste Fahrzeug."""
+            oeffne(zb, mid)
+            zb.locator(f"label[data-wm={wm}]").click()
+            zb.get_by_test_id("zb-bekaempfen").click()
+            warte(lambda: zb.evaluate(f"() => window.argus.stand.zustand.meldungen.{mid}.freigabe?.einschlag?.t ?? null") is not None, 15, f"Einschlag {mid} geplant")
+            return zb.evaluate(f"() => {{ const f = window.argus.stand.zustand.meldungen.{mid}.freigabe; return (f.einschlaege?.[0] ?? f.einschlag).t }}")
 
         # Merkmal → (Farbklasse in der Lupe, Mindestzahl Bildpunkte); Figuren-Merkmale zählen die Figuren am Ziel
         # Schrift und Verbände: „hell“ (fast weiß, Kamerafarbe und Dunst dämpfen das Weiß), Tuch und Kreuz wie in Teil 3
@@ -125,17 +134,17 @@ def main():
                          "attrappe": ("holz", 15), "beobachter": ("dunkel", 6)}
         MERKMAL_FIGUR = {"zivilpersonen": "zivil", "sanitaeter": "sanitaet"}
 
-        def merkmal(sl, g1, m, mk):
+        def merkmal(sl, zb, m, mk):
             """Lupe auf das Ziel des Merkmals; zählt Figuren bzw. Bildpunkte der Merkmalsfarbe."""
             mid, art, zid = m["id"], mk["art"], mk.get("ziel")
             zeit(sl, man["drohne"][mid]["t_s"] + 1)
-            oeffne(g1, mid)
-            g1.wait_for_timeout(500)
-            g1.get_by_role("button", name="Drohnenbild vergrößern").click()
-            warte(lambda: g1.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
-            g1.wait_for_timeout(400)
-            info = live(g1, GROSS)
-            cv = g1.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
+            oeffne(zb, mid)
+            zb.wait_for_timeout(500)
+            zb.get_by_role("button", name="Drohnenbild vergrößern").click()
+            warte(lambda: zb.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
+            zb.wait_for_timeout(400)
+            info = live(zb, GROSS)
+            cv = zb.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
             k = cv["width"] / man["drohne"][mid]["breite"]
             fz = next((f for f in info["fahrzeuge"] if f["id"] == zid), None)
             figs = [f for f in info["figuren"] if f["bei"] == zid]
@@ -162,12 +171,12 @@ def main():
                     text = f"Sprite {fz['sprite'] if fz else '–'}"
                 else:
                     text = f"{zid} im Bild{' (' + fz['sprite'] + ')' if fz else ' FEHLT'}"
-            g1.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
+            zb.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
             for _ in range(4):
-                g1.mouse.wheel(0, -100)
-                g1.wait_for_timeout(100)
-            g1.wait_for_timeout(500)
-            z = g1.evaluate(LUPE_ZAEHLEN)
+                zb.mouse.wheel(0, -100)
+                zb.wait_for_timeout(100)
+            zb.wait_for_timeout(500)
+            z = zb.evaluate(LUPE_ZAEHLEN)
             if art in MERKMAL_PIXEL:
                 farbe, mindest = MERKMAL_PIXEL[art]
                 n = z[farbe] if z else 0
@@ -180,28 +189,28 @@ def main():
             if verdeckt is not None:
                 text += f", verdeckt {round(verdeckt * 100)} %"
             pruefe(ok, f"{mid} Merkmal „{art}“ ({mk['text']}): {text}")
-            g1.screenshot(path=os.path.join(a.bilder, f"merkmal_{mid}_{art}.png"),
+            zb.screenshot(path=os.path.join(a.bilder, f"merkmal_{mid}_{art}.png"),
                           clip={"x": max(0, cv["x"] + ziel[0] * k - 260), "y": max(0, cv["y"] + ziel[1] * k - 260), "width": 520, "height": 520})
-            g1.keyboard.press("Escape")
+            zb.keyboard.press("Escape")
 
-        def live(g1, sel=LIVE):
-            return g1.evaluate(f"() => {{ const x = {sel}?.argusLive; return x && {{ ...x, vergleich: undefined }}; }}")
+        def live(zb, sel=LIVE):
+            return zb.evaluate(f"() => {{ const x = {sel}?.argusLive; return x && {{ ...x, vergleich: undefined }}; }}")
 
         if not a.nur_bildrate and not a.nur_merkmale:
             # ---------------------------------------------------------------- 1. Zusammensetzen je Meldung
-            ctx, sl, g1, g2, g3 = raum("ebenen")
+            ctx, sl, zb = raum("ebenen")
             meldungen = [] if a.ohne_ebenen else sorted([k for k, d in man["drohne"].items() if not d.get("relativ") and d.get("ebenen")], key=lambda k: man["drohne"][k]["t_s"])
             werte = {}
             for mid in meldungen:
                 zeit(sl, man["drohne"][mid]["t_s"])
-                oeffne(g1, mid)
-                v = g1.evaluate(f"() => {LIVE}.argusLive.vergleich()")
+                oeffne(zb, mid)
+                v = zb.evaluate(f"() => {LIVE}.argusLive.vergleich()")
                 lage = max([0.0] + [abs(f["soll"][0] - f["ist"][0]) + abs(f["soll"][1] - f["ist"][1]) for f in v["fahrzeuge"] + v["figuren"]])
                 soll_n = len(man["drohne"][mid]["ebenen"]["figuren"])
                 werte[mid] = v["abweichung"]
                 # Rauschen (M25 bis 2.3; seit 2.4 alle Bilder, solange EloKa steht: Manifest „eloka“) – dort zählt nur die Lage
                 rauscht = bool(man["drohne"][mid].get("eloka") or man["drohne"][mid]["ebenen"].get("bildstoerung"))
-                el = live(g1)["eloka"]
+                el = live(zb)["eloka"]
                 ok = lage <= 1.5 and (rauscht or v["abweichung"] <= a.max_abweichung) and len(v["figuren"]) == soll_n
                 ok = ok and (el > 0) == bool(man["drohne"][mid].get("eloka"))
                 pruefe(ok, f"{mid}: Abweichung zum Standbild {v['abweichung']} Graustufen{' (Rauschen live)' if rauscht else ''}, "
@@ -212,37 +221,27 @@ def main():
                 pruefe(True, f"Abweichung ohne gestörte Bilder: {min(ohne25)}–{max(ohne25)} Graustufen (Referenz tools/assets/live.py: 2,5–4,2)")
             ctx.close()
 
-            ctx, sl, g1, g2, g3 = raum("lage")
+            ctx, sl, zb = raum("lage")
 
             # ---------------------------------------------------------------- 2. Effekte und Wrack (LM auf Z-02, im Bild von M12)
             zeit(sl, man["drohne"]["M12"]["t_s"] + 2)
-            oeffne(g1, "M03")
-            g1.get_by_role("button", name="ANNEHMEN").click()
-            warte(lambda: g2.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G2")
-            g2.locator(".kmarke[data-meldung=M03]").click()
-            g2.get_by_text("Loitering Munition (Präzision)").click()
-            g2.get_by_role("button", name="BEKÄMPFEN mit LM").click()
-            warte(lambda: g3.locator(".kmarke[data-meldung=M03]").count() == 1, 15, "M03 bei G3")
-            g3.locator(".kmarke[data-meldung=M03]").click()
-            g3.get_by_role("button", name="FREIGABE").click()
-            warte(lambda: g3.locator("[data-marke='W-M03']").count() == 1, 15, "Einschlag geplant")
-            # Einschlag aus dem Protokoll; die Uhr wird genau davor, kurz danach und später gestellt (Spielzeit mit
+            # Einschlag aus dem Spielstand; die Uhr wird genau davor, kurz danach und später gestellt (Spielzeit mit
             # Bruchteil über die Sicht der Spielleitung), damit die kurze Explosion sicher in einem Bild liegt
-            te = g3.evaluate("() => window.argus.stand.zustand.meldungen.M03.g3.einschlag.t")
-            oeffne(g1, "M12")
-            g1.bring_to_front()
+            te = bekaempfen(zb, "M03", "LM")
+            oeffne(zb, "M12")
+            zb.bring_to_front()
 
             def setze(t):
                 sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", t)
-                warte(lambda: abs(g1.evaluate(f"() => {LIVE}?.argusLive?.t ?? -1") - t) < 0.05, 20, f"Live-Bild zur Spielzeit {t:.1f}")
-                g1.wait_for_timeout(300)
-                return live(g1)
+                warte(lambda: abs(zb.evaluate(f"() => {LIVE}?.argusLive?.t ?? -1") - t) < 0.05, 20, f"Live-Bild zur Spielzeit {t:.1f}")
+                zb.wait_for_timeout(300)
+                return live(zb)
 
             gesehen = {}
             for name, t in [("flug", te - 0.15), ("einschlag", te + 0.15), ("wrack", te + 6)]:
                 x = setze(t)
                 gesehen[name] = (x["effekte"], any(f["id"] == "Z-02" and f["wrack"] for f in x["fahrzeuge"]))
-                foto(g1, f"M12_{name}")
+                foto(zb, f"M12_{name}")
             flug_ok = "lm_flug" in gesehen["flug"][0] and not gesehen["flug"][1]
             schlag_ok = "explosion_klein" in gesehen["einschlag"][0]
             wrack_ok = gesehen["wrack"][1] and "feuer" in gesehen["wrack"][0]
@@ -253,30 +252,30 @@ def main():
             # ---------------------------------------------------------------- 2b. Feuer und Staub (Szenario 2.1, A8)
             # Mörser Z-06 (M05) feuert nach Schussrhythmus ab 13:38 (818 s): kurz nach dem Schuss Mündungsblitz und
             # Abschussrauch; M13: der Panzerzug fährt und wirbelt Staub auf.
-            oeffne(g1, "M05")
+            oeffne(zb, "M05")
             x = setze(818.3)
-            foto(g1, "M05_schuss")
+            foto(zb, "M05_schuss")
             pruefe("muendungsblitz_steil" in x["effekte"] and "abschussrauch" in x["effekte"],
                    f"M05 Mörser Z-06 feuert (818,3 s, 0,3 s nach dem Schuss): {sorted(x['effekte'])}")
             x = setze(830 + 4)
             pruefe("muendungsblitz_steil" not in x["effekte"], f"M05 zwischen den Feuerstößen kein Blitz (834 s): {sorted(x['effekte'])}")
             setze(880)
-            oeffne(g1, "M13")
+            oeffne(zb, "M13")
             x = setze(882)
-            foto(g1, "M13_staub")
+            foto(zb, "M13_staub")
             pruefe("staub" in x["effekte"], f"M13 Panzerzug fährt und wirbelt Staub auf (882 s): {sorted(x['effekte'])}")
 
             # ---------------------------------------------------------------- 3. Schlüsselfälle mit Lupe
             def fall(mid, name, art, zid, farbe, mindest, t=None):
                 if t is not None:
                     zeit(sl, t)
-                oeffne(g1, mid)
-                g1.wait_for_timeout(600)
-                foto(g1, f"{mid}_fenster")
-                g1.get_by_role("button", name="Drohnenbild vergrößern").click()
-                warte(lambda: g1.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
-                info = live(g1, GROSS)
-                cv = g1.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
+                oeffne(zb, mid)
+                zb.wait_for_timeout(600)
+                foto(zb, f"{mid}_fenster")
+                zb.get_by_role("button", name="Drohnenbild vergrößern").click()
+                warte(lambda: zb.evaluate(f"() => !!{GROSS}?.argusLive") is True, 10, "Vergrößerung")
+                info = live(zb, GROSS)
+                cv = zb.locator("[data-testid=live-gross] canvas.live-leinwand").bounding_box()
                 k = cv["width"] / man["drohne"][mid]["breite"]
                 if art == "fahrzeug":
                     ziel = next(f["px"] for f in info["fahrzeuge"] if f["id"] == zid)
@@ -289,37 +288,37 @@ def main():
                     anzahl = len(figs)
                     text = f"{anzahl} Figur(en) „{art}“ im Bild"
                     ok = anzahl == (2 if art == "kind" else 1)
-                g1.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
+                zb.mouse.move(cv["x"] + ziel[0] * k, cv["y"] + ziel[1] * k)
                 if art != "fahrzeug":
                     for _ in range(3):
-                        g1.mouse.wheel(0, -100)
-                        g1.wait_for_timeout(120)
-                g1.wait_for_timeout(500)
-                z = g1.evaluate(LUPE_ZAEHLEN)
+                        zb.mouse.wheel(0, -100)
+                        zb.wait_for_timeout(120)
+                zb.wait_for_timeout(500)
+                z = zb.evaluate(LUPE_ZAEHLEN)
                 if farbe:
                     ok = ok and z is not None and z[farbe] >= mindest
                     text += f", Lupe: {z[farbe] if z else '–'} {'rote' if farbe == 'rot' else 'weiße'} Bildpunkte"
                 verdeckt = man["drohne"][mid]["ebenen"]["figuren_verdeckt"]
                 text += f", verdeckt (Ebenen): {', '.join(f'{kk} {round(v * 100)} %' for kk, v in verdeckt.items()) or '–'}"
                 pruefe(ok and all(v < 0.1 for kk, v in verdeckt.items() if "soldat" not in kk), f"{mid} {name}: {text}")
-                foto(g1, f"{mid}_lupe")
-                g1.keyboard.press("Escape")
+                foto(zb, f"{mid}_lupe")
+                zb.keyboard.press("Escape")
 
             fall("M12", "S2 Rotes Kreuz", "fahrzeug", "Z-12", "rot", 40)
 
             # ---------------------------------------------------------------- 4. Kamera folgt dem Ziel (M13 Panzerzug, B9)
             t13 = man["drohne"]["M13"]["t_s"]
             zeit(sl, t13)
-            oeffne(g1, "M13")
-            x0 = live(g1)
+            oeffne(zb, "M13")
+            x0 = live(zb)
             sl.get_by_role("button", name="×5", exact=True).click()
             sl.get_by_role("button", name="▶ Start").click()
-            g1.wait_for_timeout(1500)
-            foto(g1, "M13_faehrt")
-            g1.wait_for_timeout(1500)
+            zb.wait_for_timeout(1500)
+            foto(zb, "M13_faehrt")
+            zb.wait_for_timeout(1500)
             sl.get_by_role("button", name="❚❚ Anhalten").click()
             sl.get_by_role("button", name="×1", exact=True).click()
-            x1 = live(g1)
+            x1 = live(zb)
             zid = x1["kamera"]["ziel"]
             lage0 = {f["id"]: f["px"] for f in x0["fahrzeuge"]}
             lage1 = {f["id"]: f["px"] for f in x1["fahrzeuge"]}
@@ -339,19 +338,19 @@ def main():
                 m = kand[0]
                 erst = m["ziele"][0]
                 zeit(sl, m["t_s"])
-                oeffne(g1, m["id"])
+                oeffne(zb, m["id"])
                 zeit(sl, tz[erst] + 5)
                 warte(lambda: sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}'] ?? null") is not None, 15, f"{erst} zerstört")
                 te = sl.evaluate(f"() => window.argus.stand.zustand.zerstoert['{erst}']")
-                status = lambda: g1.locator("[data-testid=live-fenster] .live-status").inner_text()  # noqa: E731
+                status = lambda: zb.locator("[data-testid=live-fenster] .live-status").inner_text()  # noqa: E731
                 a0 = setze(te + 0.25)
                 k0 = (a0["kamera"]["ziel"], a0["kamera"]["rauschen"], status())
                 a1 = setze(te + 0.5 + 0.22)
                 k1 = (a1["kamera"]["ziel"], a1["kamera"]["rauschen"], status())
-                foto(g1, f"{m['id']}_schwenk")
+                foto(zb, f"{m['id']}_schwenk")
                 a2 = setze(te + 2)
                 k2 = (a2["kamera"]["ziel"], a2["kamera"]["rauschen"], status())
-                foto(g1, f"{m['id']}_naechstes")
+                foto(zb, f"{m['id']}_naechstes")
                 mitte = next((mk for mk in a2["marken"] if mk == k2[0]), None)
                 pruefe(k0[0] == erst and k0[1] == 0 and k1[1] > 0.5 and "AUSRICHTUNG" in k1[2] and k2[0] != erst and k2[0] in m["ziele"]
                        and k2[1] == 0 and "LIVE" in k2[2] and mitte is not None,
@@ -365,38 +364,29 @@ def main():
         if not a.nur_bildrate:
             # ---------------------------------------------------------------- 6. Merkmale im Bild (2.4, E6.3)
             sz = json.load(open(os.path.join(HIER, "..", "public", "daten", "szenario_kraehe_01.json"), encoding="utf-8"))
-            ctx, sl, g1, g2, g3 = raum("merkmale")
+            ctx, sl, zb = raum("merkmale")
             for m in sorted(sz["meldungen"], key=lambda m: m["t_s"]):
                 for mk in m["bild"].get("merkmale") or []:
-                    merkmal(sl, g1, m, mk)
+                    merkmal(sl, zb, m, mk)
             ctx.close()
 
             # ---------------------------------------------------------------- 7. EloKa global (2.4, E4)
-            ctx, sl, g1, g2, g3 = raum("eloka")
+            ctx, sl, zb = raum("eloka")
             t25 = man["drohne"]["M25"]["t_s"]
             zeit(sl, t25 + 2)
-            oeffne(g1, "M25")
-            foto(g1, "eloka_M25_gestoert")
-            vorher = live(g1)["eloka"]
-            g1.get_by_role("button", name="ANNEHMEN").click()
-            warte(lambda: g2.locator(".kmarke[data-meldung=M25]").count() == 1, 15, "M25 bei G2")
-            g2.locator(".kmarke[data-meldung=M25]").click()
-            g2.get_by_text("Mörser 120 mm (Steilfeuer)").click()
-            g2.get_by_role("button", name="BEKÄMPFEN mit Mrs").click()
-            warte(lambda: g3.locator(".kmarke[data-meldung=M25]").count() == 1, 15, "M25 bei G3")
-            g3.locator(".kmarke[data-meldung=M25]").click()
-            g3.get_by_role("button", name="FREIGABE").click()
-            warte(lambda: g3.evaluate("() => window.argus.stand.zustand.meldungen.M25.g3?.einschlag?.t ?? null") is not None, 15, "Einschlag M25 geplant")
-            te = g3.evaluate("() => window.argus.stand.zustand.meldungen.M25.g3.einschlag.t")
+            oeffne(zb, "M25")
+            foto(zb, "eloka_M25_gestoert")
+            vorher = live(zb)["eloka"]
+            te = bekaempfen(zb, "M25", "MRS")
             sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", te + 3)
             warte(lambda: sl.evaluate("() => window.argus.stand.zustand.zerstoert['Z-23'] ?? null") is not None, 20, "EloKa zerstört")
-            nachher = live(g1)["eloka"] if g1.evaluate(f"() => {LIVE}?.argusLive?.meldung") == "M25" else None
+            nachher = live(zb)["eloka"] if zb.evaluate(f"() => {LIVE}?.argusLive?.meldung") == "M25" else None
             t11 = man["drohne"]["M11"]["t_s"]
             zeit(sl, t11 + 2)
-            oeffne(g1, "M11")
-            g1.wait_for_timeout(400)
-            foto(g1, "eloka_M11_klar")
-            m11 = live(g1)["eloka"]
+            oeffne(zb, "M11")
+            zb.wait_for_timeout(400)
+            foto(zb, "eloka_M11_klar")
+            m11 = live(zb)["eloka"]
             gestoert = sl.evaluate("() => window.argus.stand.zustand.meldungen.M11?.gestoert ?? false")
             pruefe(vorher > 0 and m11 == 0 and not gestoert and (nachher in (None, 0)),
                    f"EloKa: M25 live gestört ({vorher}); Mörser-Einschlag {te:.0f} s, Z-23 zerstört; M11 ({t11} s) danach klar "
@@ -407,8 +397,8 @@ def main():
         # ---------------------------------------------------------------- 5. Bildrate bei laufender Uhr
         # M17: der BMP-2 fährt ca. 3 min durchs Bild zur Schule (bei ×10 reicht das für die Messung); beim Panzerzug
         # (M13) stünde nach 20 s Spielzeit die Aufnahme da, und die wird nicht neu gezeichnet.
-        # Wie am eigenen Rechner: G1 allein (die Spielleitung startet die Uhr und schließt dann ihr Fenster; die Uhr
-        # läuft in G1 weiter). Ohne Grafikkarte in der Testumgebung: Rückfall Canvas für Karte und Seite – so misst
+        # Wie am Team-Laptop: die Zielbearbeitung allein (die Spielleitung startet die Uhr und schließt dann ihr Fenster; die
+        # Uhr läuft am Team-Laptop weiter – er rechnet das Spiel). Ohne Grafikkarte in der Testumgebung: Rückfall Canvas für Karte und Seite – so misst
         # auch docs/ENGINE.md die Karte. Mit WebGL über SwiftShader schafft hier schon eine leere Seite nur ca. 9 Bilder/s.
         browser = p.chromium.launch(args=["--disable-gpu", "--disable-software-rasterizer"])
         ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
@@ -418,42 +408,44 @@ def main():
             sl = ctx.new_page()
             sl.goto(adresse(a.basis, "sl", raumname))
             warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
-            g1 = ctx.new_page()
-            g1.on("pageerror", lambda e: konsole.append(f"g1: pageerror: {e}"))
-            g1.goto(adresse(a.basis, "g1", raumname))
-            g1.get_by_role("button", name="Überspringen").click()
+            zb = ctx.new_page()
+            zb.on("pageerror", lambda e: konsole.append(f"zb: pageerror: {e}"))
+            zb.goto(adresse(a.basis, "zb", raumname))
+            zb.get_by_role("button", name="Übersicht überspringen").click()
+            zb.get_by_role("button", name="Überspringen").click()
             zeit(sl, man["drohne"][FPS_MELDUNG]["t_s"])
             sl.get_by_role("button", name=f"×{tempo}", exact=True).click()
-            warte(lambda: g1.locator(f".kmarke[data-meldung={FPS_MELDUNG}]").count() == 1, 20, FPS_MELDUNG)
+            zeile = zb.locator(f"[data-testid=eingang] button[data-meldung={FPS_MELDUNG}]")
+            warte(lambda: zeile.count() == 1, 20, FPS_MELDUNG)
             sl.get_by_role("button", name="▶ Start").click()
-            g1.wait_for_timeout(400)
+            zb.wait_for_timeout(400)
             sl.close()
-            g1.locator(f".kmarke[data-meldung={FPS_MELDUNG}]").click()
+            zeile.click()
             if gross:
-                g1.get_by_role("button", name="Drohnenbild vergrößern").click()
+                zb.get_by_role("button", name="Drohnenbild vergrößern").click()
             sel = GROSS if gross else LIVE
-            g1.evaluate("() => { window.__argusLiveMessen = true; }")
+            zb.evaluate("() => { window.__argusLiveMessen = true; }")
             # Einschwingen abwarten: Das erste Bild nach dem Öffnen setzt den Grund im Maßstab der Anzeige zusammen (einmalig
             # 100–200 ms, auch auf dem Stand vor 2.1); das gleitende Maximum (×0,98 je Bild) klingt erst nach ca. 4 s ab.
-            g1.wait_for_timeout(4000)
+            zb.wait_for_timeout(4000)
             werte_fps, werte_ms, karte = [], [], []
             for _ in range(5):
-                g1.wait_for_timeout(1100)
-                x = g1.evaluate(f"() => {{ const c = {sel}; return c && {{ fps: Number(c.dataset.fps || 0), ms: c.argusLive?.bildMs }}; }}")
-                k = g1.evaluate("() => document.querySelector('[data-testid=g1-karte] .karte-leinwand')?.argusKarte?.diagnose")
+                zb.wait_for_timeout(1100)
+                x = zb.evaluate(f"() => {{ const c = {sel}; return c && {{ fps: Number(c.dataset.fps || 0), ms: c.argusLive?.bildMs }}; }}")
+                k = zb.evaluate("() => document.querySelector('[data-testid=lagekarte] .karte-leinwand')?.argusKarte?.diagnose")
                 if x:
                     werte_fps.append(x["fps"])
                     werte_ms.append(x["ms"]["max"])
                 if k:
                     karte.append((k["fps"], k["bildMs"]["max"], k["renderer"]))
-            name = "Vergrößerung" if gross else "Fenster am Ort"
+            name = "Vergrößerung" if gross else "Drohnenbild an der Meldung"
             fps = werte_fps[1:] or [0]
             ms = max(werte_ms[1:] or [99])
             proben.append({"wo": name, "tempo": tempo, "fps": werte_fps, "ms_max": round(ms, 1), "karte": karte})
-            pruefe(min(fps) >= 24 and ms <= 33, f"Bildrate {name} ×{tempo} (G1 allein, Canvas): {min(fps)}–{max(fps)} Bilder/s (Ziel 30), "
+            pruefe(min(fps) >= 24 and ms <= 33, f"Bildrate {name} ×{tempo} (Zielbearbeitung allein, Canvas): {min(fps)}–{max(fps)} Bilder/s (Ziel 30), "
                                               f"Zeichnen höchstens {ms:.1f} ms je Bild (Budget 33 ms); Karte daneben {karte[-1][0] if karte else '–'} Bilder/s, "
                                               f"höchstens {max([x[1] for x in karte] or [0])} ms ({karte[-1][2] if karte else '–'})")
-            g1.close()
+            zb.close()
         with open(os.path.join(a.bilder, "bildrate.json"), "w", encoding="utf-8") as f:
             json.dump(proben, f, ensure_ascii=False, indent=1)
         browser.close()

@@ -49,15 +49,15 @@ export function wegAb(inh: Inhalte, z: Spielzustand, ziele: string[]): number {
   return ab;
 }
 
-/** Freigaben je Ziel: Ziel → frühester Freigabezeitpunkt und auslösende Meldung. */
+/** Freigaben (BEKÄMPFEN) je Ziel: Ziel → frühester Zeitpunkt und auslösende Meldung. */
 export function freigaben(inh: Inhalte, z: Spielzustand): Map<string, { t: number; meldung: string; wirkmittel?: string }> {
   const out = new Map<string, { t: number; meldung: string; wirkmittel?: string }>();
   for (const id of z.reihenfolge) {
-    const g3 = z.meldungen[id].g3;
-    if (!g3 || g3.entscheid !== "freigabe" || !inh.meldungen[id]) continue;
+    const f = z.meldungen[id].freigabe;
+    if (!f || !inh.meldungen[id]) continue;
     for (const zid of inh.meldungen[id].ziele) {
       const alt = out.get(zid);
-      if (!alt || g3.t_s < alt.t) out.set(zid, { t: g3.t_s, meldung: id, wirkmittel: g3.wirkmittel });
+      if (!alt || f.t_s < alt.t) out.set(zid, { t: f.t_s, meldung: id, wirkmittel: f.wirkmittel });
     }
   }
   return out;
@@ -70,17 +70,17 @@ export function fruehesteFreigabe(frei: ReturnType<typeof freigaben>, ziele: str
 
 /** Einschlag einer freigegebenen Meldung (aus dem Protokoll; ältere Läufe ohne einschlag: neu gerechnet). Bei einem Zug der erste. */
 export function einschlagVon(inh: Inhalte, z: Spielzustand, id: string) {
-  const g3 = z.meldungen[id]?.g3;
-  if (!g3?.wirkmittel || g3.entscheid !== "freigabe") return null;
-  if (g3.einschlag) return { t: g3.einschlag.t, pos: g3.einschlag.pos, ziel: g3.einschlag.ziel };
+  const f = z.meldungen[id]?.freigabe;
+  if (!f?.wirkmittel) return null;
+  if (f.einschlag) return { t: f.einschlag.t, pos: f.einschlag.pos, ziel: f.einschlag.ziel };
   const m = inh.meldungen[id];
-  return m ? einschlag(inh, m.ziele, g3.wirkmittel, g3.t_s, z.zerstoert) : null;
+  return m ? einschlag(inh, m.ziele, f.wirkmittel, f.t_s, z.zerstoert) : null;
 }
 
-/** Alle Einschläge einer freigegebenen Meldung (seit 2.4, E3: bei einer Zug-Bekämpfung je Fahrzeug einer), in Reihenfolge. */
+/** Alle Einschläge einer bekämpften Meldung (seit 2.4, E3: bei einer Zug-Bekämpfung je Fahrzeug einer), in Reihenfolge. */
 export function einschlaegeVon(inh: Inhalte, z: Spielzustand, id: string): Einschlag[] {
-  const g3 = z.meldungen[id]?.g3;
-  if (g3?.einschlaege?.length) return g3.einschlaege.map((e) => ({ t: e.t, pos: [e.x, e.y] as Punkt, ziel: e.ziel }));
+  const f = z.meldungen[id]?.freigabe;
+  if (f?.einschlaege?.length) return f.einschlaege.map((e) => ({ t: e.t, pos: [e.x, e.y] as Punkt, ziel: e.ziel }));
   const e = einschlagVon(inh, z, id);
   return e ? [e] : [];
 }

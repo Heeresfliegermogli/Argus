@@ -2,8 +2,8 @@
 // und t, damit ein neu gestarteter Host genau dort weitermacht, wo der alte aufgehört hat.
 //
 // Seit Schritt 7 (Szenario 2.0):
-//   • Meldungen mit Fast-Track-Weiche; eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört oder
-//     abgezogen ist – beim Erscheinen oder später in der Kette (meldung_entfaellt bei G1, G2 oder G3).
+//   • Meldungen; eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört oder abgezogen ist – beim Erscheinen oder später,
+//     solange sie offen ist (meldung_entfaellt). Seit 2.6 (H2) eine Rolle je Team, kein Fast-Track mehr.
 //   • Wirkung zum Einschlagzeitpunkt, Treffer nach der Lage beim Einschlag (kern/regeln.ts).
 //   • Hintergrundgefecht (szenario.hintergrund): Kanone der eigenen Kp wirkt nur, wenn das Ziel dann noch steht.
 //   • Skriptereignis E-01 (polnischer Gegenangriff) mit Abbruch durch eine Freigabe auf Z-15–17.
@@ -24,7 +24,6 @@ import { alleWeg, ausserGefechtZeiten, einschlaegeVon, einschlagVon, freigaben, 
 import { elokaAktiv } from "../kern/eloka";
 import type { Einschlag } from "../kern/regeln";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
-import { argusBei } from "../kern/eloka";
 import { uhrzeit } from "../kern/uhr";
 import { fuelle, verlustLage } from "../kern/verluste";
 import type { Spielzustand } from "../kern/zustand";
@@ -35,21 +34,16 @@ import { type Entwurf, entwurf } from "./entwurf";
 /** kleiner Abstand für „erst nach T fällig“ (s) */
 export const NACH = 0.001;
 
-export function fastTrackGreift(inh: Inhalte, z: Spielzustand, m: Meldung, gestoert = false): boolean {
-  const a = argusBei(inh, m, gestoert);
-  return z.fastTrack && a.konfidenz >= inh.regeln.fast_track.schwelle && a.empfehlung === "BEKÄMPFEN";
-}
-
 /**
- * Meldung freigeben: als Entwurf mit Fast-Track-Weiche und „entfällt“, wenn jedes Fahrzeug schon weg ist. Seit 2.4 (E4)
- * mit `gestoert`, wenn das EloKa-Fahrzeug zur Meldezeit den Datenlink stört (ARGUS meldet dann unsicherer).
+ * Meldung erscheint: als Entwurf mit „entfällt“, wenn jedes Fahrzeug schon weg ist. Seit 2.4 (E4) mit `gestoert`, wenn das
+ * EloKa-Fahrzeug zur Meldezeit den Datenlink stört (ARGUS meldet dann unsicherer).
  */
 export function meldungEntwurf(inh: Inhalte, z: Spielzustand, m: Meldung, manuell = false, t = m.t_s): Entwurf {
   const entfaellt = alleWeg(inh, z, m.ziele, t);
   const gestoert = elokaAktiv(inh, z.zerstoert, t);
   return entwurf("meldung", {
     meldung: m.id,
-    ...(entfaellt ? { entfaellt: true } : fastTrackGreift(inh, z, m, gestoert) ? { fast_track: true } : {}),
+    ...(entfaellt ? { entfaellt: true } : {}),
     ...(manuell ? { manuell: true } : {}),
     ...(gestoert && !entfaellt ? { gestoert: true } : {}),
   }, { t_geplant: manuell ? undefined : m.t_s });
@@ -87,11 +81,11 @@ function hgZielStand(inh: Inhalte, z: Spielzustand, h: HintergrundEreignis): { w
 /** Entwurf eines Einschlags (zum Einschlag oder bei Spielende abgerechnet); seit 2.4 (E3) je Fahrzeug eines Zuges mit nr. */
 function wirkungEntwurf(inh: Inhalte, z: Spielzustand, id: string, dauer: number, e: Einschlag, nr: number, anzahl: number): Entwurf | null {
   const st = z.meldungen[id];
-  const wmId = st.g3?.wirkmittel;
+  const wmId = st.freigabe?.wirkmittel;
   if (!wmId || !inh.wirkmittel[wmId]) return null;
   const w = wirkungBeimEinschlag(inh, e, wmId, z.zerstoert);
   return entwurf("wirkung", {
-    meldung: id, wirkmittel: wmId, pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], t_freigabe: st.g3!.t_s,
+    meldung: id, wirkmittel: wmId, pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], t_freigabe: st.freigabe!.t_s,
     getroffen: w.getroffen, t_einschlag: Math.round(e.t * 100) / 100, ziel: e.ziel, verstoesse: w.pruefung.verstoesse.map(verstossText),
     ...(anzahl > 1 ? { nr, anzahl } : {}),
   }, { t_geplant: Math.min(e.t, dauer) });
@@ -167,10 +161,10 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     }
   }
 
-  // 4 Meldungen in der Kette, deren Fahrzeuge alle weg sind, entfallen
+  // 4 offene Meldungen (auch zurückgestellte), deren Fahrzeuge alle weg sind, entfallen
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
-    if (st.stufe !== "g1" && st.stufe !== "g2" && st.stufe !== "g3") continue;
+    if (st.stufe !== "offen") continue;
     const m = inh.meldungen[id];
     if (!m) continue;
     const ab = wegAb(inh, z, m.ziele);
@@ -178,7 +172,7 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     const zerstoert = m.ziele.filter((zid) => z.zerstoert[zid] !== undefined).length;
     const grund = zerstoert === m.ziele.length ? (m.ziele.length > 1 ? "alle Fahrzeuge zerstört" : "Fahrzeug zerstört")
       : zerstoert ? "Fahrzeuge zerstört oder abgezogen" : "Ziel hat den Raum verlassen";
-    liste.push(entwurf("meldung_entfaellt", { meldung: id, stufe: st.stufe, grund }, { t_geplant: ab }));
+    liste.push(entwurf("meldung_entfaellt", { meldung: id, stufe: "offen", grund }, { t_geplant: ab }));
   }
 
   // 5 neue Meldungen
@@ -230,9 +224,9 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     let tInject = Infinity;
     for (const id of z.reihenfolge) {
       const st = z.meldungen[id];
-      if (st.g3?.entscheid !== "freigabe" || !inh.meldungen[id]?.ziele.some((zid) => b.ziele.includes(zid))) continue;
+      if (!st.freigabe || !inh.meldungen[id]?.ziele.some((zid) => b.ziele.includes(zid))) continue;
       const tz = wirkungMitZivil(z, id);
-      if (tz !== null) tInject = Math.min(tInject, Math.max(st.g3.t_s + b.verzoegerung_s, tz));
+      if (tz !== null) tInject = Math.min(tInject, Math.max(st.freigabe.t_s + b.verzoegerung_s, tz));
     }
     if (t >= tInject) liste.push(entwurf("inject", mitText(i.id, tInject), { t_geplant: tInject }));
   }
@@ -295,9 +289,9 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
     const m = inh.meldungen[id];
     if (!m) continue;
     if (st.stufe === "wirkung") for (const { e } of offeneEinschlaege(inh, z, id)) k.push(e.t);
-    if (st.stufe === "g1" || st.stufe === "g2" || st.stufe === "g3") k.push(wegAb(inh, z, m.ziele));
+    if (st.stufe === "offen") k.push(wegAb(inh, z, m.ziele));
     const tz = wirkungMitZivil(z, id);
-    if (tz !== null && st.g3) for (const i of sz.injects) if (i.bedingung?.typ === "freigabe_mit_zivil") k.push(Math.max(st.g3.t_s + i.bedingung.verzoegerung_s, tz));
+    if (tz !== null && st.freigabe) for (const i of sz.injects) if (i.bedingung?.typ === "freigabe_mit_zivil") k.push(Math.max(st.freigabe.t_s + i.bedingung.verzoegerung_s, tz));
   }
   return Math.min(...k.filter((x) => x > t + 1e-9));
 }

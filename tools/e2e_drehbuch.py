@@ -1,35 +1,30 @@
 #!/usr/bin/env python3
-"""Ende-zu-Ende-Test Schritt 7: das ganze Drehbuch mit 5 Teams à 3, zwei Spielleitern und Plenum (18 Fenster).
+"""Ende-zu-Ende-Test: das ganze Drehbuch mit 5 Team-Laptops, zwei Spielleitern und Plenum (8 Fenster, seit 2.6 eine Rolle).
 
-Die fünf Teams spielen die fünf Läufe von tools/referenz/simuliere_durchlauf.py (Referenz
-tests/referenz_durchlauf.json): naiv, ideal, naiv + V-1…V-4, ideal + V-1…V-4, naiv + V-1…V-5.
-tools/drehbuch_plan.ts spielt sie vorher im Prozess mit der echten Engine durch (dieselben Läufe prüft
-tests/durchlauf.test.ts gegen die Python-Simulation) und liefert je Team die Aktionen der Modellpersonen
-und das Protokoll, das dabei entsteht.
+Die fünf Teams spielen die fünf Läufe von tools/referenz/simuliere_durchlauf.py (Referenz tests/referenz_durchlauf.json):
+naiv, ideal, naiv + V-1…V-4, ideal + V-1…V-4, naiv + V-1…V-5 (Sekunden je Entscheidung: naiv 20, ideal 35).
+tools/drehbuch_plan.ts spielt sie vorher im Prozess mit der echten Engine durch (dieselben Läufe prüft tests/durchlauf.test.ts
+gegen die Python-Simulation) und liefert je Team die Entscheidungen und das Protokoll, das dabei entsteht.
 
-Hier laufen dieselben Aktionen durch die echten Browserfenster:
-  1. Sitzung, Lobby und Teams nur über die Oberfläche (wie tools/e2e_teams.py), Plenum am „Smartboard“, eine
-     zweite Spielleitung beobachtet die Kontrollkarte (Fotos); das Host-Fenster bleibt in der Übersicht.
+Hier laufen dieselben Entscheidungen durch die echten Browserfenster:
+  1. Sitzung, Lobby und Teams nur über die Oberfläche (wie tools/e2e_teams.py): je Team ein Laptop. Plenum am „Smartboard“, eine
+     zweite Spielleitung beobachtet die Kontrollkarte (Fotos); das Fenster der Spielleitung bleibt in der Übersicht.
   2. Spielleitung: „Spiel öffnen – alle Teams“, Tempo, „▶ Uhr starten – alle“.
-  3. In jedem Teilnehmerfenster schickt eine Modellperson die Aktionen ihrer Rolle über die Sicht des Fensters
-     (window.argus.senden) zur geplanten Spielzeit – also über denselben Weg wie ein Klick: Sync-Adapter →
-     Host im SL-Fenster → Protokoll. Sie wartet, bis die Meldung bei ihr ist und ihre vorige Aktion bestätigt.
-     Die Spielleitung spielt die Verstärkungen über die Sitzung ein (an einzelne Teams).
-  4. Bis zum Spielende; unterwegs Bildschirmfotos (Feindartillerie, Nebel, LM im Flug, Achse NORD, E-01) und
-     Messung der Bildrate der Karten (Kontrollkarte SL 2, G2, G3, Plenum). SL 2 notiert über „✎ Notiz“ eine
-     Beobachtung zu S3 (der Fall ist vorgewählt).
-  5. Auswertung (Schritt 8): Das Plenum schaltet nach Spielende in allen Teams selbst auf die Auswertung; sie wird wie
-     am Smartboard Kapitel für Kapitel durchgegangen (tools/auswertung_probe.py): Ausgang je Team und Fall und
-     Kennzahlen wie die Auswertung der Protokolle im Prozess, Replay je Schlüsselfall, Notiz der SL 2 bei S3, Export
-     ohne Namen, alles in 1530 × 800. Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
+  3. An jedem Team-Laptop schickt eine Modellperson die Entscheidungen des Plans über die Sicht des Fensters
+     (window.argus.senden) zur geplanten Spielzeit – derselbe Weg wie ein Klick: lokal an die Engine des Laptops, ohne Netz.
+     Sie wartet, bis die Meldung im Eingang ist. Die Spielleitung spielt die Verstärkungen über die Sitzung ein (an einzelne Teams).
+  4. Bis zum Spielende; unterwegs Bildschirmfotos und Messung der Bildrate der Karten (Kontrollkarte SL 2, Team 1, Plenum).
+     SL 2 notiert über „✎ Notiz“ eine Beobachtung zu S3 (der Fall ist vorgewählt).
+  5. Auswertung: Das Plenum schaltet nach Spielende in allen Teams selbst auf die Auswertung; sie wird wie am Smartboard
+     Kapitel für Kapitel durchgegangen (tools/auswertung_probe.py). Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
 Geprüft wird:
-  • alle fünf Teams erreichen das Spielende, keine Aktion abgelehnt, je Team gleicher Stand (seq, Fingerabdruck)
-    in den vier Fenstern des Teams;
-  • das Protokoll jedes Teams stimmt mit dem der Engine im Prozess überein: dieselben Meldungen, Entscheidungen,
-    Einschläge (Zeit, Ort, bekämpftes Fahrzeug, Treffer, Verstöße), Meldungen entfallen, Injects, Hintergrund-
-    gefecht, E-01, Verstärkungen, Spielende – Zeiten bis auf die Verzögerung der Klicks im Browser;
+  • alle fünf Teams erreichen das Spielende, keine Aktion abgelehnt, je Team gleicher Stand (seq, Fingerabdruck) am Laptop und
+    bei der Spielleitung (hochgeladenes Protokoll);
+  • das Protokoll jedes Teams stimmt mit dem der Engine im Prozess überein: dieselben Meldungen, Entscheidungen, Einschläge
+    (Zeit, Ort, bekämpftes Fahrzeug, Treffer, Verstöße), Meldungen entfallen, Injects, Hintergrundgefecht, E-01, Verstärkungen,
+    Spielende – Zeiten bis auf die Verzögerung der Klicks im Browser;
   • Endbestand und zerstörte Fahrzeuge wie im Prozess (und damit wie die Simulation);
-  • alle 18 Fenster passen in 1530 × 800, keine Konsolenfehler.
+  • alle Fenster passen in 1530 × 800, keine Konsolenfehler.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --bilder e2e-drehbuch
@@ -37,10 +32,6 @@ Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   node tools/firebase-testserver/start.js &                                            # Firebase-Nachbildung
   python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --sync firebase --transport auto \
       --db "http://localhost:5555?ns=argus-test"
-Ohne Grafikkarte laufen die Karten hier im Rückfall Canvas (--renderer canvas, Standard) mit höchstens 2 Bildern/s
-(--fps): Mit Software-WebGL warten 18 Fenster an einem Rechner auf einen überlasteten GPU-Prozess, die Kartenfenster
-stehen dann sekundenlang, und die Modellpersonen G2/G3 klicken zu spät. WebGL und Bildrate prüft
-tools/livelage_probe.py.
 """
 import argparse
 import json
@@ -60,9 +51,7 @@ from auswertung_probe import bericht as auswertung_bericht, pruefe_auswertung  #
 
 W, H = 1530, 800
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch"]
-ROLLEN = ["g1", "g2", "g3"]
 HIER = os.path.dirname(os.path.abspath(__file__))
-VORLAUF_FT = 2.0
 
 LAYOUT_JS = """
 () => {
@@ -82,13 +71,12 @@ LAYOUT_JS = """
 }
 """
 
-# Modellperson im Teilnehmerfenster: schickt die Aktionen ihrer Rolle zur geplanten Spielzeit über die Sicht.
+# Modellperson am Team-Laptop: schickt die Entscheidungen des Plans zur geplanten Spielzeit über die Sicht (lokal, ohne Netz).
 MODELL_JS = """
 (plan) => {
   const log = [];
   window.__modell = { log, rest: plan.length, fehler: [] };
   let i = 0;
-  const soll = { g1_entscheid: 'g1', g2_empfehlung: 'g2', g3_entscheid: 'g3' };
   const tick = () => {
     const s = window.argus;
     if (!s || !s.spiel || i >= plan.length) return;
@@ -96,25 +84,23 @@ MODELL_JS = """
     if (t < plan[i].t) return;                            // billig: erst zur geplanten Zeit den Stand ansehen
     const st = s.stand;
     if (!st.lauf || st.zustand.ende) { window.__modell.rest = plan.length - i; return; }
-    if (Object.keys(st.offen).length) return;            // vorige Aktion noch nicht bestätigt
     while (i < plan.length && t >= plan[i].t) {
       const a = plan[i];
       const m = a.daten.meldung;
       if (a.typ === 'inject_quittiert' && !st.zustand.injects[a.daten.inject]) break;   // Lagemeldung noch nicht da
-      if (soll[a.typ]) {
+      if (a.typ === 'entscheid') {
         const ms = st.zustand.meldungen[m];
-        if (!ms || ms.stufe !== soll[a.typ]) {
-          if (ms && (ms.stufe === 'entfallen' || ms.stufe === 'erledigt') && t > a.t + 30) {
-            window.__modell.fehler.push(`${a.typ} ${m}: Meldung ist ${ms.stufe}`); i++; continue;
+        if (!ms || ms.stufe !== 'offen' || ms.zurueckgestellt) {
+          if (ms && (ms.stufe !== 'offen' || ms.zurueckgestellt) && t > a.t + 30) {
+            window.__modell.fehler.push(`entscheid ${m}: Meldung ist ${ms.zurueckgestellt ? 'zurückgestellt' : ms.stufe}`); i++; continue;
           }
-          break;                                          // Meldung noch nicht bei dieser Rolle
+          break;                                          // Meldung noch nicht im Eingang
         }
       }
       const id = s.senden(a.typ, a.daten);
       log.push({ plan: a.t, ist: Math.round(t * 1000) / 1000, typ: a.typ, m: m ?? null, id });
       i++;
       window.__modell.rest = plan.length - i;
-      return;                                             // erst Bestätigung abwarten
     }
   };
   window.__modell.timer = setInterval(tick, 8);
@@ -189,7 +175,7 @@ def schluessel(protokoll):
             continue
         if typ == "inject" and "stufe" in d:      # Druckmeldung der Kompanie (seit 2.3): eigener Vergleich, siehe druckmeldungen()
             continue
-        if typ in ("g1_entscheid", "g2_empfehlung", "g3_entscheid"):
+        if typ == "entscheid":
             k0 = (typ, d["meldung"])
             zaehler[k0] = zaehler.get(k0, 0) + 1
             k = (*k0, zaehler[k0])
@@ -199,16 +185,12 @@ def schluessel(protokoll):
             k = (typ, d["meldung"])
         elif typ in ("inject", "inject_quittiert"):
             k = (typ, d["inject"])
-        elif typ == "lagehinweis":
-            k = (typ, len([x for x in aus if x[0] == typ]))
         elif typ == "hintergrund":
             k = (typ, d["id"])
         elif typ == "ereignis":
             k = (typ, d["ereignis"], "entfaellt" if d.get("entfaellt") else d.get("nr"))
         elif typ == "verstaerkung":
             k = (typ, d["gruppe"])
-        elif typ == "fast_track":
-            k = (typ, d["an"])
         elif typ == "aktion_abgelehnt":
             k = (typ, len([x for x in aus if x[0] == typ]))
         else:
@@ -227,8 +209,7 @@ def nah(a, b, tol):
 
 # Ereignisse, deren Zeit von einem Klick abhängt (direkt oder über einen Einschlag): Entscheidungen, Einschläge,
 # Verstärkungen, bedingte Injects (I-08a, I-09) und Meldungen, die entfallen, weil eine Wirkung das letzte Fahrzeug traf
-AUS_AKTION = ("g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "fast_track", "verstaerkung", "inject", "meldung_entfaellt",
-              "inject_quittiert", "lagehinweis")
+AUS_AKTION = ("entscheid", "wirkung", "verstaerkung", "inject", "meldung_entfaellt", "inject_quittiert")
 
 
 def druckmeldungen(name, soll, ist):
@@ -243,6 +224,58 @@ def druckmeldungen(name, soll, ist):
         return [], f"{name}: {len(b)} Druckmeldungen wie im Prozess (Zug und Stufe), größte Zeitabweichung {dt:.1f} s"
     return [f"{name}: Druckmeldungen im Prozess {len(a)}, im Browser {len(b)} – "
             f"Prozess {[(round(t), z, st) for t, z, st in a]} / Browser {[(round(t), z, st) for t, z, st in b]}"], None
+
+
+def gleichstaende(name, soll, ist, tol):
+    """Gleichstände, die ein späterer Klick im Browser umdreht – kein Fehler der Engine, sondern zwei Ereignisse, die im Prozess
+    auf dieselbe Spielzeit fallen (die Modellteams entscheiden auf die Sekunde genau: naiv 20 s, ideal 35 s):
+
+      A  Eine Meldung erscheint genau dann, wenn ihr Fahrzeug zerstört wird (naiv: M02 mit Mörser um 01:35, Einschlag 02:10 –
+         Folgemeldung M28 zu Z-03 um 02:10). Im Prozess kommt erst der Einschlag, die Meldung entfällt beim Erscheinen; im
+         Browser erscheint sie und entfällt im selben Augenblick. Für das Team gleich: über M28 entscheidet niemand.
+      B  Eine Entscheidung fällt genau, wenn die Meldung entfällt (ideal: M30, das Ziel verlässt den Raum um 10:15,4, die
+         Entscheidung ist um 10:15). Im Browser kommt der Klick Sekundenbruchteile danach und wird abgelehnt. Nur ohne Wirkung
+         ein Gleichstand (das Wirkmittel trifft im Prozess nichts mehr); der Bestand ist dann um das Wirkmittel höher.
+
+    Gibt die bereinigten Protokolle, Hinweise, die Korrektur des Bestands und die erklärten Ablehnungen zurück."""
+    soll, ist = [dict(e) for e in soll], [dict(e) for e in ist]
+    hinweise, korrektur, abgelehnt = [], {}, []
+    weg_s, weg_i = set(), set()
+
+    def finde(liste, typ, m, pruef=lambda e: True):
+        return [k for k, e in enumerate(liste) if e["typ"] == typ and e["daten"].get("meldung") == m and pruef(e)]
+
+    for k, e in enumerate(soll):
+        m = e["daten"].get("meldung")
+        # A: Meldung entfällt beim Erscheinen (Prozess) / erscheint und entfällt sofort (Browser)
+        if e["typ"] == "meldung" and e["daten"].get("entfaellt"):
+            mi = finde(ist, "meldung", m, lambda x: not x["daten"].get("entfaellt"))
+            ei = finde(ist, "meldung_entfaellt", m, lambda x: x["daten"].get("grund") == "Fahrzeug zerstört")
+            if mi and ei and abs(ist[ei[0]]["t_s"] - ist[mi[0]]["t_s"]) <= tol and abs(ist[mi[0]]["t_s"] - e["t_s"]) <= tol:
+                ist[mi[0]] = {**ist[mi[0]], "daten": dict(e["daten"])}
+                weg_i.add(ei[0])
+                hinweise.append(f"{name}: Gleichstand {m} – erscheint, als sein Fahrzeug zerstört wird (Prozess: entfällt beim Erscheinen, "
+                                f"Browser: entfällt {ist[ei[0]]['t_s'] - ist[mi[0]]['t_s']:.2f} s danach)")
+        # B: Entscheidung genau, als die Meldung entfällt
+        if e["typ"] == "entscheid" and not finde(soll[:k], "entscheid", m):
+            ei = finde(ist, "meldung_entfaellt", m, lambda x: abs(x["t_s"] - e["t_s"]) <= tol)
+            ab = [j for j, x in enumerate(ist) if x["typ"] == "aktion_abgelehnt" and f"Meldung {m} ist nicht" in x["daten"].get("grund", "")]
+            ws = finde(soll, "wirkung", m)
+            ohne_wirkung = all(not soll[j]["daten"].get("getroffen") for j in ws)
+            if ei and ab and not finde(ist, "entscheid", m) and ohne_wirkung:
+                weg_s.update([k, *ws])
+                weg_i.update([ei[0], ab[0]])
+                wm = e["daten"].get("wirkmittel")
+                n = len(e["daten"].get("einschlaege") or [1]) if e["daten"].get("entscheid") == "bekaempfen" else 0
+                if wm and n:
+                    korrektur[wm] = korrektur.get(wm, 0) + n
+                abgelehnt.append(ist[ab[0]]["daten"]["grund"])
+                hinweise.append(f"{name}: Gleichstand {m} – Entscheidung um {e['t_s']} s, als die Meldung entfällt ({ist[ei[0]]['daten'].get('grund')} "
+                                f"um {ist[ei[0]]['t_s']} s); im Browser kam der Klick danach und wurde abgelehnt"
+                                + (f", {wm} {n}× nicht verbraucht (im Prozess ohne Treffer)" if wm and n else ""))
+    soll = [e for k, e in enumerate(soll) if k not in weg_s]
+    ist = [e for k, e in enumerate(ist) if k not in weg_i]
+    return soll, ist, hinweise, korrektur, abgelehnt
 
 
 def vergleiche(name, soll, ist, tol_t, tol_klick):
@@ -266,11 +299,10 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
         typ = a["typ"]
         # Meldungen einer Verstärkung kommen dt nach dem Einspielen – dessen Zeit ist ein Klick der Spielleitung
         klick = typ in AUS_AKTION or (typ == "meldung" and str(da.get("meldung", "")).startswith("V"))
-        tol = tol_klick + (VORLAUF_FT if typ == "fast_track" else 0) if klick else tol_t
+        tol = tol_klick if klick else tol_t
         if abs(a["t_s"] - b["t_s"]) > tol:
             f.append(f"{name}: {k} Zeit {a['t_s']} / Browser {b['t_s']}")
-        if typ != "fast_track":
-            dt.append(abs(a["t_s"] - b["t_s"]))
+        dt.append(abs(a["t_s"] - b["t_s"]))
         if typ == "wirkung":
             if da.get("ziel") != db.get("ziel"):
                 f.append(f"{name}: {k} bekämpftes Fahrzeug {da.get('ziel')} / {db.get('ziel')}")
@@ -286,8 +318,8 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
                 f.append(f"{name}: {k} Treffer {ta} / {tb}")
             if [warnung_ohne_zahlen(v) for v in da.get("verstoesse", [])] != [warnung_ohne_zahlen(v) for v in db.get("verstoesse", [])]:
                 f.append(f"{name}: {k} Verstöße {da.get('verstoesse')} / {db.get('verstoesse')}")
-        elif typ in ("g2_empfehlung", "g3_entscheid"):
-            for feld in ("empfehlung", "entscheid", "wirkmittel"):
+        elif typ == "entscheid":
+            for feld in ("entscheid", "wirkmittel"):
                 if da.get(feld) != db.get(feld):
                     f.append(f"{name}: {k} {feld} {da.get(feld)} / {db.get(feld)}")
             if [warnung_ohne_zahlen(v) for v in da.get("warnungen", [])] != [warnung_ohne_zahlen(v) for v in db.get("warnungen", [])]:
@@ -295,7 +327,7 @@ def vergleiche(name, soll, ist, tol_t, tol_klick):
             ea, eb = da.get("einschlag"), db.get("einschlag")
             if (ea is None) != (eb is None) or (ea and (ea["ziel"] != eb["ziel"] or not nah(ea["t"], eb["t"], tol_klick))):
                 f.append(f"{name}: {k} Einschlag {ea} / {eb}")
-        elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "g1_entscheid", "verstaerkung", "inject_quittiert", "lagehinweis"):
+        elif typ in ("meldung", "meldung_entfaellt", "hintergrund", "ereignis", "inject", "verstaerkung", "inject_quittiert"):
             # t_ab der Verstärkung ist die Klickzeit der Spielleitung (geprüft über t_s mit tol_klick)
             # Texte von Lagemeldungen mit dem Stand der Kompanie (I-07, I-06, I-13, seit 2.3) hängen über die Verluste von Klickzeiten ab
             ohne = lambda d: {x: y for x, y in d.items() if x not in ("t_ab", "grund", "manuell", "text")}  # noqa: E731
@@ -367,9 +399,9 @@ def main():
         # 1. Sitzung, Lobby, Teams, Plenum
         sl = seite("SL")
         sl.goto(startseite(a.basis, a))
-        sl.get_by_role("button", name="Spielleitung").click()
+        sl.get_by_test_id("zur-spielleitung").click()
         sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
-        sl.get_by_role("button", name="Neue Sitzung anlegen").click()
+        sl.get_by_test_id("sitzung-anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()
         print(f"Sitzung {code} ({time.time() - t0:.1f} s)")
@@ -379,66 +411,48 @@ def main():
         teams = []
         for i, tp in enumerate(plan["teams"]):
             name = TEAMNAMEN[i % len(TEAMNAMEN)][:24]
-            fenster = []
-            for r in ROLLEN:
-                s = seite(f"T{i + 1}/{r}")
-                s.goto(startseite(a.basis, a))
-                s.get_by_role("button", name="Ich spiele mit").click()
-                s.get_by_label("Code der Sitzung").fill(code)
-                s.get_by_role("button", name="Beitreten").click()
-                warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, f"Lobby {name}/{r}")
-                s.get_by_placeholder("z. B. Lt Müller (freiwillig)").fill(f"Lt {r.upper()}-{i + 1}")
-                if r == "g1":
-                    s.get_by_placeholder("Teamname").fill(name)
-                    s.get_by_role("button", name="Aufklärung", exact=True).click()
-                    warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {name} erstellt")
-                else:
-                    karte = s.locator(f"section.team-karte[data-teamname='{name}']")
-                    warte(lambda: karte.count() == 1, 20, f"Team {name} sichtbar")
-                    karte.locator(f"[data-slot='{name}:{r}']").get_by_role("button", name="beitreten").click()
-                    warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"{name}/{r} beigetreten")
-                fenster.append(s)
-            teams.append({"name": name, "fenster": fenster, "plan": tp})
+            s = seite(f"T{i + 1}")
+            s.goto(startseite(a.basis, a))
+            s.get_by_test_id("ich-spiele-mit").click()
+            s.get_by_test_id("code-eingabe").fill(code)
+            s.get_by_test_id("beitreten").click()
+            warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, f"Lobby {name}")
+            s.get_by_test_id("lobby-name").fill(f"Lt A-{i + 1}, Lt B-{i + 1}")
+            s.get_by_test_id("lobby-teamname").fill(name)
+            s.get_by_test_id("team-erstellen").click()
+            warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {name} angelegt")
+            teams.append({"name": name, "laptop": s, "plan": tp})
             print(f"Team {i + 1} „{name}“ ({tp['modell']}{' + ' + ' '.join(f'{g}@{t}' for g, t in tp['einspielen'].items()) if tp['einspielen'] else ''})")
 
         def sl_teams():
             return sl.evaluate("() => window.argusTeams()")
 
-        warte(lambda: len(sl_teams()) == len(teams) and all(len(t["spieler"]) == 3 and all(x["online"] for x in t["spieler"]) for t in sl_teams()),
-              40, "alle Teams voll und verbunden")
+        warte(lambda: len(sl_teams()) == len(teams) and all(t["spieler"] and t["spieler"][0]["online"] for t in sl_teams()),
+              40, "alle Teams mit Laptop")
         ids = {t["name"]: t["id"] for t in sl_teams()}
         for t in teams:
             t["id"] = ids[t["name"]]
 
-        # 2. Spiel öffnen, Einweisung schließen, Tempo, Modellpersonen, Start für alle
+        # 2. Spiel öffnen, Übersicht und Einweisung schließen, Tempo, Modellpersonen, Start für alle
         sl.get_by_test_id("alle-oeffnen").click()
         for t in teams:
-            for r, s in zip(ROLLEN, t["fenster"]):
-                warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 40, f"Einweisung {t['name']}/{r}")
-                s.get_by_role("button", name="Überspringen").click()
+            s = t["laptop"]
+            warte(lambda: s.get_by_test_id("tour").count() == 1, 40, f"Übersicht {t['name']}")
+            s.get_by_test_id("tour-ueberspringen").click()
+            warte(lambda: s.get_by_test_id("einweisung-zb").count() == 1, 10, f"Einweisung {t['name']}")
+            s.get_by_test_id("einweisung-ueberspringen").click()
         warte(lambda: all(x["seq"] >= 2 for x in sl_teams()), 20, "Spielstände angelegt")
         sl.get_by_role("button", name=f"×{a.tempo}", exact=True).click()
-        warte(lambda: all(x["uhr"]["tempo"] == a.tempo for x in sl_teams()), 20, f"Tempo ×{a.tempo} überall")
+        warte(lambda: all(t["laptop"].evaluate("() => window.argus.stand.zustand.uhr.tempo") == a.tempo for t in teams), 20, f"Tempo ×{a.tempo} überall")
         LANG_JS = """() => { window.__lang = { n: 0, summe: 0, max: 0, liste: [] };
             new PerformanceObserver((l) => { for (const e of l.getEntries()) { const x = window.__lang; x.n++; x.summe += e.duration; x.max = Math.max(x.max, e.duration);
               if (x.liste.length < 400) x.liste.push([Math.round(e.startTime), Math.round(e.duration)]); } }).observe({ entryTypes: ['longtask'] }); }"""
         if a.debug:
-            for s in [sl, pl] + [f for t in teams for f in t["fenster"]]:
+            for s in [sl, pl] + [t["laptop"] for t in teams]:
                 s.evaluate(LANG_JS)
         for t in teams:
-            # Fast-Track schaltet das Modell 0,05 s vor der ersten Meldung danach (Simulation: ab 10:14:30). Im Browser
-            # kommt ein Klick um einige Zehntel später an; die Modellperson G3 schaltet deshalb VORLAUF_FT s früher – das
-            # ändert nichts, solange in dieser Zeit keine Meldung erscheint (geprüft).
-            meldezeiten = [e["t_s"] for e in t["plan"]["protokoll"] if e["typ"] == "meldung"]
-            for x in t["plan"]["aktionen"]:
-                if x["typ"] == "fast_track":
-                    frueher = x["t"] - VORLAUF_FT
-                    if any(frueher <= m <= x["t"] for m in meldezeiten):
-                        fehler.append(f"{t['name']}: Meldung zwischen {frueher} und {x['t']} – Fast-Track nicht vorziehbar")
-                    x["t"] = frueher
-            for r, s in zip(ROLLEN, t["fenster"]):
-                eigene = [x for x in t["plan"]["aktionen"] if x["rolle"] == r]
-                s.evaluate(MODELL_JS, eigene)
+            eigene = [x for x in t["plan"]["aktionen"] if x["rolle"] == "zb"]
+            t["laptop"].evaluate(MODELL_JS, eigene)
         sl.evaluate(SL_JS, [{"team": t["id"], "aktionen": [x for x in t["plan"]["aktionen"] if x["rolle"] == "sl"]} for t in teams])
         # Zweite Spielleitung (beobachtet, wie im Hörsaal): Kontrollkarte von Team 1 für die Fotos. Das Host-Fenster
         # bleibt in der Übersicht. Alle Karten sind fertig aufgebaut, bevor die Uhr läuft.
@@ -448,8 +462,8 @@ def main():
         sl2.locator(f"[data-ansehen='{teams[0]['name']}']").click()
         warte(lambda: sl2.locator("[data-testid=kontrollkarte][data-bereit='1']").count() == 1, 30, "Kontrollkarte bei SL 2")
         for t in teams:
-            for r, s in zip(ROLLEN[1:], t["fenster"][1:]):
-                warte(lambda: s.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 30, f"Karte {t['name']}/{r}")
+            s = t["laptop"]
+            warte(lambda: s.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 30, f"Karte {t['name']}")
         warte(lambda: pl.locator("[data-testid=lagekarte]").count() == 0 or pl.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 20, "Plenum")
         start = sl.get_by_test_id("alle-start")
         try:
@@ -458,27 +472,26 @@ def main():
             print("Teams:", [(x["name"], x["seq"], x["laeuft"], x["uhr"]) for x in sl_teams()])
             raise
         start.click()
-        warte(lambda: all(x["laeuft"] for x in sl_teams()), 20, "alle Uhren laufen")
-        starts = [x["uhr"]["ts"] for x in sl_teams()]
-        print(f"Uhren gestartet ×{a.tempo}, Abstand der Startzeiten {max(starts) - min(starts)} ms ({time.time() - t0:.0f} s)")
+        warte(lambda: all(t["laptop"].evaluate("() => window.argus.stand.zustand.uhr.laeuft") for t in teams), 20, "alle Uhren laufen")
+        roh = [t["laptop"].evaluate("() => ({ t: window.argus.spielzeit(), s: window.argusSitzung.adapter.serverJetzt() })") for t in teams]
+        zeiten = [x["t"] - (x["s"] - roh[0]["s"]) / 1000 * a.tempo for x in roh]   # auf denselben Augenblick umgerechnet
+        print(f"Uhren gestartet ×{a.tempo}, Spanne der Spielzeiten {max(zeiten) - min(zeiten):.2f} s ({time.time() - t0:.0f} s)")
 
         # 3. Lauf bis Spielende mit Fotos und Messung der Bildrate
-        g1a, g2a, g3a = teams[0]["fenster"]
-        lm1 = next((x["t"] for x in teams[0]["plan"]["aktionen"] if x["typ"] == "g3_entscheid" and x["daten"]["entscheid"] == "freigabe"
-                    and any(y["typ"] == "g2_empfehlung" and y["daten"]["meldung"] == x["daten"]["meldung"] and y["daten"].get("wirkmittel") == "LM"
-                            for y in teams[0]["plan"]["aktionen"])), None)
+        zb1 = teams[0]["laptop"]
+        lm1 = next((x["t"] for x in teams[0]["plan"]["aktionen"] if x["typ"] == "entscheid" and x["daten"].get("wirkmittel") == "LM"), None)
         fotos = [
             (304.5, "artillerie_h01", [("sl2", sl2), ("plenum", pl)]),
-            (590, "nebel_h03_wrack_z11", [("sl2", sl2), ("g2", g2a), ("g3", g3a), ("plenum", pl)]),
+            (590, "nebel_h03_wrack_z11", [("sl2", sl2), ("zb", zb1), ("plenum", pl)]),
             (900, "uebersicht_mitte", [("sl", sl)]),
-            (1012, "achse_nord", [("sl2", sl2), ("g2", g2a)]),
+            (1012, "achse_nord", [("sl2", sl2), ("zb", zb1)]),
         ]
         if lm1:
-            fotos.append((lm1 + 20, "lm_im_flug", [("sl2", sl2), ("g2", g2a), ("g3", g3a)]))
+            fotos.append((lm1 + 20, "lm_im_flug", [("sl2", sl2), ("zb", zb1)]))
         fotos.sort()
         team2_ansicht = False
         notiz_sl2 = False
-        NOTIZ_TEXT = "SL 2: Führung hat I-04 gelesen, aber nicht weitergegeben (e2e)"
+        NOTIZ_TEXT = "SL 2: Team hat I-04 angeklickt, aber nicht vorgelesen (e2e)"
         naechste_messung = time.time() + 8
         naechste_debug = time.time()
         layout_mitte = False
@@ -492,8 +505,10 @@ def main():
                 for rn, s in ziele:
                     foto(s, f"{name}_{rn}")
                 print(f"  Foto {name} bei {t_spiel:.0f} s")
-            if not notiz_sl2 and t_spiel >= 1290:
-                # SL 2 notiert zu Team 1 (Zuschauen in der Teamansicht): „✎ Notiz“, der laufende Fall S3 ist vorgewählt
+            if not notiz_sl2 and t_spiel >= 1225:
+                # SL 2 notiert zu Team 1 (Steuerung des Teams): „✎ Notiz“, der laufende Fall S3 ist vorgewählt – naiv: M20 erscheint
+                # um 20:15, BEKÄMPFEN mit der Kanone um 20:35, Einschlag 20:40 (danach ist S3 erledigt und ab 20:45 läuft N2/M21).
+                # Seit 2.6 entscheidet naiv nach 20 s: das Fenster für die Notiz ist 20:15–20:40, hier 20:25.
                 sl2.get_by_test_id("notiz-knopf").click()
                 warte(lambda: sl2.get_by_test_id("notiz-menue").count() == 1, 10, "Notizfeld SL 2")
                 gewaehlt = sl2.locator("[data-notiz-fall].an").get_attribute("data-notiz-fall")
@@ -511,19 +526,18 @@ def main():
                 foto(sl2, "e01_ideal_sl2")
                 print(f"  Foto e01_ideal_sl bei {t_spiel:.0f} s")
             if not layout_mitte and t_spiel >= 900:
-                for n, s in [("SL", sl), ("SL 2", sl2), ("Plenum", pl)] + [(f"T{k + 1}/{r}", f) for k, t in enumerate(teams) for r, f in zip(ROLLEN, t["fenster"])]:
+                for n, s in [("SL", sl), ("SL 2", sl2), ("Plenum", pl)] + [(f"T{k + 1}", t["laptop"]) for k, t in enumerate(teams)]:
                     lay = s.evaluate(LAYOUT_JS)
                     if lay["seite"][0] > W or lay["seite"][1] > H or lay["zuGross"]:
                         fehler.append(f"{n} (Mitte): Seite {lay['seite']} {lay['zuGross'][:2]}")
                 layout_mitte = True
             if a.debug and time.time() >= naechste_debug:
                 for k, t in enumerate(teams):
-                    for r, s in zip(ROLLEN, t["fenster"]):
-                        d = s.evaluate("() => ({ sicht: !!(window.argus && window.argus.spiel), t: window.argus && window.argus.spiel ? Math.round(window.argus.spielzeit()) : null, rest: window.__modell?.rest, offen: window.argus && window.argus.spiel ? Object.keys(window.argus.stand.offen).length : null, log: (window.__modell?.log || []).slice(-1) })")
-                        print(f"    T{k + 1}/{r} {d}")
+                    d = t["laptop"].evaluate("() => ({ sicht: !!(window.argus && window.argus.spiel), t: window.argus && window.argus.spiel ? Math.round(window.argus.spielzeit()) : null, rest: window.__modell?.rest, log: (window.__modell?.log || []).slice(-1) })")
+                    print(f"    T{k + 1} {d}")
                 naechste_debug = time.time() + 3
             if time.time() >= naechste_messung:
-                for n, s in [("SL 2", sl2), ("T1/G2", g2a), ("T1/G3", g3a), ("Plenum", pl)]:
+                for n, s in [("SL 2", sl2), ("T1", zb1), ("Plenum", pl)]:
                     for d in s.evaluate(DIAGNOSE_JS):
                         fps.append({"fenster": n, "t": round(t_spiel), **{k: d[k] for k in ("id", "fps", "bildMs", "effekte", "renderer")}})
                 naechste_messung = time.time() + 15
@@ -535,31 +549,46 @@ def main():
         time.sleep(2)
 
         if a.debug:
-            for n, s in [("SL", sl), ("Plenum", pl)] + [(f"T{k + 1}/{r}", f) for k, t in enumerate(teams) for r, f in zip(ROLLEN, t["fenster"])]:
+            for n, s in [("SL", sl), ("Plenum", pl)] + [(f"T{k + 1}", t["laptop"]) for k, t in enumerate(teams)]:
                 l = s.evaluate("() => window.__lang && { n: window.__lang.n, summe: Math.round(window.__lang.summe), max: Math.round(window.__lang.max), liste: window.__lang.liste.slice(-8) }")
                 print(f"    lange Aufgaben {n}: {l}")
         # ---------------------------------------------------------------- Prüfungen
+        # die Spielleitung hat jedes Protokoll vollständig (Upload der Laptops)
+        def gleich_bei_sl():
+            st = {x["id"]: x for x in sl_teams()}
+            for t in teams:
+                r = t["laptop"].locator(".rahmen[data-seq]").first
+                if (r.get_attribute("data-lauf"), int(r.get_attribute("data-seq") or 0), r.get_attribute("data-fp")) != (st[t["id"]]["lauf"], st[t["id"]]["seq"], st[t["id"]]["fp"]):
+                    return False
+            return True
+        try:
+            warte(gleich_bei_sl, 30, "Spielleitung hat alle Protokolle")
+        except AssertionError as e:
+            fehler.append(str(e))
         endstand = sl_teams()
         nach_id = {x["id"]: x for x in endstand}
         for k, t in enumerate(teams):
             x = nach_id[t["id"]]
-            for r, s in zip(ROLLEN, t["fenster"]):
-                rahmen = s.locator(".rahmen[data-seq]").first
-                stand = (rahmen.get_attribute("data-lauf"), int(rahmen.get_attribute("data-seq") or 0), rahmen.get_attribute("data-fp"))
-                if stand != (x["lauf"], x["seq"], x["fp"]):
-                    fehler.append(f"Team {k + 1}/{r}: Stand {stand}, SL {(x['lauf'], x['seq'], x['fp'])}")
-                m = s.evaluate("() => window.__modell && { rest: window.__modell.rest, fehler: window.__modell.fehler, log: window.__modell.log }")
-                if m["rest"]:
-                    fehler.append(f"Team {k + 1}/{r}: {m['rest']} geplante Aktionen nicht gesendet")
-                fehler += [f"Team {k + 1}/{r}: {f}" for f in m["fehler"]]
-                verz = [l["ist"] - l["plan"] for l in m["log"]]
-                t["verzug_" + r] = max(verz) if verz else 0
+            s = t["laptop"]
+            rahmen = s.locator(".rahmen[data-seq]").first
+            stand = (rahmen.get_attribute("data-lauf"), int(rahmen.get_attribute("data-seq") or 0), rahmen.get_attribute("data-fp"))
+            if stand != (x["lauf"], x["seq"], x["fp"]):
+                fehler.append(f"Team {k + 1}: Stand am Laptop {stand}, SL {(x['lauf'], x['seq'], x['fp'])}")
+            m = s.evaluate("() => window.__modell && { rest: window.__modell.rest, fehler: window.__modell.fehler, log: window.__modell.log }")
+            if m["rest"]:
+                fehler.append(f"Team {k + 1}: {m['rest']} geplante Aktionen nicht gesendet")
+            fehler += [f"Team {k + 1}: {f}" for f in m["fehler"]]
+            verz = [l["ist"] - l["plan"] for l in m["log"]]
+            t["verzug"] = max(verz) if verz else 0
         maxdt = {}
         for k, t in enumerate(teams):
             ist = sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll.map((e) => ({ seq: e.seq, typ: e.typ, t_s: e.t_s, ts: e.ts, ts_aktion: e.ts_aktion, rolle: e.von.rolle, daten: e.daten }))", t["id"])
             with open(os.path.join(a.bilder, f"protokoll_team{k + 1}.json"), "w", encoding="utf-8") as f:
                 json.dump(ist, f, ensure_ascii=False, indent=0)
-            unterschiede, maxdt[k] = vergleiche(f"Team {k + 1}", t["plan"]["protokoll"], ist, tol_t, tol_klick)
+            soll_b, ist_b, gl_hinweise, gl_bestand, gl_abgelehnt = gleichstaende(f"Team {k + 1}", t["plan"]["protokoll"], ist, tol_klick)
+            for h in gl_hinweise:
+                print("  Hinweis:", h)
+            unterschiede, maxdt[k] = vergleiche(f"Team {k + 1}", soll_b, ist_b, tol_t, tol_klick)
             fehler += unterschiede
             dm_hinweis, dm_ok = druckmeldungen(f"Team {k + 1}", t["plan"]["protokoll"], ist)
             for h in dm_hinweis:
@@ -573,28 +602,34 @@ def main():
                 if ts[iid] != ti[iid]:
                     print(f"  Hinweis: Team {k + 1} {iid} Prozess „{ts[iid]}“ / Browser „{ti[iid]}“")
             z = sl.evaluate("(id) => { const z = window.argusSitzung.spiel(id).stand.zustand; return { bestand: z.bestand, zerstoert: z.zerstoert, abgelehnt: z.abgelehnt, ende: z.ende } }", t["id"])
-            if z["bestand"] != t["plan"]["ende"]["bestand"]:
-                fehler.append(f"Team {k + 1}: Bestand {z['bestand']} / im Prozess {t['plan']['ende']['bestand']}")
+            bestand_soll = {w: (b + gl_bestand.get(w, 0) if isinstance(b, int) else b) for w, b in t["plan"]["ende"]["bestand"].items()}
+            if z["bestand"] != bestand_soll:
+                fehler.append(f"Team {k + 1}: Bestand {z['bestand']} / im Prozess {bestand_soll}"
+                              + (f" (mit Gleichstand {gl_bestand})" if gl_bestand else ""))
             if sorted(z["zerstoert"]) != sorted(t["plan"]["ende"]["zerstoert"]):
                 fehler.append(f"Team {k + 1}: zerstört {sorted(z['zerstoert'])} / {sorted(t['plan']['ende']['zerstoert'])}")
             for zid, tz in z["zerstoert"].items():
                 soll = t["plan"]["ende"]["zerstoert"].get(zid)
                 if soll is not None and abs(soll - tz) > tol_klick:
                     fehler.append(f"Team {k + 1}: {zid} zerstört um {tz} / {soll}")
-            if z["abgelehnt"]:
-                fehler.append(f"Team {k + 1}: {len(z['abgelehnt'])} Aktionen abgelehnt: {[x['grund'] for x in z['abgelehnt']][:3]}")
-            # Weg einer Aktion: Klick (Serverzeit) → Ereignis im Protokoll (Serverzeit beim Schreiben durch den Host)
-            weg = sorted(e["ts"] - e["ts_aktion"] for e in ist if e.get("ts_aktion"))
-            weg_spaet = [e["ts"] - e["ts_aktion"] for e in ist if e.get("ts_aktion") and e["t_s"] >= 1080]
-            t["weg"] = (weg[len(weg) // 2] if weg else 0, weg[-1] if weg else 0, max(weg_spaet) if weg_spaet else 0)
+            rest_abgelehnt, unerklaert = list(gl_abgelehnt), []
+            for x in z["abgelehnt"]:
+                if x["grund"] in rest_abgelehnt:
+                    rest_abgelehnt.remove(x["grund"])     # erklärt durch einen Gleichstand (oben)
+                else:
+                    unerklaert.append(x)
+            if unerklaert:
+                fehler.append(f"Team {k + 1}: {len(unerklaert)} Aktionen abgelehnt: {[x['grund'] for x in unerklaert][:3]}")
+            # Weg einer Entscheidung: Klick (Serverzeit) → Ereignis im Protokoll des Laptops (lokal, ohne Netz)
+            weg = sorted(e["ts"] - e["ts_aktion"] for e in ist if e.get("ts_aktion") and e["rolle"] == "zb")
+            t["weg"] = (weg[len(weg) // 2] if weg else 0, weg[-1] if weg else 0)
             nm = sum(1 for e in ist if e["typ"] == "meldung")
             nw = sum(1 for e in ist if e["typ"] == "wirkung")
             print(f"  Team {k + 1} {t['plan']['modell']:<5} seq {nach_id[t['id']]['seq']:>3}  {nm} Meldungen, {nw} Einschläge, "
                   f"zerstört {len(z['zerstoert'])}, Bestand {z['bestand']}, größte Zeitabweichung {maxdt[k]:.2f} s, "
-                  f"Verzug G1/G2/G3 {t['verzug_g1']:.2f}/{t['verzug_g2']:.2f}/{t['verzug_g3']:.2f} s, "
-                  f"Klick → Protokoll Median {t['weg'][0]:.0f} ms, max {t['weg'][1]:.0f} ms (ab 10:18 max {t['weg'][2]:.0f} ms)")
+                  f"Verzug der Modellperson {t['verzug']:.2f} s, Klick → Protokoll Median {t['weg'][0]:.0f} ms, max {t['weg'][1]:.0f} ms")
 
-        for n, s in [("SL", sl), ("SL 2", sl2), ("Plenum", pl)] + [(f"T{k + 1}/{r}", f) for k, t in enumerate(teams) for r, f in zip(ROLLEN, t["fenster"])]:
+        for n, s in [("SL", sl), ("SL 2", sl2), ("Plenum", pl)] + [(f"T{k + 1}", t["laptop"]) for k, t in enumerate(teams)]:
             lay = s.evaluate(LAYOUT_JS)
             if lay["seite"][0] > W or lay["seite"][1] > H:
                 fehler.append(f"{n}: Seite {lay['seite']} größer als {W}×{H}")
@@ -638,8 +673,8 @@ def main():
             sl.get_by_test_id("auswertung-knopf").click()
             warte(lambda: sl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 20, "Auswertung bei der Spielleitung")
             n_sl = sl.locator("[data-testid=teamvergleich] td[data-fall]").count()
-            if n_sl != len(teams) * 8:
-                fehler.append(f"Auswertung SL: {n_sl} Zellen, erwartet {len(teams) * 8}")
+            if n_sl != len(teams) * 12:
+                fehler.append(f"Auswertung SL: {n_sl} Zellen, erwartet {len(teams) * 12}")
             foto(sl, "sl_auswertung")
             sl.get_by_test_id("auswertung-zurueck").click()
             warte(lambda: sl.locator("[data-testid=uebersicht]").count() == 1, 10, "zurück zur Übersicht")
@@ -656,8 +691,7 @@ def main():
         sl2.wait_for_timeout(800)
         foto(sl2, "sl2_ende_team1")
         foto(sl, "sl_uebersicht_ende")
-        for r, s in zip(ROLLEN, teams[0]["fenster"]):
-            foto(s, f"team1_{r}_ende")
+        foto(teams[0]["laptop"], "team1_ende")
 
         if fotos_fehlt:
             print("Ohne Foto (Zeitüberschreitung beim Bildschirmfoto):", *fotos_fehlt, sep="\n  ")
@@ -672,8 +706,8 @@ def main():
     if fehler:
         print("FEHLER:", *fehler[:60], sep="\n  ")
         sys.exit(1)
-    print(f"OK – Drehbuch mit {len(plan['teams'])} Teams vollständig durchgespielt, Protokolle wie die Engine im Prozess "
-          f"(= simuliere_durchlauf.py naiv/ideal), alle Fenster in {W}×{H}")
+    print(f"OK – Drehbuch mit {len(plan['teams'])} Team-Laptops vollständig durchgespielt, Protokolle wie die Engine im Prozess "
+          f"(= simuliere_durchlauf.py naiv/ideal), Spielleitung vollständig, alle Fenster in {W}×{H}")
 
 
 if __name__ == "__main__":

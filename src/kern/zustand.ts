@@ -1,14 +1,18 @@
 // Spielstand als reine Funktion des Protokolls: zustand = protokoll.reduce(anwenden, anfangsZustand).
 // Läuft auf jedem Rechner gleich; deshalb zeigen alle Fenster denselben Stand, sobald sie dieselben
 // Ereignisse haben. Keine Zufälle, keine Uhrzeit-Abfragen hier drin.
+// Seit 2.6 (H2): eine Rolle je Team – eine Meldung ist offen im Eingang, bis das Team entscheidet (BEKÄMPFEN, ZURÜCKSTELLEN,
+// ABLEHNEN); Ereignisse älterer Versionen (g1_entscheid … fast_track) zählen nur für seq.
 import type { Inhalte } from "../inhalte/typen";
-import type {
-  Absender, EinschlagDaten, EinschlagFlach, Ereignis, G1Entscheid, G2Empfehlung, G3Entscheid, Rolle, TrefferDaten,
-} from "./ereignisse";
+import type { Absender, EinschlagDaten, EinschlagFlach, Entscheid, Ereignis, TrefferDaten } from "./ereignisse";
 import { UHR_START, type UhrStand } from "./uhr";
 
-export type Stufe = "g1" | "g2" | "g3" | "wirkung" | "erledigt" | "entfallen";
-export type Ergebnis = "abgelehnt_g1" | "nicht_bekaempfen_g2" | "abgelehnt_g3" | "bekaempft";
+/**
+ * Stand einer Meldung (seit 2.6 eine Rolle): offen im Eingang des Teams (auch zurückgestellt), Wirkung unterwegs (BEKÄMPFEN, Einschlag
+ * steht aus), erledigt (abgelehnt oder bekämpft) oder entfallen (alle Fahrzeuge zerstört oder abgezogen, solange sie offen war).
+ */
+export type Stufe = "offen" | "wirkung" | "erledigt" | "entfallen";
+export type Ergebnis = "abgelehnt" | "bekaempft";
 
 /** Wann und von wem ein Schritt kam. */
 export interface Schritt {
@@ -32,17 +36,17 @@ export interface EinzelWirkung {
 export interface MeldungsStand {
   id: string;
   erschienen: Schritt;
-  fastTrack: boolean;
   manuell: boolean;
   /** seit 2.4 (E4): Datenlink zur Meldezeit gestört (EloKa) – ARGUS meldete unsicherer (kern/eloka.ts, argusBei) */
   gestoert?: boolean;
   stufe: Stufe;
   ergebnis?: Ergebnis;
-  /** von G2 zurückgestellt (BEOBACHTEN), bleibt bei G2 sichtbar */
-  beobachten: boolean;
-  g1?: Schritt & { entscheid: G1Entscheid; vermerk?: string };
-  g2?: Schritt & { empfehlung: G2Empfehlung; wirkmittel?: string; begruendung?: string; warnungen: string[] };
-  g3?: Schritt & { entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen: string[]; einschlag?: EinschlagDaten; einschlaege?: EinschlagFlach[] };
+  /** ZURÜCKSTELLEN: bleibt offen im Eingang, hinten (seit 2.6; bis 2.5 BEOBACHTEN bei der Zielprüfung) */
+  zurueckgestellt: boolean;
+  /** letzte Entscheidung des Teams zu dieser Meldung (mit Sekunden ab Eingang und ab Öffnen) */
+  entscheid?: Schritt & { entscheid: Entscheid; wirkmittel?: string; warnungen: string[]; t_offen?: number; sek_eingang?: number; sek_offen?: number };
+  /** BEKÄMPFEN (= Freigabe): Wirkmittel, Warnungen am vorausberechneten Einschlagort und die Einschläge */
+  freigabe?: Schritt & { wirkmittel: string; warnungen: string[]; einschlag?: EinschlagDaten; einschlaege?: EinschlagFlach[] };
   /** seit 2.4 (E3): die Einschläge, die schon da sind (je Fahrzeug eines Zuges einer); `wirkung` fasst sie zusammen, sobald alle da sind */
   wirkungen?: EinzelWirkung[];
   wirkung?: Schritt & {
@@ -50,8 +54,8 @@ export interface MeldungsStand {
     /** Einschlagzeit (bei Abrechnung zum Spielende nach t_s) */
     t_einschlag: number; ziel?: string; verstoesse: string[];
   };
-  /** in der Kette entfallen (jedes Fahrzeug zerstört oder weg): bei welcher Stufe */
-  entfallen?: Schritt & { stufe: "g1" | "g2" | "g3"; grund: string };
+  /** entfallen, solange sie offen war (jedes Fahrzeug zerstört oder weg) */
+  entfallen?: Schritt & { grund: string };
   /** seq aller Ereignisse zu dieser Meldung (für Verlauf und Replay) */
   verlauf: number[];
 }
@@ -76,12 +80,10 @@ export interface Spielzustand {
   seq: number;
   uhr: UhrStand;
   ende: boolean;
-  fastTrack: boolean;
   meldungen: Record<string, MeldungsStand>;
   reihenfolge: string[];
   injects: Record<string, InjectStand>;
   injectReihenfolge: string[];
-  lagehinweise: (Schritt & { text: string; an: Rolle[] })[];
   /** Beobachtungen der Spielleitung, optional zu einem Fall (Auswertung, Schritt 8) */
   notizen: (Schritt & { text: string; fall?: string })[];
   /** Restbestand je Wirkmittel, null = unbegrenzt */
@@ -111,12 +113,10 @@ export function anfangsZustand(inh: Inhalte): Spielzustand {
     seq: 0,
     uhr: { ...UHR_START, tempo: inh.szenario.spieluhr.tempo || 1 },
     ende: false,
-    fastTrack: inh.regeln.fast_track.standard ?? false,
     meldungen: {},
     reihenfolge: [],
     injects: {},
     injectReihenfolge: [],
-    lagehinweise: [],
     notizen: [],
     bestand: Object.fromEntries(Object.values(inh.wirkmittel).map((w) => [w.id, w.bestand])),
     zerstoert: {},
@@ -165,7 +165,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       break;
     }
     case "uhr":
-      n.uhr = { laeuft: e.daten.laeuft, t_s: e.daten.t_s, ts: e.ts, tempo: e.daten.tempo };
+      n.uhr = { laeuft: e.daten.laeuft, t_s: e.daten.t_s, ts: e.daten.ab_ts ?? e.ts, tempo: e.daten.tempo };
       break;
     case "meldung": {
       const d = e.daten;
@@ -173,49 +173,35 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       const m: MeldungsStand = {
         id: d.meldung,
         erschienen: s,
-        fastTrack: !!d.fast_track,
         manuell: !!d.manuell,
         ...(d.gestoert ? { gestoert: true } : {}),
-        stufe: d.entfaellt ? "entfallen" : d.fast_track ? "g2" : "g1",
-        beobachten: false,
+        stufe: d.entfaellt ? "entfallen" : "offen",
+        zurueckgestellt: false,
         verlauf: [e.seq],
       };
       n.meldungen = { ...n.meldungen, [d.meldung]: m };
       n.reihenfolge = [...n.reihenfolge, d.meldung];
       break;
     }
-    case "g1_entscheid": {
+    case "entscheid": {
       const d = e.daten;
       meldungAendern(d.meldung, () => ({
-        g1: { ...s, entscheid: d.entscheid, vermerk: d.vermerk },
-        stufe: d.entscheid === "annehmen" ? "g2" : "erledigt",
-        ergebnis: d.entscheid === "annehmen" ? undefined : "abgelehnt_g1",
-      }));
-      break;
-    }
-    case "g2_empfehlung": {
-      const d = e.daten;
-      meldungAendern(d.meldung, () => ({
-        g2: { ...s, empfehlung: d.empfehlung, wirkmittel: d.wirkmittel, begruendung: d.begruendung, warnungen: d.warnungen ?? [] },
-        stufe: d.empfehlung === "bekaempfen" ? "g3" : d.empfehlung === "beobachten" ? "g2" : "erledigt",
-        beobachten: d.empfehlung === "beobachten",
-        ergebnis: d.empfehlung === "nicht_bekaempfen" ? "nicht_bekaempfen_g2" : undefined,
-      }));
-      break;
-    }
-    case "g3_entscheid": {
-      const d = e.daten;
-      meldungAendern(d.meldung, () => ({
-        g3: {
-          ...s, entscheid: d.entscheid, bemerkung: d.bemerkung, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [], einschlag: d.einschlag,
-          ...(d.einschlaege ? { einschlaege: d.einschlaege } : {}),
+        entscheid: {
+          ...s, entscheid: d.entscheid, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [],
+          ...(d.t_offen !== undefined ? { t_offen: d.t_offen } : {}), ...(d.sek_eingang !== undefined ? { sek_eingang: d.sek_eingang } : {}),
+          ...(d.sek_offen !== undefined ? { sek_offen: d.sek_offen } : {}),
         },
+        ...(d.entscheid === "bekaempfen" && d.wirkmittel ? {
+          freigabe: {
+            ...s, wirkmittel: d.wirkmittel, warnungen: d.warnungen ?? [], einschlag: d.einschlag, ...(d.einschlaege ? { einschlaege: d.einschlaege } : {}),
+          },
+        } : {}),
         wirkungen: undefined,
-        stufe: d.entscheid === "freigabe" ? "wirkung" : d.entscheid === "zurueck" ? "g2" : "erledigt",
-        beobachten: false,
-        ergebnis: d.entscheid === "ablehnen" ? "abgelehnt_g3" : undefined,
+        stufe: d.entscheid === "bekaempfen" ? "wirkung" : d.entscheid === "zurueckstellen" ? "offen" : "erledigt",
+        zurueckgestellt: d.entscheid === "zurueckstellen",
+        ergebnis: d.entscheid === "ablehnen" ? "abgelehnt" : undefined,
       }));
-      if (d.entscheid === "freigabe" && d.wirkmittel) {
+      if (d.entscheid === "bekaempfen" && d.wirkmittel) {
         // seit 2.4 (E3): eine LM je bekämpftem Fahrzeug eines Zuges
         const alt = n.bestand[d.wirkmittel];
         if (typeof alt === "number") n.bestand = { ...n.bestand, [d.wirkmittel]: Math.max(0, alt - (d.einschlaege?.length ?? 1)) };
@@ -232,7 +218,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
         nr, t_einschlag: d.t_einschlag ?? e.t_s, pos: d.pos, ziel: d.ziel, getroffen, verstoesse: d.verstoesse ?? [], seq: e.seq,
       };
       const alle = [...(st0.wirkungen ?? []), einzeln].sort((a, b) => a.nr - b.nr);
-      const anzahl = d.anzahl ?? st0.g3?.einschlaege?.length ?? 1;
+      const anzahl = d.anzahl ?? st0.freigabe?.einschlaege?.length ?? 1;
       // seit 2.4 (E3): die Wirkung der Meldung steht fest, sobald alle Einschläge da sind (ein Zug: je Fahrzeug einer)
       const fertig = alle.length >= anzahl;
       meldungAendern(d.meldung, () => ({
@@ -252,8 +238,8 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
     case "meldung_entfaellt": {
       const d = e.daten;
       const m = n.meldungen[d.meldung];
-      if (!m || (m.stufe !== "g1" && m.stufe !== "g2" && m.stufe !== "g3")) break;
-      meldungAendern(d.meldung, () => ({ stufe: "entfallen", entfallen: { ...s, stufe: d.stufe, grund: d.grund } }));
+      if (!m || m.stufe !== "offen") break;
+      meldungAendern(d.meldung, () => ({ stufe: "entfallen", entfallen: { ...s, grund: d.grund } }));
       break;
     }
     case "verstaerkung": {
@@ -305,14 +291,8 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       if (i && !i.quittiert) n.injects = { ...n.injects, [i.id]: { ...i, quittiert: s } };
       break;
     }
-    case "lagehinweis":
-      n.lagehinweise = [...n.lagehinweise, { ...s, text: e.daten.text, an: e.daten.an }];
-      break;
     case "notiz":
       n.notizen = [...n.notizen, { ...s, text: e.daten.text, ...(e.daten.fall ? { fall: e.daten.fall } : {}) }];
-      break;
-    case "fast_track":
-      n.fastTrack = e.daten.an;
       break;
     case "spielende":
       n.ende = true;
@@ -348,11 +328,11 @@ export function zustandAus(protokoll: Ereignis[], inh: Inhalte): Spielzustand {
 /** Kurzer Fingerabdruck des Stands, um Fenster zu vergleichen (Test und Anzeige). */
 export function fingerabdruck(z: Spielzustand): string {
   const teile = [
-    z.lauf, z.seq, z.uhr.laeuft ? 1 : 0, z.uhr.tempo, z.fastTrack ? 1 : 0, z.ende ? 1 : 0,
+    z.lauf, z.seq, z.uhr.laeuft ? 1 : 0, z.uhr.tempo, z.ende ? 1 : 0,
     z.reihenfolge.map((id) => `${id}:${z.meldungen[id].stufe}`).join(","),
     z.injectReihenfolge.map((id) => `${id}${z.injects[id].quittiert ? "q" : ""}`).join(","),
     Object.entries(z.bestand).map(([k, v]) => `${k}${v ?? "∞"}`).join(","),
-    z.lagehinweise.length, z.notizen.length, z.abgelehnt.length,
+    z.notizen.length, z.abgelehnt.length,
     Object.keys(z.zerstoert).sort().join(","), z.verstaerkungen.map((v) => v.gruppe).join(","),
     Object.entries(z.durchbrueche ?? {}).map(([k, v]) => `${k}${v.durch ? "!" : ""}`).sort().join(","),
   ];

@@ -2,8 +2,8 @@
 // Lagezeit; die Karte (src/karte/) zeichnet nur, was hier herauskommt. Damit steht die
 // Informationsverteilung auch für die Karte an einer Stelle und ist testbar.
 //
-//  • G2 und G3 sehen die Zielmeldungen an der gemeldeten Position mit dem Zeichen der ARGUS-Klasse –
-//    nie die Ground Truth, nie ungemeldete Ziele, keine Personen.
+//  • Das Team (seit 2.6 eine Rolle, Zielbearbeitung) sieht die Zielmeldungen an der gemeldeten Position mit dem Zeichen der
+//    ARGUS-Klasse – nie die Ground Truth, nie ungemeldete Ziele, keine Personen.
 //  • Spielleitung und Plenum (Auflösung) sehen die Kontrollkarte: alle Ziele nach Ground Truth,
 //    auch ungemeldete, Personen und getroffene Personen, alle Wirkungen mit Ergebnis.
 //
@@ -11,18 +11,18 @@
 // Bild die Position zur laufenden Spielzeit, ein zerstörtes Fahrzeug bleibt ab seiner Zerstörung als
 // Wrack stehen. Das Lagebild selbst wird nur bei neuen Ereignissen und im Sekundentakt neu berechnet.
 //
-// Tracking: Gemeldete Ziele bleiben auf den Karten von G1, G2 und G3 als Spur stehen und bewegen sich
+// Tracking: Gemeldete Ziele bleiben auf der Karte des Teams als Spur stehen und bewegen sich
 // mit – an der Position des ersten noch stehenden Fahrzeugs der Meldung, mit dem Zeichen der ARGUS-Klasse
 // (nie Ground Truth). Sind alle Fahrzeuge zerstört, bleibt das Zeichen durchgestrichen am Wrack; nach der
 // eigenen Wirkung bleibt es beim bekämpften Fahrzeug am Einschlagort (Rest eines Zuges meldet ARGUS neu).
-// Zieht ein Ziel ab, verschwindet seine Spur, sobald die Meldung bei dieser Rolle erledigt ist.
+// Zieht ein Ziel ab, verschwindet seine Spur, sobald die Meldung erledigt ist.
 import type { ArgusAusgabe, GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
 import { ZEICHEN_KONTAKT, zeichenArgus, zeichenZiel } from "../karte/zeichen";
 import { ausrichtung, dist, feinlage, gtBei, imPolygon, position, vorhanden } from "./geometrie";
 import { einschlaegeVon, offeneEinschlaege } from "./lage";
 import { gemeldetePosition } from "./regeln";
 import { argusBei } from "./eloka";
-import { STUFE_TEXT, ERGEBNIS_TEXT, zielNummer } from "./sichten";
+import { standText, zielNummer } from "./sichten";
 import { uhrzeit } from "./uhr";
 import { panzer as eigenePanzer, PANZER_STUFE_TEXT, type Stufe, stand as verlustPanzerStand, trefferText, verlustLage, verwText, zug as zugStand, type ZugStand } from "./verluste";
 import { zielNr } from "./zielnummern";
@@ -66,7 +66,7 @@ export interface KartenObjekt {
   titel: string;
   zeilen: string[];
   zustand: ObjektZustand;
-  /** Meldung, die ein Klick auswählt (G2/G3) */
+  /** Meldung, die ein Klick auswählt (Team) */
   meldung?: string;
   /** alle Meldungen zu diesem Ziel */
   meldungen?: string[];
@@ -85,7 +85,7 @@ export interface KartenObjekt {
   /** alle Fahrzeuge zerstört (Zeichen durchgestrichen), auch wenn nicht von diesem Team bekämpft */
   zerstoert?: boolean;
   /**
-   * Seit 2.2 (Aufklärung, Zielprüfung, Führung): „kontakt“ = Bewegung erkannt, keine Meldung bei der Rolle (C1);
+   * Seit 2.2: „kontakt“ = Bewegung erkannt, keine Meldung beim Team (C1);
    * „teil“ = Fahrzeug einer Meldung, das sich vom Zeichen entfernt hat; „wrack“ = getroffenes Fahrzeug einer
    * zugweisen Meldung am Einschlagort (C8). Kleiner gezeichnet, ohne Marke, nicht anklickbar.
    */
@@ -111,8 +111,13 @@ export interface WirkungsMarke {
   zeilen: string[];
   /** Kontrollkarte: Wirkung traf Geschütztes, Verbündete, Zivilpersonen oder eine Attrappe */
   fehl?: boolean;
-  /** freigegeben, Einschlag steht noch aus (Vorlaufzeit läuft): nur Umriss, Uhrzeit des Einschlags */
+  /** freigegeben, Einschlag steht noch aus (Vorlaufzeit läuft): nur Umriss, Countdown bis zum Einschlag (seit 2.6, H5.3) */
   geplant?: boolean;
+  /** Spielzeit des Einschlags (Countdown) und bekämpftes Fahrzeug (Marke am Ziel) */
+  t_einschlag?: number;
+  ziel?: string;
+  /** Meldung der Wirkung */
+  meldung?: string;
 }
 
 /** Seit 2.5 (F1/F2.6): ein Kampfpanzer der eigenen 1. Kp auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
@@ -193,17 +198,10 @@ export const GT_NAME: Record<GtKategorie, string> = {
 /** Kategorien, deren Treffer eine Fehlbekämpfung ist (Kontrollkarte, Übersicht der Spielleitung). */
 export const FEHL = new Set(["verbuendet", "zivil", "geschuetzt", "attrappe", "ausser_gefecht", "besatzung_ergibt_sich"]);
 
-/** Hat diese Rolle die Meldung bekommen (G1: jede erschienene, G2: angenommen oder Fast-Track, G3: mit Empfehlung)? */
-function erreicht(st: MeldungsStand, rolle: "g1" | "g2" | "g3"): boolean {
-  if (rolle === "g1") return true;
-  if (rolle === "g2") return st.fastTrack || st.g1?.entscheid === "annehmen";
-  return st.stufe === "g3" || !!st.g3 || !!st.wirkung;
-}
-
-function zustandFuer(st: MeldungsStand, rolle: "g1" | "g2" | "g3"): ObjektZustand {
+function zustandFuer(st: MeldungsStand): ObjektZustand {
   if (st.ergebnis === "bekaempft") return "bekaempft";
   if (st.stufe === "wirkung") return "freigegeben";
-  if (st.stufe === rolle) return st.beobachten ? "zurueckgestellt" : "offen";
+  if (st.stufe === "offen") return st.zurueckgestellt ? "zurueckgestellt" : "offen";
   return "erledigt";
 }
 
@@ -214,8 +212,8 @@ function markenId(id: string, nr: number): string {
 
 /** Freigegebene Wirkung, deren Einschläge noch ausstehen (für alle Karten gleich): Ort und Zeit vorausberechnet, je Einschlag. */
 function geplanteWirkungen(inh: Inhalte, z: Spielzustand, m: Meldung, st: MeldungsStand): WirkungsMarke[] {
-  if (st.stufe !== "wirkung" || st.wirkung || !st.g3?.wirkmittel) return [];
-  const wm = inh.wirkmittel[st.g3.wirkmittel];
+  if (st.stufe !== "wirkung" || st.wirkung || !st.freigabe?.wirkmittel) return [];
+  const wm = inh.wirkmittel[st.freigabe.wirkmittel];
   if (!wm) return [];
   const start = inh.szenario.spieluhr.start;
   const alle = einschlaegeVon(inh, z, m.id);
@@ -224,9 +222,12 @@ function geplanteWirkungen(inh: Inhalte, z: Spielzustand, m: Meldung, st: Meldun
     id: markenId(m.id, nr),
     pos: e.pos,
     radius_m: wm.wirkradius_m,
-    text: `Ziel ${zielNr(inh, z, m.id)} ${wm.kurz}${zug} · ${uhrzeit(start, e.t)}`,
-    zeilen: [`freigegeben ${uhrzeit(start, st.g3!.t_s)}, Einschlag ${uhrzeit(start, e.t)} (vorausberechnet)`, wm.name],
+    text: `Ziel ${zielNr(inh, z, m.id)} ${wm.kurz}${zug}`,
+    zeilen: [`bekämpft ${uhrzeit(start, st.freigabe!.t_s)}, Einschlag vorausberechnet`, wm.name],
     geplant: true,
+    t_einschlag: e.t,
+    ziel: e.ziel,
+    meldung: m.id,
   }));
 }
 
@@ -255,12 +256,6 @@ export function zielBahn(inh: Inhalte, z: Spielzustand, id: string): Bahn | unde
 
 const RANG: Record<ObjektZustand, number> = { offen: 5, zurueckgestellt: 4, freigegeben: 3, bekaempft: 2, erledigt: 1 };
 
-function standText(st: MeldungsStand): string {
-  if (st.ergebnis) return ERGEBNIS_TEXT[st.ergebnis];
-  if (st.beobachten) return "zurückgestellt (BEOBACHTEN)";
-  return STUFE_TEXT[st.stufe];
-}
-
 /** Bis zu diesem Abstand vom Zeichen gehört ein Fahrzeug der Meldung zum Zeichen (Zahl, Größenangabe); weiter weg
  *  bekommt es ein eigenes kleines Zeichen (seit 2.2). */
 export const GRUPPE_RADIUS_M = 40;
@@ -276,8 +271,8 @@ function stehtNoch(inh: Inhalte, z: Spielzustand, id: string, t: number): boolea
 }
 
 /**
- * Zielmeldungen für G1, G2 oder G3. Mehrere Meldungen zum selben Ziel (Folgemeldung) ergeben ein
- * Zeichen; ein Klick wählt die Meldung, die bei dieser Rolle offen ist, sonst die neueste.
+ * Zielmeldungen für das Team. Mehrere Meldungen zum selben Ziel (Folgemeldung) ergeben ein
+ * Zeichen; ein Klick wählt die Meldung, die offen ist, sonst die neueste.
  * Mit tLage folgt das Zeichen dem Ziel (Tracking, `bahn`); ohne steht es an der gemeldeten Position.
  *
  * Seit 2.2 (Änderungen C1, C7, C8 nach dem 2. Solo-Durchlauf), nur mit tLage:
@@ -288,13 +283,13 @@ function stehtNoch(inh: Inhalte, z: Spielzustand, id: string, t: number): boolea
  *  • Jedes andere Fahrzeug, das die Drohne sieht (nicht im Wald, nicht ungemeldet, mit Route), steht ab der Einfahrt
  *    als Kontakt auf der Karte, bis eine Meldung dazu bei der Rolle ankommt. So erscheint kein Fahrzeug mitten im Bild.
  */
-export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1" | "g2" | "g3", tLage?: number): Lagebild {
+export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: number): Lagebild {
   const start = inh.szenario.spieluhr.start;
   const proZiel = new Map<string, { m: Meldung; st: MeldungsStand }[]>();
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
     const m = inh.meldungen[id];
-    if (!st || !m || !erreicht(st, rolle)) continue;
+    if (!st || !m) continue;
     if (st.stufe === "entfallen" && !st.entfallen) continue; // schon beim Erscheinen entfallen: nie gesehen
     const nr = zielNummer(inh, m);
     proZiel.set(nr, [...(proZiel.get(nr) ?? []), { m, st }]);
@@ -304,10 +299,10 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
   /** je Zeichen: Fahrzeug, dem es folgt, und alle Fahrzeuge seiner Meldungen (für Teil-, Wrack- und Kontaktzeichen) */
   const zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[]; argus: ArgusAusgabe }[] = [];
   for (const [nr, liste] of proZiel) {
-    const sortiert = [...liste].sort((a, b) => RANG[zustandFuer(b.st, rolle)] - RANG[zustandFuer(a.st, rolle)]
+    const sortiert = [...liste].sort((a, b) => RANG[zustandFuer(b.st)] - RANG[zustandFuer(a.st)]
       || b.st.erschienen.seq - a.st.erschienen.seq);
     const { m, st } = sortiert[0];
-    const zustand = zustandFuer(st, rolle);
+    const zustand = zustandFuer(st);
     const bekaempft = liste.some((x) => x.st.ergebnis === "bekaempft");
     const gemeldet = gemeldetePosition(inh, m);
     const ids = liste.map((x) => x.m.id);
@@ -342,7 +337,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
         menge = undefined;
       } else {
         if (zustand === "erledigt" || zustand === "bekaempft") continue; // abgezogen: keine Spur mehr
-        // abgezogen, aber noch offen bei der Rolle: das Zeichen bleibt an der letzten Stelle
+        // abgezogen, aber noch offen: das Zeichen bleibt an der letzten Stelle
         const b = zielBahn(inh, z, m.ziele[0]);
         bahn = b ? { ...b, halt: b.halt ?? tLage } : undefined;
         const lage = bahn && bahnLage(bahn, tLage);
@@ -380,7 +375,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
     zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern, argus: argusBei(inh, m, st.gestoert) });
     for (const x of liste) {
       wirkungen.push(...geplanteWirkungen(inh, z, x.m, x.st));
-      const wmId = x.st.wirkung?.wirkmittel ?? x.st.g3?.wirkmittel;
+      const wmId = x.st.wirkung?.wirkmittel ?? x.st.freigabe?.wirkmittel;
       const wm = wmId ? inh.wirkmittel[wmId] : undefined;
       for (const w of einschlagListe(x.st)) {
         wirkungen.push({
@@ -388,7 +383,9 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
           pos: w.pos,
           radius_m: wm?.wirkradius_m ?? 0,
           text: `Ziel ${zielNr(inh, z, x.m.id)} ${wm?.kurz ?? wmId ?? ""}`,
-          zeilen: [`Einschlag ${uhrzeit(start, w.t)} mit ${wm?.name ?? wmId ?? ""}`, `freigegeben ${uhrzeit(start, x.st.g3?.t_s ?? w.t)}`],
+          zeilen: [`Einschlag ${uhrzeit(start, w.t)} mit ${wm?.name ?? wmId ?? ""}`, `bekämpft ${uhrzeit(start, x.st.freigabe?.t_s ?? w.t)}`],
+          t_einschlag: w.t,
+          meldung: x.m.id,
         });
       }
     }
@@ -397,7 +394,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, rolle: "g1"
   return { objekte, personen: [], wirkungen, eigene: tLage !== undefined ? eigeneLage(inh, z, tLage) : undefined };
 }
 
-/** Wrack-, Teil- und Kontaktzeichen zu den Meldungszeichen einer Rolle (seit 2.2, C1/C8). */
+/** Wrack-, Teil- und Kontaktzeichen zu den Meldungszeichen des Teams (seit 2.2, C1/C8). */
 function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
   zeichen: { o: KartenObjekt; fuehrer: string | null; fahrzeuge: string[]; m: Meldung; nummern: string[]; argus: ArgusAusgabe }[]): KartenObjekt[] {
   const out: KartenObjekt[] = [];
@@ -449,7 +446,7 @@ function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
       });
     }
   }
-  // C1: Kontakte – was die Drohne fahren sieht, ohne dass eine Meldung dazu bei der Rolle ist
+  // C1: Kontakte – was die Drohne fahren sieht, ohne dass eine Meldung dazu beim Team ist
   for (const ziel of inh.szenario.ziele) {
     if (ziel.ungemeldet || bekannt.has(ziel.id) || !ziel.bewegung?.route?.length) continue;
     if (!stehtNoch(inh, z, ziel.id, t)) continue;
@@ -461,7 +458,7 @@ function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
       sidc: ZEICHEN_KONTAKT,
       text: "",
       titel: "Kontakt",
-      zeilen: ["Bewegung erkannt – (noch) keine Meldung bei dir"],
+      zeilen: ["Bewegung erkannt – (noch) keine Meldung bei euch"],
       zustand: "erledigt",
       bahn: zielBahn(inh, z, ziel.id),
       art: "kontakt",
@@ -485,7 +482,7 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
     const st = z.meldungen[id];
     if (!st) continue;
     if (inh.meldungen[id]) wirkungen.push(...geplanteWirkungen(inh, z, inh.meldungen[id], st));
-    const wmId = st.wirkung?.wirkmittel ?? st.g3?.wirkmittel;
+    const wmId = st.wirkung?.wirkmittel ?? st.freigabe?.wirkmittel;
     const wm = wmId ? inh.wirkmittel[wmId] : undefined;
     // seit 2.4 (E3): je Einschlag eines Zuges eine Marke
     for (const w of einschlagListe(st)) {
@@ -498,7 +495,7 @@ export function lagebildKontrolle(inh: Inhalte, z: Spielzustand, tLage: number):
         pos: w.pos,
         radius_m: wm?.wirkradius_m ?? 0,
         text: `Ziel ${zielNr(inh, z, id)} ${wm?.kurz ?? wmId ?? ""}`,
-        zeilen: [`Einschlag ${uhrzeit(start, w.t)} (frei ${uhrzeit(start, st.g3?.t_s ?? w.t)}) mit ${wm?.name ?? wmId ?? ""}`,
+        zeilen: [`Einschlag ${uhrzeit(start, w.t)} (bekämpft ${uhrzeit(start, st.freigabe?.t_s ?? w.t)}) mit ${wm?.name ?? wmId ?? ""}`,
           treffer.length ? `getroffen: ${treffer.join(", ")}` : "nichts getroffen"],
         fehl: w.getroffen.some((g) => FEHL.has(g.kategorie)),
       });

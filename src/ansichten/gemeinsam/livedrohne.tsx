@@ -1,5 +1,4 @@
-// Live-Drohnenbild in der Ansicht G1 (Schritt 6b): als Fenster am Ort des Ziels auf der Karte und – per Klick –
-// groß mit Lupe. Gezeichnet wird mit src/drohne/livebild.ts auf eine Leinwand; die ARGUS-Markierung (Eckrahmen,
+// Live-Drohnenbild (Schritt 6b, seit 2.6 in der Zielbearbeitung rechts neben der Karte) und – per Klick – groß mit Lupe. Gezeichnet wird mit src/drohne/livebild.ts auf eine Leinwand; die ARGUS-Markierung (Eckrahmen,
 // Klasse, Konfidenz) liegt als HTML darüber, folgt dem Fahrzeug und bleibt so scharf wie zuvor.
 //
 // Takt: höchstens 30 Bilder/s, solange die Uhr läuft (Fahrzeuge fahren), sonst 12 für Schleifen (Feuer, Rauch,
@@ -10,7 +9,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { type AssetManifest, assetUrl, drohnenbild } from "../../assets/assets";
 import type { BildZiel, Drohnenbild } from "../../assets/typen";
 import { type LiveDrohnenbild, type LiveLage, type LiveTransform, type Szene, erzeugeLiveBild, vergleicheMitStandbild } from "../../drohne/livebild";
-import type { Meldung } from "../../inhalte/typen";
+import type { ArgusAusgabe, Meldung } from "../../inhalte/typen";
 import { bildrateMax } from "../../karte/bildrate";
 import type { KartenUhr } from "../../karte/lagekarte";
 import { uhrzeit } from "../../kern/uhr";
@@ -176,7 +175,7 @@ function Leisten(p: { statusRef: (el: HTMLElement | null) => void; pq: string; s
 }
 
 /** Die Leinwand mit ARGUS-Rahmen und Leisten (Fenster am Ort und Vergrößerung). */
-function LiveLeinwand(p: LeinwandOpt & { meldung: Meldung; db: Drohnenbild; lupeAn?: boolean; testid?: string }) {
+function LiveLeinwand(p: LeinwandOpt & { meldung: Meldung; argus?: ArgusAusgabe; db: Drohnenbild; lupeAn?: boolean; testid?: string }) {
   const { meldung: m, db } = p;
   const huelle = useRef<HTMLDivElement>(null);
   const leinwand = useRef<HTMLCanvasElement>(null);
@@ -190,7 +189,9 @@ function LiveLeinwand(p: LeinwandOpt & { meldung: Meldung; db: Drohnenbild; lupe
   useEffect(() => {
     refs.current = { huelle: huelle.current, leinwand: leinwand.current, lupe: lupe.current, rahmen: rahmen.current, status: status.current };
   });
-  const einzeln = m.argus.einzeln ?? [];
+  // ARGUS-Ausgabe, wie das Team sie sieht (seit 2.4 mit EloKa-Störung: argusBei)
+  const a = p.argus ?? m.argus;
+  const einzeln = a.einzeln ?? [];
   const t0 = p.uhr().t;
   return (
     <div class="drohne live" ref={huelle} data-testid={p.testid} data-meldung={m.id}>
@@ -198,7 +199,7 @@ function LiveLeinwand(p: LeinwandOpt & { meldung: Meldung; db: Drohnenbild; lupe
       {db.ziele.map((z, i) => (
         <div key={z.id} class="argus-rahmen" style="visibility:hidden" data-ziel={z.id}
           ref={(el) => { if (el) rahmen.current.set(z.id, el); else rahmen.current.delete(z.id); }}>
-          <span class="argus-marke">{m.argus.klasse} · {einzeln[i] ?? m.argus.konfidenz} %</span>
+          <span class="argus-marke">{a.klasse} · {einzeln[i] ?? a.konfidenz} %</span>
         </div>
       ))}
       <Leisten statusRef={(el) => { status.current = el; }} pq={db.pq} start={p.start} t={t0} />
@@ -215,7 +216,7 @@ function LiveLeinwand(p: LeinwandOpt & { meldung: Meldung; db: Drohnenbild; lupe
  * das Standbild. Klick öffnet die Vergrößerung mit Lupe.
  */
 export function LiveDrohnenFenster(p: {
-  meldung: Meldung; lage: () => LiveLage; uhr: () => KartenUhr; start: string;
+  meldung: Meldung; argus?: ArgusAusgabe; lage: () => LiveLage; uhr: () => KartenUhr; start: string;
 }) {
   const man = useManifest();
   const m = p.meldung;
@@ -228,7 +229,7 @@ export function LiveDrohnenFenster(p: {
       <div class="drohne-fenster" role="button" tabIndex={0} aria-label="Drohnenbild vergrößern" data-testid="drohnenbild"
         onClick={() => db && setGross(true)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && db && setGross(true)}>
         {bild && db ? (
-          <LiveLeinwand bild={bild} meldung={m} db={db} lage={p.lage} uhr={p.uhr} start={p.start} pausiert={gross} testid="live-fenster" />
+          <LiveLeinwand bild={bild} meldung={m} argus={p.argus} db={db} lage={p.lage} uhr={p.uhr} start={p.start} pausiert={gross} testid="live-fenster" />
         ) : (
           <div class="drohne">
             {db ? <img src={assetUrl(db.datei)} width={db.breite} height={db.hoehe} alt={m.bild.beschreibung} draggable={false} />
@@ -239,7 +240,7 @@ export function LiveDrohnenFenster(p: {
       </div>
       {/* über dem ganzen Fenster: außerhalb der Karte einhängen (das Fenster am Ort ist verschoben und schneidet ab) */}
       {gross && db && createPortal(
-        <LiveVergroesserung m={m} db={db} bild={bild} lage={p.lage} uhr={p.uhr} start={p.start} schliessen={() => setGross(false)} />,
+        <LiveVergroesserung m={m} argus={p.argus} db={db} bild={bild} lage={p.lage} uhr={p.uhr} start={p.start} schliessen={() => setGross(false)} />,
         document.body,
       )}
     </>
@@ -248,7 +249,7 @@ export function LiveDrohnenFenster(p: {
 
 /** Vergrößerung über dem ganzen Fenster: Live-Bild groß, Lupe folgt der Maus (Mausrad: stärker/schwächer). */
 function LiveVergroesserung(p: {
-  m: Meldung; db: Drohnenbild; bild: LiveDrohnenbild | null; lage: () => LiveLage; uhr: () => KartenUhr; start: string; schliessen: () => void;
+  m: Meldung; argus?: ArgusAusgabe; db: Drohnenbild; bild: LiveDrohnenbild | null; lage: () => LiveLage; uhr: () => KartenUhr; start: string; schliessen: () => void;
 }) {
   const { m, db } = p;
   const rahmen = useRef<HTMLDivElement>(null);
@@ -274,7 +275,7 @@ function LiveVergroesserung(p: {
     <div class="lupe-schirm" onClick={p.schliessen} data-testid="vergroesserung">
       <div class="lupe-rahmen" style={{ width: `${mass.w}px`, height: `${mass.h}px` }} onClick={(e) => e.stopPropagation()}>
         <div class="lupe-leiste">
-          <span>Meldung {m.id} · Lupe folgt der Maus, {faktor.toLocaleString("de-DE", { maximumFractionDigits: 1 })}-fach · Mausrad: stärker/schwächer</span>
+          <span>Lupe folgt der Maus, {faktor.toLocaleString("de-DE", { maximumFractionDigits: 1 })}-fach · Mausrad: stärker/schwächer</span>
           <button type="button" class="knopf klein" onClick={p.schliessen}>Schließen (Esc)</button>
         </div>
         <div ref={rahmen} style={{ width: "100%", height: "100%" }}
@@ -288,7 +289,7 @@ function LiveVergroesserung(p: {
             setFaktor((f) => Math.round(Math.max(LUPE.min, Math.min(LUPE.max, f * (e.deltaY < 0 ? 1.2 : 1 / 1.2))) * 10) / 10);
           }}>
           {p.bild ? (
-            <LiveLeinwand bild={p.bild} meldung={m} db={db} lage={p.lage} uhr={p.uhr} start={p.start} lupeAn
+            <LiveLeinwand bild={p.bild} meldung={m} argus={p.argus} db={db} lage={p.lage} uhr={p.uhr} start={p.start} lupeAn
               lupe={lupe ? { ...lupe, faktor } : null} testid="live-gross" />
           ) : (
             // ohne Ebenen: Standbild mit Lupe wie bisher

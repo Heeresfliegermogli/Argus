@@ -1,18 +1,13 @@
-// Welche Rolle welche Ansicht bekommt. Eine neue Rolle oder Ansicht ist ein Modul, das den
-// Stand einer Sicht (Team-Spiel aus Sicht einer Rolle) liest und Aktionen sendet, und wird hier eingetragen.
+// Welche Rolle welche Ansicht bekommt. Seit 2.6 (Änderungen H2) eine Rolle je Team: die Zielbearbeitung.
 import type { JSX } from "preact";
 import type { Rolle } from "../kern/ereignisse";
 import type { Sicht } from "../sitzung/sicht";
-import { G1Ansicht } from "./g1";
-import { G2Ansicht } from "./g2";
-import { G3Ansicht } from "./g3";
 import { PlenumAnsicht } from "./plenum";
 import { SLAnsicht } from "./sl";
+import { ZBAnsicht } from "./zb";
 
 export const ANSICHTEN: Record<Rolle, (p: { s: Sicht }) => JSX.Element> = {
-  g1: G1Ansicht,
-  g2: G2Ansicht,
-  g3: G3Ansicht,
+  zb: ZBAnsicht,
   sl: SLAnsicht,
   plenum: PlenumAnsicht,
 };

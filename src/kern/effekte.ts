@@ -7,12 +7,16 @@
 // Asset-Manifest (effekte.zuordnung: Wirkmittel → Flug/Einschlag/danach, Hintergrund → Einschlag/Fläche,
 // Wrack → Feuer/Rauch, feuert → Mündungsblitz). Neue Wirkmittel oder Effekte sind damit Daten, kein Code.
 //
-// Was eine Rolle sehen darf, entscheidet `sichtbar`:
+// Was gesehen werden darf, entscheidet `sichtbar`:
 //  • Spielleitung und Auflösung: alles.
-//  • G1, G2, G3: eigene Wirkungen, Feindartillerie, Rauch und das Feindfeuer auf die eigene Kp; Wirkungen des Hintergrundgefechts und von
-//    E-01 nur auf Ziele, die diese Rolle aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes
-//    Ziel); der Mündungsblitz eines Schützen nur, wenn die Rolle auch den Schützen kennt.
-//  • Plenum während des Spiels („umgebung“): nur Feindartillerie und Rauch.
+//  • Team (seit 2.6 eine Rolle): eigene Wirkungen, Feindartillerie, Rauch und das Feindfeuer auf die eigene Kp – seit 2.6 (H5.7) mit
+//    Mündungsfeuer am Schützen und Leuchtspur zum Panzer bei jedem direkten Schuss; Wirkungen des Hintergrundgefechts und von E-01 nur
+//    auf Ziele, die das Team aus einer Meldung kennt (sonst verriete der Effekt ein ungemeldetes Ziel); der Mündungsblitz eines
+//    Schützen nach Schussrhythmus nur, wenn das Team auch den Schützen kennt.
+//  • Plenum während des Spiels („umgebung“): nur Feindartillerie, Rauch und die Einschläge an der eigenen Kp.
+//
+// LM im Flug (seit 2.6, H5.2): fliegt auf den vorausberechneten Einschlagort (Position des Fahrzeugs zum Einschlagzeitpunkt) und
+// führt im Endanflug auf das Fahrzeug nach (`ziel`, `zielRoute`); der Einschlag liegt genau am Fahrzeug – auch im Replay.
 //
 // Seit Szenario 2.1 (A8): Fahrzeuge mit `feuert` schießen nach ihrem Schussrhythmus (Mündungsblitz, danach
 // Abschussrauch), solange sie stehen und nicht zerstört sind – sichtbar für Rollen, die das Fahrzeug kennen. Fahrende
@@ -67,6 +71,31 @@ export interface Effekt {
    * Treffer an den eigenen Stellungen: Es sind Hunderte je Lauf, dauerhaft stehende Krater kosten jedes Bild Rechenzeit.
    */
   bleibt_s?: number;
+  /** flug (LM, seit 2.6): bekämpftes Fahrzeug und seine Route – im Endanflug folgt der Flugkörper dem Fahrzeug */
+  ziel?: string;
+  zielRoute?: RoutenPunkt[];
+  /** flug (LM): Zeitpunkt, ab dem das Fahrzeug steht (zerstört vor dem Einschlag) */
+  zielHalt?: number;
+}
+
+/** Anteil des Flugs, ab dem die LM dem Fahrzeug nachführt (Endanflug). */
+export const ENDANFLUG_AB = 0.6;
+
+/**
+ * Ort der LM zur Spielzeit t (seit 2.6, H5.2): erst geradeaus auf den vorausberechneten Einschlagort, im Endanflug zunehmend auf das
+ * Fahrzeug selbst (seine Position zur Zeit t). Beim Einschlag liegt sie genau am Fahrzeug (= Einschlagort der Engine).
+ */
+export function flugOrt(e: Pick<Effekt, "t" | "ab" | "pos" | "von" | "zielRoute" | "zielHalt">, t: number): Punkt {
+  const von = e.von ?? e.pos;
+  const ab = e.ab ?? e.t;
+  const f = Math.max(0, Math.min(1, (t - ab) / Math.max(0.01, e.t - ab)));
+  const lin: Punkt = [von[0] + (e.pos[0] - von[0]) * f, von[1] + (e.pos[1] - von[1]) * f];
+  if (!e.zielRoute?.length || f <= ENDANFLUG_AB) return lin;
+  const obj = { pos: [e.zielRoute[0][1], e.zielRoute[0][2]] as Punkt, bewegung: { route: e.zielRoute } };
+  const fz = position(obj, Math.min(t, e.t, e.zielHalt ?? Infinity));
+  const u = (f - ENDANFLUG_AB) / (1 - ENDANFLUG_AB);
+  const w = u * u * (3 - 2 * u);
+  return [lin[0] + (fz[0] - lin[0]) * w, lin[1] + (fz[1] - lin[1]) * w];
 }
 
 /** Wie lange Krater an den eigenen Stellungen stehen bleiben (Spielzeit, s). */
@@ -233,7 +262,7 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   // eigene Wirkungen: Flug (LM in Spielzeit, PzAbw als Leuchtspur) und Einschlag am vorausberechneten Ort
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
-    const wmId = st.g3?.entscheid === "freigabe" ? st.g3.wirkmittel : undefined;
+    const wmId = st.freigabe?.wirkmittel;
     if (!wmId) continue;
     const wm = inh.wirkmittel[wmId];
     if (!wm) continue;
@@ -245,7 +274,13 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
       const e = da ? { t: da.t_einschlag, pos: da.pos } : plan;
       const k = nr ? `${id}~${nr}` : id;
       if (wm.flug) {
-        out.push({ id: `${k}-f`, art: "flug", quelle: q, ab: st.g3!.t_s + nr * abstand + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start });
+        // seit 2.6 (H5.2): Endanflug auf das bekämpfte Fahrzeug (Route der Welt des Teams, angehalten bei einer früheren Zerstörung)
+        const zf = plan.ziel ? inh.ziele[plan.ziel] : undefined;
+        const halt = plan.ziel !== undefined && z.zerstoert[plan.ziel] !== undefined && z.zerstoert[plan.ziel] < e.t ? z.zerstoert[plan.ziel] : undefined;
+        out.push({
+          id: `${k}-f`, art: "flug", quelle: q, ab: st.freigabe!.t_s + nr * abstand + (wm.flug.vorbereitung_s ?? 0), t: e.t, pos: e.pos, von: wm.flug.start,
+          ...(zf ? { ziel: zf.id, zielRoute: zf.bewegung?.route?.length ? zf.bewegung.route : [[0, zf.pos[0], zf.pos[1]]], ...(halt !== undefined ? { zielHalt: halt } : {}) } : {}),
+        });
       } else if (wm.einsatzbereich) {
         // direktes Feuer: Kanone des nächsten einsatzbereiten Panzers (seit 2.5; vorher aus der Zugstellung bzw. vom Westrand)
         out.push({ id: `${k}-f`, art: "flug", quelle: q, t: e.t, pos: e.pos, von: abschussOrt(inh, z, e.t, undefined, e.pos), echtzeit_s: LEUCHTSPUR_S });
@@ -273,12 +308,18 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     });
   }
 
-  // Direktschützen ohne feuert (seit 2.5): Mündungsblitz zum beschossenen Panzer zu jedem Schuss des Verlustmodells
+  // Direktes Feuer auf die eigenen Panzer (seit 2.5; seit 2.6, H5.7, für das Team immer sichtbar): Mündungsfeuer am Schützen und
+  // Leuchtspur zum Einschlag (daneben, nah oder am Panzer) zu jedem Schuss des Verlustmodells. Schützen mit Schussrhythmus (feuert),
+  // die das Team kennt, zeigen ihren Mündungsblitz schon unten nach Drehbuch.
   for (const v of vl.ereignisse) {
-    if (v.art !== "direkt" || !v.von || !kennt(v.quelle) || inh.ziele[v.quelle]?.feuert?.length) continue;
+    if (v.art !== "direkt" || !v.von) continue;
     const p = pmap.get(v.panzer);
     if (!p) continue;
-    out.push({ id: `${v.quelle}-v${v.nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: v.ts, pos: muendung(v.von, p.pos), richtung: grad(v.von, p.pos), nr: v.nr });
+    const mpos = muendung(v.von, p.pos);
+    if (!(inh.ziele[v.quelle]?.feuert?.length && kennt(v.quelle))) {
+      out.push({ id: `${v.quelle}-v${v.nr}`, art: "muendung", quelle: { feuert: "kanone" }, t: v.ts, pos: mpos, richtung: grad(v.von, p.pos), nr: v.nr });
+    }
+    out.push({ id: `${v.quelle}-v${v.nr}-s`, art: "flug", quelle: { hintergrund: "panzerabwehr" }, t: Math.max(v.ts + 0.2, v.t), pos: v.pos, von: mpos, echtzeit_s: LEUCHTSPUR_S });
   }
 
   // Feuer nach Schussrhythmus (seit 2.1): Mündungsblitz (danach Abschussrauch), solange das Fahrzeug steht
@@ -321,17 +362,14 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
   return out;
 }
 
-/** Ziel-IDs, die eine Rolle aus ihren Meldungen kennt (für die Sichtbarkeit der Effekte). */
-export function bekannteZiele(inh: Inhalte, z: Spielzustand, rolle: "g1" | "g2" | "g3"): Set<string> {
+/** Ziel-IDs, die das Team aus seinen Meldungen kennt (für die Sichtbarkeit der Effekte). */
+export function bekannteZiele(inh: Inhalte, z: Spielzustand): Set<string> {
   const s = new Set<string>();
   for (const id of z.reihenfolge) {
     const st = z.meldungen[id];
     const m = inh.meldungen[id];
-    if (!m) continue;
-    const ja = rolle === "g1" ? !!st.entfallen || st.stufe !== "entfallen"
-      : rolle === "g2" ? st.fastTrack || st.g1?.entscheid === "annehmen"
-        : st.stufe === "g3" || !!st.g3 || !!st.wirkung;
-    if (ja) m.ziele.forEach((x) => s.add(x));
+    if (!m || (st.stufe === "entfallen" && !st.entfallen)) continue;
+    m.ziele.forEach((x) => s.add(x));
   }
   return s;
 }

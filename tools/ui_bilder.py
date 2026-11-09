@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Bildschirmfotos aller Ansichten in 1530 × 800 mit einem kurzen, gespielten Ablauf.
+"""Bildschirmfotos aller Ansichten in 1530 × 800 mit einem kurzen, gespielten Ablauf (seit 2.6: eine Rolle je Team).
 
-Öffnet SL, G1, G2, G3 und Plenum im selben Raum (lokaler Sync), spielt bis kurz nach der Attrappe
-(S1, M08) und fotografiert jede Ansicht in typischen Zuständen. Prüft dabei das Layout:
-kein Rollbalken auf der Seite und kein abgeschnittener Inhalt in festen Feldern (nur Listen, die
-mit data-liste markiert sind, dürfen innerhalb ihres Feldes rollen).
+Öffnet Spielleitung, Zielbearbeitung (Team-Laptop, rechnet das Spiel) und Plenum im selben Raum (lokaler Sync, Direktaufruf
+ohne Lobby), fotografiert die Einweisung (Übersicht mit Pfeilen, Folien), spielt bis zur Attrappe (S1, M08) und weiter bis zum
+ersten Beschuss eines eigenen Panzers und einem Einschlag, dann bis Spielende. Prüft dabei das Layout: kein Rollbalken auf der
+Seite und kein abgeschnittener Inhalt in festen Feldern (nur Listen, die mit data-liste markiert sind, dürfen rollen), und
+dass „Fast-Track“ und „Gegenangriff“ vor dem Ereignis nirgends zu sehen sind.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder
@@ -18,7 +19,7 @@ import urllib.parse
 from playwright.sync_api import sync_playwright
 
 W, H = 1530, 800
-ROLLEN = ["sl", "g1", "g2", "g3", "plenum"]
+ROLLEN = ["sl", "zb", "plenum"]
 
 LAYOUT_JS = """
 () => {
@@ -30,12 +31,18 @@ LAYOUT_JS = """
       zuGross.push(`${t}: ${r.scrollWidth}×${r.scrollHeight} in ${r.clientWidth}×${r.clientHeight}`);
     }
   }
-  for (const el of document.querySelectorAll('.stapel, .inhalt, main')) {
+  for (const el of document.querySelectorAll('.stapel, .inhalt, main, .zb-meldung, .eingang, .feed')) {
     if (el.scrollHeight > el.clientHeight + 2) zuGross.push(`${el.className}: Höhe ${el.scrollHeight} > ${el.clientHeight}`);
   }
-  return { seite: [de.scrollWidth, de.scrollHeight], zuGross };
+  // Folien der Einweisung: nichts ragt seitlich oder unten heraus
+  for (const el of document.querySelectorAll('.folie-rumpf, .folie-inhalt')) {
+    if (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2) zuGross.push(`${el.className}: ${el.scrollWidth}×${el.scrollHeight} in ${el.clientWidth}×${el.clientHeight}`);
+  }
+  return { seite: [de.scrollWidth, de.scrollHeight], zuGross, text: document.body.innerText };
 }
 """
+
+VERBOTEN = ["Fast-Track", "Fast Track", "Gegenangriff"]
 
 
 def adresse(basis, rolle, raum):
@@ -65,12 +72,16 @@ def main():
     fehler = []
     konsole = []
 
-    def foto(s, name):
+    def foto(s, name, verboten=True):
         lay = s.evaluate(LAYOUT_JS)
         if lay["seite"][0] > W or lay["seite"][1] > H:
             fehler.append(f"{name}: Seite {lay['seite']} größer als {W}×{H}")
         for z in lay["zuGross"]:
             fehler.append(f"{name}: abgeschnitten – {z}")
+        if verboten:
+            for v in VERBOTEN:
+                if v in lay["text"]:
+                    fehler.append(f"{name}: „{v}“ sichtbar")
         s.screenshot(path=os.path.join(a.bilder, f"{name}.png"))
         print("Foto", name, "OK" if not lay["zuGross"] else lay["zuGross"])
 
@@ -86,111 +97,145 @@ def main():
             s[r] = pg
             if r == "sl":
                 warte(lambda: pg.locator(".rahmen[data-host='1']").count() == 1, 20, "SL steuert")
-        sl, g1, g2, g3, pl = (s[r] for r in ROLLEN)
-        warte(lambda: g1.locator("[data-testid=einweisung-g1]").count() == 1, 10, "Einweisung G1 offen")
-        # Einweisung als Folien (B5): jede Folie fotografieren, am Ende „Verstanden – zur Ansicht“
-        for r in ["g1", "g2", "g3"]:
-            s[r].wait_for_timeout(300)
+        sl, zb, pl = (s[r] for r in ROLLEN)
+        zust = lambda x: x.evaluate("() => window.argus.stand.zustand")  # noqa: E731
+
+        # Einweisung (H4): zuerst die Übersicht mit Pfeilen auf der echten Oberfläche, dann die Folien
+        warte(lambda: zb.get_by_test_id("tour").count() == 1, 15, "Übersicht (Tour) offen")
+        zb.wait_for_timeout(500)
+        n = 0
+        while zb.get_by_test_id("tour").count() == 1 and n < 12:
+            n += 1
+            ziel = zb.get_by_test_id("tour").get_attribute("data-schritt")
+            foto(zb, f"zb_tour_{n}_{ziel}")
+            zb.get_by_test_id("tour-weiter").click()
+            zb.wait_for_timeout(250)
+        warte(lambda: zb.get_by_test_id("einweisung-zb").count() == 1, 10, "Einweisung (Folien) nach der Übersicht")
+        n = 1
+        zb.wait_for_timeout(500)
+        foto(zb, f"zb_einweisung_{n}")
+        while zb.get_by_test_id("einweisung-schliessen").count() == 0 and n < 10:
+            zb.get_by_test_id("einweisung-weiter").click()
+            n += 1
+            zb.wait_for_timeout(600)
+            foto(zb, f"zb_einweisung_{n}")
+        zb.get_by_test_id("einweisung-schliessen").click()
+        if sl.get_by_test_id("einweisung-schliessen").count() or sl.get_by_test_id("einweisung-sl").count():
             n = 1
-            foto(s[r], f"{r}_einweisung_{n}")
-            while s[r].get_by_test_id("einweisung-schliessen").count() == 0:
-                s[r].get_by_test_id("einweisung-weiter").click()
+            foto(sl, f"sl_einweisung_{n}")
+            while sl.get_by_test_id("einweisung-schliessen").count() == 0 and n < 10:
+                sl.get_by_test_id("einweisung-weiter").click()
                 n += 1
-                s[r].wait_for_timeout(200)
-                foto(s[r], f"{r}_einweisung_{n}")
-            s[r].get_by_test_id("einweisung-schliessen").click()
+                sl.wait_for_timeout(300)
+                foto(sl, f"sl_einweisung_{n}")
+            sl.get_by_test_id("einweisung-schliessen").click()
         warte(lambda: pl.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "Plenumskarte bereit")
         pl.wait_for_timeout(800)
         foto(pl, "plenum_einweisung")
-        for r in ["g1", "g2", "g3"]:
-            foto(s[r], f"{r}_leer")
+        foto(zb, "zb_leer")
+        foto(sl, "sl_leer")
 
-        # Spielzeit 08:25, Start, bis M08 (Attrappe) da ist, dann anhalten
+        # Spielzeit 08:25, Start, bis M08 (Attrappe) im Eingang ist, dann anhalten
         sl.fill("[data-testid=sl-zeit]", "08:25")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
-        warte(lambda: g1.locator("[data-meldung=M08]").count() > 0, 30, "M08 bei G1")
+        warte(lambda: zb.locator(".eingang-zeile[data-meldung=M08]").count() > 0, 40, "M08 im Eingang")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
+        warte(lambda: not zust(zb)["uhr"]["laeuft"], 10, "Uhr steht")
 
-        # G1: alle offenen Meldungen vor M08 annehmen, M08 bleibt offen. Seit Szenario 2.0
-        # fahren die Spähtrupps wieder ab: deren Meldungen sind beim Sprung auf 08:25 schon entfallen.
-        offen_g1 = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1' && id !== 'M08')")
-        for mid in offen_g1:
-            g1.locator(f".kmarke[data-meldung={mid}]").first.click()
-            g1.get_by_test_id("g1-annehmen").click()
-            warte(lambda: g1.locator(f".kmarke[data-meldung={mid}]").count() == 0, 10, f"{mid} angenommen")
-        g1.locator(".kmarke[data-meldung=M08]").first.click()
-        warte(lambda: g1.locator("[data-testid=live-fenster][data-meldung=M08]").count() == 1, 15, "Live-Bild M08")
-        g1.wait_for_timeout(600)
-        foto(g1, "g1_meldung_M08")
-        g1.locator("[data-testid=drohnenbild]").click()
-        g1.wait_for_timeout(400)
-        g1.mouse.move(W / 2 + 40, H / 2 + 20)
-        g1.wait_for_timeout(200)
-        foto(g1, "g1_vergroesserung")
-        g1.keyboard.press("Escape")
+        # alle offenen Meldungen vor M08 ablehnen, M08 öffnen
+        offen = zb.evaluate("() => { const z = window.argus.stand.zustand; return z.reihenfolge.filter((id) => z.meldungen[id].stufe === 'offen' && !z.meldungen[id].zurueckgestellt && id !== 'M08'); }")
+        for mid in offen:
+            zb.locator(f".eingang-zeile[data-meldung={mid}]").click()
+            warte(lambda: zb.get_by_test_id("offene-meldung").get_attribute("data-meldung") == mid, 10, f"{mid} geöffnet")
+            zb.get_by_test_id("zb-ablehnen").click()
+            warte(lambda: zb.locator(f".eingang-zeile[data-meldung={mid}]").count() == 0, 10, f"{mid} abgelehnt")
+        zb.locator(".eingang-zeile[data-meldung=M08]").click()
+        warte(lambda: zb.locator("[data-testid=live-fenster][data-meldung=M08]").count() == 1, 15, "Live-Bild M08")
+        zb.wait_for_timeout(800)
+        foto(zb, "zb_meldung_M08")
+        zb.get_by_test_id("kleingedrucktes-knopf").click()
+        zb.wait_for_timeout(200)
+        foto(zb, "zb_kleingedrucktes")
+        zb.get_by_test_id("kleingedrucktes-knopf").click()
+        zb.locator("[data-testid=drohnenbild]").click()
+        zb.wait_for_timeout(400)
+        zb.mouse.move(W / 2 + 40, H / 2 + 20)
+        zb.wait_for_timeout(300)
+        foto(zb, "zb_vergroesserung")
+        zb.keyboard.press("Escape")
+        # M08 ablehnen (Attrappe)
+        zb.get_by_test_id("zb-ablehnen").click()
+        warte(lambda: zb.locator(".eingang-zeile[data-meldung=M08]").count() == 0, 10, "M08 abgelehnt")
 
-        # G2: die ersten beiden mit LM bzw. Mrs empfehlen; eine Meldung zeigen, bei der der Mörser warnt (R2/R3)
-        warte(lambda: g2.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "G2-Karte bereit")
-        offen_g2 = g2.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g2')")
-        erste, zweite = offen_g2[0], offen_g2[1]
-        for mid, wm in [(erste, "LM"), (zweite, "MRS")]:
-            g2.locator(f".kmarke[data-meldung={mid}]").first.click()
-            g2.locator(f"label[data-wm={wm}]").click()
-            g2.get_by_test_id("g2-bekaempfen").click()
-            warte(lambda: g2.locator(f".kmarke[data-meldung={mid}]").count() == 0, 10, f"{mid} empfohlen")
-        rest = [x for x in offen_g2 if x not in (erste, zweite)]
-        gezeigt = None
-        for mid in rest:
-            g2.locator(f".kmarke[data-meldung={mid}]").first.click()
-            g2.locator("label[data-wm=MRS]").click()
-            g2.wait_for_timeout(300)
-            if "verletzt" in g2.get_by_test_id("karte-banner").inner_text():
-                gezeigt = mid
-                break
-        if not gezeigt:
-            fehler.append(f"keine Meldung mit Mörser-Warnung unter {rest}")
-        foto(g2, f"g2_warnung_{gezeigt}")
-        g2.locator("label[data-wm=LM]").click()
-        g2.wait_for_timeout(400)
-        foto(g2, f"g2_ok_{gezeigt}")
-
-        # G3: I-01 quittieren, die erste Empfehlung freigeben, die zweite gewählt lassen
-        warte(lambda: g3.locator("[data-inject]").count() >= 3, 10, "Injects bei G3")
-        g3.locator("[data-inject=I-01]").get_by_role("button", name="Gelesen").click()
-        warte(lambda: g3.locator(f".kmarke[data-meldung={erste}]").count() > 0, 10, f"{erste} bei G3")
-        g3.locator(f".kmarke[data-meldung={erste}]").first.click()
-        g3.get_by_test_id("g3-freigabe").click()
-        warte(lambda: g3.locator(f".kmarke[data-meldung={erste}]").count() == 0, 10, f"{erste} freigegeben")
-        g3.fill("[data-testid=g3-lagehinweis]", "Achtung Schule NS-01: dort sind Zivilpersonen")
-        g3.get_by_role("button", name="Senden").click()
-        g3.wait_for_timeout(700)
-        foto(g3, "g3_entscheiden")
-
-        # Wirkung abwarten (LM: Start und Flug vom Westrand, 30–50 s) mit Tempo ×20
-        sl.get_by_role("button", name="×20").click()
+        # bis M12 (Sanität neben der Schule) weiterspielen: der Mörser warnt (R2), die LM nicht
+        sl.get_by_role("button", name="×5", exact=True).click()
         sl.get_by_role("button", name="▶ Start").click()
-        warte(lambda: sl.evaluate("() => window.argus.stand.protokoll.some(e => e.typ === 'wirkung')"), 30, "Wirkung")
+        warte(lambda: zb.locator(".eingang-zeile[data-meldung=M11]").count() > 0, 60, "M11 im Eingang")
+        sl.get_by_role("button", name="❚❚ Anhalten").click()
+        warte(lambda: not zust(zb)["uhr"]["laeuft"], 10, "Uhr steht")
+        zb.locator(".eingang-zeile[data-meldung=M11]").click()
+        warte(lambda: zb.get_by_test_id("offene-meldung").get_attribute("data-meldung") == "M11", 10, "M11 geöffnet")
+        zb.locator("label[data-wm=MRS]").click()
+        zb.wait_for_timeout(400)
+        foto(zb, "zb_wahl_moerser")
+        zb.locator("label[data-wm=LM]").click()
+        zb.wait_for_timeout(400)
+        knopf = zb.get_by_test_id("zb-bekaempfen").inner_text()
+        if "LM" not in knopf or "Bestand" not in knopf:
+            fehler.append(f"Knopf BEKÄMPFEN ohne Wirkmittel und Bestand: „{knopf}“")
+        foto(zb, "zb_wahl_lm")
+        zb.get_by_test_id("zb-bekaempfen").click()
+        warte(lambda: zb.locator(".eingang-zeile.unterwegs[data-unterwegs=M11]").count() == 1, 10, "M11 bekämpft (Countdown)")
+        zb.wait_for_timeout(400)
+        if "Einschlag in" not in zb.locator(".eingang-zeile.unterwegs[data-unterwegs=M11]").inner_text():
+            fehler.append("kein Countdown „Einschlag in …“ in der Liste")
+        foto(zb, "zb_countdown")
+        sl.get_by_role("button", name="×1", exact=True).click()
+        sl.get_by_role("button", name="▶ Start").click()
+        zb.wait_for_timeout(12000)
+        foto(zb, "zb_lm_im_anflug")
+        foto(pl, "plenum_lage")
+        sl.get_by_role("button", name="×5", exact=True).click()
+        warte(lambda: zust(zb)["meldungen"]["M11"]["stufe"] == "erledigt", 60, "M11 Einschlag")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
         sl.wait_for_timeout(800)
+        foto(zb, "zb_nach_einschlag")
         foto(sl, "sl_kontrollkarte")
-        foto(g1, "g1_mit_lagehinweis")
-        foto(g2, "g2_nach_wirkung")
-        foto(pl, "plenum_lage")
+
+        # Beschuss eines eigenen Panzers (H5.7): Mündungsfeuer, Leuchtspur, Panzer blinkt, roter Rand
+        sl.fill("[data-testid=sl-zeit]", "15:28")
+        sl.get_by_text("Spielzeit setzen").click()
+        sl.get_by_role("button", name="×1", exact=True).click()
+        sl.get_by_role("button", name="▶ Start").click()
+        ende = time.time() + 40
+        gesehen = False
+        while time.time() < ende:
+            if zb.locator(".rahmen.treffer-rand, .pz-kachel.getroffen").count() > 0:
+                zb.wait_for_timeout(150)
+                foto(zb, "zb_beschuss")
+                gesehen = True
+                break
+            zb.wait_for_timeout(100)
+        if not gesehen:
+            fehler.append("Treffer auf einen eigenen Panzer nicht sichtbar (roter Rand / blinkender Panzer)")
+        sl.get_by_role("button", name="❚❚ Anhalten").click()
+        zb.wait_for_timeout(500)
+        foto(zb, "zb_feed_nach_beschuss")
 
         # Spielende
         sl.fill("[data-testid=sl-zeit]", "24:57")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
-        warte(lambda: g1.locator("[data-testid=spielende]").count() == 1, 30, "Spielende bei G1")
+        warte(lambda: zb.locator("[data-testid=spielende]").count() == 1, 40, "Spielende am Team-Laptop")
         pl.wait_for_timeout(1500)
-        foto(g1, "g1_spielende")
-        foto(pl, "plenum_aufloesung")
+        foto(zb, "zb_spielende", verboten=False)
+        foto(pl, "plenum_aufloesung", verboten=False)
         sl.locator(".reiter button", has_text="Protokoll").click()
         sl.wait_for_timeout(300)
-        foto(sl, "sl_protokoll")
+        foto(sl, "sl_protokoll", verboten=False)
 
-        renderer = g2.evaluate("() => document.querySelector('.karte canvas')?.getAttribute('data-renderer')")
+        renderer = zb.evaluate("() => document.querySelector('.karte canvas')?.getAttribute('data-renderer')")
         print("Karten-Renderer:", renderer)
         browser.close()
 

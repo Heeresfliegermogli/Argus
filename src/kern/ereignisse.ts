@@ -1,16 +1,18 @@
 // Ereignisprotokoll: das Format, in dem jede Aktion festgehalten wird.
 //
 // Zwei Arten von Nachrichten:
-//  • Aktion   – eine Anfrage einer Ansicht („G1 nimmt M07 an“). Jeder Rechner darf Aktionen senden.
-//  • Ereignis – ein Eintrag im Protokoll. Nur der Host (die steuernde Spielleitung) schreibt ihn,
-//               nachdem er die Aktion geprüft hat; daher gibt es genau eine gültige Reihenfolge.
-//               Wird eine Aktion abgewiesen, entsteht das Ereignis „aktion_abgelehnt“.
+//  • Aktion   – eine Anfrage („das Team bekämpft M07 mit LM“, „Spielleitung: Start für alle“).
+//  • Ereignis – ein Eintrag im Protokoll. Nur der Host des Teams schreibt ihn, nachdem er die Aktion geprüft hat; daher gibt
+//               es genau eine gültige Reihenfolge. Wird eine Aktion abgewiesen, entsteht das Ereignis „aktion_abgelehnt“.
 //
-// Alle Rechner berechnen den Spielstand selbst aus dem Protokoll (zustand.ts). Dasselbe Protokoll
-// speist später Replay und Auswertung. Ereignisse sind unveränderlich; seq ist lückenlos ab 1.
+// Seit 2.6 (Änderungen H) läuft der Host im Browser des Team-Laptops: Die Entscheidungen des Teams gehen ohne Netz an ihn,
+// nur Aktionen der Spielleitung (Uhr, Reserve, Notiz) kommen über das Netz. Das Protokoll wird für Spielleitung und Auswertung
+// in Stücken hochgeladen. Alle Rechner berechnen den Spielstand selbst aus dem Protokoll (zustand.ts). Dasselbe Protokoll
+// speist Replay und Auswertung. Ereignisse sind unveränderlich; seq ist lückenlos ab 1.
 
-export type Rolle = "g1" | "g2" | "g3" | "sl" | "plenum";
-export const ROLLEN: Rolle[] = ["g1", "g2", "g3", "sl", "plenum"];
+/** zb = Zielbearbeitung (seit 2.6 die eine Rolle je Team; bis 2.5 g1 Aufklärung, g2 Zielprüfung, g3 Führung). */
+export type Rolle = "zb" | "sl" | "plenum";
+export const ROLLEN: Rolle[] = ["zb", "sl", "plenum"];
 
 export interface Absender {
   rolle: Rolle | "system";
@@ -21,9 +23,8 @@ export interface Absender {
 
 // ---------------------------------------------------------------- Codes
 
-export type G1Entscheid = "annehmen" | "ablehnen";
-export type G2Empfehlung = "bekaempfen" | "beobachten" | "nicht_bekaempfen";
-export type G3Entscheid = "freigabe" | "ablehnen" | "zurueck";
+/** Die eine Entscheidung des Teams je Meldung (seit 2.6): BEKÄMPFEN mit Wirkmittel (= Freigabe), ZURÜCKSTELLEN oder ABLEHNEN. */
+export type Entscheid = "bekaempfen" | "zurueckstellen" | "ablehnen";
 export type UhrBefehl = "start" | "pause" | "tempo" | "setzen";
 
 export interface TrefferDaten {
@@ -59,24 +60,28 @@ export interface EreignisDaten {
   /** Beginn eines Laufs (immer seq 1). */
   spiel_neu: { lauf: string; szenario: string; version: string; titel: string };
   /** Neuer Uhrstand: ab ts gilt Spielzeit t_s, läuft mit tempo. */
-  uhr: { befehl: UhrBefehl; laeuft: boolean; t_s: number; tempo: number };
   /**
-   * ARGUS-Meldung erscheint. fast_track: geht ohne G1 direkt an G2. entfaellt: jedes Fahrzeug schon zerstört oder weg.
+   * ab_ts (seit 2.6, H1.4): Serverzeit, ab der die Uhr läuft, wenn das Startsignal der Spielleitung verspätet ankam – der Team-Laptop
+   * holt den Verzug nach (höchstens 60 s), damit alle Teams dieselbe Spielzeit haben. Ohne ab_ts gilt ts des Ereignisses.
+   */
+  uhr: { befehl: UhrBefehl; laeuft: boolean; t_s: number; tempo: number; ab_ts?: number };
+  /**
+   * ARGUS-Meldung erscheint (im Eingang des Teams). entfaellt: jedes Fahrzeug schon zerstört oder weg.
    * gestoert (seit 2.4, E4): der Datenlink war zur Meldezeit gestört (EloKa) – ARGUS meldet unsicherer (kern/eloka.ts).
    */
-  meldung: { meldung: string; fast_track?: boolean; manuell?: boolean; entfaellt?: boolean; gestoert?: boolean };
-  /** Meldung entfällt in der Kette (bei G1, G2 oder G3), weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist. */
-  meldung_entfaellt: { meldung: string; stufe: "g1" | "g2" | "g3"; grund: string };
-  g1_entscheid: { meldung: string; entscheid: G1Entscheid; vermerk?: string };
-  /** warnungen: Regelprüfung (R2, R3, Einsatzbereich) zur Zeit der Empfehlung, vom Host berechnet. */
-  g2_empfehlung: {
-    meldung: string; empfehlung: G2Empfehlung; wirkmittel?: string; begruendung?: string; warnungen?: string[];
-  };
-  /** Bei Freigabe: wirkmittel aus der G2-Empfehlung, warnungen und einschlag am vorausberechneten Einschlagort. */
-  g3_entscheid: {
-    meldung: string; entscheid: G3Entscheid; bemerkung?: string; wirkmittel?: string; warnungen?: string[]; einschlag?: EinschlagDaten;
-    /** seit 2.4 (E3): alle Einschläge einer Zug-Bekämpfung (der erste = einschlag); fehlt bei einem einzigen Einschlag */
+  meldung: { meldung: string; manuell?: boolean; entfaellt?: boolean; gestoert?: boolean };
+  /** Meldung entfällt, solange sie offen ist, weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist. */
+  meldung_entfaellt: { meldung: string; stufe: "offen"; grund: string };
+  /**
+   * Seit 2.6 (H2): die eine Entscheidung des Teams. Bei BEKÄMPFEN mit Wirkmittel (= Freigabe) rechnet der Host Warnungen und
+   * Einschläge am vorausberechneten Einschlagort. Tempo (H2.4): t_offen = Spielzeit, zu der die Meldung geöffnet wurde;
+   * sek_eingang/sek_offen = Sekunden ab Eingang bzw. ab Öffnen bis zur Entscheidung.
+   */
+  entscheid: {
+    meldung: string; entscheid: Entscheid; wirkmittel?: string; warnungen?: string[]; einschlag?: EinschlagDaten;
+    /** alle Einschläge einer Zug-Bekämpfung (der erste = einschlag); fehlt bei einem einzigen Einschlag */
     einschlaege?: EinschlagFlach[];
+    t_offen?: number; sek_eingang?: number; sek_offen?: number;
   };
   /**
    * Einschlag (Trefferregel seit 2.0): pos/ziel/t_einschlag wie bei der Freigabe vorausberechnet, getroffen nach der
@@ -110,10 +115,9 @@ export interface EreignisDaten {
    * (I-07, I-06, I-13) tragen den Text mit dem Stand dieses Teams, Druckmeldungen dazu Zug und Stufe der Dringlichkeit.
    */
   inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number };
+  /** Seit 2.6: Lagemeldung im Feed angeklickt (gelesen); ohne Klick rutscht sie nach einigen Sekunden in „frühere Meldungen“. */
   inject_quittiert: { inject: string };
-  lagehinweis: { text: string; an: Rolle[] };
-  fast_track: { an: boolean };
-  /** Beobachtung der Spielleitung (SL 2), optional zu einem Schlüssel- oder Nebenfall (S1–S4, N1–N4) für die Auswertung. */
+  /** Beobachtung der Spielleitung (SL 2), optional zu einem Schlüssel- oder Nebenfall (S1–S8, N1–N4) für die Auswertung. */
   notiz: { text: string; fall?: string };
   spielende: { grund: string };
   aktion_abgelehnt: { aktionstyp: string; grund: string };
@@ -122,9 +126,8 @@ export interface EreignisDaten {
 export type EreignisTyp = keyof EreignisDaten;
 
 export const EREIGNIS_TYPEN: EreignisTyp[] = [
-  "spiel_neu", "uhr", "meldung", "meldung_entfaellt", "g1_entscheid", "g2_empfehlung", "g3_entscheid", "wirkung", "inject",
-  "inject_quittiert", "lagehinweis", "fast_track", "notiz", "spielende", "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis",
-  "durchbruch",
+  "spiel_neu", "uhr", "meldung", "meldung_entfaellt", "entscheid", "wirkung", "inject", "inject_quittiert", "notiz", "spielende",
+  "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis", "durchbruch",
 ];
 
 export type Ereignis = {
@@ -149,12 +152,9 @@ export type EreignisVon<T extends EreignisTyp> = Extract<Ereignis, { typ: T }>;
 // ---------------------------------------------------------------- Aktionen
 
 export interface AktionsDaten {
-  g1_entscheid: EreignisDaten["g1_entscheid"];
-  g2_empfehlung: Omit<EreignisDaten["g2_empfehlung"], "warnungen">;
-  g3_entscheid: Omit<EreignisDaten["g3_entscheid"], "warnungen" | "wirkmittel">;
+  /** t_offen: Spielzeit, zu der das Team die Meldung geöffnet hat (für die Sekunden bis zur Entscheidung) */
+  entscheid: { meldung: string; entscheid: Entscheid; wirkmittel?: string; t_offen?: number };
   inject_quittiert: EreignisDaten["inject_quittiert"];
-  lagehinweis: EreignisDaten["lagehinweis"];
-  fast_track: EreignisDaten["fast_track"];
   notiz: EreignisDaten["notiz"];
   uhr: { befehl: UhrBefehl; tempo?: number; t_s?: number };
   meldung_ausloesen: { meldung: string };
@@ -165,20 +165,18 @@ export interface AktionsDaten {
 export type AktionsTyp = keyof AktionsDaten;
 
 export const AKTIONS_TYPEN: AktionsTyp[] = [
-  "g1_entscheid", "g2_empfehlung", "g3_entscheid", "inject_quittiert", "lagehinweis", "fast_track", "notiz",
-  "uhr", "meldung_ausloesen", "inject_ausloesen", "verstaerkung_einspielen",
+  "entscheid", "inject_quittiert", "notiz", "uhr", "meldung_ausloesen", "inject_ausloesen", "verstaerkung_einspielen",
 ];
 
-/** Wer welche Aktion senden darf. Der Host prüft das. */
+/**
+ * Wer welche Aktion senden darf. Der Host prüft das. Die Uhr darf auch das Team stellen – nur der Test ohne Lobby zeigt dafür einen
+ * Knopf (ohne Spielleitung); im Spiel startet die Spielleitung alle Teams.
+ */
 export const RECHTE: Record<AktionsTyp, Rolle[]> = {
-  g1_entscheid: ["g1"],
-  g2_empfehlung: ["g2"],
-  g3_entscheid: ["g3"],
-  inject_quittiert: ["g3"],
-  lagehinweis: ["g3"],
-  fast_track: ["g3", "sl"],
+  entscheid: ["zb"],
+  inject_quittiert: ["zb"],
   notiz: ["sl"],
-  uhr: ["sl"],
+  uhr: ["sl", "zb"],
   meldung_ausloesen: ["sl"],
   inject_ausloesen: ["sl"],
   verstaerkung_einspielen: ["sl"],
@@ -196,7 +194,7 @@ export type Aktion = {
 }[AktionsTyp];
 
 /** Höchstlängen für Freitexte (auch in den Firebase-Regeln). */
-export const TEXT_MAX = { vermerk: 120, begruendung: 120, bemerkung: 120, lagehinweis: 240, notiz: 500 } as const;
+export const TEXT_MAX = { notiz: 500 } as const;
 
 // ---------------------------------------------------------------- Schlüssel und Kennungen
 

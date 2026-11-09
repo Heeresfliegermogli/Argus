@@ -1,11 +1,11 @@
 // Auswertung im Plenum (Schritt 8): Auflösung nach Spielende am Smartboard, gesteuert von der Spielleitung.
 //
 // Kapitel (je ein Klick oder Bild ↓ / → am Presenter):
-//   1 Teamvergleich – Teams × Schlüssel-/Nebenfälle: Ausgang und wer an welcher Stufe entschieden hat
-//   2 Kennzahlen    – Fehlbekämpfungen, Widerspruch gegen ARGUS, Bearbeitungszeit je Stufe, Fast-Track, I-04, Lagehinweise
+//   1 Teamvergleich – Schlüssel-/Nebenfälle × Teams (seit 2.6 gedreht, 7 Teams in 1530 px): Ausgang, Entscheidung, Sekunden
+//   2 Kennzahlen    – Fehlbekämpfungen, trotz Warnung, Widerspruch gegen ARGUS, wie lange hingeschaut (H2.4), I-04 angeklickt
 //   3 Konfidenz     – Kernaussage: ARGUS war bei den Fehlern sicherer als bei den echten Zielen
-//   S3, S2, S1, S4  – Replay je Schlüsselfall: Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild
-//                     wie G1 es sah, Leitfragen und Bezüge, Notizen der SL 2
+//   S3, S2, S1, S4  – Replay je Schlüsselfall: Zeitleiste aller Teams (eine Entscheidung je Meldung mit Sekunden), Kontrollkarte
+//                     zum Durchscrubben, Drohnenbild wie das Team es sah, Leitfragen und Bezüge, Notizen der SL 2
 //   Schlussfrage
 // Zeitbudget 12 min (2 min Kennzahlen, je Fall 2,5 min) oben rechts. Export der Ergebnisse ohne Namen.
 //
@@ -15,8 +15,8 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../inhalte/typen";
 import {
-  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, replayPlan, type FallDef, type FallErgebnis, type KettenGlied, type TeamAuswertung, type TeamLauf, type ZeitMarke,
-  auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, zeitleiste, zustandBis,
+  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, KONFIDENZ_HOCH, replayPlan, type FallDef, type FallErgebnis, type TeamAuswertung, type TeamLauf, type ZeitMarke,
+  auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, sekText, zeitleiste, zustandBis,
 } from "../kern/auswertung";
 import { bekannteZiele, effekte } from "../kern/effekte";
 import { weltFuer } from "../kern/lage";
@@ -24,7 +24,7 @@ import { lagebildKontrolle } from "../kern/lagebild";
 import { position, vorhanden } from "../kern/geometrie";
 import { gemeldetePosition } from "../kern/regeln";
 import { mmss, uhrzeit } from "../kern/uhr";
-import { ROLLEN_NAME, ROLLEN_ZEICHEN } from "../kern/sichten";
+import { argusBei } from "../kern/eloka";
 import { zielNr } from "../kern/zielnummern";
 import { PANZER_STUFE_TEXT } from "../kern/verluste";
 
@@ -243,7 +243,7 @@ function ExportMenue(p: { inh: Inhalte; teams: TeamLauf[]; a: Auswertung }) {
         <div class="menue-kopf"><b>Ergebnisse anonym</b> <span class="sehr-leise">Teams als A, B, C …, keine Namen</span></div>
         <button type="button" class="knopf klein" onClick={() => json(false)} data-export="json">JSON ohne Freitexte</button>
         <button type="button" class="knopf klein" onClick={() => json(true)} data-export="json-freitext"
-          title="mit Vermerken, Begründungen, Lagehinweisen und Notizen der Spielleitung – können Namen enthalten">JSON mit Freitexten</button>
+          title="mit den Notizen der Spielleitung – können Namen enthalten">JSON mit Notizen</button>
         <button type="button" class="knopf klein" onClick={() => { setOffen(false); herunterladen(`${basis}.csv`, exportCsv(p.a), "text/csv;charset=utf-8"); }} data-export="csv">Kennzahlen und Fälle (CSV)</button>
       </Menue>
     </span>
@@ -262,16 +262,13 @@ function Ausgang(p: { e: FallErgebnis; gross?: boolean }) {
   );
 }
 
-/** Kette A → Z → F (Aufklärung, Zielprüfung, Führung; → Einschlag): wer an welcher Stufe was entschieden hat; die entscheidende Stufe umrandet. */
+/** Entscheidung des Teams (✓ bekämpft, ◷ zurückgestellt, ✕ abgelehnt) mit Sekunden ab Eingang, dazu der Einschlag ✸ (rot: Fehltreffer). */
 function KetteZeile(p: { e: FallErgebnis; kompakt?: boolean }) {
   const k = p.e.kette;
+  const g = k.glied;
   return (
-    <span class={`kette ${p.kompakt ? "kompakt" : ""}`} aria-label={k.glieder.map((g) => g.titel).join("; ")}>
-      {k.glieder.map((g: KettenGlied) => (
-        <span key={g.stufe} class={`glied g-${g.stufe} ${g.art} ${g.entscheidend ? "entscheidend" : ""}`} title={g.titel}>
-          <i>{ROLLEN_ZEICHEN[g.stufe]}</i><b>{g.vorher ? "◷›" : ""}{g.zeichen}</b>
-        </span>
-      ))}
+    <span class={`kette ${p.kompakt ? "kompakt" : ""}`} aria-label={g.titel}>
+      <span class={`glied ${g.art}`} title={g.titel}><b>{g.vorher ? "◷›" : ""}{g.zeichen}</b>{g.sek !== undefined && <i class="glied-sek">{Math.round(g.sek)} s</i>}</span>
       {k.einschlag && <span class={`glied einschlag ${k.einschlag.fehl || k.einschlag.regel ? "fehl" : ""}`} title={k.einschlag.text}><b>✸</b></span>}
     </span>
   );
@@ -279,89 +276,85 @@ function KetteZeile(p: { e: FallErgebnis; kompakt?: boolean }) {
 
 // ---------------------------------------------------------------- Kapitel 1: Teamvergleich
 
-/** Kurzfassung für die schmalen Zellen der Nebenfälle: ohne Wirkmittel, kurze Verben. */
-/** Text in den schmalen Spalten der Nebenfälle: ohne Wirkmittel und ohne Rolle (die Kette darüber zeigt, wer es war). */
+/** Zeile einer Zelle kürzen (Wirkmittel in Klammern und Uhrzeit weg; die Sekunden stehen an der Entscheidung). */
 function zelleKurz(z: string): string {
-  const k = z.replace(/\s*\([^)]*\)\s*$/, "").replace("stellt zurück", "zurück").replace("nicht bekämpfen", "nicht bek.").replace("FREIGABE", "Freigabe")
-    .replace(/^(Aufklärung|Zielprüfung|Führung) /, "");
-  return k.charAt(0).toUpperCase() + k.slice(1);
+  return z.replace(/\s*\([^)]*\)/, "").replace(/ \d\d:\d\d/, "").replace(/ · \d+ s$/, "");
 }
 
+const WAS_KLEIN: Record<string, string> = { bekaempfen: "bekämpft", zurueckstellen: "zurückgestellt", ablehnen: "abgelehnt" };
+
+/**
+ * Eine Zeile je Zelle (seit 2.6, 7 Teams in 1530 × 800): Was folgte – Treffer, Folgemeldung, entfallen. Die Entscheidung selbst
+ * zeigt das Zeichen davor (✓ bekämpft, ◷ zurückgestellt, ✕ abgelehnt) mit den Sekunden ab Eingang.
+ */
+function zelleFolge(e: FallErgebnis): string {
+  if (e.zeilen.length > 1) return zelleKurz(e.zeilen[1]);
+  const was = e.kette.glied.was;
+  return was ? WAS_KLEIN[was] : zelleKurz(e.zeilen[0] ?? "");
+}
+
+/**
+ * Teamvergleich (seit 2.6 gedreht, H6): Zeilen = Fälle, Spalten = Teams – 7 Teams passen in 1530 px. Je Zelle der Ausgang, die
+ * Entscheidung mit Sekunden ab Eingang und was danach geschah. Klick auf einen Schlüsselfall öffnet das Replay.
+ */
 function Teamvergleich(p: { a: Auswertung; inh: Inhalte; waehle: (fall: string, team: string) => void }) {
   const { a } = p;
-  const sf = a.faelle.filter((f) => f.art === "schluessel");
-  const nf = a.faelle.filter((f) => f.art === "neben");
   return (
     <section class="tafel tafel-vergleich" data-testid="teamvergleich">
       <div class="tafel-kopf">
-        <h1>Wer hat an welcher Stufe entschieden?</h1>
+        <h1>Was hat jedes Team entschieden – und wie schnell?</h1>
         <div class="legende-zeile">
           <span><span class="ausgang richtig"><b>✓</b></span> richtig</span>
           <span><span class="ausgang falsch"><b>✕</b></span> falsch</span>
           <span><span class="ausgang verpasst"><b>◐</b></span> zu Unrecht abgelehnt</span>
           <span><span class="ausgang offen"><b>…</b></span> offen / entfallen</span>
           <span class="trenner" />
-          <span><span class="glied halt mini"><b>✕</b></span> gestoppt</span>
+          <span><span class="glied weiter mini"><b>✓</b></span> bekämpft</span>
           <span><span class="glied warten mini"><b>◷</b></span> zurückgestellt</span>
-          <span><span class="glied ft mini"><b>FT</b></span> Fast-Track</span>
-          <span><span class="glied entscheidend mini"><b>·</b></span> hat entschieden</span>
-          <span class="trenner" />
-          <span class="leise">A Aufklärung · Z Zielprüfung · F Führung</span>
+          <span><span class="glied halt mini"><b>✕</b></span> abgelehnt</span>
+          <span class="leise">· Sekunden ab Eingang</span>
         </div>
       </div>
-      <table class="vergleich">
+      <table class="vergleich gedreht" data-teams={a.teams.length}>
         <colgroup>
-          <col class="c-team" />
-          {a.faelle.map((f) => <col key={f.id} class={f.art === "neben" ? "c-neben" : "c-fall"} />)}
+          <col class="c-fall-name" />
+          {a.teams.map((t) => <col key={t.id} class="c-team" />)}
+          <col class="c-summe" />
         </colgroup>
         <thead>
-          <tr class="gruppe">
-            <th />
-            <th colSpan={sf.length}>Schlüsselfälle</th>
-            <th colSpan={nf.length} class="neben">Nebenfälle</th>
-          </tr>
           <tr>
-            <th class="team-spalte">Team</th>
-            {a.faelle.map((f) => (
-              <th key={f.id} class={f.art === "neben" ? "neben" : ""} title={f.titel}>
-                <span class="fall-id">{f.id}</span><span class="fall-titel">{f.titel}</span>
-              </th>
+            <th class="fall-spalte">Fall</th>
+            {a.teams.map((t) => (
+              <th key={t.id} data-team={t.id}><TeamMarke name={t.name} farbe={t.farbe} />{!t.ende && <div class="klein sehr-leise">Spiel läuft</div>}</th>
             ))}
+            <th class="summe-spalte sehr-leise">alle</th>
           </tr>
         </thead>
         <tbody>
-          {a.teams.map((t) => (
-            <tr key={t.id} data-team={t.id}>
-              <th class="team-spalte"><TeamMarke name={t.name} farbe={t.farbe} />{!t.ende && <div class="klein sehr-leise">Spiel läuft</div>}</th>
-              {a.faelle.map((f) => {
-                const e = t.faelle[f.id];
-                return (
-                  <td key={f.id} class={`vergleich-zelle ${e.ausgang} ${f.art === "neben" ? "neben" : ""}`} data-fall={f.id} data-ausgang={e.ausgang}
-                    title={`${f.id} · ${t.name}: ${AUSGANG_TEXT[e.ausgang]} – ${e.text}`}
-                    onClick={() => f.art === "schluessel" && p.waehle(f.id, t.id)}>
-                    <div class="zelle-oben"><Ausgang e={e} /><KetteZeile e={e} kompakt={f.art === "neben"} /></div>
-                    {f.art === "schluessel" ? <div class="zelle-text">{e.zeilen.map((z) => <div>{z}</div>)}</div>
-                      : <div class="zelle-text klein">{zelleKurz(e.zeilen[0] ?? "")}</div>}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th class="team-spalte sehr-leise">alle Teams</th>
-            {a.faelle.map((f) => {
-              const n = (x: string) => a.teams.filter((t) => t.faelle[f.id].ausgang === x).length;
-              return (
-                <td key={f.id} class={f.art === "neben" ? "neben" : ""}>
-                  <span class="summe">{n("falsch") > 0 && <span class="rot">✕ {n("falsch")}</span>} <span class="gruen">✓ {n("richtig")}</span>
-                    {n("verpasst") > 0 && <span class="bernstein"> ◐ {n("verpasst")}</span>}</span>
+          {a.faelle.map((f) => {
+            const n = (x: string) => a.teams.filter((t) => t.faelle[f.id].ausgang === x).length;
+            return (
+              <tr key={f.id} class={f.art === "neben" ? "neben" : ""} data-fall-zeile={f.id}>
+                <th class="fall-spalte" title={f.titel}><span class="fall-id">{f.id}</span><span class="fall-titel">{f.titel}</span></th>
+                {a.teams.map((t) => {
+                  const e = t.faelle[f.id];
+                  return (
+                    <td key={t.id} class={`vergleich-zelle ${e.ausgang}`} data-fall={f.id} data-team={t.id} data-ausgang={e.ausgang}
+                      title={`${f.id} · ${t.name}: ${AUSGANG_TEXT[e.ausgang]} – ${e.text}`}
+                      onClick={() => f.art === "schluessel" && p.waehle(f.id, t.id)}>
+                      <div class="zelle-oben"><Ausgang e={e} /><KetteZeile e={e} /></div>
+                      <div class="zelle-text"><div>{zelleFolge(e)}</div></div>
+                    </td>
+                  );
+                })}
+                <td class="summe-spalte">
+                  <span class="summe">{n("falsch") > 0 && <span class="rot">✕{n("falsch")} </span>}<span class="gruen">✓{n("richtig")}</span>
+                    {n("verpasst") > 0 && <span class="bernstein"> ◐{n("verpasst")}</span>}</span>
                 </td>
-              );
-            })}
-          </tr>
-        </tfoot>
+              </tr>
+            );
+          })}
+        </tbody>
       </table>
     </section>
   );
@@ -384,66 +377,59 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
   const start = inh.szenario.spieluhr.start;
   const lmId = a.teams[0]?.kennzahlen.lagemeldungen[0]?.id ?? "I-04";
   const lmErschienen = a.teams.map((t) => t.kennzahlen.lagemeldungen[0]?.erschienen).find((x) => x !== undefined);
-  const schwelle = a.teams[0]?.kennzahlen.zeiten.schwelle ?? 90;
+  const schwelle = a.teams[0]?.kennzahlen.zeiten.schwelle ?? KONFIDENZ_HOCH;
   return (
     <section class="tafel tafel-kennzahlen" data-testid="kennzahlen">
       <div class="tafel-kopf">
         <h1>Kennzahlen je Team</h1>
-        <span class="leise">aus den Protokollen · Bearbeitungszeit = Eingang bei der Stufe bis zur Entscheidung (Median)</span>
+        <span class="leise">aus den Protokollen · hingeschaut = Sekunden vom Eingang einer Meldung bis zur Entscheidung (Median)</span>
       </div>
       <table class="kennzahlen">
         <colgroup>
-          <col style="width:206px" /><col style="width:196px" /><col style="width:112px" /><col style="width:170px" />
-          <col style="width:270px" /><col style="width:178px" /><col style="width:150px" /><col />
+          <col style="width:206px" /><col style="width:290px" /><col style="width:118px" /><col style="width:170px" />
+          <col style="width:330px" /><col style="width:140px" /><col />
         </colgroup>
         <thead>
           <tr>
             <th class="team-spalte">Team</th>
             <th>Fehlbekämpfungen</th>
-            <th>Freigabe trotz Regel&shy;warnung</th>
+            <th>Bekämpft trotz Regel&shy;warnung</th>
             <th>Widerspruch gegen ARGUS</th>
-            <th>Bearbeitungszeit je Stufe <span class="th-zusatz">(A · Z · F)</span></th>
-            <th>Fast-Track</th>
-            <th>{lmId} gelesen{lmErschienen !== undefined && <span class="th-zusatz"> (kam {uhrzeit(start, lmErschienen).slice(0, 5)})</span>}</th>
-            <th>Lagehinweise der Führung</th>
+            <th>Wie lange habt ihr hingeschaut? <span class="th-zusatz">(ab Eingang · ab Öffnen)</span></th>
+            <th>{lmId} angeklickt{lmErschienen !== undefined && <span class="th-zusatz"> (kam {uhrzeit(start, lmErschienen).slice(0, 5)})</span>}</th>
+            <th>Eigene Truppe</th>
           </tr>
         </thead>
         <tbody>
           {a.teams.map((t) => {
             const k = t.kennzahlen;
             const lm = k.lagemeldungen[0];
+            const z = k.zeiten;
             return (
               <tr key={t.id} data-team={t.id}>
                 <th class="team-spalte"><TeamMarke name={t.name} farbe={t.farbe} />
-                  <div class="klein sehr-leise">{k.meldungen.bearbeitet} von {k.meldungen.erschienen} Meldungen bearbeitet</div>
+                  <div class="klein sehr-leise">{k.meldungen.bearbeitet} von {k.meldungen.erschienen} Meldungen entschieden</div>
                   <div class="klein sehr-leise" data-kz="durchbruch">{k.durchbruch.fahrzeuge.length ? `Feind durchgebrochen: ${k.durchbruch.fahrzeuge.length} Fz` : "kein Durchbruch"}</div></th>
                 <td data-kz="fehl">
                   <b class={`wert ${k.fehl.wirkungen ? "rot" : "gruen"}`}>{k.fehl.wirkungen}</b>
                   <div class="chips">{k.fehl.arten.map((x) => <span key={x.art} class="chip fehl">{FEHL_TEXT[x.art]}{x.anzahl > 1 ? ` ×${x.anzahl}` : ""}</span>)}</div>
                 </td>
-                <td data-kz="warnung"><b class={`wert ${k.trotzWarnung ? "rot" : ""}`}>{k.trotzWarnung}</b></td>
+                <td data-kz="warnung"><b class={`wert ${k.trotzWarnung ? "rot" : ""}`}>{k.trotzWarnung}</b>
+                  <div class="unter">von {k.freigaben.gesamt} Bekämpfungen</div></td>
                 <td data-kz="widerspruch">
                   <b class="wert">{k.widerspruch.gesamt}</b>
                   <div class="unter"><span class="gruen">{k.widerspruch.zuRecht} zu Recht</span> · <span class={k.widerspruch.zuUnrecht ? "rot" : ""}>{k.widerspruch.zuUnrecht} zu Unrecht</span></div>
                 </td>
                 <td data-kz="zeit">
-                  <div class="stufen-zeit">
-                    {(["g1", "g2", "g3"] as const).map((s) => <span key={s} class={`sz g-${s}`} title={ROLLEN_NAME[s]}><i>{ROLLEN_ZEICHEN[s]}</i><b>{sek(k.zeiten.alle[s])}</b> s</span>)}
-                  </div>
-                  <div class="unter">≥ {schwelle} %: {sek(k.zeiten.hoch.g1)} · {sek(k.zeiten.hoch.g2)} · {sek(k.zeiten.hoch.g3)} s · darunter {sek(k.zeiten.niedrig.g1)} · {sek(k.zeiten.niedrig.g2)} · {sek(k.zeiten.niedrig.g3)} s</div>
-                </td>
-                <td data-kz="ft">
-                  {k.fastTrack.an ? <b class="wert bernstein">EIN</b> : <b class="wert leise">aus</b>}
-                  <div class="unter">{k.fastTrack.an && k.fastTrack.seit !== undefined ? `ab ${uhrzeit(start, k.fastTrack.seit)}` : k.fastTrack.wechsel.length ? `zuletzt aus ${uhrzeit(start, k.fastTrack.wechsel[k.fastTrack.wechsel.length - 1].t)}` : "nie eingeschaltet"}
-                    {k.fastTrack.meldungen > 0 && ` · ${k.fastTrack.meldungen} Meldungen ohne Aufklärung`}</div>
+                  <div class="tempo-zeile"><b class="wert">{sek(z.alle.eingang)} s</b><span class="leise"> · {sek(z.alle.offen)} s angesehen</span></div>
+                  <div class="unter">ab {schwelle} %: {sek(z.hoch.eingang)} s · darunter {sek(z.niedrig.eingang)} s · {z.unter20} von {z.alle.n} Entscheidungen in höchstens 20 s{z.kuerzeste !== null ? ` · schnellste ${sekText(z.kuerzeste)}` : ""}</div>
                 </td>
                 <td data-kz="lm">
-                  {lm?.gelesen !== undefined ? <b class="wert">{uhrzeit(start, lm.gelesen)}</b> : <b class="wert rot">nicht gelesen</b>}
-                  <div class="unter">{lm?.gelesen !== undefined && lm.erschienen !== undefined ? `${dauerText(lm.gelesen - lm.erschienen)} nach Eingang` : lm?.erschienen === undefined ? "kam nicht" : ""}</div>
+                  {lm?.gelesen !== undefined ? <b class="wert">{uhrzeit(start, lm.gelesen)}</b> : <b class="wert rot">nicht angeklickt</b>}
+                  <div class="unter">{lm?.gelesen !== undefined && lm.erschienen !== undefined ? `${dauerText(lm.gelesen - lm.erschienen)} nach Eingang` : lm?.erschienen === undefined ? "kam nicht" : "lief im Feed durch"}</div>
                 </td>
-                <td data-kz="hinweise">
-                  <b class="wert">{k.lagehinweise.anzahl}</b>
-                  <div class="unter">{k.lagehinweise.ersterNach !== undefined ? `nach ${lmId}: ${uhrzeit(start, k.lagehinweise.ersterNach)}` : k.lagehinweise.anzahl ? `keiner nach ${lmId}` : "keiner"}</div>
+                <td data-kz="verluste">
+                  {k.verluste ? <><b class="wert">{k.verluste.bereit}/{k.verluste.gesamt}</b><div class="unter">einsatzbereit bei Spielende · {k.verluste.verwundete} Verwundete</div></> : <span class="sehr-leise">–</span>}
                 </td>
               </tr>
             );
@@ -452,7 +438,7 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
       </table>
       <div class="tafel-fuss leise">
         Fehlbekämpfung: Wirkung traf Verbündete, Sanität, Zivilpersonen, die Attrappe oder Gegner, die sich ergeben. Widerspruch: anders gehandelt, als ARGUS empfahl –
-        zu Recht, wo die Lage es verlangte. Durchbruch: Feindfahrzeuge, die nicht aufgehalten wurden (keine Wertung). Gezählt wird nur, was im Protokoll steht.
+        zu Recht, wo die Lage es verlangte. Hingeschaut: je Meldung die Sekunden vom Eingang bis zur Entscheidung. Gezählt wird nur, was im Protokoll steht.
       </div>
     </section>
   );
@@ -463,7 +449,7 @@ function KennzahlenTafel(p: { a: Auswertung; inh: Inhalte }) {
 function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte; sl?: boolean }) {
   const { a, inh } = p;
   const k = a.konfidenz;
-  const schwelle = inh.regeln.fast_track.schwelle;
+  const schwelle = KONFIDENZ_HOCH;
   const bek = inh.regeln.argus.schwellen.bekaempfen;
   const pru = inh.regeln.argus.schwellen.pruefen;
   const falsch = k.punkte.filter((x) => x.falsch).sort((x, y) => y.konfidenz - x.konfidenz);
@@ -497,7 +483,7 @@ function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte; sl?: boolean }) {
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Streudiagramm: ${k.punkte.length} Meldungen, x Konfidenz, y Sichtstörung; ${k.falsch} falsche Empfehlungen`}>
           {/* Bereiche der Empfehlungslogik */}
           <rect x={X(schwelle)} y={O} width={X(xmax) - X(schwelle)} height={bahnOben + BAHN - O} class="kd-ft" />
-          <text x={X(schwelle) + 6} y={O + 18} class="kd-bereich bernstein">Fast-Track ab {schwelle} %</text>
+          <text x={X(schwelle) + 6} y={O + 18} class="kd-bereich bernstein">ab {schwelle} %: „sicher“</text>
           {[pru, bek].map((v) => <line key={v} x1={X(v)} x2={X(v)} y1={O} y2={bahnOben + BAHN} class="kd-schwelle" />)}
           <text x={(X(xmin) + X(pru)) / 2} y={H - 8} class="kd-bereich mitte">UNKLAR</text>
           <text x={(X(pru) + X(bek)) / 2} y={H - 8} class="kd-bereich mitte">PRÜFEN</text>
@@ -555,7 +541,7 @@ function KonfidenzTafel(p: { a: Auswertung; inh: Inhalte; sl?: boolean }) {
           <div><b>Ø {fmt(k.mittelRichtig)} %</b><span>bei den richtigen BEKÄMPFEN</span></div>
         </div>
         <ul class="aussage-punkte">
-          {ueberFt > 0 && <li><b>{ueberFt === k.falsch ? `Alle ${k.falsch}` : `${ueberFt} von ${k.falsch}`} Fehler</b> lagen über der Fast-Track-Schwelle ({schwelle} %).</li>}
+          {ueberFt > 0 && <li><b>{ueberFt === k.falsch ? `Alle ${k.falsch}` : `${ueberFt} von ${k.falsch}`} Fehler</b> hatten eine Konfidenz von {schwelle} % und mehr.</li>}
           {k.fehl.n > 0 && <li>Die Teams folgten einer falschen Empfehlung <b>{k.fehl.n}-mal</b> – immer bei {k.fehl.min === k.fehl.max ? `${k.fehl.min}` : `${k.fehl.min}–${k.fehl.max}`} %.</li>}
           {k.fehl.n === 0 && <li>Kein Team ist einer falschen Empfehlung gefolgt.</li>}
           {k.widerspruch.n > 0 && <li>Zu Recht widersprochen haben die Teams <b>{k.widerspruch.n}-mal</b>, auch bei bis zu {k.widerspruch.max} %.</li>}
@@ -644,7 +630,7 @@ function Replay(p: {
           <div class="fall-info"><span class="leise">Information lag bei:</span> {sf.info_bei}</div>
           <div class="fall-ausgang"><TeamMarke name={tw.name} farbe={tw.farbe} klein /> <Ausgang e={e} gross /> <span class="leise">{e.text}</span></div>
         </div>
-        <G1Bild inh={inh} welt={welt} lauf={lauf} tw={tw} fall={fall} />
+        <TeamBild inh={inh} welt={welt} lauf={lauf} tw={tw} fall={fall} />
         <div class="leitfragen" data-testid="leitfragen">
           <h2>Leitfragen</h2>
           <ol>{sf.leitfragen.map((q) => <li>{q}</li>)}</ol>
@@ -728,38 +714,42 @@ function NotizFeld(p: { fall: string; team: TeamAuswertung; senden: (text: strin
   );
 }
 
-/** Drohnenbild, wie die Aufklärung es bei der Entscheidung sah (live zur Zeit der Entscheidung, die Drohne verfolgt das Ziel; Lupe per Klick). */
-function G1Bild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswertung; fall: FallDef }) {
+/**
+ * Drohnenbild, wie das Team es bei der Entscheidung sah (live zur Zeit der Entscheidung, die Drohne verfolgt das Ziel; Lupe per Klick),
+ * mit der ARGUS-Ausgabe von damals (EloKa: gestört). Seit 2.6 ohne Sensordaten (E6.3).
+ */
+function TeamBild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswertung; fall: FallDef }) {
   const { welt, tw, fall } = p;
   const start = p.inh.szenario.spieluhr.start;
   const mv = tw.verlaeufe.get(fall.meldung);
-  const g1 = mv?.entscheidungen.find((x) => x.stufe === "g1");
-  const tBild = g1?.t ?? mv?.t ?? welt.meldungen[fall.meldung]?.t_s ?? 0;
+  const e = mv?.entscheidungen[mv.entscheidungen.length - 1];
+  const tBild = e?.t ?? mv?.t ?? welt.meldungen[fall.meldung]?.t_s ?? 0;
   const lage = useMemo((): LiveLage => {
     const z = zustandBis(p.inh, p.lauf.protokoll, tBild).z;
-    return { inh: welt, z, effekte: effekte(welt, z, bekannteZiele(welt, z, "g1")) };
+    return { inh: welt, z, effekte: effekte(welt, z, bekannteZiele(welt, z)) };
   }, [p.lauf, tBild, welt]);
   const m = welt.meldungen[fall.meldung];
-  const hinweis = !mv ? "Die Meldung kam bei diesem Team nicht." : mv.fastTrack ? "Fast-Track: Die Aufklärung hat dieses Bild nie gesehen." : !g1 ? "Die Aufklärung hat nicht entschieden." : null;
+  const gestoert = p.lauf.zustand.meldungen[fall.meldung]?.gestoert;
+  const a = m ? argusBei(welt, m, gestoert) : null;
+  const was: Record<string, string> = { bekaempfen: "BEKÄMPFEN", zurueckstellen: "ZURÜCKSTELLEN", ablehnen: "ABLEHNEN" };
+  const hinweis = !mv ? "Die Meldung kam bei diesem Team nicht." : !e ? "Das Team hat nicht entschieden." : null;
   return (
-    <div class="g1-bild" data-testid="g1-bild">
-      <h2>Drohnenbild, wie die Aufklärung es sah <span class="sehr-leise klein">{g1 ? `bei der Entscheidung ${uhrzeit(start, g1.t)} – ${g1.was === "annehmen" ? "ANNEHMEN" : "ABLEHNEN"}` : mv ? `zur Meldezeit ${uhrzeit(start, mv.t)}` : ""}</span></h2>
+    <div class="g1-bild" data-testid="team-bild">
+      <h2>Drohnenbild, wie das Team es sah <span class="sehr-leise klein">{e ? `bei der Entscheidung ${uhrzeit(start, e.t)} – ${was[e.was]}${e.sekEingang !== undefined ? ` nach ${sekText(e.sekEingang)}` : ""}` : mv ? `zur Meldezeit ${uhrzeit(start, mv.t)}` : ""}</span></h2>
       <div class={`g1-bild-rahmen ${hinweis ? "mit-hinweis" : ""}`}>
-        {m && <LiveDrohnenFenster key={`${tw.id}-${fall.id}`} meldung={m} lage={() => lage} uhr={() => ({ t: tBild, tempo: 1, laeuft: false })} start={start} />}
+        {m && <LiveDrohnenFenster key={`${tw.id}-${fall.id}`} meldung={m} argus={a ?? undefined} lage={() => lage} uhr={() => ({ t: tBild, tempo: 1, laeuft: false })} start={start} />}
         {hinweis && <div class="g1-bild-hinweis">{hinweis}</div>}
       </div>
-      {m && (
-        <div class="g1-sensor" title="Sensordaten der Drohne – nur die Aufklärung sah sie (ARGUS wertet sie nicht aus)">
-          <span class="leise">Sensordaten (nur Aufklärung):</span> Wärme {m.sensor.waerme} · Bewegung {m.sensor.bewegung} · Spuren {m.sensor.spuren}
-          {m.sensor.kennzeichnung && m.sensor.kennzeichnung !== "keine erkannt" ? <> · Kennzeichnung <b>{m.sensor.kennzeichnung}</b></> : null}
-          {m.sensor.personen && m.sensor.personen !== "–" ? <> · Personen {m.sensor.personen}</> : null}
+      {m && a && (
+        <div class="g1-sensor" title="So meldete ARGUS diese Meldung dem Team">
+          <span class="leise">ARGUS:</span> {a.klasse}{a.zugehoerigkeit ? ` · ${a.zugehoerigkeit}` : ""} {a.konfidenz} % · {a.empfehlung}{a.gestoert ? " · Datenlink gestört" : ""}
         </div>
       )}
     </div>
   );
 }
 
-/** Zeitleiste aller Teams zu einem Fall: Meldung → Aufklärung → Zielprüfung → Führung → Einschlag; Klick wählt Team und Zeit. */
+/** Zeitleiste aller Teams zu einem Fall: Meldung → Entscheidung (mit Sekunden) → Einschlag; Klick wählt Team und Zeit. */
 function FallZeitleiste(p: {
   a: Auswertung; inh: Inhalte; fall: FallDef; von: number; bis: number; t: number; setze: (t: number) => void; team: string; setTeam: (t: string) => void;
   spielt: boolean; umschalten: () => void; tempo: number;
@@ -771,7 +761,7 @@ function FallZeitleiste(p: {
   const schritt = bis - von > 420 ? 60 : 30;
   for (let x = Math.ceil(von / schritt) * schritt; x <= bis; x += schritt) ticks.push(x);
   const global = [
-    ...fallInjects(inh).filter((i) => i.fall === fall.id).map((i) => ({ t: i.t, text: i.id, klasse: "inject", titel: `${i.id} an die Führung ${uhrzeit(start, i.t)}: „${inh.injects[i.id]?.text ?? ""}“` })),
+    ...fallInjects(inh).filter((i) => i.fall === fall.id).map((i) => ({ t: i.t, text: i.id, klasse: "inject", titel: `Lagemeldung ${i.id} ${uhrzeit(start, i.t)}: „${inh.injects[i.id]?.text ?? ""}“` })),
     ...[fall.meldung, ...fall.folge].map((id) => ({ t: inh.meldungen[id]?.t_s ?? 0, text: zielText(inh, id), klasse: "meldung", titel: `${zielText(inh, id)} von ARGUS ${uhrzeit(start, inh.meldungen[id]?.t_s ?? 0)}` })),
   ];
   const spur = useRef<HTMLDivElement | null>(null);
@@ -788,11 +778,9 @@ function FallZeitleiste(p: {
         </button>
         <span class="zl-legende klein">
           <span><i class="zl-marke meldung muster">M</i>ARGUS-Meldung</span>
-          <span><i class="zl-marke g1 muster">A✓</i><i class="zl-marke g2 muster">Z◷</i><i class="zl-marke g3 muster">F✕</i>Entscheidung (A Aufklärung, Z Zielprüfung, F Führung)</span>
-          <span><i class="zl-marke g3 freigabe muster">F✓</i>Freigabe</span>
+          <span><i class="zl-marke entscheid weiter muster">✓ 9 s</i><i class="zl-marke entscheid warten muster">◷</i><i class="zl-marke entscheid halt muster">✕</i>Entscheidung (Sekunden ab Eingang)</span>
           <span><i class="zl-marke einschlag fehl muster">✸</i>Einschlag</span>
-          <span><i class="zl-marke gelesen muster">✉</i>Lagemeldung gelesen</span>
-          <span><i class="zl-marke hinweis muster">▲</i>Lagehinweis</span>
+          <span><i class="zl-marke gelesen muster">✉</i>Lagemeldung</span>
         </span>
       </div>
       <div class="zl-gitter" ref={spur}>
@@ -1012,9 +1000,9 @@ function Schluss(p: { a: Auswertung; inh: Inhalte }) {
     <section class="tafel tafel-schluss" data-testid="schluss">
       <p class="schlussfrage">{inh.szenario.auswertung.schlussfrage}</p>
       <div class="schluss-zahlen">
-        <Zahl wert={summe((t) => t.kennzahlen.freigaben.gesamt)} text={`Freigaben in ${a.teams.length} Teams`} />
+        <Zahl wert={summe((t) => t.kennzahlen.freigaben.gesamt)} text={`Bekämpfungen in ${a.teams.length} Teams`} />
         <Zahl wert={summe((t) => t.kennzahlen.freigaben.wieArgus)} text="davon wie von ARGUS empfohlen" />
-        <Zahl wert={summe((t) => t.kennzahlen.fastTrack.meldungen)} text="Meldungen per Fast-Track ohne Aufklärung" />
+        <Zahl wert={summe((t) => t.kennzahlen.zeiten.unter20)} text="Entscheidungen in höchstens 20 s" />
         <Zahl wert={summe((t) => t.kennzahlen.widerspruch.gesamt)} text={`Mal widersprochen – ${summe((t) => t.kennzahlen.widerspruch.zuRecht)} zu Recht`} />
       </div>
     </section>

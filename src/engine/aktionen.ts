@@ -6,7 +6,6 @@ import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
 } from "../kern/ereignisse";
 import { einschlaege, vorhersage } from "../kern/regeln";
-import { ROLLEN_DATIV } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { einspielSperre, verstaerkungen } from "../kern/welt";
 import type { Spielzustand } from "../kern/zustand";
@@ -26,8 +25,13 @@ function text(wert: unknown, max: number, pflicht = false): string | undefined |
   return t.length <= max ? t || undefined : false;
 }
 
+/** Auf 0,1 s runden (Sekunden bis zur Entscheidung im Protokoll). */
+function r1(x: number): number {
+  return Math.round(x * 10) / 10;
+}
+
 /**
- * Warnungen zu R2, R3 und Einsatzbereich für ein Wirkmittel, vorausgerechnet für eine Freigabe zur Zeit t:
+ * Warnungen zu R2, R3 und Einsatzbereich für ein Wirkmittel, vorausgerechnet für BEKÄMPFEN zur Zeit t:
  * am Ort des Ziels zum Einschlagzeitpunkt (Trefferregel seit Szenario 2.0).
  */
 export function warnungen(inh: Inhalte, z: Spielzustand, meldung: string, wm: string, t: number): string[] {
@@ -52,62 +56,35 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
   if (!a || typeof a !== "object" || !(a.typ in RECHTE)) return nein("unbekannte Aktion");
   const rolle = a.von?.rolle as Rolle;
   if (!RECHTE[a.typ as AktionsTyp].includes(rolle)) return nein(`${rolle ?? "?"} darf ${a.typ} nicht`);
-  const d = (a.daten ?? {}) as Record<string, unknown>;
-  const spielAktion = ["g1_entscheid", "g2_empfehlung", "g3_entscheid", "meldung_ausloesen"].includes(a.typ);
+  const spielAktion = ["entscheid", "meldung_ausloesen"].includes(a.typ);
   if (spielAktion && z.ende) return nein("Spiel ist beendet");
 
-  const meldungIn = (stufe: string) => {
-    const id = d.meldung as string;
-    const st = z.meldungen[id];
-    if (!st) return `Meldung ${id} liegt nicht vor`;
-    if (st.stufe !== stufe) return `Meldung ${id} ist nicht (mehr) bei ${ROLLEN_DATIV[stufe as "g1" | "g2" | "g3"] ?? stufe}`;
-    return null;
-  };
-
   switch (a.typ) {
-    case "g1_entscheid": {
-      const f = meldungIn("g1");
-      if (f) return nein(f);
-      if (d.entscheid !== "annehmen" && d.entscheid !== "ablehnen") return nein("Entscheid ungültig");
-      const vermerk = text(d.vermerk, TEXT_MAX.vermerk);
-      if (vermerk === false) return nein("Vermerk zu lang");
-      return ja(entwurf("g1_entscheid", { meldung: a.daten.meldung, entscheid: a.daten.entscheid, vermerk }));
-    }
-    case "g2_empfehlung": {
-      const f = meldungIn("g2");
-      if (f) return nein(f);
-      const dd = a.daten as AktionsDaten["g2_empfehlung"];
-      if (!["bekaempfen", "beobachten", "nicht_bekaempfen"].includes(dd.empfehlung)) return nein("Empfehlung ungültig");
-      const begruendung = text(dd.begruendung, TEXT_MAX.begruendung);
-      if (begruendung === false) return nein("Begründung zu lang");
-      if (dd.empfehlung !== "bekaempfen") {
-        return ja(entwurf("g2_empfehlung", { meldung: dd.meldung, empfehlung: dd.empfehlung, begruendung }));
-      }
-      if (!dd.wirkmittel || !inh.wirkmittel[dd.wirkmittel]) return nein("Wirkmittel fehlt");
-      return ja(entwurf("g2_empfehlung", {
-        meldung: dd.meldung, empfehlung: "bekaempfen", wirkmittel: dd.wirkmittel, begruendung,
-        warnungen: warnungen(inh, z, dd.meldung, dd.wirkmittel, t),
-      }));
-    }
-    case "g3_entscheid": {
-      const f = meldungIn("g3");
-      if (f) return nein(f);
-      const dd = a.daten as AktionsDaten["g3_entscheid"];
-      if (!["freigabe", "ablehnen", "zurueck"].includes(dd.entscheid)) return nein("Entscheid ungültig");
-      const bemerkung = text(dd.bemerkung, TEXT_MAX.bemerkung);
-      if (bemerkung === false) return nein("Bemerkung zu lang");
-      if (dd.entscheid !== "freigabe") return ja(entwurf("g3_entscheid", { meldung: dd.meldung, entscheid: dd.entscheid, bemerkung }));
-      const wm = z.meldungen[dd.meldung].g2?.wirkmittel;
-      if (!wm) return nein("Empfehlung ohne Wirkmittel");
-      if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – zurück an die Zielprüfung`);
-      // seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug – je Fahrzeug ein Einschlag (LM, PzAbw), höchstens so viele wie Bestand
+    case "entscheid": {
+      // seit 2.6 (H2): eine Entscheidung je Meldung – BEKÄMPFEN mit Wirkmittel (= Freigabe), ZURÜCKSTELLEN oder ABLEHNEN
+      const dd = a.daten as AktionsDaten["entscheid"];
+      const st = z.meldungen[dd.meldung];
+      if (!st) return nein(`Meldung ${dd.meldung} liegt nicht vor`);
+      if (st.stufe !== "offen") return nein(`Meldung ${dd.meldung} ist nicht (mehr) offen`);
+      if (!["bekaempfen", "zurueckstellen", "ablehnen"].includes(dd.entscheid)) return nein("Entscheidung ungültig");
+      if (dd.entscheid === "zurueckstellen" && st.zurueckgestellt) return nein(`Meldung ${dd.meldung} ist schon zurückgestellt`);
+      // Tempo (H2.4): Sekunden ab Eingang (Erscheinen der Meldung) und ab Öffnen (vom Fenster gemeldet, nie vor dem Eingang)
+      const tEin = st.erschienen.t_s;
+      const tOffen = typeof dd.t_offen === "number" && Number.isFinite(dd.t_offen) ? Math.min(t, Math.max(tEin, dd.t_offen)) : undefined;
+      const tempo = { ...(tOffen !== undefined ? { t_offen: r1(tOffen), sek_offen: r1(t - tOffen) } : {}), sek_eingang: r1(t - tEin) };
+      if (dd.entscheid !== "bekaempfen") return ja(entwurf("entscheid", { meldung: dd.meldung, entscheid: dd.entscheid, ...tempo }));
+      const wm = dd.wirkmittel;
+      if (!wm || !inh.wirkmittel[wm]) return nein("Wirkmittel fehlt");
+      if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – anderes Wirkmittel wählen`);
+      // seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug – je Fahrzeug ein Einschlag (LM, Kanone), höchstens so viele wie Bestand
       const liste = einschlaege(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert, z.bestand[wm] ?? null)
         .map((e) => ({ t: Math.round(e.t * 100) / 100, x: Math.round(e.pos[0] * 10) / 10, y: Math.round(e.pos[1] * 10) / 10, ziel: e.ziel }));
       const e = liste[0];
-      return ja(entwurf("g3_entscheid", {
-        meldung: dd.meldung, entscheid: "freigabe", bemerkung, wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),
+      return ja(entwurf("entscheid", {
+        meldung: dd.meldung, entscheid: "bekaempfen", wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),
         einschlag: { t: e.t, pos: [e.x, e.y], ziel: e.ziel },
         ...(liste.length > 1 ? { einschlaege: liste } : {}),
+        ...tempo,
       }));
     }
     case "inject_quittiert": {
@@ -116,16 +93,6 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       if (i.quittiert) return nein(`Inject ${i.id} ist schon quittiert`);
       return ja(entwurf("inject_quittiert", { inject: i.id }));
     }
-    case "lagehinweis": {
-      const t2 = text(a.daten.text, TEXT_MAX.lagehinweis, true);
-      if (!t2) return nein("Lagehinweis leer oder zu lang");
-      const an = (Array.isArray(a.daten.an) ? a.daten.an : []).filter((r) => r === "g1" || r === "g2");
-      if (!an.length) return nein("Empfänger fehlt");
-      return ja(entwurf("lagehinweis", { text: t2, an: [...new Set(an)] }));
-    }
-    case "fast_track":
-      if (typeof a.daten.an !== "boolean") return nein("Wert ungültig");
-      return ja(entwurf("fast_track", { an: a.daten.an }));
     case "notiz": {
       const t2 = text(a.daten.text, TEXT_MAX.notiz, true);
       if (!t2) return nein("Notiz leer oder zu lang");

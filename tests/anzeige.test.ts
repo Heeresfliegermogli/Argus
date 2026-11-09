@@ -1,5 +1,5 @@
 // Änderungen B3, B4, B7 (25.10.2026): Rollen ohne G-Nummern, Spieluhr 00:00–25:00, „Ziel 7“ statt M07 – nur Anzeige,
-// Kennungen in Daten und Protokoll bleiben.
+// Kennungen in Daten und Protokoll bleiben. Seit 2.6 (H2) gibt es nur noch eine Rolle; rollenImText bleibt für alte Texte.
 import { describe, expect, it } from "vitest";
 import { rollenImText } from "../src/kern/anzeige";
 import { beschreibe } from "../src/kern/beschreibung";
@@ -30,10 +30,10 @@ describe("Rollen in Texten (B3)", () => {
     const alle = JSON.stringify([Object.values(inh.szenario.lage), inh.szenario.injects.map((i) => i.text), inh.szenario.schluesselfaelle]);
     expect(alle).not.toMatch(/\bG[123]\b/);
     expect(alle).not.toMatch(/\b(09|10):[0-5]\d\b/);
-    // Empfänger der Injects bleiben Kennungen (der Code verteilt danach)
-    expect(new Set(inh.szenario.injects.map((i) => i.an))).toEqual(new Set(["G3", ...(inh.szenario.injects.some((i) => i.an === "alle") ? ["alle"] : [])]));
+    // seit 2.6 gehen alle Lagemeldungen an das Team (eine Rolle)
+    expect(new Set(inh.szenario.injects.map((i) => i.an))).toEqual(new Set(["Team"]));
     expect(inh.szenario.spieluhr.start).toBe("10:00:00");
-    expect(inh.szenario.lage.G1.absaetze.join(" ")).toMatch(/Zielprüfung/);
+    expect(inh.szenario.lage.team.absaetze.join(" ")).toMatch(/Ziel 28|BEKÄMPFEN/);
     expect(inh.meldungen.M20.id).toBe("M20");
   });
 });
@@ -75,11 +75,13 @@ describe("Protokoll der Spielleitung (B3, B7)", () => {
     seq = 0;
     const m = e("meldung", { meldung: "M03" }, 240);
     expect(beschreibe(m, inh)).toMatch(/^ARGUS Ziel 5 \(M03\): /); // seit 2.2: M28 und M29 davor
-    const g1 = e("g1_entscheid", { meldung: "M03", entscheid: "annehmen" }, 250);
-    expect(beschreibe(g1, inh)).toMatch(/^Ziel 5 \(M03\) /);
-    const i = inh.szenario.injects.find((x) => x.an === "G3")!;
+    const ent = e("entscheid", { meldung: "M03", entscheid: "bekaempfen", wirkmittel: "LM", sek_eingang: 14, sek_offen: 9, einschlaege: [{}, {}, {}] }, 250);
+    expect(beschreibe(ent, inh)).toBe("Ziel 5 (M03) BEKÄMPFEN mit LM ×3 nach 14 s (9 s angesehen)");
+    const ab = e("entscheid", { meldung: "M03", entscheid: "ablehnen", sek_eingang: 30 }, 250);
+    expect(beschreibe(ab, inh)).toBe("Ziel 5 (M03) ABLEHNEN nach 30 s");
+    const i = inh.szenario.injects.find((x) => x.t_s !== undefined)!;
     const inj = e("inject", { inject: i.id }, i.t_s ?? 30);
-    expect(beschreibe(inj, inh)).toContain(`Inject ${i.id} an Führung`);
+    expect(beschreibe(inj, inh)).toContain(`Inject ${i.id} an Team`);
     expect(beschreibe(inj, inh)).not.toMatch(/\bG[123]\b/);
   });
 });

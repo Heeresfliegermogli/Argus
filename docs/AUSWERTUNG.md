@@ -1,12 +1,14 @@
 # ARGUS – Auswertung im Plenum (Schritt 8)
 
-Stand 22.10.2026, Anzeige angepasst am 25.10.2026 (B3, B4, B6, B7, B9): Rollen heißen Aufklärung, Zielprüfung,
-Führung (in der Kette **A → Z → F**), Zeiten in Spielzeit 00:00–25:00, Ziele „Ziel n“ wie im Spiel (die Spielleitung
-sieht die interne Kennung klein daneben), kein Vermerk mehr, das Drohnenbild im Replay verfolgt das Ziel wie im
-Spiel. Seit 01.11.2026 (Szenario 2.3, D5) mit dem Kapitel **„Preis des Abwartens“** (eigene Verluste je Team, Offenlegung des
-gebauten Drucks). Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen. Gesteuert von der
-Spielleitung mit wenigen Klicks (oder einem Presenter). Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**, nie
-Namen von Personen, keine Rangliste und keine Punkte.
+Stand 09.11.2026 (Szenario 2.6, Änderungen H): **eine Rolle je Team, eine Entscheidung je Meldung, sieben Teams.** Der
+Teamvergleich ist gedreht (Zeilen = Fälle, Spalten = Teams) und passt mit 7 Teams in 1530 × 800; jede Zelle nennt die eine
+Entscheidung mit den **Sekunden ab Eingang**; die Kennzahlen fragen „Wie lange habt ihr hingeschaut?“ (ab Eingang · ab Öffnen, H2.4);
+das Replay zeigt je Meldung eine Entscheidung und das Drohnenbild, wie das Team es sah. Fast-Track gibt es nicht mehr; der Vergleich
+mit der Automatik kommt mit Liste G als „ARGUS allein“. Davor: 22.10.2026, angepasst B3–B9 (25.10.), seit 2.3 (D5) mit dem Kapitel
+**„Preis des Abwartens“**. Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen (seit 2.6 die vom Team-Laptop
+hochgeladenen; fehlt eines, lädt die Spielleitung die Datei des Teams mit **Protokoll laden**). Gesteuert von der Spielleitung mit
+wenigen Klicks (oder einem Presenter). Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**, nie Namen von Personen, keine
+Rangliste und keine Punkte.
 
 ## Ablauf im Hörsaal: 12 min
 
@@ -16,12 +18,12 @@ dieselbe Ansicht in ihrer Übersicht über **Auswertung ›**.
 
 | Kapitel | Zeit | Inhalt |
 |---|---|---|
-| 1 Teams | 0:45 | Teamvergleich: Teams × S3, S2, S1, S4 und N1–N4. Je Zelle der Ausgang (✓ richtig, ✕ falsch, ◐ zu Unrecht abgelehnt, … offen/entfallen), die Kette **A → Z → F → ✸** (Aufklärung, Zielprüfung, Führung) (✓ weiter, ✕ gestoppt, ◷ zurückgestellt, ↩ zurück an die Zielprüfung, FT Fast-Track) mit der **entscheidenden Stufe umrandet**, darunter zwei Zeilen („FREIGABE 10:22:15 (PzAbw)“ / „→ Verbündete getroffen“). Unten je Fall: wie viele Teams richtig/falsch. Klick auf eine Zelle öffnet das Replay dieses Falls für dieses Team. |
-| 2 Kennzahlen | 0:45 | je Team: Fehlbekämpfungen (Zahl und Art), Freigabe trotz Regelwarnung, Widerspruch gegen ARGUS (zu Recht / zu Unrecht), Bearbeitungszeit je Stufe (Median, dazu ≥ 90 % und darunter), Fast-Track (wann ein, Meldungen ohne Aufklärung), I-04 gelesen (Spielzeit, wie lange nach Eingang), Lagehinweise an G1/G2 (erster nach I-04) |
-| 3 Konfidenz | 0:30 | Kernaussage: Streudiagramm Konfidenz × Sichtstörung je Meldung; die vier falschen Empfehlungen (M08, M12, M20, M21) rot mit „n von 5 Teams bekämpft“; Ø 93,5 % (falsch) gegen 88,1 % (richtig BEKÄMPFEN; Szenario 2.2, vorher 88,3 %); alle vier über der Fast-Track-Schwelle; Kernaussage aus dem Szenario |
-| S3, S2, S1, S4 | je 2:30 (mit Verlustmodell je 2:15) | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild, wie die Aufklärung es sah, Leitfragen und Bezüge, Notizen der SL 2 |
+| 1 Teams | 0:45 | „Was hat jedes Team entschieden – und wie schnell?“ Zeilen = Fälle S1–S8, N1–N4, Spalten = Teams (seit 2.6 gedreht, 7 Teams in 1530 px), rechts „alle“ (richtig/falsch). Je Zelle der Ausgang (✓ richtig, ✕ falsch, ◐ zu Unrecht abgelehnt, … offen/entfallen), die eine Entscheidung (✓ bekämpft, ◷ zurückgestellt, ✕ abgelehnt) mit **Sekunden ab Eingang** und einzeilig, was danach geschah („→ Verbündete getroffen“). Klick auf eine Zelle öffnet das Replay dieses Falls für dieses Team. |
+| 2 Kennzahlen | 0:45 | je Team: Fehlbekämpfungen (Zahl und Art), bekämpft trotz Regelwarnung, Widerspruch gegen ARGUS (zu Recht / zu Unrecht), **Wie lange habt ihr hingeschaut?** (Median ab Eingang · ab Öffnen, kürzeste und längste, Entscheidungen in höchstens 20 s), I-04 angeklickt (Spielzeit, wie lange nach Eingang), eigene Truppe (einsatzbereite Panzer, Verwundete) |
+| 3 Konfidenz | 0:30 | Kernaussage: Streudiagramm Konfidenz × Sichtstörung je Meldung; die falschen Empfehlungen rot mit „n von 7 Teams bekämpft“; Ø der falschen gegen die richtigen BEKÄMPFEN; Kernaussage aus dem Szenario |
+| S3, S2, S1, S4 | je 2:30 (mit Verlustmodell je 2:15) | Replay je Schlüsselfall (Reihenfolge aus den Daten, `reihenfolge`): Zeitleiste aller Teams, Kontrollkarte zum Durchscrubben, Drohnenbild, wie das Team es bei der Entscheidung sah, Leitfragen und Bezüge, Notizen der SL 2 |
 | Preis des Abwartens (seit 2.3; seit 2.5 je Panzer, F2.9) | 1:00 | Zustand der vier Panzer der 1. Kp je Team über die Spielzeit (Kurve = Mittel der vier in der Teamfarbe, Linien bei 70 % „darunter eingeschränkt“ und 40 % „darunter ausgefallen – höchstens zwei, die Kp hält“), darauf die Entscheidungen bei S4, N4 und S3 (● richtig, ◆ falsch) am Zeitpunkt der Entscheidung; am Kurvenende „b/4“; rechts je Team ein Balken je Panzer (gelb eingeschränkt, grau ausgefallen), einsatzbereite Panzer, Verwundete und die Fehlbekämpfungen. Leitfragen an das Team mit den wenigsten Treffern an der eigenen Kp („Ihr hattet weniger Treffer an der eigenen Kp – um welchen Preis?“) und an das mit den meisten („Ihr habt gewartet, und eure Panzer wurden getroffen – war das richtig?“), darunter die **Offenlegung**: Der Druck war gebaut (Treffer an der eigenen Kp, Zeit, Forderungen der Panzer); wer bei S4, S5, N4 oder S3 wartete, sah eigene Panzer getroffen werden – und lag trotzdem richtig. Bezüge: Art. 51 Abs. 5 lit. b und Art. 57 ZP I, Fürsorge, Innere Führung. Keine Rangliste, keine Punkte; bis 2.4 Kampfkraft dreier Züge |
-| Schluss | – | „Wer hat in diesem Spiel entschieden: ihr oder ARGUS?“ mit vier Zahlen über alle Teams (Freigaben, davon auf BEKÄMPFEN von ARGUS, Meldungen per Fast-Track ohne Aufklärung, Widerspruch) |
+| Schluss | – | „Wer hat in diesem Spiel entschieden: ihr oder ARGUS?“ mit vier Zahlen über alle Teams (Bekämpfungen, davon wie von ARGUS empfohlen, Entscheidungen in höchstens 20 s, Mal widersprochen – davon zu Recht) |
 
 Oben rechts läuft das **Zeitbudget** (Kapitel / gesamt, bei Überschreitung bernsteinfarben; Klick setzt zurück).
 
@@ -37,19 +39,18 @@ und als Sichtstörung die EloKa-Stärke (die Bilanz bleibt bei den Werten der Da
 
 ### Replay je Schlüsselfall
 
-* **Zeitleiste** (unter der Karte): je Team eine Zeile mit Ausgang, darauf die Marken der Meldung (◆ ARGUS, schraffiert
-  bei Fast-Track) → A → Z → F (Freigabe rot) → ✸ Einschlag (rot bei Fehltreffer) und – wo es den Fall betrifft –
-  ✉ Lagemeldung gelesen, ▲ Lagehinweis an Aufklärung/Zielprüfung, „FT ein“, ✎ Notiz der SL. Gestrichelte Linien: Lagemeldung zum Fall
+* **Zeitleiste** (unter der Karte): je Team eine Zeile mit Ausgang, darauf die Marken der Meldung (◆ ARGUS) → die eine
+  Entscheidung mit Sekunden (BEKÄMPFEN rot) → ✸ Einschlag (rot bei Fehltreffer) und – wo es den Fall betrifft –
+  ✉ Lagemeldung angeklickt, ✎ Notiz der SL. Gestrichelte Linien: Lagemeldung zum Fall
   (S3: I-04, S4: I-07) und Meldezeit, für alle Teams gleich. Klick oder Ziehen auf einer Zeile wählt Team und Zeitpunkt,
   Klick auf eine Marke springt genau dorthin.
 * **Kontrollkarte** des gewählten Teams mit Ground Truth, Bewegung, Wirkungen und Effekten zur Zeit des Replays (Stand aus
   dem Protokoll bis zu diesem Zeitpunkt), Ausschnitt auf den Fall (Weg der Fahrzeuge im Zeitfenster, Einschläge).
 * **▶** spielt das Zeitfenster des Falls in ca. 45 s ab (Tempo je Fall ×4 bis ×15) – vom Budget von 2:30 bleibt der
   größte Teil für das Gespräch.
-* **Drohnenbild, wie die Aufklärung es sah**: das Live-Bild zur Zeit der Entscheidung der Aufklärung (bei Fast-Track
-  zur Meldezeit mit „Fast-Track: Die Aufklärung hat dieses Bild nie gesehen.“), mit derselben Kamera wie im Spiel
-  (verfolgt das Ziel, schwenkt nach einer Zerstörung), Klick = groß mit Lupe (Esc schließt). Darunter die
-  Sensordaten, die nur die Aufklärung hatte (Wärme, Bewegung, Spuren, Kennzeichnung, Personen).
+* **Drohnenbild, wie das Team es sah**: das Live-Bild zur Zeit der Entscheidung („bei der Entscheidung 14:32 – bekämpft nach
+  20 s“), mit derselben Kamera wie im Spiel (verfolgt das Ziel, schwenkt nach einer Zerstörung), Klick = groß mit Lupe (Esc
+  schließt). Darunter, was ARGUS dem Team meldete (Klasse, Zugehörigkeit, Konfidenz, Empfehlung) – Sensordaten gibt es seit 2.4 nicht mehr.
 * **Leitfragen und Bezüge** aus dem Szenario, **Notizen der SL 2** zu diesem Fall (gewähltes Team zuerst).
 
 ### Bedienung
@@ -67,16 +68,16 @@ Die ganze Auflösung braucht **11 Bedienschritte** (7 × weiter, 4 × ▶), dazu
 
 ### Notizen der SL 2
 
-Während des Spiels: in der Teamansicht (Steuerung oder Zuschauen bei den drei Rollen) **✎ Notiz** – der Fall, der bei diesem Team
-gerade läuft, ist vorgewählt (S1–S4, N1–N4 oder „allgemein“), Text, Enter. Die Notiz steht im Protokoll des Teams
-(`notiz {text, fall}`) und erscheint in der Auswertung beim Fall – also **am Smartboard**: Rollen (Aufklärung, Zielprüfung, Führung) statt
-Namen, so steht es auch im Feld. Nach dem Spiel kann die Spielleitung in ihrer Auswertung im Replay weitere Notizen zum
+Während des Spiels: in der Teamansicht (Steuerung oder Zuschauen) **✎ Notiz** – der Fall, der bei diesem Team gerade läuft, ist
+vorgewählt (S1–S8, N1–N4 oder „allgemein“), Text (bis 500 Zeichen), Enter. Die Notiz geht als Aktion an den Team-Laptop, steht im
+Protokoll des Teams (`notiz {text, fall}`) und erscheint in der Auswertung beim Fall – also **am Smartboard**: keine Namen, so steht es
+auch im Feld. Nach dem Spiel kann die Spielleitung in ihrer Auswertung im Replay weitere Notizen zum
 gewählten Team und Fall schreiben.
 
 ### Üben ohne Spiel
 
-`…/Argus/?auswertung=demo` (Startseite unten: „Auswertung üben (Beispiel, 5 Teams)“): die fünf Modellteams des
-Drehbuchs (naiv, ideal, beide mit Verstärkungen, naiv mit fünf) mit einigen Notizen. Daten in
+`…/Argus/?auswertung=demo` (Startseite unten: „Auswertung üben (Beispiel, 7 Teams)“): sieben Modellteams (die fünf des
+Drehbuchs – naiv, ideal, beide mit Verstärkungen, naiv mit fünf – und zwei weitere mit 25 bzw. 30 s je Entscheidung) mit einigen Notizen. Daten in
 `public/demo/auswertung_demo.json`, erzeugt mit `npx vite-node tools/auswertung_demo.ts`. Nur auf der Webseite, nicht in
 der Offline-Datei.
 
@@ -91,15 +92,13 @@ Protokoll steht.
 | **falsch** | eine Freigabe im Fall traf beim Einschlag Verbündete, Sanität, Zivilpersonen, die Attrappe oder Gegner, die sich ergeben, oder schlug unter Verstoß gegen R2/R3 ein (N4: NS-01) |
 | **richtig** | nichts davon: das Team hat gestoppt oder zurückgestellt, oder (echtes Ziel) ohne Fehltreffer bekämpft |
 | **zu Unrecht abgelehnt** | echtes Ziel, das nach der Lösung bekämpft werden sollte, wurde abgelehnt (N3) |
-| offen / entfallen / nicht erreicht | bei Spielende noch in der Kette / Fahrzeug zerstört oder abgezogen, bevor jemand entschied / Meldung kam nicht |
-| entscheidende Stufe | bei „falsch“ und bei Bekämpfung die Führung (Freigabe), sonst die Stufe, die gestoppt oder zurückgestellt hat |
+| offen / entfallen / nicht erreicht | bei Spielende noch im Eingang / Fahrzeug zerstört oder abgezogen, bevor das Team entschied / Meldung kam nicht |
+| Entscheidung | seit 2.6 eine je Meldung (BEKÄMPFEN mit Wirkmittel, ZURÜCKSTELLEN, ABLEHNEN; eine zurückgestellte Meldung kann später noch entschieden werden – es zählt die letzte) mit Sekunden ab Eingang und ab Öffnen |
 | Fehlbekämpfung | Wirkung mit mindestens einem Treffer der Art verbündet, Sanität, zivil, Attrappe, außer Gefecht/ergibt sich |
-| Freigabe trotz Regelwarnung | Die Führung gab frei, obwohl die Vorausrechnung eine Warnung zum Einschlag zeigte |
-| **Widerspruch gegen ARGUS** | am Ende anders gehandelt, als ARGUS empfahl: BEKÄMPFEN, aber ein Mensch stoppte (Aufklärung ABLEHNEN, Zielprüfung NICHT BEKÄMPFEN/BEOBACHTEN, Führung ABLEHNEN/ZURÜCK) und es kam zu keiner Wirkung – oder NICHT BEKÄMPFEN, aber bekämpft. **Zu Recht**, wenn die Lösung im Szenario das Stoppen verlangt bzw. die Wirkung ohne Fehltreffer und Verstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man widersprechen könnte |
-| Bearbeitungszeit je Stufe | Eingang bei der Stufe bis zu ihrer Entscheidung (jede Runde, z. B. nach ZURÜCK erneut), Median; getrennt nach Konfidenz ≥ Fast-Track-Schwelle (90 %) und darunter |
-| Fast-Track | Zeitpunkt des letzten Einschaltens, Meldungen, die ohne Aufklärung an die Zielprüfung gingen |
-| I-04 gelesen | Quittung der Führung („gelesen“) der ersten festen Lagemeldung zu einem Fall (Reihenfolge der Fälle: I-04 zu S3; I-07 zu S4 erscheint im Replay) |
-| Lagehinweise | Anzahl, erster nach I-04 |
+| bekämpft trotz Regelwarnung | Das Team bekämpfte, obwohl die Vorausrechnung eine Regelwarnung zum Einschlag zeigte |
+| **Widerspruch gegen ARGUS** | am Ende anders gehandelt, als ARGUS empfahl: BEKÄMPFEN, aber das Team lehnte ab oder stellte zurück und es kam zu keiner Wirkung – oder NICHT BEKÄMPFEN, aber bekämpft. **Zu Recht**, wenn die Lösung im Szenario das Stoppen verlangt bzw. die Wirkung ohne Fehltreffer und Verstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der man widersprechen könnte |
+| Wie lange hingeschaut (seit 2.6) | Sekunden ab Eingang und ab Öffnen bis zur Entscheidung (`sek_eingang`, `sek_offen` im Protokoll), Median, kürzeste, längste, Zahl der Entscheidungen in höchstens 20 s; getrennt nach Konfidenz ≥ 90 % und darunter |
+| I-04 angeklickt | Klick des Teams auf die erste feste Lagemeldung zu einem Fall im Feed (I-04 zu S3; I-07 zu S4 erscheint im Replay). Ohne Klick rutscht sie nach ca. 8 s in „frühere Meldungen“ – ob sie gelesen wurde, weiß man dann nicht |
 | Eigene Verluste (seit 2.3; seit 2.5 je Panzer) | Einsatzbereite (nicht ausgefallene), eingeschränkte und ausgefallene Panzer, Verwundete und mittlerer Zustand bei Spielende, Zustand und Stufe je Panzer, Verlauf alle 15 s (Zustand je Panzer, einsatzbereit, Verwundete) und Zahl der Druckmeldungen (K-…) – aus dem Verlustmodell (`src/kern/verluste.ts`), gleiche Entscheidungen ⇒ gleiche Werte. Export: `einsatzbereit_ende`, `eingeschraenkt_ende`, `ausgefallen_ende`, `verwundete_ende`, `zustand_mittel_ende`, `zustand_panzer`, `zustand_verlauf`. Lage, keine Wertung: Sie stehen neben den Fehlbekämpfungen, nie als Punkte |
 | ARGUS falsch | BEKÄMPFEN, aber das Ziel war zur Meldezeit nicht legitim (wie `pruefe_szenario.py`): M08, M12, M20, M21 |
 
@@ -107,10 +106,10 @@ Protokoll steht.
 
 **Export ▾** oben rechts: JSON ohne Freitexte, JSON mit Freitexten, CSV (Kennzahlen und Fälle je Team, Semikolon, für
 Excel). Teams heißen **Team A, B, C …** (Reihenfolge wie in der Auswertung), keine Namen von Personen oder Teams, keine
-Kennungen der Rechner, nur Spielzeit 00:00–25:00 (keine Uhrzeit des Seminars). Seit 25.10.2026 mit Legende der
-Rollen (`rollen`: g1 Aufklärung, g2 Zielprüfung, g3 Führung), je Meldung die Zielnummer der Spieler (`ziel`), CSV-Spalten
-`median_aufklaerung_s`, `median_zielpruefung_s`, `median_fuehrung_s`. Freitexte (Begründung, Bemerkung,
-Lagehinweise, Notizen der SL; Vermerke nur aus älteren Läufen) nur auf Wunsch, weil sie Namen enthalten können. Inhalt: Fälle, ARGUS-Bilanz je Meldung
+Kennungen der Rechner, nur Spielzeit 00:00–25:00 (keine Uhrzeit des Seminars). Je Meldung die Zielnummer der Spieler (`ziel`),
+je Entscheidung `sekunden_ab_eingang` und `sekunden_ab_oeffnen`, CSV-Spalten `median_s_ab_eingang`, `median_s_ab_oeffnen`,
+`median_s_konfidenz_hoch`, `median_s_konfidenz_niedrig`, `bis_20_s` (seit 2.6; bis 2.5 je Rolle). Freitexte (Notizen der SL; aus
+älteren Läufen Begründung, Bemerkung, Lagehinweise) nur auf Wunsch, weil sie Namen enthalten können. Inhalt: Fälle, ARGUS-Bilanz je Meldung
 (Konfidenz, Sichtstörung, wie viele Teams bekämpft), je Team Kennzahlen, Fälle mit Kette und Einschlag, alle Meldungen
 mit Entscheidungen, Wirkungen und entfallenen Meldungen, Lagehinweise, Verstärkungen. Seit 2.3 (D5.3) je Team `verluste`
 (`kampfkraft_ende`, `verwundete_ende`, `druckmeldungen`, `kampfkraft_zuege` je Zug, `kampfkraft_verlauf` je Minute), in der CSV die
@@ -125,10 +124,10 @@ Spalten `kampfkraft_ende` und `verwundete_ende`.
 | `src/ansichten/sl-fenster.tsx` | `AuswertungFenster` (Plenum und Spielleitung), Umschalten im Plenum, „✎ Notiz“ in der Teamansicht |
 | `src/karte/lagekarte.ts`, `src/ansichten/gemeinsam/lagekarte.tsx` | `fokus` (Ausschnitt), wartet, bis die Leinwand ihre Größe hat |
 | `src/main.tsx`, `tools/auswertung_demo.ts`, `public/demo/auswertung_demo.json` | Üben ohne Spiel (`?auswertung=demo`) |
-| `tests/modellteam.ts` | G3 der Modellteams quittiert Lagemeldungen (ideal nach 20 s, naiv nach 40 s, I-04 erst nach 270 s) und gibt Lagehinweise (ideal; Team 3 des Drehbuchs warnt, schießt aber trotzdem) – ändert den Ablauf der Meldungen nicht |
+| `tests/modellteam.ts` | Modellteams für eine Rolle (seit 2.6): naiv 20 s, ideal 35 s je Entscheidung; sie klicken Lagemeldungen an (ideal nach 20 s, naiv nach 40 s, I-04 erst nach 270 s) – ändert den Ablauf der Meldungen nicht |
 
-Protokoll: `notiz` hat ein optionales Feld `fall` (S1–S4, N1–N4; der Host prüft, dass es den Fall gibt). Die
-Firebase-Regeln lassen das ohne Änderung zu.
+Protokoll: `notiz` hat ein optionales Feld `fall` (S1–S8, N1–N4; der Host prüft, dass es den Fall gibt); `entscheid` trägt seit 2.6
+`t_offen`, `sek_eingang`, `sek_offen`.
 
 ## Nachweis „Fertig, wenn“
 
@@ -143,6 +142,7 @@ Firebase-Regeln lassen das ohne Änderung zu.
 | **E5 (01.11.2026, Szenario 2.4, Logik)** | `tests/auswertung.test.ts` mit allen zwölf Fällen der fünf Drehbuch-Teams (naiv trifft S5, S6, S8; ideal stoppt richtig: S5 an der Zielprüfung, S6 und die Presse in S8 bei der Aufklärung), Replay-Plan (Standard, sechs, acht Fälle, Budget ≤ 12:00), Regelwarnung ohne Bestandshinweis |
 | **F2.9 (02.11.2026, Szenario 2.5)** | Kapitel „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team (`tests/szenario23.test.ts`, `tools/verluste_probe.py` auf `?auswertung=demo`, Beispieldaten mit `tools/auswertung_demo.ts` neu erzeugt): fünf Kurven (Mittel der vier Panzer), 15 Marken, Balken je Panzer, „b/4“ je Team, Leitfragen und Offenlegung, kleinste Schrift 13,5 px, in 1530 × 800. Im Beispiel: Falke Nord 4/4 (naiv), Löwe 2 3/4 (ideal), Team Ömer & Co 3/4, Wega 2/4, Kassiopeia 3/4. `auswertung_probe.py`: Kapitel „Preis“ mit Werten wie im Prozess (einsatzbereit, Verwundete); **offen (seit E-a, Aufgabe von E-b):** Teamvergleich mit zwölf Spalten zu breit (2244 px), Konfidenz mit sechs falschen Empfehlungen |
 | automatisch | 114 Tests (12 neu in `tests/auswertung.test.ts`), Build; `tools/auswertung_probe.py` auf `?auswertung=demo`, `ui_faelle.py` (22 Bilder), `bedientest_probe.py` 15/15, `lobby_probe.py` 19/19 |
+| **H (09.11.2026, Szenario 2.6)** | `tests/auswertung.test.ts` für eine Rolle (Ausgang je Fall, Sekunden ab Eingang/Öffnen, Widerspruch, Export mit `sekunden_ab_eingang`); `tools/auswertung_probe.py` auf `?auswertung=demo` mit **7 Teams**: Teamvergleich gedreht in 1530 × 800 ohne Rollbalken (bisher 2244 px breit), Sekunden in jeder Zelle, Kennzahlen kompakt, kleinste Schrift 13 px; `tools/e2e_drehbuch.py` (5 Team-Laptops, SL, SL 2, Plenum): Plenum schaltet selbst auf die Auswertung, Teamvergleich und Kennzahlen = Auswertung im Prozess, Notiz der SL 2 bei S3 |
 
 Prüfen: `python3 tools/auswertung_probe.py http://localhost:4173/` (Beispiel) bzw. mit `--erwartet plan.json` und der
 Adresse eines Plenums nach einem Lauf; das ganze Drehbuch mit `python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5`.
@@ -151,6 +151,6 @@ Adresse eines Plenums nach einem Lauf; das ganze Drehbuch mit `python3 tools/e2e
 
 - Probe am Smartboard im Hörsaal: Lesbarkeit aus 4–8 m (Teamvergleich, Zeitleiste, Diagramm), Presenter (Bild ↓/↑).
   Die Ansicht ist für 1530 × 800 ausgelegt (Dienst-PC mit 125 %); Vollbild (F11) gibt etwas mehr Höhe.
-- Mit der echten Datenbank (Firebase) einmal die ganze Auswertung nach einem Lauf öffnen (lädt alle fünf Protokolle).
+- Mit der echten Datenbank (Firebase) einmal die ganze Auswertung nach einem Lauf öffnen (lädt alle sieben hochgeladenen Protokolle).
 - Notizen der SL 2 im echten Durchlauf: Reicht ✎ Notiz in der Teamansicht, oder braucht SL 2 eine eigene Notizleiste für
   alle Teams?

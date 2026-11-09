@@ -2,7 +2,7 @@
 //   window.argus         die Sicht, die das Fenster gerade zeigt (stand, senden …); ohne Sicht die Sitzung
 //   window.argusSitzung  die Sitzung des Fensters
 //   window.argusTeams()  je Team: Name, Lauf, seq, Fingerabdruck, Kennungen der Aktionen im Protokoll
-//   window.argusGespeichert(team)  Kennungen aller gespeicherten Aktionen des aktuellen Laufs (Promise)
+//   window.argusGespeichert(team, ms)  Kennungen aller gespeicherten Aktionen des aktuellen Laufs (Promise; wartet ms auf das Netz)
 import { fingerabdruck } from "../kern/zustand";
 import type { Sicht } from "./sicht";
 import type { Sitzung } from "./sitzung";
@@ -11,7 +11,7 @@ interface Fenster {
   argus?: Sicht | Sitzung;
   argusSitzung?: Sitzung;
   argusTeams?: () => unknown[];
-  argusGespeichert?: (team: string) => Promise<string[]>;
+  argusGespeichert?: (team: string, ms?: number) => Promise<string[]>;
 }
 
 let sitzung: Sitzung | null = null;
@@ -33,12 +33,12 @@ export function meldeSitzung(s: Sitzung | null): void {
       protokoll: sp ? sp.stand.protokoll.map((e) => ({ seq: e.seq, typ: e.typ, aktion: e.aktion ?? null, client: e.von.client ?? null, rolle: e.von.rolle })) : [],
     };
   }) : []);
-  w.argusGespeichert = (team: string) => new Promise<string[]>((ok) => {
+  w.argusGespeichert = (team: string, ms = 1500) => new Promise<string[]>((ok) => {
     const lauf = sitzung?.team(team)?.lauf;
     if (!sitzung || !lauf) return ok([]);
     const ids: string[] = [];
     const ab = sitzung.adapter.aufAktionen(team, lauf, (a) => ids.push(a.id));
-    setTimeout(() => { ab(); ok(ids); }, 1500);
+    setTimeout(() => { ab(); ok(ids); }, ms);
   });
 }
 

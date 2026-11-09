@@ -13,15 +13,18 @@ import { weltFuer } from "../src/kern/lage";
 import { pruefeWirkmittel } from "../src/kern/regeln";
 import { welt } from "../src/kern/welt";
 import { inhalte } from "./hilfen";
-import { type Modellteam, spieleDurch } from "./modellteam";
+import { type DrehbuchReferenz, type Modellteam, drehbuchTeams, spieleDurch } from "./modellteam";
 
 const man = JSON.parse(readFileSync(fileURLToPath(new URL("../public/assets/manifest.json", import.meta.url)), "utf-8")) as AssetManifest;
 
+const ref = JSON.parse(readFileSync(fileURLToPath(new URL("./referenz_durchlauf.json", import.meta.url)), "utf-8")) as DrehbuchReferenz;
+
 let teams: Modellteam[] | null = null;
+/** Die Läufe des Drehbuchs: naiv, ideal, naiv + Verstärkungen V-1–V-4 (seit 2.6 eine Rolle, Modellzeiten 20 s und 35 s). */
 async function lauf(): Promise<Modellteam[]> {
   if (teams) return teams;
   const inh = await inhalte();
-  teams = spieleDurch(inh, [{ name: "naiv", opt: { team: "naiv" } }, { name: "ideal", opt: { team: "ideal" } }]);
+  teams = spieleDurch(inh, drehbuchTeams(ref).slice(0, 3));
   return teams;
 }
 
@@ -76,18 +79,23 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     expect(weltFuer(inh, { ...(await lauf())[1].z, durchbrueche: {} }).ziele["Z-27"].bis_s).toBeUndefined();
   });
 
-  it("naiv: Freigabe auf die PT-91 → E-01 fällt aus, die letzten Feindkräfte brechen durch, I-13 kommt 10 s nach dem ersten über dem Bach", async () => {
-    const [naiv] = await lauf();
-    const inh = weltFuer(naiv.inh, naiv.z);
-    const d = durchgebrochen(inh, naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen);
-    expect(d.fahrzeuge).toEqual(["Z-20", "Z-27", "Z-28"]); // seit 2.4 auch Z-20 (wie simuliere_durchlauf.py)
+  it("naiv: BEKÄMPFEN der PT-91 → E-01 fällt aus, die letzten Feindkräfte brechen auf; mit Verstärkungen kommen zwei über den Bach (I-13)", async () => {
+    const [naiv, , naivV] = await lauf();
+    // ohne Verstärkungen: die Gruppen D-04/D-05 brechen auf, das schnelle Team trifft sie mit dem Mörser, bevor sie über dem Bach sind
+    expect(naiv.z.meldungen.M20.wirkung).toBeDefined();
     expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
-    expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
-    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; seit 2.5 die Kanonen der 1. Kp)
+    expect(durchgebrochen(weltFuer(naiv.inh, naiv.z), naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen).fahrzeuge).toEqual([]);
+    expect(naiv.z.injects["I-13"]).toBeUndefined();
+    // mit Verstärkungen (mehr Meldungen, später dran): Z-27 und Z-28 brechen durch, I-13 kommt 10 s nach dem ersten über dem Bach
+    const inh = weltFuer(naivV.inh, naivV.z);
+    const d = durchgebrochen(inh, naivV.z.durchbrueche, naivV.z.zerstoert, naivV.z.verstaerkungen);
+    expect(d.fahrzeuge).toEqual(["Z-27", "Z-28"]); // wie simuliere_durchlauf.py (Lauf 3)
+    expect(naivV.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
+    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; die Kanonen der 1. Kp)
     expect(naiv.z.durchbrueche["D-01"]).toMatchObject({ durch: false });
     expect(naiv.z.durchbrueche["D-01"].grund).toMatch(/zerstört/);
     // die Spielleitung sieht den Stand je Gruppe
-    const st = bedingtStand(naiv.inh, naiv.z, 1500).filter((b) => b.art === "durchbruch");
+    const st = bedingtStand(naivV.inh, naivV.z, 1500).filter((b) => b.art === "durchbruch");
     expect(st.find((b) => b.id === "D-04")?.status).toBe("ausgeloest");
     expect(st.find((b) => b.id === "D-01")?.status).toBe("entfaellt");
   });
@@ -114,8 +122,8 @@ describe("Szenario 2.1: Animationen (A8)", () => {
     expect(tz).toBeDefined();
     expect(alle.length).toBeGreaterThan(0);
     expect(alle.every((e) => e.t < tz && e.art === "muendung" && e.quelle.feuert === "moerser")).toBe(true);
-    // Zielprüfung kennt Z-06 aus M05, das Plenum (Umgebung) sieht keine Schüsse
-    expect(effekte(inh, naiv.z, bekannteZiele(inh, naiv.z, "g2")).some((e) => e.id.startsWith("Z-06-s"))).toBe(true);
+    // das Team kennt Z-06 aus M05, das Plenum (Umgebung) sieht keine Schüsse
+    expect(effekte(inh, naiv.z, bekannteZiele(inh, naiv.z)).some((e) => e.id.startsWith("Z-06-s"))).toBe(true);
     expect(effekte(inh, naiv.z, "umgebung").some((e) => e.id.startsWith("Z-06-s"))).toBe(false);
     // BMP-2 an der Brücke: Kanone nach Westen (Richtung eigene Truppe)
     const z18 = effekte(inh, naiv.z, "alle").filter((e) => e.id.startsWith("Z-18-s"));

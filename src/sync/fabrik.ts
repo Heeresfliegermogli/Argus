@@ -4,10 +4,15 @@ import type { Einstellungen } from "../config";
 import type { SyncAdapter } from "./adapter";
 import { FirebaseAdapter } from "./firebase";
 import { LokalAdapter } from "./lokal";
+import { VerzugAdapter } from "./verzug";
 
-export function adapterFuer(e: Pick<Einstellungen, "sync" | "db" | "transport">, sitzung: string): SyncAdapter {
-  if (e.sync === "lokal") return new LokalAdapter(sitzung);
-  return new FirebaseAdapter(sitzung, { databaseURL: e.db, transport: e.transport });
+export function adapterFuer(e: Pick<Einstellungen, "sync" | "db" | "transport"> & { verzug?: number }, sitzung: string): SyncAdapter {
+  const a = e.sync === "lokal" ? new LokalAdapter(sitzung) : new FirebaseAdapter(sitzung, { databaseURL: e.db, transport: e.transport });
+  if (!e.verzug) return a;
+  // künstlicher Verzug (H1.6): für Tests und Vorführung über die Konsole erreichbar
+  const v = new VerzugAdapter(a, e.verzug);
+  (globalThis as { argusVerzug?: VerzugAdapter }).argusVerzug = v;
+  return v;
 }
 
 export type SitzungGefunden = "da" | "fehlt" | "keine_antwort";

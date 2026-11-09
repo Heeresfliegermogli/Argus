@@ -1,7 +1,9 @@
-# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9, D1–D5 und F)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9, D1–D5, F und H)
 
-Fünf Ansichten in 1530 × 800 ohne Rollbalken: Aufklärung, Zielprüfung, Führung, Spielleitung und Plenum.
-Jede Rolle hat eine Einweisung (im Spiel als Folien, als Druck A5 quer).
+**Seit Szenario 2.6 (Änderungen H, 09.11.2026):** drei Ansichten in 1530 × 800 ohne Rollbalken – **Zielbearbeitung** (eine Rolle je
+Team, 2–3 Personen an einem Laptop; intern `zb`), **Spielleitung** und **Plenum**. Die Rollen Aufklärung, Zielprüfung und Führung
+(`g1`–`g3`) sind entfallen; die Abschnitte unten zu ihnen beschreiben den Stand bis 2.5 und sind als solche markiert. Die Einweisung
+des Teams ist eine **Übersicht auf der echten Oberfläche** mit Pfeilen, danach vier Folien.
 
 **Änderungen B1–B12 (25.10.2026, nach dem Solo-Durchlauf):** Die Rollen heißen in der Oberfläche nur noch
 **Aufklärung**, **Zielprüfung**, **Führung** (Abzeichen A, Z, F; intern bleiben `g1`, `g2`, `g3`, im Szenario
@@ -65,7 +67,30 @@ bisher `…/Argus/?rolle=g1|g2|g3|sl|plenum&raum=…` (g1 Aufklärung, g2 Zielpr
 bedient alle drei Rollen). Druck der Einweisungskarten
 `…/Argus/?druck=einweisung`. Die Spielleitung öffnet das Plenum mit „Plenum öffnen“.
 
-## Die Ansichten Aufklärung, Zielprüfung, Führung (seit 6b)
+## Die Ansicht Zielbearbeitung (seit 2.6, H2)
+
+Eine Ansicht für das ganze Team, eine Entscheidung je Meldung. Aufbau (`src/ansichten/zb.tsx`, `src/stil/basis.css`):
+
+| Bereich | Inhalt |
+|---|---|
+| **Kopfzeile** | Rollenband „ARGUS Zielbearbeitung“, Teamname; Uhr (mm:ss) und Phase („Phase 5: Krise“ – der Gegenangriff steht nirgends vorher, H3.2); **die vier Panzer** 1/1–1/4 als Kacheln mit Zustand (blinkt rot bei Treffer, ausgefallen durchgestrichen), Verwundete; **Bestand groß** („Mrs 12 · LM 20 · Kanone“, gelb bei wenig, rot bei leer, H5.6); Verbindung („verbunden · n offen“, „offline – Spiel läuft“), **⇩ Protokoll**, **? Einweisung** |
+| **links: Lagemeldungen** (schmal) | Brigade, Nachbarn, 1. Kp. Eine neue steht ca. 8 s oben (Klick = gelesen), dann rutscht sie in **„frühere Meldungen“** (eingeklappt, Zahl; Klick zeigt eine ganz) – unter Druck läuft der Feed leicht unter, S3 lebt davon (H5.5). Kein „Gelesen“-Knopf mehr |
+| **Mitte: Lagekarte** | Marken der Meldungen im Eingang (Klick öffnet), gelbe Kontakte, bekämpfte Ziele mit **Countdown „Einschlag in 0:23“** am Ziel (H5.3), Vorschau des gewählten Wirkmittels am vorausberechneten Einschlagort mit Banner („Mrs: Einschlag in 0:35 – R2, R3 verletzt“), die vier Panzer mit Feindfeuer (Mündungsblitz am Schützen, Leuchtspur, Einschlag oder Treffer am Panzer, H5.7). Legende: Meldung (ARGUS), Kontakt, bekämpft – Einschlag folgt, bekämpft, No-Strike-Zone, Einschränkungsgebiet (H5.4) |
+| **rechts oben: Eingang** | je Meldung eine Zeile: „Ziel n“, ARGUS-Klasse und Konfidenz, Empfehlung, **Wartezeit m:ss** (ab 30 s hervorgehoben); zurückgestellte darunter mit ◷; bekämpfte mit „bekämpft · LM ×2“ und Countdown. Die älteste neue Meldung öffnet sich von selbst, ein Klick öffnet eine andere |
+| **rechts unten: geöffnete Meldung** | „Ziel n · im Eingang seit m:ss“, kleines **„i“** (Angaben des Herstellers, H6/E6.4); **Live-Drohnenbild** (Klick: groß mit Lupe); ARGUS-Ausgabe „Panzer · Feind 91 %“ mit Empfehlung und Bildalter (`argusBei`, `bildalter`, H6/E6.1); **Wirkmittel** je Zeile mit Bestand, „Einschlag in m:ss“, „✓ keine Warnung“ oder ⚠ R2/R3/EB, „nur k von n Fahrzeugen“; die drei Knöpfe **BEKÄMPFEN mit LM ×3** („Bestand 8 → 5“, „⚠ trotz Warnung“, H6/E3.2) · **ZURÜCKSTELLEN** (beobachten) · **ABLEHNEN** |
+
+* Jede Entscheidung trägt die Sekunden ab Eingang und ab Öffnen ins Protokoll (`sek_eingang`, `sek_offen`, H2.4) – für die Frage
+  der Auswertung „Wie lange habt ihr hingeschaut?“.
+* Ein **Treffer an einem eigenen Panzer** lässt die Kachel rot blinken und zeigt einen kurzen roten Rand am Bildschirm; der erste
+  Beschuss jedes Panzers kommt als Lagemeldung der 1. Kp (H5.7). Keine Personen.
+* Der Team-Laptop rechnet das Spiel: Ein Klick ist im selben Bild in Karte, Drohnenbild und Eingang (H5.1).
+* Ein zweites Fenster des Teams und die Spielleitung („◉ Zielbearbeitung“) sehen dieselbe Ansicht nur lesend (Abzeichen „◉ Zuschauen“,
+  Knöpfe gesperrt).
+* Im Test ohne Lobby steuert das Team die Uhr oben rechts selbst (▶ Start, ×1/×5/×20).
+* Bei Spielende sperrt eine Tafel die Ansicht („Bitte zum Plenum“); ist das Protokoll noch nicht ganz im Netz, bietet sie
+  **Protokoll speichern** an.
+
+## Bis 2.5: die Ansichten Aufklärung, Zielprüfung, Führung (6b – 2.5, abgelöst)
 
 Alle drei haben dieselbe Ordnung: **links die Karte** (Arbeitsfläche, ca. 1050 × 730 px), **rechts das
 Meldungsfeld** (440 px, Führung 470 px). Die Nummern ①②③ stehen gleich in der Einweisung.
@@ -96,9 +121,11 @@ Eingaben, deutlich gekennzeichnet: Abzeichen „◉ Zuschauen – nur lesen“ i
 um die Ansicht, ◉ an den Reitern. **Im Test ohne Lobby (B11)** bedient die Spielleitung alle drei Rollen selbst
 (Reiter ohne ◉, kein Rahmen) – „Allein testen (ein Fenster)“ auf der Startseite.
 
-## Drohnenbild am Ort und Live-Drohnenbild (Aufklärung, seit 6b)
+## Drohnenbild am Ort (bis 2.5) und Live-Drohnenbild (seit 6b)
 
-* **Fenster am Ort:** Die geöffnete Meldung zeigt ihr Drohnenbild in einem Fenster (416 × 260 px) neben dem
+* **Seit 2.6** steht das Live-Drohnenbild an der geöffneten Meldung rechts (bis 520 × 325 px, 16 : 10); Klick = groß mit Lupe wie
+  unten. Fenster am Ort, Verschieben und ✕ gab es bis 2.5 bei der Aufklärung:
+* **Fenster am Ort (bis 2.5):** Die geöffnete Meldung zeigt ihr Drohnenbild in einem Fenster (416 × 260 px) neben dem
   Ziel, eine Linie führt zum Zeichen. Das Fenster sucht sich eine Ecke, in der es ganz auf der Karte liegt,
   das Ziel frei lässt und möglichst keine anderen Marken verdeckt; es bleibt stehen, solange das Ziel frei
   daneben liegt, und rückt weiter, wenn das Ziel darunter fährt oder Zoom/Ausschnitt sich ändern
@@ -137,43 +164,37 @@ um die Ansicht, ◉ an den Reitern. **Im Test ohne Lobby (B11)** bedient die Spi
   Leinwand (`data-fps`, `data-ms`, `argusLive`).
 * Ohne Ebenen (oder solange sie laden) zeigt das Fenster das Standbild.
 
-## Einweisung als Folien (B5) und Einweisungskarten
+## Einweisung (seit 2.6, H4) und Einweisungskarten
 
-**Im Spiel** öffnet sich vor dem Start (je Rolle und Fenster einmal) eine kurze Anleitung als Folien,
-`src/ansichten/einweisung.tsx`: Folie 1 „Euer Team“ (Kette Aufklärung → Zielprüfung → Führung mit Namen aus der
-Lobby, der wichtigste Satz der Rolle), danach 2–4 Folien mit je einem Bild und zwei, drei Sätzen: Aufklärung
-„Meldung auswählen“, „Drohnenbild ansehen“ (verfolgt das Ziel, Lupe, verschieben, ✕), „Daten prüfen“,
-„Entscheiden“; Zielprüfung „Zielmeldung auswählen“, „Wirkmittel wählen“, „Empfehlen“; Führung „Empfehlung
-auswählen“, „Entscheiden“, „Lagemeldungen und Lagehinweise“; Spielleitung Auftrag und drei Folien. Je Rolle 3–5
-Folien. Bedienung: **weiter ›** / **‹ zurück**, Punkte, Pfeiltasten, Bild ↑/↓, Wischen (Touch), **Überspringen**
-(jederzeit), Esc; auf der letzten Folie **Verstanden – zur Ansicht**. Später über **Einweisung** in der Kopfzeile
-wieder aufrufbar. Die Bilder sind kleine Skizzen der Ansicht (Marke „Ziel 3“, Knöpfe gleich gewichtet) ohne
-Hinweise auf Fallen.
+**Im Spiel** öffnet sich am Team-Laptop vor dem Start (je Lauf und Fenster einmal, bei spätem Beitritt auch im laufenden Spiel)
+die Einweisung, `src/ansichten/einweisung.tsx`, jederzeit wieder über **? Einweisung** oben rechts:
 
-**Druck** (`?druck=einweisung`, A5 quer): je Rolle eine Karte mit „Euer Team“, den Folien als Raster und dem
-wichtigsten Satz.
+1. **Übersicht auf der echten Oberfläche** (H4.1): Lichtfleck und Pfeil auf das Element, Sprechblase daneben, sieben Schritte –
+   „Hier kommen die Meldungen rein“ (Eingang), „Hier entscheidet ihr“ (geöffnete Meldung), „Die Lagekarte“, „Hier eure vier Panzer“,
+   „Hier Lagemeldungen“, „Hier Wirkmittel und Bestand“, „Spieluhr“. Weiter mit **weiter ›**, Pfeiltasten, Klick in den dunklen
+   Bereich; **Übersicht überspringen** jederzeit; am Ende **weiter zur Einweisung ›**.
+2. **Vier Folien** (H4.2): „Die Phasen“ (Aufklärung, Gefechtsaufklärung, Bergung, Hauptangriff, Krise – je ein Satz, ohne
+   Gegenangriff), „Was ARGUS meldet“ (je Klasse ein helles, scharfes Bildbeispiel als Ausschnitt mit Lupe – Panzer, Fahrzeug,
+   Infanterie; keine Lösungshinweise, H4.4), „Die Wirkmittel“ (je Wirkmittel eine kurze Animation), „Los geht’s“. Bedienung:
+   **weiter ›** / **‹ zurück**, Punkte, Pfeiltasten, Wischen, **Überspringen**, **Übersicht noch einmal**, Esc; auf der letzten
+   Folie **Verstanden – zur Ansicht**.
 
-Jede Person hat eine Rolle; die Einweisung spricht sie mit „du“ an (auch der Auftrag im Szenario, `lage.G1` …):
+Nicht mehr in der Einweisung (H4.3): das Kleingedruckte des Herstellers (steht im Befehl, im Spiel hinter „i“, in der Auswertung),
+der Block „Regelungen“ (die Regeln stehen im Befehl, das System warnt), die Kette der drei Rollen.
 
-* **Kopf:** Rolle und ein Satz („Du prüfst jede ARGUS-Meldung zuerst.“).
-* **Euer Team:** die Kette Aufklärung → Zielprüfung → Führung mit Teamname und -farbe und den Namen aus der
-  Lobby, die eigene Rolle hervorgehoben („… du“), je Rolle was sie tut und was sie sieht (Aufklärung: Drohnenbild
-  live, Sensordaten; Zielprüfung: Zielmeldung, Wirkmittel, Warnungen; Führung: Empfehlung, Lagemeldungen). Darunter: „Alle drei
-  sehen die Karte mit den gemeldeten Zielen, sonst jede Person nur ihre eigene Ansicht. Ihr sitzt als Team
-  zusammen und dürft miteinander sprechen.“ – keine Aufforderung, etwas weiterzugeben (keine Lösungshinweise).
-* Der lange Auftrag aus dem Szenario steht seit B5 nicht mehr auf der Karte der Spieler (kürzer); die
-  Spielleitung sieht ihren Auftrag auf der ersten Folie. Im Druck je Rolle eine Karte ohne Namen (für jedes Team
-  einen Satz Aufklärung, Zielprüfung, Führung), dazu die Karte der Spielleitung; das Plenum zeigt dieselben
-  Rollensätze.
+**Spielleitung:** Auftrag und Folien zum Ablauf (Lage vorlesen, **Spiel öffnen – alle Teams**, **▶ Start für alle**).
+
+**Druck** (`?druck=einweisung`, A5 quer): eine Karte für das Team (Skizze der Ansicht mit nummerierten Bereichen, die Folien als
+Raster) und die Karte der Spielleitung.
 
 ## Startseite, Lobby, Übersicht (Schritt 4b)
 
 | Fenster | Inhalt |
 |---|---|
 | **Startseite** (B1) | zuerst nur zwei große Knöpfe **Ich spiele mit** und **Spielleitung** (Anker `#mitspielen`, `#spielleitung`, Zurück funktioniert). „Ich spiele mit“: nur das Codefeld (drei Zeichen) und **Beitreten** („„K0“ ist kein Code. Ein Code hat 3 Zeichen, z. B. K7P.“ bzw. „Die Sitzung … gibt es nicht“). „Spielleitung“: zuletzt genutzte Sitzung **Fortsetzen als Spielleitung** / **Plenum**, **Neue Sitzung anlegen** (Name), bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; eingeklappt „Test ohne Lobby“ (Raum, **Allein testen (ein Fenster)**, **Alle vier Fenster öffnen**, einzelne Rollen); unten Auswertung üben, Einweisungskarten drucken, Lasttest |
-| **Lobby** | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links Name, „Neues Team“ (Name, 🎲, drei Rollenknöpfe Aufklärung, Zielprüfung, Führung in Rollenfarbe) bzw. „Du bist im Team“, die drei Rollen in je einem Satz; rechts alle Teams als Karten (bis 8 ohne Rollen), je Rolle eine Zeile mit Name oder **beitreten** / **wechseln** / **+ dazu**, eigene Rolle **abgeben** |
-| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (seit Schritt 7 mit **Verstärkung ▾**: je Gruppe „an alle“ und je Team ein Knopf, gesperrt mit Grund; seit Schritt 8 **Auswertung ›**); Tabelle je Team (Spieler als Chips mit Menü, Spielzeit mit „+n V“ für eingespielte Verstärkungen, Eingang, S1–S4, Fehl, FT, da, ▶/❚❚, ansehen ›); Fuß mit Teilnehmern ohne Team |
-| **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, Steuerung · ◉ Aufklärung · ◉ Zielprüfung · ◉ Führung; die Rollen nur lesen („◉ Zuschauen – nur lesen“, blauer Rahmen), im Test ohne Lobby bedienbar; seit Schritt 8 **✎ Notiz** (Beobachtung der SL 2 zu einem Fall, der laufende Fall ist vorgewählt) |
+| **Lobby** (seit 2.6) | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links „Eure Namen“, „Neues Team“ (Name, 🎲, **Team anlegen** – „dieser Laptop spielt für das Team“) bzw. „Ihr seid im Team“ (rechnet / schaut zu, **Team verlassen**), „So spielt ihr“; rechts alle Teams als Karten mit den Fenstern (★ = Team-Laptop) und **beitreten** (Team ohne Laptop) bzw. **zuschauen** |
+| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (Spiel öffnen, **▶ Start für alle**, Anhalten, Tempo, Spielzeit, Reserve, Plenum, **Auswertung ›**, **Protokoll laden**; das Menü „Verstärkung“ ist seit 2.6 ausgeblendet); Tabelle je Team **aus den Statusmeldungen** (Laptop als Chip mit Menü, Spielzeit, Eingang, Schlüsselfälle S1–S8, Fehl, Panzer, Protokoll im Netz und Alter der Statusmeldung, ▶/❚❚, ansehen ›) |
+| **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, **Steuerung** · **◉ Zielbearbeitung** (nur lesen, mit Verzug); **✎ Notiz** (Beobachtung der SL 2 zu einem Fall, der laufende Fall ist vorgewählt) |
 | **Plenum** | vor dem ersten Spiel Einweisung mit Code und Teams; danach ein Team (Wahl oben links) |
 
 Gestaltung: Teamfarben (Rosa, Gelb, Grün, Cyan, Indigo, Magenta, Hellgrau, Braun) sind weder Rollen-
@@ -185,7 +206,7 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
 `src/karte/lagekarte.ts` (PixiJS 8, WebGL, Rückfall Canvas) zeichnet nur, was das Lagebild
 (`src/kern/lagebild.ts`) liefert – die Informationsverteilung steht damit an einer Stelle und ist getestet:
 
-* **Aufklärung, Zielprüfung, Führung:** Zielmeldungen mit dem Zeichen der ARGUS-Klasse (milsymbol, APP-6/MIL-STD-2525C), nie
+* **Zielbearbeitung (bis 2.5 Aufklärung, Zielprüfung, Führung):** Zielmeldungen mit dem Zeichen der ARGUS-Klasse (milsymbol, APP-6/MIL-STD-2525C), nie
   Ground Truth, keine Personen. Seit Schritt 7 **folgt das Zeichen dem Ziel**
   (erstes noch stehendes Fahrzeug der Meldung, Zahl = noch stehende Fahrzeuge); nach der Wirkung bleibt es
   durchgestrichen am Wrack, abgezogene Ziele verschwinden. Seit C1–C9 (Szenario 2.2): Fahrzeuge ohne Meldung bei der Rolle
@@ -193,13 +214,15 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
   unsichtbar); Zug-Zeichen mit Größenangabe (●●/●●●) und „n Fz“, Teilzeichen für Fahrzeuge > 40 m vom Zug, eigenes
   Wrackzeichen je getroffenem Fahrzeug (`src/kern/lagebild.ts`: `kontakt`, `teil`, `wrack`). Folgemeldungen zum selben Ziel ergeben ein
   Zeichen (z. B. „M18/M23“). Gewählt = gelb umrandet, erledigt = blass, bekämpft = Kreuz, freigegeben =
-  roter gestrichelter Kreis am vorausberechneten Einschlagort mit Uhrzeit. Effekte nur zu Zielen, die die
-  Rolle kennt (eigene Wirkungen, LM im Flug, Leuchtspur, Wracks), Feindartillerie und Nebel für alle.
+  roter gestrichelter Kreis am vorausberechneten Einschlagort, seit 2.6 mit Countdown „Einschlag in m:ss“. Die LM fliegt auf den
+  vorausberechneten Einschlagort und führt im Endanflug auf das Fahrzeug nach – der Einschlag liegt sichtbar am Fahrzeug, auch im
+  Replay (H5.2). Effekte nur zu Zielen, die das Team kennt (eigene Wirkungen, LM im Flug, Leuchtspur, Wracks), Feindartillerie, Nebel
+  und das Feuer auf die eigenen Panzer für alle.
 * **Kontrollkarte (SL, Plenum-Auflösung):** alle Ziele nach Ground Truth, **in Bewegung** (Position je Bild,
   Sprite mit Fahrtrichtung, ab der Zerstörung Wrack, Z-24 ab 10:19:30 mit abgesprungener Kette), alle Effekte, Feind/verbündet/zivil/außer Gefecht, Attrappe mit Täuschungszeichen, Sanitätsfahrzeug mit
   Rotem Kreuz, ungemeldete Ziele violett umrandet, Personen (Zivil weiß, Soldaten rot, Besatzung mit
   weißem Tuch blau umrandet, getroffen = Kreuz), Wirkungen grau bzw. rot bei Fehltreffer.
-* **Eigene Panzer (seit 2.5, F1; 2.3/2.4 eigene Züge):** bei allen Rollen, auf der Kontrollkarte und im Plenum – je Panzer das Zeichen
+* **Eigene Panzer (seit 2.5, F1; 2.3/2.4 eigene Züge):** bei der Zielbearbeitung, auf der Kontrollkarte und im Plenum – je Panzer das Zeichen
   `SFGPEVAT-------` (Kampfpanzer, eigen; ausgefallen `SFGDEVAT-------` grau mit Schrägstrich) mit Kennung 1/1–1/4 und Zustandsbalken,
   ab 2,6 px/m der Sprite `kpz_leo2a7v` (intakt, `_eingeschraenkt`, `_ausgefallen`) mit Erdwall zum Feind; Treffer lassen das Zeichen
   blinken; Zustand aus `src/kern/verluste.ts` (`eigeneLage` im Lagebild). Die Karte meldet an `argusKarte.diagnose.eigene` Zeichen,
@@ -221,16 +244,14 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
 
 * Bernstein gehört ARGUS (Markierung, Klasse, Konfidenz), Rot der Wirkung (BEKÄMPFEN, FREIGABE) und
   Regelverstößen. Jede Gruppe hat eine eigene Farbe (Kopfzeile, Einweisungskarte, Schrittnummern).
-* ANNEHMEN und ABLEHNEN sind gleich gewichtet: Die Oberfläche legt keine Antwort nahe.
-* Weniger ist mehr (6b): keine Listen und kein Verlauf bei den drei Rollen; was offen ist, steht auf der Karte, der
-  Eingang als Zahl. Rollentexte in der Du-Form (eine Person je Rolle).
+* ZURÜCKSTELLEN und ABLEHNEN stehen gleich groß neben BEKÄMPFEN: Die Oberfläche legt keine Antwort nahe (seit 2.6; bis 2.5
+  ANNEHMEN/ABLEHNEN der Aufklärung).
+* Weniger ist mehr: ein Eingang mit Wartezeit statt Verlauf; was offen ist, steht im Eingang und auf der Karte. Texte für das
+  Team in der Ihr-Form (2–3 Personen an einem Laptop).
 * Keine Lösungshinweise in der Oberfläche: Was die Schlüsselfälle auflöst, steht nur dort, wo das
-  Drehbuch es vorsieht (Sensordaten und Kleingedrucktes bei der Aufklärung, I-04 im Postfach der Führung). Die
-  Sensordaten tragen deshalb keinen Zusatz „fließen nicht in ARGUS ein“ – das steht im Kleingedruckten;
-  der Platzhalter für Lagehinweise nennt kein Beispiel aus dem Szenario.
+  Drehbuch es vorsieht (Merkmale im Drohnenbild, Kleingedrucktes hinter „i“, die Lagemeldungen im Feed – S3 nur dort).
 * Feste Felder schneiden nichts ab; nur Listen rollen innerhalb ihres Feldes, ohne sichtbaren Balken
-  (unten ausgeblendet, solange mehr folgt). Lange Freitexte (Begründung) bei der Führung höchstens
-  zwei Zeilen, ganzer Text beim Zeigen.
+  (unten ausgeblendet, solange mehr folgt). Ältere Lagemeldungen einzeilig, ganzer Text beim Klick.
 * Schrift Barlow Semi Condensed und IBM Plex Mono (eingebettet, auch in der Offline-Datei).
 
 ## Datengetrieben
@@ -243,14 +264,14 @@ Neu in den Daten (nur Darstellung, keine Spielregel; `claude/daten/` und `public
   allgemeines Fahrzeugzeichen.
 * **Zone `beschriftung`:** Lage der Zonenbeschriftung auf der Karte (sonst berechnet). Szenario bleibt 1.3.
 
-Texte der Einweisungskarten: Auftrag und Lage aus dem Szenario (`lage.G1` …, seit 6b in der Du-Form; nur Text,
-Szenario-Version bleibt 2.0), Wirkmittel, Fast-Track-Schwelle und Spielzeit aus den Daten; Bedienung und
-Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
+Texte der Einweisung: Phasen, Wirkmittel, Klassenbeispiele und Spielzeit aus den Daten; Übersicht und Bedienung stehen im Code
+(`src/ansichten/einweisung.tsx`). Fast-Track gibt es seit 2.6 nicht mehr.
 
 ## Prüfung
 
 | Prüfung | Ergebnis |
 |---|---|
+| **H (09.11.2026, Szenario 2.6)** `npm test`, `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `verluste_probe.py`, `drohne_probe.py`, `livelage_probe.py`, `auswertung_probe.py`, `e2e_teams.py`, `e2e_drehbuch.py` (alle auf eine Rolle umgestellt) | siehe `claude/Zwischenstand_H.md`: alle Ansichten in 1530 × 800 ohne Rollbalken (Übersicht mit Pfeilen, Folien, Eingang voll, Lupe je Schlüsselfall, Countdown, frühere Lagemeldungen, Teamvergleich mit 7 Teams); Bedientest 13/13, Lobby 20/20; Beschuss der Panzer sichtbar (Mündungsblitz, Leuchtspur, Blinken, roter Rand) |
 | **F (02.11.2026, Szenario 2.5)** `npm test`, `verluste_probe.py` (für F neu geschrieben), `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `auswertung_probe.py`, `e2e_drehbuch.py` | 176 Tests (neu `tests/szenario25.test.ts`); vier Panzer mit Kennung und Zustandsbalken bei allen Rollen, auf der Kontrollkarte und im Plenum, gezoomt als Sprites (intakt, eingeschränkt, ausgefallen), Kopfzeile „1. Zug: b/4 einsatzbereit · n Verwundete“ (seit F5 „1. Kp: …“) mit Balken je Panzer in allen Fenstern gleich, Druckmeldungen je Panzer ≤ 140 Zeichen, I-07 nennt 1/4, Zeichen blinkt bei Treffer, Untergrenze hält, Preis des Abwartens je Panzer; Bedientest 18/18 (F-2: seit E3 zwei Einschlagsmarken für Ziel 1); Plenum-Einweisung nach Kürzen der Lage ohne Rollbalken; `e2e_drehbuch.py` mit zwei Teams: Protokolle und Druckmeldungen wie im Prozess (siehe ENGINE.md). **Offen, seit E-a (Aufgabe von E-b):** Teamvergleich der Auswertung mit zwölf Spalten 2244 px breit (`plenum_aufloesung`, `plenum_auswertung_teamvergleich`), Sensordaten noch in Einweisung und Replay (E6.3) |
 | **D1–D5 (01.11.2026, Szenario 2.3)** `npm test`, `verluste_probe.py` (neu), `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `drohne_probe.py`, `auswertung_probe.py` | 150 Tests (neu `tests/szenario23.test.ts`); eigene Züge mit Kampfkraft bei allen Rollen, Kopfzeile in allen Fenstern gleich, Druckmeldungen im Postfach ≤ 140 Zeichen, Flackern bei Treffer, Empfehlungskarte 89 px hoch, Kapitel „Preis des Abwartens“; 29 und 22 Bilder in 1530 × 800 ohne Rollbalken; Bedientest 18/18, Lobby 20/20, Live-Drohnenbild 43 Prüfpunkte; Auswertung mit Preis-Kapitel (12:00 min) |
 | **C1–C9 (28.10.2026, Szenario 2.2)** `npm test`, `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `drohne_probe.py`, `livelage_probe.py`, `auswertung_probe.py` | 140 Tests (neu `tests/szenario22.test.ts`, Kontakte, Teil- und Wrackzeichen in `tests/lagebild.test.ts`); 29 und 22 Bilder in 1530 × 800 ohne Rollbalken (gelbe Kontakte, Zug-Zeichen mit ●●●, eigene Wrackzeichen, Legende einzeilig); Bedientest 18/18 (Ziel 3 ist jetzt der Tigr aus M28, das Drohnenfenster wird zur Kartenmitte gezogen); Lobby 20/20; Live-Drohnenbild 43 Prüfpunkte (alle 30 Meldungen wie das Standbild, M25 mit starker Bildstörung, Rotes Kreuz, Kinder, weißes Tuch, Bildrate 28–30 Bilder/s); Live-Lage und Auswertung bestanden |
@@ -274,6 +295,6 @@ Teamleiste stehen im Code (`src/ansichten/einweisung.tsx`).
 
 ## Offen
 
-* Bedientest mit Menschen (Teil A Start und Lobby, Teil B Ansichten); dabei „◌ AUSRICHTUNG …“ (ab Ziel 18), die Kinder in Ziel 21 und die gelben Kontakte (seit Szenario 2.2) beobachten.
+* Bedientest mit Menschen für 2.6 (Teil A Start und Lobby, Teil B Zielbearbeitung zu zweit); dabei Tempo und Feed beobachten.
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
 * Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).

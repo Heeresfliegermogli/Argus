@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Probe Änderungen F (Szenario 2.5, „Panzerzug“) auf der Oberfläche; bis 2.4 prüfte sie D1–D5 mit drei Zügen.
+"""Probe Panzerzug und Beschuss der eigenen Kp auf der Oberfläche (Änderungen F, Szenario 2.5; seit 2.6 eine Rolle, H3.3, H5.6, H5.7).
 
-Ein Team im Direktaufruf (SL, Aufklärung, Zielprüfung, Führung, Plenum; lokaler Sync), Uhr über die Steuerung der SL,
-ohne Entscheidungen der Rollen (der Zeitplan läuft, die 1. Kp nimmt Schaden):
-  F1  Alle Rollen sehen die vier Panzer 1/1–1/4 auf der Karte (Zeichen, Beschriftung), gezoomt als Sprites in Stellung
-      (intakt, eingeschränkt, ausgefallen); Feinde nach Ground Truth nur auf der Kontrollkarte.
-  F2.6 Kopfzeile in jedem Fenster „1. Kp: b/4 einsatzbereit · n Verwundete“ mit einem Balken je Panzer, überall gleich;
-      ein getroffener Panzer blinkt (Tempo ×1).
-  F2.7 Druckmeldungen K-… von der „1. Kp“ je Panzer im Postfach der Führung (≤ 140 Zeichen mit Absender), I-07 nennt 1/4.
-  D4  Empfehlungskarte der Führung kompakt (eine Meldung durch die Kette).
-  F2.9 Auswertung (Beispiel, 5 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
+Ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync), Uhr über die Steuerung der SL:
+  E3.2 Knopf „BEKÄMPFEN mit LM ×2 – Bestand 20 → 18“ (Ziel 1, zwei Fahrzeuge), Bestand groß in der Kopfzeile (H5.6).
+  F1   Alle Karten zeigen die vier Panzer 1/1–1/4 (Zeichen, Beschriftung), gezoomt als Sprites in Stellung.
+  F2.6 Kopfzeile: Zielbearbeitung mit den vier Panzern (Zustand je Panzer), SL und Plenum „1. Kp: b/4 einsatzbereit …“ – überall
+       derselbe Stand.
+  H5.7 Beschuss der eigenen Panzer deutlich sichtbar (16:45 bei Tempo ×1, direktes Feuer auf 1/1): auf der Karte Mündungsblitz
+       am Schützen und Leuchtspur zum Panzer, der getroffene Panzer blinkt in der Kopfzeile, kurzer roter Rand am Bildschirm;
+       der erste Beschuss jedes Panzers kommt als Lagemeldung der 1. Kp in den Feed.
+  H3.3 Lagemeldungen am Spielende: Druckmeldungen wegen Artillerie/Mörser mindestens 2 min auseinander, keine Hintergrund-
+       meldungen der Feindartillerie (H-01, H-04, H-12) im Feed, jede Meldung ≤ 140 Zeichen mit Absender.
+  F2.9 Auswertung (Beispiel, 7 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
 Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
@@ -100,11 +102,11 @@ def main():
 
         sl = seite("SL", url(rolle="sl", raum=a.raum, name="SL 1"))
         warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 30, "SL steuert")
-        g1, g2, g3, pl = (seite(r.upper(), url(rolle=r, raum=a.raum)) for r in ["g1", "g2", "g3", "plenum"])
-        for s, r in [(g1, "g1"), (g2, "g2"), (g3, "g3")]:
-            warte(lambda: s.locator(f"[data-testid=einweisung-{r}]").count() == 1, 20, f"Einweisung {r}")
-            s.get_by_test_id("einweisung-ueberspringen").click()
-        karten = [(sl, "kontrollkarte", "SL"), (g1, "g1-karte", "Aufklärung"), (g2, "lagekarte", "Zielprüfung"), (g3, "lagekarte", "Führung")]
+        zb, pl = (seite(n, url(rolle=r, raum=a.raum)) for n, r in [("Zielbearbeitung", "zb"), ("Plenum", "plenum")])
+        warte(lambda: zb.get_by_test_id("tour").count() == 1, 20, "Übersicht")
+        zb.get_by_test_id("tour-ueberspringen").click()
+        zb.get_by_test_id("einweisung-ueberspringen").click()
+        karten = [(sl, "kontrollkarte", "SL"), (zb, "lagekarte", "Zielbearbeitung"), (pl, "lagekarte", "Plenum")]
         for s, k, _ in karten:
             warte(lambda: s.locator(f"[data-testid={k}] .karte-leinwand").count() == 1, 20, f"Karte {k}")
 
@@ -122,110 +124,116 @@ def main():
             if tempo:
                 sl.get_by_role("button", name=f"×{tempo}", exact=True).click()
 
-        # ---------------------------------------------------------------- D4 Empfehlungskarte kompakt
-        print("D4 – Empfehlungskarte der Führung (eine Meldung durch die Kette)")
+        # ---------------------------------------------------------------- E3.2 / H5.6 Bestand
+        print("E3.2/H5.6 – BEKÄMPFEN mit Bestand, Bestand in der Kopfzeile")
         zeit("00:25")
-        warte(lambda: g1.get_by_test_id("g1-offen").inner_text() != "0", 10, "Meldung bei der Aufklärung")
-        mid = g1.evaluate("() => window.argus.stand.zustand.reihenfolge.filter((id) => window.argus.stand.zustand.meldungen[id].stufe === 'g1')")[-1]
-        g1.locator(f".kmarke[data-meldung={mid}]").first.click()
-        g1.get_by_test_id("g1-annehmen").click()
-        warte(lambda: g2.locator(f".kmarke[data-meldung={mid}]").count() > 0, 10, f"{mid} bei der Zielprüfung")
-        g2.locator(f".kmarke[data-meldung={mid}]").first.click()
-        g2.locator("label[data-wm=LM]").click()
-        g2.wait_for_timeout(300)
-        g2.get_by_test_id("g2-bekaempfen").click()
-        warte(lambda: g3.locator(f".kmarke[data-meldung={mid}]").count() > 0, 10, f"{mid} bei der Führung")
-        g3.locator(f".kmarke[data-meldung={mid}]").first.click()
-        warte(lambda: g3.get_by_test_id("g3-jetzt").count() == 1, 10, "Empfehlung offen")
-        karte_h = g3.evaluate("() => document.querySelector('.g3-karte').getBoundingClientRect().height")
-        txt = g3.locator(".g3-karte").inner_text()
-        pruefe(karte_h <= 150, f"Empfehlungskarte kompakt: {karte_h:.0f} px hoch")
-        pruefe("Zielprüfung" in txt and "Loitering" in txt and "Einschlag" in txt and "%" in txt, "Karte nennt Ziel, Klasse, Konfidenz, Empfehlung mit Wirkmittel und Einschlag")
-        foto(g3, "d4_empfehlungskarte")
-        g3.get_by_test_id("g3-ablehnen").click()
+        warte(lambda: zb.get_by_test_id("offene-meldung").get_attribute("data-meldung") == "M01", 10, "Ziel 1 offen")
+        zb.locator("label[data-wm=LM]").click()
+        knopf = zb.get_by_test_id("zb-bekaempfen").inner_text()
+        pruefe("BEKÄMPFEN mit LM ×2" in knopf and "Bestand 20 → 18" in knopf, f"Knopf „{' – '.join(knopf.splitlines())}“")
+        lm_vorher = zb.get_by_test_id("bestand").locator("[data-wm=LM]").inner_text()
+        foto(zb, "e32_bekaempfen_lm_x2")
+        zb.get_by_test_id("zb-bekaempfen").click()
+        warte(lambda: zb.get_by_test_id("bestand").locator("[data-wm=LM]").get_attribute("data-bestand") == "18", 5, "Bestand LM 18")
+        pruefe(lm_vorher.replace(" ", "").replace("\n", "") == "LM20", f"Kopfzeile vorher „{lm_vorher}“, jetzt LM 18")
 
         # ---------------------------------------------------------------- F2.6 Kopfzeile, F1 Karten
-        print("F1/F2.6 – vier Panzer und Kopfzeile (18:40, ohne Entscheidungen)")
+        print("F1/F2.6 – vier Panzer und Kopfzeile (18:40, ohne weitere Entscheidungen)")
         zeit("18:40")
         time.sleep(1.5)
+        pz = zb.evaluate("() => [...document.querySelectorAll('[data-testid=panzer-leiste] .pz-kachel')].map(e => `${e.dataset.pz}:${e.dataset.stufe}:${e.dataset.zustand}`)")
+        bereit_zb = zb.get_by_test_id("panzer-leiste").get_attribute("data-bereit")
+        pruefe([x.split(":")[0] for x in pz] == ["1/1", "1/2", "1/3", "1/4"], f"Zielbearbeitung: je Panzer eine Kachel {pz}")
         stand = {}
-        for s, n in [(sl, "SL"), (g1, "Aufklärung"), (g2, "Zielprüfung"), (g3, "Führung"), (pl, "Plenum")]:
+        for s, n in [(sl, "SL"), (pl, "Plenum")]:
             warte(lambda: s.get_by_test_id("kp-stand").count() == 1, 10, f"Kopfzeile {n}")
             b = s.get_by_test_id("kp-stand")
             balken = s.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => `${e.dataset.pz}:${e.dataset.stufe}:${e.dataset.zustand}`)")
-            stand[n] = (b.get_attribute("data-bereit"), b.get_attribute("data-verwundete"), tuple(balken), b.inner_text(), b.get_attribute("class"))
-        werte = {v[:3] for v in stand.values()}
-        pruefe(len(werte) == 1, f"Kopfzeile in allen Fenstern gleich: {stand['Führung'][3]} {stand['Führung'][2]} ({len(werte)} Werte)")
-        txt = stand["Führung"][3]
-        pruefe(txt.startswith("1. Kp: ") and "/4 einsatzbereit" in txt and ("Verwundete" in txt or "Verwundeter" in txt or "keine Verwundeten" in txt),
-               f"Text „1. Kp: b/4 einsatzbereit · n Verwundete“: {txt}")
-        pruefe([x.split(":")[0] for x in stand["Führung"][2]] == ["1/1", "1/2", "1/3", "1/4"], "je Panzer ein Balken (1/1–1/4)")
-        bereit = int(stand["Führung"][0])
+            stand[n] = (b.get_attribute("data-bereit"), tuple(balken), b.inner_text())
+        pruefe(all(v[0] == bereit_zb and list(v[1]) == pz for v in stand.values()), f"überall derselbe Stand: {bereit_zb}/4 {pz}")
+        txt = stand["SL"][2]
+        pruefe(txt.startswith("1. Kp: ") and "/4 einsatzbereit" in txt, f"SL „1. Kp: b/4 einsatzbereit …“: {txt}")
+        bereit = int(bereit_zb)
         for s, k, n in karten:
             warte(lambda: (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("zeichen", 0) + (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("sprites", 0) > 0, 10, f"eigene Panzer {n}")
             d = s.evaluate(KARTE_JS, k)["eigene"]
             pruefe(sorted(d["texte"]) == ["1/1", "1/2", "1/3", "1/4"], f"{n}: vier Panzer beschriftet {d['texte']} {d['stufen']}")
-        foto(g3, "f1_fuehrung_1840")
+        foto(zb, "f1_zielbearbeitung_1840")
         foto(sl, "f1_kontrollkarte_1840")
-        foto(g1, "f1_aufklaerung_1840")
 
         # gezoomt: Panzer in Stellung (Sprites)
-        sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }")
-        time.sleep(1.2)
-        d = sl.evaluate(KARTE_JS, "kontrollkarte")["eigene"]
-        pruefe(d["sprites"] >= 3, f"Kontrollkarte gezoomt: Panzer in Stellung als Sprites ({d['sprites']}, {d['stufen']})")
-        foto(sl, "f1_stellung_gezoomt")
-        g3.evaluate("() => { const e = document.querySelector('[data-testid=lagekarte] .karte-leinwand'); e.argusKarte.zeigeAuf([70, 440], 4.5) }")
-        time.sleep(1.2)
-        d = g3.evaluate(KARTE_JS, "lagekarte")["eigene"]
-        pruefe(d["sprites"] >= 3, f"Führung gezoomt: Panzer in Stellung ({d['sprites']})")
-        foto(g3, "f1_fuehrung_gezoomt")
-        g3.evaluate("() => { const e = document.querySelector('[data-testid=lagekarte] .karte-leinwand'); e.argusKarte.ganzeKarte() }")
+        for s, k, n in karten[:2]:
+            s.evaluate(f"() => {{ const e = document.querySelector('[data-testid={k}] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }}")
+            time.sleep(1.2)
+            d = s.evaluate(KARTE_JS, k)["eigene"]
+            pruefe(d["sprites"] >= 3, f"{n} gezoomt: Panzer in Stellung als Sprites ({d['sprites']}, {d['stufen']})")
+            foto(s, f"f1_stellung_gezoomt_{k}")
+            s.evaluate(f"() => {{ const e = document.querySelector('[data-testid={k}] .karte-leinwand'); e.argusKarte.ganzeKarte() }}")
 
-        # ---------------------------------------------------------------- F2.7 Druckmeldungen und Blinken
-        print("F2.7 – Druckmeldungen je Panzer und Treffer am Panzer")
-        km = g3.locator("[data-testid=postfach] [data-inject^='K-']")
-        pruefe(km.count() >= 3, f"Postfach der Führung: {km.count()} Druckmeldungen der Kp")
-        texte = g3.evaluate("""() => [...document.querySelectorAll("[data-testid=postfach] [data-inject]")].map(e => ({
-            id: e.dataset.inject, von: e.querySelector('.kopfzeile span')?.textContent.split(' · ').slice(1).join(' · '),
-            text: (e.querySelector('.text') || e.querySelector('.einzeilig'))?.textContent, dringend: e.classList.contains('dringend') }))""")
-        lang = [t for t in texte if len(f"{t['von']}: {t['text']}") > 140]
-        pruefe(not lang, f"alle {len(texte)} Lagemeldungen im Postfach ≤ 140 Zeichen mit Absender" + (f" – zu lang: {lang[:2]}" if lang else ""))
-        i07 = next((t for t in texte if t["id"] == "I-07"), None)
-        pruefe(bool(i07) and i07["text"].startswith("1/4 unter Mörserfeuer aus Hof RABE,"), f"I-07 nennt 1/4: {i07 and i07['text']}")
-        k_texte = [t for t in texte if t["id"].startswith("K-")]
-        pruefe(all(t["von"] == "1. Kp" for t in k_texte), "Druckmeldungen von der „1. Kp“")
-        pruefe(all(any(n in (t["text"] or "") for n in ("1/1", "1/2", "1/3", "1/4")) for t in k_texte), "jede Druckmeldung nennt ihren Panzer")
-        foto(g3, "f2_postfach_1840")
-        # Blinken: 1/4 liegt unter Mörserfeuer aus Hof RABE (eine Salve alle 30 s), Tempo ×1
-        zeit("18:41", tempo=1)
+        # ---------------------------------------------------------------- H5.7 Beschuss sichtbar
+        print("H5.7 – Beschuss der eigenen Panzer (16:45, Tempo ×1)")
+        zeit("16:45", tempo=1)
+        zb.evaluate("""() => { window.__h57 = { rand: 0, kachel: new Set() };
+            new MutationObserver(() => { const r = document.querySelector('.rahmen'); if (r && r.classList.contains('treffer-rand')) window.__h57.rand++;
+              for (const k of document.querySelectorAll('.pz-kachel.getroffen')) window.__h57.kachel.add(k.dataset.pz); })
+              .observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] }); }""")
         sl.get_by_role("button", name="▶ Start").click()
-        gesehen = set()
-        ende = time.time() + 40
-        while time.time() < ende and not gesehen:
-            for s, k, _ in karten[:1] + karten[3:]:
-                gesehen |= set(s.evaluate(KARTE_JS, k)["eigene"]["flackern"])
+        gezeigt, flackern, foto_da = set(), set(), False
+        ende = time.time() + 30
+        while time.time() < ende:
+            d = zb.evaluate(KARTE_JS, "lagekarte")
+            gezeigt |= set(d["gezeigt"])
+            flackern |= set(d["eigene"]["flackern"])
+            if not foto_da and zb.locator(".rahmen.treffer-rand").count():
+                zb.screenshot(path=os.path.join(a.bilder, "h57_treffer_zielbearbeitung.png"))
+                foto_da = True
+            if foto_da and {"muendungsblitz", "leuchtspur"} <= gezeigt and time.time() > ende - 15:
+                break
             time.sleep(0.05)
-        pruefe(bool(gesehen), f"Zeichen blinkt bei Treffer (gesehen: {sorted(gesehen)})")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
         warte(lambda: not zustand()["laeuft"], 5, "Uhr steht")
+        h57 = zb.evaluate("() => ({ rand: window.__h57.rand, kachel: [...window.__h57.kachel] })")
+        pruefe({"muendungsblitz", "leuchtspur"} <= gezeigt, f"Karte der Zielbearbeitung: Mündungsblitz und Leuchtspur ({sorted(gezeigt)})")
+        pruefe(bool(flackern), f"Zeichen des getroffenen Panzers blinkt auf der Karte ({sorted(flackern)})")
+        pruefe(bool(h57["kachel"]), f"Kopfzeile: getroffener Panzer blinkt rot ({h57['kachel']})")
+        pruefe(h57["rand"] > 0 and foto_da, f"roter Rand am Bildschirm bei Treffer ({h57['rand']}×, Foto h57_treffer_zielbearbeitung)")
 
-        # spät im Spiel: Panzer ausgefallen (grau), Untergrenze
+        # ---------------------------------------------------------------- H3.3 / F2.7 Lagemeldungen am Spielende
+        print("H3.3/F2.7 – Lagemeldungen (24:50, ohne weitere Entscheidungen)")
         zeit("24:50")
         time.sleep(1.5)
-        b = g3.get_by_test_id("kp-stand")
+        zb.get_by_test_id("feed-frueher").click()
+        texte = zb.evaluate("""() => [...document.querySelectorAll("[data-testid=feed] [data-inject]")].map(e => ({
+            id: e.dataset.inject, kopf: e.querySelector('.feed-von')?.textContent, text: e.getAttribute('title') || e.querySelector('.feed-text')?.textContent }))""")
+        def sek(kopf):
+            m, s_ = kopf.split(" · ")[0].split(":")
+            return int(m) * 60 + int(s_)
+        lang = [t for t in texte if len(f"{t['kopf'].split(' · ', 1)[1]}: {t['text']}") > 140]
+        pruefe(not lang, f"alle {len(texte)} Lagemeldungen ≤ 140 Zeichen mit Absender" + (f" – zu lang: {lang[:2]}" if lang else ""))
+        hg = [t["id"] for t in texte if t["id"] in ("H-01", "H-04", "H-12")]
+        pruefe(not hg, f"keine Hintergrundmeldungen der Feindartillerie im Feed ({hg})")
+        art = sorted(sek(t["kopf"]) for t in texte if t["id"].startswith("K-") and any(w in (t["text"] or "") for w in ("Mörser", "Artillerie", "Steilfeuer")))
+        abst = [b_ - a_ for a_, b_ in zip(art, art[1:])]
+        pruefe(all(x >= 120 for x in abst), f"Artilleriemeldungen der Kp mindestens 2 min auseinander ({len(art)} Meldungen, Abstände {abst} s)")
+        k_texte = [t for t in texte if t["id"].startswith("K-")]
+        pruefe(all(t["kopf"].endswith("1. Kp") for t in k_texte), f"{len(k_texte)} Meldungen der „1. Kp“")
+        von_kp = [t for t in texte if t["kopf"].endswith("1. Kp")]
+        erst = {n for n in ("1/1", "1/2", "1/3", "1/4") if any(n in (t["text"] or "") for t in von_kp)}
+        pruefe(len(erst) == 4, f"Beschuss jedes Panzers als Lagemeldung der 1. Kp ({sorted(erst)})")
+        foto(zb, "h33_feed_2450")
+        b = pl.get_by_test_id("kp-stand")
         bereit2 = int(b.get_attribute("data-bereit"))
-        zst = g3.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => [e.dataset.stufe, Number(e.dataset.zustand)])")
+        zst = pl.evaluate("() => [...document.querySelectorAll('[data-testid=kp-stand] .pz-balken')].map(e => [e.dataset.stufe, Number(e.dataset.zustand)])")
         pruefe(bereit2 <= bereit and bereit2 >= 2, f"ohne Abwehr: {bereit}/4 → {bereit2}/4 einsatzbereit, höchstens zwei ausgefallen")
         pruefe(all(z >= 40 for st, z in zst if st != "ausgefallen"), f"Kp hält (Untergrenze): {zst}")
-        foto(g3, "f2_fuehrung_2450")
+        foto(zb, "f2_zielbearbeitung_2450")
         foto(pl, "f1_plenum_2450")
         sl.evaluate("() => { const e = document.querySelector('[data-testid=kontrollkarte] .karte-leinwand'); e.argusKarte.zeigeAuf([60, 440], 5) }")
         time.sleep(1.2)
         foto(sl, "f2_stellung_gezoomt_2450")
 
         # ---------------------------------------------------------------- D5 Auswertung
-        print("F2.9 – Auswertung „Preis des Abwartens“ (Beispiel, 5 Teams)")
+        print("F2.9 – Auswertung „Preis des Abwartens“ (Beispiel, 7 Teams)")
         aw = seite("Auswertung", f"{a.basis}?auswertung=demo")
         warte(lambda: aw.locator("button[data-kapitel=preis]").count() == 1, 30, "Kapitel Preis")
         aw.click("button[data-kapitel=preis]")
@@ -233,9 +241,9 @@ def main():
         time.sleep(0.6)
         n_kurven = aw.locator(".preis-kurve").count()
         n_marken = aw.locator(".preis-marke").count()
-        pruefe(n_kurven == 5, f"fünf Kurven (mittlerer Zustand der vier Panzer) ({n_kurven})")
+        pruefe(n_kurven == 7, f"sieben Kurven (mittlerer Zustand der vier Panzer) ({n_kurven})")
         n_pz = aw.locator(".preis-panzer").count()
-        pruefe(n_pz == 5, f"Zustand der vier Panzer je Team ({n_pz} Zeilen)")
+        pruefe(n_pz == 7, f"Zustand der vier Panzer je Team ({n_pz} Zeilen)")
         pruefe(n_marken >= 10, f"Marken S4/N4/S3 auf den Kurven ({n_marken})")
         lf = aw.get_by_test_id("preis-leitfragen").inner_text()
         pruefe("um welchen Preis" in lf and "war das richtig" in lf, "Leitfragen „um welchen Preis?“ / „war das richtig?“")
@@ -258,7 +266,8 @@ def main():
     if fehler or konsole:
         print(f"{len(fehler)} Fehler, {len(konsole)} Konsolenfehler")
         sys.exit(1)
-    print("OK – F: vier Panzer, Kopfzeile je Panzer, Druckmeldungen, Blinken, Empfehlungskarte, Preis des Abwartens, alles in 1530×800")
+    print("OK – vier Panzer, Kopfzeile, Bestand, Beschuss sichtbar (Mündungsblitz, Leuchtspur, Blinken, roter Rand), Lagemeldungen, "
+          "Preis des Abwartens, alles in 1530×800")
 
 
 if __name__ == "__main__":

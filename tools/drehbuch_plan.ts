@@ -2,9 +2,9 @@
 // tests/durchlauf.test.ts mit der echten Engine im Prozess durch (naiv, ideal, beide mit vier Verstärkungen,
 // naiv mit fünf – dieselben Läufe wie tools/referenz/simuliere_durchlauf.py, Referenz tests/referenz_durchlauf.json)
 // und schreibt je Team
-//   • die Aktionen der Modellpersonen G1, G2, G3 und der Spielleitung mit Spielzeit (zum Nachspielen im Browser),
+//   • die Aktionen des Teams (seit 2.6 eine Rolle: je Meldung eine Entscheidung) und der Spielleitung mit Spielzeit,
 //   • das Protokoll, das dabei entsteht (zum Vergleich mit den Protokollen der Browserfenster),
-//   • die Auswertung dieses Protokolls (Schritt 8: Ausgang je Fall und Kennzahlen) zum Vergleich mit dem Plenum.
+//   • die Auswertung dieses Protokolls (Ausgang je Fall, Sekunden je Entscheidung, Kennzahlen) zum Vergleich mit dem Plenum.
 //
 // Aufruf: npx vite-node tools/drehbuch_plan.ts -- <ziel.json>
 import { readFileSync, writeFileSync } from "node:fs";
@@ -16,7 +16,7 @@ const ref = JSON.parse(readFileSync(new URL("../tests/referenz_durchlauf.json", 
 
 const ziel = process.argv.slice(2).filter((a) => a !== "--")[0] ?? "drehbuch_plan.json";
 const inh = await inhalte();
-// G3 quittiert Lagemeldungen und gibt (ideal, Team 3) Lagehinweise – für Kennzahlen und Replay der Auswertung (Schritt 8)
+// das Team klickt Lagemeldungen an (Team 3 erst nach einer Minute) – für Kennzahlen und Replay der Auswertung
 const teams = spieleDurch(inh, drehbuchTeams(ref));
 
 const a = auswerten(inh, teams.map((m) => ({ id: m.name, name: m.name, farbe: "#888888", zustand: m.z, protokoll: m.kanal.protokoll })));
@@ -33,10 +33,10 @@ const plan = teams.map((m, i) => ({
     const t = a.teams[i];
     const k = t.kennzahlen;
     return {
-      faelle: Object.fromEntries(a.faelle.map((f) => [f.id, { ausgang: t.faelle[f.id].ausgang, stufe: t.faelle[f.id].stufe ?? null }])),
+      faelle: Object.fromEntries(a.faelle.map((f) => [f.id, { ausgang: t.faelle[f.id].ausgang, entscheid: t.faelle[f.id].kette.glied.was ?? null, sek: t.faelle[f.id].sek ?? null }])),
       kennzahlen: {
         fehl: k.fehl.wirkungen, warnung: k.trotzWarnung, widerspruch: k.widerspruch.gesamt, zu_recht: k.widerspruch.zuRecht,
-        ft: k.fastTrack.an, lm_gelesen: k.lagemeldungen[0]?.gelesen ?? null, lagehinweise: k.lagehinweise.anzahl,
+        lm_gelesen: k.lagemeldungen[0]?.gelesen ?? null, sek_median: k.zeiten.alle.eingang, entscheidungen: k.zeiten.alle.n,
       },
     };
   })(),

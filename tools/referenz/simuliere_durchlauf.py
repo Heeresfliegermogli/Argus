@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Simulierter Durchlauf mit Modellteams, um das Drehbuch zu prüfen (kein Gefechtsmodell).
 
-  naiv  – folgt ARGUS: G1 nimmt alles an außer UNKLAR, G2 nimmt das erste Wirkmittel, für das das System keine Warnung
-          zeigt (sonst LM, auch gegen die Warnung), G3 gibt immer frei, Fast-Track wird 30 s nach dem Angebot eingeschaltet.
-  ideal – handelt nach der Lösung im Szenario (loesung-Felder); G3 gibt nur frei, wenn die Warnung zum Einschlag frei ist.
+Seit 2.6 (Änderungen H, 09.11.2026): eine Rolle je Team, eine Entscheidung je Meldung (BEKÄMPFEN mit Wirkmittel = Freigabe,
+ZURÜCKSTELLEN oder ABLEHNEN). Das Team arbeitet die Meldungen der Reihe nach ab (die älteste öffnet sich von selbst); jede
+Entscheidung dauert die Modellzeit des Teams.
 
-Bearbeitungszeiten je Stufe (Warteschlange je Person, ein Team à 3): G1 40 s, G2 50 s, G3 30 s. Was bei Spielende nicht
-freigegeben ist, bleibt offen.
+  naiv  – folgt ARGUS (bei gestörtem Datenlink der gestörten Ausgabe): BEKÄMPFEN außer bei UNKLAR (ABLEHNEN), mit dem ersten
+          Wirkmittel, für das das System keine Warnung zeigt (sonst LM, auch gegen die Warnung). Modellzeit T_NAIV je Entscheidung
+          („Lavender“: 20 s je Ziel).
+  ideal – handelt nach der Lösung im Szenario (loesung.entscheid); BEKÄMPFEN nur mit einem Wirkmittel der Lösung, ohne Warnung und
+          wenn beim vorausberechneten Einschlag nichts Geschütztes im Wirkradius ist (sonst ZURÜCKSTELLEN). Modellzeit T_IDEAL.
 
-Seit 2.0: Trefferregel nach der Lage beim Einschlag (argus_lib.wirkung), Hintergrundgefecht (eigene PzAbw), Ereignis E-01,
+Was bei Spielende nicht entschieden ist, bleibt offen.
+
+Seit 2.0: Trefferregel nach der Lage beim Einschlag (argus_lib.wirkung), Hintergrundgefecht (eigene Kanone), Ereignis E-01,
 Zugmeldungen (Meldung entfällt erst, wenn jedes Fahrzeug zerstört ist) und auf Wunsch Verstärkungen.
 Seit 2.1: Durchbruch nicht aufgehaltener Gruppen (Welt zur Zeit T, Lagemeldung I-13, Kennzahl durchgebrochen).
 Seit 2.2: Loitering Munition trifft nur das bekämpfte Fahrzeug (wirkung(..., ziel=…), Wirkmittel mit nur_zielfahrzeug).
@@ -19,10 +24,9 @@ alle Schlüssel- und Nebenfälle erreicht.
 
 Aufruf: python3 simuliere_durchlauf.py [--verstaerkung]   (mit Verstärkungen und Robustheit gegen langsamere Teams)
 
-Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.5.
-Im Repository dient sie als
-Referenz für die Engine: tools/referenz/erzeuge_referenz.py schreibt die Ergebnisse nach tests/referenz_durchlauf.json,
-tests/durchlauf.test.ts spielt dieselben Modellteams mit der echten Engine und vergleicht.
+Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.6.
+Im Repository dient sie als Referenz für die Engine: tools/referenz/erzeuge_durchlauf.py schreibt die Ergebnisse nach
+tests/referenz_durchlauf.json, tests/durchlauf.test.ts spielt dieselben Modellteams mit der echten Engine und vergleicht.
 """
 import sys
 
@@ -30,12 +34,11 @@ import argus_lib as L
 import verluste as V
 from pruefe_szenario import pruefe
 
-T_G1, T_G2, T_G3 = 35, 40, 30
+T_NAIV, T_IDEAL = 20, 35      # Sekunden je Entscheidung (eine Rolle, seit 2.6)
 REIHENFOLGE = ["PZA", "ART", "MRS", "PRZ", "LM"]   # nicht vorhandene Wirkmittel werden übersprungen
-FT_NACH_ANGEBOT_S = 30
 VERSTAERKUNG_STANDARD = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960}          # alle vier Minuten bis 10:16
 VERSTAERKUNG_ZU_SPAET = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960, "V-5": 1200}   # zusätzlich V-5 um 10:20
-ROBUSTHEIT = [(35, 40, 30), (40, 40, 30), (35, 45, 30), (45, 40, 30), (40, 45, 30), (35, 50, 30), (40, 50, 40)]       # Bearbeitungszeiten G1, G2, G3
+ROBUSTHEIT = [(20, 35), (25, 35), (20, 40), (25, 40), (30, 40), (30, 45), (35, 50)]       # Sekunden je Entscheidung naiv, ideal
 
 
 def mit_verstaerkung(d, einspielen):
@@ -60,24 +63,21 @@ def mit_verstaerkung(d, einspielen):
 
 
 def lauf(d, team, detail=None, einspielen=None):
-    """Spielt das Drehbuch mit einem Modellteam durch.
+    """Spielt das Drehbuch mit einem Modellteam durch (eine Rolle, seit 2.6).
 
-    Gibt (log, treffer_schutz, injects, restbestand, letzte_entscheidung) zurück. Wird eine Liste `detail` übergeben,
-    landet dort je Meldung ein dict mit allen Zeitpunkten (für das Video), dazu Einträge {"inject": id, "t": s} für alle
-    festen und bedingten Injects, {"fast_track": s}, {"hintergrund": id, ...} und {"ereignis": id, ...}.
+    Gibt (log, treffer_schutz, injects, restbestand, letzte_bekaempfung) zurück. Wird eine Liste `detail` übergeben,
+    landet dort je Meldung ein dict mit Entscheidung und Zeitpunkten (t_entscheid, entscheid, sek_eingang, sek_offen), dazu
+    Einträge {"inject": id, "t": s} für alle festen und bedingten Injects, {"hintergrund": id, ...} und {"ereignis": id, ...}.
     """
     if einspielen:
         d = mit_verstaerkung(d, einspielen)
     sz, wm, regeln = d["szenario"], d["wirkmittel"], d["regeln"]
     dauer = sz["spieluhr"]["dauer_s"]
     bestand = {k: (v["bestand"] if v["bestand"] is not None else 10 ** 6) for k, v in wm.items()}
-    frei = {"G1": 0, "G2": 0, "G3": 0}
-    i05 = next((i["t_s"] for i in sz["injects"] if i.get("aktion") == "fast_track_angebot"), None)
-    ft_ab = i05 + FT_NACH_ANGEBOT_S if team == "naiv" and i05 is not None else None
+    frei = 0                     # das Team ist frei ab (eine Rolle: eine Meldung nach der anderen)
+    dauer_je = T_NAIV if team == "naiv" else T_IDEAL
     log, treffer_schutz, injects = [], [], []
     det = detail if detail is not None else []
-    if ft_ab is not None:
-        det.append({"fast_track": ft_ab})
     for i in sz["injects"]:
         if "t_s" in i:
             det.append({"inject": i["id"], "t": i["t_s"]})
@@ -172,102 +172,57 @@ def lauf(d, team, detail=None, einspielen=None):
 
     for m in sz["meldungen"]:
         a, gestoert = argus(m)
-        ev = {"m": m["id"], "t_meld": m["t_s"], "ft": False, "gestoert": gestoert}
+        ev = {"m": m["id"], "t_meld": m["t_s"], "gestoert": gestoert}
         det.append(ev)
         if alle_weg(m["ziele"], m["t_s"]):
             ev["ende"] = "entfällt"
             log.append((m["id"], "entfällt (Ziel schon zerstört oder weg)"))
             continue
-        t = m["t_s"]
-        ft = ft_ab is not None and t >= ft_ab and a["konfidenz"] >= regeln["fast_track"]["schwelle"] and a["empfehlung"] == "BEKÄMPFEN"
-        ev["ft"] = ft
-        loes = m.get("loesung") or {"G1": "ANNEHMEN", "G2": "BEKÄMPFEN", "G3": "FREIGABE"}
-        # G1 (eine Meldung, deren Fahrzeuge alle zerstört oder abgezogen sind, verschwindet aus dem Eingang, sobald sie dran wäre)
-        if not ft:
-            if alle_weg(m["ziele"], max(t, frei["G1"])):
-                ev["ende"] = "entfällt"
-                log.append((m["id"], f"entfällt vor G1 {L.mmss(max(t, frei['G1']))} (Ziel inzwischen zerstört oder weg)"))
-                continue
-            t = max(t, frei["G1"]) + T_G1
-            frei["G1"] = t
-            if t >= dauer:
-                ev["ende"] = "Spielende"
-                log.append((m["id"], "bei Spielende noch offen"))
-                continue
-            if alle_weg(m["ziele"], t):       # wie die Engine: entfällt, sobald das letzte Fahrzeug weg ist (auch während der Bearbeitung)
-                ev["ende"] = "entfällt"
-                log.append((m["id"], f"entfällt bei G1 {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
-                continue
-            ok = a["empfehlung"] != "UNKLAR" if team == "naiv" else loes["G1"].startswith("ANNEHMEN")
-            ev.update(t_g1=t, g1="ANNEHMEN" if ok else "ABLEHNEN")
-            if not ok:
-                ev["ende"] = "G1 lehnt ab"
-                log.append((m["id"], f"G1 lehnt ab {L.mmss(t)}"))
-                continue
-        # G2: Warnung rechnet den Einschlag für eine Freigabe nach T_G3 voraus
-        if alle_weg(m["ziele"], max(t, frei["G2"])):
-            ev.update(ende="entfällt (G2)")
-            log.append((m["id"], f"entfällt vor G2 {L.mmss(max(t, frei['G2']))} (Ziel inzwischen zerstört oder weg)"))
+        loes = m.get("loesung") or {"entscheid": "BEKÄMPFEN"}
+        # Das Team öffnet die Meldung, sobald es frei ist (die älteste zuerst). Eine Meldung, deren Fahrzeuge alle zerstört oder
+        # abgezogen sind, verschwindet aus dem Eingang, sobald sie dran wäre – oder während das Team sie ansieht.
+        t_offen = max(m["t_s"], frei)
+        if alle_weg(m["ziele"], t_offen):
+            ev["ende"] = "entfällt"
+            log.append((m["id"], f"entfällt vor der Entscheidung {L.mmss(t_offen)} (Ziel inzwischen zerstört oder weg)"))
             continue
-        t = max(t, frei["G2"]) + T_G2
-        frei["G2"] = t
+        t = t_offen + dauer_je
         if t >= dauer:
             ev["ende"] = "Spielende"
             log.append((m["id"], "bei Spielende noch offen"))
             continue
-        if alle_weg(m["ziele"], t):
-            ev.update(ende="entfällt (G2)")
-            log.append((m["id"], f"entfällt bei G2 {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
+        frei = t
+        if alle_weg(m["ziele"], t):       # wie die Engine: entfällt, sobald das letzte Fahrzeug weg ist (auch während der Bearbeitung)
+            ev["ende"] = "entfällt"
+            log.append((m["id"], f"entfällt beim Team {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
             continue
-        ev["t_g2"] = t
-        zul = waehle(m, t + T_G3, t)
+        ev.update(t_entscheid=t, t_offen=t_offen, sek_eingang=round(t - m["t_s"], 1), sek_offen=round(t - t_offen, 1))
         if team == "naiv":
+            if a["empfehlung"] == "UNKLAR":
+                ev.update(entscheid="ABLEHNEN", ende="abgelehnt")
+                log.append((m["id"], f"ABLEHNEN {L.mmss(t)}"))
+                continue
+            zul = waehle(m, t, t)
             wahl = zul[0] if zul else next((w for w in ("LM", "MRS") if w in wm and bestand[w] > 0), None)
         else:
-            g2 = loes["G2"]
-            if "BEOBACHTEN" in g2.split(":")[0]:
-                ev.update(g2="BEOBACHTEN", ende="G2 beobachtet")
-                log.append((m["id"], f"G2 BEOBACHTEN {L.mmss(t)}"))
+            if loes["entscheid"] == "ABLEHNEN":
+                ev.update(entscheid="ABLEHNEN", ende="abgelehnt")
+                log.append((m["id"], f"ABLEHNEN {L.mmss(t)}"))
                 continue
-            if g2.startswith("NICHT") or loes["G1"].startswith("ABLEHNEN"):
-                ev.update(g2="NICHT BEKÄMPFEN", ende="G2 nicht bekämpfen")
-                log.append((m["id"], f"G2 NICHT BEKÄMPFEN {L.mmss(t)}"))
+            if loes["entscheid"] == "ZURÜCKSTELLEN":
+                ev.update(entscheid="ZURÜCKSTELLEN", ende="zurückgestellt")
+                log.append((m["id"], f"ZURÜCKSTELLEN {L.mmss(t)}"))
                 continue
+            zul = waehle(m, t, t, bild=True)
             wahl = (zul or [None])[0]
-        if wahl is None:
-            ev.update(g2="kein Wirkmittel", ende="kein Wirkmittel")
-            log.append((m["id"], f"G2: kein Wirkmittel ohne Warnung {L.mmss(t)}"))
-            continue
-        ev["g2"] = wahl
-        # G3
-        if alle_weg(m["ziele"], max(t, frei["G3"])):
-            ev.update(ende="entfällt (G3)", g3="ENTFÄLLT")
-            log.append((m["id"], f"entfällt vor G3 {L.mmss(max(t, frei['G3']))} (Ziel inzwischen zerstört oder weg)"))
-            continue
-        t = max(t, frei["G3"]) + T_G3
-        if t >= dauer:
-            ev["ende"] = "Spielende"
-            log.append((m["id"], "bei Spielende noch offen"))
-            continue
-        frei["G3"] = t
-        if alle_weg(m["ziele"], t):
-            ev.update(t_g3=t, g3="ENTFÄLLT", ende="entfällt (G3)")
-            log.append((m["id"], f"entfällt bei G3 {L.mmss(t)} (Ziel inzwischen getroffen oder weg)"))
-            continue
-        ev["t_g3"] = t
-        if team == "ideal":
-            if not loes["G3"].startswith("FREIGABE"):
-                ev.update(g3="ABLEHNEN", ende="G3 lehnt ab")
-                log.append((m["id"], f"G3 lehnt ab {L.mmss(t)}"))
+            if wahl is None:
+                ev.update(entscheid="ZURÜCKSTELLEN", ende="zurückgestellt")
+                log.append((m["id"], f"ZURÜCKSTELLEN {L.mmss(t)} (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)"))
                 continue
-            jetzt = waehle(m, t, t, bild=True)
-            if wahl not in jetzt:
-                if not jetzt:
-                    ev.update(g3="ZURÜCK AN G2", ende="G3: Warnung zum Einschlag")
-                    log.append((m["id"], f"G3 gibt nicht frei {L.mmss(t)} (Warnung zum Einschlag)"))
-                    continue
-                wahl = jetzt[0]
-                ev["g2"] = wahl
+        if wahl is None:
+            ev.update(entscheid="ZURÜCKSTELLEN", ende="kein Wirkmittel")
+            log.append((m["id"], f"kein Wirkmittel mehr {L.mmss(t)}"))
+            continue
         w = wirkung_beim_einschlag(m, wahl, t)
         bestand[wahl] -= len(w["einschlaege"])
         for zid in m["ziele"]:
@@ -281,10 +236,10 @@ def lauf(d, team, detail=None, einspielen=None):
             if g[2] in L.SCHUTZ or g[2] == "attrappe":
                 treffer_schutz.append(f"{g[0]} {L.GT_TEXT.get(g[2], g[2])}" if g[1] in ("Fahrzeug", "Attrappe") else f"{g[0]} {g[1]}")
                 schutz.append(g)
-        ev.update(g3="FREIGABE", wm=wahl, pos=w["pos"], ziel=w["ziel"], t_wirkung=w["t"], getroffen=w["getroffen"], schutz=schutz,
+        ev.update(entscheid="BEKÄMPFEN", wm=wahl, pos=w["pos"], ziel=w["ziel"], t_wirkung=w["t"], getroffen=w["getroffen"], schutz=schutz,
                   verstoesse=w["verstoesse"], ende="Wirkung", einschlaege=w["einschlaege"])
         n_zug = len(w["einschlaege"])
-        log.append((m["id"], f"Freigabe {L.mmss(t)} mit {wahl}{f' ×{n_zug}' if n_zug > 1 else ''}{' FT' if ft else ''}, Einschlag {L.mmss(w['t'])}"
+        log.append((m["id"], f"BEKÄMPFEN {L.mmss(t)} mit {wahl}{f' ×{n_zug}' if n_zug > 1 else ''}, Einschlag {L.mmss(w['t'])}"
                              f"{' – RoE: ' + '; '.join(w['verstoesse']) if w['verstoesse'] else ''}"))
         for i in sz["injects"]:
             b = i.get("bedingung")
@@ -373,7 +328,7 @@ def lauf(d, team, detail=None, einspielen=None):
         det.append({"verluste": st, "zug": V.zug(dw, st), "ereignisse": len(ev), "treffer": sum(1 for e in ev if e["ergebnis"] == "treffer"),
                     "verlauf": V.verlauf(dw, ev), "zeitlinie": ev})
     rest = {k: (v if v < 10 ** 5 else "∞") for k, v in bestand.items()}
-    letzte = max([e["t_g3"] for e in det if "t_g3" in e] or [0])
+    letzte = max([e["t_entscheid"] for e in det if e.get("entscheid") == "BEKÄMPFEN"] or [0])
     return log, treffer_schutz, injects, rest, letzte
 
 
@@ -398,26 +353,26 @@ def faelle_erreicht(d, team, einspielen=None):
             if ende == "Wirkung":
                 schutz = ", ".join(g[0] + " " + (L.GT_TEXT.get(g[2], g[2]) if g[1] in ("Fahrzeug", "Attrappe") else g[1])
                                    for g in e.get("schutz", []))
-                teile.append(f"{mid} Freigabe {L.mmss(e['t_g3'])} {e['wm']}{' FT' if e.get('ft') else ''}"
+                teile.append(f"{mid} BEKÄMPFEN {L.mmss(e['t_entscheid'])} {e['wm']}"
                              f"{' → ' + schutz if schutz else ''}{' RoE ' + '/'.join(v.split(' ')[0] for v in e['verstoesse']) if e.get('verstoesse') else ''}")
             else:
-                zeit = e.get("t_g3") or e.get("t_g2") or e.get("t_g1")
+                zeit = e.get("t_entscheid")
                 teile.append(f"{mid} {ende}{' ' + L.mmss(zeit) if zeit else ''}")
         out[f["id"]] = (ok, "; ".join(teile))
     return out
 
 
 def robustheit(d, zeiten=ROBUSTHEIT):
-    """Welche Fälle erreichen die Modellteams bei langsamerer Bearbeitung nicht? Liefert [(G1, G2, G3, {team: [fälle]})]."""
-    global T_G1, T_G2, T_G3
-    alt = (T_G1, T_G2, T_G3)
+    """Welche Fälle erreichen die Modellteams bei langsamerer Bearbeitung nicht? Liefert [(T_NAIV, T_IDEAL, {team: [fälle]})]."""
+    global T_NAIV, T_IDEAL
+    alt = (T_NAIV, T_IDEAL)
     out = []
     try:
-        for g1, g2, g3 in zeiten:
-            T_G1, T_G2, T_G3 = g1, g2, g3
-            out.append((g1, g2, g3, {t: [k for k, (ok, _) in faelle_erreicht(d, t).items() if not ok] for t in ("naiv", "ideal")}))
+        for tn, ti in zeiten:
+            T_NAIV, T_IDEAL = tn, ti
+            out.append((tn, ti, {t: [k for k, (ok, _) in faelle_erreicht(d, t).items() if not ok] for t in ("naiv", "ideal")}))
     finally:
-        T_G1, T_G2, T_G3 = alt
+        T_NAIV, T_IDEAL = alt
     return out
 
 
@@ -431,14 +386,14 @@ def bericht(d, mit_v=False):
         name = team + (" + Verstärkungen " + ", ".join(f"{k} {L.mmss(v)}" for k, v in ein.items()) if ein else "")
         fe = faelle_erreicht(d, team, ein)
         offen = [a for a, b in log if b == "bei Spielende noch offen"]
-        out.append(f"Team {name}: letzte Freigabe T+{L.mmss(ende)}; geschützte/Fehlziele getroffen: {', '.join(ts) or 'keine'}; "
+        out.append(f"Team {name}: letzte Bekämpfung T+{L.mmss(ende)}; geschützte/Fehlziele getroffen: {', '.join(ts) or 'keine'}; "
                    f"bedingte Injects: {', '.join(inj) or 'keine'}; Restbestand {rest}; bei Spielende offen: {', '.join(offen) or 'nichts'}")
         out.append("  Fälle: " + " | ".join(f"{k} {'✓' if ok else '✗ NICHT ERREICHT'} {txt}" for k, (ok, txt) in fe.items()))
         out.append("  " + " | ".join(f"{a}: {b}" for a, b in log))
     if mit_v:
-        out.append("Robustheit (nicht erreichte Fälle bei Bearbeitungszeit G1/G2/G3 in s, ohne Verstärkung):")
-        for g1, g2, g3, r in robustheit(d):
-            out.append(f"  {g1}/{g2}/{g3}: " + "; ".join(f"{t} {', '.join(f) or 'alle erreicht'}" for t, f in r.items()))
+        out.append("Robustheit (nicht erreichte Fälle bei Sekunden je Entscheidung naiv/ideal, ohne Verstärkung):")
+        for tn, ti, r in robustheit(d):
+            out.append(f"  {tn}/{ti}: " + "; ".join(f"{t} {', '.join(f) or 'alle erreicht'}" for t, f in r.items()))
     return out
 
 

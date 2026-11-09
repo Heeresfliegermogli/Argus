@@ -1,7 +1,8 @@
 // Schritt 6b: Bausteine der Kartenoberfläche als reine Funktionen – Lage des Drohnenbild-Fensters am Ort,
-// Marken je Meldung (zurückgestellte bleiben stehen), Rollen auf der Einweisungskarte.
+// Marken je Meldung (zurückgestellte bleiben stehen), Einweisung (seit 2.6 eine Rolle: Übersicht mit Pfeilen, Klassenbeispiele).
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { gruppenKurz } from "../src/ansichten/einweisung";
+import { KLASSEN_BEISPIEL, TOUR } from "../src/ansichten/einweisung";
 import { fensterLage, meldungsMarken } from "../src/ansichten/gemeinsam/lagekarte";
 import type { MeldungsStand } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
@@ -58,19 +59,17 @@ describe("Drohnenbild-Fenster am Ort", () => {
 });
 
 function stand(id: string, extra: Partial<MeldungsStand> = {}): MeldungsStand {
-  return {
-    id, erschienen: { seq: 1, t_s: 20 }, fastTrack: false, manuell: false, stufe: "g2", beobachten: false, verlauf: [], ...extra,
-  } as MeldungsStand;
+  return { id, erschienen: { seq: 1, t_s: 20 }, manuell: false, stufe: "offen", zurueckgestellt: false, ...extra } as MeldungsStand;
 }
 
 describe("Marken der Meldungen", () => {
-  it("je offene Meldung ein Knopf; gewählt, zurückgestellt und Zusatz (⚠) erkennbar", () => {
+  it("je offene Meldung ein Knopf; gewählt und zurückgestellt erkennbar", () => {
     const geklickt: string[] = [];
-    const m = meldungsMarken([stand("M01"), stand("M03", { beobachten: true }), stand("M04")], "M04", (id) => geklickt.push(id),
-      (id) => `Ziel ${Number(id.slice(1))}`, (st) => (st.id === "M01" ? "⚠" : undefined));
+    const m = meldungsMarken([stand("M01"), stand("M03", { zurueckgestellt: true }), stand("M04")], "M04", (id) => geklickt.push(id),
+      (id) => `Ziel ${Number(id.slice(1))}`);
     // Spieler sehen „Ziel 1“, die Marke trägt intern weiter die Meldung (B7)
     expect(m.map((x) => [x.id, x.text, x.art])).toEqual([
-      ["M01", "Ziel 1 · ⚠", "offen"],
+      ["M01", "Ziel 1", "offen"],
       ["M03", "Ziel 3 · zurückgestellt", "zurueck"],
       ["M04", "Ziel 4", "gewaehlt"],
     ]);
@@ -81,20 +80,41 @@ describe("Marken der Meldungen", () => {
   });
 });
 
-describe("Einweisungskarten", () => {
-  it("nennen alle drei Rollen des Teams (Plenum und Teamleiste)", async () => {
-    const inh = await inhalte();
-    const g = gruppenKurz(inh);
-    expect(g.map((x) => x.rolle)).toEqual(["g1", "g2", "g3"]);
-    for (const x of g) expect(x.text).toMatch(/^[A-ZÄÖÜ].+\.$/);
+describe("Einweisung (H4)", () => {
+  const quelle = (f: string) => readFileSync(new URL(`../src/ansichten/${f}`, import.meta.url), "utf-8");
+
+  it("Übersicht mit Pfeilen: jedes Ziel der Tour gibt es auf der echten Oberfläche", () => {
+    const ziele = TOUR.map((s) => s.ziel);
+    for (const z of ["eingang", "entscheiden", "panzer", "feed", "bestand"]) expect(ziele, z).toContain(z);
+    const ui = quelle("zb.tsx") + quelle("gemeinsam/rahmen.tsx");
+    for (const z of ziele) expect(ui, z).toContain(`data-tour="${z}"`);
+    for (const s of TOUR) expect(s.titel.length, s.ziel).toBeGreaterThan(5);
   });
 
-  it("Auftrag je Rolle in der Du-Form (jede Rolle ist eine Person)", async () => {
+  it("Auftrag für das Team (eine Rolle, Ihr-Form), ohne G1–G3, Fast-Track, Gegenangriff und Regelblock", async () => {
     const inh = await inhalte();
-    for (const r of ["G1", "G2", "G3"]) {
-      const text = inh.szenario.lage[r].absaetze.join(" ");
-      expect(text, r).not.toMatch(/\b(Ihr|ihr|euch|eure)\b/);
-      expect(text, r).toMatch(/\b(Du|du)\b/);
+    expect(Object.keys(inh.szenario.lage).sort()).toEqual(["plenum", "spielleitung", "team"]);
+    const team = inh.szenario.lage.team.absaetze.join(" ");
+    expect(team).toMatch(/BEKÄMPFEN/);
+    expect(team).toMatch(/ZURÜCKSTELLEN/);
+    expect(team).toMatch(/ABLEHNEN/);
+    expect(team).toMatch(/\b(Ihr|ihr)\b/);
+    const sichtbar = JSON.stringify([inh.szenario.lage.team, inh.szenario.lage.plenum, inh.szenario.phasen.map((p) => [p.name, p.kurz])]);
+    expect(sichtbar).not.toMatch(/\bG[123]\b|Fast-Track|Gegenangriff|Aufklärer|Zielprüfer/);
+    // im Code der Einweisung (ohne Kommentare) kein Kleingedrucktes und kein Regelblock (H4.3)
+    const einweisung = quelle("einweisung.tsx").split("\n").filter((z) => !z.trim().startsWith("//")).join("\n");
+    expect(einweisung).not.toMatch(/Kleingedruckt|Regelungen/);
+  });
+
+  it("je Klasse ein Bildbeispiel aus einer Routinemeldung (keine Lösungshinweise)", async () => {
+    const inh = await inhalte();
+    expect(KLASSEN_BEISPIEL.map((k) => k.klasse)).toEqual(["Panzer", "Fahrzeug", "Infanterie"]);
+    for (const k of KLASSEN_BEISPIEL) {
+      const m = inh.meldungen[k.meldung];
+      expect(m, k.meldung).toBeDefined();
+      expect(m.fall, k.meldung).toBeUndefined();
+      expect(m.argus.empfehlung, k.meldung).toBe("BEKÄMPFEN");
+      expect(m.ziele.every((z) => inh.ziele[z].gt.legitim), k.meldung).toBe(true);
     }
   });
 });

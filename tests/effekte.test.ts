@@ -5,7 +5,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { AssetManifest } from "../src/assets/typen";
-import { type Effekt, bekannteZiele, effekte } from "../src/kern/effekte";
+import { ENDANFLUG_AB, type Effekt, bekannteZiele, effekte, flugOrt } from "../src/kern/effekte";
+import { position } from "../src/kern/geometrie";
 import { weltFuer } from "../src/kern/lage";
 import { ausserGefechtAb, lagebildKontrolle } from "../src/kern/lagebild";
 import { inhalte } from "./hilfen";
@@ -44,9 +45,17 @@ describe("Effekte (kern/effekte.ts)", () => {
       if (wm.flug) {
         expect(f?.art).toBe("flug");
         expect(f!.von).toEqual(wm.flug.start);
-        expect(f!.ab).toBeCloseTo(st.g3!.t_s + (wm.flug.vorbereitung_s ?? 0), 2);
+        expect(f!.ab).toBeCloseTo(st.freigabe!.t_s + (wm.flug.vorbereitung_s ?? 0), 2);
         expect(f!.t).toBeCloseTo(w.t_einschlag, 2);
         expect(f!.echtzeit_s).toBeUndefined();
+        // H5.2: Die LM fliegt auf den vorausberechneten Einschlagort, im Endanflug auf das Fahrzeug; am Einschlag genau dort
+        expect(f!.ziel).toBe(w.ziel);
+        const z0 = inh.ziele[f!.ziel!];
+        const amZiel = position(z0, Math.min(f!.t, f!.zielHalt ?? Infinity));
+        const ende = flugOrt(f!, f!.t);
+        expect(Math.hypot(ende[0] - amZiel[0], ende[1] - amZiel[1]), `${id} trifft das Fahrzeug`).toBeLessThan(0.5);
+        const mitte = flugOrt(f!, f!.ab! + (f!.t - f!.ab!) * (ENDANFLUG_AB / 2));
+        expect(Number.isFinite(mitte[0]) && Number.isFinite(mitte[1])).toBe(true);
       } else if (wm.einsatzbereich) {
         expect(f?.echtzeit_s).toBeGreaterThan(0);
         // seit 2.5 (F1.5): Kanone eines Panzers der 1. Kp (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
@@ -160,21 +169,19 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Sichtbarkeit: G2/G3 sehen nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf die 1. Kp", async () => {
+  it("Sichtbarkeit: das Team sieht nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf die 1. Kp", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id));
-      for (const rolle of ["g1", "g2", "g3"] as const) {
-        const kennt = bekannteZiele(inh, m.z, rolle);
-        for (const u of ungemeldet) expect(kennt.has(u)).toBe(false);
-        const fx = effekte(inh, m.z, kennt);
-        for (const e of fx) {
-          const ziel = e.id.match(/^(Z-\d+|V\d-\d)-[wsx]$/)?.[1];
-          if (ziel) expect(kennt.has(ziel), `${rolle} ${e.id}`).toBe(true);
-        }
-        // E-01 auf Z-27/Z-28 (ungemeldet): kein Treffer, keine Leuchtspur bei den Rollen
-        expect(fx.some((e) => e.id.startsWith("E-01-0-") && e.art !== "muendung")).toBe(false);
+      const kennt = bekannteZiele(inh, m.z);
+      for (const u of ungemeldet) expect(kennt.has(u)).toBe(false);
+      const fx = effekte(inh, m.z, kennt);
+      for (const e of fx) {
+        const ziel = e.id.match(/^(Z-\d+|V\d-\d)-[wsx]$/)?.[1];
+        if (ziel) expect(kennt.has(ziel), e.id).toBe(true);
       }
+      // E-01 auf Z-27/Z-28 (ungemeldet): kein Treffer, keine Leuchtspur beim Team
+      expect(fx.some((e) => e.id.startsWith("E-01-0-") && e.art !== "muendung")).toBe(false);
       const pl = effekte(inh, m.z, "umgebung");
       // seit 2.3 auch Feuer auf die eigene Truppe (V-…, seit 2.5 je Panzer, Rauch an ausgefallenen Panzern): verrät kein Ziel
       const erlaubt = (e: Effekt) =>

@@ -30,10 +30,8 @@ function laeufe(): Plugin {
     resolveId: (x) => (x === id ? `\0${id}` : null),
     load(x) {
       if (x !== `\0${id}`) return null;
-      const ref = JSON.parse(readFileSync(hier("../../tests/referenz_durchlauf.json"), "utf-8")) as {
-        zeiten: unknown; reihenfolge_wirkmittel: unknown; laeufe: { team: string; einspielen: Record<string, number> }[];
-      };
-      const auszug = { zeiten: ref.zeiten, reihenfolge_wirkmittel: ref.reihenfolge_wirkmittel, laeufe: ref.laeufe.map((l) => ({ team: l.team, einspielen: l.einspielen })) };
+      const ref = JSON.parse(readFileSync(hier("../../tests/referenz_durchlauf.json"), "utf-8")) as { zeiten: unknown; reihenfolge_wirkmittel: unknown };
+      const auszug = { zeiten: ref.zeiten, reihenfolge_wirkmittel: ref.reihenfolge_wirkmittel };
       return `export default ${JSON.stringify(auszug)};`;
     },
   };

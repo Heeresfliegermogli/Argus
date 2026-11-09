@@ -1,11 +1,11 @@
 {
  "version": 1,
- "erzeugt": "2026-11-02",
+ "erzeugt": "2026-11-09",
  "generator": "tools/assets/gen_assets.py",
  "hinweis": "Alle Pfade relativ zu assets/. Übungslage, alles fiktiv und prozedural erzeugt. Drohnenbilder ohne HUD und ohne ARGUS-Markierung: Die Oberfläche zeichnet Rahmen (ziele[].box, Pixel im Bild), Klasse, Konfidenz und Uhrzeit aus Szenario und Manifest.",
  "szenario": {
   "id": "kraehe-01",
-  "version": "2.5",
+  "version": "2.6",
   "datei": "szenario_kraehe_01.json"
  },
  "koordinaten": "Meter, x nach Osten, y nach Süden, Ursprung oben links; hdg in Grad, 0 = Osten, im Uhrzeigersinn",

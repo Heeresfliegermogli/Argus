@@ -1,6 +1,6 @@
 // Plenum (Smartboard): drei Bilder, die sich nach dem Spielstand von selbst umschalten und von Hand
 // gewählt werden können.
-//   Einweisung – Lage für alle, Lagekarte, die drei Gruppen (vor dem Start)
+//   Einweisung – Lage für alle, Lagekarte, Code und Teams (vor dem Start)
 //   Lage       – Uhr und Lagekarte ohne Ziele (während des Spiels; der Raum sieht nichts Geheimes)
 //   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen dieses Teams (nach Spielende)
 // Die Auswertung über alle Teams (Schritt 8, auswertung.tsx) zeigt das Plenum-Fenster von selbst, sobald alle Teams
@@ -8,14 +8,12 @@
 import { useMemo, useState } from "preact/hooks";
 import { effekte } from "../kern/effekte";
 import { LEER, eigeneLage, lagebildKontrolle } from "../kern/lagebild";
-import { ROLLEN_NAME } from "../kern/sichten";
 import { phaseZu, uhrzeit } from "../kern/uhr";
 import { zustandAus } from "../kern/zustand";
 import type { Sicht } from "../sitzung/sicht";
 import { Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
-import { gruppenKurz } from "./einweisung";
 import { TeamMarke } from "./gemeinsam/rahmen";
 
 /** Was Teilnehmer zum Mitspielen brauchen (Sitzung mit Lobby): Seite, Code und die Teams bisher. */
@@ -76,7 +74,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
             <Panel titel="Stand" klasse="flach">
               <div class="plenum-zahl"><span>ARGUS-Meldungen bisher</span><b>{z.reihenfolge.length} / {sz.meldungen.length}</b></div>
               <div class="plenum-zahl"><span>Wirkungen</span><b>{z.reihenfolge.filter((id) => z.meldungen[id].wirkung).length}</b></div>
-              <div class="plenum-zahl"><span>Fast-Track</span><b>{z.fastTrack ? "EIN" : "AUS"}</b></div>
+              <div class="plenum-zahl"><span>Lagemeldungen</span><b>{z.injectReihenfolge.length}</b></div>
             </Panel>
           </div>
         </div>
@@ -86,7 +84,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
   );
 }
 
-/** Einweisung am Smartboard: Lage für alle, die drei Rollen, Lagekarte; in einer Sitzung dazu Code und Teams. */
+/** Einweisung am Smartboard: Lage für alle, Lagekarte; in einer Sitzung dazu Code und Teams. */
 export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) {
   const inh = p.inh;
   const sz = inh.szenario;
@@ -99,11 +97,6 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
       <Panel titel="Lage für alle" klasse="plenum-text">
         <div class="stapel" style="gap:12px;height:100%">
           <div>{lage.absaetze.map((a) => <p>{a}</p>)}</div>
-          <div class="plenum-gruppen">
-            {gruppenKurz(inh).map((g) => (
-              <div class={`rolle-${g.rolle}`}><b>{ROLLEN_NAME[g.rolle]}</b>{g.text}</div>
-            ))}
-          </div>
           <div class="klein leise">{sz.ablauf_unterricht.map((a) => `${a.phase} ${a.dauer_min} min`).join(" · ")}</div>
         </div>
       </Panel>
@@ -116,7 +109,7 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
             </div>
             <div class="beitritt-teams">
               {b.teams.length === 0 ? <span class="sehr-leise">noch keine Teams</span>
-                : b.teams.map((t) => <span key={t.id}><TeamMarke name={t.name} farbe={t.farbe} /> <span class="sehr-leise zahl">{t.spieler}/3</span></span>)}
+                : b.teams.map((t) => <span key={t.id} class={t.spieler ? "" : "sehr-leise"}><TeamMarke name={t.name} farbe={t.farbe} /></span>)}
             </div>
           </section>
         )}
@@ -137,7 +130,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   const fx = useMemo(() => effekte(inh, z, "alle"), [inh, z]);
   const wirkungen = lb.wirkungen.filter((w) => !w.geplant);
   const bearbeitet = z.reihenfolge.filter((id) => z.meldungen[id].ergebnis).length;
-  const trotzWarnung = z.reihenfolge.filter((id) => z.meldungen[id].g3?.entscheid === "freigabe" && (z.meldungen[id].g3?.warnungen.length ?? 0) > 0).length;
+  const trotzWarnung = z.reihenfolge.filter((id) => (z.meldungen[id].freigabe?.warnungen ?? []).some((w) => !/^(Bestand |nur \d+ von \d+ )/.test(w))).length;
   const ungemeldet = inh.szenario.ziele.filter((x) => x.ungemeldet);
   return (
     <div class="plenum-raster plenum-aufloesung">
@@ -150,7 +143,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
           <div class="plenum-zahl"><span>Meldungen abgeschlossen</span><b>{bearbeitet} / {inh.szenario.meldungen.length}</b></div>
           <div class="plenum-zahl"><span>Wirkungen</span><b>{wirkungen.length}</b></div>
           <div class="plenum-zahl"><span>davon mit Fehltreffer</span><b style={wirkungen.some((w) => w.fehl) ? "color:#ff8f86" : ""}>{wirkungen.filter((w) => w.fehl).length}</b></div>
-          <div class="plenum-zahl"><span>Freigaben trotz Regelwarnung</span><b>{trotzWarnung}</b></div>
+          <div class="plenum-zahl"><span>Bekämpft trotz Regelwarnung</span><b>{trotzWarnung}</b></div>
           <div class="plenum-zahl"><span>Von ARGUS nie gemeldet</span><b>{ungemeldet.map((x) => inh.fahrzeuge[x.typ]?.name ?? x.typ).join(", ") || "–"}</b></div>
         </Panel>
         <Panel titel="Wirkungen" liste>
