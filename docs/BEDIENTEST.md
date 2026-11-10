@@ -35,18 +35,21 @@ sichtbare Beschriftungen – das ersetzt den Test mit Menschen nicht.
 
 ## Teil B: Ansicht Zielbearbeitung
 
-Aufbau der Ansicht (1530 × 800): links schmal der **Feed der Lagemeldungen** (Brigade, Nachbarn, 1. Kp; seit 2.7 steht eine
-Meldung 30 s oder bis sie angeklickt wird – kleines ✕ –, danach ist sie ganz weg), in der Mitte die **Lagekarte** (Marken der
-Meldungen, bekämpfte Ziele mit Countdown bis zum Einschlag), rechts fest aufgeteilt (nichts verschiebt sich): oben die Zeile
-**„Wirkung unterwegs“** (je bekämpftem Ziel ein Chip mit Countdown, z. B. „Ziel 17 ×3 0:23“, mehr als drei hinter „+n“),
-darunter der **Eingang** mit der Wartezeit je Meldung (feste Höhe, eigene Rollleiste; Vermerke wie „Ziel 15 über die Brücke
-durchgebrochen“ stehen dort eine Minute), darunter die geöffnete Meldung: Live-Drohnenbild (Klick: groß mit Lupe),
-ARGUS-Ausgabe („Panzer · Feind 91 %“, Empfehlung), Wirkmittel mit Bestand, Countdown und Warnungen, die drei Knöpfe an
-fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, der Bestand groß.
+Aufbau der Ansicht (seit Liste J, Dienst-Laptop 1536 × 730): links die **ganze Lagekarte** (Marken der Meldungen, bekämpfte
+Ziele mit Countdown bis zum Einschlag), oben links auf der Karte die **Lagemeldungen** (Brigade, Nachbarn, 1. Kp; höchstens zwei
+auf einmal; eine steht 30 s oder bis sie angeklickt wird – kleines ✕ –, danach ist sie ganz weg), unten links die Legende
+(einklappbar); rechts fest aufgeteilt (nichts verschiebt sich): oben die Zeile **„Wirkung unterwegs“** (je bekämpftem Ziel ein
+Chip mit Countdown, z. B. „Ziel 17 ×3 0:23“, mehr als drei hinter „+n“), darunter der **Eingang** mit der Wartezeit je Meldung
+(vier Zeilen, eigene Rollleiste; Vermerke wie „Ziel 15 über die Brücke durchgebrochen“ stehen dort eine Minute), darunter die
+geöffnete Meldung: Live-Drohnenbild (Klick: groß mit Lupe), ARGUS-Ausgabe („Panzer · Feind 91 %“, Empfehlung), die Wirkmittel
+als **drei Kacheln** (Bestand, Countdown, ✓ oder ⚠), eine Zeile mit der Warnung zum gewählten Wirkmittel und ganz unten die drei
+Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, der Bestand groß.
 
 ## Aufbau
 
-1. Rechner mit Edge, Fenster ca. 1530 × 800 (Dienst-PC mit 125 % Skalierung ist genau das).
+1. Rechner mit Edge, Browser maximiert (Dienst-Laptop 1920 × 1080 mit 125 % Skalierung: Fenster ca. 1536 × 730). Die Ansicht passt
+   sich jeder Größe ab 1280 × 600 an; ist das Fenster kleiner, wird alles verkleinert und ein Hinweis bittet um Vollbild (F11). Die
+   Fenstergröße steht unten in der Einweisung und bei der Spielleitung in der Übersicht.
 2. https://heeresfliegermogli.github.io/Argus/ → **Spielleitung** → Synchronisation **Lokal** → „Test ohne Lobby: ein Team“
    aufklappen → Raum `bedientest` → **Team und Spielleitung öffnen** (zwei Fenster). Ein Plenum-Fenster ist nicht nötig.
    (Mit zwei Rechnern: Synchronisation Firebase, gleicher Raum, je Rechner ein Fenster.)
@@ -72,12 +75,12 @@ fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, 
 | 1 | „Wie viele Meldungen warten im Eingang, und wie lange wartet die älteste schon?“ | Zahl neben „Eingang“, Zeit m:ss in der Zeile von Ziel 1 |
 | 2 | „Öffne Ziel 3. Was meldet ARGUS, und wie sicher ist es?“ | Klick auf die Zeile „Ziel 3“ (oder die Marke auf der Karte); liest „Fahrzeug · Feind …%“ und die Empfehlung |
 | 3 | „Sieh dir das Fahrzeug genauer an.“ | Klick auf das Drohnenbild („Klick: groß mit Lupe“), Lupe auf dem Fahrzeug, Schließen/Esc |
-| 4 | „Wähle für Ziel 3 den Mörser. Was sagt das System?“ | nennt die Warnung (R3, Ortschaft) am Mörser oder im Banner der Karte, zeigt den roten Kreis |
+| 4 | „Wähle für Ziel 3 den Mörser. Was sagt das System?“ | nennt die Warnung (R3, Ortschaft) – ⚠ auf der Kachel „Mrs“, Text in der Zeile darunter oder im Hinweis auf der Karte –, zeigt den roten Kreis |
 | 5 | „Stell Ziel 3 zurück und öffne es danach wieder.“ | ZURÜCKSTELLEN; Zeile mit ◷ unter „+ 1 zurückgestellt“ angeklickt |
-| 6 | „Bekämpft Ziel 1 mit einem Wirkmittel ohne Warnung. Wann schlägt es ein?“ | LM oder Mörser mit „✓ keine Warnung“, BEKÄMPFEN; liest den Countdown m:ss im Chip „Ziel 1“ unter „Wirkung unterwegs“ (oder auf der Karte) |
-| 7 | „Wie viele Loitering Munition habt ihr noch?“ | liest den Bestand in der Kopfzeile („LM 18“) oder am Wirkmittel |
+| 6 | „Bekämpft Ziel 1 mit einem Wirkmittel ohne Warnung. Wann schlägt es ein?“ | LM oder Mörser mit ✓ auf der Kachel („✓ keine Warnung“ in der Zeile darunter), BEKÄMPFEN; liest den Countdown m:ss im Chip „Ziel 1“ unter „Wirkung unterwegs“ (oder auf der Karte) |
+| 7 | „Wie viele Loitering Munition habt ihr noch?“ | liest den Bestand in der Kopfzeile („LM 18“) oder groß auf der Kachel „LM“ |
 | 8 | „Lehnt Ziel 2 ab.“ | Zeile „Ziel 2“, ABLEHNEN |
-| 9 | „Was meldet die Brigade gerade? Klickt die Meldung danach weg.“ (Uhr vorher bis 03:00) | liest im Feed links „Evakuierung KRÄHE unvollständig …“ (Schule, Kinder), Klick auf die Meldung (✕) – sie ist weg |
+| 9 | „Was meldet die Brigade gerade? Klickt die Meldung danach weg.“ (Uhr vorher bis 03:00) | liest oben links auf der Karte „Evakuierung KRÄHE unvollständig …“ (Schule, Kinder), Klick auf die Meldung (✕) – sie ist weg |
 | 10 | „Wie geht es euren Panzern?“ | zeigt auf 1/1–1/4 in der Kopfzeile, nennt den Zustand |
 | 11 | „Ruft die Einweisung noch einmal auf.“ | **? Einweisung** oben rechts |
 
@@ -123,7 +126,7 @@ Jede Unklarheit kommt in die Änderungsliste (auch bei „bestanden“).
 | B | B | 11 | ☐ ja ☐ nein | | |
 
 Abschlussfragen an beide: „Was hat euch beim ersten Hinsehen am meisten verwirrt?“ und „Wie habt ihr euch zu zweit
-aufgeteilt – wer schaut ins Drohnenbild, wer auf die Lagemeldungen?“ (Es gibt keine Vorgabe; die Antwort zeigt, ob der
-Feed überhaupt gelesen wird – S3 lebt davon.)
+aufgeteilt – wer schaut ins Drohnenbild, wer auf die Lagemeldungen?“ (Es gibt keine Vorgabe; die Antwort zeigt, ob die
+Lagemeldungen auf der Karte überhaupt gelesen werden – S3 lebt davon.)
 
 Ergebnis mit Datum in `claude/Entscheidungen.md` eintragen.

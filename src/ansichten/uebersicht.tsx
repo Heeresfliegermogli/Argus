@@ -1,13 +1,15 @@
 // Spielleitung: Übersicht aller Teams der Sitzung (seit 2.6 aus den Statusmeldungen der Team-Laptops, H1.2/H7).
 //   • Steuerleiste für alle Teams: Spiel öffnen, Start für alle, Anhalten, Tempo, Spielzeit, Reserve-Lagemeldungen, Plenum,
 //     Auswertung, Protokoll aus Datei laden (H1.3), neues Spiel.
-//   • Tabelle je Team: Laptop (Anwesenheit), Spielzeit, Eingang, Schlüsselfälle live, Fehltreffer, die vier Panzer, wie weit das
-//     Protokoll im Netz ist und wie alt die letzte Statusmeldung ist; Start/Halt einzeln, „ansehen“.
+//   • Tabelle je Team: Laptop (Anwesenheit, seit Liste J mit Fenstergröße – rot unter 1280 × 600 mit Hinweis „F11“), Spielzeit,
+//     Eingang, Schlüsselfälle live, Fehltreffer, die vier Panzer, wie weit das Protokoll im Netz ist und wie alt die letzte
+//     Statusmeldung ist; Start/Halt einzeln, „ansehen“.
 // Jeder Team-Laptop rechnet sein Spiel selbst; Start und Pause gehen als Signal an alle (die Uhr läuft ab der Serverzeit des Klicks).
 // Die Zahlen kommen etwa alle 5 s – bei Netzverzug später, die Uhr läuft aus der letzten Meldung weiter.
 import { useRef, useState } from "preact/hooks";
 import type { AktionsDaten, AktionsTyp } from "../kern/ereignisse";
 import { TEAMNAME_MAX } from "../kern/sitzungen";
+import { fensterText, leseFensterKennung, zuKlein } from "../kern/fenster";
 import { type FallStand, type FallStatus, type TeamStatus, statusFaelle, statusPanzer, statusUhr, teamStatus } from "../kern/uebersicht";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { panzer } from "../kern/verluste";
@@ -46,10 +48,27 @@ function ohneTeam(s: Sitzung) {
   return s.stand.teilnehmer.filter((x) => x.art === "tt" && !inTeams.has(x.client));
 }
 
+/**
+ * Fenstergröße des Team-Laptops (J2.4, aus der Anwesenheit): „Fenster 1536 × 730“; unter 1280 × 600 rot mit „F11“ – dann ist die
+ * Ansicht am Laptop verkleinert.
+ */
+export function FensterGroesse(p: { kennung?: string }) {
+  const f = leseFensterKennung(p.kennung);
+  if (!f) return null;
+  const klein = zuKlein(f.breite, f.hoehe);
+  return (
+    <div class={`klein zahl ${klein ? "rot" : "sehr-leise"}`} data-fenster={p.kennung}
+      title={klein ? "Fenster kleiner als 1280 × 600 – die Ansicht ist verkleinert. Am Laptop: Browser auf Vollbild (F11)." : "Fenstergröße des Team-Laptops (Inhalt des Browserfensters)"}>
+      Fenster {fensterText(f)}{klein ? " – F11!" : ""}
+    </div>
+  );
+}
+
 function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
   const { s, t } = p;
   const [menue, setMenue] = useState<string | null>(null);
   const ohne = ohneTeam(s);
+  const rechner = t.spieler.find((x) => x.client === t.rechner);
   return (
     <td class="rollen-zelle" data-laptop={t.name}>
       {t.spieler.length === 0 && (
@@ -67,7 +86,7 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
       {t.spieler.map((x) => (
         <span class="menue-anker" key={x.client}>
           <button type="button" class={`spieler-chip ${x.online ? "" : "weg"}`} onClick={() => setMenue(x.client)}
-            title={`${x.name} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"} – Klick: verschieben`}>
+            title={`${x.name} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""} – Klick: verschieben`}>
             <i class="punkt" />{x.name || "Team"}{x.client === t.rechner && t.spieler.length > 1 ? " ★" : ""}
           </button>
           <Menue offen={menue === x.client} schliessen={() => setMenue(null)}>
@@ -75,6 +94,7 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
           </Menue>
         </span>
       ))}
+      {rechner?.online && <FensterGroesse kennung={rechner.fenster} />}
     </td>
   );
 }

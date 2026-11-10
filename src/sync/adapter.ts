@@ -7,7 +7,7 @@
 // argus/v1/sitzungen/<code>/, lokal entsprechend):
 //   info                            { code, szenario, version, titel, erstellt, von }  einmal angelegt
 //   host                            { id, name, puls }  steuernde Spielleitung (Start, Pause, Spiel öffnen)
-//   anwesenheit/<client>            { client, art, name, puls, version, team? }
+//   anwesenheit/<client>            { client, art, name, puls, version, team? }   (seit Liste J: version „0.9.0 1536x730“, siehe firebase.ts)
 //   teams/<team>                    { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen, seit } }
 //   status/<team>                   Statusmeldung des Team-Laptops an die Spielleitung, etwa alle 5 s (seit 2.6, H1.2)
 //   laeufe/<team>/<lauf>/protokoll/<e…>   Ereignisse, nur anhängen. Seit 2.6 (H1) rechnet der Team-Laptop sein Spiel selbst und
@@ -52,6 +52,8 @@ export interface Teilnehmer {
   version?: string;
   /** Team, in dem das Fenster gerade spielt (nur Anzeige; maßgeblich ist teams/…/spieler) */
   team?: string;
+  /** seit Liste J (J2.4): Fenstergröße „1536x730“ – zeigt die Spielleitung je Team (Laptop zu klein?) */
+  fenster?: string;
 }
 
 export interface HostInfo {

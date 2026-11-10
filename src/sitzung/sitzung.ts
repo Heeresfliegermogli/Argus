@@ -14,6 +14,7 @@
 // sie fehlen, und rechnet das Spiel; eine Spielleitung im selben Raum steuert und sieht zu.
 import type { Inhalte } from "../inhalte/typen";
 import { type Absender, type AktionsDaten, type AktionsTyp, type Rolle, neueLaufId, zufall } from "../kern/ereignisse";
+import { fensterJetzt, fensterKennung } from "../kern/fenster";
 import { ROLLEN_NAME } from "../kern/sichten";
 import {
   DIREKT_TEAM, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, freieFarbe, neueTeamId, rollenAus, rollenText, teamnameBereinigt,
@@ -34,6 +35,8 @@ export interface SpielerStand {
   online: boolean;
   /** Serverzeit des Beitritts (das früheste anwesende Fenster eines Teams rechnet sein Spiel) */
   seit: number;
+  /** seit Liste J (J2.4): Fenstergröße aus der Anwesenheit, „1536x730“ */
+  fenster?: string;
 }
 
 export interface TeamStand {
@@ -96,12 +99,15 @@ export interface SitzungsOptionen {
 
 /** Teams mit Anwesenheit zusammenführen (reine Funktion, auch für Tests). */
 export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilnehmer[]): TeamStand[] {
-  const online = new Set(teilnehmer.map((t) => t.client));
+  const online = new Map(teilnehmer.map((t) => [t.client, t]));
   return Object.entries(teams)
     .filter(([, d]) => d && typeof d.name === "string")
     .map(([id, d]) => {
       const spieler = Object.entries(d.spieler ?? {})
-        .map(([client, s]) => ({ client, name: s.name, rollen: rollenAus(s.rollen), online: online.has(client), seit: s.seit ?? 0 }))
+        .map(([client, s]) => {
+          const anw = online.get(client);
+          return { client, name: s.name, rollen: rollenAus(s.rollen), online: !!anw, seit: s.seit ?? 0, ...(anw?.fenster ? { fenster: anw.fenster } : {}) };
+        })
         .filter((s) => s.rollen.length > 0)
         .sort((a, b) => a.seit - b.seit || a.client.localeCompare(b.client));
       const rechner = spieler[0]?.client ?? null;
@@ -189,6 +195,14 @@ export class Sitzung {
     this.gestartet = true;
     this.abos.push(this.adapter.aufVerbindung((v) => this.verbindungGeaendert(v)));
     this.meldeAnwesenheit();
+    // seit Liste J (J2.4): Fenstergröße neu melden, wenn das Fenster größer oder kleiner gezogen wird
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", this.fensterGeaendert);
+      this.abos.push(() => {
+        window.removeEventListener("resize", this.fensterGeaendert);
+        if (this.fensterTimer) clearTimeout(this.fensterTimer);
+      });
+    }
     this.abos.push(this.adapter.aufAnwesenheit((liste) => {
       this.aendern({ teilnehmer: liste });
       this.teamsNeu();
@@ -227,11 +241,25 @@ export class Sitzung {
   }
 
   private meldeAnwesenheit(): void {
+    const f = fensterJetzt();
+    this.gemeldetesFenster = f.breite && f.hoehe ? fensterKennung(f) : "";
     this.adapter.meldeAnwesenheit({
       client: this.client, art: this.s.art, name: this.s.name, version: __ARGUS_VERSION__,
       ...(this.s.ich.team ? { team: this.s.ich.team } : {}),
+      ...(this.gemeldetesFenster ? { fenster: this.gemeldetesFenster } : {}),
     });
   }
+
+  /** zuletzt gemeldete Fenstergröße; ändert sie sich (1 s Ruhe nach dem Ziehen), meldet das Fenster sich neu (J2.4) */
+  private gemeldetesFenster = "";
+  private fensterTimer: ReturnType<typeof setTimeout> | null = null;
+  private fensterGeaendert = (): void => {
+    if (this.fensterTimer) clearTimeout(this.fensterTimer);
+    this.fensterTimer = setTimeout(() => {
+      this.fensterTimer = null;
+      if (this.gestartet && fensterKennung(fensterJetzt()) !== this.gemeldetesFenster) this.meldeAnwesenheit();
+    }, 1000);
+  };
 
   // ---------------------------------------------------------------- Teams und Spiele
 

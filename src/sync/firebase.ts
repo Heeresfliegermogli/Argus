@@ -214,8 +214,11 @@ export class FirebaseAdapter implements SyncAdapter {
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void {
     this.anwRef = this.r(`anwesenheit/${t.client}`);
     const r = this.anwRef;
+    // Seit Liste J (J2.4): Die Fenstergröße reist im Feld version mit („0.9.0 1536x730“, höchstens 20 Zeichen) – so bleiben die
+    // Firebase-Regeln unverändert (anwesenheit kennt kein Feld fenster). aufAnwesenheit trennt beides wieder.
+    const eintrag = anwesenheitSchreiben(t);
     // Ganzer Eintrag bei jedem Puls (nicht nur puls): kommt auch nach einem Verbindungsabbruch wieder.
-    const schreiben = () => set(r, bereinigt({ ...t, puls: serverTimestamp() })).catch((e: Error) => this.fehler(e));
+    const schreiben = () => set(r, bereinigt({ ...eintrag, puls: serverTimestamp() })).catch((e: Error) => this.fehler(e));
     onDisconnect(r).remove().catch(() => {});
     void schreiben();
     if (this.anwTimer) clearInterval(this.anwTimer);
@@ -227,7 +230,7 @@ export class FirebaseAdapter implements SyncAdapter {
     const melden = () => cb(Object.values(letzte).filter((t) => !istVeraltet(t.puls, this.serverJetzt())));
     const t = setInterval(melden, PULS_INTERVALL_MS);
     const ab = this.abo(onValue(this.r("anwesenheit"), (s) => {
-      letzte = (s.val() ?? {}) as Record<string, Teilnehmer>;
+      letzte = Object.fromEntries(Object.entries((s.val() ?? {}) as Record<string, Teilnehmer>).map(([k, v]) => [k, anwesenheitLesen(v)]));
       melden();
     }));
     return () => {
@@ -274,4 +277,22 @@ export class FirebaseAdapter implements SyncAdapter {
     this.verbindung = { ...this.verbindung, fehler: e.message };
     this.verbHoerer.forEach((cb) => cb(this.verbindung));
   }
+}
+
+/**
+ * Anwesenheit für Firebase (seit Liste J, J2.4): Fenstergröße an version anhängen („0.9.0 1536x730“). Die Regeln erlauben in version
+ * bis 20 Zeichen und kein eigenes Feld fenster – so muss niemand die Regeln neu veröffentlichen. Zu lang: ohne Fenster.
+ */
+export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehmer, "puls" | "fenster"> {
+  const { fenster, ...rest } = t;
+  if (!fenster || !/^\d{2,5}x\d{2,5}$/.test(fenster)) return rest;
+  const version = `${rest.version ?? ""} ${fenster}`.trim();
+  return version.length <= 20 ? { ...rest, version } : rest;
+}
+
+/** Gegenstück zu anwesenheitSchreiben: „0.9.0 1536x730“ → version „0.9.0“, fenster „1536x730“. */
+export function anwesenheitLesen(t: Teilnehmer): Teilnehmer {
+  const m = typeof t?.version === "string" ? t.version.match(/^(.*?)\s*(\d{2,5}x\d{2,5})$/) : null;
+  if (!m) return t;
+  return { ...t, version: m[1] || undefined, fenster: m[2] };
 }

@@ -13,6 +13,7 @@ import { EinweisungDruck } from "./ansichten/einweisung";
 import { PlenumFenster, SLFenster } from "./ansichten/sl-fenster";
 import { Start } from "./ansichten/start";
 import { TTFenster } from "./ansichten/tt-fenster";
+import { skalierungAnwenden } from "./ansichten/gemeinsam/fenster";
 import { type Einstellungen, leseEinstellungen, merke, merkeSitzung, merken, sitzungsAdresse } from "./config";
 import { setzeBildrateMax } from "./karte/bildrate";
 import { ladeInhalte } from "./inhalte/laden";
@@ -150,5 +151,8 @@ function App() {
   document.title = titel(e);
   return e.sitzung || e.rolle ? <Fenster e={e} /> : <Start e={e} />;
 }
+
+// Seit Liste J: unter 1280 × 600 wird die ganze Ansicht gleichmäßig verkleinert (nicht beim Druck der Einweisungskarten)
+if (new URLSearchParams(location.search).get("druck") !== "einweisung") skalierungAnwenden(document.getElementById("app")!);
 
 render(<App />, document.getElementById("app")!);

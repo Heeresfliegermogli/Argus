@@ -5,6 +5,8 @@
 //   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen dieses Teams (nach Spielende)
 // Die Auswertung über alle Teams (Schritt 8, auswertung.tsx) zeigt das Plenum-Fenster von selbst, sobald alle Teams
 // das Spielende erreicht haben; „Auswertung – alle Teams ›“ führt von Hand hin.
+// Seit Liste J (J3.1): In allen drei Bildern steht links die ganze Karte im Seitenverhältnis 10 : 7 (volle Höhe, nichts abgeschnitten),
+// die übrige Breite rechts trägt Lage, Code und Teams bzw. Uhr und Stand bzw. die Auflösung. Geprüft in 1530 × 800 und 1920 × 1080.
 import { useMemo, useState } from "preact/hooks";
 import { effekte } from "../kern/effekte";
 import { LEER, eigeneLage, lagebildKontrolle } from "../kern/lagebild";
@@ -15,9 +17,6 @@ import { Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { TeamMarke } from "./gemeinsam/rahmen";
-
-/** Mitte des Kartenausschnitts im Plenum (seit 2.7, G4b): die Karte füllt ihr Feld, oben und unten fehlt etwas Wald. */
-const KARTE_MITTE_PLENUM: [number, number] = [500, 340];
 
 /** Was Teilnehmer zum Mitspielen brauchen (Sitzung mit Lobby): Seite, Code und die Teams bisher. */
 export interface Beitritt {
@@ -65,9 +64,10 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
       </div>
       {modus === "einweisung" && <PlenumEinweisung inh={inh} beitritt={p.beitritt} />}
       {modus === "lage" && (
-        <div class="plenum-raster plenum-lage">
+        <div class="plenum-raster plenum-lage karte-links">
+          <div class="karte-raster">
           <Panel titel="Lagekarte" klasse="ohne-rand">
-            <LagekarteAnsicht inh={inh} lagebild={lageEigen} hintergrund="topo" legende="gelaende" uhr={() => p.s.kartenUhr()} effekte={umgebung} fuellen={KARTE_MITTE_PLENUM} />
+            <LagekarteAnsicht inh={inh} lagebild={lageEigen} hintergrund="topo" legende="gelaende" uhr={() => p.s.kartenUhr()} effekte={umgebung} senkrechtMitte />
           </Panel>
           <div class="stapel">
             <Panel titel="Spieluhr" klasse="flach">
@@ -79,6 +79,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
               <div class="plenum-zahl"><span>Wirkungen</span><b>{z.reihenfolge.filter((id) => z.meldungen[id].wirkung).length}</b></div>
               <div class="plenum-zahl"><span>Lagemeldungen</span><b>{z.injectReihenfolge.length}</b></div>
             </Panel>
+          </div>
           </div>
         </div>
       )}
@@ -96,12 +97,10 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
   // seit 2.5 (F1): die vier Panzer der 1. Kp in Stellung, wie in der Lage beschrieben (Spielbeginn, alle einsatzbereit)
   const start = useMemo(() => ({ ...LEER, eigene: eigeneLage(inh, zustandAus([], inh), 0) }), [inh]);
   return (
-    <div class="plenum-raster plenum-einweisung">
-      <Panel titel="Lage für alle" klasse="plenum-text">
-        <div class="stapel" style="gap:12px;height:100%">
-          <div>{lage.absaetze.map((a) => <p>{a}</p>)}</div>
-          <div class="klein leise">{sz.ablauf_unterricht.map((a) => `${a.phase} ${a.dauer_min} min`).join(" · ")}</div>
-        </div>
+    <div class="plenum-raster plenum-einweisung karte-links">
+      <div class="karte-raster">
+      <Panel titel={raumName(inh)} klasse="ohne-rand" rechts={<span class="klein sehr-leise">Gelände, Einheiten und Namen sind frei erfunden</span>}>
+        <LagekarteAnsicht inh={inh} lagebild={start} hintergrund="topo" legende="gelaende" senkrechtMitte />
       </Panel>
       <div class="stapel">
         {b && (
@@ -116,9 +115,13 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
             </div>
           </section>
         )}
-        <Panel titel={raumName(inh)} klasse="ohne-rand" rechts={<span class="klein sehr-leise">Gelände, Einheiten und Namen sind frei erfunden</span>}>
-          <LagekarteAnsicht inh={inh} lagebild={start} hintergrund="topo" legende="gelaende" fuellen={KARTE_MITTE_PLENUM} />
+        <Panel titel="Lage für alle" klasse="plenum-text">
+          <div class="stapel" style="gap:12px;height:100%">
+            <div>{lage.absaetze.map((a) => <p>{a}</p>)}</div>
+            <div class="klein leise">{sz.ablauf_unterricht.map((a) => `${a.phase} ${a.dauer_min} min`).join(" · ")}</div>
+          </div>
         </Panel>
+      </div>
       </div>
     </div>
   );
@@ -136,9 +139,11 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   const trotzWarnung = z.reihenfolge.filter((id) => (z.meldungen[id].freigabe?.warnungen ?? []).some((w) => !/^(Bestand |nur \d+ von \d+ )/.test(w))).length;
   const ungemeldet = inh.szenario.ziele.filter((x) => x.ungemeldet);
   return (
-    <div class="plenum-raster plenum-aufloesung">
+    <div class="plenum-raster plenum-aufloesung karte-links">
+      <div class="karte-raster">
+      {/* ganze Karte (Ostrand mit den Einfahrten und dem Mörser im Wald MARDER), darunter ein Streifen für die Legende */}
       <Panel titel="Kontrollkarte" klasse="ohne-rand" rechts={<span class="klein sehr-leise">Lage {uhrzeit(start, tLage)}</span>}>
-        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte" fuellen={KARTE_MITTE_PLENUM}
+        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte"
           uhr={() => p.s.kartenUhr()} effekte={fx} />
       </Panel>
       <div class="stapel">
@@ -161,6 +166,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
             </div>
           )}
         </Panel>
+      </div>
       </div>
     </div>
   );

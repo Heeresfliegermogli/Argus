@@ -24,7 +24,7 @@ Geprüft wird:
     (Zeit, Ort, bekämpftes Fahrzeug, Treffer, Verstöße), Meldungen entfallen, Injects, Hintergrundgefecht, E-01, Verstärkungen,
     Spielende – Zeiten bis auf die Verzögerung der Klicks im Browser;
   • Endbestand und zerstörte Fahrzeuge wie im Prozess (und damit wie die Simulation);
-  • alle Fenster passen in 1530 × 800, keine Konsolenfehler.
+  • alle Fenster passen in 1536 × 730, keine Konsolenfehler.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5 --bilder e2e-drehbuch
@@ -49,7 +49,9 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from auswertung_probe import bericht as auswertung_bericht, pruefe_auswertung  # noqa: E402
 
-W, H = 1530, 800
+from pruefgroessen import STANDARD  # noqa: E402
+
+W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch"]
 HIER = os.path.dirname(os.path.abspath(__file__))
 

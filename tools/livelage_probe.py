@@ -22,7 +22,7 @@ Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung (ohne Verstärkun
   B2  V-2 um 12:00 für alle gesperrt (Szenario 2.1: 11:15–17:15) – abgelehnt mit Grund.
 Teil C – Bildrate der Kontrollkarte allein (wie am Rechner der Spielleitung), Tempo ×1 und ×10, gezoomt mit Sprites; seit 2.6
   läuft der Team-Laptop (rechnet das Spiel) in einem kleinen Fenster daneben.
-Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
+Jede Ansicht in 1536 × 730 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 Karten mit WebGL über SwiftShader (Standard) oder im Rückfall Canvas (--renderer canvas).
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
@@ -37,7 +37,9 @@ import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
-W, H = 1530, 800
+from pruefgroessen import STANDARD  # noqa: E402
+
+W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 LAYOUT_JS = """
 () => {
   const de = document.documentElement;

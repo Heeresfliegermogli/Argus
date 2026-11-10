@@ -12,6 +12,7 @@ import type { Spielzustand } from "../../kern/zustand";
 import { Menue } from "./bausteine";
 import { useManifest } from "./drohnenbild";
 import { TeamMarke } from "./rahmen";
+import { aktuelleSkala } from "./fenster";
 
 /**
  * Kleine Karte für die Vorschau einer Verstärkung (B10) im Menü der Übersicht, die keine Kontrollkarte hat:
@@ -85,8 +86,10 @@ export function VerstaerkungMenue(p: {
   return (
     <span class="menue-anker">
       <button type="button" class="knopf klein" disabled={p.gesperrt || !aktiv.length} data-testid="verstaerkung-menue" onClick={(e) => {
+          // in Pixeln der Ansicht (unter 1280 × 600 ist sie verkleinert, das Menü liegt in ihr)
           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          setLage({ top: Math.round(r.bottom + 4), right: Math.max(8, Math.round(window.innerWidth - r.right)), maxHoehe: Math.round(window.innerHeight - r.bottom - 16) });
+          const k = aktuelleSkala();
+          setLage({ top: Math.round(r.bottom / k + 4), right: Math.max(8, Math.round((window.innerWidth - r.right) / k)), maxHoehe: Math.round((window.innerHeight - r.bottom) / k - 16) });
           setOffen(!offen);
         }}
         title="Vorbereitete Feindgruppen einspielen (nur Routineziele, keine neuen Fallen)">Verstärkung ▾</button>

@@ -11,6 +11,8 @@
 //   Abschluss 1:00    – vier Kernaussagen, Schlussfrage
 // Kennzahlen, Konfidenz und „Preis des Abwartens“ sind zuschaltbar (Menü „+“). Eine kleine Uhr je Kapitel zeigt Soll und Ist; nichts
 // springt von selbst weiter. Export der Ergebnisse ohne Namen.
+// Gebaut für das Smartboard (1530 × 800). Seit Liste J (J3.3): In kleineren Fenstern (Dienst-Laptop 1536 × 730) wird die Auswertung als
+// Ganzes verkleinert (Mindestgröße 1530 × 800, gemeinsam/fenster.ts) – nichts wird abgeschnitten; ab 1920 × 960 wächst sie mit.
 //
 // Leitplanken: Die Auswertung zeigt Teams, nie Namen von Personen. Sie bleibt bei der Ethik (Fehlbekämpfungen,
 // Widerspruch, Informationsweitergabe) – keine Rangliste, keine Punkte, keine Darstellung getöteter Menschen.
@@ -40,6 +42,7 @@ function zielText(inh: Inhalte, id: string): string {
 }
 import type { LiveLage } from "../drohne/livebild";
 import { Menue } from "./gemeinsam/bausteine";
+import { setzeMindestgroesse } from "./gemeinsam/fenster";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { LiveDrohnenFenster } from "./gemeinsam/livedrohne";
 import { TeamMarke } from "./gemeinsam/rahmen";
@@ -114,7 +117,14 @@ interface Schritte {
   weitere: boolean;
 }
 
+/** Mindestgröße der Auswertung (Smartboard); darunter wird sie gleichmäßig verkleinert (J3.3). */
+export const AUSWERTUNG_MIN = { breite: 1530, hoehe: 800 };
+
 export function AuswertungAnsicht(p: AuswertungProps) {
+  useEffect(() => {
+    setzeMindestgroesse(AUSWERTUNG_MIN);
+    return () => setzeMindestgroesse(null);
+  }, []);
   const schl = teamSchluessel(p.teams);
   const ref = useReferenz(p.inh);
   const a = useMemo(() => auswerten(p.inh, p.teams, ref ? { zustand: ref } : null), [p.inh, schl, ref]);

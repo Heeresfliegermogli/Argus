@@ -73,6 +73,8 @@ export interface KartenBild {
   aussen: Map<string, Punkt>;
   breite: number;
   hoehe: number;
+  /** Seit Liste J: sichtbarer Ausschnitt der Karte in Metern [x0, y0, x1, y1] (ganze Karte: 0, 0, 1000, 700) */
+  sichtbar: Rechteck;
 }
 
 export interface KartenOptionen {
@@ -87,10 +89,11 @@ export interface KartenOptionen {
   /** nach jedem gezeichneten Bild: Lage der Marken (siehe setzeMarken) */
   onBild?: (b: KartenBild) => void;
   /**
-   * Seit 2.7 (G4b): Beim Start füllt die Karte ihr Feld (kein leerer Rand) – Mitte des Ausschnitts in Metern, z. B. zwischen eigenen
-   * Panzern, Brücke und Ortschaft. Zoom und Verschieben bleiben; „Ganze Karte“ (⤢) zeigt wieder alles.
+   * Seit Liste J (10.11.2026): Ist das Feld höher als die Karte (10 : 7), steht die ganze Karte senkrecht in der Mitte (schmaler Rand
+   * oben und unten) statt oben (Kontrollkarte: Legende im Streifen darunter). Beim Start zeigt jede Karte die ganze Karte – das Füllen
+   * durch Zoom (G4b) ist entfallen, weil es den Ostrand abschnitt.
    */
-  fuellen?: Punkt;
+  senkrechtMitte?: boolean;
 }
 
 const FARBE = {
@@ -404,7 +407,6 @@ export class Lagekarte {
   }
 
   zoom(faktor: number, um?: Punkt): void {
-    this.benutzer = true;
     const neu = Math.max(1, Math.min(ZOOM_MAX, this.zoomFaktor * faktor));
     const p = um ?? [this.breite / 2, this.hoehe / 2];
     const welt: Punkt = [(p[0] - this.x) / this.s, (p[1] - this.y) / this.s];
@@ -418,7 +420,6 @@ export class Lagekarte {
   }
 
   ganzeKarte(): void {
-    this.benutzer = true;
     this.zoomFaktor = 1;
     this.s = this.fit;
     this.begrenzen();
@@ -456,16 +457,14 @@ export class Lagekarte {
 
   // ---------------------------------------------------------------- Ansicht
 
-  /** Seit 2.7 (G4b): Zoom, bei dem die Karte das Feld ganz füllt (mindestens 1). */
-  fuellFaktor(): number {
+  /** Sichtbarer Ausschnitt in Metern [x0, y0, x1, y1] (seit Liste J: Proben prüfen, dass beim Start die ganze Karte zu sehen ist). */
+  sichtbar(): Rechteck {
     const k = this.inh.karte.ausdehnung_m;
-    if (!this.breite || !this.hoehe) return 1;
-    return Math.max(1, Math.max(this.breite / k.breite, this.hoehe / k.hoehe) / Math.min(this.breite / k.breite, this.hoehe / k.hoehe));
+    if (!this.s) return [0, 0, 0, 0];
+    const r = (v: number) => Math.round(v * 10) / 10;
+    return [r(Math.max(0, -this.x / this.s)), r(Math.max(0, -this.y / this.s)),
+      r(Math.min(k.breite, (this.breite - this.x) / this.s)), r(Math.min(k.hoehe, (this.hoehe - this.y) / this.s))];
   }
-
-  private gefuellt = false;
-  /** Zoom oder Ausschnitt vom Benutzer gewählt (dann füllt eine Größenänderung nicht neu) */
-  private benutzer = false;
 
   private groesse(w: number, h: number): void {
     const welt: Punkt = this.breite ? [(this.breite / 2 - this.x) / this.s, (this.hoehe / 2 - this.y) / this.s] : this.zentrum;
@@ -474,18 +473,6 @@ export class Lagekarte {
     this.app.renderer.resize(w, h);
     const k = this.inh.karte.ausdehnung_m;
     this.fit = Math.min(w / k.breite, h / k.hoehe);
-    // seit 2.7 (G4b): ohne Benutzer-Zoom füllt die Karte ihr Feld auch nach einer Größenänderung
-    if (this.opt.fuellen && w && h && (!this.gefuellt || !this.benutzer) && !this.fokusAusstehend) {
-      this.gefuellt = true;
-      this.zoomFaktor = this.fuellFaktor();
-      this.s = this.fit * this.zoomFaktor;
-      this.x = w / 2 - this.opt.fuellen[0] * this.s;
-      this.y = h / 2 - this.opt.fuellen[1] * this.s;
-      this.begrenzen();
-      this.opt.onZoom?.(this.zoomFaktor);
-      this.zeichnen();
-      return;
-    }
     this.s = this.fit * this.zoomFaktor;
     this.x = w / 2 - welt[0] * this.s;
     this.y = h / 2 - welt[1] * this.s;
@@ -499,8 +486,8 @@ export class Lagekarte {
     const bw = k.breite * this.s;
     const bh = k.hoehe * this.s;
     this.x = bw <= this.breite ? (this.breite - bw) / 2 : Math.min(0, Math.max(this.breite - bw, this.x));
-    // passt die Karte in der Höhe, liegt sie oben; unten bleibt Platz für die Legende
-    this.y = bh <= this.hoehe ? 0 : Math.min(0, Math.max(this.hoehe - bh, this.y));
+    // passt die Karte in der Höhe, liegt sie oben (unten bleibt Platz für die Legende) – mit senkrechtMitte in der Mitte (Liste J)
+    this.y = bh <= this.hoehe ? (this.opt.senkrechtMitte ? (this.hoehe - bh) / 2 : 0) : Math.min(0, Math.max(this.hoehe - bh, this.y));
   }
 
   private bs(p: Punkt): Punkt {
@@ -512,9 +499,12 @@ export class Lagekarte {
       c.addEventListener(typ, f as EventListener, o);
       this.aufraeumen.push(() => c.removeEventListener(typ, f as EventListener, o));
     };
+    // seit Liste J: unter 1280 × 600 ist die ganze Ansicht verkleinert (transform: scale) – Zeiger in Leinwand-Pixel umrechnen
     const lokal = (e: PointerEvent | WheelEvent | MouseEvent): Punkt => {
       const r = c.getBoundingClientRect();
-      return [e.clientX - r.left, e.clientY - r.top];
+      const fx = c.clientWidth && r.width ? c.clientWidth / r.width : 1;
+      const fy = c.clientHeight && r.height ? c.clientHeight / r.height : 1;
+      return [(e.clientX - r.left) * fx, (e.clientY - r.top) * fy];
     };
     an("wheel", (e) => {
       e.preventDefault();
@@ -532,7 +522,6 @@ export class Lagekarte {
         const dy = p[1] - this.ziehen.py;
         if (Math.hypot(dx, dy) > 4) this.ziehen.bewegt = true;
         if (this.ziehen.bewegt && this.zoomFaktor > 1) {
-          this.benutzer = true;
           this.x = this.ziehen.x + dx;
           this.y = this.ziehen.y + dy;
           this.begrenzen();
@@ -799,7 +788,7 @@ export class Lagekarte {
     this.personen(u, this.lb.personen, uhr?.t ?? null);
     if (uhr) this.effekte.zeichnen(uhr.t, uhr.tempo, (p) => this.bs(p), this.s, performance.now(), this.breite, this.hoehe, this.staub);
     for (const [k, t] of this.texte) if (!this.benutzt.has(k) && !this.benutztStatisch.has(k)) t.visible = false;
-    this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, aussen: this.bildAussen, breite: this.breite, hoehe: this.hoehe });
+    this.opt.onBild?.({ rechtecke: this.bildRechtecke, punkte: this.bildPunkte, aussen: this.bildAussen, breite: this.breite, hoehe: this.hoehe, sichtbar: this.sichtbar() });
   }
 
   /** Stil einer Marke (Platzhalter in der Größe des HTML-Knopfs, unsichtbar). */

@@ -213,8 +213,8 @@ export function SLAnsicht(p: { s: Sicht }) {
               const marke = x.art === "tt" ? "zb" : x.art;
               const kurz = x.art === "plenum" ? "Plenum" : x.art === "sl" ? "SL" : "Team";
               return (
-                <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`}
-                  title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""} · letzte Rückmeldung vor ${alter} s`}>
+                <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`} data-fenster={x.fenster ?? ""}
+                  title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""} · letzte Rückmeldung vor ${alter} s`}>
                   <i class={`rolle-${marke}`} />{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}
                   {st.host?.id === x.client && <b> ★</b>}<span class="sehr-leise zahl">{alter} s</span>
                 </span>

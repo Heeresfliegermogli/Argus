@@ -60,7 +60,7 @@ Plenum, Zuschauer: folgen dem hochgeladenen Protokoll (mit Verzug)
 ```
 info                                   { code, szenario, version, titel, erstellt, von }  einmal angelegt
 host                                   { id, name, puls }  steuernde Spielleitung
-anwesenheit/<client>                   { client, art (tt|sl|plenum), name, puls, version, team? }
+anwesenheit/<client>                   { client, art (tt|sl|plenum), name, puls, version, team? }  (seit J: version „0.9.0 1536x730“ = Fenstergröße)
 teams/<team>                           { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen: "zb", seit } }
 status/<team>                          Statusmeldung des Team-Laptops (seit 2.6; Felder in SITZUNG.md)
 laeufe/<team>/<lauf>/protokoll/e000001 Ereignisse des Teams (nur anhängen; Upload des Team-Laptops)

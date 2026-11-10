@@ -4,6 +4,9 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { KLASSEN_BEISPIEL, TOUR } from "../src/ansichten/einweisung";
 import { fensterLage, meldungsMarken } from "../src/ansichten/gemeinsam/lagekarte";
+import { LAGEMELDUNG_MAX, lageEinblendung } from "../src/ansichten/zb";
+import { MIN_FENSTER, PRUEFGROESSEN, fensterKennung, leseFensterKennung, skalaFuer, zuKlein } from "../src/kern/fenster";
+import type { InjectStand } from "../src/kern/zustand";
 import type { MeldungsStand } from "../src/kern/zustand";
 import { inhalte } from "./hilfen";
 
@@ -85,7 +88,8 @@ describe("Einweisung (H4)", () => {
 
   it("Übersicht mit Pfeilen: jedes Ziel der Tour gibt es auf der echten Oberfläche", () => {
     const ziele = TOUR.map((s) => s.ziel);
-    for (const z of ["eingang", "entscheiden", "panzer", "feed", "bestand"]) expect(ziele, z).toContain(z);
+    // seit Liste J (J4): „Lagemeldungen“ zeigt auf die Einblendung oben links auf der Karte, „Wirkmittel“ auf die drei Kacheln
+    for (const z of ["eingang", "entscheiden", "karte", "panzer", "feed", "wirkmittel", "uhr"]) expect(ziele, z).toContain(z);
     const ui = quelle("zb.tsx") + quelle("gemeinsam/rahmen.tsx");
     for (const z of ziele) expect(ui, z).toContain(`data-tour="${z}"`);
     for (const s of TOUR) expect(s.titel.length, s.ziel).toBeGreaterThan(5);
@@ -116,5 +120,63 @@ describe("Einweisung (H4)", () => {
       expect(m.argus.empfehlung, k.meldung).toBe("BEKÄMPFEN");
       expect(m.ziele.every((z) => inh.ziele[z].gt.legitim), k.meldung).toBe(true);
     }
+  });
+});
+
+describe("Liste J: ganze Karte, jede Fenstergröße", () => {
+  const css = readFileSync(new URL("../src/stil/basis.css", import.meta.url), "utf-8");
+  const quelle = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf-8");
+
+  it("J1.1: Kartenfeld der Zielbearbeitung im Seitenverhältnis 10 : 7 aus der Höhe, rechte Spalte der Rest; G4b (Füllen) ist weg", () => {
+    expect(css).toMatch(/\.zb-raster \{[^}]*grid-template-columns: min\(calc\(100cqh \* 10 \/ 7\), calc\(100cqw - 8px - var\(--zb-rechts-min\)\)\) minmax\(0, 1fr\)/);
+    expect(css).toMatch(/\.ansicht-zb \{ --zb-rechts-min: 440px;[^}]*container-type: size/);
+    // Plenum: ebenfalls die ganze Karte (J3.1)
+    expect(css).toMatch(/\.karte-raster \{[^}]*\* 10 \/ 7 \+ 2px\)/);
+    for (const f of ["ansichten/zb.tsx", "ansichten/plenum.tsx", "ansichten/gemeinsam/lagekarte.tsx", "karte/lagekarte.ts"]) {
+      expect(quelle(f), f).not.toMatch(/fuellen=|fuellen\?:|fuellFaktor/);
+    }
+    expect(quelle("ansichten/zb.tsx")).toContain("senkrechtMitte");
+  });
+
+  it("J1.2: höchstens zwei Lagemeldungen auf der Karte, die neuesten; die übrigen stehen dahinter", () => {
+    const inj = (id: string, t: number, quittiert = false) => ({ id, erschienen: { seq: 1, t_s: t }, ...(quittiert ? { quittiert: { seq: 2, t_s: t + 1 } } : {}) }) as InjectStand;
+    const inh = { regeln: { anzeige: { lagemeldung_s: 30 } } } as Parameters<typeof lageEinblendung>[0];
+    const alle = [inj("I-01", 100), inj("I-02", 105), inj("I-03", 110, true), inj("I-04", 112)];
+    const e = lageEinblendung(inh, alle, 115);
+    expect(LAGEMELDUNG_MAX).toBe(2);
+    expect(e.zeigen.map((i) => i.id)).toEqual(["I-04", "I-02"]);
+    expect(e.weitere.map((i) => i.id)).toEqual(["I-01"]);
+    // I-01 läuft weiter ab (30 s Spielzeit) und erscheint nicht mehr, wenn sie um ist
+    expect(lageEinblendung(inh, alle, 131).zeigen.map((i) => i.id)).toEqual(["I-04", "I-02"]);
+    expect(lageEinblendung(inh, alle, 131).weitere).toEqual([]);
+  });
+
+  it("J2.1: Mindestgröße 1280 × 600 – darunter gleichmäßig verkleinert; Prüfgrößen", () => {
+    expect(MIN_FENSTER).toEqual({ breite: 1280, hoehe: 600 });
+    expect(PRUEFGROESSEN).toEqual([[1536, 730], [1366, 650], [1530, 800], [1920, 960]]);
+    for (const [b, h] of PRUEFGROESSEN) {
+      expect(skalaFuer(b, h), `${b}×${h}`).toBe(1);
+      expect(zuKlein(b, h)).toBe(false);
+    }
+    expect(skalaFuer(1100, 560)).toBeCloseTo(1100 / 1280, 6);
+    expect(skalaFuer(1400, 540)).toBeCloseTo(540 / 600, 6);
+    expect(zuKlein(1279, 700)).toBe(true);
+    expect(fensterKennung({ breite: 1536, hoehe: 730 })).toBe("1536x730");
+    expect(leseFensterKennung("1536x730")).toEqual({ breite: 1536, hoehe: 730 });
+    expect(leseFensterKennung("0.9.0")).toBeNull();
+    // die Ansicht rechnet mit 100 % (kein 100vh mehr), sonst stimmt die Verkleinerung nicht
+    expect(css).toMatch(/\.rahmen \{[^}]*height: 100%;/);
+  });
+
+  it("J1.3: Wirkmittel als Kacheln, eine Zeile Warnung, Knöpfe immer an derselben Stelle", () => {
+    const zb = quelle("ansichten/zb.tsx");
+    expect(zb).toContain('class="wm-kacheln" data-tour="wirkmittel"');
+    expect(zb).toContain("<WarnZeile");
+    // Knöpfe stehen außerhalb der Bedingung „Meldung offen“ (immer da)
+    expect(zb.indexOf('data-testid="zb-knoepfe"')).toBeGreaterThan(zb.indexOf("<WarnZeile"));
+    expect(css).toMatch(/\.zb-knoepfe \{[^}]*margin-top: auto/);
+    expect(css).toMatch(/section\.eingang \{[^}]*flex: 0 0 155px; height: 155px/);
+    // die Regel trifft nicht die Zelle „Eingang“ in der Übersicht der Spielleitung
+    expect(css).not.toMatch(/^\.eingang \{[^}]*height:/m);
   });
 });

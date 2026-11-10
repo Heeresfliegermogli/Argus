@@ -168,7 +168,7 @@ function useLiveTakt(o: LeinwandOpt, refs: { current: TaktElemente }): void {
 function Leisten(p: { statusRef: (el: HTMLElement | null) => void; pq: string; start: string; t: number }) {
   return (
     <>
-      <div class="drohne-kopf"><span>ARGUS 3.2 │ UAV-2 „Milan“ │ EO Tag</span><span class="live-status" ref={p.statusRef}>● LIVE {uhrzeit(p.start, p.t)}</span></div>
+      <div class="drohne-kopf"><span>ARGUS 3.2<span class="hud-lang"> │ UAV-2 „Milan“ │ EO Tag</span></span><span class="live-status" ref={p.statusRef}>● LIVE {uhrzeit(p.start, p.t)}</span></div>
       <div class="drohne-fuss"><span>PQ {p.pq}</span><span class="nur-aufnahme">Ziel hat das Bild verlassen</span><span>Übung</span></div>
     </>
   );

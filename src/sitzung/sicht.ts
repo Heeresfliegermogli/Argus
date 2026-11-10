@@ -21,6 +21,8 @@ export interface SichtTeilnehmer {
   puls: number;
   /** Rollen im Team (Teilnehmer) */
   rollen: GruppenRolle[];
+  /** seit Liste J: Fenstergröße „1536x730“ (Anwesenheit) */
+  fenster?: string;
 }
 
 export interface SichtStand {
@@ -106,7 +108,7 @@ export class Sicht {
     const rollenVon = new Map(team?.spieler.map((x) => [x.client, x.rollen]) ?? []);
     const teilnehmer = ss.teilnehmer
       .filter((t) => t.art !== "tt" || rollenVon.has(t.client))
-      .map((t) => ({ client: t.client, art: t.art, name: t.name, puls: t.puls, rollen: rollenVon.get(t.client) ?? [] }));
+      .map((t) => ({ client: t.client, art: t.art, name: t.name, puls: t.puls, rollen: rollenVon.get(t.client) ?? [], ...(t.fenster ? { fenster: t.fenster } : {}) }));
     return {
       rolle: this.rolle,
       client: ss.client,

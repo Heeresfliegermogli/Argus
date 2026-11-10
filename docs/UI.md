@@ -1,4 +1,21 @@
-# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9, D1–D5, F, H, G und I)
+# ARGUS – Ansichten (Schritt 6, ergänzt in 4b, 7, 6b, B1–B12, C1–C9, D1–D5, F, H, G, I und J)
+
+**Seit Liste J (10.11.2026, Szenario unverändert 2.7): die ganze Karte passt ins Fenster.** Geprüft wird jetzt in **1536 × 730**
+(Dienst-Laptop: 1920 × 1080 mit 125 % Skalierung, abzüglich Tabs, Adressleiste und Taskleiste – neue Standardgröße), **1366 × 650**,
+**1530 × 800** (Smartboard) und **1920 × 960**: kein Rollbalken, nichts abgeschnitten, die ganze Karte sichtbar (auch der Ostrand mit
+den Wäldern MARDER und DACHS, Hof RABE und den Einfahrten), die drei Knöpfe ganz sichtbar und an fester Stelle, kleinste Schrift ab
+1366 × 650 mindestens 12 px. **Unter 1280 × 600** wird die ganze Ansicht gleichmäßig verkleinert (transform: scale am Element `#app`,
+`src/ansichten/gemeinsam/fenster.ts`) – nie gerollt, nie abgeschnitten; der Team-Laptop zeigt dann einen Hinweis „Browser auf Vollbild
+(F11)“. Die **Zielbearbeitung** ist neu aufgeteilt (Tabelle unten): links die Karte in voller Höhe im Seitenverhältnis 10 : 7 (Breite
+= 1,43 × Höhe; das Füllen durch Zoom aus G4b ist entfallen), die **Lagemeldungen als Einblendung oben links auf der Karte** (höchstens
+zwei, Verhalten wie I4), die **Legende klein unten links** (einklappbar), rechts die Restbreite: Wirkung unterwegs · Eingang (vier
+Zeilen fest) · geöffnete Meldung mit großem Drohnenbild, ARGUS-Zeile, **Wirkmittel als drei Kacheln**, eine Zeile Warnung, **Knöpfe
+ganz unten**. **Plenum:** in Einweisung, Lage und Auflösung links die ganze Karte in 10 : 7, rechts Lage/Code/Teams bzw. Uhr und
+Stand bzw. die Auflösung. **Kontrollkarte** der Spielleitung wie bisher ganz (in 1536 × 730 744 × 520 px, Legende im Streifen
+darunter). Die **Auswertung** ist für das Smartboard gebaut und wird in kleineren Fenstern als Ganzes verkleinert (1536 × 730: 91 %,
+Mindestgröße 1530 × 800). Die **Fenstergröße** jedes Team-Laptops steht in der Übersicht der Spielleitung („Fenster 1536 × 730“,
+rot mit „F11!“ unter 1280 × 600; sie reist mit der Anwesenheit im Feld `version`, die Firebase-Regeln bleiben unverändert) und unten
+in der Einweisung. Die Probe-Werkzeuge prüfen alle vier Größen (`tools/pruefgroessen.py`).
 
 **Seit Szenario 2.7 (Änderungen G und I, 10.11.2026):** Lagemeldungen stehen **30 s oder bis zum Klick** (kleines ✕) und sind dann
 **ganz weg** – keine „frühere Meldungen“ mehr (`regeln.anzeige.lagemeldung_s`; gelesen nach x s steht im Protokoll, I4). Die
@@ -7,7 +24,7 @@ Rest hinter „+n“ als Überlagerung), darunter der **Eingang mit fester Höhe
 an fester Stelle – die Knöpfe bewegen sich nie. **Kein Ziel verschwindet ohne Erklärung** (I1): Fällt eine Meldung aus dem
 Eingang oder verlässt ein gemeldetes Ziel den Raum, steht eine Minute ein **Vermerk** im Eingang („Ziel 15 · über die Brücke
 ELSTER durchgebrochen“, „Ziel 30 · verbündet – nicht bekämpfen“), dazu ein Hinweis; das Zeichen bleibt am Kartenrand stehen
-(„Ziel 15 durchgebrochen“). Die **Karte füllt ihr Feld** (G4b) in Zielbearbeitung und Plenum: Ohne Zoom des Benutzers wird so
+(„Ziel 15 durchgebrochen“). *(Bis Liste J:)* Die **Karte füllt ihr Feld** (G4b) in Zielbearbeitung und Plenum: Ohne Zoom des Benutzers wird so
 weit vergrößert, dass kein grauer Rand bleibt; „ganze Karte“ (⤢) zeigt wieder alles. Zielbearbeitung: rund 690 m von den eigenen
 Panzern am Westrand über Bach und Brücke bis in die Ortschaft (mehr Breite geht bei vollem Feld nicht; Meldungen außerhalb zeigt
 der Pfeil am Rand). Plenum: volle Breite, oben und unten je ca. 60 m weniger. Die **Kontrollkarte** der Spielleitung zeigt geprüft
@@ -81,18 +98,40 @@ bisher `…/Argus/?rolle=g1|g2|g3|sl|plenum&raum=…` (g1 Aufklärung, g2 Zielpr
 bedient alle drei Rollen). Druck der Einweisungskarten
 `…/Argus/?druck=einweisung`. Die Spielleitung öffnet das Plenum mit „Plenum öffnen“.
 
-## Die Ansicht Zielbearbeitung (seit 2.6, H2)
+## Die Ansicht Zielbearbeitung (seit 2.6, H2; Aufteilung seit Liste J)
 
 Eine Ansicht für das ganze Team, eine Entscheidung je Meldung. Aufbau (`src/ansichten/zb.tsx`, `src/stil/basis.css`):
 
+```
+┌ Kopfzeile: Zielbearbeitung · Uhr/Phase · 1/1 1/2 1/3 1/4 · Mrs 12 LM 20 Kanone · verbunden · ⇩ · ? Einweisung ─────────────┐
+│ ┌ Lagekarte (ganz, 10 : 7, volle Höhe) ───────────────────────┐ ┌ Wirkung unterwegs: Ziel 17 ×3 0:23 … +n ───┐ │
+│ │ ┌ Lagemeldung · Brigade · 13:58 ✕ ┐            [+ − ⤢ Luftbild] │ ├ Eingang 8 (4 Zeilen fest, rollt) ──────────┤ │
+│ │ │ … (höchstens zwei, 30 s / Klick) │                          │ │ Ziel 1  Panzer 94 %  BEKÄMPFEN     13:40 │ │
+│ │ └──────────────────────────────────┘                          │ │ …                                         │ │
+│ │                    Marken, Countdown, Vorschau                │ ├ Ziel 1 (2 Fz) · im Eingang seit 13:40   i ┤ │
+│ │                                                               │ │ ███ Live-Drohnenbild 16 : 10 (Klick: Lupe) │ │
+│ │ [Legende ▾]                        [Mrs: Einschlag in 0:35 …] │ │ ARGUS 3.2 Panzer · Feind 94 % BEKÄMPFEN    │ │
+│ └───────────────────────────────────────────────────────────────┘ │ [Mrs 12 0:35 ⚠][LM 20 0:31 ✓][Kanone ∞ ✓] │ │
+│                                                                   │ ⚠ Mrs: R3 …  (eine Zeile, Klick: ganz)     │ │
+│                                                                   │ [BEKÄMPFEN mit …][ZURÜCKSTELLEN][ABLEHNEN] │ │
+└───────────────────────────────────────────────────────────────────┴────────────────────────────────────────────┘
+```
+
 | Bereich | Inhalt |
 |---|---|
-| **Kopfzeile** | Rollenband „ARGUS Zielbearbeitung“, Teamname; Uhr (mm:ss) und Phase („Phase 5: Krise“ – der Gegenangriff steht nirgends vorher, H3.2); **die vier Panzer** 1/1–1/4 als Kacheln mit Zustand (blinkt rot bei Treffer, ausgefallen durchgestrichen), Verwundete; **Bestand groß** („Mrs 12 · LM 20 · Kanone“, gelb bei wenig, rot bei leer, H5.6); Verbindung („verbunden · n offen“, „offline – Spiel läuft“), **⇩ Protokoll**, **? Einweisung** |
-| **links: Lagemeldungen** (schmal) | Brigade, Nachbarn, 1. Kp, die neueste oben. Seit 2.7 (I4) steht eine Meldung **30 s oder bis zum Klick** (kleines ✕, ein Balken zeigt die Restzeit) und ist dann **ganz weg** – keine Liste „frühere Meldungen“. Unter Druck läuft der Feed unter, S3 lebt davon (H5.5). Ob und nach wie vielen Sekunden eine Meldung angeklickt wurde, steht im Protokoll (`inject_quittiert`); Spielleitung und Auswertung sehen alle |
-| **Mitte: Lagekarte** | Marken der Meldungen im Eingang (Klick öffnet), gelbe Kontakte, bekämpfte Ziele mit **Countdown „Einschlag in 0:23“** am Ziel (H5.3), Vorschau des gewählten Wirkmittels am vorausberechneten Einschlagort mit Banner („Mrs: Einschlag in 0:35 – R2, R3 verletzt“), die vier Panzer mit Feindfeuer (Mündungsblitz am Schützen, Leuchtspur, Einschlag oder Treffer am Panzer, H5.7). Legende: Meldung (ARGUS), Kontakt, bekämpft – Einschlag folgt, bekämpft, No-Strike-Zone, Einschränkungsgebiet (H5.4) |
-| **rechts oben: Wirkung unterwegs** (seit 2.7, I5) | eine Zeile fester Höhe: je bekämpftem Ziel mit ausstehendem Einschlag ein Chip „Ziel 17 ×3 0:23“ (der nächste Einschlag zuerst), höchstens drei; passen nicht alle, „+n“ – Klick zeigt alle als Überlagerung, nichts verschiebt sich |
-| **rechts: Eingang** (feste Höhe, eigene Rollleiste) | je Meldung eine Zeile: „Ziel n“, ARGUS-Klasse und Konfidenz, Empfehlung, **Wartezeit m:ss** (ab 30 s hervorgehoben); zurückgestellte darunter mit ◷. Seit 2.7 (I1, I3) darunter eine Minute lang **Vermerke**: „durchgebrochen“, „abgezogen“, „verbündet – nicht bekämpfen“, „entfallen“. Die älteste neue Meldung öffnet sich von selbst, ein Klick öffnet eine andere |
-| **rechts unten: geöffnete Meldung** (feste Stelle) | „Ziel n · im Eingang seit m:ss“, kleines **„i“** (Angaben des Herstellers, H6/E6.4); **Live-Drohnenbild** (Klick: groß mit Lupe); ARGUS-Ausgabe „Panzer · Feind 91 %“ mit Empfehlung und Bildalter (`argusBei`, `bildalter`, H6/E6.1); **Wirkmittel** je Zeile mit Bestand, „Einschlag in m:ss“, „✓ keine Warnung“ oder ⚠ R2/R3/EB, „nur k von n Fahrzeugen“; die drei Knöpfe **BEKÄMPFEN mit LM ×3** („Bestand 8 → 5“, „⚠ trotz Warnung“, H6/E3.2) · **ZURÜCKSTELLEN** (beobachten) · **ABLEHNEN** |
+| **Kopfzeile** | Rollenband „ARGUS Zielbearbeitung“, Teamname; Uhr (mm:ss) und Phase („Phase 5: Krise“ – der Gegenangriff steht nirgends vorher, H3.2); **die vier Panzer** 1/1–1/4 als Kacheln mit Zustand (blinkt rot bei Treffer, ausgefallen durchgestrichen), Verwundete; **Bestand groß** („Mrs 12 · LM 20 · Kanone“, gelb bei wenig, rot bei leer, H5.6); Verbindung („verbunden · n offen“, „offline – Spiel läuft“), **⇩ Protokoll**, **? Einweisung**. Tempo-Knöpfe nur im Test ohne Lobby (J1.4). Ist die Kopfzeile schmaler als 1460 px (1366 × 650), entfallen die Marke „ARGUS“ im Band und die Wörter an „⇩ Protokoll“ und „▶ Start“; die Uhr-Info kürzt sich |
+| **links: Lagekarte** (seit J) | **immer die ganze Karte im Seitenverhältnis 10 : 7**: Höhe = Höhe unter der Kopfzeile, Breite = 1,43 × Höhe (CSS-Grid mit Container-Einheiten: `min(100cqh × 10/7, 100cqw − 8 px − 440 px)`). Ist die rechte Spalte dadurch schmaler als 440 px (z. B. 1280 × 720), wird das Kartenfeld schmaler und die Karte steht mit schmalem Rand oben und unten in der Mitte (`senkrechtMitte`) – nie abgeschnitten (J2.2). Zoom, Verschieben und ⤢ bleiben. Marken der Meldungen im Eingang (Klick öffnet), gelbe Kontakte, bekämpfte Ziele mit **Countdown „Einschlag in 0:23“** (H5.3), Vorschau des gewählten Wirkmittels am vorausberechneten Einschlagort, Hinweis unten rechts („Mrs: Einschlag in 0:35 – R2, R3 verletzt“), die vier Panzer mit Feindfeuer (H5.7). Die Karte meldet ihren sichtbaren Ausschnitt in Metern (`data-sichtbar="0,0,1000,700"`) |
+| **oben links auf der Karte: Lagemeldungen** (seit J, J1.2) | Einblendung, 330 px breit: Brigade, Nachbarn, 1. Kp, die neueste oben, je mit „Lagemeldung · Absender · Zeit“, Text, Restbalken und ✕. **Höchstens zwei gleichzeitig**; stehen mehr, zählt „+ n weitere Lagemeldung(en)“ – eine verdeckte läuft weiter ab und erscheint mit ihrer Restzeit, sobald eine der beiden weg ist (`lageEinblendung`). Verhalten wie I4: **30 s oder bis zum Klick**, dann ganz weg; unter Druck laufen sie unter, S3 lebt davon. Ob und nach wie vielen Sekunden angeklickt, steht im Protokoll (`inject_quittiert`); Spielleitung und Auswertung sehen alle |
+| **unten links auf der Karte: Legende** (seit J, J1.5) | klein, zwei Spalten (Meldung (ARGUS), Kontakt, bekämpft – Einschlag folgt, bekämpft, No-Strike-Zone, Einschränkungsgebiet), **einklappbar** („Legende ▾/▸“, je Browser gemerkt); überdeckt die eigenen Panzer am Westrand nicht |
+| **rechts oben: Wirkung unterwegs** (seit 2.7, I5) | eine Zeile fester Höhe (30 px): je bekämpftem Ziel mit ausstehendem Einschlag ein Chip „Ziel 17 ×3 0:23“ (der nächste Einschlag zuerst), höchstens drei; passen nicht alle, „+n“ – Klick zeigt alle als Überlagerung, nichts verschiebt sich |
+| **rechts: Eingang** (fest **vier Zeilen**, eigene Rollleiste) | je Meldung eine Zeile: „Ziel n“, ARGUS-Klasse und Konfidenz, Empfehlung, **Wartezeit m:ss** (ab 30 s hervorgehoben); zurückgestellte darunter mit ◷. Seit 2.7 (I1, I3) darunter eine Minute lang **Vermerke**. Die älteste neue Meldung öffnet sich von selbst, ein Klick öffnet eine andere |
+| **rechts unten: geöffnete Meldung** (feste Stelle; ohne Meldung dieselben Felder) | Kopf „Ziel n · im Eingang seit m:ss“, kleines **„i“** (Angaben des Herstellers); **Live-Drohnenbild** über die volle Spaltenbreite in einem dunklen Rahmen – das Bild selbst immer ganz in 16 : 10 (bei Meldungen mit mehreren Fahrzeugen liegen die Ziele über die ganze Bildhöhe; ein Zuschnitt würde z. B. den dritten PT-91 in S3 verdecken), so groß, wie die Höhe zulässt: 1536 × 730 ca. 416 × 260, 1366 × 650 ca. 290 × 180, 1920 × 960 ca. 600 × 375 (Klick: groß mit Lupe); **ARGUS-Zeile** „Panzer · Feind 91 %“ mit Empfehlung und Bildalter; **Wirkmittel als drei Kacheln** (Name, Bestand groß – Kanone „∞“ –, „Einschlag 0:35“, ×k, ✓ oder ⚠; ohne Meldung nur der Bestand); darunter **eine Zeile Warnung** zum gezeigten (Maus) bzw. gewählten Wirkmittel („⚠ Mrs: R3: Ortschaft im Wirkradius …“, ganzer Text als Tooltip und per Klick als Kasten); **ganz unten an fester Stelle** die drei Knöpfe **BEKÄMPFEN mit LM ×3** („Bestand 8 → 5“, „⚠ trotz Warnung“) · **ZURÜCKSTELLEN** (beobachten) · **ABLEHNEN** – auch ohne offene Meldung (gesperrt). Ist die Spalte schmaler als 520 px (1530 × 800), werden die Knöpfe etwas kleiner (15 px), damit alle Wörter ganz passen |
+
+Fotos in den vier Prüfgrößen: [`docs/bilder/liste-j/`](bilder/liste-j/) (`zb_1536x730.jpg` …, Mörser gewählt mit Warnung R3).
+
+Maße der rechten Spalte (Prüfgrößen): 1536 × 730 → Karte 950 × 665, rechts 562 px; 1366 × 650 → 837 × 585, rechts 505 px;
+1530 × 800 → 1051 × 735, rechts 455 px; 1920 × 960 → 1280 × 896, rechts 616 px. Hinweise (Toasts) stehen in der Zielbearbeitung
+unten links über der Karte und lassen Klicks durch – rechts unten sind die Knöpfe.
 
 * Jede Entscheidung trägt die Sekunden ab Eingang und ab Öffnen ins Protokoll (`sek_eingang`, `sek_offen`, H2.4) – für die Frage
   der Auswertung „Wie lange habt ihr hingeschaut?“.
@@ -102,6 +141,8 @@ Eine Ansicht für das ganze Team, eine Entscheidung je Meldung. Aufbau (`src/ans
 * Ein zweites Fenster des Teams und die Spielleitung („◉ Zielbearbeitung“) sehen dieselbe Ansicht nur lesend (Abzeichen „◉ Zuschauen“,
   Knöpfe gesperrt).
 * Im Test ohne Lobby steuert das Team die Uhr oben rechts selbst (▶ Start, ×1/×5/×20).
+* Fenster kleiner als 1280 × 600: die ganze Ansicht wird gleichmäßig verkleinert, ein Hinweis bittet um Vollbild (F11); die Übersicht der
+  Spielleitung zeigt die Fenstergröße rot.
 * Bei Spielende sperrt eine Tafel die Ansicht („Bitte zum Plenum“); ist das Protokoll noch nicht ganz im Netz, bietet sie
   **Protokoll speichern** an.
 
@@ -187,20 +228,25 @@ die Einweisung, `src/ansichten/einweisung.tsx`, jederzeit wieder über **? Einwe
 1. **Übersicht auf der echten Oberfläche** (H4.1): Lichtfleck und Pfeil auf das Element, Sprechblase daneben, sieben Schritte –
    „Hier kommen die Meldungen rein“ (Eingang), „Hier entscheidet ihr“ (geöffnete Meldung), „Die Lagekarte“, „Hier eure vier Panzer“,
    „Hier Lagemeldungen“, „Hier Wirkmittel und Bestand“, „Spieluhr“. Weiter mit **weiter ›**, Pfeiltasten, Klick in den dunklen
-   Bereich; **Übersicht überspringen** jederzeit; am Ende **weiter zur Einweisung ›**.
+   Bereich; **Übersicht überspringen** jederzeit; am Ende **weiter zur Einweisung ›**. Seit Liste J (J4) zeigt „Hier Lagemeldungen“
+   auf die Einblendung oben links auf der Karte – solange die Übersicht läuft, steht dort eine **Beispiel-Lagemeldung** (gestrichelt,
+   nur wenn gerade keine echte da ist; CSS `body[data-tour]`) –, „Hier Wirkmittel und Bestand“ auf die drei Kacheln. Die Übersicht
+   hängt über dem ganzen Fenster (außerhalb der verkleinerten Ansicht), damit Lichtfleck und Pfeil auch unter 1280 × 600 stimmen.
 2. **Vier Folien** (H4.2): „Die Phasen“ (Aufklärung, Gefechtsaufklärung, Bergung, Hauptangriff, Krise – je ein Satz, ohne
    Gegenangriff), „Was ARGUS meldet“ (je Klasse ein helles, scharfes Bildbeispiel als Ausschnitt mit Lupe – Panzer, Fahrzeug,
    Infanterie; keine Lösungshinweise, H4.4), „Die Wirkmittel“ (je Wirkmittel eine kurze Animation), „Los geht’s“. Bedienung:
    **weiter ›** / **‹ zurück**, Punkte, Pfeiltasten, Wischen, **Überspringen**, **Übersicht noch einmal**, Esc; auf der letzten
-   Folie **Verstanden – zur Ansicht**.
+   Folie **Verstanden – zur Ansicht**. Unter den Punkten steht klein die **Fenstergröße** des Laptops („Fenster 1536 × 730“, unter
+   1280 × 600 rot: „Browser auf Vollbild (F11)“, J2.4). Alle Folien passen in 1366 × 650 ohne Rollen.
 
 Nicht mehr in der Einweisung (H4.3): das Kleingedruckte des Herstellers (steht im Befehl, im Spiel hinter „i“, in der Auswertung),
 der Block „Regelungen“ (die Regeln stehen im Befehl, das System warnt), die Kette der drei Rollen.
 
 **Spielleitung:** Auftrag und Folien zum Ablauf (Lage vorlesen, **Spiel öffnen – alle Teams**, **▶ Start für alle**).
 
-**Druck** (`?druck=einweisung`, A5 quer): eine Karte für das Team (Skizze der Ansicht mit nummerierten Bereichen, die Folien als
-Raster) und die Karte der Spielleitung.
+**Druck** (`?druck=einweisung`, A5 quer): eine Karte für das Team (Skizze der Ansicht mit nummerierten Bereichen – seit Liste J
+Karte links mit den Lagemeldungen oben links, rechts Eingang, Meldung, Wirkmittel –, die Folien als Raster) und die Karte der
+Spielleitung.
 
 ## Startseite, Lobby, Übersicht (Schritt 4b)
 
@@ -208,9 +254,9 @@ Raster) und die Karte der Spielleitung.
 |---|---|
 | **Startseite** (B1) | zuerst nur zwei große Knöpfe **Ich spiele mit** und **Spielleitung** (Anker `#mitspielen`, `#spielleitung`, Zurück funktioniert). „Ich spiele mit“: nur das Codefeld (drei Zeichen) und **Beitreten** („„K0“ ist kein Code. Ein Code hat 3 Zeichen, z. B. K7P.“ bzw. „Die Sitzung … gibt es nicht“). „Spielleitung“: zuletzt genutzte Sitzung **Fortsetzen als Spielleitung** / **Plenum**, **Neue Sitzung anlegen** (Name), bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; eingeklappt „Test ohne Lobby“ (Raum, **Allein testen (ein Fenster)**, **Alle vier Fenster öffnen**, einzelne Rollen); unten Auswertung üben, Einweisungskarten drucken, Lasttest |
 | **Lobby** (seit 2.6) | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links „Eure Namen“, „Neues Team“ (Name, 🎲, **Team anlegen** – „dieser Laptop spielt für das Team“) bzw. „Ihr seid im Team“ (rechnet / schaut zu, **Team verlassen**), „So spielt ihr“; rechts alle Teams als Karten mit den Fenstern (★ = Team-Laptop) und **beitreten** (Team ohne Laptop) bzw. **zuschauen** |
-| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (Spiel öffnen, **▶ Start für alle**, Anhalten, Tempo, Spielzeit, Reserve, Plenum, **Auswertung ›**, **Protokoll laden**; das Menü „Verstärkung“ ist seit 2.6 ausgeblendet); Tabelle je Team **aus den Statusmeldungen** (Laptop als Chip mit Menü, Spielzeit, Eingang, Schlüsselfälle S1–S8, Fehl, Panzer, Protokoll im Netz und Alter der Statusmeldung, ▶/❚❚, ansehen ›) |
+| **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (Spiel öffnen, **▶ Start für alle**, Anhalten, Tempo, Spielzeit, Reserve, Plenum, **Auswertung ›**, **Protokoll laden**; das Menü „Verstärkung“ ist seit 2.6 ausgeblendet); Tabelle je Team **aus den Statusmeldungen** (Laptop als Chip mit Menü und darunter seit Liste J die **Fenstergröße** des Team-Laptops – „Fenster 1536 × 730“, rot „… – F11!“ unter 1280 × 600 –, Spielzeit, Eingang, Schlüsselfälle S1–S8, Fehl, Panzer, Protokoll im Netz und Alter der Statusmeldung, ▶/❚❚, ansehen ›). Die Teamansicht zeigt die Fenstergröße jedes Fensters beim Zeigen auf den Chip unter „Fenster“ |
 | **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, **Steuerung** · **◉ Zielbearbeitung** (nur lesen, mit Verzug); **✎ Notiz** (Beobachtung der SL 2 zu einem Fall, der laufende Fall ist vorgewählt) |
-| **Plenum** | vor dem ersten Spiel Einweisung mit Code und Teams; danach ein Team (Wahl oben links) |
+| **Plenum** | vor dem ersten Spiel Einweisung mit Code und Teams; danach ein Team (Wahl oben links). Seit Liste J (J3.1) in allen drei Bildern links die **ganze Karte in 10 : 7** (volle Höhe), rechts der Rest: Einweisung – Code und Teams, darunter „Lage für alle“; Lage – Uhr und Stand; Auflösung – Kontrollkarte (mit Streifen für die Legende) und „Auf einen Blick“, Wirkungen |
 
 Gestaltung: Teamfarben (Rosa, Gelb, Grün, Cyan, Indigo, Magenta, Hellgrau, Braun) sind weder Rollen-
 noch Signalfarbe und stehen nie ohne Namen. Folgenreiches (neues Spiel, Team löschen) fragt im Knopf
@@ -264,9 +310,11 @@ nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die E
 * Weniger ist mehr: ein Eingang mit Wartezeit statt Verlauf; was offen ist, steht im Eingang und auf der Karte. Texte für das
   Team in der Ihr-Form (2–3 Personen an einem Laptop).
 * Keine Lösungshinweise in der Oberfläche: Was die Schlüsselfälle auflöst, steht nur dort, wo das
-  Drehbuch es vorsieht (Merkmale im Drohnenbild, Kleingedrucktes hinter „i“, die Lagemeldungen im Feed – S3 nur dort).
+  Drehbuch es vorsieht (Merkmale im Drohnenbild, Kleingedrucktes hinter „i“, die Lagemeldungen auf der Karte – S3 nur dort).
 * Feste Felder schneiden nichts ab; nur Listen rollen innerhalb ihres Feldes, ohne sichtbaren Balken
-  (unten ausgeblendet, solange mehr folgt). Ältere Lagemeldungen einzeilig, ganzer Text beim Klick.
+  (unten ausgeblendet, solange mehr folgt). Text in Knöpfen und Kacheln wird nie gekürzt („…“).
+* Jede Fenstergröße ab 1280 × 600 ohne Rollbalken; darunter wird gleichmäßig verkleinert (Liste J). Die Karte steht überall ganz im
+  Seitenverhältnis 10 : 7 (Zielbearbeitung, Plenum, Kontrollkarte); nur die Auswertung (Smartboard) hat als Mindestgröße 1530 × 800.
 * Schrift Barlow Semi Condensed und IBM Plex Mono (eingebettet, auch in der Offline-Datei).
 
 ## Datengetrieben
@@ -286,6 +334,7 @@ Texte der Einweisung: Phasen, Wirkmittel, Klassenbeispiele und Spielzeit aus den
 
 | Prüfung | Ergebnis |
 |---|---|
+| **J (10.11.2026, Szenario 2.7)** `npm test` (neu: Liste J in `tests/oberflaeche.test.ts`, Fenstergröße in `tests/firebase_regeln.test.ts`), `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `auswertung_probe.py` – alle mit `tools/pruefgroessen.py` in **1536 × 730** (Standard), **1366 × 650**, **1530 × 800**, **1920 × 960** | siehe `claude/Zwischenstand_J.md`: ganze Karte (data-sichtbar 0,0,1000,700) in allen Größen, kein Rollbalken, nichts abgeschnitten, Knöpfe in jedem Bild einer Größe auf den Pixel gleich, kleinste Schrift 12 px |
 | **G+I (10.11.2026, Szenario 2.7)** `npm test`, `ui_bilder.py`, `ui_faelle.py` (neu: I4 Feed, I5 acht Wirkungen und zehn Meldungen), `bedientest_probe.py`, `livelage_probe.py` (neu: A8 PT-91 und Auflösung, A9 Ziel 15 durchgebrochen), `auswertung_probe.py` (15-min-Plan), `verluste_probe.py`, `e2e_drehbuch.py` | siehe `claude/Zwischenstand_GI.md` |
 | **H (09.11.2026, Szenario 2.6)** `npm test`, `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `lobby_probe.py`, `verluste_probe.py`, `drohne_probe.py`, `livelage_probe.py`, `auswertung_probe.py`, `e2e_teams.py`, `e2e_drehbuch.py` (alle auf eine Rolle umgestellt) | siehe `claude/Zwischenstand_H.md`: alle Ansichten in 1530 × 800 ohne Rollbalken (Übersicht mit Pfeilen, Folien, Eingang voll, Lupe je Schlüsselfall, Countdown, frühere Lagemeldungen, Teamvergleich mit 7 Teams); Bedientest 13/13, Lobby 20/20; Beschuss der Panzer sichtbar (Mündungsblitz, Leuchtspur, Blinken, roter Rand) |
 | **F (02.11.2026, Szenario 2.5)** `npm test`, `verluste_probe.py` (für F neu geschrieben), `ui_bilder.py`, `ui_faelle.py`, `bedientest_probe.py`, `auswertung_probe.py`, `e2e_drehbuch.py` | 176 Tests (neu `tests/szenario25.test.ts`); vier Panzer mit Kennung und Zustandsbalken bei allen Rollen, auf der Kontrollkarte und im Plenum, gezoomt als Sprites (intakt, eingeschränkt, ausgefallen), Kopfzeile „1. Zug: b/4 einsatzbereit · n Verwundete“ (seit F5 „1. Kp: …“) mit Balken je Panzer in allen Fenstern gleich, Druckmeldungen je Panzer ≤ 140 Zeichen, I-07 nennt 1/4, Zeichen blinkt bei Treffer, Untergrenze hält, Preis des Abwartens je Panzer; Bedientest 18/18 (F-2: seit E3 zwei Einschlagsmarken für Ziel 1); Plenum-Einweisung nach Kürzen der Lage ohne Rollbalken; `e2e_drehbuch.py` mit zwei Teams: Protokolle und Druckmeldungen wie im Prozess (siehe ENGINE.md). **Offen, seit E-a (Aufgabe von E-b):** Teamvergleich der Auswertung mit zwölf Spalten 2244 px breit (`plenum_aufloesung`, `plenum_auswertung_teamvergleich`), Sensordaten noch in Einweisung und Replay (E6.3) |
@@ -311,6 +360,8 @@ Texte der Einweisung: Phasen, Wirkmittel, Klassenbeispiele und Spielzeit aus den
 
 ## Offen
 
-* Bedientest mit Menschen für 2.6 (Teil A Start und Lobby, Teil B Zielbearbeitung zu zweit); dabei Tempo und Feed beobachten.
+* Bedientest mit Menschen für 2.6 (Teil A Start und Lobby, Teil B Zielbearbeitung zu zweit); dabei Tempo und Lagemeldungen beobachten.
+* Liste J am Dienst-Laptop ansehen (echtes Fenster, 125 %): Ist das Drohnenbild groß genug (1536 × 730 ca. 416 × 260)? Wird die
+  Lagemeldung oben links auf der Karte gesehen? Stört die Legende unten links?
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
 * Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).

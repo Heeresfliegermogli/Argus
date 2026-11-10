@@ -2,7 +2,8 @@
 """Probe der Auswertung (Schritt 8; seit 2.7 15 min nach Änderungsliste G): die Auflösung so durchgehen, wie die Spielleitung es am
 Smartboard tut.
 
-Ablauf (1530 × 800, wie die Dienstrechner und das Smartboard):
+Ablauf (seit Liste J in 1536 × 730 – Dienst-Laptop; die Auswertung ist für das Smartboard 1530 × 800 gebaut und wird darunter als Ganzes
+verkleinert, J3.3 –; am Ende alle Kapitel noch einmal in 1920 × 960, 1530 × 800 und 1366 × 650):
   1. Auswertung öffnen – Beispiel (…/?auswertung=demo, sieben Modellteams: fünf des Drehbuchs, zwei mit anderem Tempo) oder das
      Plenum einer Sitzung (Adresse mit sitzung=…&rolle=plenum; nach Spielende schaltet es selbst auf die Auswertung).
   2. Kapitel für Kapitel mit der Taste „Bild ↓“ (wie ein Presenter): Teamvergleich 1:00, S3 und S2 (Replay, je 2:00), Bilanz 2:00 (erst
@@ -33,7 +34,9 @@ import time
 
 from playwright.sync_api import sync_playwright
 
-W, H = 1530, 800
+from pruefgroessen import GROESSEN, groessen_argument, groesse_text, lies_groesse
+
+W, H = 1536, 730
 HIER = os.path.dirname(os.path.abspath(__file__))
 KAPITEL = ["teams", "S3", "S2", "bilanz", "impuls", "diskussion", "abschluss"]
 BUDGET = {"teams": 60, "S3": 120, "S2": 120, "bilanz": 120, "impuls": 60, "diskussion": 360, "abschluss": 60}
@@ -62,6 +65,8 @@ LAYOUT_JS = """
     if (el.scrollWidth > el.clientWidth + 2) zuGross.push(`${el.className}: Breite ${el.scrollWidth} > ${el.clientWidth}`);
   }
   // kleinste sichtbare Schrift (Text, der nicht nur Zierde ist)
+  // seit Liste J: unter 1530 × 800 ist die Auswertung verkleinert – gemessen wird am Bildschirm, geprüft die Schrift im Entwurf
+  const skala = Number(document.documentElement.dataset.skala || 1) || 1;
   let min = 99, klein = 0, n = 0;
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
@@ -78,7 +83,8 @@ LAYOUT_JS = """
     min = Math.min(min, fs);
     if (fs < 14) klein++;
   }
-  return { seite: [de.scrollWidth, de.scrollHeight], zuGross, schrift: { min, klein, n } };
+  min = Math.round(min * skala * 10) / 10;
+  return { seite: [de.scrollWidth, de.scrollHeight], zuGross, schrift: { min, klein, n, skala, entwurf: Math.round(min / skala * 10) / 10 } };
 }
 """
 
@@ -117,14 +123,17 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     def foto(name):
         s.screenshot(path=os.path.join(a.bilder, f"{name}.png"))
 
+    W, H = s.viewport_size["width"], s.viewport_size["height"]
+
     def layout(name):
         lay = s.evaluate(LAYOUT_JS)
-        if lay["seite"][0] > W or lay["seite"][1] > H:
-            fehler.append(f"{name}: Seite {lay['seite']} größer als {W}×{H}")
+        w, h = s.viewport_size["width"], s.viewport_size["height"]
+        if lay["seite"][0] > w or lay["seite"][1] > h:
+            fehler.append(f"{name}: Seite {lay['seite']} größer als {w}×{h}")
         if lay["zuGross"]:
             fehler.append(f"{name}: {lay['zuGross'][:3]}")
-        if lay["schrift"]["min"] < 12:
-            fehler.append(f"{name}: kleinste Schrift {lay['schrift']['min']} px")
+        if lay["schrift"]["entwurf"] < 12:
+            fehler.append(f"{name}: kleinste Schrift {lay['schrift']['entwurf']} px")
         return lay
 
     def kapitel_jetzt():
@@ -149,7 +158,7 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                 tabelle.setdefault(c["team"], {})[c["fall"]] = c
             breite = s.evaluate("() => { const t = document.querySelector('[data-testid=teamvergleich]'); return [t.scrollWidth, t.clientWidth, t.getBoundingClientRect().right]; }")
             if breite[2] > W:
-                fehler.append(f"Teamvergleich ragt über 1530 px hinaus ({breite})")
+                fehler.append(f"Teamvergleich ragt über {W} px hinaus ({breite})")
             for i, t in enumerate(teams):
                 zeile = tabelle[t["id"]]
                 print(f"  {t['name'][:18]:<18} " + "  ".join(f"{f}:{z['ausgang'][:7]:<7}" for f, z in zeile.items()))
@@ -442,6 +451,34 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     return fehler, protokoll, schritte
 
 
+def kapitel_in_groessen(s, bilder, groessen):
+    """Seit Liste J (J2.3, J3.3): alle Kapitel der Standard-Auswertung in weiteren Fenstergrößen – kein Rollbalken, nichts abgeschnitten,
+    Schrift (im Entwurf) ≥ 12 px. Gibt Fehler und je Größe die Verkleinerung und die kleinste Schrift am Bildschirm zurück."""
+    fehler, ergebnis = [], {}
+    alt = s.viewport_size
+    for g in groessen:
+        s.set_viewport_size({"width": g[0], "height": g[1]})
+        s.wait_for_timeout(600)
+        mins = []
+        for k in KAPITEL:
+            s.locator(f"[data-kapitel-chip='{k}'], .kapitel-chip[data-kapitel='{k}']").first.click()
+            warte(lambda: s.locator("[data-testid=auswertung]").get_attribute("data-kapitel") == k, 10, f"{k} in {groesse_text(g)}")
+            s.wait_for_timeout(900 if k in ("S3", "S2") else 400)
+            lay = s.evaluate(LAYOUT_JS)
+            if lay["seite"][0] > g[0] or lay["seite"][1] > g[1]:
+                fehler.append(f"{groesse_text(g)} {k}: Seite {lay['seite']}")
+            if lay["zuGross"]:
+                fehler.append(f"{groesse_text(g)} {k}: {lay['zuGross'][:3]}")
+            if lay["schrift"]["entwurf"] < 12:
+                fehler.append(f"{groesse_text(g)} {k}: kleinste Schrift {lay['schrift']['entwurf']} px")
+            mins.append(lay["schrift"]["min"])
+            s.screenshot(path=os.path.join(bilder, f"groesse_{groesse_text(g)}_{k}.png"))
+        ergebnis[groesse_text(g)] = (lay["schrift"]["skala"], min(mins))
+        print(f"  {groesse_text(g)}: alle {len(KAPITEL)} Kapitel, Verkleinerung {lay['schrift']['skala']:.3f}, kleinste Schrift am Bildschirm {min(mins)} px")
+    s.set_viewport_size(alt)
+    return fehler, ergebnis
+
+
 def bericht(protokoll, schritte):
     print("\nKapitel                Zeit bis sichtbar   kleinste Schrift   Text < 14 px")
     for k, dauer, schrift in protokoll:
@@ -458,7 +495,9 @@ def main():
     ap.add_argument("--bilder", default="auswertung-probe")
     ap.add_argument("--erwartet", default=None, help="Plan aus tools/drehbuch_plan.ts (Ausgang je Fall); sonst neu erzeugt")
     ap.add_argument("--ohne-vergleich", action="store_true", help="Inhalte nicht mit dem Plan vergleichen (andere Teams)")
+    groessen_argument(ap)
     a = ap.parse_args()
+    w0, h0 = lies_groesse(a.groesse)
     os.makedirs(a.bilder, exist_ok=True)
     demo = "sitzung=" not in a.adresse
     url = a.adresse if not demo else a.adresse.rstrip("/") + "/?auswertung=demo"
@@ -467,7 +506,7 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--disable-gpu", "--disable-software-rasterizer"])
-        ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1, accept_downloads=True)
+        ctx = browser.new_context(viewport={"width": w0, "height": h0}, device_scale_factor=1, accept_downloads=True)
         s = ctx.new_page()
         s.on("console", lambda m: konsole.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
         s.on("pageerror", lambda e: konsole.append(f"pageerror: {e}"))
@@ -477,6 +516,9 @@ def main():
         print(f"Auswertung offen nach {time.time() - t0:.1f} s ({'Beispiel' if demo else 'Sitzung'})")
         fehler2, protokoll, schritte = pruefe_auswertung(s, plan, a.bilder, demo)
         fehler += fehler2
+        print("Alle Kapitel in den übrigen Prüfgrößen:")
+        fehler3, _ = kapitel_in_groessen(s, a.bilder, [g for g in GROESSEN if g != (w0, h0)])
+        fehler += fehler3
 
         relevante = [k for k in konsole if "GPU stall" not in k and "WebGL" not in k and "swiftshader" not in k.lower() and "favicon" not in k]
         if any("pageerror" in k or k.startswith("error") for k in relevante):
@@ -487,7 +529,7 @@ def main():
     if fehler:
         print("FEHLER:", *fehler[:40], sep="\n  ")
         sys.exit(1)
-    print("OK – Auswertung vollständig, in 1530×800 ohne Rollbalken, Inhalte wie die Auswertung im Prozess")
+    print(f"OK – Auswertung vollständig, in {w0}×{h0} und den übrigen Prüfgrößen ohne Rollbalken, Inhalte wie die Auswertung im Prozess")
 
 
 if __name__ == "__main__":

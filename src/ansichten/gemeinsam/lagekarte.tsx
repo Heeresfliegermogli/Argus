@@ -20,6 +20,7 @@ import type { MeldungsStand } from "../../kern/zustand";
 // Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt.
 import type { Hintergrund, KartenBild, KartenInfo, KartenUhr, Lagekarte, Rechteck, Vorschau } from "../../karte/lagekarte";
 import { MODIFIKATOR_ATTRAPPE, ZEICHEN_KONTAKT, sidc } from "../../karte/zeichen";
+import { aktuelleSkala } from "./fenster";
 
 /** Marke über der Karte: Meldung (Knopf) oder bekämpftes Ziel (Countdown bis zum Einschlag, H5.3). */
 export interface KartenMarke {
@@ -183,7 +184,25 @@ function MiniZeichen(p: { code: string; groesse?: number }) {
   return <span dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+/** Legende der Zielbearbeitung eingeklappt? (seit Liste J, J1.5; je Browser gemerkt) */
+function legendeZuGemerkt(): boolean {
+  try {
+    return localStorage.getItem("argus:legende:zu") === "1";
+  } catch {
+    return false;
+  }
+}
+
 function LegendeLeiste(p: { art: Legende }) {
+  const [zu, setZu] = useState(legendeZuGemerkt);
+  const umschalten = () => {
+    setZu(!zu);
+    try {
+      localStorage.setItem("argus:legende:zu", zu ? "0" : "1");
+    } catch {
+      /* privater Modus */
+    }
+  };
   const zonen = (
     <>
       <span><i class="legende-flaeche" style="background:rgba(216,68,58,.3);border:2px solid #d8443a" />No-Strike-Zone</span>
@@ -192,14 +211,21 @@ function LegendeLeiste(p: { art: Legende }) {
   );
   if (p.art === "gelaende") return <div class="karte-legende">{zonen}</div>;
   if (p.art === "ziele") {
-    // seit 2.6 (H5.4): einfach – Meldung, Kontakt, bekämpft (Einschlag folgt / getroffen), Zonen
+    // seit 2.6 (H5.4): einfach – Meldung, Kontakt, bekämpft (Einschlag folgt / getroffen), Zonen. Seit Liste J (J1.5): klein unten links
+    // auf der Karte, einklappbar (die ganze Karte steht im Feld, es gibt keinen Streifen mehr darunter)
     return (
-      <div class="karte-legende" data-testid="legende">
-        <span><MiniZeichen code={sidc("H", "EVAT")} />Meldung (ARGUS)</span>
-        <span title="Bewegung erkannt, (noch) keine Meldung"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
-        <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />bekämpft, Einschlag folgt</span>
-        <span><b style="color:#d8443a">✕</b>bekämpft</span>
-        {zonen}
+      <div class={`karte-legende klein ${zu ? "zu" : ""}`} data-testid="legende" data-zu={zu ? "1" : "0"}>
+        <button type="button" class="legende-knopf" onClick={umschalten} aria-expanded={!zu} data-testid="legende-knopf"
+          title={zu ? "Legende zeigen" : "Legende einklappen"}>Legende {zu ? "▸" : "▾"}</button>
+        {!zu && (
+          <>
+            <span><MiniZeichen code={sidc("H", "EVAT")} />Meldung (ARGUS)</span>
+            <span title="Bewegung erkannt, (noch) keine Meldung"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
+            <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />bekämpft, Einschlag folgt</span>
+            <span><b style="color:#d8443a">✕</b>bekämpft</span>
+            {zonen}
+          </>
+        )}
       </div>
     );
   }
@@ -244,8 +270,8 @@ export function LagekarteAnsicht(p: {
   fokus?: { pos: Punkt; faktor: number; schluessel: string };
   /** Fahrwege der Einheiten (Kontrollkarte, B10; Knopf „Fahrwege“ blendet sie aus) und Vorschau einer Verstärkung */
   fahrwege?: Fahrweg[];
-  /** seit 2.7 (G4b): beim Start das Feld füllen, Mitte des Ausschnitts in Metern (Zoom und Verschieben bleiben) */
-  fuellen?: Punkt;
+  /** seit Liste J: ist das Feld höher als 10 : 7, steht die ganze Karte senkrecht in der Mitte (sonst oben, Legende darunter) */
+  senkrechtMitte?: boolean;
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -279,8 +305,13 @@ export function LagekarteAnsicht(p: {
   fensterRef.current = p.fenster;
   const letztesBild = useRef<KartenBild | null>(null);
   const zoomRef = useRef(1);
+  const kartenEl = useRef<HTMLDivElement>(null);
   const aufBild = (b: KartenBild) => {
     letztesBild.current = b;
+    // seit Liste J: sichtbarer Ausschnitt in Metern am Element (Proben prüfen: beim Start die ganze Karte, auch der Ostrand)
+    const ke = kartenEl.current;
+    const sb = b.sichtbar.join(",");
+    if (ke && ke.dataset.sichtbar !== sb) ke.dataset.sichtbar = sb;
     for (const [id, el] of markenEl.current) {
       const r = b.rechtecke.get(id);
       const stil = r ? `translate(${Math.round((r[0] + r[2]) / 2)}px, ${Math.round((r[1] + r[3]) / 2)}px) translate(-50%, -50%)` : "";
@@ -371,7 +402,7 @@ export function LagekarteAnsicht(p: {
       hintergrund: grund,
       sprites: p.sprites,
       zeichenGroesse: p.zeichenGroesse,
-      fuellen: p.fuellen,
+      senkrechtMitte: p.senkrechtMitte,
       onKlick: (o) => o.meldung && wahlRef.current?.(o.meldung),
       onInfo: setInfo,
       onZoom: (z) => {
@@ -469,7 +500,7 @@ export function LagekarteAnsicht(p: {
     const lage = fensterLageRef.current;
     const fe = fensterEl.current;
     if (!lage || !fe || e.button !== 0 || (e.target as HTMLElement).closest("[data-schliessen]")) return;
-    const oben = e.clientY - fe.getBoundingClientRect().top;
+    const oben = (e.clientY - fe.getBoundingClientRect().top) / aktuelleSkala();
     if (oben > ZIEH_LEISTE) return;
     ziehRef.current = { x: e.clientX, y: e.clientY, r: lage.r, bewegt: false, id: e.pointerId };
     gezogenRef.current = false;
@@ -479,8 +510,9 @@ export function LagekarteAnsicht(p: {
     const fe = fensterEl.current;
     const lage = fensterLageRef.current;
     if (!z || !fe || !lage || e.pointerId !== z.id) return;
-    const dx = e.clientX - z.x;
-    const dy = e.clientY - z.y;
+    const k = aktuelleSkala();
+    const dx = (e.clientX - z.x) / k;
+    const dy = (e.clientY - z.y) / k;
     if (!z.bewegt && Math.hypot(dx, dy) < 5) return;
     if (!z.bewegt) fe.setPointerCapture(e.pointerId);
     z.bewegt = true;
@@ -509,7 +541,7 @@ export function LagekarteAnsicht(p: {
   })();
 
   return (
-    <div class="karte" data-testid={p.testid ?? "lagekarte"} data-bereit={bereit ? "1" : "0"}>
+    <div class="karte" ref={kartenEl} data-testid={p.testid ?? "lagekarte"} data-bereit={bereit ? "1" : "0"}>
       <div class="karte-leinwand" ref={host} />
       {fehler && (
         <div class="karte-fehler">

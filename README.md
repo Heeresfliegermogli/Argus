@@ -6,7 +6,12 @@ eine Entscheidung (BEKÄMPFEN mit Mörser / LM / Kanone, ZURÜCKSTELLEN, ABLEHNE
 Spiel selbst**; die Spielleitung startet alle Teams, sieht ihren Stand und wertet aus.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-Stand: Änderungen H (09.11.2026, Szenario **2.6**) nach dem Test auf Bundeswehr-Laptops – eine Rolle „Zielbearbeitung“ je Team
+**Neu (Liste J, 10.11.2026, Szenario 2.7):** Die ganze Karte (10 : 7) passt in jedes Fenster ab 1280 × 600 – links in voller Höhe,
+Lagemeldungen als Einblendung oben links auf der Karte, rechts Wirkung unterwegs, Eingang (4 Zeilen), geöffnete Meldung mit großem
+Drohnenbild, Wirkmittel als drei Kacheln, Knöpfe immer ganz unten; darunter wird gleichmäßig verkleinert. Geprüft in 1536 × 730
+(Dienst-Laptop, Standard), 1366 × 650, 1530 × 800 und 1920 × 960 ([`docs/UI.md`](docs/UI.md)). Firebase-Regeln unverändert.
+
+Stand davor: Änderungen H (09.11.2026, Szenario **2.6**) nach dem Test auf Bundeswehr-Laptops – eine Rolle „Zielbearbeitung“ je Team
 statt Aufklärung/Zielprüfung/Führung, Tempo statt Arbeitsteilung (Sekunden je Entscheidung im Protokoll und in der Auswertung);
 die Engine läuft im Browser des Teams (kein Desync mehr), das Netz trägt nur Lobby, Start, Statusmeldungen und den Upload des
 Protokolls (ausfallsicher, mit Datei als Rückfall); Fast-Track entfällt, Phase 5 heißt „Krise“, weniger Artilleriemeldungen;
@@ -97,7 +102,9 @@ python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport au
 python3 tools/lobby_probe.py http://localhost:4173/                              # 20 Aufgaben Startseite und Lobby
 ```
 
-Oberfläche in 1530 × 800 (kein Rollbalken, nichts abgeschnitten, Bilder je Ansicht):
+Oberfläche seit Liste J in 1536 × 730 (Dienst-Laptop) und den Prüfgrößen 1366 × 650, 1530 × 800, 1920 × 960 (`tools/pruefgroessen.py`:
+kein Rollbalken, nichts abgeschnitten, ganze Karte, Knöpfe ganz und an fester Stelle, Schrift ≥ 12 px; `--groesse 1366x650`,
+`--alle-groessen`):
 
 ```bash
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1

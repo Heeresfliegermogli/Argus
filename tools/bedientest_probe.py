@@ -7,6 +7,9 @@ Aufbau wie im Test: „Test ohne Lobby“ mit zwei Fenstern – Spielleitung (Te
 (Testperson). Die Einweisung (Übersicht mit Pfeilen, dann Folien) öffnet sich bei der Zielbearbeitung von selbst. Teil S:
 „Allein testen (ein Fenster)“ – das Team steuert die Uhr selbst.
 
+Seit Liste J im Fenster des Dienst-Laptops (1536 × 730; --groesse 1366x650 usw.): Lagemeldungen oben links auf der Karte, Wirkmittel
+als drei Kacheln mit einer Zeile Warnung darunter.
+
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/bedientest_probe.py http://localhost:4173/
 """
@@ -20,7 +23,8 @@ import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
-from ui_bilder import H, W, adresse, warte
+from pruefgroessen import groessen_argument, lies_groesse
+from ui_bilder import adresse, warte
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +33,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("basis")
     ap.add_argument("--raum", default=f"bedien-{int(time.time()) % 100000}")
+    groessen_argument(ap)
     a = ap.parse_args()
+    W, H = lies_groesse(a.groesse)
     ergebnis = []
     kat = json.load(open(os.path.join(HIER, "..", "public", "daten", "katalog_wirkmittel.json"), encoding="utf-8"))
     lm_voll = next(w["bestand"] for w in kat["wirkmittel"] if w["id"] == "LM")
@@ -71,8 +77,11 @@ def main():
                 zb.get_by_role("button", name="weiter ›").click()
                 schritte += 1
                 ziele.append(zb.get_by_test_id("tour").get_attribute("data-schritt"))
+                if ziele[-1] == "feed":
+                    # Liste J (J4): die Übersicht zeigt eine Beispiel-Lagemeldung oben links auf der Karte
+                    assert zb.locator(".lage-einblendung .feed-beispiel").is_visible(), "keine Beispiel-Lagemeldung auf der Karte"
                 assert schritte <= 9, "mehr als acht Schritte"
-            for z in ["eingang", "entscheiden", "panzer", "feed", "bestand"]:
+            for z in ["eingang", "entscheiden", "karte", "panzer", "feed", "wirkmittel"]:
                 assert z in ziele, f"Übersicht ohne „{z}“"
             zb.get_by_role("button", name="weiter zur Einweisung ›").click()
             folien = 1
@@ -123,9 +132,12 @@ def main():
             warte(lambda: zb.get_by_test_id("vergroesserung").count() == 0, 5, "Vergrößerung zu")
 
         def z_4():
-            zb.locator("label[data-wm=MRS]").click()
+            # Liste J: Kachel „Mrs“ zeigt ⚠, die Zeile unter den Kacheln den Text der Warnung (R3), die Karte das Banner
+            mrs = zb.locator("label[data-wm=MRS]")
+            assert "⚠" in mrs.inner_text(), mrs.inner_text()
+            mrs.click()
             assert "R3" in zb.get_by_test_id("karte-banner").inner_text(), zb.get_by_test_id("karte-banner").inner_text()
-            assert zb.locator("label[data-wm=MRS]").get_by_text(re.compile("R3")).count() >= 1, "Warnung R3 nicht am Wirkmittel"
+            assert "R3" in zb.get_by_test_id("wm-warnung").inner_text(), f"Warnung R3 nicht unter den Kacheln: {zb.get_by_test_id('wm-warnung').inner_text()}"
 
         def z_5():
             zb.get_by_role("button", name=re.compile("^ZURÜCKSTELLEN")).click()
@@ -137,8 +149,9 @@ def main():
             zeile("Ziel 1").click()
             warte(lambda: offen() == "M01", 10, "Ziel 1 offen")
             lm = zb.locator("label[data-wm=LM]")
-            assert lm.get_by_text("keine Warnung").count() == 1, lm.inner_text()
+            assert "✓" in lm.inner_text(), lm.inner_text()
             lm.click()
+            assert "keine Warnung" in zb.get_by_test_id("wm-warnung").inner_text(), zb.get_by_test_id("wm-warnung").inner_text()
             knopf = zb.get_by_test_id("zb-bekaempfen")
             assert re.search(r"BEKÄMPFEN mit LM", knopf.inner_text()) and "Bestand" in knopf.inner_text(), knopf.inner_text()
             knopf.click()
@@ -151,6 +164,9 @@ def main():
             zahl = int(lm.locator("b").inner_text())
             verbraucht = zb.evaluate("() => (window.argus.stand.zustand.meldungen.M01.freigabe?.einschlaege?.length) ?? 1")
             assert zahl == lm_voll - verbraucht, f"Kopfzeile LM {zahl}, erwartet {lm_voll - verbraucht}"
+            # dieselbe Zahl groß auf der Kachel (Liste J)
+            kachel = int(zb.locator("label[data-wm=LM] .wk-bestand").inner_text())
+            assert kachel == zahl, f"Kachel LM {kachel}, Kopfzeile {zahl}"
 
         def z_8():
             zeile("Ziel 2").click()
@@ -160,14 +176,18 @@ def main():
             warte(lambda: eingang() == vorher - 1, 10, "Eingang eins weniger")
 
         def z_9():
-            # Lagemeldungen (seit 2.7, I4): eine steht 30 s oder bis zum Klick, dann ist sie ganz weg. Die SL lässt die Uhr bis
-            # 03:00 laufen (Lagemeldung der Brigade zur Schule) und hält an; die Testperson liest sie und klickt sie weg.
+            # Lagemeldungen (seit 2.7, I4): eine steht 30 s oder bis zum Klick, dann ist sie ganz weg. Seit Liste J oben links auf der
+            # Karte. Die SL lässt die Uhr bis 03:00 laufen (Lagemeldung der Brigade zur Schule) und hält an; die Testperson liest sie
+            # und klickt sie weg.
             sl.get_by_role("button", name="▶ Start").click()
             feed = zb.get_by_test_id("feed-frisch").locator(".feed-meldung")
-            warte(lambda: feed.count() >= 1, 30, "Lagemeldung im Feed")
+            warte(lambda: feed.count() >= 1, 30, "Lagemeldung auf der Karte")
             sl.get_by_role("button", name="❚❚ Anhalten").click()
             m = feed.filter(has_text="Schule").first
-            assert m.count() == 1, f"keine Lagemeldung zur Schule im Feed: {zb.get_by_test_id('feed').inner_text()}"
+            assert m.count() == 1, f"keine Lagemeldung zur Schule auf der Karte: {zb.get_by_test_id('feed').inner_text()}"
+            kb = zb.get_by_test_id("zb-karte").bounding_box()
+            mb = m.bounding_box()
+            assert mb["x"] - kb["x"] < 40 and mb["y"] - kb["y"] < 40, f"Lagemeldung nicht oben links auf der Karte ({mb}, Karte {kb})"
             m.click()
             warte(lambda: feed.filter(has_text="Schule").count() == 0, 5, "Lagemeldung nach dem Klick weg")
 
@@ -209,7 +229,7 @@ def main():
             solo.get_by_role("button", name="Überspringen").click()
             assert solo.get_by_test_id("nur-lesen").count() == 0, "Solo-Fenster ist Zuschauen"
             solo.get_by_role("button", name="×20").click()
-            solo.get_by_role("button", name="▶ Start").click()
+            solo.get_by_test_id("test-start").click()
             warte(lambda: solo.get_by_test_id("offene-meldung").get_attribute("data-meldung") == "M01", 20, "Ziel 1 offen")
             solo.get_by_role("button", name="❚❚").click()
             solo.locator("label[data-wm=MRS]").click()

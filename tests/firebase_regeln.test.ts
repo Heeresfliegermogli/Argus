@@ -13,6 +13,7 @@ import { Sicht } from "../src/sitzung/sicht";
 import { Sitzung } from "../src/sitzung/sitzung";
 import type { SitzungsInfo, TeamDaten } from "../src/sync/adapter";
 import type { TeamStatus } from "../src/kern/uebersicht";
+import { anwesenheitLesen, anwesenheitSchreiben } from "../src/sync/firebase";
 import { LokalAdapter } from "../src/sync/lokal";
 import { bis, inhalte } from "./hilfen";
 import { type DrehbuchReferenz, type Modellteam, START_MS, drehbuchTeams, spieleDurch } from "./modellteam";
@@ -134,6 +135,24 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
     expect(db.write(`${S}/anwesenheit/abc123`, { ...anw, team: "irgendwas" }).allowed).toBe(false);
     expect(db.write(`${S}/anwesenheit/abc123`, null).allowed).toBe(true);
     expect(db.write(`${S}/anwesenheit/ABC`, anw).allowed).toBe(false);
+  });
+
+  it("seit Liste J (J2.4): Fenstergröße reist im Feld version mit – ohne neue Regeln", () => {
+    const db = leer();
+    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "0.9.0", team: TEAM, fenster: "1536x730" };
+    const eintrag = anwesenheitSchreiben(t);
+    expect(eintrag).toEqual({ client: "abc123", art: "tt", name: "Lt Anders", version: "0.9.0 1536x730", team: TEAM });
+    expect(db.write(`${S}/anwesenheit/abc123`, { ...eintrag, puls: Date.now() }).allowed).toBe(true);
+    // ein eigenes Feld fenster lehnen die Regeln ab – deshalb der Umweg über version
+    expect(db.write(`${S}/anwesenheit/abc123`, { ...t, puls: Date.now() }).allowed).toBe(false);
+    // auch die größte Kennung passt in die 20 Zeichen
+    const gross = anwesenheitSchreiben({ ...t, fenster: "99999x99999" });
+    expect(gross.version!.length).toBeLessThanOrEqual(20);
+    expect(db.write(`${S}/anwesenheit/abc123`, { ...gross, puls: Date.now() }).allowed).toBe(true);
+    // gelesen wieder getrennt; alte Fenster ohne Größe bleiben wie sie sind
+    expect(anwesenheitLesen({ ...eintrag, puls: 1 })).toMatchObject({ version: "0.9.0", fenster: "1536x730" });
+    expect(anwesenheitLesen({ client: "abc123", art: "tt", name: "x", puls: 1, version: "0.8.0" })).toMatchObject({ version: "0.8.0" });
+    expect(anwesenheitLesen({ client: "abc123", art: "tt", name: "x", puls: 1, version: "0.8.0" }).fenster).toBeUndefined();
   });
 
   it("Protokoll: nur anhängen, nicht überschreiben oder löschen; Form wird geprüft", () => {

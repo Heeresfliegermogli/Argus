@@ -83,12 +83,18 @@ Haben alle Teams das Spielende erreicht, zeigt es die **Auswertung über alle Te
 ```
 info                                   { code, szenario, version, titel, erstellt, von }  einmal angelegt
 host                                   { id, name, puls }  steuernde Spielleitung
-anwesenheit/<client>                   { client, art: tt|sl|plenum, name, puls, version, team? }
+anwesenheit/<client>                   { client, art: tt|sl|plenum, name, puls, version, team? }  (seit J: version „0.9.0 1536x730“ = Fenstergröße)
 teams/<team>                           { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen: "zb", seit } }
 status/<team>                          Statusmeldung des Team-Laptops (neu in 2.6, flache Felder, siehe unten)
 laeufe/<team>/<lauf>/protokoll/e000001 Ereignisse, nur anhängen – schreibt nur der Team-Laptop (Upload)
 laeufe/<team>/<lauf>/aktionen/<id>     Aktionen der Spielleitung an den Team-Laptop, nur anhängen
 ```
+
+Seit Liste J (J2.4) meldet jedes Fenster mit der Anwesenheit seine **Fenstergröße**, damit die Spielleitung am Tag sieht, ob ein
+Laptop zu klein ist (Übersicht: „Fenster 1536 × 730“, rot mit „F11!“ unter 1280 × 600). Die Regeln kennen für `anwesenheit` kein
+eigenes Feld dafür; die Größe hängt deshalb am Feld `version` (bis 20 Zeichen erlaubt): geschrieben „0.9.0 1536x730“, beim Lesen
+wieder getrennt (`anwesenheitSchreiben`/`anwesenheitLesen` in `src/sync/firebase.ts`, geprüft in `tests/firebase_regeln.test.ts`).
+**Die Firebase-Regeln bleiben dafür unverändert.** Ändert sich die Fenstergröße, meldet sich das Fenster nach 1 s Ruhe neu.
 
 * **Wer rechnet:** das früheste Fenster des Teams (`seit`), auch wenn es gerade nicht verbunden ist. Kein anderes Fenster übernimmt
   von selbst – ein Laptop ohne Netz spielt weiter, ein zweites Fenster würde sonst einen zweiten Spielstand anfangen. Übernehmen

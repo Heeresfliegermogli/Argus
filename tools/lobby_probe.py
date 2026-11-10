@@ -10,7 +10,8 @@ Teilnehmer:  Code eingeben (drei Zeichen, auch klein und mit Leerzeichen), falsc
              ohne Laptop (genau einer rechnet), Neuladen, später Beitritt in ein laufendes Spiel mit Übersicht und Folien.
 Spielleitung: umbenennen, Fenster verschieben, Fenster ohne Team einem Team ohne Laptop zuweisen, Team löschen, Spiel öffnen
              und „▶ Start für alle“, Zuschauen und Steuerung eines Teams, Plenum mit Code und Teamwahl, zuletzt genutzte
-             Sitzung fortsetzen.
+             Sitzung fortsetzen; seit Liste J (J2.4) die Fenstergröße je Team-Laptop in der Übersicht („Fenster 1536 × 730“, rot mit
+             „F11“ unter 1280 × 600) und Startseite, Lobby, Übersicht, Team-Laptop und Plenum in allen vier Prüfgrößen.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/lobby_probe.py http://localhost:4173/ [--bilder lobby-bilder]
@@ -24,7 +25,7 @@ import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
-W, H = 1530, 800
+from pruefgroessen import GROESSEN, groessen_argument, groesse_text, lies_groesse, pruefe_layout
 RECHNET = "Dieser Laptop spielt für das Team."
 ZUSCHAUEN = "hier nur zuschauen"
 OHNE_TEAM = "Team anlegen oder beitreten"
@@ -49,7 +50,9 @@ def main():
     ap.add_argument("--bilder", default="lobby-bilder")
     ap.add_argument("--renderer", choices=["canvas", "webgl"], default="canvas")
     ap.add_argument("--fps", type=int, default=2, help="höchste Bildrate der Karten (0 = ohne Grenze)")
+    groessen_argument(ap)
     a = ap.parse_args()
+    W, H = lies_groesse(a.groesse)
     os.makedirs(a.bilder, exist_ok=True)
     start = f"{a.basis}{'&' if '?' in a.basis else '?'}{urllib.parse.urlencode({'sync': a.sync, **({'fps': a.fps} if a.fps else {})})}"
     ergebnis = []
@@ -325,6 +328,36 @@ def main():
             j.get_by_role("button", name="Überspringen").click()
             warte(lambda: j.get_by_test_id("einweisung-zb").count() == 0 and j.get_by_test_id("tour").count() == 0, 10, "Einweisung zu")
 
+        def s8():
+            # J2.4: Die Übersicht zeigt je Team die Fenstergröße des Team-Laptops (aus der Anwesenheit, ohne neue Firebase-Regeln)
+            zelle = zeile("Adler 1").locator("[data-fenster]")
+            warte(lambda: zelle.count() == 1 and f"{W} × {H}" in zelle.inner_text(), 15, f"„Fenster {W} × {H}“ bei Adler 1")
+            # zu kleines Fenster: rot mit F11; der Team-Laptop meldet die neue Größe nach einer Sekunde Ruhe
+            pg = tt["Lt Anders, Lt Bauer"]
+            pg.set_viewport_size({"width": 1180, "height": 560})
+            warte(lambda: "1180 × 560" in zelle.inner_text() and "F11" in zelle.inner_text(), 15, "„Fenster 1180 × 560 – F11!“")
+            assert "rot" in (zelle.get_attribute("class") or ""), "zu kleines Fenster nicht rot"
+            bild(sl, "sl-fenster-zu-klein")
+            # am Team-Laptop: verkleinert, nichts abgeschnitten, Hinweis auf Vollbild
+            f, _ = pruefe_layout(pg, karte_ganz=True, schrift_min=0)
+            assert not f, f"verkleinerte Ansicht: {f}"
+            bild(pg, "tt-1180x560-verkleinert")
+            pg.set_viewport_size({"width": W, "height": H})
+            warte(lambda: f"{W} × {H}" in zelle.inner_text(), 15, "Fenstergröße wieder normal")
+
+        def j23():
+            # J2.3: Übersicht der SL, Team-Laptop und Plenum in allen vier Prüfgrößen
+            fehler = []
+            for pg, name in [(sl, "sl-uebersicht"), (tt["Lt Brandt"], "tt-zb"), (plenum, "plenum")]:
+                for g in GROESSEN:
+                    pg.set_viewport_size({"width": g[0], "height": g[1]})
+                    pg.wait_for_timeout(700)
+                    f, _ = pruefe_layout(pg)
+                    fehler += [f"{name} {groesse_text(g)}: {x}" for x in f]
+                    bild(pg, f"{name}_{groesse_text(g)}")
+                pg.set_viewport_size({"width": W, "height": H})
+            assert not fehler, "; ".join(fehler[:4])
+
         def p2():
             plenum.get_by_test_id("plenum-teamwahl").select_option(label="Condor Süd")
             warte(lambda: plenum.get_by_test_id("plenum-teamwahl").input_value() != "", 10, "Teamwahl")
@@ -359,6 +392,8 @@ def main():
             ("S6 SL schaut der Zielbearbeitung zu, Steuerung, zurück", s6),
             ("T2 Neuladen führt zurück an den Team-Laptop", t2),
             ("T3 später Beitritt: Übersicht mit Pfeilen, Folien, wieder aufrufen", t3),
+            ("S8 Fenstergröße je Team-Laptop in der Übersicht, F11-Hinweis (J2.4)", s8),
+            ("J2.3 Übersicht, Team-Laptop, Plenum in den vier Prüfgrößen", j23),
             ("P2 Plenum: Team wählen", p2),
             ("S7 zuletzt genutzte Sitzung als Spielleitung fortsetzen", s7),
         ]:

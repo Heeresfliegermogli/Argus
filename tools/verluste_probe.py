@@ -12,7 +12,7 @@ Ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync), Uhr über 
   H3.3 Lagemeldungen am Spielende: Druckmeldungen wegen Artillerie/Mörser mindestens 2 min auseinander, keine Hintergrund-
        meldungen der Feindartillerie (H-01, H-04, H-12) im Feed, jede Meldung ≤ 140 Zeichen mit Absender.
   F2.9 Auswertung (Beispiel, 7 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
-Jede Ansicht in 1530 × 800 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
+Jede Ansicht in 1536 × 730 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/verluste_probe.py http://localhost:4173/ --bilder verluste-bilder
@@ -25,7 +25,9 @@ import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
-W, H = 1530, 800
+from pruefgroessen import STANDARD  # noqa: E402
+
+W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 LAYOUT_JS = """
 () => {
   const de = document.documentElement;
@@ -277,7 +279,7 @@ def main():
         print(f"{len(fehler)} Fehler, {len(konsole)} Konsolenfehler")
         sys.exit(1)
     print("OK – vier Panzer, Kopfzeile, Bestand, Beschuss sichtbar (Mündungsblitz, Leuchtspur, Blinken, roter Rand), Lagemeldungen, "
-          "Preis des Abwartens, alles in 1530×800")
+          "Preis des Abwartens, alles in 1536×730")
 
 
 if __name__ == "__main__":

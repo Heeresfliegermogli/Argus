@@ -1,21 +1,23 @@
 // Zielbearbeitung (intern zb; seit 2.6, Änderungen H2): eine Ansicht je Team, 2–3 Personen an einem Laptop, eine Entscheidung je
-// Meldung. Aufbau in 1530 × 800:
-//   links   schmaler Feed der Lagemeldungen (Brigade, Nachbarn, 1. Kp); seit 2.7 (I4) steht eine Lagemeldung, bis sie angeklickt wird
-//           oder 30 s Spielzeit um sind (regeln.anzeige.lagemeldung_s), dann ist sie ganz weg – unter Druck läuft sie unter (S3 lebt
-//           davon); das Protokoll zeigt, ob und wann sie angeklickt wurde
-//   Mitte   Lagekarte: Marken der Meldungen im Eingang, bekämpfte Ziele mit Countdown bis zum Einschlag, Vorschau des Wirkmittels
-//   rechts  seit 2.7 (I5) fest aufgeteilt, nichts verschiebt sich: oben eine Zeile „Wirkung unterwegs“ (Chips „Ziel 17 ×3 0:23“,
-//           Rest „+3“ als Überlagerung), darunter der Eingang mit fester Höhe und eigener Rollleiste (Wartezeit je Meldung, dazu
-//           Vermerke: verbündet, durchgebrochen, abgezogen, zerstört), darunter die geöffnete Meldung: Live-Drohnenbild (Klick: groß
-//           mit Lupe), ARGUS-Ausgabe, Wirkmittel mit Bestand, Countdown und Warnungen am vorausberechneten Einschlagort; die drei
-//           Knöpfe BEKÄMPFEN mit … · ZURÜCKSTELLEN · ABLEHNEN stehen immer an derselben Stelle
+// Meldung. Aufbau seit Liste J (10.11.2026) – die ganze Karte passt ins Fenster, geprüft in 1536 × 730 (Dienst-Laptop), 1366 × 650,
+// 1530 × 800 und 1920 × 960:
+//   links   die Lagekarte, immer ganz und im Seitenverhältnis 10 : 7: Höhe = verfügbare Höhe unter der Kopfzeile, Breite = 1,43 × Höhe
+//           (wird die rechte Spalte schmaler als 440 px, wird das Feld schmaler und die Karte steht mit schmalem Rand oben und unten
+//           in der Mitte). Zoom, Verschieben und ⤢ bleiben. Oben links auf der Karte die Lagemeldungen als Einblendung (höchstens zwei,
+//           wie I4: bis zum Klick oder 30 s Spielzeit, dann ganz weg – unter Druck laufen sie unter, S3 lebt davon), unten links die
+//           Legende (einklappbar)
+//   rechts  die Restbreite, feste Aufteilung von oben – nichts verschiebt sich: eine Zeile „Wirkung unterwegs“ (Chips „Ziel 17 ×3
+//           0:23“, Rest „+3“ als Überlagerung), der Eingang mit fester Höhe für vier Zeilen und eigener Rollleiste (Wartezeit je
+//           Meldung, Vermerke: verbündet, durchgebrochen, abgezogen, zerstört), darunter die geöffnete Meldung: Kopf, Live-Drohnenbild
+//           (Klick: groß mit Lupe), ARGUS-Zeile, die drei Wirkmittel als Kacheln (Bestand groß, Countdown bis zum Einschlag, ✓/⚠),
+//           eine Zeile Warnung zum gewählten Wirkmittel und ganz unten an fester Stelle BEKÄMPFEN mit … · ZURÜCKSTELLEN · ABLEHNEN
 // Die Kopfzeile (rahmen.tsx) zeigt Uhr, Phase, die vier Panzer und den Bestand groß.
 // Jede Entscheidung trägt die Sekunden ab Eingang und ab Öffnen ins Protokoll (H2.4). Der Team-Laptop rechnet das Spiel selbst:
 // Ein Klick ist sofort im Spielstand – ohne Netz.
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { drohnenbild, drohnenEbenen, vorladen } from "../assets/assets";
 import type { LiveLage } from "../drohne/livebild";
-import type { Inhalte, Meldung } from "../inhalte/typen";
+import type { Inhalte, Meldung, Wirkmittel } from "../inhalte/typen";
 import type { Vorschau } from "../karte/lagekarte";
 import { bekannteZiele, effekte } from "../kern/effekte";
 import { argusBei, bildalter } from "../kern/eloka";
@@ -32,15 +34,6 @@ import { useManifest } from "./gemeinsam/drohnenbild";
 import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { type KartenMarke, LagekarteAnsicht, meldungsMarken, wirkungsMarken } from "./gemeinsam/lagekarte";
 import { LiveDrohnenFenster } from "./gemeinsam/livedrohne";
-
-/**
- * Mitte des Kartenausschnitts beim Start (seit 2.7, G4b): Die Karte füllt ihr Feld; bei 1530 × 800 sieht das Team rund 700 m von den
- * eigenen Panzern am Westrand über Bach und Brücke bis in die Ortschaft. Neue Meldungen außerhalb zeigt ein Pfeil am Rand.
- */
-export const KARTE_MITTE_ZB: [number, number] = [378, 350];
-
-/** Drohnenbild in der Ansicht (16 : 10) */
-export const DROHNEN_BILD = { breite: 520, hoehe: 325 };
 
 /** m:ss für Wartezeit und Countdown */
 export function mss(s: number): string {
@@ -95,45 +88,70 @@ export function argusZeile(inh: Inhalte, m: Meldung, gestoert?: boolean): string
   return `${a.klasse === "unbekannt" ? "unbekannt" : a.klasse}${zug} ${a.konfidenz} %`;
 }
 
-// ---------------------------------------------------------------- Feed der Lagemeldungen (H5.5, seit 2.7 I4)
+// ---------------------------------------------------------------- Lagemeldungen als Einblendung auf der Karte (H5.5, I4, seit Liste J)
 
-/** So lange (Spielzeit, s) steht eine Lagemeldung im Feed, wenn die Regeln nichts sagen. */
+/** So lange (Spielzeit, s) steht eine Lagemeldung, wenn die Regeln nichts sagen. */
 export const LAGEMELDUNG_S = 30;
 
+/** Höchstens so viele Lagemeldungen stehen gleichzeitig auf der Karte (J1.2); weitere warten dahinter („+1 weitere“). */
+export const LAGEMELDUNG_MAX = 2;
+
 /**
- * Lagemeldungen, die das Team gerade sieht (seit 2.7, I4): nicht angeklickt und höchstens lagemeldung_s Spielzeit alt, die neueste
- * oben. Angeklickte und abgelaufene sind ganz weg (Spielleitung und Auswertung sehen weiter alle).
+ * Lagemeldungen, die gerade stehen (seit 2.7, I4): nicht angeklickt und höchstens lagemeldung_s Spielzeit alt, die neueste zuerst.
+ * Angeklickte und abgelaufene sind ganz weg (Spielleitung und Auswertung sehen weiter alle).
  */
 export function feedSichtbar(inh: Inhalte, injects: InjectStand[], t: number): InjectStand[] {
   const sek = inh.regeln.anzeige?.lagemeldung_s ?? LAGEMELDUNG_S;
   return [...injects].reverse().filter((i) => !i.quittiert && t - i.erschienen.t_s < sek);
 }
 
-function LageFeed(p: { s: Sicht; injects: InjectStand[]; t: number }) {
+/**
+ * Lagemeldungen auf der Karte (seit Liste J, J1.2): die neuesten zwei, die übrigen stehenden dahinter. Eine verdeckte läuft weiter
+ * ab und erscheint, sobald eine der beiden weg ist (Klick oder 30 s) – mit ihrer Restzeit.
+ */
+export function lageEinblendung(inh: Inhalte, injects: InjectStand[], t: number): { zeigen: InjectStand[]; weitere: InjectStand[] } {
+  const alle = feedSichtbar(inh, injects, t);
+  return { zeigen: alle.slice(0, LAGEMELDUNG_MAX), weitere: alle.slice(LAGEMELDUNG_MAX) };
+}
+
+/**
+ * Einblendung oben links auf der Karte (seit Liste J statt eigener Spalte): je Lagemeldung Absender, Zeit, Text, Restbalken und ✕.
+ * Während der Einweisung steht hier ein Beispiel, falls gerade keine echte Lagemeldung da ist (nur sichtbar, solange die Übersicht
+ * läuft: body[data-tour]).
+ */
+function LageEinblendung(p: { s: Sicht; injects: InjectStand[]; t: number }) {
   const { s } = p;
   const inh = s.inh;
   const sek = inh.regeln.anzeige?.lagemeldung_s ?? LAGEMELDUNG_S;
-  const sichtbar = feedSichtbar(inh, p.injects, p.t);
+  const { zeigen, weitere } = lageEinblendung(inh, p.injects, p.t);
   const lesen = (i: InjectStand) => {
     if (!i.quittiert && !s.nurLesen) s.senden("inject_quittiert", { inject: i.id });
   };
   return (
-    <section class="feed" data-tour="feed" data-testid="feed">
-      <h2>Lagemeldungen</h2>
+    <section class="lage-einblendung" data-tour="feed" data-testid="feed" aria-label="Lagemeldungen" aria-live="polite">
       <div class="feed-frisch" data-testid="feed-frisch">
-        {sichtbar.length === 0 && <div class="feed-leer">{p.injects.length ? "Neue Lagemeldungen erscheinen hier." : "Meldungen von Brigade, Nachbarn und der 1. Kp erscheinen hier."}</div>}
-        {sichtbar.map((i) => {
+        {zeigen.map((i) => {
           const a = injectAnzeige(inh, i);
           const rest = Math.max(0, Math.min(1, 1 - (p.t - i.erschienen.t_s) / sek));
           return (
-            <button type="button" key={i.id} class={`feed-meldung frisch ${(i.stufe ?? 0) >= 2 ? "dringend" : ""}`} data-inject={i.id} onClick={() => lesen(i)}
+            <button type="button" key={i.id} class={`feed-meldung frisch echt ${(i.stufe ?? 0) >= 2 ? "dringend" : ""}`} data-inject={i.id} onClick={() => lesen(i)}
               title={`Klick: gelesen – die Meldung verschwindet (sonst nach ${sek} s)`}>
-              <div class="feed-von">{mss(i.erschienen.t_s)} · {a.von}<span class="feed-x" aria-label="gelesen">✕</span></div>
+              <div class="feed-von"><span class="feed-titel">Lagemeldung</span> · {a.von} · {mss(i.erschienen.t_s)}<span class="feed-x" aria-label="gelesen">✕</span></div>
               <div class="feed-text">{a.text}</div>
               <i class="feed-rest" style={{ width: `${Math.round(rest * 100)}%` }} aria-hidden="true" />
             </button>
           );
         })}
+      </div>
+      {weitere.length > 0 && (
+        <div class="feed-weitere" data-testid="feed-weitere" title="Höchstens zwei Lagemeldungen stehen gleichzeitig auf der Karte. Klickt eine weg, erscheint die nächste.">
+          + {weitere.length} weitere Lagemeldung{weitere.length > 1 ? "en" : ""}
+        </div>
+      )}
+      <div class="feed-meldung feed-beispiel" aria-hidden="true">
+        <div class="feed-von"><span class="feed-titel">Lagemeldung</span> · Brigade · Beispiel<span class="feed-x">✕</span></div>
+        <div class="feed-text">So erscheinen Meldungen von Brigade, Nachbarn und 1. Kp – 30 Sekunden lang oder bis ihr sie anklickt.</div>
+        <i class="feed-rest" style="width:62%" />
       </div>
     </section>
   );
@@ -154,7 +172,7 @@ function EingangListe(p: {
         <span class={`eingang-zahl ${neu.length ? "neu" : ""}`} data-testid="eingang-zahl" title="neue Meldungen im Eingang">{neu.length}</span>
         {zurueck.length > 0 && <span class="klein leise" data-testid="zurueck-zahl">+ {zurueck.length} zurückgestellt</span>}
       </header>
-      <div class="eingang-liste rolle-liste" data-liste>
+      <div class="eingang-liste" data-liste>
         {p.offen.length === 0 && p.vermerke.length === 0 && <div class="feed-leer">Warten auf ARGUS-Meldungen …</div>}
         {[...neu, ...zurueck].map((st) => {
           const m = inh.meldungen[st.id];
@@ -229,34 +247,70 @@ function UnterwegsLeiste(p: { inh: Inhalte; z: Spielzustand; t: number; unterweg
 
 // ---------------------------------------------------------------- Geöffnete Meldung
 
-function WirkmittelZeile(p: {
-  inh: Inhalte; z: Spielzustand; m: Meldung; wm: string; t: number; gewaehlt: boolean; gesperrt: boolean; waehle: () => void; zeige: (an: boolean) => void;
+/** Warnungen eines Wirkmittels am vorausberechneten Einschlagort (dazu: Bestand reicht nicht für alle Fahrzeuge). */
+function warnungen(w: Wirkmittel, v: ZugWirkung): string[] {
+  const nurK = zugArt(w) === "je_fahrzeug" && v.k < v.n;
+  return [...v.pruefung.verstoesse.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])];
+}
+
+/**
+ * Ein Wirkmittel als Kachel (seit Liste J, J1.3): Name, Bestand groß, Countdown bis zum Einschlag, ✓ (keine Warnung) oder ⚠. Ohne
+ * offene Meldung zeigt die Kachel nur den Bestand – sie steht immer an derselben Stelle.
+ */
+function WirkmittelKachel(p: {
+  inh: Inhalte; z: Spielzustand; m: Meldung | null; wm: string; t: number; gewaehlt: boolean; gesperrt: boolean; waehle: () => void; zeige: (an: boolean) => void;
 }) {
   const { inh, z, m, wm, t } = p;
   const w = inh.wirkmittel[wm];
   const bestand = z.bestand[wm];
   const leer = bestand === 0;
-  const v = vorhersage(inh, m, wm, t, z.zerstoert, bestand ?? null);
+  const v = m ? vorhersage(inh, m, wm, t, z.zerstoert, bestand ?? null) : null;
   const knapp = bestandKnapp(inh, wm, bestand);
-  const regeln = v.pruefung.verstoesse;
-  const nurK = zugArt(w) === "je_fahrzeug" && v.k < v.n;
+  const warn = v ? warnungen(w, v) : [];
+  const ohneBestand = bestand === null || bestand === undefined;
+  const titel = `${w.name}${ohneBestand ? " – kein Bestand nötig" : `: ${bestand} übrig`}${v && !leer ? `\nEinschlag in ${mss(v.einschlag.t - t)}${v.k > 1 ? ` · ×${v.k}` : ""}` : ""}${warn.length ? `\n⚠ ${warn.join("\n⚠ ")}` : v && !leer ? "\n✓ keine Warnung" : ""}`;
   return (
-    <label class={`wm-wahl ${p.gewaehlt ? "gewaehlt" : ""} ${leer ? "aus" : ""} ${regeln.length ? "warn" : ""}`} data-wm={wm}
+    <label class={`wm-kachel ${p.gewaehlt ? "gewaehlt" : ""} ${leer ? "aus" : ""} ${warn.length ? "warn" : ""} ${!m ? "ohne" : ""}`} data-wm={wm} title={titel}
       onMouseEnter={() => p.zeige(true)} onMouseLeave={() => p.zeige(false)}>
-      <input type="radio" name="wm" checked={p.gewaehlt} disabled={leer || p.gesperrt} onChange={p.waehle} />
-      <span class={`wm-bestand ${knapp ? "knapp" : ""} ${leer ? "leer" : ""}`} title={bestand === null ? `${w.name}: kein Bestand nötig` : `${w.name}: ${bestand} übrig`}>
-        {w.kurz} <b>{bestand === null || bestand === undefined ? "" : bestand}</b>
+      <span class="wk-oben">
+        <input type="radio" name="wm" checked={p.gewaehlt} disabled={leer || p.gesperrt} onChange={p.waehle} />
+        <span class="wk-name">{w.kurz}</span>
+        <b class={`wk-bestand ${knapp ? "knapp" : ""} ${leer ? "leer" : ""} ${ohneBestand ? "ohne" : ""}`} data-bestand={bestand ?? ""}>{ohneBestand ? "∞" : bestand}</b>
       </span>
-      <span class="wm-info">
-        <span class="wm-zeit">{leer ? "aufgebraucht" : <>Einschlag in <b class="zahl">{mss(v.einschlag.t - t)}</b>{v.k > 1 ? ` · ×${v.k}` : ""}</>}</span>
-        {/* seit 2.7 (I5): eine Zeile – alle Warnungen hintereinander (ganz im Tooltip), damit die Meldung gleich hoch bleibt */}
-        {!leer && (regeln.length || nurK ? (
-          <span class="wm-status verstoss" title={[...regeln.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])].join("\n")}>
-            ⚠ {[...regeln.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])].join(" · ")}
-          </span>
-        ) : <span class="wm-status ok">✓ keine Warnung</span>)}
+      <span class="wk-unten">
+        {leer ? <span class="wk-zeit">aufgebraucht</span> : v ? (
+          <>
+            <span class="wk-zeit">Einschlag <b class="zahl">{mss(v.einschlag.t - t)}</b>{v.k > 1 ? <span class="leise"> ×{v.k}</span> : null}</span>
+            <span class={`wk-status ${warn.length ? "verstoss" : "ok"}`} data-status={warn.length ? "warnung" : "ok"}>{warn.length ? "⚠" : "✓"}</span>
+          </>
+        ) : <span class="wk-zeit sehr-leise">–</span>}
       </span>
     </label>
+  );
+}
+
+/**
+ * Eine Zeile unter den Kacheln (J1.3): Warnung zum gezeigten Wirkmittel (Maus darüber, sonst das gewählte) – voller Text als Tooltip
+ * und per Klick als Kasten darüber (verschiebt nichts).
+ */
+function WarnZeile(p: { inh: Inhalte; z: Spielzustand; m: Meldung | null; wm: string | null; t: number }) {
+  const { inh, z, m, wm, t } = p;
+  const [offen, setOffen] = useState(false);
+  useEffect(() => setOffen(false), [m?.id, wm]);
+  if (!m) return <div class="wm-warnzeile sehr-leise" data-testid="wm-warnung">Meldung öffnen, dann Wirkmittel wählen.</div>;
+  if (!wm) return <div class="wm-warnzeile sehr-leise" data-testid="wm-warnung">Wirkmittel wählen – die Karte zeigt, wo es einschlägt.</div>;
+  const w = inh.wirkmittel[wm];
+  if (z.bestand[wm] === 0) return <div class="wm-warnzeile leise" data-testid="wm-warnung" data-wm={wm}>{w.kurz}: aufgebraucht</div>;
+  const v = vorhersage(inh, m, wm, t, z.zerstoert, z.bestand[wm] ?? null);
+  const warn = warnungen(w, v);
+  if (!warn.length) return <div class="wm-warnzeile ok" data-testid="wm-warnung" data-wm={wm}>✓ {w.kurz}: keine Warnung am Einschlagort</div>;
+  const text = `⚠ ${w.kurz}: ${warn.join(" · ")}`;
+  return (
+    <div class="wm-warnzeile verstoss" data-testid="wm-warnung" data-wm={wm} title={warn.join("\n")} role="button" tabIndex={0}
+      onClick={() => setOffen(!offen)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOffen(!offen)}>
+      <span class="wm-warntext">{text}</span>
+      {offen && <div class="wm-warn-voll" data-testid="wm-warnung-voll">{warn.map((x) => <div key={x}>⚠ {x}</div>)}</div>}
+    </div>
   );
 }
 
@@ -346,65 +400,75 @@ export function ZBAnsicht(p: { s: Sicht }) {
 
   return (
     <main class="inhalt ansicht-zb">
-      <LageFeed s={s} injects={injects} t={t} />
-      <section class="panel ohne-rand karten-feld" data-testid="zb-karte" data-tour="karte">
-        <LagekarteAnsicht inh={inh} lagebild={lagebild} vorschau={vs?.vorschau ?? null} gewaehlt={gewaehlt}
-          onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele" fuellen={KARTE_MITTE_ZB}
-          uhr={() => s.kartenUhr()} effekte={fx} marken={marken}
-          banner={vs && <div class={`karte-banner ${vs.vorschau.ok ? "ok" : "verstoss"}`} data-testid="karte-banner">
-            {inh.wirkmittel[vorschauWm!].kurz}: Einschlag in {mss(vs.v.einschlag.t - t)} – {vs.vorschau.ok ? "keine Warnung" : `${vs.v.pruefung.verstoesse.map((x) => x.regel).join(", ")} verletzt`}
-          </div>} />
-      </section>
-      <aside class="zb-rechts">
-        <UnterwegsLeiste inh={inh} z={z} t={t} unterwegs={unterwegs} />
-        <EingangListe inh={inh} z={z} t={t} offen={offen} vermerke={vm} gewaehlt={gewaehlt} waehle={oeffnen} />
-        <section class="zb-meldung" data-tour="entscheiden" data-testid="offene-meldung" data-meldung={ms?.id}>
-          {!m || !ms || !a ? (
-            <div class="zb-warten" data-testid="zb-warten">
-              {offen.length ? "Meldung im Eingang anklicken, um sie zu öffnen." : "Warten auf ARGUS-Meldungen … Neue Meldungen kommen oben in den Eingang und öffnen sich hier mit dem Drohnenbild."}
-            </div>
-          ) : (
-            <>
-              <div class="zb-kopf">
-                <b data-testid="zb-ziel">{zielName(inh, z, m.id)}</b>
-                <span class="leise">{ms.zurueckgestellt ? "zurückgestellt · " : ""}im Eingang seit <b class="zahl">{mss(t - ms.erschienen.t_s)}</b></span>
-                {m.folge_von && <span class="sehr-leise klein">Folgemeldung zu {name(m.folge_von)}</span>}
-                <span style="flex:1" />
-                <Kleingedrucktes inh={inh} />
-              </div>
-              <div class="zb-drohne" style={{ maxWidth: `${DROHNEN_BILD.breite}px`, maxHeight: `${DROHNEN_BILD.hoehe}px` }} data-tour="drohne">
-                <LiveDrohnenFenster key={m.id} meldung={m} argus={a} lage={() => lage.current} uhr={() => s.kartenUhr()} start={start} />
-              </div>
-              <div class="zb-argus" data-testid="argus-zeile">
-                <span class="feldname">{inh.szenario.argus_system.name}</span>
-                <b data-testid="argus-klasse">{argusZeile(inh, m, ms.gestoert)}</b>
-                <Empfehlung wert={a.empfehlung} />
-                <span class="sehr-leise klein">Bild {bildalter(inh, m, ms.gestoert)} s alt{a.gestoert ? " · Datenlink gestört" : ""}</span>
-              </div>
-              <div class="wm-liste" data-tour="wirkmittel" data-testid="wirkmittel" onMouseLeave={() => setZeigeWm(null)}>
-                {Object.keys(inh.wirkmittel).map((id) => (
-                  <WirkmittelZeile key={id} inh={inh} z={z} m={m} wm={id} t={t} gewaehlt={wm === id} gesperrt={gesperrt}
-                    waehle={() => setWm(id)} zeige={(an) => setZeigeWm(an ? id : null)} />
-                ))}
-              </div>
-            </>
-          )}
-          {/* seit 2.7 (I5.1): die Knöpfe stehen immer an derselben Stelle (ohne Meldung gesperrt) */}
-          <div class="zb-knoepfe" data-testid="zb-knoepfe">
-            <button type="button" class="knopf gross toedlich" disabled={gesperrt || !wm} onClick={() => entscheiden("bekaempfen")} data-testid="zb-bekaempfen"
-              title={!m ? undefined : !wm ? "zuerst ein Wirkmittel wählen" : gewaehltV && !gewaehltV.pruefung.zulaessig ? "trotz Warnung – wird protokolliert" : undefined}>
-              {bekText}<span class="unterzeile">{m ? bekUnter : "keine Meldung offen"}{gewaehltV && !gewaehltV.pruefung.zulaessig ? " · ⚠ trotz Warnung" : ""}</span>
-            </button>
-            <button type="button" class="knopf gross" disabled={gesperrt || !!ms?.zurueckgestellt} onClick={() => entscheiden("zurueckstellen")} data-testid="zb-zurueckstellen"
-              title={ms?.zurueckgestellt ? "schon zurückgestellt" : "beobachten, später entscheiden"}>
-              ZURÜCKSTELLEN<span class="unterzeile">beobachten</span>
-            </button>
-            <button type="button" class="knopf gross" disabled={gesperrt} onClick={() => entscheiden("ablehnen")} data-testid="zb-ablehnen">
-              ABLEHNEN<span class="unterzeile">nicht bekämpfen</span>
-            </button>
-          </div>
+      <div class="zb-raster">
+        <section class="karten-feld" data-testid="zb-karte" data-tour="karte">
+          <LagekarteAnsicht inh={inh} lagebild={lagebild} vorschau={vs?.vorschau ?? null} gewaehlt={gewaehlt}
+            onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele" senkrechtMitte
+            uhr={() => s.kartenUhr()} effekte={fx} marken={marken} ecke={<LageEinblendung s={s} injects={injects} t={t} />}
+            banner={vs && <div class={`karte-banner unten ${vs.vorschau.ok ? "ok" : "verstoss"}`} data-testid="karte-banner">
+              {inh.wirkmittel[vorschauWm!].kurz}: Einschlag in {mss(vs.v.einschlag.t - t)} – {vs.vorschau.ok ? "keine Warnung" : `${vs.v.pruefung.verstoesse.map((x) => x.regel).join(", ")} verletzt`}
+            </div>} />
         </section>
-      </aside>
+        <aside class="zb-rechts">
+          <UnterwegsLeiste inh={inh} z={z} t={t} unterwegs={unterwegs} />
+          <EingangListe inh={inh} z={z} t={t} offen={offen} vermerke={vm} gewaehlt={gewaehlt} waehle={oeffnen} />
+          <section class="zb-meldung" data-tour="entscheiden" data-testid="offene-meldung" data-meldung={ms?.id}>
+            <div class="zb-kopf">
+              {m && ms ? (
+                <>
+                  <b data-testid="zb-ziel">{zielName(inh, z, m.id)}</b>
+                  <span class="leise">{ms.zurueckgestellt ? "zurückgestellt · " : ""}im Eingang seit <b class="zahl">{mss(t - ms.erschienen.t_s)}</b></span>
+                  {m.folge_von && <span class="sehr-leise klein einzeilig">Folgemeldung zu {name(m.folge_von)}</span>}
+                </>
+              ) : <span class="sehr-leise">keine Meldung offen</span>}
+              <span style="flex:1" />
+              <Kleingedrucktes inh={inh} />
+            </div>
+            <div class="zb-drohne" data-tour="drohne">
+              {m && ms && a ? (
+                <div class="zb-drohne-bild">
+                  <LiveDrohnenFenster key={m.id} meldung={m} argus={a} lage={() => lage.current} uhr={() => s.kartenUhr()} start={start} />
+                </div>
+              ) : (
+                <div class="zb-warten" data-testid="zb-warten">
+                  {offen.length ? "Meldung im Eingang anklicken, um sie zu öffnen." : "Warten auf ARGUS-Meldungen … Neue Meldungen kommen in den Eingang und öffnen sich hier mit dem Drohnenbild."}
+                </div>
+              )}
+            </div>
+            <div class="zb-argus" data-testid="argus-zeile">
+              <span class="feldname">{inh.szenario.argus_system.name}</span>
+              {m && ms && a ? (
+                <>
+                  <b data-testid="argus-klasse">{argusZeile(inh, m, ms.gestoert)}</b>
+                  <Empfehlung wert={a.empfehlung} />
+                  <span class="sehr-leise klein einzeilig">Bild {bildalter(inh, m, ms.gestoert)} s alt{a.gestoert ? " · Datenlink gestört" : ""}</span>
+                </>
+              ) : <span class="sehr-leise">–</span>}
+            </div>
+            <div class="wm-kacheln" data-tour="wirkmittel" data-testid="wirkmittel" onMouseLeave={() => setZeigeWm(null)}>
+              {Object.keys(inh.wirkmittel).map((id) => (
+                <WirkmittelKachel key={id} inh={inh} z={z} m={m} wm={id} t={t} gewaehlt={wm === id} gesperrt={gesperrt}
+                  waehle={() => setWm(id)} zeige={(an) => setZeigeWm(an ? id : null)} />
+              ))}
+            </div>
+            <WarnZeile inh={inh} z={z} m={m} wm={vorschauWm} t={t} />
+            {/* seit 2.7 (I5.1), Liste J: die Knöpfe stehen immer ganz unten an derselben Stelle (ohne Meldung gesperrt) */}
+            <div class="zb-knoepfe" data-testid="zb-knoepfe">
+              <button type="button" class="knopf gross toedlich" disabled={gesperrt || !wm} onClick={() => entscheiden("bekaempfen")} data-testid="zb-bekaempfen"
+                title={!m ? undefined : !wm ? "zuerst ein Wirkmittel wählen" : gewaehltV && !gewaehltV.pruefung.zulaessig ? "trotz Warnung – wird protokolliert" : undefined}>
+                {bekText}<span class="unterzeile">{m ? bekUnter : "keine Meldung offen"}{gewaehltV && !gewaehltV.pruefung.zulaessig ? " · ⚠ trotz Warnung" : ""}</span>
+              </button>
+              <button type="button" class="knopf gross" disabled={gesperrt || !!ms?.zurueckgestellt} onClick={() => entscheiden("zurueckstellen")} data-testid="zb-zurueckstellen"
+                title={ms?.zurueckgestellt ? "schon zurückgestellt" : "beobachten, später entscheiden"}>
+                ZURÜCKSTELLEN<span class="unterzeile">beobachten</span>
+              </button>
+              <button type="button" class="knopf gross" disabled={gesperrt} onClick={() => entscheiden("ablehnen")} data-testid="zb-ablehnen">
+                ABLEHNEN<span class="unterzeile">nicht bekämpfen</span>
+              </button>
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

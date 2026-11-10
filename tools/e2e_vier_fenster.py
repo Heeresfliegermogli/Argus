@@ -5,7 +5,7 @@ Spiel), ein zweites Fenster desselben Teams (sieht nur zu) und Plenum.
 Prüft: Der Team-Laptop rechnet sein Spiel selbst (Entscheidung sofort im eigenen Stand, ohne Netz); die anderen Fenster folgen
 dem hochgeladenen Protokoll und haben am Ende denselben Stand (Laufnummer, seq, Fingerabdruck); das zweite Fenster kann nichts
 senden; jede Aktion steht im Protokoll, das Protokoll ist lückenlos; Statusmeldung bei der Spielleitung; jede Ansicht passt ohne
-Rollbalken in 1530 × 800, feste Felder schneiden nichts ab.
+Rollbalken in 1536 × 730, feste Felder schneiden nichts ab.
 
 Aufruf:
   python3 tools/e2e_vier_fenster.py http://localhost:4173/            # gebaute Seite, lokaler Sync
@@ -24,7 +24,9 @@ import urllib.parse
 from playwright.sync_api import sync_playwright
 
 FENSTER = [("sl", "sl"), ("zb", "zb"), ("zu", "zb"), ("plenum", "plenum")]
-W, H = 1530, 800
+from pruefgroessen import STANDARD  # noqa: E402
+
+W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 
 
 def adresse(basis, rolle, a, verzug=True):
@@ -172,7 +174,7 @@ def main():
         warte(lambda: sl.locator("[data-testid=protokoll] tr").count() == len(protokoll), 5, "Protokollanzeige vollständig")
         print(f"Protokoll: {len(protokoll)} Einträge, Entscheidungen {[(e['daten']['meldung'], e['daten']['entscheid'], e['daten'].get('sek_eingang')) for e in ent]}")
 
-        # Layout: kein Rollbalken auf Seitenebene in 1530 × 800, nichts abgeschnitten in festen Feldern
+        # Layout: kein Rollbalken auf Seitenebene in 1536 × 730, nichts abgeschnitten in festen Feldern
         for n, _ in FENSTER:
             s = seiten[n]
             groesse = s.evaluate("() => [document.documentElement.scrollWidth, document.documentElement.scrollHeight]")
@@ -196,7 +198,7 @@ def main():
     if fehler:
         print("FEHLER:", *fehler, sep="\n  ")
         sys.exit(1)
-    print("OK – Team-Laptop rechnet, Spielleitung und zweites Fenster synchron, jede Aktion im Protokoll, Layout passt in 1530×800")
+    print("OK – Team-Laptop rechnet, Spielleitung und zweites Fenster synchron, jede Aktion im Protokoll, Layout passt in 1536×730")
 
 
 if __name__ == "__main__":

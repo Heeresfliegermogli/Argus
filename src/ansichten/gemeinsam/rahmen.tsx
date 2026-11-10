@@ -18,6 +18,7 @@ import type { Sicht } from "../../sitzung/sicht";
 import { istVeraltet } from "../../sync/adapter";
 import { EinweisungFenster } from "../einweisung";
 import { Hinweise } from "./bausteine";
+import { fensterText, useFenster, zuKlein } from "./fenster";
 import { useSpielzeit, useStand } from "./hooks";
 
 function gelesen(schl: string): boolean {
@@ -176,7 +177,7 @@ function TestUhr(p: { s: Sicht; z: Spielzustand }) {
   return (
     <span class="zeile test-uhr" style="gap:4px;flex-wrap:nowrap" data-testid="test-uhr" title="Test ohne Lobby: Uhr selbst steuern (im Seminar macht das die Spielleitung)">
       <button type="button" class={`knopf klein ${z.uhr.laeuft ? "warn" : "gut"}`} disabled={z.ende} data-testid="test-start"
-        onClick={() => p.s.senden("uhr", { befehl: z.uhr.laeuft ? "pause" : "start" })}>{z.uhr.laeuft ? "❚❚" : "▶ Start"}</button>
+        onClick={() => p.s.senden("uhr", { befehl: z.uhr.laeuft ? "pause" : "start" })}>{z.uhr.laeuft ? "❚❚" : <>▶<span class="lang"> Start</span></>}</button>
       {[1, 5, 20].map((v) => (
         <button type="button" key={v} class={`knopf klein ${z.uhr.tempo === v ? "an" : ""}`} onClick={() => p.s.senden("uhr", { befehl: "tempo", tempo: v })}>×{v}</button>
       ))}
@@ -223,6 +224,12 @@ export function Rahmen(p: {
     setRot((n) => n + 1);
     setTimeout(() => setRot((n) => Math.max(0, n - 1)), 900);
   };
+  // seit Liste J (J2.4): Fenster kleiner als 1280 × 600 – die Ansicht wird verkleinert; Hinweis auf Vollbild (einmal je Wechsel)
+  const fenster = useFenster();
+  const klein = zuKlein(fenster.breite, fenster.hoehe);
+  useEffect(() => {
+    if (klein && rolle !== "plenum") p.s.hinweis("warnung", `Fenster ${fensterText(fenster)} – kleiner als 1280 × 600, die Ansicht ist verkleinert. Browser auf Vollbild (F11).`);
+  }, [klein]);
 
   const hostDa = !!st.host && !istVeraltet(st.host.puls, p.s.adapter.serverJetzt());
   const zeigeTeam = st.team !== DIREKT_TEAM && rolle !== "sl" && rolle !== "plenum" && !p.teamImBand;
@@ -254,7 +261,7 @@ export function Rahmen(p: {
           </span>
           {st.rechnet && (
             <button type="button" class={`knopf klein ${up.fehler && offenHoch > 0 ? "warn" : "leise"}`} onClick={speichern} data-testid="protokoll-speichern"
-              title="Protokoll dieses Teams als Datei speichern (für die Spielleitung, wenn das Netz nicht geht)">⇩ Protokoll</button>
+              title="Protokoll dieses Teams als Datei speichern (für die Spielleitung, wenn das Netz nicht geht)">⇩<span class="lang"> Protokoll</span></button>
           )}
           {rolle !== "plenum" && (
             <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf"

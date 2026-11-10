@@ -16,7 +16,7 @@ Geprüft wird:
   • nur der Laptop rechnet; die Entscheidungen gehen nicht über das Netz (gespeicherte Aktionen nur von der Spielleitung);
     kein Absender taucht im Protokoll eines fremden Teams auf; Statusmeldung jedes Teams bei der Spielleitung;
   • die Spielstände der Teams unterscheiden sich wie gespielt;
-  • alle Fenster passen in 1530 × 800 (kein Rollbalken, nichts abgeschnitten), keine Konsolenfehler.
+  • alle Fenster passen in 1536 × 730 (kein Rollbalken, nichts abgeschnitten), keine Konsolenfehler.
 Mit --verzug 5000 läuft jedes Fenster mit künstlichem Netzverzug (H1.6): das Spiel der Teams bleibt sofort, Spielleitung und
 zweites Fenster holen auf.
 
@@ -35,7 +35,9 @@ import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
-W, H = 1530, 800
+from pruefgroessen import STANDARD  # noqa: E402
+
+W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch", "Rigel", "Deneb"]
 # Entscheidung je Team zu Ziel 1 (M01): (entscheid, wirkmittel)
 ENTSCHEIDE = [("bekaempfen", "LM"), ("ablehnen", None), ("bekaempfen", "MRS"), ("zurueckstellen", None), ("bekaempfen", "PZA"),
@@ -348,7 +350,7 @@ def main():
     if fehler:
         print("FEHLER:", *fehler, sep="\n  ")
         sys.exit(1)
-    print(f"OK – {a.teams} Team-Laptops + Spielleitung + Plenum: jedes Team rechnet selbst, getrennte Spielstände, Spielleitung synchron, alles in 1530×800")
+    print(f"OK – {a.teams} Team-Laptops + Spielleitung + Plenum: jedes Team rechnet selbst, getrennte Spielstände, Spielleitung synchron, alles in 1536×730")
 
 
 if __name__ == "__main__":

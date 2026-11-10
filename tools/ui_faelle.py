@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bildschirmfotos der Schlüsselfälle und Belastungsprobe der Ansicht in 1530 × 800 (seit 2.6: eine Rolle, Zielbearbeitung).
+"""Bildschirmfotos der Schlüsselfälle und Belastungsprobe der Ansicht (seit 2.6: eine Rolle, Zielbearbeitung; seit Liste J in 1536 × 730).
 
 Ergänzt tools/ui_bilder.py (kurzer Ablauf bis S1). Hier:
   • volle Warteschlangen (Spielzeit erst 13:20, dann 20:50 gesetzt: viele Meldungen und Lagemeldungen auf einmal;
@@ -8,11 +8,13 @@ Ergänzt tools/ui_bilder.py (kurzer Ablauf bis S1). Hier:
     (S2 Rotes Kreuz M12, S4 Kinder M18, S3 drei Panzer M20, N2 weißes Tuch M21),
   • Mörser bei M12 mit mehreren Warnungen am vorausberechneten Einschlagort, BEKÄMPFEN trotz Warnung, ZURÜCKSTELLEN (M18),
   • viele bekämpfte Ziele mit Countdown in der Zeile „Wirkung unterwegs“, längste Notiz der Spielleitung,
-  • seit 2.7 (I4): Lagemeldungen stehen 30 s (Spielzeit) oder bis zum Klick im Feed, dann sind sie ganz weg,
+  • seit 2.7 (I4): Lagemeldungen stehen 30 s (Spielzeit) oder bis zum Klick, dann sind sie ganz weg; seit Liste J als Einblendung oben
+    links auf der Karte, höchstens zwei (die übrigen stehen dahinter, „+n weitere“),
   • seit 2.7 (I5.2): in einem zweiten Raum 8 gleichzeitige Wirkungen und mindestens 10 Meldungen im Eingang – nichts verschiebt sich,
     nichts abgeschnitten, die Knöpfe bleiben an ihrer Stelle; „+n“ zeigt alle Wirkungen als Überlagerung,
   • Wirkungen mit Fehltreffern auf Kontrollkarte, in der Auswertung und in der Auflösung, Kontrollkarte gezoomt (Sprites).
-Prüft wie ui_bilder.py: kein Rollbalken, nichts abgeschnitten, keine Fehler in der Konsole.
+Prüft wie ui_bilder.py (tools/pruefgroessen.py): kein Rollbalken, nichts abgeschnitten, ganze Karte, Knöpfe ganz sichtbar, keine Fehler in
+der Konsole; die volle Ansicht (I5: 8 Wirkungen, über 10 Meldungen) in allen vier Prüfgrößen.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle
@@ -24,7 +26,8 @@ import time
 
 from playwright.sync_api import sync_playwright
 
-from ui_bilder import LAYOUT_JS, H, W, adresse, warte
+from pruefgroessen import GROESSEN, groessen_argument, groesse_text, lies_groesse, pruefe_layout
+from ui_bilder import adresse, warte
 
 ROLLEN = ["sl", "zb", "plenum"]
 NOTIZ_500 = ("Team hat das Rote Kreuz in der Lupe gesehen, aber nicht angesprochen; nach 20 s BEKÄMPFEN mit Mörser trotz Warnung. "
@@ -32,11 +35,12 @@ NOTIZ_500 = ("Team hat das Rote Kreuz in der Lupe gesehen, aber nicht angesproch
 NOTIZ_500 = NOTIZ_500[:500]
 
 
-KAESTEN_JS = """() => Object.fromEntries(['unterwegs', 'eingang', 'offene-meldung', 'zb-knoepfe', 'zb-bekaempfen', 'zb-zurueckstellen', 'zb-ablehnen', 'zb-karte', 'feed']
+# seit Liste J ohne „feed“: die Lagemeldungen liegen als Einblendung auf der Karte und wachsen mit ihrem Inhalt
+KAESTEN_JS = """() => Object.fromEntries(['unterwegs', 'eingang', 'offene-meldung', 'zb-knoepfe', 'zb-bekaempfen', 'zb-zurueckstellen', 'zb-ablehnen', 'zb-karte']
     .map((id) => { const r = document.querySelector(`[data-testid=${id}]`).getBoundingClientRect(); return [id, [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]]; }))"""
 
 
-def pruefe_i5(ctx, a, fehler, foto, senden, konsole):
+def pruefe_i5(ctx, a, fehler, foto, senden, konsole, foto_alle=None):
     """I5.2: eigener Raum, kein Team hat entschieden; Spielzeit 20:50 bei stehender Uhr – über 20 Meldungen im Eingang. Acht davon
     mit dem Mörser bekämpfen (stehende Uhr: alle bleiben unterwegs), dazwischen und danach messen: Zeile „Wirkung unterwegs“, Eingang,
     geöffnete Meldung und Knöpfe stehen auf den Pixel gleich; „+n“ zeigt alle als Überlagerung."""
@@ -78,7 +82,7 @@ def pruefe_i5(ctx, a, fehler, foto, senden, konsole):
     eingang = zb.evaluate("() => { const l = document.querySelector('[data-testid=eingang] .eingang-liste'); return [l.scrollHeight, l.clientHeight]; }")
     if eingang[0] <= eingang[1]:
         fehler.append(f"I5: Eingang rollt nicht ({eingang})")
-    foto(zb, "zb_I5_8_wirkungen")
+    (foto_alle or foto)(zb, "zb_I5_8_wirkungen")
     zb.get_by_test_id("unterwegs-mehr").click()
     warte(lambda: zb.get_by_test_id("unterwegs-alle").count() == 1, 5, "I5: alle Wirkungen als Überlagerung")
     if zb.locator("[data-testid=unterwegs-alle] .unterwegs-chip").count() != n_unterwegs:
@@ -101,18 +105,25 @@ def main():
     ap.add_argument("basis")
     ap.add_argument("--bilder", default="ui-faelle")
     ap.add_argument("--raum", default=f"faelle-{int(time.time()) % 100000}")
+    groessen_argument(ap)
     a = ap.parse_args()
     os.makedirs(a.bilder, exist_ok=True)
+    w0, h0 = lies_groesse(a.groesse)
     fehler, konsole = [], []
 
-    def foto(s, name):
-        lay = s.evaluate(LAYOUT_JS)
-        if lay["seite"][0] > W or lay["seite"][1] > H:
-            fehler.append(f"{name}: Seite {lay['seite']} größer als {W}×{H}")
-        for z in lay["zuGross"]:
-            fehler.append(f"{name}: abgeschnitten – {z}")
+    def foto(s, name, karte_ganz=True):
+        f, _ = pruefe_layout(s, karte_ganz=karte_ganz)
+        fehler.extend(f"{name}: {x}" for x in f)
         s.screenshot(path=os.path.join(a.bilder, f"{name}.png"))
-        print("Foto", name, "OK" if not lay["zuGross"] else lay["zuGross"])
+        print("Foto", name, "OK" if not f else f)
+
+    def foto_alle(s, name):
+        for g in GROESSEN:
+            s.set_viewport_size({"width": g[0], "height": g[1]})
+            s.wait_for_timeout(700)
+            foto(s, f"{name}_{groesse_text(g)}")
+        s.set_viewport_size({"width": w0, "height": h0})
+        s.wait_for_timeout(500)
 
     def senden(s, typ, daten):
         s.evaluate("([t, d]) => window.argus.senden(t, d)", [typ, daten])
@@ -122,7 +133,7 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
-        ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
+        ctx = browser.new_context(viewport={"width": w0, "height": h0}, device_scale_factor=1)
         s = {}
         for r in ROLLEN:
             pg = ctx.new_page()
@@ -171,7 +182,7 @@ def main():
         warte(lambda: zb.locator("[data-testid=eingang] [data-meldung=M12]").count() == 1, 20, "M12 im Eingang")
         warte(lambda: zb.locator("[data-testid=lagekarte][data-bereit='1']").count() == 1, 15, "Karte bereit")
         zb.wait_for_timeout(500)
-        foto(zb, "zb_eingang_voll")
+        foto_alle(zb, "zb_eingang_voll")
         lupe("M12", "S2_rotes_kreuz")
         # Mörser bei M12: mehrere Warnungen am vorausberechneten Einschlagort, BEKÄMPFEN trotz Warnung
         zb.locator("label[data-wm=MRS]").click()
@@ -203,22 +214,27 @@ def main():
             senden(zb, "entscheid", {"meldung": mid, "entscheid": "bekaempfen", "wirkmittel": "LM"})
         zb.wait_for_timeout(600)
         foto(zb, "zb_einschlaege_countdown")
-        # seit 2.7 (I4): im Feed nur, was höchstens 30 s alt und nicht angeklickt ist; ein Klick nimmt sie ganz weg
+        # seit 2.7 (I4): nur, was höchstens 30 s alt und nicht angeklickt ist; ein Klick nimmt sie ganz weg. Seit Liste J (J1.2): als
+        # Einblendung oben links auf der Karte, höchstens zwei – die neuesten; die übrigen zählt „+n weitere“
         if zb.get_by_test_id("feed-frueher").count():
-            fehler.append("Feed: „frühere Meldungen“ gibt es seit 2.7 nicht mehr")
-        soll = zb.evaluate("""() => { const z = window.argus.stand.zustand; const t = z.uhr.t_s;
+            fehler.append("Lagemeldungen: „frühere Meldungen“ gibt es seit 2.7 nicht mehr")
+        stehend = zb.evaluate("""() => { const z = window.argus.stand.zustand; const t = z.uhr.t_s;
             return z.injectReihenfolge.filter((id) => !z.injects[id].quittiert && t - z.injects[id].erschienen.t_s < 30).reverse(); }""")
+        soll = stehend[:2]
         ist = zb.eval_on_selector_all("[data-testid=feed-frisch] .feed-meldung", "es => es.map((e) => e.dataset.inject)")
         if ist != soll:
-            fehler.append(f"Feed: {ist} / erwartet (höchstens 30 s alt, ungelesen) {soll}")
+            fehler.append(f"Lagemeldungen auf der Karte: {ist} / erwartet (höchstens zwei, 30 s, ungelesen) {soll}")
+        weitere = zb.get_by_test_id("feed-weitere").inner_text() if zb.get_by_test_id("feed-weitere").count() else ""
+        if (len(stehend) > 2) != bool(weitere) or (weitere and str(len(stehend) - 2) not in weitere):
+            fehler.append(f"Lagemeldungen: {len(stehend)} stehen, Hinweis „{weitere}“")
         alt = zb.evaluate("() => { const z = window.argus.stand.zustand; return z.injectReihenfolge.filter((id) => z.uhr.t_s - z.injects[id].erschienen.t_s >= 30).length; }")
-        print(f"  Feed bei 20:50: {len(ist)} Lagemeldungen sichtbar, {alt} ältere ganz weg")
-        foto(zb, "zb_feed_30s")
+        print(f"  Lagemeldungen bei 20:50: {len(ist)} auf der Karte, {len(stehend) - len(ist)} dahinter, {alt} ältere ganz weg")
+        foto_alle(zb, "zb_lagemeldungen_30s")
         if ist:
             zb.locator(f"[data-testid=feed-frisch] [data-inject='{ist[0]}']").click()
             warte(lambda: zb.locator(f"[data-testid=feed-frisch] [data-inject='{ist[0]}']").count() == 0, 5, "Lagemeldung nach Klick weg")
             if not any(e["typ"] == "inject_quittiert" and e["daten"]["inject"] == ist[0] for e in protokoll(zb)):
-                fehler.append("Feed: Klick nicht im Protokoll (inject_quittiert)")
+                fehler.append("Lagemeldung: Klick nicht im Protokoll (inject_quittiert)")
         oeffne("M18")
         zb.wait_for_timeout(500)
         foto(zb, "zb_M18_zurueckgestellt")
@@ -245,7 +261,7 @@ def main():
         for _ in range(2):
             sl.get_by_role("button", name="Hineinzoomen").click()
         sl.wait_for_timeout(2500)
-        foto(sl, "sl_kontrollkarte_zoom")
+        foto(sl, "sl_kontrollkarte_zoom", karte_ganz=False)
         foto(zb, "zb_karte_bekaempft")
 
         # Spielende → Auswertung im Plenum, dann von Hand zur Auflösung des Teams
@@ -254,20 +270,20 @@ def main():
         sl.get_by_role("button", name="▶ Start").click()
         warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Auswertung im Plenum")
         pl.wait_for_timeout(1200)
-        foto(pl, "plenum_auswertung_teamvergleich")
+        foto(pl, "plenum_auswertung_teamvergleich", karte_ganz=False)
         # S2 mit der langen Notiz
         pl.locator("[data-kapitel='S2']").first.click()
         warte(lambda: pl.locator("section.replay[data-fall='S2']").count() == 1, 10, "Replay S2")
         pl.wait_for_timeout(800)
         if NOTIZ_500[:60] not in pl.get_by_test_id("notizen-sl").inner_text():
             fehler.append("Auswertung S2: lange Notiz der Spielleitung fehlt")
-        foto(pl, "plenum_auswertung_S2_notiz")
+        foto(pl, "plenum_auswertung_S2_notiz", karte_ganz=False)
         pl.get_by_test_id("auswertung-zurueck").click()
         warte(lambda: pl.locator("main[data-modus=aufloesung]").count() == 1, 30, "Auflösung im Plenum")
         pl.wait_for_timeout(1800)
         foto(pl, "plenum_aufloesung_fehltreffer")
         foto(zb, "zb_spielende")
-        pruefe_i5(ctx, a, fehler, foto, senden, konsole)
+        pruefe_i5(ctx, a, fehler, foto, senden, konsole, foto_alle)
         browser.close()
 
     relevante = [k for k in konsole if "favicon" not in k and "GPU stall" not in k and "WebGL" not in k]

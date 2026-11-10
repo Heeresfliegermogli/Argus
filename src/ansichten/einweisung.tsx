@@ -1,7 +1,9 @@
 // Einweisung (seit 2.6, Änderungen H4). Für das Team in zwei Teilen, jederzeit über „? Einweisung“ in der Kopfzeile wieder aufrufbar:
 //   1. Übersicht auf der echten Oberfläche: Die Ansicht bleibt sichtbar, ein Lichtfleck mit Pfeil zeigt nacheinander auf Eingang,
 //      Entscheiden, Karte, die vier Panzer, Lagemeldungen, Wirkmittel und Bestand, Uhr („Hier kommen die Meldungen rein“ …).
-//      Weiterklicken mit „weiter ›“, Pfeiltasten oder Klick in den dunklen Bereich.
+//      Weiterklicken mit „weiter ›“, Pfeiltasten oder Klick in den dunklen Bereich. Seit Liste J (J4) zeigt „Lagemeldungen“ auf die
+//      Einblendung oben links auf der Karte (dafür steht dort während der Übersicht ein Beispiel, body[data-tour]) und „Wirkmittel“
+//      auf die drei Kacheln. Die Übersicht liegt über dem ganzen Fenster (außerhalb der verkleinerten Ansicht eingehängt).
 //   2. Kurz: die Phasen (je ein Satz, ohne Lösungshinweis), je Klasse ein helles Bildbeispiel als Ausschnitt mit Lupe (Panzer,
 //      Fahrzeug, Infanterie – keine Attrappe, kein Schutzzeichen), je Wirkmittel eine kurze Animation (Mörser, LM, Kanone).
 // Nicht mehr in der Einweisung (H4.3): das Kleingedruckte des Herstellers (steht im Befehl, im Spiel hinter „i“, in der Auswertung),
@@ -9,6 +11,7 @@
 // Der Druck (…/?druck=einweisung, A5 quer) zeigt eine Karte für das Team (Übersicht als Skizze, Phasen, Klassen, Wirkmittel) und eine für
 // die Spielleitung.
 import type { ComponentChildren } from "preact";
+import { createPortal } from "preact/compat";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { assetUrl, drohnenbild } from "../assets/assets";
 import type { Inhalte } from "../inhalte/typen";
@@ -16,6 +19,7 @@ import type { Rolle } from "../kern/ereignisse";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { useManifest } from "./gemeinsam/drohnenbild";
+import { aktuelleSkala, fensterText, useFenster, zuKlein } from "./gemeinsam/fenster";
 
 type KartenRolle = Exclude<Rolle, "plenum">;
 
@@ -32,11 +36,11 @@ export interface TourSchritt {
 
 export const TOUR: TourSchritt[] = [
   { ziel: "eingang", titel: "Hier kommen die Meldungen rein", text: <>Jede ARGUS-Meldung landet im Eingang, die Zeit daneben läuft mit: so lange wartet sie schon. Die älteste öffnet sich von selbst, ein Klick öffnet eine andere. Darüber: was gerade unterwegs ist, mit Countdown bis zum Einschlag.</> },
-  { ziel: "entscheiden", titel: "Hier entscheidet ihr", text: <>Die geöffnete Meldung: Drohnenbild live (Klick: groß mit Lupe), was ARGUS meldet, die Wirkmittel – und die drei Knöpfe <M k="toedlich">BEKÄMPFEN mit …</M> <M>ZURÜCKSTELLEN</M> <M>ABLEHNEN</M>. Ohne eure Entscheidung wird nichts bekämpft.</> },
-  { ziel: "karte", titel: "Die Lagekarte", text: <>Meldungen stehen als Marke am Ziel (Klick öffnet). Bekämpfte Ziele zeigen den Countdown bis zum Einschlag. Rot: No-Strike-Zone, orange gestrichelt: Einschränkungsgebiet. Mausrad zoomt.</> },
+  { ziel: "entscheiden", titel: "Hier entscheidet ihr", text: <>Die geöffnete Meldung: Drohnenbild live (Klick: groß mit Lupe), was ARGUS meldet, die Wirkmittel – und ganz unten die drei Knöpfe <M k="toedlich">BEKÄMPFEN mit …</M> <M>ZURÜCKSTELLEN</M> <M>ABLEHNEN</M>. Ohne eure Entscheidung wird nichts bekämpft.</> },
+  { ziel: "karte", titel: "Die Lagekarte", text: <>Die ganze Karte, vom Westrand mit euren Panzern bis zu den Wäldern am Ostrand. Meldungen stehen als Marke am Ziel (Klick öffnet). Bekämpfte Ziele zeigen den Countdown bis zum Einschlag. Rot: No-Strike-Zone, orange gestrichelt: Einschränkungsgebiet. Mausrad zoomt, ⤢ zeigt wieder alles.</> },
   { ziel: "panzer", titel: "Hier eure vier Panzer", text: <>Die 1. Kp am Westrand: 1/1 bis 1/4 mit ihrem Zustand. Wird ein Panzer getroffen, blinkt er rot.</> },
-  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 1. Kp melden sich hier. Eine Meldung steht 30 Sekunden – oder bis ihr sie anklickt (✕). Danach ist sie weg.</> },
-  { ziel: "bestand", titel: "Hier Wirkmittel und Bestand", text: <>Mörser und Loitering Munition (LM) sind begrenzt, die Kanone der 1. Kp nicht – sie reicht aber nur bis zum Bach. Wird es knapp, wird die Zahl gelb.</> },
+  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 1. Kp melden sich oben links auf der Karte – höchstens zwei auf einmal. Eine Meldung steht 30 Sekunden oder bis ihr sie anklickt (✕). Danach ist sie weg.</> },
+  { ziel: "wirkmittel", titel: "Hier Wirkmittel und Bestand", text: <>Mörser, Loitering Munition (LM) und die Kanone der 1. Kp: je Kachel der Bestand, der Countdown bis zum Einschlag und ✓ oder ⚠ am Einschlagort. Mörser und LM sind begrenzt (wird es knapp, wird die Zahl gelb), die Kanone nicht – sie reicht aber nur bis zum Bach.</> },
   { ziel: "uhr", titel: "Spieluhr", text: <>25 Minuten in Echtzeit, die Spielleitung startet für alle Teams gleichzeitig. Daneben die Phase.</> },
 ];
 
@@ -79,8 +83,18 @@ function blasenLage(r: Rechteck, bw: number, bh: number, vw: number, vh: number)
 
 /** Übersicht über die echte Oberfläche: Lichtfleck und Pfeil auf das Element, Sprechblase daneben. */
 function Tour(p: { schritte: TourSchritt[]; fertig: () => void; abbrechen: () => void }) {
-  const da = p.schritte.filter((s) => !!rechteckVon(s.ziel));
-  const liste = da.length ? da : p.schritte;
+  // Während der Übersicht steht oben links auf der Karte eine Beispiel-Lagemeldung (CSS: body[data-tour]) – vor dem Messen setzen
+  const [liste] = useState(() => {
+    document.body.dataset.tour = "an";
+    const da = p.schritte.filter((s) => !!rechteckVon(s.ziel));
+    return da.length ? da : p.schritte;
+  });
+  useEffect(() => {
+    document.body.dataset.tour = "an";
+    return () => {
+      delete document.body.dataset.tour;
+    };
+  }, []);
   const [nr, setNr] = useState(0);
   const [r, setR] = useState<Rechteck | null>(null);
   const [masse, setMasse] = useState({ vw: window.innerWidth, vh: window.innerHeight });
@@ -117,7 +131,8 @@ function Tour(p: { schritte: TourSchritt[]; fertig: () => void; abbrechen: () =>
   });
   const lage = r ? blasenLage(r, bm.w, bm.h, masse.vw, masse.vh) : { x: masse.vw / 2 - bm.w / 2, y: masse.vh / 2 - bm.h / 2, pfeil: null };
   const pf = lage.pfeil;
-  return (
+  // über dem ganzen Fenster einhängen: Die Ansicht darunter kann verkleinert sein (unter 1280 × 600), die Übersicht rechnet in Fensterpixeln
+  return createPortal(
     <div class="tour" data-testid="tour" data-schritt={s.ziel} onClick={weiter}>
       {r ? <div class="tour-licht" style={{ left: `${r.x - 6}px`, top: `${r.y - 6}px`, width: `${r.w + 12}px`, height: `${r.h + 12}px` }} />
         : <div class="tour-dunkel" />}
@@ -138,7 +153,8 @@ function Tour(p: { schritte: TourSchritt[]; fertig: () => void; abbrechen: () =>
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -190,7 +206,7 @@ function KlassenBild(p: { meldung: string; klasse: string; breite?: number; zoom
   const f = 2.4;
   return (
     <div class="klassen-bild" style={{ width: `${w}px`, height: `${h}px`, backgroundImage: `url("${url}")`, backgroundSize: groesse, backgroundPosition: lageBild }}
-      data-klasse={p.klasse} onPointerMove={(e) => { const rc = (e.currentTarget as HTMLElement).getBoundingClientRect(); setLupe({ x: e.clientX - rc.left, y: e.clientY - rc.top }); }}
+      data-klasse={p.klasse} onPointerMove={(e) => { const rc = (e.currentTarget as HTMLElement).getBoundingClientRect(); const k = aktuelleSkala(); setLupe({ x: (e.clientX - rc.left) / k, y: (e.clientY - rc.top) / k }); }}
       onPointerLeave={() => setLupe(null)} role="img" aria-label={`Beispiel ${p.klasse}`}>
       <span class="klassen-rahmen" style={{ left: `${(box[0] - ax) * k}px`, top: `${(box[1] - ay) * k}px`, width: `${box[2] * k}px`, height: `${box[3] * k}px` }}>
         <span class="argus-marke">{p.klasse}</span>
@@ -389,6 +405,18 @@ function slFolien(inh: Inhalte): Folie[] {
  * Einweisung im Spiel. Team: erst die Übersicht auf der Oberfläche, dann Folien. Spielleitung: Folien. Weiter mit „weiter ›“,
  * Pfeiltasten oder Wischen; „Überspringen“ schließt.
  */
+/** Technik (J2.4): Fenstergröße dieses Laptops; unter 1280 × 600 der Hinweis auf Vollbild. */
+function FensterInfo() {
+  const f = useFenster();
+  const klein = zuKlein(f.breite, f.hoehe);
+  return (
+    <span class={`fenster-info ${klein ? "zu-klein" : ""}`} data-testid="fenster-info" data-fenster={`${f.breite}x${f.hoehe}`}
+      title={klein ? "Kleiner als 1280 × 600: Die Ansicht wird verkleinert. Browser auf Vollbild (F11) stellen." : "Fenstergröße dieses Laptops (geprüft ab 1280 × 600)"}>
+      Fenster {fensterText(f)}{klein ? " – Browser auf Vollbild (F11)" : ""}
+    </span>
+  );
+}
+
 export function EinweisungFenster(p: { inh: Inhalte; rolle: KartenRolle; schliessen: () => void }) {
   const team = p.rolle === "zb";
   const [tour, setTour] = useState(team);
@@ -436,10 +464,13 @@ export function EinweisungFenster(p: { inh: Inhalte; rolle: KartenRolle; schlies
             <button type="button" class="knopf leise" onClick={p.schliessen} data-testid="einweisung-ueberspringen">Überspringen</button>
             {team && <button type="button" class="knopf leise" onClick={() => setTour(true)} data-testid="einweisung-tour">Übersicht noch einmal</button>}
           </span>
-          <span class="folie-punkte" aria-label={`Folie ${nr + 1} von ${anzahl}`}>
-            {Array.from({ length: anzahl }, (_, i) => (
-              <button type="button" key={i} class={i === nr ? "an" : ""} onClick={() => geh(i)} aria-label={`Folie ${i + 1}`} />
-            ))}
+          <span class="folie-mitte">
+            <span class="folie-punkte" aria-label={`Folie ${nr + 1} von ${anzahl}`}>
+              {Array.from({ length: anzahl }, (_, i) => (
+                <button type="button" key={i} class={i === nr ? "an" : ""} onClick={() => geh(i)} aria-label={`Folie ${i + 1}`} />
+              ))}
+            </span>
+            <FensterInfo />
           </span>
           <span class="zeile" style="gap:8px">
             {nr > 0 && <button type="button" class="knopf leise" onClick={() => geh(nr - 1)}>‹ zurück</button>}
@@ -462,11 +493,14 @@ function AnsichtSkizze() {
   );
   return (
     <div class="skizze" aria-label="Aufbau der Ansicht">
-      <div class="skizze-kopf">{feld(7, "Uhr, Phase", "")}{feld(4, "vier Panzer", "")}{feld(6, "Bestand", "")}</div>
+      <div class="skizze-kopf">{feld(7, "Uhr, Phase", "")}{feld(4, "vier Panzer", "")}</div>
       <div class="skizze-rumpf">
-        {feld(5, "Lagemeldungen", "")}
-        {feld(3, "Lagekarte", "")}
-        <div class="skizze-rechts">{feld(1, "Eingang mit Wartezeit", "")}{feld(2, "Meldung: Drohnenbild, ARGUS, Wirkmittel, entscheiden", "flex:1")}</div>
+        <div class="skizze-karte">{feld(3, "Lagekarte (ganz)", "flex:1")}<div class="skizze-ecke">{feld(5, "Lagemeldungen", "")}</div></div>
+        <div class="skizze-rechts">
+          {feld(1, "Eingang mit Wartezeit", "")}
+          {feld(2, "Meldung: Drohnenbild, ARGUS, entscheiden", "flex:1")}
+          {feld(6, "Wirkmittel: Bestand, Countdown", "")}
+        </div>
       </div>
     </div>
   );

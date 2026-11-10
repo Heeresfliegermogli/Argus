@@ -54,7 +54,7 @@ h2 { font-size: 15px; color: var(--text); }
 :focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
 
 /* ---------------------------------------------------------------- Rahmen */
-.rahmen { display: grid; grid-template-rows: var(--kopf) 1fr; height: 100vh; max-height: 100vh; position: relative; }
+.rahmen { display: grid; grid-template-rows: var(--kopf) minmax(0, 1fr); height: 100%; max-height: 100%; position: relative; }
 .kopf {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
   padding: 0 14px 0 0; background: #0e1317; border-bottom: 1px solid var(--linie);
@@ -187,7 +187,9 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 .pz-balken[data-stufe="ausgefallen"] > i { background: #8a8f96; }
 .pz-balken[data-stufe="ausgefallen"]::after { content: ""; position: absolute; left: -2px; right: -2px; top: 3px; height: 1px; background: #2b2f35; transform: rotate(-20deg); }
 
-.hinweise { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 40; max-width: 440px; }
+.hinweise { position: fixed; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 40; max-width: 440px; pointer-events: none; }
+/* Zielbearbeitung (seit Liste J): Hinweise unten links über der Legende der Karte – rechts unten stehen die Knöpfe */
+.rahmen[data-rolle="zb"] .hinweise { right: auto; left: 18px; bottom: 18px; }
 .hinweis { padding: 9px 12px; border-radius: 6px; background: #234467; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 14px; }
 .hinweis.warnung { background: #6b4d16; color: #fff3da; border: none; }
 .hinweis.fehler { background: #6a2724; }
@@ -351,9 +353,16 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 .plenum { min-height: 0; padding: 12px; display: grid; gap: 12px; grid-template-rows: auto 1fr; }
 .plenum-kopf { display: flex; justify-content: space-between; align-items: center; }
 .plenum-raster { min-height: 0; display: grid; gap: 12px; }
-.plenum-einweisung { grid-template-columns: 520px minmax(0, 1fr); }
-.plenum-lage { grid-template-columns: minmax(0, 1fr) 360px; }
-.plenum-aufloesung { grid-template-columns: minmax(0, 1fr) 420px; }
+/* seit Liste J (J3.1): links die ganze Karte in 10 : 7 (Feld mit Kopf 36 px und Rand), rechts der Rest – mindestens --rest-min;
+   ist dafür zu wenig Breite, wird das Kartenfeld schmaler und die Karte steht in der Mitte (nie abgeschnitten). Die Kontrollkarte der
+   Auflösung bekommt unten einen Streifen für ihre Legende. */
+.karte-links { display: block; container-type: size; --rest-min: 360px; --legende-streifen: 0px; }
+.karte-raster { height: 100%; display: grid; gap: 12px; min-height: 0;
+  grid-template-columns: min(calc((100cqh - 38px - var(--legende-streifen)) * 10 / 7 + 2px), calc(100cqw - 12px - var(--rest-min))) minmax(0, 1fr); }
+.karte-raster > .panel { min-width: 0; }
+.plenum-einweisung { --rest-min: 440px; }
+.plenum-lage { --rest-min: 340px; }
+.plenum-aufloesung { --rest-min: 400px; --legende-streifen: 66px; }
 .plenum-text p { font-size: 18px; line-height: 1.45; margin: 0 0 11px; }
 .plenum-gruppen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .plenum-gruppen div { border-radius: 6px; padding: 8px 10px; color: #0e1317; font-size: 14px; line-height: 1.3; }
@@ -499,7 +508,7 @@ label.wahl.klein input { margin-top: 0; }
 .knopf.loeschen { padding: 1px 6px; color: var(--text-3); }
 .knopf.scharf, .knopf.loeschen.scharf { background: #8e2620; border-color: #c0453b; color: #fff; }
 .uebersicht-fuss { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; flex-wrap: wrap; }
-.uebersicht-fuss .fall { min-width: 18px; height: 17px; font-size: 11px; }
+.uebersicht-fuss .fall { min-width: 19px; height: 18px; font-size: 12px; }
 
 /* ---------------------------------------------------------------- Plenum: Code und Teams */
 .beitritt { background: var(--flaeche); border: 1px solid #36628f; border-radius: var(--radius); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
@@ -594,9 +603,9 @@ label.wahl.klein input { margin-top: 0; }
 .karte-linie circle { fill: none; stroke: #f0b13d; stroke-width: 2.5; filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, .8)); }
 .drohne-fenster { position: relative; width: 100%; height: 100%; cursor: zoom-in; }
 .drohne-fenster .drohne { height: 100%; border-radius: 0; }
-.drohne-fenster .drohne-kopf, .drohne-fenster .drohne-fuss { font-size: 11px; padding: 2px 7px; }
-.drohne-fenster .argus-marke { font-size: 11px; padding: 1px 4px; }
-.drohne-fenster .drohne-lupe-hinweis { bottom: 22px; font-size: 11.5px; }
+.drohne-fenster .drohne-kopf, .drohne-fenster .drohne-fuss { font-size: 12px; padding: 2px 7px; white-space: nowrap; gap: 8px; }
+.drohne-fenster .argus-marke { font-size: 12px; padding: 1px 4px; }
+.drohne-fenster .drohne-lupe-hinweis { bottom: 22px; font-size: 12px; }
 .drohne.live { cursor: inherit; }
 .live-leinwand { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 /* Kopf rechts: „● LIVE 10:14:31“ bzw. „AUFNAHME 10:14:30“, wenn das Ziel den Ausschnitt verlassen hat */
@@ -926,6 +935,10 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .folie-punkte { display: flex; gap: 8px; }
 .folie-punkte button { width: 11px; height: 11px; border-radius: 50%; border: 0; padding: 0; background: #c7bfae; cursor: pointer; }
 .folie-punkte button.an { background: var(--ek); box-shadow: 0 0 0 2px #1c2227; }
+/* seit Liste J (J2.4): Fenstergröße unter den Folienpunkten; unter 1280 × 600 rot mit Hinweis auf Vollbild */
+.folie-mitte { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.fenster-info { font-size: 12px; color: #6b757e; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fenster-info.zu-klein { color: #a3362f; font-weight: 700; }
 
 /* kleine, neutrale Bilder der Bedienung */
 .mini-reihe { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
@@ -993,30 +1006,55 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 
 /* ================================================================ seit 2.6 (Änderungen H): eine Rolle je Team ================ */
 
-/* ---- Zielbearbeitung: Feed | Karte | Eingang und Meldung (1530 × 800) */
-.ansicht-zb { grid-template-columns: 226px minmax(0, 1fr) 540px; padding: 8px; gap: 8px; }
-.ansicht-zb .karten-feld { min-height: 0; }
+/* ---- Zielbearbeitung seit Liste J (10.11.2026): Karte links ganz in 10 : 7, rechts die Restbreite – geprüft in 1536 × 730
+   (Dienst-Laptop), 1366 × 650, 1530 × 800 und 1920 × 960. Die Karte bekommt die volle Höhe unter der Kopfzeile und 10/7 davon als
+   Breite (Container-Einheiten: 100cqh = Höhe des Inhalts); wird die rechte Spalte dadurch schmaler als --zb-rechts-min, wird das
+   Kartenfeld schmaler und die Karte steht mit schmalem Rand oben und unten in der Mitte (J2.2) – nie abgeschnitten. */
+.ansicht-zb { --zb-rechts-min: 440px; display: block; padding: 8px; container-type: size; }
+.zb-raster { height: 100%; display: grid; gap: 8px; min-height: 0;
+  grid-template-columns: min(calc(100cqh * 10 / 7), calc(100cqw - 8px - var(--zb-rechts-min))) minmax(0, 1fr); }
+.ansicht-zb .karten-feld { position: relative; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--linie); border-radius: var(--radius); background: #e7e2d6; }
+.ansicht-zb .karten-feld > .karte { border-radius: var(--radius); }
 
-/* Feed der Lagemeldungen (H5.5; seit 2.7, I4: bis zum Klick oder 30 s, dann ganz weg – der Balken unten zeigt die Restzeit) */
-.feed { display: flex; flex-direction: column; min-height: 0; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); overflow: hidden; }
-.feed h2 { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid var(--linie); color: var(--text-2); }
-.feed-frisch { display: flex; flex-direction: column; gap: 6px; padding: 7px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
-.feed-leer { color: var(--text-3); font-size: 13px; padding: 6px 2px; }
-.feed-meldung { display: block; position: relative; width: 100%; text-align: left; border: 1px solid var(--linie-2); background: var(--flaeche-2); border-radius: 6px; padding: 6px 8px 8px; cursor: pointer; color: var(--text); font: inherit; flex: 0 0 auto; overflow: hidden; }
-.feed-x { float: right; margin-left: 6px; color: var(--text-2); font-size: 12px; line-height: 1; padding: 1px 3px; border-radius: 3px; }
+/* Lagemeldungen als Einblendung oben links auf der Karte (J1.2; Verhalten wie I4: bis zum Klick oder 30 s, dann ganz weg – der Balken
+   unten zeigt die Restzeit). Höchstens zwei gleichzeitig, 330 px breit. */
+.ansicht-zb .karte-ecke { max-width: calc(100% - 230px); }
+.lage-einblendung { width: 330px; max-width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.lage-einblendung .feed-frisch { display: flex; flex-direction: column; gap: 6px; }
+.lage-einblendung .feed-frisch:empty { display: none; }
+.feed-meldung { display: block; position: relative; width: 100%; text-align: left; border: 1px solid var(--linie-2); background: rgba(28, 35, 42, .95); border-radius: 6px;
+  padding: 6px 9px 8px; cursor: pointer; color: var(--text); font: inherit; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
+.feed-x { float: right; margin-left: 6px; color: var(--text-2); font-size: 12px; line-height: 1; padding: 2px 4px; border-radius: 3px; }
 .feed-meldung:hover .feed-x { color: var(--text); background: var(--flaeche-3); }
-.feed-rest { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--argus); opacity: .75; transition: width .25s linear; }
+.feed-rest { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--argus); opacity: .8; transition: width .25s linear; }
 .feed-meldung.dringend .feed-rest { background: #e0564b; }
-.feed-meldung.frisch { border-color: var(--argus); background: var(--argus-flaeche); animation: feed-neu 1.2s ease-out 1; }
+.feed-meldung.frisch { border-color: var(--argus); background: rgba(42, 36, 22, .96); animation: feed-neu 1.2s ease-out 1; }
 .feed-meldung.dringend { border-color: #c0453c; }
-.feed-meldung.frisch.dringend { background: #3a1b18; }
-.feed-von { font-size: 12px; color: var(--text-3); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
-.feed-text { font-size: 13.5px; line-height: 1.3; }
-@keyframes feed-neu { from { box-shadow: 0 0 0 4px rgba(233,170,59,.6); } to { box-shadow: 0 0 0 0 rgba(233,170,59,0); } }
+.feed-meldung.frisch.dringend { background: rgba(58, 27, 24, .96); }
+.feed-von { font-size: 12px; color: var(--text-2); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+.feed-titel { color: var(--argus); font-weight: 700; letter-spacing: .02em; }
+.feed-meldung.dringend .feed-titel { color: #ff8f86; }
+.feed-text { font-size: 14px; line-height: 1.3; }
+.feed-leer { color: var(--text-3); font-size: 13px; padding: 6px 2px; }
+.feed-weitere { align-self: flex-start; font-size: 12.5px; color: var(--text); background: rgba(20, 26, 31, .9); border: 1px solid var(--linie-2); border-radius: 11px; padding: 1px 9px; }
+@keyframes feed-neu { from { box-shadow: 0 0 0 4px rgba(233,170,59,.6); } to { box-shadow: 0 4px 14px rgba(0, 0, 0, .45); } }
+/* Beispiel für die Einweisung (J4): nur während der Übersicht und nur, wenn gerade keine echte Lagemeldung steht */
+.feed-beispiel { display: none; cursor: default; border-style: dashed; }
+body[data-tour] .lage-einblendung:not(:has(.feed-meldung.echt)) .feed-beispiel { display: block; }
 
-/* rechte Spalte (seit 2.7, I5.1): feste Aufteilung – Zeile „Wirkung unterwegs“ 30 px, Eingang 186 px mit eigener Rollleiste, darunter die
-   geöffnete Meldung mit den Knöpfen unten; nichts verschiebt sich, wenn Wirkungen, Meldungen oder Vermerke dazukommen */
-.zb-rechts { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+/* Legende klein unten links auf der Karte, einklappbar (J1.5) */
+.karte-legende.klein { display: grid; grid-template-columns: auto auto; gap: 2px 12px; padding: 4px 26px 5px 8px; font-size: 12.5px; max-width: calc(100% - 16px); }
+.karte-legende.klein.zu { display: block; padding: 1px 4px; }
+.legende-knopf { position: absolute; right: 2px; top: 1px; border: 0; background: transparent; color: #5b6670; font: 600 12.5px/1.3 var(--schrift); padding: 1px 4px; cursor: pointer; }
+.karte-legende.klein.zu .legende-knopf { position: static; color: #1d252c; }
+/* Hinweis zum gewählten Wirkmittel: unten rechts auf der Karte (oben links stehen die Lagemeldungen, unten links die Legende) */
+.karte-banner.unten { top: auto; bottom: 8px; left: auto; right: 8px; transform: none; max-width: 48%; }
+
+/* rechte Spalte (seit 2.7, I5.1; Liste J): feste Aufteilung – „Wirkung unterwegs“ 30 px, Eingang mit fester Höhe für vier Zeilen und eigener
+   Rollleiste, darunter die geöffnete Meldung mit den Knöpfen ganz unten; nichts verschiebt sich, wenn Wirkungen, Meldungen oder Vermerke
+   dazukommen */
+.zb-rechts { display: flex; flex-direction: column; gap: 5px; min-height: 0; min-width: 0; }
 .unterwegs-leiste { position: relative; flex: 0 0 30px; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 8px; background: var(--flaeche);
   border: 1px solid var(--linie); border-radius: var(--radius); white-space: nowrap; z-index: 5; }
 .unterwegs-titel { font-size: 13px; color: var(--text-2); font-weight: 600; }
@@ -1028,20 +1066,23 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .unterwegs-alle { position: absolute; top: calc(100% + 4px); left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: var(--flaeche-3);
   border: 1px solid var(--linie-2); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); cursor: pointer; }
 .unterwegs-alle .unterwegs-chip { max-width: none; }
-.eingang { display: flex; flex-direction: column; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); min-height: 0; flex: 0 0 186px; height: 186px; overflow: hidden; white-space: normal; font-weight: 400; }
-.eingang > header { display: flex; align-items: center; gap: 9px; padding: 4px 10px; border-bottom: 1px solid var(--linie); min-height: 34px; }
-.eingang > header h2 { font-size: 15px; }
-.eingang .eingang-zahl { font-size: 18px; min-width: 32px; padding: 2px 7px; }
-/* mehr als vier Meldungen: die Liste rollt in ihrem Feld (schmaler Balken, damit man sieht, dass da noch etwas kommt) */
+/* Eingang: Kopf 28 px, vier Zeilen à 28 px (Abstand 3, Rand 4) – fest 155 px; mehr Meldungen rollen in ihrem Feld (schmaler Balken) */
+/* nur der Eingang der Zielbearbeitung (section.eingang) – die Übersicht der Spielleitung hat eine Zelle span.eingang (bis 2.7 traf diese
+   Regel auch sie und machte jede Teamzeile 190 px hoch) */
+section.eingang { display: flex; flex-direction: column; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); min-height: 0;
+  flex: 0 0 155px; height: 155px; overflow: hidden; white-space: normal; font-weight: 400; }
+section.eingang > header { display: flex; align-items: center; gap: 9px; padding: 0 10px; border-bottom: 1px solid var(--linie); height: 28px; flex: 0 0 28px; }
+section.eingang > header h2 { font-size: 15px; }
+section.eingang .eingang-zahl { font-size: 17px; min-width: 30px; padding: 1px 7px; }
 .eingang-liste { overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 3px; min-height: 0; flex: 1 1 auto; scrollbar-width: thin; scrollbar-color: var(--linie-2) transparent; }
-.eingang-zeile { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto 104px; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 5px;
-  background: var(--flaeche-2); border: 1px solid transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; min-height: 30px; }
+.eingang-zeile { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto 64px; gap: 8px; align-items: center; padding: 0 8px; border-radius: 5px;
+  background: var(--flaeche-2); border: 1px solid transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; height: 28px; flex: 0 0 28px; }
 .eingang-zeile:hover { border-color: var(--linie-2); }
 .eingang-zeile.gewaehlt { border-color: var(--zb); box-shadow: inset 3px 0 0 var(--zb); background: var(--flaeche-3); }
 .eingang-zeile.zurueck { opacity: .72; }
 .eingang-zeile.lange .ez-zeit { color: var(--argus); font-weight: 700; }
 /* Vermerke (seit 2.7, I1.2/I3.2): warum ein Ziel aus dem Eingang fiel – nicht anklickbar */
-.eingang-zeile.vermerk { cursor: default; background: transparent; border: 1px dashed var(--linie-2); grid-template-columns: 74px minmax(0, 1fr) auto; color: var(--text-2); min-height: 26px; }
+.eingang-zeile.vermerk { cursor: default; background: transparent; border: 1px dashed var(--linie-2); grid-template-columns: 70px minmax(0, 1fr) auto; color: var(--text-2); }
 .eingang-zeile.vermerk:hover { border-color: var(--linie-2); }
 .eingang-zeile.vermerk .ez-argus { font-style: italic; }
 .eingang-zeile.vermerk.verbuendet { border-color: #3d6da8; }
@@ -1051,41 +1092,69 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .ez-argus { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); font-size: 14px; }
 .ez-zeit { text-align: right; font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ez-zeit.rot, .zahl.rot { color: #ff8f86; }
-.eingang-zeile .empfehlung { font-size: 11.5px; padding: 1px 6px; }
+.eingang-zeile .empfehlung { font-size: 12px; padding: 1px 4px; }
 
-.zb-meldung { display: flex; flex-direction: column; gap: 6px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); padding: 7px 9px; min-height: 0; flex: 1 1 auto; overflow: hidden; }
-.zb-warten { color: var(--text-3); padding: 16px 6px; line-height: 1.4; }
-.zb-kopf { display: flex; align-items: baseline; gap: 10px; }
+/* Geöffnete Meldung: Kopf, Drohnenbild (nimmt die übrige Höhe; 16 : 10 ganz, mittig im dunklen Rahmen über die volle Breite),
+   ARGUS-Zeile, drei Kacheln, eine Zeile Warnung, Knöpfe ganz unten. Ohne Meldung dieselben Felder – nichts springt. */
+.zb-meldung { display: flex; flex-direction: column; gap: 5px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius);
+  padding: 5px 8px 8px; min-height: 0; flex: 1 1 auto; overflow: hidden; }
+.zb-meldung > * { flex: 0 0 auto; min-width: 0; }
+.zb-kopf { display: flex; align-items: center; gap: 10px; height: 23px; white-space: nowrap; }
 .zb-kopf b { font-size: 17px; }
-/* Drohnenbild: 520 × 325, wird kleiner (bis 208 Bildpunkte hoch), wenn viele Meldungen im Eingang stehen – die Knöpfe bleiben sichtbar */
-.zb-drohne { flex: 1 1 325px; min-height: 208px; max-height: 325px; aspect-ratio: 1.6; align-self: center; border-radius: 4px; overflow: hidden; background: #0b0e10; }
-.zb-meldung > :not(.zb-drohne) { flex: 0 0 auto; }
-.zb-drohne .drohne-fenster { height: 100%; }
-.zb-drohne .drohne { height: 100%; aspect-ratio: auto; }
-.zb-argus { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 15px; }
+.zb-drohne { flex: 1 1 0; min-height: 0; container-type: size; display: grid; place-items: center; background: #0b0e10; border-radius: 4px; overflow: hidden; }
+.zb-drohne-bild { width: min(100cqw, 160cqh); height: min(100cqh, 62.5cqw); }
+.zb-drohne-bild .drohne-fenster { height: 100%; }
+.zb-drohne-bild .drohne { height: 100%; aspect-ratio: auto; }
+.zb-drohne-bild { container-type: inline-size; }
+@container (max-width: 380px) { .drohne-kopf .hud-lang { display: none; } }
+.zb-warten { color: var(--text-3); padding: 12px 18px; line-height: 1.4; text-align: center; max-width: 420px; }
+.zb-argus { display: flex; align-items: center; gap: 9px; height: 22px; font-size: 15px; white-space: nowrap; overflow: hidden; }
 .zb-argus .feldname { color: var(--argus); font-weight: 700; font-size: 13px; }
-.wm-liste { display: flex; flex-direction: column; gap: 3px; }
-.wm-wahl { display: grid; grid-template-columns: 18px 104px minmax(0, 1fr); gap: 8px; align-items: center; padding: 3px 8px; border-radius: 5px; border: 1px solid var(--linie); background: var(--flaeche-2); cursor: pointer; min-height: 34px; }
-.wm-wahl:hover { border-color: var(--linie-2); }
-.wm-wahl.gewaehlt { border-color: #d8443a; box-shadow: inset 3px 0 0 #d8443a; background: var(--flaeche-3); }
-.wm-wahl.aus { opacity: .5; cursor: default; }
-.wm-wahl input { accent-color: #d8443a; margin: 0; }
-.wm-bestand { font-size: 15px; font-weight: 600; white-space: nowrap; }
-.wm-bestand b { font: 700 19px/1 var(--mono); margin-left: 4px; }
-.wm-bestand.knapp b { color: var(--argus); }
-.wm-bestand.leer b { color: #ff8f86; }
-.wm-info { display: flex; flex-direction: column; min-width: 0; font-size: 13.5px; line-height: 1.22; }
-.wm-info .wm-status { margin: 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* seit 2.7 (I5): höchstens zwei Zeilen je Wirkmittel (Einschlag, eine Zeile Warnungen) – die Meldung bleibt gleich hoch */
-.wm-wahl { max-height: 42px; overflow: hidden; }
-.zb-knoepfe { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 7px; margin-top: auto; }
-.zb-knoepfe .knopf.gross { padding: 9px 10px; font-size: 16px; }
-.zb-knoepfe .knopf .unterzeile { font-size: 12px; }
+
+/* Wirkmittel als drei Kacheln nebeneinander (J1.3): Name, Bestand groß, Countdown, ✓/⚠ */
+.wm-kacheln { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.wm-kachel { display: flex; flex-direction: column; gap: 3px; padding: 4px 9px 5px; border-radius: 6px; border: 1px solid var(--linie-2); background: var(--flaeche-2);
+  cursor: pointer; min-width: 0; height: 54px; }
+.wm-kachel:hover { border-color: #5c6b7a; }
+.wm-kachel.gewaehlt { border-color: #d8443a; box-shadow: inset 0 0 0 1px #d8443a, inset 0 3px 0 #d8443a; background: var(--flaeche-3); }
+.wm-kachel.aus { opacity: .5; cursor: default; }
+.wm-kachel.ohne { cursor: default; }
+.wm-kachel input { accent-color: #d8443a; margin: 0; flex: 0 0 auto; }
+.wk-oben { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.wk-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wk-bestand { margin-left: auto; font: 700 22px/1 var(--mono); }
+.wk-bestand.ohne { font-weight: 500; color: var(--text-2); }
+.wk-bestand.knapp { color: var(--argus); }
+.wk-bestand.leer { color: #ff8f86; }
+.wk-unten { display: flex; align-items: baseline; gap: 6px; font-size: 13.5px; white-space: nowrap; min-width: 0; }
+.wk-zeit { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.wk-zeit b { font: 600 14px/1 var(--mono); }
+.wk-status { margin-left: auto; font-weight: 700; font-size: 15px; line-height: 1; }
+.wk-status.ok { color: #8fdcab; }
+.wk-status.verstoss { color: #ff8f86; }
+/* eine Zeile Warnung zum gewählten bzw. gezeigten Wirkmittel; Klick: ganzer Text als Kasten darüber (verschiebt nichts) */
+.wm-warnzeile { position: relative; height: 19px; font-size: 13px; line-height: 19px; white-space: nowrap; overflow: visible; }
+.wm-warnzeile > .wm-warntext, .wm-warnzeile:not(:has(.wm-warntext)) { display: block; overflow: hidden; text-overflow: ellipsis; }
+.wm-warnzeile.ok { color: #8fdcab; }
+.wm-warnzeile.verstoss { color: #ffb4ad; cursor: pointer; }
+.wm-warn-voll { position: absolute; left: 0; right: 0; bottom: calc(100% + 4px); z-index: 20; white-space: normal; line-height: 1.35; background: #0e1317; color: #ffd2cd;
+  border: 1px solid #7a332e; border-radius: 6px; padding: 7px 10px; box-shadow: 0 8px 22px #000a; display: flex; flex-direction: column; gap: 3px; }
+.zb-knoepfe { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 7px; margin-top: auto; }
+.zb-knoepfe .knopf.gross { padding: 7px 8px; font-size: 16px; white-space: nowrap; overflow: hidden; }
+.zb-knoepfe .knopf .unterzeile { font-size: 12px; overflow: hidden; }
+/* schmale rechte Spalte (1530 × 800: 455 px): Knöpfe etwas kleiner, damit „ZURÜCKSTELLEN“ und „BEKÄMPFEN mit LM ×3“ ganz passen */
+.zb-rechts { container: zbrechts / inline-size; }
+@container zbrechts (max-width: 520px) {
+  .zb-knoepfe { grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+  .zb-knoepfe .knopf.gross { font-size: 15px; letter-spacing: 0; padding: 7px 5px; }
+  .eingang-zeile { grid-template-columns: 62px minmax(0, 1fr) auto 58px; gap: 6px; }
+  .wm-kachel { padding: 4px 7px 5px; }
+}
 
 /* „i“: Kleingedrucktes des Herstellers (E6.4) */
 .i-knopf-anker { position: relative; }
 .i-knopf { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text-2); font: italic 700 13px/1 Georgia, serif; cursor: pointer; padding: 0; }
-.i-text { position: absolute; right: 0; top: 28px; z-index: 20; width: 360px; background: #0e1317; border: 1px solid var(--linie-2); border-radius: 6px; padding: 8px 10px; font-size: 13.5px; color: var(--text-2); box-shadow: 0 6px 20px #0009; }
+.i-text { position: absolute; right: 0; top: 28px; z-index: 20; width: 360px; white-space: normal; background: #0e1317; border: 1px solid var(--linie-2); border-radius: 6px; padding: 8px 10px; font-size: 13.5px; color: var(--text-2); box-shadow: 0 6px 20px #0009; }
 
 /* Kopfzeile: vier Panzer (H5.7) und Bestand (H5.6) */
 .pz-leiste { display: flex; align-items: center; gap: 4px; }
@@ -1105,7 +1174,17 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .bestand b { font: 700 20px/1.1 var(--mono); }
 .bestand.knapp { background: #5b4518; color: #ffe2a6; }
 .bestand.leer { background: #5a2522; color: #ffd9d6; }
-.rahmen[data-rolle="zb"] .kopf { grid-template-columns: auto auto minmax(0, 1fr); gap: 14px; }
+/* seit Liste J: die Gruppe rechts behält ihre Breite, die Uhr-Info kürzt sich (… ) statt darunter zu laufen (1366 × 650) */
+.rahmen[data-rolle="zb"] .kopf { grid-template-columns: auto minmax(0, max-content) minmax(max-content, 1fr); gap: 14px; }
+.rahmen[data-rolle="zb"] .kopf .uhr { min-width: 0; }
+.rahmen[data-rolle="zb"] .kopf .uhr-info { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pz-verw { white-space: nowrap; }
+/* schmale Fenster (1366 × 650): Marke „ARGUS“ im Band und die Wörter an „⇩ Protokoll“ / „▶ Start“ fallen weg, die Zeichen bleiben */
+.rahmen[data-rolle="zb"] .kopf { container: kopf / inline-size; }
+@container kopf (max-width: 1460px) {
+  .rollenband .marke { display: none; }
+  .kopf-rechts .lang { display: none; }
+}
 .rahmen[data-rolle="zb"] .kopf .uhr-info { font-size: 12.5px; white-space: nowrap; }
 .rahmen[data-rolle="zb"] .kopf .uhr-zeit { font-size: 24px; }
 .rahmen[data-rolle="zb"] .kopf-rechts .knopf.klein { white-space: nowrap; }
@@ -1163,7 +1242,7 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .klassen-bild { position: relative; border-radius: 6px; overflow: hidden; background-color: #222; background-repeat: no-repeat; filter: brightness(1.28) contrast(1.12) saturate(1.08); cursor: none; box-shadow: 0 2px 8px #0004; }
 .klassen-bild.leer { display: grid; place-items: center; color: #7a848c; font-size: 13px; filter: none; cursor: default; }
 .klassen-rahmen { position: absolute; border: 2px solid var(--argus); border-radius: 2px; pointer-events: none; }
-.klassen-rahmen .argus-marke { font-size: 11px; padding: 0 4px; }
+.klassen-rahmen .argus-marke { font-size: 12px; padding: 0 4px; }
 .klassen-lupe { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 10px #0008; background-repeat: no-repeat; pointer-events: none; }
 .wm-animation { border-radius: 6px; box-shadow: 0 2px 8px #0003; }
 .wm-anim-text { font: 600 11px var(--schrift); fill: #1c2227; }
@@ -1178,7 +1257,10 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .druck-team .phasen-liste { gap: 4px; }
 .skizze { border: 2px solid #3b4651; border-radius: 6px; display: flex; flex-direction: column; height: 260px; font-size: 12.5px; }
 .skizze-kopf { display: flex; gap: 6px; padding: 5px; border-bottom: 2px solid #3b4651; justify-content: flex-end; }
-.skizze-rumpf { flex: 1; display: grid; grid-template-columns: 0.7fr 1.6fr 1.4fr; gap: 6px; padding: 6px; }
+.skizze-rumpf { flex: 1; display: grid; grid-template-columns: 1.43fr 1fr; gap: 6px; padding: 6px; }
+.skizze-karte { position: relative; display: flex; }
+.skizze-ecke { position: absolute; left: 6px; top: 30px; width: 56%; }
+.skizze-ecke .skizze-feld { background: #fff; box-shadow: 0 0 0 1px #3b4651; }
 .skizze-rechts { display: flex; flex-direction: column; gap: 6px; }
 .skizze-feld { background: #ebe6da; border-radius: 4px; padding: 5px 6px; display: flex; gap: 6px; align-items: flex-start; }
 .skizze-feld .schritt { flex: 0 0 auto; width: 20px; height: 20px; font-size: 12px; --rollenfarbe: var(--zb); }
