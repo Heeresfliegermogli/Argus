@@ -18,9 +18,9 @@
 // Entscheidungen zum Zeitpunkt T schon. Was davon abhängt, dass bis T keine Freigabe kam (E-01, I-08b),
 // wird erst fällig, wenn die Uhr T überschritten hat – eine Freigabe genau um T zählt also noch.
 import type { HintergrundEreignis, Inhalte, Meldung } from "../inhalte/typen";
-import { durchbruchGruppen, durchbruchStand, durchgebrochen } from "../kern/durchbruch";
+import { durchbruchGruppen, durchbruchStand, durchbruchUeber, durchgebrochen } from "../kern/durchbruch";
 import { gtBei, position, weg } from "../kern/geometrie";
-import { alleWeg, ausserGefechtZeiten, einschlaegeVon, einschlagVon, freigaben, fruehesteFreigabe, offeneEinschlaege, wegAb, weltFuer } from "../kern/lage";
+import { alleWeg, ausserGefechtZeiten, einschlaegeVon, einschlagVon, ereignisZiel, freigaben, fruehesteFreigabe, offeneEinschlaege, wegAb, weltFuer } from "../kern/lage";
 import { elokaAktiv } from "../kern/eloka";
 import type { Einschlag } from "../kern/regeln";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
@@ -91,6 +91,13 @@ function wirkungEntwurf(inh: Inhalte, z: Spielzustand, id: string, dauer: number
   }, { t_geplant: Math.min(e.t, dauer) });
 }
 
+/** Zeitpunkt der Auflösung (seit 2.7, I3.2): nach_s nach dem Erscheinen der Meldung; null, solange sie nicht erschienen ist. */
+export function aufloesungZeit(z: Spielzustand, a: { meldung: string; nach_s: number }): number | null {
+  const st = z.meldungen[a.meldung];
+  if (!st || (st.stufe === "entfallen" && !st.entfallen)) return null;
+  return st.erschienen.t_s + a.nach_s;
+}
+
 export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
   const liste: Entwurf[] = [];
   if (z.seq === 0) return liste;
@@ -138,16 +145,37 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
       }
       continue;
     }
+    // seit 2.7 (I3.1): ein Schuss nach dem anderen (der Host schreibt nur das früheste Fällige und fragt neu) – ohne festes Ziel trifft
+    // er das erste stehende Fahrzeug aus ziele_reihenfolge im Bereich, nach den Zerstörungen bis dahin
+    let schussOffen = false;
     e.wirkungen.forEach((w, nr) => {
-      if (stand?.wirkungen[nr] || !(t > w.t_s)) return;
-      const ziel = inh.ziele[w.ziel];
+      if (schussOffen || stand?.wirkungen[nr] || !(t > w.t_s)) return;
+      schussOffen = true;
       let grund: string | undefined;
+      let zielId: string | undefined = w.ziel;
       if (frueh && frueh.t <= w.t_s) grund = `Freigabe ${frueh.meldung} um ${uhrzeit(start, frueh.t)} – Angriff abgebrochen`;
       else if ((z.zerstoert[w.von] ?? Infinity) <= w.t_s) grund = `${w.von} ist ausgefallen`;
-      else if (!ziel || weg(ziel, w.t_s, z.zerstoert)) grund = `${w.ziel} ${z.zerstoert[w.ziel] !== undefined ? "schon zerstört" : "nicht im Raum"}`;
-      else if (ziel && !gtBei(ziel, w.t_s).legitim) grund = `${w.ziel} ist kein legitimes Ziel`;
-      liste.push(entwurf("ereignis", { ereignis: e.id, nr, von: w.von, ziel: w.ziel, wirkt: !grund, grund }, { t_geplant: w.t_s }));
+      else if (w.ziel) {
+        const ziel = inh.ziele[w.ziel];
+        if (!ziel || weg(ziel, w.t_s, z.zerstoert)) grund = `${w.ziel} ${z.zerstoert[w.ziel] !== undefined ? "schon zerstört" : "nicht im Raum"}`;
+        else if (!gtBei(ziel, w.t_s).legitim) grund = `${w.ziel} ist kein legitimes Ziel`;
+      } else {
+        zielId = ereignisZiel(inh, e, z.zerstoert, w.t_s) ?? undefined;
+        if (!zielId) grund = `kein Feind ${e.bereich?.name ? `an der ${e.bereich.name}` : "im Bereich"}`;
+      }
+      liste.push(entwurf("ereignis", { ereignis: e.id, nr, von: w.von, ...(zielId ? { ziel: zielId } : {}), wirkt: !grund, grund }, { t_geplant: w.t_s }));
     });
+  }
+
+  // 3a Auflösung nach Zeit (seit 2.7, I3.2): ohne Freigabe auf die Ziele bis nach_s nach der Meldung sind sie erkannt (verbündet) –
+  //    erst nach diesem Zeitpunkt fällig, eine Freigabe genau dann zählt noch
+  for (const a of sz.aufloesungen ?? []) {
+    if (z.aufloesungen?.[a.id]) continue;
+    const ta = aufloesungZeit(z, a);
+    if (ta === null || !(t > ta)) continue;
+    const frueh = fruehesteFreigabe(frei, a.ziele);
+    if (frueh && frueh.t <= ta) continue;
+    liste.push(entwurf("aufloesung", { aufloesung: a.id, meldung: a.meldung, als: a.als }, { t_geplant: ta }));
   }
 
   // 3b Durchbruch (seit 2.1): nach dem Angriffszeitpunkt entschieden, damit Zerstörungen genau um t_s noch zählen
@@ -170,8 +198,11 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     const ab = wegAb(inh, z, m.ziele);
     if (ab > t) continue;
     const zerstoert = m.ziele.filter((zid) => z.zerstoert[zid] !== undefined).length;
+    // seit 2.7 (I1.2): kein Ziel verschwindet ohne Erklärung – durchgebrochen (über Brücke oder Furt nach Westen) oder abgezogen
+    const ueber = durchbruchUeber(inh, z, m.ziele.filter((zid) => z.zerstoert[zid] === undefined));
     const grund = zerstoert === m.ziele.length ? (m.ziele.length > 1 ? "alle Fahrzeuge zerstört" : "Fahrzeug zerstört")
-      : zerstoert ? "Fahrzeuge zerstört oder abgezogen" : "Ziel hat den Raum verlassen";
+      : ueber ? `über ${ueber} durchgebrochen${zerstoert ? " (Rest zerstört)" : ""}`
+        : zerstoert ? "Fahrzeuge zerstört oder abgezogen" : "aus dem Raum abgezogen";
     liste.push(entwurf("meldung_entfaellt", { meldung: id, stufe: "offen", grund }, { t_geplant: ab }));
   }
 
@@ -268,6 +299,10 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
     e.wirkungen.forEach((w, nr) => { if (!z.ereignisse[e.id]?.wirkungen[nr]) k.push(w.t_s + NACH); });
   }
   for (const g of durchbruchGruppen(inh, z.verstaerkungen)) if (!z.durchbrueche[g.id] && g.t_s < sz.spieluhr.dauer_s) k.push(g.t_s + NACH);
+  for (const a of sz.aufloesungen ?? []) {
+    const ta = aufloesungZeit(z, a);
+    if (ta !== null && !z.aufloesungen?.[a.id]) k.push(ta + NACH);
+  }
   for (const i of sz.injects) {
     const b = i.bedingung;
     if (z.injects[i.id] || !b) continue;
@@ -374,7 +409,7 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
     const text = bedingungText(inh, b);
     const stand = z.ereignisse[e.id];
     const erledigt = Object.values(stand?.wirkungen ?? {});
-    const getroffen = e.wirkungen.filter((_, nr) => stand?.wirkungen[nr]?.wirkt).map((w) => w.ziel);
+    const getroffen = e.wirkungen.map((w, nr) => (stand?.wirkungen[nr]?.wirkt ? stand.wirkungen[nr].ziel ?? w.ziel : undefined)).filter((x) => !!x);
     const erste = fruehesteFreigabe(frei, b.ziele);
     if (stand?.entfaellt || (b.typ === "keine_freigabe_bis" && erste && erste.t <= b.t_s)) {
       aus.push({ id: e.id, art: "ereignis", status: "entfaellt", text: `${text} – entfällt (Freigabe ${erste?.meldung ?? "?"} ${erste ? uhr(erste.t) : ""})` });
@@ -384,6 +419,15 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
     } else if (b.typ === "keine_freigabe_bis") {
       aus.push({ id: e.id, art: "ereignis", status: t >= b.t_s ? "erfuellt" : "wartet", text, t: b.t_s });
     }
+  }
+  // Auflösungen (seit 2.7, I3.2): wartet bis nach_s nach der Meldung, entfällt nach einer Freigabe, sonst erkannt
+  for (const a of inh.szenario.aufloesungen ?? []) {
+    const ta = aufloesungZeit(z, a);
+    const erste = fruehesteFreigabe(frei, a.ziele);
+    const text = `${a.ziele.join(", ")} als ${a.name} erkannt, wenn bis ${a.nach_s} s nach ${a.meldung} keine Freigabe`;
+    if (z.aufloesungen?.[a.id]) aus.push({ id: a.id, art: "ereignis", status: "ausgeloest", text: `${text} – erkannt ${uhr(z.aufloesungen[a.id].t_s)}` });
+    else if (erste && (ta === null || erste.t <= ta)) aus.push({ id: a.id, art: "ereignis", status: "entfaellt", text: `${text} – entfällt (Freigabe ${erste.meldung} ${uhr(erste.t)})` });
+    else aus.push({ id: a.id, art: "ereignis", status: ta !== null && t >= ta ? "erfuellt" : "wartet", text, ...(ta !== null ? { t: ta } : {}) });
   }
   // Durchbruch-Gruppen: wartet (bis t_s), aufgehalten (Grund) oder bricht durch
   for (const g of durchbruchGruppen(inh, z.verstaerkungen)) {

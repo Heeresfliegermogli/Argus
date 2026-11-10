@@ -122,7 +122,7 @@ def main():
         zb.get_by_test_id("zb-bekaempfen").click()
         # sofort im eigenen Stand: die Aktion geht nicht über das Netz (auch mit --verzug)
         warte(lambda: int(attr(zb, "data-seq")) > vorher, 5, "Entscheidung im eigenen Stand")
-        warte(lambda: zb.locator(f".eingang-zeile.unterwegs[data-unterwegs={erste}]").count() == 1, 5, "Countdown im Eingang")
+        warte(lambda: zb.locator(f".unterwegs-chip[data-unterwegs={erste}]").count() == 1, 5, "Countdown unter „Wirkung unterwegs“")
 
         # zweites Fenster: kann nicht entscheiden
         gesendet = zu.evaluate("() => window.argus.senden('entscheid', { meldung: 'M02', entscheid: 'ablehnen' })")

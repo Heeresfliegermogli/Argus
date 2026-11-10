@@ -92,7 +92,7 @@ describe("Lagebild des Teams", () => {
     ]), inh);
     const lb = lagebildZielmeldungen(inh, z);
     expect(lb.objekte).toHaveLength(1);
-    expect(lb.objekte[0].text).toBe("Ziel 24/31"); // Zielnummern statt M18/M23 (B7)
+    expect(lb.objekte[0].text).toBe("Ziel 26/33"); // Zielnummern statt M18/M23 (B7); seit 2.7 kommen M34 und M37 vor M18
     expect(lb.objekte[0].zustand).toBe("bekaempft");
     expect(lb.objekte[0].sidc[3]).toBe("X");
     expect(lb.wirkungen.map((w) => w.id)).toEqual(["W-M23"]);

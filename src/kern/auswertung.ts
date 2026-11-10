@@ -9,7 +9,8 @@
 //  • Fall: Schlüsselfall (S1–S8, Reihenfolge der Auflösung aus den Daten) oder Nebenfall (N1–N4). Zu einem Fall
 //    gehören seine Meldung und Folgemeldungen mit demselben `fall` (S4: M18 und M23, S5: M32 und M36, S8: M33 und M34).
 //    Seit 2.4 (E5) sind S5–S8 `zuschaltbar`: Sie stehen im Teamvergleich, das Replay zeigt sie nur, wenn die
-//    Spielleitung sie zuschaltet (replayPlan, Budget 12 min bleibt).
+//    Spielleitung sie zuschaltet. Seit 2.7 (G1) hat das Replay 4 min (Standard S3 und S2, die übrigen zuschaltbar, die Zeit je Fall
+//    sinkt) in einer Auswertung von 15 min: Teamvergleich, Replay, Bilanz, Impuls, Diskussion, Abschluss (kapitelPlan).
 //  • Ausgang eines Falls je Team:
 //      falsch          – eine Bekämpfung traf Verbündete, Geschütztes, Zivilpersonen, die Attrappe oder Wehrlose,
 //                        oder schlug unter Verstoß gegen R2/R3 ein (Lage beim Einschlag)
@@ -23,6 +24,7 @@
 //    Szenario das verlangt bzw. die Wirkung ohne Fehltreffer und ohne Regelverstoß blieb. PRÜFEN/UNKLAR ist keine Empfehlung, der
 //    man widersprechen könnte.
 import { mitVerlusten, panzer, type Stufe, verlustStand, verlustVerlauf } from "./verluste";
+import { type Bilanz, bilanz, FEHL_IDS } from "./bilanz";
 import type { Inhalte, Meldung, Nebenfall, Schluesselfall } from "../inhalte/typen";
 import type { Entscheid, Ereignis } from "./ereignisse";
 import { gtBei } from "./geometrie";
@@ -60,6 +62,9 @@ export const AUSGANG_TEXT: Record<FallAusgang, string> = {
   nicht_erreicht: "nicht erreicht",
 };
 
+/** Auflösung nach Zeit (seit 2.7, I3.2): „als verbündet erkannt“. */
+export const ALS_TEXT: Record<string, string> = { verbuendet: "verbündet" };
+
 export interface FallDef {
   id: string;
   art: "schluessel" | "neben";
@@ -95,25 +100,19 @@ export function regelWarnung(w: string): boolean {
   return !/^(Bestand |nur \d+ von \d+ )/.test(w);
 }
 
-// ---------------------------------------------------------------- Replay-Plan (seit 2.4, E5)
+// ---------------------------------------------------------------- Replay-Plan (seit 2.4, E5) und Kapitelplan (seit 2.7, G1)
 
-/** Zeitbudget der Auflösung in s (12 min), wenn das Szenario keines nennt. */
-export const REPLAY_BUDGET_S = 720;
-/** Feste Kapitel vor den Fällen: Teamvergleich 45 s, Kennzahlen 45 s, Konfidenz 30 s. */
-export const REPLAY_FEST = { teams: 45, kennzahlen: 45, konfidenz: 30 } as const;
-/** „Preis des Abwartens“ nach den Fällen (seit 2.3, nur mit Verlustmodell). */
-export const REPLAY_PREIS_S = 60;
+/** Zeitbudget des Replays in s, wenn das Szenario keines nennt (seit 2.7: 4 min). */
+export const REPLAY_BUDGET_S = 240;
 /** Unter so vielen s je Fall wird es knapp (Hinweis an die Spielleitung, kein Verbot). */
-export const REPLAY_KNAPP_S = 90;
+export const REPLAY_KNAPP_S = 60;
 
 export interface ReplayPlan {
   /** Schlüsselfälle in der gewählten Reihenfolge */
   faelle: FallDef[];
   /** Zeit je Fall in s (auf 5 s abgerundet) */
   jeFall: number;
-  /** Preis des Abwartens dabei? (dann 60 s) */
-  preis: number;
-  /** Summe aller Kapitel in s, höchstens das Budget */
+  /** Summe der Fälle in s, höchstens das Budget */
   summe: number;
   budget: number;
   /** Fälle, die zugeschaltet werden können und noch nicht gewählt sind */
@@ -129,30 +128,86 @@ export function replayStandard(inh: Inhalte): string[] {
 }
 
 /**
- * Welche Schlüsselfälle das Replay zeigt, in welcher Reihenfolge und wie lange: Die Spielleitung wählt Fälle und
- * Reihenfolge (Standard S3, S2, S1, S4; S5–S8 zuschaltbar), das Budget von 12 min bleibt – die festen Kapitel
- * (2 min, mit Verlustmodell 1 min Preis des Abwartens) gehen ab, der Rest teilt sich gleich auf die gewählten Fälle.
+ * Welche Schlüsselfälle das Replay zeigt, in welcher Reihenfolge und wie lange: Die Spielleitung wählt Fälle und Reihenfolge
+ * (seit 2.7 Standard S3, S2; S1, S4–S8 zuschaltbar); das Budget des Replays (4 min) teilt sich gleich auf die gewählten Fälle.
  * Unbekannte, doppelte und Nebenfälle in `auswahl` fallen weg; ohne Auswahl gilt der Standard.
  */
-export function replayPlan(inh: Inhalte, auswahl?: string[] | null, mitPreis = false): ReplayPlan {
+export function replayPlan(inh: Inhalte, auswahl?: string[] | null): ReplayPlan {
   const sz = (inh.basis ?? inh).szenario;
   const alle = faelle(inh).filter((f) => f.art === "schluessel");
   const nachId = new Map(alle.map((f) => [f.id, f]));
   const ids = [...new Set(auswahl ?? replayStandard(inh))].filter((id) => nachId.has(id));
   const gewaehlt = ids.map((id) => nachId.get(id)!);
   const budget = sz.auswertung.replay?.budget_s ?? REPLAY_BUDGET_S;
-  const fest = REPLAY_FEST.teams + REPLAY_FEST.kennzahlen + REPLAY_FEST.konfidenz;
-  const preis = mitPreis ? REPLAY_PREIS_S : 0;
-  const jeFall = gewaehlt.length ? Math.floor((budget - fest - preis) / gewaehlt.length / 5) * 5 : 0;
+  const jeFall = gewaehlt.length ? Math.floor(budget / gewaehlt.length / 5) * 5 : 0;
+  // zuschaltbar in der Reihenfolge der Daten (replay.zuschaltbar), dann die übrigen Schlüsselfälle
+  const reihe = [...(sz.auswertung.replay?.zuschaltbar ?? []), ...alle.map((f) => f.id)];
+  const zu = [...new Set(reihe)].filter((id) => nachId.has(id) && !ids.includes(id)).map((id) => nachId.get(id)!);
   return {
-    faelle: gewaehlt,
-    jeFall,
-    preis,
-    summe: fest + preis + jeFall * gewaehlt.length,
-    budget,
-    zuschaltbar: alle.filter((f) => !ids.includes(f.id)),
+    faelle: gewaehlt, jeFall, summe: jeFall * gewaehlt.length, budget, zuschaltbar: zu,
     knapp: gewaehlt.length > 0 && jeFall < REPLAY_KNAPP_S,
   };
+}
+
+/** Kapitel der Auswertung (seit 2.7, G1): Standard aus den Daten, zuschaltbare nach Wahl der Spielleitung; das Replay je Fall. */
+export interface KapitelDef {
+  id: string;
+  titel: string;
+  /** kurz für die Kapitelleiste */
+  kurz: string;
+  /** Soll in s */
+  sek: number;
+  fall?: FallDef;
+  zuschaltbar?: boolean;
+  /** Kapitel, nach dem ein zuschaltbares steht */
+  nach?: string;
+}
+
+export interface KapitelWahl {
+  /** zugeschaltete Kapitel (kennzahlen, konfidenz, preis) */
+  zusatz?: string[];
+  /** Fälle des Replays (null: Standard) */
+  faelle?: string[] | null;
+}
+
+/** Standard, wenn das Szenario keinen Kapitelplan hat (vor 2.7): Teamvergleich, Kennzahlen, Konfidenz, Replay, Preis, Abschluss. */
+const KAPITEL_ALT = [
+  { id: "teams", titel: "Teamvergleich", sek: 45 }, { id: "kennzahlen", titel: "Kennzahlen je Team", sek: 45 },
+  { id: "konfidenz", titel: "Was die Konfidenz sagt", sek: 30 }, { id: "replay", titel: "Replay", sek: 540 },
+  { id: "abschluss", titel: "Schlussfrage", sek: 60 },
+];
+
+const KURZ: Record<string, string> = {
+  teams: "Teams", kennzahlen: "Kennzahlen", konfidenz: "Konfidenz", preis: "Preis", bilanz: "Bilanz", impuls: "Impuls", diskussion: "Diskussion",
+  abschluss: "Abschluss",
+};
+
+/**
+ * Kapitelplan der Auswertung (seit 2.7, G1.1): Teamvergleich 60 s, Replay 240 s (Standard S3, S2 je 120 s), Bilanz 120 s, Impuls 60 s,
+ * Diskussion 360 s, Abschluss 60 s – 15 min. Kennzahlen, Konfidenz und „Preis des Abwartens“ (nur mit Verlustmodell) sind zuschaltbar
+ * und stehen dann nach ihrem Kapitel (`nach`); zugeschaltete Fälle teilen sich das Replay-Budget.
+ */
+export function kapitelPlan(inh: Inhalte, wahl: KapitelWahl = {}): { kapitel: KapitelDef[]; summe: number; replay: ReplayPlan; zuschaltbar: KapitelDef[] } {
+  const sz = (inh.basis ?? inh).szenario;
+  const au = sz.auswertung;
+  const mitPreis = mitVerlusten(inh);
+  const replay = replayPlan(inh, wahl.faelle ?? null);
+  const zusatzAlle: KapitelDef[] = (au.zuschaltbar ?? []).filter((k) => k.id !== "preis" || mitPreis)
+    .map((k) => ({ id: k.id, titel: k.titel, kurz: KURZ[k.id] ?? k.titel, sek: k.sek, zuschaltbar: true, nach: k.nach }));
+  const an = new Set(wahl.zusatz ?? []);
+  const out: KapitelDef[] = [];
+  const dazu = (nach: string) => {
+    for (const k of zusatzAlle) if (k.nach === nach && an.has(k.id)) out.push(k);
+  };
+  for (const k of au.kapitel ?? KAPITEL_ALT) {
+    if (k.id === "replay") {
+      for (const f of replay.faelle) out.push({ id: f.id, titel: `${f.id} · ${f.titel}`, kurz: f.id, sek: replay.jeFall, fall: f });
+    } else {
+      out.push({ id: k.id, titel: k.titel, kurz: KURZ[k.id] ?? k.titel, sek: k.sek });
+    }
+    dazu(k.id);
+  }
+  return { kapitel: out, summe: out.reduce((x, k) => x + k.sek, 0), replay, zuschaltbar: zusatzAlle };
 }
 
 // ---------------------------------------------------------------- Verlauf je Meldung aus dem Protokoll
@@ -200,6 +255,8 @@ export interface MeldungsVerlauf {
   wirkung?: WirkungInfo;
   /** entfallen (vor einer Entscheidung oder während sie zurückgestellt war); beimErscheinen: schon beim Erscheinen */
   entfallen?: { t: number; grund: string; beimErscheinen?: boolean };
+  /** seit 2.7 (I3.2): nach Zeit aufgelöst (z. B. „als verbündet erkannt“), nicht mehr offen */
+  aufgeloest?: { t: number; als: string };
   /** Stand bei Spielende */
   stufe: string;
   /** zurückgestellt und bei Spielende noch offen */
@@ -227,6 +284,7 @@ export function meldungsVerlaeufe(team: TeamLauf): Map<string, MeldungsVerlauf> 
       id, t: st.erschienen.t_s, entscheidungen: [], stufe: st.stufe,
       zurueckgestellt: st.stufe === "offen" && st.zurueckgestellt,
       ...(st.stufe === "entfallen" && !st.entfallen ? { entfallen: { t: st.erschienen.t_s, grund: "schon beim Erscheinen", beimErscheinen: true } } : {}),
+      ...(st.aufgeloest ? { aufgeloest: { t: st.aufgeloest.t_s, als: st.aufgeloest.als } } : {}),
     });
   }
   for (const e of team.protokoll) {
@@ -341,7 +399,9 @@ export function kette(inh: Inhalte, mv: MeldungsVerlauf | undefined, meldung: st
   } else {
     glied = mv.stufe === "offen"
       ? { zeichen: "…", art: "offen", titel: "bei Spielende noch im Eingang" }
-      : { zeichen: "–", art: "leer", titel: mv.entfallen ? `entfallen – ${mv.entfallen.grund}` : "–" };
+      : mv.aufgeloest
+        ? { zeichen: "◆", art: "leer", t: mv.aufgeloest.t, titel: `ohne Entscheidung –${uz(mv.aufgeloest.t)} als ${ALS_TEXT[mv.aufgeloest.als] ?? mv.aufgeloest.als} erkannt` }
+        : { zeichen: "–", art: "leer", titel: mv.entfallen ? `entfallen – ${mv.entfallen.grund}` : "–" };
   }
   const w = mv.wirkung;
   const einschlag = w ? {
@@ -418,6 +478,12 @@ export function fallErgebnis(inh: Inhalte, verlaeufe: Map<string, MeldungsVerlau
   if (haupt.wirkung) {
     // bekämpft ohne Fehltreffer und ohne Verstoß: echtes Ziel, sauber getroffen
     return erg("richtig", [`BEKÄMPFEN ${uz(haupt.wirkung.t_freigabe)} (${wmKurz(haupt.wirkung)})${nach(k.glied)}`, folgeText() ?? "ohne Fehltreffer"], haupt.wirkung.t_freigabe);
+  }
+  if (haupt.aufgeloest) {
+    // seit 2.7 (I3.2/I3.3): bis zur Auflösung nicht freigegeben – „richtig = nicht freigegeben“, auch ohne Entscheidung des Teams
+    const erkannt = `${uz(haupt.aufgeloest.t)} als ${ALS_TEXT[haupt.aufgeloest.als] ?? haupt.aufgeloest.als} erkannt`;
+    if (stopp) return soll ? erg("verpasst", [stoppText(stopp), "Ziel war echt"], stopp.t) : erg("richtig", [stoppText(stopp), erkannt], stopp.t);
+    return erg(soll ? "verpasst" : "richtig", ["ohne Entscheidung", erkannt], haupt.aufgeloest.t);
   }
   if (haupt.stufe === "erledigt" && stopp) {
     return soll ? erg("verpasst", [stoppText(stopp), "Ziel war echt"], stopp.t) : erg("richtig", [stoppText(stopp), folgeText()], stopp.t);
@@ -680,6 +746,8 @@ export interface TeamAuswertung {
   farbe: string;
   ende: boolean;
   kennzahlen: Kennzahlen;
+  /** seit 2.7 (G2): Bilanz „Das ist es wert“ (null ohne Spielwerte im Szenario) */
+  bilanz: Bilanz | null;
   faelle: Record<string, FallErgebnis>;
   verlaeufe: Map<string, MeldungsVerlauf>;
   notizen: { t: number; fall?: string; text: string }[];
@@ -689,9 +757,11 @@ export interface Auswertung {
   faelle: FallDef[];
   teams: TeamAuswertung[];
   konfidenz: KonfidenzBild;
+  /** seit 2.7 (G2.1): Referenzlauf „ARGUS allein“ (gerechnet mit der Engine, src/engine/referenzlauf.ts) */
+  referenz?: { name: string; bilanz: Bilanz | null; zustand: Spielzustand };
 }
 
-export function auswerten(basis: Inhalte, teams: TeamLauf[]): Auswertung {
+export function auswerten(basis: Inhalte, teams: TeamLauf[], referenz?: { zustand: Spielzustand } | null): Auswertung {
   const fs = faelle(basis);
   const tw = teams.map((t): TeamAuswertung => {
     const inh = weltFuer(basis, t.zustand);
@@ -699,12 +769,14 @@ export function auswerten(basis: Inhalte, teams: TeamLauf[]): Auswertung {
     return {
       id: t.id, name: t.name, farbe: t.farbe, ende: t.zustand.ende,
       kennzahlen: kennzahlen(basis, t, verlaeufe),
+      bilanz: bilanz(basis, t.zustand),
       faelle: Object.fromEntries(fs.map((f) => [f.id, fallErgebnis(inh, verlaeufe, f, t.zustand.ende)])),
       verlaeufe,
       notizen: t.zustand.notizen.map((n) => ({ t: n.t_s, fall: n.fall, text: n.text })),
     };
   });
-  return { faelle: fs, teams: tw, konfidenz: konfidenzBild(basis, tw.map((t) => t.verlaeufe), tw.map((t) => t.kennzahlen)) };
+  const ref = referenz ? { name: (basis.basis ?? basis).szenario.auswertung.referenz?.name ?? "ARGUS allein", bilanz: bilanz(basis, referenz.zustand), zustand: referenz.zustand } : undefined;
+  return { faelle: fs, teams: tw, konfidenz: konfidenzBild(basis, tw.map((t) => t.verlaeufe), tw.map((t) => t.kennzahlen)), ...(ref ? { referenz: ref } : {}) };
 }
 
 // ---------------------------------------------------------------- Replay
@@ -738,6 +810,7 @@ export function fallFenster(basis: Inhalte, teams: TeamAuswertung[], f: FallDef)
       if (!mv) continue;
       for (const e of mv.entscheidungen) bis = Math.max(bis, e.t + 15);
       if (mv.wirkung) bis = Math.max(bis, mv.wirkung.t + 20);
+      if (mv.aufgeloest) bis = Math.max(bis, mv.aufgeloest.t + 15);
     }
   }
   von = Math.max(0, Math.floor(von / 5) * 5);
@@ -768,9 +841,18 @@ export function zeitleiste(basis: Inhalte, t: TeamAuswertung, f: FallDef): ZeitM
       out.push({ t: w.t, art: "einschlag", zeichen: "✸", klasse: wirkungFehlerhaft(w) ? "fehl" : "ok", meldung: id, text: kette(inh, mv, id).einschlag?.text ?? "Einschlag" });
     }
     if (mv.entfallen && !mv.entfallen.beimErscheinen) out.push({ t: mv.entfallen.t, art: "meldung", zeichen: "∅", klasse: "entfallen", meldung: id, text: `${zt} entfällt ${uz(mv.entfallen.t)} – ${mv.entfallen.grund}` });
+    // seit 2.7 (I3.2): ohne Freigabe nach Zeit aufgelöst (S3: um 21:45 als verbündet erkannt)
+    if (mv.aufgeloest) {
+      out.push({ t: mv.aufgeloest.t, art: "meldung", zeichen: "◆", klasse: "aufgeloest", meldung: id,
+        text: `${zt} ${uz(mv.aufgeloest.t)} als ${ALS_TEXT[mv.aufgeloest.als] ?? mv.aufgeloest.als} erkannt – ohne Freigabe, aus dem Eingang` });
+    }
   }
+  // seit 2.7 (I4.2): Lagemeldungen stehen lagemeldung_s im Feed – angeklickt nach x s oder ungelesen verschwunden
+  const frist = inh.regeln.anzeige?.lagemeldung_s;
   for (const lm of t.kennzahlen.lagemeldungen.filter((x) => x.fall === f.id)) {
-    if (lm.erschienen !== undefined) out.push({ t: lm.erschienen, art: "gelesen", zeichen: "✉", klasse: "info", text: `Lagemeldung ${lm.id} ${uz(lm.erschienen)}${lm.gelesen !== undefined ? ` – angeklickt nach ${Math.round(lm.gelesen - lm.erschienen)} s` : ""}` });
+    if (lm.erschienen === undefined) continue;
+    const text = lm.gelesen !== undefined ? `gelesen nach ${Math.round(lm.gelesen - lm.erschienen)} s` : frist ? `ungelesen verschwunden (nach ${frist} s)` : "nicht angeklickt";
+    out.push({ t: lm.erschienen, art: "gelesen", zeichen: "✉", klasse: lm.gelesen !== undefined ? "info" : "ungelesen", text: `Lagemeldung ${lm.id} ${uz(lm.erschienen)} – ${text}` });
   }
   for (const n of t.notizen.filter((x) => x.fall === f.id)) out.push({ t: n.t, art: "notiz", zeichen: "✎", klasse: "notiz", text: `Notiz SL: ${n.text}` });
   return out.sort((a, b) => a.t - b.t);
@@ -830,12 +912,15 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
       richtig: a.konfidenz.richtig, falsch: a.konfidenz.falsch, konfidenz_falsch_mittel: a.konfidenz.mittelFalsch, konfidenz_richtig_bekaempfen_mittel: a.konfidenz.mittelRichtig,
       meldungen: a.konfidenz.punkte.map((p) => ({ meldung: p.meldung, ziel: zielText(inh, p.meldung), konfidenz: p.konfidenz, empfehlung: p.empfehlung, sicht_gestoert: p.gestoert, argus_falsch: p.falsch, fall: p.fall ?? null, teams_bekaempft: p.bekaempft, teams_entschieden: p.entschieden })),
     },
+    // seit 2.7 (G5): Bilanz „Das ist es wert“ (Spielwerte, gerundet) – Referenzlauf „ARGUS allein“
+    ...(a.referenz?.bilanz ? { referenz: { name: a.referenz.name, bilanz: bilanzExport(a.referenz.bilanz) } } : {}),
     teams: a.teams.map((t, i) => {
       const lauf = teams.find((x) => x.id === t.id)!;
       const k = t.kennzahlen;
       return {
         team: teamKennung(i),
         spielende: t.ende,
+        ...(t.bilanz ? { bilanz: bilanzExport(t.bilanz) } : {}),
         verstaerkungen: lauf.zustand.verstaerkungen.map((v) => ({ gruppe: v.gruppe, t: r1(v.t0) })),
         kennzahlen: {
           meldungen_erschienen: k.meldungen.erschienen, meldungen_bearbeitet: k.meldungen.bearbeitet, meldungen_gesamt: k.meldungen.gesamt, meldungen_offen_ende: k.meldungen.offenEnde,
@@ -880,18 +965,35 @@ export function exportAnonym(basis: Inhalte, teams: TeamLauf[], a: Auswertung, o
   };
 }
 
+/** Bilanz für den Export (seit 2.7, G5): Spielwerte, Fehlbekämpfungen ohne Eurowert. */
+function bilanzExport(b: Bilanz) {
+  const r1 = (x: number | null) => (x === null ? null : Math.round(x * 10) / 10);
+  return {
+    feindfahrzeuge: b.fahrzeuge, wert_mio_eur: b.wertMio, munition_eur: b.munitionEur, schuss: b.schuss,
+    sekunden_meldung_bis_wirkung_median: r1(b.medianS), sekunden_hingeschaut_median: r1(b.hingeschautS),
+    panzer_einsatzbereit: b.panzer ? `${b.panzer.bereit}/${b.panzer.gesamt}` : null,
+    fehlbekaempfungen: b.fehl, davon_kinder: b.kinder,
+  };
+}
+
 /** Kennzahlen und Fälle je Team als CSV (Semikolon, für Excel), anonym. */
 export function exportCsv(a: Auswertung): string {
   const kopf = [
     "team", "meldungen_bearbeitet", "meldungen_erschienen", "offen_ende", "fehlbekaempfungen", "fehl_arten", "bekaempft", "trotz_warnung",
     "widerspruch", "zu_recht", "zu_unrecht", "median_s_ab_eingang", "median_s_ab_oeffnen", "median_s_konfidenz_hoch", "median_s_konfidenz_niedrig", "bis_20_s",
     "lagemeldung", "angeklickt_s", "durchgebrochen", "einsatzbereit_ende", "ausgefallen_ende", "verwundete_ende",
+    // seit 2.7 (G5): Bilanz (Spielwerte), Fehlbekämpfungen ohne Eurowert
+    "bilanz_feindfahrzeuge", "bilanz_wert_mio_eur", "bilanz_munition_eur", "bilanz_median_s_meldung_bis_wirkung",
+    ...FEHL_IDS.map((f) => `fehl_${f}`), "fehl_kinder",
     ...a.faelle.flatMap((f) => [f.id, `${f.id}_s`]),
   ];
   const zelle = (v: unknown) => {
     const s = v === null || v === undefined ? "" : typeof v === "number" ? String(Math.round(v * 10) / 10).replace(".", ",") : String(v);
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
+  const bilanzSpalten = (b: Bilanz | null | undefined) => (b
+    ? [b.fahrzeuge, b.wertMio, b.munitionEur, b.medianS, ...FEHL_IDS.map((f) => b.fehl[f]), b.kinder]
+    : Array<null>(5 + FEHL_IDS.length).fill(null));
   const zeilen = a.teams.map((t, i) => {
     const k = t.kennzahlen;
     const lm = k.lagemeldungen[0];
@@ -901,8 +1003,14 @@ export function exportCsv(a: Auswertung): string {
       k.zeiten.alle.eingang, k.zeiten.alle.offen, k.zeiten.hoch.eingang, k.zeiten.niedrig.eingang, k.zeiten.unter20,
       lm?.id ?? null, lm?.gelesen !== undefined && lm?.erschienen !== undefined ? lm.gelesen - lm.erschienen : null, k.durchbruch.fahrzeuge.length,
       k.verluste?.bereit ?? null, k.verluste?.ausgefallen ?? null, k.verluste?.verwundete ?? null,
+      ...bilanzSpalten(t.bilanz),
       ...a.faelle.flatMap((f) => [t.faelle[f.id].ausgang, t.faelle[f.id].sek ?? null]),
     ].map(zelle).join(";");
   });
+  // Referenzlauf „ARGUS allein“ als eigene Zeile (nur Bilanz)
+  if (a.referenz?.bilanz) {
+    const b = a.referenz.bilanz;
+    zeilen.push([a.referenz.name, ...Array<null>(18).fill(null), b.panzer?.bereit ?? null, null, null, ...bilanzSpalten(b), ...a.faelle.flatMap(() => [null, null])].map(zelle).join(";"));
+  }
   return `\ufeff${[kopf.join(";"), ...zeilen].join("\r\n")}\r\n`;
 }

@@ -16,6 +16,9 @@ import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { TeamMarke } from "./gemeinsam/rahmen";
 
+/** Mitte des Kartenausschnitts im Plenum (seit 2.7, G4b): die Karte füllt ihr Feld, oben und unten fehlt etwas Wald. */
+const KARTE_MITTE_PLENUM: [number, number] = [500, 340];
+
 /** Was Teilnehmer zum Mitspielen brauchen (Sitzung mit Lobby): Seite, Code und die Teams bisher. */
 export interface Beitritt {
   code: string;
@@ -64,7 +67,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
       {modus === "lage" && (
         <div class="plenum-raster plenum-lage">
           <Panel titel="Lagekarte" klasse="ohne-rand">
-            <LagekarteAnsicht inh={inh} lagebild={lageEigen} hintergrund="topo" legende="gelaende" uhr={() => p.s.kartenUhr()} effekte={umgebung} />
+            <LagekarteAnsicht inh={inh} lagebild={lageEigen} hintergrund="topo" legende="gelaende" uhr={() => p.s.kartenUhr()} effekte={umgebung} fuellen={KARTE_MITTE_PLENUM} />
           </Panel>
           <div class="stapel">
             <Panel titel="Spieluhr" klasse="flach">
@@ -114,7 +117,7 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
           </section>
         )}
         <Panel titel={raumName(inh)} klasse="ohne-rand" rechts={<span class="klein sehr-leise">Gelände, Einheiten und Namen sind frei erfunden</span>}>
-          <LagekarteAnsicht inh={inh} lagebild={start} hintergrund="topo" legende="gelaende" />
+          <LagekarteAnsicht inh={inh} lagebild={start} hintergrund="topo" legende="gelaende" fuellen={KARTE_MITTE_PLENUM} />
         </Panel>
       </div>
     </div>
@@ -135,7 +138,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   return (
     <div class="plenum-raster plenum-aufloesung">
       <Panel titel="Kontrollkarte" klasse="ohne-rand" rechts={<span class="klein sehr-leise">Lage {uhrzeit(start, tLage)}</span>}>
-        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte"
+        <LagekarteAnsicht inh={inh} lagebild={lb} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={18} testid="aufloesung-karte" fuellen={KARTE_MITTE_PLENUM}
           uhr={() => p.s.kartenUhr()} effekte={fx} />
       </Panel>
       <div class="stapel">

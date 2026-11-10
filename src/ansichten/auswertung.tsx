@@ -1,23 +1,28 @@
 // Auswertung im Plenum (Schritt 8): Auflösung nach Spielende am Smartboard, gesteuert von der Spielleitung.
 //
-// Kapitel (je ein Klick oder Bild ↓ / → am Presenter):
-//   1 Teamvergleich – Schlüssel-/Nebenfälle × Teams (seit 2.6 gedreht, 7 Teams in 1530 px): Ausgang, Entscheidung, Sekunden
-//   2 Kennzahlen    – Fehlbekämpfungen, trotz Warnung, Widerspruch gegen ARGUS, wie lange hingeschaut (H2.4), I-04 angeklickt
-//   3 Konfidenz     – Kernaussage: ARGUS war bei den Fehlern sicherer als bei den echten Zielen
-//   S3, S2, S1, S4  – Replay je Schlüsselfall: Zeitleiste aller Teams (eine Entscheidung je Meldung mit Sekunden), Kontrollkarte
-//                     zum Durchscrubben, Drohnenbild wie das Team es sah, Leitfragen und Bezüge, Notizen der SL 2
-//   Schlussfrage
-// Zeitbudget 12 min (2 min Kennzahlen, je Fall 2,5 min) oben rechts. Export der Ergebnisse ohne Namen.
+// Seit 2.7 (Änderungsliste G) 15 min in Kapiteln (Plan aus den Daten, kern/auswertung.ts kapitelPlan), je ein Klick oder Bild ↓ / →:
+//   Teamvergleich 1:00 – Fälle × Teams (7 Teams in 1530 px): Ausgang, Entscheidung, Sekunden ab Eingang
+//   Replay 4:00       – Standard S3 und S2 (je 2:00), S1 und S4–S8 zuschaltbar (die Zeit je Fall sinkt): Zeitleiste aller Teams,
+//                       Kontrollkarte zum Durchscrubben, Drohnenbild wie das Team es sah, „Wie lange habt ihr hingeschaut?“, Leitfragen
+//   Bilanz 2:00       – „Das ist es wert“: je Team und „ARGUS allein“ (Referenzlauf mit der Engine) Feindfahrzeuge, Wert in Spielwerten,
+//                       Munition, Zeit, eigene Panzer; ein Klick deckt auf, was nicht in der Bilanz steht (Fehlbekämpfungen ohne Preis)
+//   Impuls 1:00       – Zitat ohne Quelle („Stimmt ihr zu?“), ein Klick deckt die Quelle auf; weitere Zitate zuschaltbar
+//   Diskussion 6:00   – Wertekompass mit den fünf Leitfragen
+//   Abschluss 1:00    – vier Kernaussagen, Schlussfrage
+// Kennzahlen, Konfidenz und „Preis des Abwartens“ sind zuschaltbar (Menü „+“). Eine kleine Uhr je Kapitel zeigt Soll und Ist; nichts
+// springt von selbst weiter. Export der Ergebnisse ohne Namen.
 //
 // Leitplanken: Die Auswertung zeigt Teams, nie Namen von Personen. Sie bleibt bei der Ethik (Fehlbekämpfungen,
-// Widerspruch, Informationsweitergabe) – keine Rangliste, keine Punkte.
+// Widerspruch, Informationsweitergabe) – keine Rangliste, keine Punkte, keine Darstellung getöteter Menschen.
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../inhalte/typen";
 import {
-  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, KONFIDENZ_HOCH, replayPlan, type FallDef, type FallErgebnis, type TeamAuswertung, type TeamLauf, type ZeitMarke,
-  auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, sekText, zeitleiste, zustandBis,
+  AUSGANG_TEXT, type Auswertung, FEHL_TEXT, KONFIDENZ_HOCH, type FallDef, type FallErgebnis, type KapitelDef, type KapitelWahl, kapitelPlan,
+  type TeamAuswertung, type TeamLauf, type ZeitMarke, auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, sekText,
+  zeitleiste, zustandBis,
 } from "../kern/auswertung";
+import { type Bilanz, euro, FEHL_IDS, mio } from "../kern/bilanz";
 import { bekannteZiele, effekte } from "../kern/effekte";
 import { weltFuer } from "../kern/lage";
 import { lagebildKontrolle } from "../kern/lagebild";
@@ -27,6 +32,7 @@ import { mmss, uhrzeit } from "../kern/uhr";
 import { argusBei } from "../kern/eloka";
 import { zielNr } from "../kern/zielnummern";
 import { PANZER_STUFE_TEXT } from "../kern/verluste";
+import type { Spielzustand } from "../kern/zustand";
 
 /** „Ziel 8“ – in allen Teams dieselbe Nummer (B7). */
 function zielText(inh: Inhalte, id: string): string {
@@ -40,44 +46,25 @@ import { TeamMarke } from "./gemeinsam/rahmen";
 
 /**
  * Wie schnell das Replay läuft (Spielsekunden je Sekunde): so, dass ein Fall in ca. 45 s abläuft (×4 bis ×15) – vom
- * Budget von 2,5 min je Fall bleibt so der größte Teil für das Gespräch.
+ * Budget je Fall bleibt so der größte Teil für das Gespräch.
  */
 export const REPLAY_DAUER_S = 45;
 export function replayTempo(von: number, bis: number): number {
   return Math.max(4, Math.min(15, Math.round((bis - von) / REPLAY_DAUER_S)));
 }
 
-interface Kapitel {
-  id: string;
-  kurz: string;
-  titel: string;
-  /** Zeitbudget in s */
-  budget: number;
-  fall?: FallDef;
-}
+/** Kapitel der Auswertung mit Soll in s (seit 2.7 aus kapitelPlan; budget = sek). */
+export type Kapitel = KapitelDef & { budget: number };
 
 /**
- * Kapitel der Auflösung: Teamvergleich, Kennzahlen, Konfidenz (zusammen 2 min), je Schlüsselfall 2,5 min, Schlussfrage.
- * Seit 2.3 (D5) mit Verlustmodell: „Preis des Abwartens“ (1 min) nach den Fällen, die Fälle dafür je 2:15 – zusammen 12 min.
- * Seit 2.4 (E5): Welche Fälle in welcher Reihenfolge, entscheidet die Spielleitung (`auswahl`, Standard S3, S2, S1, S4;
- * S5–S8 zuschaltbar); die Zeit je Fall rechnet replayPlan aus, das Budget bleibt 12 min.
+ * Kapitel der Auswertung (seit 2.7, G1): Standard aus den Daten (15 min), zugeschaltete Kapitel und Fälle nach Wahl der Spielleitung.
  */
-export function kapitelListe(a: Auswertung, inh?: Inhalte, auswahl?: string[] | null): Kapitel[] {
-  const preis = a.teams.some((t) => t.kennzahlen.verluste);
-  const plan = inh ? replayPlan(inh, auswahl, preis) : null;
-  const fs = plan ? plan.faelle : a.faelle.filter((f) => f.art === "schluessel" && !f.zuschaltbar);
-  const jeFall = plan ? plan.jeFall : preis ? 135 : 150;
-  return [
-    { id: "teams", kurz: "Teams", titel: "Teamvergleich", budget: 45 },
-    { id: "kennzahlen", kurz: "Kennzahlen", titel: "Kennzahlen je Team", budget: 45 },
-    { id: "konfidenz", kurz: "Konfidenz", titel: "Was die Konfidenz sagt", budget: 30 },
-    ...fs.map((f) => ({ id: f.id, kurz: f.id, titel: `${f.id} · ${f.titel}`, budget: jeFall, fall: f })),
-    ...(preis ? [{ id: "preis", kurz: "Preis", titel: "Preis des Abwartens", budget: 60 }] : []),
-    { id: "schluss", kurz: "Schluss", titel: "Schlussfrage", budget: 0 },
-  ];
+export function kapitelListe(inh: Inhalte, wahl: KapitelWahl = {}): Kapitel[] {
+  return kapitelPlan(inh, wahl).kapitel.map((k) => ({ ...k, budget: k.sek }));
 }
 
-export const BUDGET_GESAMT = 12 * 60;
+/** Gesamtbudget, wenn das Szenario keinen Kapitelplan hat (seit 2.7 aus den Daten: 15 min). */
+export const BUDGET_GESAMT = 15 * 60;
 
 export interface AuswertungProps {
   inh: Inhalte;
@@ -95,32 +82,83 @@ function teamSchluessel(teams: TeamLauf[]): string {
   return teams.map((t) => `${t.id}:${t.zustand.seq}:${t.protokoll.length}:${t.name}:${t.farbe}`).join("|");
 }
 
+/**
+ * Referenzlauf „ARGUS allein“ (G2.1): einmal beim Öffnen der Auswertung mit der Engine gerechnet (ca. 0,2–0,5 s), nicht im ersten
+ * Bild – bis dahin null.
+ */
+function useReferenz(inh: Inhalte): Spielzustand | null {
+  const [z, setZ] = useState<Spielzustand | null>(null);
+  useEffect(() => {
+    if (!inh.regeln.bilanz) return;
+    let aus = false;
+    const t = setTimeout(() => {
+      void import("../engine/referenzlauf").then(({ argusAllein }) => {
+        if (!aus) setZ(argusAllein(inh).z);
+      });
+    }, 30);
+    return () => {
+      aus = true;
+      clearTimeout(t);
+    };
+  }, [inh]);
+  return z;
+}
+
+/** Schritte innerhalb eines Kapitels (der Presenter blättert erst sie, dann das nächste Kapitel). */
+interface Schritte {
+  /** Bilanz: Teil 2 „Nicht in der Bilanz“ aufgedeckt */
+  aufgedeckt: boolean;
+  /** Impuls: Folie (0 ohne Quelle, 1 aufgedeckt, ab 2 zugeschaltete Zitate) */
+  folie: number;
+  /** Impuls: weitere Zitate zugeschaltet */
+  weitere: boolean;
+}
+
 export function AuswertungAnsicht(p: AuswertungProps) {
   const schl = teamSchluessel(p.teams);
-  const a = useMemo(() => auswerten(p.inh, p.teams), [p.inh, schl]);
-  const kapitel = useMemo(() => kapitelListe(a, p.inh), [a, p.inh]);
-  const [nr, setNr] = useState(0);
+  const ref = useReferenz(p.inh);
+  const a = useMemo(() => auswerten(p.inh, p.teams, ref ? { zustand: ref } : null), [p.inh, schl, ref]);
+  const [wahl, setWahl] = useState<KapitelWahl>({});
+  const plan = useMemo(() => kapitelPlan(p.inh, wahl), [p.inh, wahl]);
+  const kapitel: Kapitel[] = useMemo(() => plan.kapitel.map((k) => ({ ...k, budget: k.sek })), [plan]);
+  const [kid, setKid] = useState<string>(kapitel[0]?.id ?? "teams");
+  const nr = Math.max(0, kapitel.findIndex((k) => k.id === kid));
   const [team, setTeam] = useState<string | null>(null);
   const [spielt, setSpielt] = useState(false);
+  const [schritte, setSchritte] = useState<Schritte>({ aufgedeckt: false, folie: 0, weitere: false });
   const k = kapitel[Math.min(nr, kapitel.length - 1)];
   const teamId = team && a.teams.some((t) => t.id === team) ? team : a.teams[0]?.id ?? null;
   const uhr = useZeitbudget(k.id);
+  const folien = p.inh.szenario.auswertung.impuls?.folien ?? [];
+  const folienMax = schritte.weitere ? folien.length - 1 : Math.min(1, folien.length - 1);
 
   const geh = (n: number) => {
     setSpielt(false);
-    setNr(Math.max(0, Math.min(kapitel.length - 1, n)));
+    const i = Math.max(0, Math.min(kapitel.length - 1, n));
+    setKid(kapitel[i].id);
+  };
+  /** Presenter „weiter“: erst die Schritte im Kapitel (Bilanz aufdecken, Impuls-Folien), dann das nächste Kapitel. */
+  const weiter = () => {
+    if (k.id === "bilanz" && !schritte.aufgedeckt && a.teams.length) return setSchritte((x) => ({ ...x, aufgedeckt: true }));
+    if (k.id === "impuls" && schritte.folie < folienMax) return setSchritte((x) => ({ ...x, folie: x.folie + 1 }));
+    geh(nr + 1);
+  };
+  const zurueck = () => {
+    if (k.id === "impuls" && schritte.folie > 0) return setSchritte((x) => ({ ...x, folie: x.folie - 1 }));
+    if (k.id === "bilanz" && schritte.aufgedeckt) return setSchritte((x) => ({ ...x, aufgedeckt: false }));
+    geh(nr - 1);
   };
   // Presenter und Tastatur: Bild ↓ / → weiter, Bild ↑ / ← zurück, Pos1/Ende, 1–9 Team, Leertaste/P Replay
-  const tasten = useRef({ nr, geh, kapitel, a, setTeam, setSpielt, k });
-  tasten.current = { nr, geh, kapitel, a, setTeam, setSpielt, k };
+  const tasten = useRef({ nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k });
+  tasten.current = { nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k };
   useEffect(() => {
     const taste = (e: KeyboardEvent) => {
       const ziel = e.target as HTMLElement | null;
       if (ziel && (ziel.tagName === "INPUT" || ziel.tagName === "TEXTAREA" || ziel.tagName === "SELECT" || ziel.isContentEditable)) return;
       if (document.querySelector(".lupe-schirm")) return; // Vergrößerung des Drohnenbilds offen (Esc schließt)
       const x = tasten.current;
-      if (["PageDown", "ArrowRight", "ArrowDown"].includes(e.key)) x.geh(x.nr + 1);
-      else if (["PageUp", "ArrowLeft", "ArrowUp", "Backspace"].includes(e.key)) x.geh(x.nr - 1);
+      if (["PageDown", "ArrowRight", "ArrowDown"].includes(e.key)) x.weiter();
+      else if (["PageUp", "ArrowLeft", "ArrowUp", "Backspace"].includes(e.key)) x.zurueck();
       else if (e.key === "Home") x.geh(0);
       else if (e.key === "End") x.geh(x.kapitel.length - 1);
       else if (/^[1-9]$/.test(e.key) && x.a.teams[Number(e.key) - 1]) x.setTeam(x.a.teams[Number(e.key) - 1].id);
@@ -140,31 +178,77 @@ export function AuswertungAnsicht(p: AuswertungProps) {
           {p.kennung && <span class="sehr-leise klein mono">{p.kennung}</span>}
         </div>
         <nav class="kapitel-leiste" aria-label="Kapitel der Auswertung">
-          <button type="button" class="knopf kapitel-pfeil" onClick={() => geh(nr - 1)} disabled={nr === 0} aria-label="vorheriges Kapitel" title="zurück (Bild ↑, ←)">◂</button>
+          <button type="button" class="knopf kapitel-pfeil" onClick={zurueck} disabled={nr === 0 && !(k.id === "impuls" && schritte.folie > 0)} aria-label="zurück" title="zurück (Bild ↑, ←)">◂</button>
           {kapitel.map((x, i) => (
-            <button type="button" key={x.id} class={`kapitel-chip ${i === nr ? "an" : ""} ${x.fall ? "fall" : ""}`} onClick={() => geh(i)} data-kapitel={x.id}
-              aria-current={i === nr ? "step" : undefined} title={x.titel}>
-              {x.fall ? x.kurz : <><span class="kapitel-nr">{i + 1}</span>{x.kurz}</>}
+            <button type="button" key={x.id} class={`kapitel-chip ${i === nr ? "an" : ""} ${x.fall ? "fall" : ""} ${x.zuschaltbar ? "zusatz" : ""}`} onClick={() => geh(i)} data-kapitel={x.id}
+              aria-current={i === nr ? "step" : undefined} title={`${x.titel} · ${mmss(x.budget)}`}>
+              {x.fall ? x.kurz : <>{x.kurz}</>}
             </button>
           ))}
-          <button type="button" class="knopf kapitel-pfeil" onClick={() => geh(nr + 1)} disabled={nr === kapitel.length - 1} aria-label="nächstes Kapitel" title="weiter (Bild ↓, →, Presenter)" data-testid="weiter">▸</button>
+          <KapitelMenue plan={plan} wahl={wahl} setWahl={setWahl} />
+          <button type="button" class="knopf kapitel-pfeil" onClick={weiter} disabled={nr === kapitel.length - 1} aria-label="weiter" title="weiter (Bild ↓, →, Presenter)" data-testid="weiter">▸</button>
         </nav>
         <div class="kopf-rechts">
-          <Zeitbudget uhr={uhr} k={k} />
+          <Zeitbudget uhr={uhr} k={k} gesamt={plan.summe} />
           <ExportMenue inh={p.inh} teams={p.teams} a={a} />
           {p.zurueck && <button type="button" class="knopf klein" onClick={p.zurueck.aktion} data-testid="auswertung-zurueck">{p.zurueck.text}</button>}
         </div>
       </header>
       <main class="auswertung" data-kapitel={k.id} data-testid="auswertung">
-        {a.teams.length === 0 ? <div class="leer">Noch kein Team hat gespielt.</div>
-          : k.id === "teams" ? <Teamvergleich a={a} inh={p.inh} waehle={(f, t) => { setTeam(t); const i = kapitel.findIndex((x) => x.id === f); if (i >= 0) geh(i); }} />
+        {a.teams.length === 0 && !["impuls", "diskussion", "abschluss"].includes(k.id) ? <div class="leer">Noch kein Team hat gespielt.</div>
+          : k.id === "teams" ? <Teamvergleich a={a} inh={p.inh} waehle={(f, t) => {
+            setTeam(t);
+            if (!kapitel.some((x) => x.id === f)) setWahl((w) => ({ ...w, faelle: [...plan.replay.faelle.map((x) => x.id), f] }));
+            setSpielt(false);
+            setKid(f);
+          }} />
             : k.id === "kennzahlen" ? <KennzahlenTafel a={a} inh={p.inh} />
               : k.id === "konfidenz" ? <KonfidenzTafel a={a} inh={p.inh} sl={p.art === "sl"} />
                 : k.fall ? <Replay key={k.id} a={a} inh={p.inh} teams={p.teams} fall={k.fall} team={teamId!} setTeam={setTeam} spielt={spielt} setSpielt={setSpielt} notiz={p.notiz} />
                   : k.id === "preis" ? <PreisDesAbwartens a={a} inh={p.inh} />
-                    : <Schluss a={a} inh={p.inh} />}
+                    : k.id === "bilanz" ? <BilanzTafel a={a} inh={p.inh} aufgedeckt={schritte.aufgedeckt} aufdecken={() => setSchritte((x) => ({ ...x, aufgedeckt: !x.aufgedeckt }))} />
+                      : k.id === "impuls" ? <ImpulsTafel inh={p.inh} folie={schritte.folie} weitere={schritte.weitere}
+                        setFolie={(f) => setSchritte((x) => ({ ...x, folie: f, weitere: x.weitere || f > 1 }))} />
+                        : k.id === "diskussion" ? <DiskussionTafel inh={p.inh} />
+                          : <Abschluss a={a} inh={p.inh} />}
       </main>
     </div>
+  );
+}
+
+/** Menü „+“ (G1.1): zuschaltbare Kapitel (Kennzahlen, Konfidenz, Preis des Abwartens) und Fälle für das Replay. */
+function KapitelMenue(p: { plan: ReturnType<typeof kapitelPlan>; wahl: KapitelWahl; setWahl: (w: KapitelWahl) => void }) {
+  const [offen, setOffen] = useState(false);
+  const an = new Set(p.wahl.zusatz ?? []);
+  const faelle = p.plan.replay.faelle.map((f) => f.id);
+  const alleFaelle = [...faelle, ...p.plan.replay.zuschaltbar.map((f) => f.id)];
+  const titel = new Map([...p.plan.replay.faelle, ...p.plan.replay.zuschaltbar].map((f) => [f.id, f.titel]));
+  const schalteKapitel = (id: string) => {
+    const neu = new Set(an);
+    if (neu.has(id)) neu.delete(id);
+    else neu.add(id);
+    p.setWahl({ ...p.wahl, zusatz: [...neu] });
+  };
+  const schalteFall = (id: string) => {
+    const neu = faelle.includes(id) ? faelle.filter((x) => x !== id) : [...faelle, id];
+    if (neu.length) p.setWahl({ ...p.wahl, faelle: alleFaelle.filter((x) => neu.includes(x)) });
+  };
+  return (
+    <span class="menue-anker">
+      <button type="button" class="knopf kapitel-plus" onClick={() => setOffen(!offen)} aria-expanded={offen} title="Kapitel und Fälle zuschalten" data-testid="kapitel-plus">＋</button>
+      <Menue offen={offen} schliessen={() => setOffen(false)} testid="kapitel-menue">
+        <div class="menue-kopf"><b>Zuschalten</b> <span class="sehr-leise">die Zeit der Auswertung wächst; Fälle teilen sich {mmss(p.plan.replay.budget)} Replay</span></div>
+        {p.plan.zuschaltbar.map((k) => (
+          <label key={k.id} class="menue-zeile"><input type="checkbox" checked={an.has(k.id)} onChange={() => schalteKapitel(k.id)} data-zusatz={k.id} />
+            {k.titel} <span class="sehr-leise">+{mmss(k.sek)}</span></label>
+        ))}
+        <div class="menue-kopf"><b>Replay</b> <span class="sehr-leise">{faelle.length} Fälle je {mmss(p.plan.replay.jeFall)}{p.plan.replay.knapp ? " – knapp" : ""}</span></div>
+        {alleFaelle.map((id) => (
+          <label key={id} class="menue-zeile"><input type="checkbox" checked={faelle.includes(id)} onChange={() => schalteFall(id)} data-fall-wahl={id}
+            disabled={faelle.length === 1 && faelle.includes(id)} /> {id} · {titel.get(id)}</label>
+        ))}
+      </Menue>
+    </span>
   );
 }
 
@@ -203,14 +287,15 @@ function useZeitbudget(kapitel: string): UhrStand {
   };
 }
 
-function Zeitbudget(p: { uhr: UhrStand; k: Kapitel }) {
+/** Kleine Uhr je Kapitel (G1.2): Ist / Soll des Kapitels, dazu gesamt; rot, wenn drüber. Nichts springt von selbst weiter. */
+function Zeitbudget(p: { uhr: UhrStand; k: Kapitel; gesamt: number }) {
   const { uhr, k } = p;
   const ueber = k.budget > 0 && uhr.kapitel > k.budget;
   return (
-    <button type="button" class={`zeitbudget ${ueber ? "ueber" : ""} ${uhr.gesamt > BUDGET_GESAMT ? "ueber-gesamt" : ""}`} onClick={uhr.zuruecksetzen}
-      title="Zeitbudget der Auswertung: Kapitel / gesamt (Klick: neu beginnen)" data-testid="zeitbudget">
-      {k.budget > 0 && <span>{mmss(uhr.kapitel)} / {mmss(k.budget)}</span>}
-      <span class="sehr-leise">Σ {mmss(uhr.gesamt)} / {mmss(BUDGET_GESAMT)}</span>
+    <button type="button" class={`zeitbudget ${ueber ? "ueber" : ""} ${uhr.gesamt > p.gesamt ? "ueber-gesamt" : ""}`} onClick={uhr.zuruecksetzen}
+      title="Zeit der Auswertung: Kapitel Ist / Soll, gesamt Ist / Soll (Klick: neu beginnen)" data-testid="zeitbudget">
+      {k.budget > 0 && <span title={`${k.titel}: Ist / Soll`}>{mmss(uhr.kapitel)} / {mmss(k.budget)}</span>}
+      <span class="sehr-leise">Σ {mmss(uhr.gesamt)} / {mmss(p.gesamt)}</span>
     </button>
   );
 }
@@ -605,6 +690,7 @@ function Replay(p: {
   const uhrFn = () => ({ t: tRef.current, tempo: p.spielt ? tempo : 1, laeuft: true });
   const e = tw.faelle[fall.id];
   const sf = fall.sf!;
+  const zitat = inh.szenario.auswertung.bilanz?.zitat;
   // Notizen zum Fall: gewähltes Team zuerst, dann die anderen
   const notizen = [tw, ...a.teams.filter((x) => x.id !== tw.id)].flatMap((x) => x.notizen.filter((nz) => nz.fall === fall.id).map((nz) => ({ ...nz, team: x })));
 
@@ -630,7 +716,14 @@ function Replay(p: {
           <div class="fall-info"><span class="leise">Information lag bei:</span> {sf.info_bei}</div>
           <div class="fall-ausgang"><TeamMarke name={tw.name} farbe={tw.farbe} klein /> <Ausgang e={e} gross /> <span class="leise">{e.text}</span></div>
         </div>
-        <TeamBild inh={inh} welt={welt} lauf={lauf} tw={tw} fall={fall} />
+        <TeamBild inh={inh} welt={welt} lauf={lauf} tw={tw} fall={fall}>
+          {/* seit 2.7 (G, Stand 09.11.): Sekunden bis zur Entscheidung neben dem Zitat „20 seconds for each target“ */}
+          <div class="hingeschaut" data-testid="hingeschaut">
+            <span>Wie lange habt ihr hingeschaut?</span>
+            <b class="zahl">{e.kette.glied.sek !== undefined ? sekText(e.kette.glied.sek) : "keine Entscheidung"}</b>
+            {zitat && <span class="hingeschaut-zitat">„{zitat.text}“ <i>– {zitat.quelle}</i></span>}
+          </div>
+        </TeamBild>
         <div class="leitfragen" data-testid="leitfragen">
           <h2>Leitfragen</h2>
           <ol>{sf.leitfragen.map((q) => <li>{q}</li>)}</ol>
@@ -718,7 +811,7 @@ function NotizFeld(p: { fall: string; team: TeamAuswertung; senden: (text: strin
  * Drohnenbild, wie das Team es bei der Entscheidung sah (live zur Zeit der Entscheidung, die Drohne verfolgt das Ziel; Lupe per Klick),
  * mit der ARGUS-Ausgabe von damals (EloKa: gestört). Seit 2.6 ohne Sensordaten (E6.3).
  */
-function TeamBild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswertung; fall: FallDef }) {
+function TeamBild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAuswertung; fall: FallDef; children?: ComponentChildren }) {
   const { welt, tw, fall } = p;
   const start = p.inh.szenario.spieluhr.start;
   const mv = tw.verlaeufe.get(fall.meldung);
@@ -736,9 +829,12 @@ function TeamBild(p: { inh: Inhalte; welt: Inhalte; lauf: TeamLauf; tw: TeamAusw
   return (
     <div class="g1-bild" data-testid="team-bild">
       <h2>Drohnenbild, wie das Team es sah <span class="sehr-leise klein">{e ? `bei der Entscheidung ${uhrzeit(start, e.t)} – ${was[e.was]}${e.sekEingang !== undefined ? ` nach ${sekText(e.sekEingang)}` : ""}` : mv ? `zur Meldezeit ${uhrzeit(start, mv.t)}` : ""}</span></h2>
-      <div class={`g1-bild-rahmen ${hinweis ? "mit-hinweis" : ""}`}>
-        {m && <LiveDrohnenFenster key={`${tw.id}-${fall.id}`} meldung={m} argus={a ?? undefined} lage={() => lage} uhr={() => ({ t: tBild, tempo: 1, laeuft: false })} start={start} />}
-        {hinweis && <div class="g1-bild-hinweis">{hinweis}</div>}
+      <div class="g1-bild-zeile">
+        <div class={`g1-bild-rahmen ${hinweis ? "mit-hinweis" : ""}`}>
+          {m && <LiveDrohnenFenster key={`${tw.id}-${fall.id}`} meldung={m} argus={a ?? undefined} lage={() => lage} uhr={() => ({ t: tBild, tempo: 1, laeuft: false })} start={start} />}
+          {hinweis && <div class="g1-bild-hinweis">{hinweis}</div>}
+        </div>
+        {p.children}
       </div>
       {m && a && (
         <div class="g1-sensor" title="So meldete ARGUS diese Meldung dem Team">
@@ -993,18 +1089,234 @@ function PreisDesAbwartens(p: { a: Auswertung; inh: Inhalte }) {
   );
 }
 
-function Schluss(p: { a: Auswertung; inh: Inhalte }) {
+// ---------------------------------------------------------------- Bilanz „Das ist es wert“ (seit 2.7, G2)
+
+/** Eine Spalte der Bilanz: ein Team oder „ARGUS allein“. */
+interface BilanzSpalte {
+  id: string;
+  name: string;
+  farbe?: string;
+  argus?: boolean;
+  laeuft?: boolean;
+  b: Bilanz | null;
+}
+
+/** Zahl oder Strich. */
+function zahlOder(x: number | null | undefined, f: (v: number) => string = (v) => String(v)): string {
+  return x === null || x === undefined ? "–" : f(x);
+}
+
+/** „schneller als alle Teams“ usw. – was der Hinweis für die Spielleitung heute trifft (G2.5, keine Rangfolge der Teams). */
+function heuteText(ref: Bilanz, teams: Bilanz[]): string {
+  if (!teams.length) return "";
+  const zeiten = teams.map((b) => b.medianS).filter((x): x is number => x !== null);
+  const schneller = ref.medianS !== null && zeiten.every((x) => ref.medianS! < x);
+  const mehr = teams.filter((b) => ref.wertMio > b.wertMio).length;
+  const geschont = ref.panzer && teams.every((b) => !b.panzer || ref.panzer!.bereit >= b.panzer.bereit);
+  return [
+    schneller ? "schneller als alle Teams ✓" : "nicht schneller als jedes Team",
+    mehr === teams.length ? "mehr zerstört als alle Teams ✓" : `mehr zerstört als ${mehr} von ${teams.length} Teams`,
+    geschont ? "Panzer mindestens so gut erhalten wie jedes Team ✓" : "ein Team hat seine Panzer besser erhalten",
+  ].join(" · ");
+}
+
+/**
+ * Kapitel „Bilanz – Das ist es wert“ (G2.2–G2.5): je Team (feste Reihenfolge, keine Ränge) und „ARGUS allein“ (abgesetzt):
+ * zerstörte Feindfahrzeuge und ihr Wert in Spielwerten, Munitionskosten, Zeit von der Meldung bis zur Wirkung, wie lange hingeschaut,
+ * eigene Panzer. Ein Klick (oder „weiter“) deckt auf, was nicht in der Bilanz steht: die Fehlbekämpfungen als Zahl mit Zeichen, ohne
+ * Eurowert. Keine Bilder aus den Treffern.
+ */
+function BilanzTafel(p: { a: Auswertung; inh: Inhalte; aufgedeckt: boolean; aufdecken: () => void }) {
   const { a, inh } = p;
+  const regel = inh.regeln.bilanz;
+  const text = inh.szenario.auswertung.bilanz;
+  const refName = a.referenz?.name ?? inh.szenario.auswertung.referenz?.name ?? "ARGUS allein";
+  if (!regel) return <div class="leer">Dieses Szenario hat keine Spielwerte für die Bilanz.</div>;
+  const spalten: BilanzSpalte[] = [
+    ...a.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, laeuft: !t.ende, b: t.bilanz })),
+    { id: "argus", name: refName, argus: true, b: a.referenz?.bilanz ?? null },
+  ];
+  const maxWert = Math.max(0.01, ...spalten.map((x) => x.b?.wertMio ?? 0));
+  const teamB = a.teams.map((t) => t.bilanz).filter((x): x is Bilanz => !!x);
+  const zelle = (x: BilanzSpalte, inhalt: ComponentChildren, klasse = "") => (
+    <td key={x.id} class={`bz ${x.argus ? "bz-argus" : ""} ${klasse}`} data-spalte={x.id}>{x.argus && !a.referenz ? <span class="sehr-leise klein">wird gerechnet …</span> : inhalt}</td>
+  );
+  const zeile = (titel: ComponentChildren, f: (b: Bilanz) => ComponentChildren, klasse = "", unter?: ComponentChildren) => (
+    <tr class={klasse}>
+      <th class="bz-titel">{titel}{unter && <div class="bz-unter">{unter}</div>}</th>
+      {spalten.map((x) => zelle(x, x.b ? f(x.b) : "–"))}
+    </tr>
+  );
+  return (
+    <section class="tafel tafel-bilanz" data-testid="bilanz">
+      <div class="tafel-kopf">
+        <h1>{text?.titel ?? "Bilanz – Das ist es wert"}</h1>
+        <span class="leise">so viel habt ihr getroffen – in Spielwerten, gerundet · Teams in der Reihenfolge des Beitritts, keine Rangfolge</span>
+      </div>
+      <table class="bilanz" data-spalten={spalten.length}>
+        <colgroup><col class="bz-c-titel" />{a.teams.map((t) => <col key={t.id} />)}<col class="bz-c-argus" /></colgroup>
+        <thead>
+          <tr>
+            <th />
+            {spalten.map((x) => (
+              <th key={x.id} class={`bz-kopf ${x.argus ? "bz-argus" : ""}`} data-spalte={x.id}>
+                {x.argus ? <><b>{x.name}</b><div class="klein">jede BEKÄMPFEN-Empfehlung sofort, ohne Prüfung</div></>
+                  : <><TeamMarke name={x.name} farbe={x.farbe!} />{x.laeuft && <div class="klein sehr-leise">Spiel läuft</div>}</>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {zeile("Wert der zerstörten Feindfahrzeuge", (b) => (
+            <div class="bz-wert"><b>{mio(b.wertMio)}</b> <span class="leise">Mio €</span>
+              <i class="bz-balken" style={{ width: `${Math.round((b.wertMio / maxWert) * 100)}%` }} /></div>
+          ), "bz-haupt")}
+          {zeile("Feindfahrzeuge zerstört", (b) => <b class="bz-zahl">{b.fahrzeuge}</b>)}
+          {zeile("Munition verschossen", (b) => <span class="bz-zahl">{euro(b.munitionEur)}</span>, "", "LM, Mörser, Kanone")}
+          {zeile("Meldung bis Wirkung", (b) => <span class="bz-zahl">{zahlOder(b.medianS, (v) => `${Math.round(v)} s`)}</span>, "", "Median")}
+          {zeile(<>Wie lange habt ihr hingeschaut?</>, (b) => <span class="bz-zahl">{zahlOder(b.hingeschautS, (v) => `${Math.round(v)} s`)}</span>, "bz-hinschauen",
+            text?.zitat ? <span class="bz-zitat">„{text.zitat.text}“ <i>– {text.zitat.quelle}</i></span> : "Sekunden ab Eingang bis zur Entscheidung, Median")}
+          {zeile("Eigene Panzer einsatzbereit", (b) => b.panzer ? (
+            <span class="bz-panzer" title={`${b.panzer.bereit} von ${b.panzer.gesamt} einsatzbereit bei Spielende`}>
+              {Array.from({ length: b.panzer.gesamt }, (_, i) => <i key={i} class={i < b.panzer!.bereit ? "an" : ""} />)}<b>{b.panzer.bereit}/{b.panzer.gesamt}</b>
+            </span>) : "–")}
+          <tr class="bz-trenner">
+            <th colSpan={spalten.length + 1}>
+              <button type="button" class={`knopf bz-aufdecken ${p.aufgedeckt ? "an" : ""}`} onClick={p.aufdecken} data-testid="bilanz-aufdecken" aria-expanded={p.aufgedeckt}>
+                {p.aufgedeckt ? "▾" : "▸"} {text?.nicht_in_bilanz ?? "Nicht in der Bilanz"}
+              </button>
+              {!p.aufgedeckt && <span class="sehr-leise klein"> – Klick oder „weiter“ deckt auf</span>}
+            </th>
+          </tr>
+          {p.aufgedeckt && regel.fehl.map((f) => (
+            <tr key={f.id} class="bz-fehl" data-fehl={f.id}>
+              <th class="bz-titel"><span class="bz-zeichen">{f.zeichen}</span> {f.text}{f.einheit && <span class="bz-einheit"> ({f.einheit})</span>}</th>
+              {spalten.map((x) => {
+                const n = x.b?.fehl[f.id as (typeof FEHL_IDS)[number]] ?? 0;
+                return zelle(x, n ? <span class="bz-fehlzahl"><span class="bz-zeichen">{f.zeichen}</span> <b>{n}</b>
+                  {f.kinder && x.b && x.b.kinder > 0 ? <span class="klein"> davon {x.b.kinder} Kinder</span> : null}</span> : <span class="sehr-leise">–</span>, n ? "fehl" : "");
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div class="tafel-fuss bz-fuss">
+        <span class="sehr-leise">{regel.fuss}</span>
+        {text?.hinweis_sl && a.referenz?.bilanz && (
+          <span class="bz-hinweis" data-testid="bilanz-hinweis-sl" title="Hinweis für die Spielleitung – nicht vorlesen">
+            SL: {text.hinweis_sl} <span class="sehr-leise">(heute: {heuteText(a.referenz.bilanz, teamB)})</span>
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------- Impuls (seit 2.7, G3)
+
+/**
+ * Kapitel „Impuls“: Folie 1 das Zitat ohne Quelle mit „Stimmt ihr zu?“, ein Klick (oder „weiter“) deckt die Quelle auf (Folie 2,
+ * mit Pflichtzeile). Weitere Zitate (Karp, Thiel, Luckey, Gegenstimme Guterres) nur nach Klick auf „weitere Zitate“, je eine Folie mit
+ * Quelle. Zitate wörtlich aus den Daten (G3.3).
+ */
+function ImpulsTafel(p: { inh: Inhalte; folie: number; weitere: boolean; setFolie: (f: number) => void }) {
+  const imp = p.inh.szenario.auswertung.impuls;
+  if (!imp?.folien.length) return <div class="leer">Kein Impuls im Szenario.</div>;
+  const f = imp.folien[Math.min(p.folie, imp.folien.length - 1)];
+  const erste = imp.folien[0];
+  return (
+    <section class="tafel tafel-impuls" data-testid="impuls" data-folie={f.id}>
+      {f.ohne_quelle ? (
+        <div class="impuls-folie ohne-quelle">
+          <blockquote class="impuls-zitat gross" lang="en">„{f.original}“</blockquote>
+          {f.deutsch && <p class="impuls-deutsch">„{f.deutsch}“</p>}
+          <p class="impuls-frage">{imp.frage}</p>
+          <button type="button" class="knopf impuls-aufdecken" onClick={() => p.setFolie(1)} data-testid="impuls-aufdecken">Wer sagt das? ▸</button>
+        </div>
+      ) : f.punkte ? (
+        <div class="impuls-folie aufgedeckt">
+          <h1 class="impuls-titel">{f.titel}</h1>
+          <div class="impuls-quelle">{f.quelle}</div>
+          <blockquote class="impuls-zitat" lang="en">„{erste.original}“</blockquote>
+          {f.vorspann && <p class="impuls-vorspann">{f.vorspann}</p>}
+          <ul class="impuls-punkte">
+            {f.punkte.map((x) => <li key={x.text}><b>{x.text}</b>{x.zitat && <> – <q lang="en">{x.zitat}</q></>}</li>)}
+          </ul>
+          {f.pflicht && <p class="impuls-pflicht" data-testid="impuls-pflicht">{f.pflicht}</p>}
+          <p class="impuls-frage klein-frage">{imp.frage}</p>
+        </div>
+      ) : (
+        <div class={`impuls-folie weitere ${f.gegenstimme ? "gegenstimme" : ""}`}>
+          {f.gegenstimme && <div class="impuls-marke">Gegenstimme</div>}
+          <p class="impuls-wer"><b>{f.wer}</b>{f.rolle ? ` (${f.rolle}${f.anlass ? `, ${f.anlass}` : ""})` : f.anlass ? ` (${f.anlass})` : ""}{f.vorspann ? ` ${f.vorspann}` : ""}</p>
+          <blockquote class="impuls-zitat gross" lang="en">„{f.original}“</blockquote>
+          <p class="impuls-frage klein-frage">{imp.frage}</p>
+        </div>
+      )}
+      <nav class="impuls-punkte-nav" aria-label="Folien des Impulses">
+        {imp.folien.map((x, i) => (i <= 1 || p.weitere ? (
+          <button type="button" key={x.id} class={`impuls-punkt ${i === p.folie ? "an" : ""}`} onClick={() => p.setFolie(i)} data-impuls={x.id}
+            title={i === 0 ? "Zitat ohne Quelle" : i === 1 ? "Quelle" : x.wer}>{i === 0 ? "Zitat" : i === 1 ? "Quelle" : x.wer?.split(" ").slice(-1)[0]}</button>
+        ) : null))}
+        {!p.weitere && imp.folien.length > 2 && p.folie >= 1 && (
+          <button type="button" class="knopf klein impuls-weitere" onClick={() => p.setFolie(2)} data-testid="impuls-weitere">weitere Zitate ›</button>
+        )}
+      </nav>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------- Diskussion (seit 2.7, G4.1)
+
+/** Kapitel „Diskussion“: Folie „Wertekompass“ (Werte und Tugenden) mit den fünf Leitfragen; steht während der Diskussion. */
+function DiskussionTafel(p: { inh: Inhalte }) {
+  const d = p.inh.szenario.auswertung.diskussion;
+  if (!d) return <div class="leer">Keine Diskussionsfolie im Szenario.</div>;
+  const genannt = new Set(d.leitfragen.flatMap((l) => l.werte));
+  return (
+    <section class="tafel tafel-diskussion" data-testid="diskussion">
+      <div class="kompass">
+        <h1>{d.titel}</h1>
+        <div class="sehr-leise">{d.quelle}</div>
+        <h2>Werte</h2>
+        <div class="kompass-chips">{d.werte.map((w) => <span key={w} class={`kompass-chip wert ${genannt.has(w) ? "genannt" : ""}`}>{w}</span>)}</div>
+        <h2>Tugenden</h2>
+        <div class="kompass-chips">{d.tugenden.map((w) => <span key={w} class={`kompass-chip tugend ${genannt.has(w) ? "genannt" : ""}`}>{w}</span>)}</div>
+      </div>
+      <ol class="leitfragen-diskussion">
+        {d.leitfragen.map((l) => (
+          <li key={l.titel}><b>{l.titel}</b>{l.werte.some((w) => !l.titel.includes(w)) && <span class="sehr-leise"> · {l.werte.filter((w) => !l.titel.includes(w)).join(", ")}</span>}<p>{l.text}</p></li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------- Abschluss (seit 2.7, G4.2)
+
+/** Kapitel „Abschluss“: vier Kernaussagen und die Schlussfrage; darunter klein, was die Teams entschieden haben. */
+function Abschluss(p: { a: Auswertung; inh: Inhalte }) {
+  const { a, inh } = p;
+  const au = inh.szenario.auswertung;
   const summe = (f: (t: TeamAuswertung) => number) => a.teams.reduce((s, t) => s + f(t), 0);
   return (
     <section class="tafel tafel-schluss" data-testid="schluss">
-      <p class="schlussfrage">{inh.szenario.auswertung.schlussfrage}</p>
-      <div class="schluss-zahlen">
-        <Zahl wert={summe((t) => t.kennzahlen.freigaben.gesamt)} text={`Bekämpfungen in ${a.teams.length} Teams`} />
-        <Zahl wert={summe((t) => t.kennzahlen.freigaben.wieArgus)} text="davon wie von ARGUS empfohlen" />
-        <Zahl wert={summe((t) => t.kennzahlen.zeiten.unter20)} text="Entscheidungen in höchstens 20 s" />
-        <Zahl wert={summe((t) => t.kennzahlen.widerspruch.gesamt)} text={`Mal widersprochen – ${summe((t) => t.kennzahlen.widerspruch.zuRecht)} zu Recht`} />
-      </div>
+      {au.abschluss && (
+        <div class="kernaussagen" data-testid="kernaussagen">
+          {au.abschluss.kernaussagen.map((k, i) => (
+            <div key={k.titel} class="kernaussage-karte"><span class="kernaussage-nr">{i + 1}</span><b>{k.titel}</b><p>{k.text}</p></div>
+          ))}
+        </div>
+      )}
+      <p class="schlussfrage">{au.schlussfrage}</p>
+      {a.teams.length > 0 && (
+        <div class="schluss-zahlen">
+          <Zahl wert={summe((t) => t.kennzahlen.freigaben.gesamt)} text={`Bekämpfungen in ${a.teams.length} Teams`} />
+          <Zahl wert={summe((t) => t.kennzahlen.freigaben.wieArgus)} text="davon wie von ARGUS empfohlen" />
+          <Zahl wert={summe((t) => t.kennzahlen.zeiten.unter20)} text="Entscheidungen in höchstens 20 s" />
+          <Zahl wert={summe((t) => t.kennzahlen.widerspruch.gesamt)} text={`Mal widersprochen – ${summe((t) => t.kennzahlen.widerspruch.zuRecht)} zu Recht`} />
+        </div>
+      )}
     </section>
   );
 }
@@ -1012,4 +1324,3 @@ function Schluss(p: { a: Auswertung; inh: Inhalte }) {
 function Zahl(p: { wert: ComponentChildren; text: string }) {
   return <div class="schluss-zahl"><b>{p.wert}</b><span>{p.text}</span></div>;
 }
-

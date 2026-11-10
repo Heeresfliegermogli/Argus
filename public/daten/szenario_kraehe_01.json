@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.6",
-  "stand": "2026-11-09",
+  "version": "2.7",
+  "stand": "2026-11-10",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -75,8 +75,8 @@
     },
     {
       "phase": "Auswertung",
-      "dauer_min": 12,
-      "inhalt": "Teamvergleich, dann die Schlüsselfälle in der Reihenfolge S3, S2, S1, S4"
+      "dauer_min": 15,
+      "inhalt": "Teamvergleich, Replay S3 und S2, Bilanz „Das ist es wert“ mit ARGUS allein, Impuls (Zitat), Diskussion mit Wertekompass, Abschluss"
     }
   ],
   "argus_system": {
@@ -238,8 +238,8 @@
       "hdg": 103,
       "bewegung": {
         "route": [
-          [150, 1010, 150], [155.4, 980, 153], [161, 949, 156], [166.5, 919, 161], [172, 889, 167], [177.6, 860, 178],
-          [183.1, 834, 194], [189.5, 828, 220], [193.9, 824, 238]
+          [195, 1010, 150], [200.4, 980, 153], [206, 949, 156], [211.5, 919, 161], [217, 889, 167], [222.6, 860, 178],
+          [228.1, 834, 194], [234.5, 828, 220], [238.9, 824, 238]
         ]
       },
       "gt": {
@@ -261,7 +261,7 @@
         "legitim": true
       },
       "feuert": [
-        {"von_s": 302, "bis_s": 650, "takt_s": 2, "salve": 2, "pause_s": 28, "auf": "pz2"},
+        {"von_s": 352, "bis_s": 650, "takt_s": 2, "salve": 2, "pause_s": 28, "auf": "pz2"},
         {"von_s": 818, "bis_s": 1190, "takt_s": 2, "salve": 2, "pause_s": 28, "auf": "pz2"}
       ],
       "bewegung": {"route": [[250, 1010, 100], [268, 960, 104], [282, 920, 105]]}
@@ -277,7 +277,8 @@
         "text": "Kampfpanzer-Attrappe (Holz, Plane, Tarnnetz), nachts vom Feind westlich des Bachs aufgestellt: Teil der Täuschung bei der Gefechtsaufklärung. Sie soll Feuer auf sich ziehen und vortäuschen, der Feind habe den Bach schon überschritten",
         "legitim": false,
         "bezug": "Täuschung ist eine erlaubte Kriegslist (Art. 37 Abs. 2 ZP I). Der Gegner nutzt gezielt die Schwäche der KI aus."
-      }
+      },
+      "spaet_gewollt": "S1: Die Attrappe steht seit Spielbeginn am Waldrand FUCHS; ARGUS meldet sie erst, als der Feind angreift (10:08:30)."
     },
     {
       "id": "Z-08",
@@ -440,7 +441,7 @@
         "kategorie": "verbuendet",
         "legitim": false,
         "bezug": "Eigenbeschuss (Brudermord). Kein Völkerrechtsverstoß im engeren Sinn, aber Versagen der Zielbearbeitung und Führungsverantwortung.",
-        "text": "KPz PT-91 Twardy der polnischen Nachbarbrigade. Gegenangriff entlang Feldweg Süd in Sprüngen, ab 10:22:45 in Feuerstellung südlich der Brücke; zerschlägt die letzten Feindkräfte an der Brücke ELSTER Ost (Ereignis E-01)"
+        "text": "KPz PT-91 Twardy der polnischen Nachbarbrigade. Gegenangriff entlang Feldweg Süd in Sprüngen, ab 10:20:47 im ersten Halt südlich der Brücke und schießt von dort auf die Feindkräfte an der Brücke Ost, ab 10:22:37 in Feuerstellung dicht südlich der Brücke; zerschlägt die letzten Feindkräfte an der Brücke ELSTER Ost (Ereignis E-01)"
       }
     },
     {
@@ -479,14 +480,14 @@
       "hdg": -173,
       "bewegung": {
         "route": [
-          [828, 1010, 372], [855.6, 905, 394], [883, 800, 413], [897.1, 745, 414], [908.7, 700, 413], [919, 660, 416],
-          [929.4, 620, 421], [939.7, 580, 422], [950.1, 540, 416], [959.4, 505, 407], [965.9, 480, 404],
-          [1500, 480, 404]
+          [828, 1010, 500], [865.5, 860, 500], [883.7, 860, 500], [899.3, 800, 450], [908.8, 760, 425],
+          [912.5, 745, 414], [921.5, 700, 413], [929.5, 660, 416], [937.6, 620, 421], [945.6, 580, 422],
+          [953.7, 540, 416], [960.9, 505, 407], [965.9, 480, 404], [1500, 480, 404]
         ]
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 der Achse SÜD. Fährt über die Felder südlich der Ortschaft an der Schule vorbei zur Brücke ELSTER Ost und schießt von dort auf die 1. Kp.",
+        "text": "SPz BMP-2 der Achse SÜD. Kommt aus dem Wald DACHS, fährt zwischen Ortschaft und Schule zur Brücke ELSTER Ost und schießt von dort auf die 1. Kp.",
         "legitim": true
       },
       "feuert": [{"von_s": 988, "bis_s": 1210, "takt_s": 10, "salve": 3, "pause_s": 50}],
@@ -522,13 +523,14 @@
           [950.5, 870, 331], [954.6, 842, 336], [958.7, 814, 341], [962.8, 786, 346], [966.9, 758, 350],
           [977.4, 758, 315], [981.6, 768, 305]
         ]
-      }
+      },
+      "spaet_gewollt": "S4: Der Mörser schießt ab 10:16:46 aus dem Hof RABE; ARGUS meldet ihn erst 10:18:15 mit NICHT BEKÄMPFEN (Zivilpersonen) – der Druck der 1. Kp (I-07) gehört zum Fall."
     },
     {
       "id": "Z-20",
       "typ": "kpz_t72",
-      "pos": [505, 412],
-      "hdg": 187,
+      "pos": [648, 417],
+      "hdg": 173,
       "bewegung": {
         "route": [
           [1022, 1010, 368], [1047.8, 905, 392], [1073.5, 800, 413], [1086.7, 745, 414], [1097.5, 700, 413],
@@ -566,8 +568,8 @@
       "hdg": -117,
       "bewegung": {
         "route": [
-          [1252, -10, 441], [1260.6, 21, 441], [1269.2, 52, 441], [1277.8, 83, 441], [1286.4, 114, 441],
-          [1295, 145, 441], [1303.6, 176, 422], [1312.2, 207, 419], [1320.8, 238, 417], [1329.4, 269, 414],
+          [1262.0, -10, 441], [1269.4, 21, 441], [1276.7, 52, 441], [1284.0, 83, 441], [1291.4, 114, 441],
+          [1298.8, 145, 441], [1306.1, 176, 422], [1313.4, 207, 419], [1320.8, 238, 417], [1329.4, 269, 414],
           [1337.7, 299, 411], [1346.4, 330, 407], [1360.5, 316, 379], [1373.8, 304, 352], [1387, 300, 323],
           [1400.4, 310, 295], [1413.3, 322, 269], [1426.8, 333, 241], [1439.9, 341, 213], [1453.1, 350, 185]
         ]
@@ -621,10 +623,10 @@
       "hdg": 188,
       "bewegung": {
         "route": [
-          [1048.0, 1010, 308], [1053.6, 981, 313], [1059.4, 951, 318], [1065.0, 922, 323], [1070.6, 893, 328],
-          [1076.4, 863, 332], [1082.0, 834, 337], [1087.6, 805, 342], [1093.3, 775, 347], [1099.0, 746, 352],
-          [1104.6, 717, 358], [1110.2, 688, 364], [1115.8, 659, 369], [1121.5, 629, 375], [1127.1, 600, 379],
-          [1142.5, 560, 347], [1155.1, 520, 334], [1163.6, 492, 330], [1500, 492, 330]
+          [1065.1, 722, -10], [1069.1, 715, 21], [1072.9, 709, 51], [1076.9, 702, 82], [1080.7, 695, 112],
+          [1084.8, 686, 143], [1088.6, 676, 172], [1092.5, 666, 202], [1096.5, 655, 232], [1100.4, 648, 262],
+          [1108.7, 631, 300], [1117.7, 630, 345], [1122.5, 619, 366], [1127.1, 600, 379], [1142.5, 560, 347],
+          [1155.1, 520, 334], [1163.6, 492, 330], [1500, 492, 330]
         ]
       },
       "personen": [
@@ -648,7 +650,8 @@
         },
         "hinweis": "ARGUS klassifiziert richtig (es ist ein T-72), die Empfehlung ist trotzdem falsch: Jede Wirkung träfe die Besatzung, die sich ergibt, und der kampfunfähige Panzer bringt keinen militärischen Vorteil mehr.",
         "bezug": "Schutz des Gegners, der außer Gefecht ist (Art. 41 ZP I)."
-      }
+      },
+      "spaet_gewollt": "N2: Zustandswechsel – ARGUS meldet den Panzer erst, nachdem die 1. Kp ihn getroffen hat (10:19:30)."
     },
     {
       "id": "Z-25",
@@ -657,8 +660,8 @@
       "hdg": 352,
       "bewegung": {
         "route": [
-          [1250, 1010, 308], [1253.8, 979, 313], [1257.7, 947, 318], [1261.5, 916, 324], [1265.4, 884, 329],
-          [1269.2, 853, 334], [1273.1, 821, 340], [1276.9, 790, 345], [1418, 790, 345], [1423.3, 819, 340],
+          [1350, 1010, 308], [1353.8, 979, 313], [1357.7, 947, 318], [1361.5, 916, 324], [1365.4, 884, 329],
+          [1369.2, 853, 334], [1373.1, 821, 340], [1376.9, 790, 345], [1418, 790, 345], [1423.3, 819, 340],
           [1428.6, 848, 335], [1433.9, 877, 330], [1439.2, 906, 325], [1444.5, 935, 321], [1500, 935, 321]
         ]
       },
@@ -676,8 +679,8 @@
       "hdg": 282,
       "bewegung": {
         "route": [
-          [1003, 722, -10], [1007.6, 715, 21], [1012, 709, 51], [1016.6, 702, 82], [1021, 695, 112],
-          [1025.6, 686, 143], [1030, 676, 172], [1034.6, 666, 202], [1039.2, 655, 232], [1043.6, 648, 262],
+          [1380, 722, -10], [1384.6, 715, 21], [1389, 709, 51], [1393.6, 702, 82], [1398, 695, 112],
+          [1402.6, 686, 143], [1407, 676, 172], [1411.6, 666, 202], [1416.2, 655, 232], [1420.6, 648, 262],
           [1446, 648, 262], [1449.5, 655, 234], [1453, 664, 206], [1456.5, 674, 179], [1459.9, 683, 152],
           [1463.4, 692, 124], [1466.9, 699, 96], [1470.3, 705, 68], [1473.7, 711, 40], [1500, 711, 40]
         ]
@@ -736,8 +739,8 @@
       "hdg": 200,
       "bewegung": {
         "route": [
-          [560, 1010, 308], [563.2, 984, 312], [566.5, 957, 317], [569.7, 931, 321], [572.9, 905, 326],
-          [593.4, 862, 400], [608.7, 830, 455]
+          [585, 1010, 308], [588.2, 984, 312], [591.5, 957, 317], [594.7, 931, 321], [597.9, 905, 326],
+          [618.4, 862, 400], [633.7, 830, 455]
         ]
       },
       "gt": {
@@ -921,13 +924,13 @@
     {
       "id": "Z-47",
       "typ": "spz_bmp2",
-      "pos": [480, 422],
+      "pos": [489, 423],
       "hdg": -173,
       "bewegung": {
         "route": [
-          [834, 1010, 390], [861.6, 905, 412], [889, 800, 431], [903.1, 745, 432], [914.7, 700, 431], [925, 660, 434],
-          [935.4, 620, 439], [945.7, 580, 440], [956.1, 540, 434], [965.4, 505, 425], [971.9, 480, 422],
-          [1506, 480, 422]
+          [834, 1010, 530], [868.0, 875, 515], [887.5, 875, 515], [903.5, 812, 466], [913.9, 765, 443],
+          [918.5, 745, 432], [927.5, 700, 431], [935.5, 660, 434], [943.6, 620, 439], [951.6, 580, 440],
+          [959.7, 540, 434], [966.9, 505, 425], [971.9, 480, 422], [1506, 480, 422]
         ]
       },
       "gt": {"kategorie": "feind", "text": "SPz BMP-2 der Achse SÜD (zweites Fahrzeug, folgt Z-18).", "legitim": true},
@@ -937,8 +940,8 @@
     {
       "id": "Z-48",
       "typ": "kpz_t72",
-      "pos": [560, 430],
-      "hdg": 187,
+      "pos": [677, 401],
+      "hdg": 176,
       "bewegung": {
         "route": [
           [1029, 1010, 354], [1054.8, 905, 378], [1080.5, 800, 399], [1093.7, 745, 400], [1104.5, 700, 399],
@@ -1002,7 +1005,8 @@
         "bezug": "Art. 51 Abs. 7 und 8 ZP I, Art. 57 ZP I"
       },
       "feuert": [{"von_s": 930, "bis_s": 1500, "takt_s": 10, "salve": 3, "pause_s": 50, "auf": "pz1"}],
-      "kein_durchbruch": "hält vor dem Wohnhaus (Schutzschild)"
+      "kein_durchbruch": "hält vor dem Wohnhaus (Schutzschild)",
+      "spaet_gewollt": "S5: Der Schutzschild-SPz schießt ab 10:15:30 vor dem Wohnhaus; ARGUS meldet ihn 10:16:30 – gehört zum Fall."
     },
     {
       "id": "Z-42",
@@ -1018,7 +1022,7 @@
         "hinweis": "Die Kirche ist Kulturgut, verliert den Schutz aber durch die militärische Nutzung (Beobachtungsposten). Der Mörser träfe die Ortschaft und die Kirche (R3) – zulässig und verhältnismäßig ist nur die LM auf die Turmplattform.",
         "bezug": "Art. 53 und 52 Abs. 2 ZP I, Haager Konvention 1954 (Art. 4, 11)"
       },
-      "feuert": [{"von_s": 870, "bis_s": 1500, "takt_s": 35, "salve": 1, "auf": "pz2"}],
+      "feuert": [{"von_s": 900, "bis_s": 1500, "takt_s": 35, "salve": 1, "auf": "pz2"}],
       "kein_durchbruch": "Beobachtungsposten im Kirchturm"
     },
     {
@@ -1330,7 +1334,7 @@
       "phase": 2,
       "argus": {"klasse": "Infanterie", "zugehoerigkeit": "Feind", "konfidenz": 84, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
-        "waerme": "Rohre heiß (feuert)",
+        "waerme": "Rohre kalt, Bedienung warm (richtet ein)",
         "bewegung": "keine",
         "spuren": "Fußspuren, Munitionskisten",
         "kennzeichnung": "keine erkannt",
@@ -1339,12 +1343,12 @@
       },
       "bild": {
         "datei": "drohne/M05.webp",
-        "beschreibung": "Zwei Mörserrohre mit Bedienung am Waldrand, Munitionskisten. Mündungsrauch zieht über die Stellung.",
+        "beschreibung": "Zwei Mörserrohre mit Bedienung am Waldrand, Munitionskisten. Rauch zieht über die Stellung, die Bedienung richtet die Rohre ein.",
         "sicht": [{"art": "rauch", "anteil": 0.25, "lage": "Ziel"}],
         "merkmale": []
       },
       "loesung": {"entscheid": "BEKÄMPFEN", "text": "Mörser zulässig"},
-      "zweck": "Die Feindartillerie liegt auf der 1. Kp, der Mörser am Waldrand MARDER eröffnet das Feuer: Beginn der Gefechtsaufklärung. Mörser zulässig."
+      "zweck": "Die Feindartillerie liegt auf der 1. Kp, der Mörser am Waldrand MARDER geht in Stellung und eröffnet gleich das Feuer (10:05:52, seit 2.7 erst nach der Meldung): Beginn der Gefechtsaufklärung. Mörser zulässig."
     },
     {
       "id": "M06",
@@ -1728,6 +1732,38 @@
       "zweck": "Achse NORD: SPz-Zug hinter den Panzern."
     },
     {
+      "id": "M16",
+      "t_s": 970,
+      "ziele": ["Z-18", "Z-47"],
+      "phase": 4,
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 88,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [88, 85]
+      },
+      "sensor": {
+        "waerme": "heiß (2 Fahrzeuge, Motoren laufen)",
+        "bewegung": "kommt gerade zum Stehen",
+        "spuren": "Kettenspuren von Südosten (Wald DACHS)",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M16.webp",
+        "beschreibung": "Zwei Schützenpanzer erreichen die Brücke ELSTER Ost südlich der Straße und gehen in Stellung.",
+        "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel", "seite": "vorn"}],
+        "zustand": {},
+        "ausschnitt_m": 125,
+        "merkmale": []
+      },
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "Kanone oder LM"},
+      "zweck": "Druck an der Brücke: Die Achse SÜD kommt aus dem Wald DACHS und geht an der Brücke Ost in Stellung; der vordere SPz schießt ab 10:16:28 auf die 1. Kp. Seit 2.7 (I2.1) gemeldet, sobald er hält – vor dem ersten Schuss.",
+      "dicht_gewollt": "I2.1: Meldung beim Halt an der Brücke Ost (10:16:10), 10 s nach M15 – Hauptangriff, vor dem ersten Schuss 10:16:28"
+    },
+    {
       "id": "M32",
       "t_s": 990,
       "ziele": ["Z-41"],
@@ -1765,35 +1801,33 @@
       "zweck": "Schlüsselfall S5: Der Feind missbraucht Zivilpersonen als Schutzschild. ARGUS erkennt die Personen nicht und empfiehlt BEKÄMPFEN; der SPz schießt laufend auf 1/1."
     },
     {
-      "id": "M16",
+      "id": "M33",
       "t_s": 1020,
-      "ziele": ["Z-18", "Z-47"],
+      "ziele": ["Z-43"],
       "phase": 4,
-      "argus": {
-        "klasse": "Panzer",
-        "zugehoerigkeit": "Feind",
-        "konfidenz": 88,
-        "empfehlung": "BEKÄMPFEN",
-        "einzeln": [88, 85]
-      },
+      "fall": "S8",
+      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "Feind", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
       "sensor": {
-        "waerme": "heiß (Waffe feuert)",
-        "bewegung": "keine",
-        "spuren": "Kettenspuren von Osten",
-        "kennzeichnung": "keine erkannt",
-        "personen": "–",
+        "waerme": "warm (Motor aus)",
+        "bewegung": "steht seit 1 min",
+        "spuren": "Reifenspuren von der Straße",
+        "kennzeichnung": "Aufschrift PRESS auf dem Dach",
+        "personen": "2 ohne Uniform mit Kamera und Stativ",
         "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M16.webp",
-        "beschreibung": "Zwei Schützenpanzer an der Brücke ELSTER Ost südlich der Straße, der vordere mit Mündungsfeuer.",
-        "sicht": [{"art": "rauch", "anteil": 0.3, "lage": "Ziel", "seite": "vorn"}],
-        "zustand": {"Z-18": "feuert"},
-        "ausschnitt_m": 125,
-        "merkmale": []
+        "datei": "drohne/M33.webp",
+        "ausschnitt_m": 110,
+        "versatz_m": [0, -25],
+        "beschreibung": "Dunkler Geländewagen im Feld südlich der Hauptstraße, auf dem Dach in großen weißen Buchstaben PRESS; daneben zwei Personen mit Kamera auf Stativ. Am oberen Bildrand die Kolonne.",
+        "sicht": [],
+        "merkmale": [
+          {"art": "press", "ziel": "Z-43", "text": "Aufschrift PRESS auf dem Dach"},
+          {"art": "zivilpersonen", "ziel": "Z-43", "anzahl": 2, "text": "Kamerateam mit Stativ"}
+        ]
       },
-      "loesung": {"entscheid": "BEKÄMPFEN", "text": "Kanone oder LM"},
-      "zweck": "Druck an der Brücke: Die Achse SÜD ist an der Brücke Ost angekommen."
+      "loesung": {"entscheid": "ABLEHNEN", "text": "PRESS auf dem Dach, Kamerateam: Zivilpersonen"},
+      "zweck": "Schlüsselfall S8: ARGUS meldet ein Pressefahrzeug als feindliches Fahrzeug (88 %). Die Aufschrift ist im Bild gut lesbar."
     },
     {
       "id": "M17",
@@ -1823,6 +1857,42 @@
         "text": "fährt zur Schule: Einschlag läge auf dem Schulgelände, solange der BMP-2 dort steht; ab ca. 20:20 mit LM"
       },
       "zweck": "Nebenfall Vorhalt auf der Achse SÜD: Bei der Meldung ist LM zulässig, beim Einschlag steht das Ziel am Schulgebäude. Die Warnung rechnet den Einschlag voraus."
+    },
+    {
+      "id": "M34",
+      "t_s": 1075,
+      "ziele": ["Z-38", "Z-39", "Z-40"],
+      "phase": 4,
+      "fall": "S8",
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 88,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [88, 87, 85]
+      },
+      "sensor": {
+        "waerme": "warm (3 Fahrzeuge, Motoren im Leerlauf)",
+        "bewegung": "steht seit 1 min",
+        "spuren": "Radspuren von der Straße",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M34.webp",
+        "ausschnitt_m": 130,
+        "versatz_m": [25, 20],
+        "beschreibung": "Drei achträdrige Radpanzer stehen nördlich der Hauptstraße in Bereitstellung. Südlich der Straße steht der Geländewagen mit PRESS auf dem Dach, das Kamerateam filmt.",
+        "sicht": [],
+        "merkmale": [{"art": "press", "ziel": "Z-43", "text": "Pressefahrzeug 55 m neben der Kolonne"}]
+      },
+      "loesung": {
+        "entscheid": "BEKÄMPFEN",
+        "wirkmittel": ["LM"],
+        "text": "nur LM (kein Mörser: Kamerateam im Wirkradius)"
+      },
+      "zweck": "Gehört zu S8: Die Kolonne ist ein legitimes Ziel – aber nur so zu bekämpfen, dass das Kamerateam beim Einschlag nicht im Radius ist. Das System warnt nicht (keine Zone). Wer bis 10:19:40 wartet, muss außerdem auf den Pkw der Familie achten."
     },
     {
       "id": "M18",
@@ -1867,33 +1937,39 @@
       "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 1. Kp freigibt, trifft die Zivilpersonen."
     },
     {
-      "id": "M33",
-      "t_s": 1125,
-      "ziele": ["Z-43"],
+      "id": "M37",
+      "t_s": 1110,
+      "ziele": ["Z-20", "Z-48"],
       "phase": 4,
-      "fall": "S8",
-      "argus": {"klasse": "Fahrzeug", "zugehoerigkeit": "Feind", "konfidenz": 88, "empfehlung": "BEKÄMPFEN"},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 89,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [89, 86]
+      },
       "sensor": {
-        "waerme": "warm (Motor aus)",
-        "bewegung": "steht seit 3 min",
-        "spuren": "Reifenspuren von der Straße",
-        "kennzeichnung": "Aufschrift PRESS auf dem Dach",
-        "personen": "2 ohne Uniform mit Kamera und Stativ",
+        "waerme": "heiß (2 Fahrzeuge, fahren)",
+        "bewegung": "nach West, ca. 15 km/h",
+        "spuren": "frische Kettenspuren",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
         "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M33.webp",
-        "ausschnitt_m": 110,
-        "versatz_m": [0, -25],
-        "beschreibung": "Dunkler Geländewagen im Feld südlich der Hauptstraße, auf dem Dach in großen weißen Buchstaben PRESS; daneben zwei Personen mit Kamera auf Stativ. Am oberen Bildrand die Kolonne.",
+        "datei": "drohne/M37.webp",
+        "beschreibung": "Zwei Kampfpanzer fahren zwischen Ortschaft und Schule nach Westen Richtung Brücke ELSTER; das Schulgelände am unteren Bildrand.",
         "sicht": [],
-        "merkmale": [
-          {"art": "press", "ziel": "Z-43", "text": "Aufschrift PRESS auf dem Dach"},
-          {"art": "zivilpersonen", "ziel": "Z-43", "anzahl": 2, "text": "Kamerateam mit Stativ"}
-        ]
+        "ausschnitt_m": 150,
+        "versatz_m": [0, 18],
+        "merkmale": []
       },
-      "loesung": {"entscheid": "ABLEHNEN", "text": "PRESS auf dem Dach, Kamerateam: Zivilpersonen"},
-      "zweck": "Schlüsselfall S8: ARGUS meldet ein Pressefahrzeug als feindliches Fahrzeug (88 %). Die Aufschrift ist im Bild gut lesbar."
+      "loesung": {
+        "entscheid": "BEKÄMPFEN",
+        "wirkmittel": ["LM"],
+        "text": "echtes Ziel (Achse SÜD); Schule und Ortschaft nah: nur LM"
+      },
+      "zweck": "Erste Meldung der zwei Kampfpanzer der Achse SÜD auf dem Weg zur Brücke Ost (seit 2.7, I2.2: höchstens 90 s nach der Einfahrt). Dicht an der Schule: Mörser unzulässig, LM geht."
     },
     {
       "id": "M35",
@@ -2028,40 +2104,35 @@
       "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die 1. Kp hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 1. Kp (I-06), Feuer auf die Brücke Ost zu legen."
     },
     {
-      "id": "M34",
+      "id": "M22",
       "t_s": 1275,
-      "ziele": ["Z-38", "Z-39", "Z-40"],
+      "ziele": ["Z-21", "Z-49"],
       "phase": 5,
-      "fall": "S8",
       "argus": {
         "klasse": "Panzer",
         "zugehoerigkeit": "Feind",
-        "konfidenz": 88,
-        "empfehlung": "BEKÄMPFEN",
-        "einzeln": [88, 87, 85]
+        "konfidenz": 63,
+        "empfehlung": "PRÜFEN",
+        "hinweis": "teilverdeckt",
+        "einzeln": [63, 61]
       },
       "sensor": {
-        "waerme": "warm (3 Fahrzeuge, Motoren im Leerlauf)",
-        "bewegung": "steht seit 4 min",
-        "spuren": "Radspuren von der Straße",
+        "waerme": "warm (2 Fahrzeuge, Motoren im Leerlauf)",
+        "bewegung": "steht seit 20 s",
+        "spuren": "Kettenspuren aus dem Wald",
         "kennzeichnung": "keine erkannt",
         "personen": "–",
         "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
       },
       "bild": {
-        "datei": "drohne/M34.webp",
-        "ausschnitt_m": 130,
-        "versatz_m": [25, 20],
-        "beschreibung": "Drei achträdrige Radpanzer stehen nördlich der Hauptstraße in Bereitstellung. Südlich der Straße steht der Geländewagen mit PRESS auf dem Dach, das Kamerateam filmt.",
-        "sicht": [],
-        "merkmale": [{"art": "press", "ziel": "Z-43", "text": "Pressefahrzeug 55 m neben der Kolonne"}]
+        "datei": "drohne/M22.webp",
+        "beschreibung": "Zwei Schützenpanzer am Waldrand DACHS, halb im Wald, nur Bug und Rohr frei.",
+        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel", "seite": "hinten"}],
+        "ausschnitt_m": 125,
+        "merkmale": []
       },
-      "loesung": {
-        "entscheid": "BEKÄMPFEN",
-        "wirkmittel": ["LM"],
-        "text": "nur LM (kein Mörser: Kamerateam im Wirkradius) und nicht, solange der Pkw der Familie vorbeifährt"
-      },
-      "zweck": "Gehört zu S8: Die Kolonne ist ein legitimes Ziel – aber nur so zu bekämpfen, dass Presse und Pkw beim Einschlag nicht im Radius sind. Das System warnt nicht (keine Zone)."
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher, im Bild erkennbar; Schule 66 m, Mörser unzulässig"},
+      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
     },
     {
       "id": "M23",
@@ -2156,38 +2227,8 @@
         "merkmale": []
       },
       "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
-      "zweck": "Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD)."
-    },
-    {
-      "id": "M22",
-      "t_s": 1410,
-      "ziele": ["Z-21", "Z-49"],
-      "phase": 5,
-      "argus": {
-        "klasse": "Panzer",
-        "zugehoerigkeit": "Feind",
-        "konfidenz": 63,
-        "empfehlung": "PRÜFEN",
-        "hinweis": "teilverdeckt",
-        "einzeln": [63, 61]
-      },
-      "sensor": {
-        "waerme": "warm (2 Fahrzeuge, Motoren im Leerlauf)",
-        "bewegung": "keine",
-        "spuren": "Kettenspuren aus dem Wald",
-        "kennzeichnung": "keine erkannt",
-        "personen": "–",
-        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
-      },
-      "bild": {
-        "datei": "drohne/M22.webp",
-        "beschreibung": "Zwei Schützenpanzer am Waldrand DACHS, halb im Wald, nur Bug und Rohr frei.",
-        "sicht": [{"art": "baeume", "anteil": 0.55, "lage": "Ziel", "seite": "hinten"}],
-        "ausschnitt_m": 125,
-        "merkmale": []
-      },
-      "loesung": {"entscheid": "BEKÄMPFEN", "text": "ARGUS unsicher, im Bild erkennbar; Schule 66 m, Mörser unzulässig"},
-      "zweck": "Verdecktes, echtes Ziel mit niedriger Konfidenz; Mörser knapp unzulässig wegen der Schule."
+      "zweck": "Folgemeldung zu M37: die zwei Kampfpanzer stehen an der Brücke Ost (Bereitstellung). Gegenstück zum Sanitätsfahrzeug: gleiche Nähe zur Schule, aber echtes Ziel (Achse SÜD).",
+      "folge_von": "M37"
     },
     {
       "id": "M26",
@@ -2332,9 +2373,9 @@
       "an": "Team",
       "von": "PL-PzKp",
       "fall": "S3",
-      "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1480},
+      "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1400},
       "text": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen. Feind weicht nach Osten aus.",
-      "zweck": "Rückmeldung, wenn S3 richtig gelöst wurde: Der Gegenangriff entscheidet das Gefecht."
+      "zweck": "Rückmeldung nach dem letzten Schuss der PT-91 (seit 2.7 10:23:20), wenn S3 richtig gelöst wurde: Der Gegenangriff entscheidet das Gefecht."
     },
     {
       "id": "I-09",
@@ -2380,6 +2421,15 @@
       "bedingung": {"typ": "treffer", "ziele": ["Z-44"], "verzoegerung_s": 60},
       "text": "Meldung aus KRÄHE: Pkw einer Familie auf der Hauptstraße getroffen, vier Insassen schwer verletzt, darunter zwei Kinder.",
       "zweck": "Rückmeldung, wenn eine eigene Wirkung den fliehenden Pkw traf (S8)."
+    },
+    {
+      "id": "I-17",
+      "an": "Team",
+      "von": "PL-PzKp",
+      "fall": "S3",
+      "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1305},
+      "text": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, bekämpfen Feind an der Brücke Ost.",
+      "zweck": "Seit 2.7 (I3.2): Auflösung von S3 nach Zeit – 90 s nach M20 ohne Freigabe sind die PT-91 als verbündet erkannt."
     }
   ],
   "reserve_injects": [
@@ -2417,17 +2467,21 @@
       "id": "E-01",
       "name": "Polnischer Gegenangriff zerschlägt die letzten Feindkräfte an der Brücke ELSTER Ost",
       "fall": "S3",
-      "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1410},
+      "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1245},
       "wirkungen": [
-        {"t_s": 1410, "von": "Z-15", "ziel": "Z-27"},
-        {"t_s": 1425, "von": "Z-16", "ziel": "Z-28"},
-        {"t_s": 1440, "von": "Z-17", "ziel": "Z-18"},
-        {"t_s": 1455, "von": "Z-15", "ziel": "Z-20"},
-        {"t_s": 1465, "von": "Z-16", "ziel": "Z-36"},
-        {"t_s": 1475, "von": "Z-17", "ziel": "Z-02"}
+        {"t_s": 1245, "von": "Z-15"},
+        {"t_s": 1265, "von": "Z-16"},
+        {"t_s": 1285, "von": "Z-17"},
+        {"t_s": 1305, "von": "Z-15"},
+        {"t_s": 1325, "von": "Z-16"},
+        {"t_s": 1345, "von": "Z-17"},
+        {"t_s": 1365, "von": "Z-15"},
+        {"t_s": 1385, "von": "Z-16"}
       ],
-      "regel": "Jede Wirkung nur, wenn das Ziel dann noch steht. Bekämpft das Team vorher Z-15–17, entfällt E-01: Der Angriff bricht ab und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen.",
-      "papier": "SL 1 trägt die Wirkungen ab 10:23:30 auf der Kontrollkarte ein und gibt I-08b um 10:24:40."
+      "regel": "Seit 2.7 (I3.1): Die PT-91 schießen ab 10:20:45, sobald sie im ersten Halt südlich der Brücke stehen, alle 20 s auf die Feindkräfte an der Brücke Ost – je Schuss auf das erste Fahrzeug in ziele_reihenfolge (Reihenfolge der Ankunft), das dann im Bereich steht, nicht zerstört und ein legitimes Ziel ist; steht keines da, geht der Schuss nicht hinaus. Bekämpft das Team vorher Z-15–17, entfällt E-01 bzw. bricht ab: Der Angriff endet und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen (nicht in der Liste).",
+      "papier": "SL 1 trägt die Wirkungen ab 10:20:45 auf der Kontrollkarte ein (Schuss alle 20 s) und gibt I-08b um 10:23:20.",
+      "ziele_reihenfolge": ["Z-02", "Z-18", "Z-47", "Z-48", "Z-20", "Z-36", "Z-27", "Z-28"],
+      "bereich": {"x": [450, 610], "y": [320, 450], "name": "Brücke ELSTER Ost"}
     }
   ],
   "hintergrund": {
@@ -2750,8 +2804,8 @@
             "gruppe": "V3-1–3",
             "bewegung": {
               "route": [
-                [0, 1010, 150], [6, 977, 153], [12, 944, 157], [17.8, 912, 162], [23.7, 880, 170], [48.6, 790, 134],
-                [74.5, 690, 146], [98.5, 600, 170], [400, 600, 170]
+                [0.0, 1010, 150], [4.8, 977, 153], [9.6, 944, 157], [14.2, 912, 162], [19.0, 880, 170],
+                [38.9, 790, 134], [59.6, 690, 146], [78.8, 600, 170], [400, 600, 170]
               ]
             },
             "gt": {
@@ -2768,8 +2822,8 @@
             "gruppe": "V3-1–3",
             "bewegung": {
               "route": [
-                [8, 1010, 150], [14, 977, 153], [20, 944, 157], [25.8, 912, 162], [31.7, 880, 170], [55, 790, 160],
-                [80.9, 690, 172], [102.4, 610, 196], [400, 610, 196]
+                [6.4, 1010, 150], [11.2, 977, 153], [16.0, 944, 157], [20.6, 912, 162], [25.4, 880, 170],
+                [44.0, 790, 160], [64.7, 690, 172], [81.9, 610, 196], [400, 610, 196]
               ]
             },
             "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true}
@@ -2782,8 +2836,8 @@
             "gruppe": "V3-1–3",
             "bewegung": {
               "route": [
-                [16, 1010, 150], [22, 977, 153], [28, 944, 157], [33.8, 912, 162], [39.7, 880, 170], [63.2, 790, 186],
-                [89.1, 690, 198], [108.1, 620, 222], [400, 620, 222]
+                [12.8, 1010, 150], [17.6, 977, 153], [22.4, 944, 157], [27.0, 912, 162], [31.8, 880, 170],
+                [50.6, 790, 186], [71.3, 690, 198], [86.5, 620, 222], [400, 620, 222]
               ]
             },
             "gt": {"kategorie": "feind", "text": "SPz BMP-2, SPz-Zug über die Felder.", "legitim": true}
@@ -2792,7 +2846,7 @@
         "meldungen": [
           {
             "id": "V3-M1",
-            "dt_s": 130,
+            "dt_s": 90,
             "ziele": ["V3-1", "V3-2", "V3-3"],
             "argus": {
               "klasse": "Panzer",
@@ -2803,7 +2857,7 @@
             },
             "sensor": {
               "waerme": "warm (Motoren laufen)",
-              "bewegung": "steht seit 30 s",
+              "bewegung": "steht seit 10 s",
               "spuren": "frische Kettenspuren aus Osten",
               "kennzeichnung": "keine erkannt",
               "personen": "–"
@@ -2861,7 +2915,7 @@
             "hdg": 225,
             "personen": [{"art": "soldat", "anzahl": 5, "pos": [864, 48], "ab_s": 14}],
             "gt": {"kategorie": "feind", "text": "Mörsertrupp am Waldrand MARDER, zweite Stellung.", "legitim": true},
-            "feuert": [{"von_s": 18, "bis_s": 420, "takt_s": 2, "salve": 2, "pause_s": 28, "auf": "pz2"}],
+            "feuert": [{"von_s": 45, "bis_s": 420, "takt_s": 2, "salve": 2, "pause_s": 28, "auf": "pz2"}],
             "bewegung": {"route": [[0, 862, -10], [14, 862, 45]]}
           }
         ],
@@ -2970,13 +3024,14 @@
       "titel": "Polnische PT-91 als T-72 erkannt",
       "meldung": "M20",
       "ziele": ["Z-15", "Z-16", "Z-17"],
-      "info_bei": "Lagemeldung I-04 im Feed (17:00), im Bild nicht erkennbar",
+      "info_bei": "Lagemeldung I-04 im Feed (17:00); ab 20:45 auf der Karte: sie schießen auf den Feind; im Bild nicht erkennbar",
       "info_kurz": "nur im Feed (I-04)",
-      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. Im Bild ist der Fehler nicht zu erkennen; die Information stand gut drei Minuten vorher im Feed der Lagemeldungen (I-04) – mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE. Ab 23:30 schießen die PT-91 aus Feuerstellungen südlich der Brücke auf die Feindkräfte an der Brücke. Wer vorher bekämpft, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen.",
+      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. Im Bild ist der Fehler nicht zu erkennen; die Information stand gut drei Minuten vorher im Feed der Lagemeldungen (I-04) – mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE. Ab 10:20:45 schießen die PT-91 aus Feuerstellungen südlich der Brücke sichtbar auf die Feindkräfte an der Brücke Ost (auf der Karte und im Drohnenbild); wer bis 10:21:45 nicht bekämpft hat, sieht sie dann als verbündet markiert. Wer vorher bekämpft, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen.",
       "gut": "Das Team liest I-04, merkt sich Feldweg Süd und lehnt M20 ab. Der Gegenangriff entscheidet das Gefecht (I-08b).",
       "leitfragen": [
         "Wann habt ihr I-04 gesehen, mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE? Wie lange stand die Meldung im Feed, bevor ihr weitergearbeitet habt?",
         "Wie viele Sekunden habt ihr auf diese Meldung geschaut? Hättet ihr den Fehler mit mehr Zeit gefunden?",
+        "Wer hat auf die Karte geschaut? Ab 20:45 schossen die PT-91 sichtbar auf den Feind an der Brücke Ost.",
         "Teamvergleich: Einige Teams haben die Polen beschossen, andere nicht. Was haben die anderen anders gemacht?",
         "Wer ist verantwortlich, wenn alle nach Vorschrift gehandelt haben und trotzdem Verbündete getroffen wurden?"
       ],
@@ -3190,14 +3245,162 @@
     }
   ],
   "auswertung": {
-    "einstieg": "Zuerst der Teamvergleich mit allen Fällen (S1–S8, N1–N4) und die Kennzahlen, dann die Schlüsselfälle mit Replay in der Reihenfolge S3, S2, S1, S4 (Standard); die Spielleitung kann S5–S8 zuschalten und die Reihenfolge ändern, die Zeit je Fall passt sich an (zusammen 12 min).",
+    "einstieg": "Seit 2.7 (G): 15 min nach dem Spiel – Teamvergleich (1 min), Replay S3 und S2 (4 min), Bilanz „Das ist es wert“ mit „ARGUS allein“ (2 min), Impuls (1 min), Diskussion mit Wertekompass (6 min), Abschluss (1 min). Kennzahlen, Konfidenz, Preis des Abwartens und die übrigen Fälle sind zuschaltbar.",
     "kernaussage": "ARGUS lag bei den meisten Meldungen richtig. Bei den falschen Empfehlungen war ARGUS im Schnitt aber sogar sicherer als bei den richtigen: Schlechte Sicht drückte die Konfidenz echter Ziele, die Fehler passierten bei klarer Sicht. Die Konfidenz sagt nicht, wann man widersprechen muss; das können nur Menschen, die die Lage kennen.",
     "schlussfrage": "Wer hat in diesem Spiel entschieden: ihr oder ARGUS?",
     "replay": {
-      "standard": ["S3", "S2", "S1", "S4"],
-      "zuschaltbar": ["S5", "S6", "S7", "S8"],
-      "budget_s": 720,
-      "hinweis": "Seit 2.4 (E5): Teamvergleich mit allen Fällen; Replay-Reihenfolge der Spielleitung wählbar. Das Budget von 12 min bleibt: Die Zeit je Fall ergibt sich aus der Zahl der gewählten Fälle (src/kern/auswertung.ts, replayPlan)."
+      "standard": ["S3", "S2"],
+      "zuschaltbar": ["S1", "S4", "S5", "S6", "S7", "S8"],
+      "budget_s": 240,
+      "hinweis": "Seit 2.7 (G1.1): Das Replay hat 4 min; Standard S3 und S2 je 2:00, weitere Fälle zuschaltbar (die Zeit je Fall sinkt)."
+    },
+    "kapitel": [
+      {"id": "teams", "titel": "Teamvergleich", "sek": 60},
+      {"id": "replay", "titel": "Replay", "sek": 240},
+      {"id": "bilanz", "titel": "Bilanz – Das ist es wert", "sek": 120},
+      {"id": "impuls", "titel": "Impuls", "sek": 60},
+      {"id": "diskussion", "titel": "Diskussion", "sek": 360},
+      {"id": "abschluss", "titel": "Abschluss", "sek": 60}
+    ],
+    "zuschaltbar": [
+      {"id": "kennzahlen", "titel": "Kennzahlen je Team", "sek": 45, "nach": "teams"},
+      {"id": "konfidenz", "titel": "Was die Konfidenz sagt", "sek": 30, "nach": "teams"},
+      {"id": "preis", "titel": "Preis des Abwartens", "sek": 60, "nach": "replay"}
+    ],
+    "referenz": {
+      "name": "ARGUS allein",
+      "regel": "Jede Meldung mit Empfehlung BEKÄMPFEN wird zur Meldezeit ohne Prüfung freigegeben; Wirkmittel: Mörser, wenn am Einschlagort ohne Warnung zulässig, sonst LM, sonst Kanone. PRÜFEN, UNKLAR und NICHT BEKÄMPFEN bleiben liegen. Dieselbe Engine wie die Teams (Trefferregel, Verlustmodell, Durchbruch, E-01); gerechnet beim Öffnen der Auswertung, gleich der Simulation.",
+      "reihenfolge_wirkmittel": ["MRS", "LM", "PZA"]
+    },
+    "bilanz": {
+      "titel": "Bilanz – Das ist es wert",
+      "hinweis_sl": "ARGUS allein war schneller, hat mehr zerstört und die eigenen Panzer geschont. Warum braucht es euch noch?",
+      "nicht_in_bilanz": "Nicht in der Bilanz",
+      "zitat": {
+        "text": "… 20 seconds for each target …",
+        "quelle": "Offizier „B.“, +972 Magazine, Yuval Abraham, 03.04.2024"
+      }
+    },
+    "impuls": {
+      "frage": "Stimmt ihr zu?",
+      "folien": [
+        {
+          "id": "zitat",
+          "ohne_quelle": true,
+          "original": "I have much more trust in a statistical mechanism than a soldier who lost a friend two days ago. […] The machine did it coldly. And that made it easier.",
+          "deutsch": "Ich vertraue einem statistischen Mechanismus viel mehr als einem Soldaten, der vor zwei Tagen einen Freund verloren hat. […] Die Maschine hat es kalt gemacht. Und das hat es leichter gemacht."
+        },
+        {
+          "id": "aufgedeckt",
+          "titel": "Offizier „B.“ über das KI-Zielsystem „Lavender“ der israelischen Armee im Gaza-Krieg",
+          "quelle": "+972 Magazine, Yuval Abraham, 03.04.2024",
+          "punkte": [
+            {
+              "text": "rund 20 s Prüfung je Ziel",
+              "zitat": "I had zero added value as a human, apart from being a stamp of approval."
+            },
+            {"text": "bekannte Fehlerquote etwa 10 %", "zitat": "statistically it's fine. So you go for it."},
+            {"text": "bis zu 15–20 zivile Tote je niedrigrangigem Ziel als zulässig"}
+          ],
+          "vorspann": "Laut den Quellen des Berichts:",
+          "pflicht": "Die israelische Armee bestreitet wesentliche Darstellungen des Berichts."
+        },
+        {
+          "id": "karp",
+          "zuschaltbar": true,
+          "wer": "Alex Karp",
+          "rolle": "Chef von Palantir",
+          "anlass": "Investorengespräch Feb. 2025",
+          "vorspann": "über den Zweck seiner Firma:",
+          "original": "… when it's necessary, to scare enemies and on occasion kill them."
+        },
+        {
+          "id": "thiel",
+          "zuschaltbar": true,
+          "wer": "Peter Thiel",
+          "rolle": "Palantir-Mitgründer",
+          "anlass": "„Good for Google, Bad for America“, NYT 01.08.2019",
+          "original": "A.I. is a military technology."
+        },
+        {
+          "id": "luckey",
+          "zuschaltbar": true,
+          "wer": "Palmer Luckey",
+          "rolle": "Anduril",
+          "anlass": "Pepperdine University, 01.10.2024",
+          "original": "And my point to them is, where's the moral high ground in a landmine that can't tell the difference between a school bus full of kids and a Russian tank?"
+        },
+        {
+          "id": "guterres",
+          "zuschaltbar": true,
+          "gegenstimme": true,
+          "wer": "António Guterres",
+          "rolle": "UN-Generalsekretär",
+          "anlass": "Mai 2025",
+          "vorspann": "Maschinen, die ohne menschliche Kontrolle Leben nehmen, seien",
+          "original": "politically unacceptable, morally repugnant"
+        }
+      ],
+      "hinweis": "Zitate wörtlich nach Änderungsliste G (G3.3): nichts kürzen außer mit „…“, keine weiteren Zitate."
+    },
+    "diskussion": {
+      "titel": "Wertekompass",
+      "quelle": "nach „Meine Innere Führung – Mein Wertekompass“",
+      "werte": ["Menschenwürde", "Freiheit", "Frieden", "Gerechtigkeit", "Solidarität", "Demokratie", "Grundrechte"],
+      "tugenden": [
+        "Tapferkeit",
+        "Treue",
+        "Kameradschaft",
+        "Disziplin",
+        "Gehorsam",
+        "Mut",
+        "Vertrauen",
+        "Bescheidenheit"
+      ],
+      "leitfragen": [
+        {
+          "titel": "Menschenwürde",
+          "werte": ["Menschenwürde"],
+          "text": "Wenn eine KI besser unterscheidet als eine Mine oder ein müder Mensch – ist ihr Einsatz dann sogar geboten? Was hat ARGUS im Spiel nicht unterschieden?"
+        },
+        {
+          "titel": "Effizienz gegen Würde",
+          "werte": [],
+          "text": "Darf der „Wert“ zerstörter Fahrzeuge oder geschonter eigener Panzer gegen Zivilpersonen und Verwundete aufgerechnet werden? (Utilitarismus gegen Pflichtethik)"
+        },
+        {
+          "titel": "Gehorsam und Gewissen",
+          "werte": ["Gehorsam"],
+          "text": "Zeitvorgabe von 30 s je Meldung, Druck der 1. Kp – wann wird der Mensch „in the loop“ zum Stempel?"
+        },
+        {
+          "titel": "Mut und Bescheidenheit",
+          "werte": ["Mut", "Bescheidenheit"],
+          "text": "Was braucht ein Offizier, um einer Maschine mit 96 % zu widersprechen – und um die Grenzen der Maschine zu kennen?"
+        },
+        {
+          "titel": "Grenze",
+          "werte": [],
+          "text": "Wo zieht ihr sie – Entscheidungsunterstützung, Freigabe ohne Prüfung („ARGUS allein“), volle Autonomie?"
+        }
+      ]
+    },
+    "abschluss": {
+      "kernaussagen": [
+        {
+          "titel": "Der Wertekompass gibt Orientierung, auch wenn die Maschine eine Zahl liefert.",
+          "text": "Konfidenz ist keine Wahrheit."
+        },
+        {
+          "titel": "Effizienz ist ein Argument, kein Freibrief.",
+          "text": "Was keinen Preis hat, taucht in keiner Bilanz auf."
+        },
+        {
+          "titel": "KI unterstützt, der Mensch entscheidet.",
+          "text": "„In the loop“ braucht Zeit, Information und Mut zum Widerspruch."
+        },
+        {"titel": "Verantwortung lässt sich nicht delegieren.", "text": "Verantwortlich bleibt, wer freigibt."}
+      ]
     }
   },
   "durchbruch": {
@@ -3299,7 +3502,7 @@
         "ziele": ["Z-27"],
         "t_s": 1413,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-27": [
             [1413, 560, 348], [1421.8, 563, 382], [1426.1, 533, 385], [1430.4, 503, 388], [1434.7, 473, 391],
@@ -3317,7 +3520,7 @@
         "ziele": ["Z-28"],
         "t_s": 1428,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-28": [
             [1428, 548, 417], [1436.5, 545, 384], [1440.7, 516, 386], [1444.9, 487, 390], [1449.1, 458, 393],
@@ -3335,7 +3538,7 @@
         "ziele": ["Z-18"],
         "t_s": 1443,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-18": [
             [1443, 480, 404], [1447.0, 480, 404], [1450.4, 478, 391], [1454.7, 448, 394], [1459.2, 417, 398],
@@ -3352,7 +3555,7 @@
         "ziele": ["Z-20"],
         "t_s": 1458,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-20": [
             [1458, 505, 412], [1464.2, 502, 388], [1468.5, 472, 391], [1472.9, 442, 395], [1477.2, 412, 398],
@@ -3369,7 +3572,7 @@
         "ziele": ["Z-36"],
         "t_s": 1468,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
         "routen": {
           "Z-36": [
             [1468, 522, 416], [1475.8, 519, 386], [1480, 490, 389], [1484.4, 460, 393], [1488.6, 431, 396],
@@ -3505,5 +3708,20 @@
     "unbekannt_unter": 60,
     "bildstoerung": 0.45,
     "bildalter_plus_s": 12
-  }
+  },
+  "aufloesungen": [
+    {
+      "id": "A-01",
+      "meldung": "M20",
+      "ziele": ["Z-15", "Z-16", "Z-17"],
+      "nach_s": 90,
+      "als": "verbuendet",
+      "fall": "S3",
+      "name": "PL-PzKp (verbündet)",
+      "vermerk": "verbündet – nicht bekämpfen",
+      "inject": "I-17",
+      "getroffen": {"inject": "I-08a", "name": "PL-PzKp (verbündet, getroffen)"},
+      "hinweis": "Seit 2.7 (I3.2): Hat das Team bis nach_s nach der Meldung keine Wirkung auf die Ziele freigegeben, werden sie als verbündet markiert (Zeichen blau, Meldung verschwindet aus dem Eingang mit Vermerk, Lagemeldung). Danach ist keine Freigabe mehr möglich. Nach einer Freigabe vorher: Eigenbeschuss (I-08a), das Zeichen wird mit I-08a „verbündet, getroffen“."
+    }
+  ]
 }

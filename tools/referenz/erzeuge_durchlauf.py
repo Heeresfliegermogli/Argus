@@ -16,6 +16,7 @@ import os
 
 import argus_lib as L
 import simuliere_durchlauf as S
+import bilanz as B
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 ZIEL = os.path.join(HIER, "..", "..", "tests", "referenz_durchlauf.json")
@@ -56,7 +57,7 @@ def lauf_export(d, team, ein):
         })
     inj = sorted(({"inject": e["inject"], "t": zahl(e["t"])} for e in det if "inject" in e), key=lambda x: (x["t"], x["inject"]))
     hg = [{"id": e["hintergrund"], "t": e["t"], "wirkt": e.get("wirkt")} for e in det if "hintergrund" in e]
-    e01 = [{"entfaellt": True} if e.get("entfaellt") else {"t": e["t"], "von": e["von"], "ziel": e["ziel"]}
+    e01 = [{"entfaellt": True} if e.get("entfaellt") else {"t": e["t"], "von": e["von"], "ziel": e["ziel"], "nr": e.get("nr")}
            for e in det if "ereignis" in e]
     durchbruch = [{"gruppe": e["durchbruch"], "t": e["t"], "durch": e["durch"]} for e in det if "durchbruch" in e]
     durchgebrochen = next((e["durchgebrochen"] for e in det if "durchgebrochen" in e), [])
@@ -75,8 +76,10 @@ def lauf_export(d, team, ein):
         "texte": {e["inject"]: e["text"] for e in det if "inject" in e and "text" in e and "stufe" not in e},
         "verlauf": v["verlauf"],
     }
+    # seit 2.7 (G2): Bilanz „Das ist es wert“, unabhängig nachgerechnet (tools/referenz/bilanz.py = src/kern/bilanz.ts)
+    bil = B.bilanz(d, det, None if v is None else (v["zug"]["bereit"], v["zug"]["gesamt"]))
     return {
-        "team": team, "einspielen": ein or {}, "meldungen": meldungen, "injects": inj,
+        "team": team, "einspielen": ein or {}, "meldungen": meldungen, "injects": inj, "bilanz": bil,
         "hintergrund": hg, "e01": e01, "durchbruch": durchbruch, "durchgebrochen": durchgebrochen, "rest": rest, "treffer_schutz": schutz, "faelle": faelle,
         "letzte_bekaempfung": letzte, "log": [f"{a}: {b}" for a, b in log], "verluste": verluste,
     }
@@ -96,9 +99,12 @@ def main():
         "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario "
                    f"{d['szenario']['id']} v{d['szenario']['version']}). Nicht von Hand ändern.",
         "szenario": d["szenario"]["version"],
-        "zeiten": {"naiv": S.T_NAIV, "ideal": S.T_IDEAL},
+        "zeiten": {"naiv": S.T_NAIV, "ideal": S.T_IDEAL, "argus": 0},
         "reihenfolge_wirkmittel": S.REIHENFOLGE,
+        "auswahl_argus": S.AUSWAHL_ARGUS,
         "laeufe": [lauf_export(d, team, ein) for team, ein in LAEUFE],
+        # seit 2.7 (G2.1): Referenzlauf „ARGUS allein“ – jede BEKÄMPFEN-Empfehlung zur Meldezeit, Mörser/LM/Kanone
+        "referenz": lauf_export(d, "argus", None),
     }
     with open(ZIEL, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)

@@ -203,6 +203,16 @@ def main():
             werte = {}
             for mid in meldungen:
                 zeit(sl, man["drohne"][mid]["t_s"])
+                # seit 2.7 (I3.1): Im passiven Lauf zerschlägt E-01 ab 20:45 die Feindkräfte an der Brücke Ost. Eine Meldung, deren
+                # Fahrzeuge dann schon zerstört sind (M19, Folgemeldung zu M37), erscheint gleich als entfallen und steht nicht im Eingang.
+                stufe, ende = None, time.time() + 20
+                while time.time() < ende and not stufe:
+                    stufe = zb.evaluate(f"() => window.argus?.stand?.zustand?.meldungen?.['{mid}']?.stufe ?? null")
+                    time.sleep(0.2)
+                if stufe == "entfallen":
+                    grund = zb.evaluate(f"() => window.argus.stand.zustand.meldungen['{mid}'].entfallen?.grund ?? ''")
+                    print(f"–    {mid}: im passiven Lauf entfallen ({grund}) – nicht im Eingang, nicht zusammengesetzt")
+                    continue
                 oeffne(zb, mid)
                 v = zb.evaluate(f"() => {LIVE}.argusLive.vergleich()")
                 lage = max([0.0] + [abs(f["soll"][0] - f["ist"][0]) + abs(f["soll"][1] - f["ist"][1]) for f in v["fahrzeuge"] + v["figuren"]])

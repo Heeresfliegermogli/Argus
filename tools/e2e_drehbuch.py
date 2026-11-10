@@ -230,8 +230,8 @@ def gleichstaende(name, soll, ist, tol):
     """Gleichstände, die ein späterer Klick im Browser umdreht – kein Fehler der Engine, sondern zwei Ereignisse, die im Prozess
     auf dieselbe Spielzeit fallen (die Modellteams entscheiden auf die Sekunde genau: naiv 20 s, ideal 35 s):
 
-      A  Eine Meldung erscheint genau dann, wenn ihr Fahrzeug zerstört wird (naiv: M02 mit Mörser um 01:35, Einschlag 02:10 –
-         Folgemeldung M28 zu Z-03 um 02:10). Im Prozess kommt erst der Einschlag, die Meldung entfällt beim Erscheinen; im
+      A  Eine Meldung erscheint genau dann, wenn ihr Fahrzeug (bzw. das letzte ihres Zuges) zerstört wird (naiv: M02 mit Mörser um
+         01:35, Einschlag 02:10 – Folgemeldung M28 zu Z-03 um 02:10; seit 2.7 auch M34: Mörser auf M33 um 17:20, Einschlag 17:55). Im Prozess kommt erst der Einschlag, die Meldung entfällt beim Erscheinen; im
          Browser erscheint sie und entfällt im selben Augenblick. Für das Team gleich: über M28 entscheidet niemand.
       B  Eine Entscheidung fällt genau, wenn die Meldung entfällt (ideal: M30, das Ziel verlässt den Raum um 10:15,4, die
          Entscheidung ist um 10:15). Im Browser kommt der Klick Sekundenbruchteile danach und wird abgelehnt. Nur ohne Wirkung
@@ -250,7 +250,9 @@ def gleichstaende(name, soll, ist, tol):
         # A: Meldung entfällt beim Erscheinen (Prozess) / erscheint und entfällt sofort (Browser)
         if e["typ"] == "meldung" and e["daten"].get("entfaellt"):
             mi = finde(ist, "meldung", m, lambda x: not x["daten"].get("entfaellt"))
-            ei = finde(ist, "meldung_entfaellt", m, lambda x: x["daten"].get("grund") == "Fahrzeug zerstört")
+            # ein Fahrzeug („Fahrzeug zerstört“) oder ein Zug, dessen letztes Fahrzeug der Einschlag trifft („alle Fahrzeuge zerstört“; seit 2.7
+            # z. B. naiv: Mörser auf das Pressefahrzeug M33 um 17:20, Einschlag 17:55 trifft die Kolonne daneben, als M34 erscheint)
+            ei = finde(ist, "meldung_entfaellt", m, lambda x: x["daten"].get("grund") in ("Fahrzeug zerstört", "alle Fahrzeuge zerstört"))
             if mi and ei and abs(ist[ei[0]]["t_s"] - ist[mi[0]]["t_s"]) <= tol and abs(ist[mi[0]]["t_s"] - e["t_s"]) <= tol:
                 ist[mi[0]] = {**ist[mi[0]], "daten": dict(e["daten"])}
                 weg_i.add(ei[0])
@@ -660,10 +662,9 @@ def main():
             t_aw = time.time()
             f_aw, prot_aw, schritte_aw = pruefe_auswertung(pl, plan_teams, ab, False)
             fehler += [f"Auswertung: {f}" for f in f_aw]
-            # Notiz der SL 2 erscheint bei S3
+            # Notiz der SL 2 erscheint bei S3 (seit 2.7, G1: das erste Replay direkt nach dem Teamvergleich)
             pl.keyboard.press("Home")
-            for _ in range(3):
-                pl.keyboard.press("PageDown")
+            pl.keyboard.press("PageDown")
             warte(lambda: pl.locator("section.replay[data-fall='S3']").count() == 1, 10, "Replay S3")
             if NOTIZ_TEXT not in pl.get_by_test_id("notizen-sl").inner_text():
                 fehler.append("Auswertung S3: Notiz der SL 2 fehlt")

@@ -1,11 +1,14 @@
 // Zielbearbeitung (intern zb; seit 2.6, Änderungen H2): eine Ansicht je Team, 2–3 Personen an einem Laptop, eine Entscheidung je
 // Meldung. Aufbau in 1530 × 800:
-//   links   schmaler Feed der Lagemeldungen (Brigade, Nachbarn, 1. Kp); eine neue steht ca. 8 s oben, dann rutscht sie in
-//           „frühere Meldungen“ (ein Klick liest sie sofort) – unter Druck läuft der Feed leicht unter (S3 lebt davon)
+//   links   schmaler Feed der Lagemeldungen (Brigade, Nachbarn, 1. Kp); seit 2.7 (I4) steht eine Lagemeldung, bis sie angeklickt wird
+//           oder 30 s Spielzeit um sind (regeln.anzeige.lagemeldung_s), dann ist sie ganz weg – unter Druck läuft sie unter (S3 lebt
+//           davon); das Protokoll zeigt, ob und wann sie angeklickt wurde
 //   Mitte   Lagekarte: Marken der Meldungen im Eingang, bekämpfte Ziele mit Countdown bis zum Einschlag, Vorschau des Wirkmittels
-//   rechts  Eingang mit Wartezeit je Meldung (bekämpfte mit „Einschlag in 0:23“), darunter die geöffnete Meldung: Live-Drohnenbild
-//           (Klick: groß mit Lupe), ARGUS-Ausgabe, Wirkmittel mit Bestand, Countdown und Warnungen am vorausberechneten
-//           Einschlagort, und die drei Knöpfe BEKÄMPFEN mit … · ZURÜCKSTELLEN · ABLEHNEN
+//   rechts  seit 2.7 (I5) fest aufgeteilt, nichts verschiebt sich: oben eine Zeile „Wirkung unterwegs“ (Chips „Ziel 17 ×3 0:23“,
+//           Rest „+3“ als Überlagerung), darunter der Eingang mit fester Höhe und eigener Rollleiste (Wartezeit je Meldung, dazu
+//           Vermerke: verbündet, durchgebrochen, abgezogen, zerstört), darunter die geöffnete Meldung: Live-Drohnenbild (Klick: groß
+//           mit Lupe), ARGUS-Ausgabe, Wirkmittel mit Bestand, Countdown und Warnungen am vorausberechneten Einschlagort; die drei
+//           Knöpfe BEKÄMPFEN mit … · ZURÜCKSTELLEN · ABLEHNEN stehen immer an derselben Stelle
 // Die Kopfzeile (rahmen.tsx) zeigt Uhr, Phase, die vier Panzer und den Bestand groß.
 // Jede Entscheidung trägt die Sekunden ab Eingang und ab Öffnen ins Protokoll (H2.4). Der Team-Laptop rechnet das Spiel selbst:
 // Ein Klick ist sofort im Spielstand – ohne Netz.
@@ -19,7 +22,7 @@ import { argusBei, bildalter } from "../kern/eloka";
 import { position } from "../kern/geometrie";
 import { lagebildZielmeldungen } from "../kern/lagebild";
 import { type ZugWirkung, vorhersage, zugArt } from "../kern/regeln";
-import { injectsFuer, warteschlange } from "../kern/sichten";
+import { injectsFuer, VERMERK_S, type Vermerk, vermerke, warteschlange } from "../kern/sichten";
 import { injectAnzeige } from "../kern/verluste";
 import { zielName } from "../kern/zielnummern";
 import type { InjectStand, MeldungsStand, Spielzustand } from "../kern/zustand";
@@ -29,6 +32,12 @@ import { useManifest } from "./gemeinsam/drohnenbild";
 import { useAuswahl, useEntfallHinweis, useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { type KartenMarke, LagekarteAnsicht, meldungsMarken, wirkungsMarken } from "./gemeinsam/lagekarte";
 import { LiveDrohnenFenster } from "./gemeinsam/livedrohne";
+
+/**
+ * Mitte des Kartenausschnitts beim Start (seit 2.7, G4b): Die Karte füllt ihr Feld; bei 1530 × 800 sieht das Team rund 700 m von den
+ * eigenen Panzern am Westrand über Bach und Brücke bis in die Ortschaft. Neue Meldungen außerhalb zeigt ein Pfeil am Rand.
+ */
+export const KARTE_MITTE_ZB: [number, number] = [378, 350];
 
 /** Drohnenbild in der Ansicht (16 : 10) */
 export const DROHNEN_BILD = { breite: 520, hoehe: 325 };
@@ -86,70 +95,45 @@ export function argusZeile(inh: Inhalte, m: Meldung, gestoert?: boolean): string
   return `${a.klasse === "unbekannt" ? "unbekannt" : a.klasse}${zug} ${a.konfidenz} %`;
 }
 
-// ---------------------------------------------------------------- Feed der Lagemeldungen (H5.5)
+// ---------------------------------------------------------------- Feed der Lagemeldungen (H5.5, seit 2.7 I4)
 
-function LageFeed(p: { s: Sicht; injects: InjectStand[] }) {
+/** So lange (Spielzeit, s) steht eine Lagemeldung im Feed, wenn die Regeln nichts sagen. */
+export const LAGEMELDUNG_S = 30;
+
+/**
+ * Lagemeldungen, die das Team gerade sieht (seit 2.7, I4): nicht angeklickt und höchstens lagemeldung_s Spielzeit alt, die neueste
+ * oben. Angeklickte und abgelaufene sind ganz weg (Spielleitung und Auswertung sehen weiter alle).
+ */
+export function feedSichtbar(inh: Inhalte, injects: InjectStand[], t: number): InjectStand[] {
+  const sek = inh.regeln.anzeige?.lagemeldung_s ?? LAGEMELDUNG_S;
+  return [...injects].reverse().filter((i) => !i.quittiert && t - i.erschienen.t_s < sek);
+}
+
+function LageFeed(p: { s: Sicht; injects: InjectStand[]; t: number }) {
   const { s } = p;
   const inh = s.inh;
-  const sek = inh.regeln.anzeige?.lagemeldung_s ?? 8;
-  // Ankunft in Echtzeit: was beim ersten Bild schon da ist, gilt als älter
-  const ankunft = useRef<Map<string, number> | null>(null);
-  const [, setTakt] = useState(0);
-  const [frueherOffen, setFrueherOffen] = useState(false);
-  const [ganz, setGanz] = useState<string | null>(null);
-  const ids = p.injects.map((i) => i.id).join(",");
-  if (!ankunft.current) ankunft.current = new Map(p.injects.map((i) => [i.id, 0]));
-  for (const i of p.injects) if (!ankunft.current.has(i.id)) ankunft.current.set(i.id, Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setTakt((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
-  void ids;
-  const jetzt = Date.now();
-  const neueste = [...p.injects].reverse();
-  const frisch = neueste.filter((i) => !i.quittiert && jetzt - (ankunft.current!.get(i.id) ?? 0) < sek * 1000);
-  const frueher = neueste.filter((i) => !frisch.includes(i));
+  const sek = inh.regeln.anzeige?.lagemeldung_s ?? LAGEMELDUNG_S;
+  const sichtbar = feedSichtbar(inh, p.injects, p.t);
   const lesen = (i: InjectStand) => {
     if (!i.quittiert && !s.nurLesen) s.senden("inject_quittiert", { inject: i.id });
   };
-  const start = inh.szenario.spieluhr.start;
-  void start;
   return (
     <section class="feed" data-tour="feed" data-testid="feed">
       <h2>Lagemeldungen</h2>
       <div class="feed-frisch" data-testid="feed-frisch">
-        {frisch.length === 0 && <div class="feed-leer">{p.injects.length ? "Neue Lagemeldungen erscheinen hier." : "Meldungen von Brigade, Nachbarn und der 1. Kp erscheinen hier."}</div>}
-        {frisch.map((i) => {
+        {sichtbar.length === 0 && <div class="feed-leer">{p.injects.length ? "Neue Lagemeldungen erscheinen hier." : "Meldungen von Brigade, Nachbarn und der 1. Kp erscheinen hier."}</div>}
+        {sichtbar.map((i) => {
           const a = injectAnzeige(inh, i);
+          const rest = Math.max(0, Math.min(1, 1 - (p.t - i.erschienen.t_s) / sek));
           return (
             <button type="button" key={i.id} class={`feed-meldung frisch ${(i.stufe ?? 0) >= 2 ? "dringend" : ""}`} data-inject={i.id} onClick={() => lesen(i)}
-              title="Klick: gelesen – rutscht in „frühere Meldungen“">
-              <div class="feed-von">{mss(i.erschienen.t_s)} · {a.von}</div>
+              title={`Klick: gelesen – die Meldung verschwindet (sonst nach ${sek} s)`}>
+              <div class="feed-von">{mss(i.erschienen.t_s)} · {a.von}<span class="feed-x" aria-label="gelesen">✕</span></div>
               <div class="feed-text">{a.text}</div>
+              <i class="feed-rest" style={{ width: `${Math.round(rest * 100)}%` }} aria-hidden="true" />
             </button>
           );
         })}
-      </div>
-      <div class={`feed-frueher ${frueherOffen ? "offen" : ""}`}>
-        <button type="button" class="feed-frueher-kopf" onClick={() => setFrueherOffen(!frueherOffen)} disabled={!frueher.length} data-testid="feed-frueher"
-          aria-expanded={frueherOffen}>
-          {frueherOffen ? "▾" : "▸"} frühere Meldungen <span class="badge">{frueher.length}</span>
-        </button>
-        {frueherOffen && (
-          <div class="feed-liste">
-            {frueher.map((i) => {
-              const a = injectAnzeige(inh, i);
-              const auf = ganz === i.id;
-              return (
-                <button type="button" key={i.id} class={`feed-meldung alt ${(i.stufe ?? 0) >= 2 ? "dringend" : ""} ${auf ? "ganz" : ""}`} data-inject={i.id}
-                  onClick={() => { setGanz(auf ? null : i.id); lesen(i); }} title={auf ? undefined : a.text}>
-                  <div class="feed-von">{mss(i.erschienen.t_s)} · {a.von}</div>
-                  <div class={auf ? "feed-text" : "feed-text einzeilig"}>{a.text}</div>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
     </section>
   );
@@ -158,7 +142,7 @@ function LageFeed(p: { s: Sicht; injects: InjectStand[] }) {
 // ---------------------------------------------------------------- Eingang (H2.3, H5.3)
 
 function EingangListe(p: {
-  inh: Inhalte; z: Spielzustand; t: number; offen: MeldungsStand[]; unterwegs: MeldungsStand[]; gewaehlt: string | null; waehle: (id: string) => void;
+  inh: Inhalte; z: Spielzustand; t: number; offen: MeldungsStand[]; vermerke: Vermerk[]; gewaehlt: string | null; waehle: (id: string) => void;
 }) {
   const { inh, z, t } = p;
   const neu = p.offen.filter((x) => !x.zurueckgestellt);
@@ -171,7 +155,7 @@ function EingangListe(p: {
         {zurueck.length > 0 && <span class="klein leise" data-testid="zurueck-zahl">+ {zurueck.length} zurückgestellt</span>}
       </header>
       <div class="eingang-liste rolle-liste" data-liste>
-        {p.offen.length === 0 && p.unterwegs.length === 0 && <div class="feed-leer">Warten auf ARGUS-Meldungen …</div>}
+        {p.offen.length === 0 && p.vermerke.length === 0 && <div class="feed-leer">Warten auf ARGUS-Meldungen …</div>}
         {[...neu, ...zurueck].map((st) => {
           const m = inh.meldungen[st.id];
           if (!m) return null;
@@ -187,19 +171,58 @@ function EingangListe(p: {
             </button>
           );
         })}
-        {p.unterwegs.map((st) => {
-          const tE = naechsterEinschlag(st, t);
-          const wm = st.freigabe ? inh.wirkmittel[st.freigabe.wirkmittel]?.kurz ?? st.freigabe.wirkmittel : "";
-          const n = st.freigabe?.einschlaege?.length ?? 1;
-          return (
-            <div key={st.id} class="eingang-zeile unterwegs" data-unterwegs={st.id}>
-              <b class="ez-ziel">{zielName(inh, z, st.id, false)}</b>
-              <span class="ez-argus">bekämpft · {wm}{n > 1 ? ` ×${n}` : ""}</span>
-              <span class="ez-zeit zahl rot">{tE !== null ? `Einschlag in ${mss(tE - t)}` : "Einschlag"}</span>
-            </div>
-          );
-        })}
+        {/* seit 2.7 (I1.2, I3.2): warum ein Ziel aus dem Eingang fiel oder den Raum verließ – steht VERMERK_S Spielzeit, das Zeichen bleibt */}
+        {p.vermerke.map((v) => (
+          <div key={`${v.meldung}-${v.art}`} class={`eingang-zeile vermerk ${v.art}`} data-vermerk={v.meldung} data-art={v.art}>
+            <b class="ez-ziel">{zielName(inh, z, v.meldung, false)}</b>
+            <span class="ez-argus">{v.text}</span>
+            <span class="ez-zeit zahl">{mss(v.t)}</span>
+          </div>
+        ))}
       </div>
+    </section>
+  );
+}
+
+/** Höchstens so viele Chips stehen in der Zeile „Wirkung unterwegs“; der Rest kommt hinter „+n“ (I5.1). */
+export const UNTERWEGS_CHIPS = 3;
+
+/**
+ * „Wirkung unterwegs“ (seit 2.7, I5.1): eine Zeile fester Höhe über dem Eingang, je bekämpfter Meldung mit ausstehendem Einschlag ein Chip
+ * „Ziel 17 ×3 0:23“ (der nächste Einschlag zuerst); passen nicht alle, „+n“ – Klick zeigt alle als Überlagerung (verschiebt nichts).
+ */
+function UnterwegsLeiste(p: { inh: Inhalte; z: Spielzustand; t: number; unterwegs: MeldungsStand[] }) {
+  const { inh, z, t } = p;
+  const [offen, setOffen] = useState(false);
+  const liste = p.unterwegs
+    .map((st) => ({ st, tE: naechsterEinschlag(st, t) }))
+    .sort((a, b) => (a.tE ?? Infinity) - (b.tE ?? Infinity));
+  const zeigen = liste.length > UNTERWEGS_CHIPS ? liste.slice(0, UNTERWEGS_CHIPS - 1) : liste;
+  const rest = liste.length - zeigen.length;
+  useEffect(() => {
+    if (!liste.length) setOffen(false);
+  }, [liste.length]);
+  const chip = ({ st, tE }: (typeof liste)[number]) => {
+    const wm = st.freigabe ? inh.wirkmittel[st.freigabe.wirkmittel]?.kurz ?? st.freigabe.wirkmittel : "";
+    const n = st.freigabe?.einschlaege?.length ?? 1;
+    return (
+      <span key={st.id} class="unterwegs-chip" data-unterwegs={st.id} title={`${zielName(inh, z, st.id, false)}: bekämpft mit ${wm}${n > 1 ? ` ×${n}` : ""}`}>
+        <b>{zielName(inh, z, st.id, false)}</b>{n > 1 ? <span class="leise"> ×{n}</span> : null}
+        <span class="zahl rot">{tE !== null ? mss(tE - t) : "–"}</span>
+      </span>
+    );
+  };
+  return (
+    <section class="unterwegs-leiste" data-testid="unterwegs">
+      <span class="unterwegs-titel">Wirkung unterwegs</span>
+      {liste.length === 0 && <span class="sehr-leise klein">keine</span>}
+      <span class="unterwegs-chips">{zeigen.map(chip)}</span>
+      {rest > 0 && (
+        <button type="button" class="unterwegs-mehr" onClick={() => setOffen(!offen)} aria-expanded={offen} data-testid="unterwegs-mehr">+{rest}</button>
+      )}
+      {offen && rest > 0 && (
+        <div class="unterwegs-alle" data-testid="unterwegs-alle" onClick={() => setOffen(false)}>{liste.map(chip)}</div>
+      )}
     </section>
   );
 }
@@ -226,9 +249,12 @@ function WirkmittelZeile(p: {
       </span>
       <span class="wm-info">
         <span class="wm-zeit">{leer ? "aufgebraucht" : <>Einschlag in <b class="zahl">{mss(v.einschlag.t - t)}</b>{v.k > 1 ? ` · ×${v.k}` : ""}</>}</span>
-        {!leer && (regeln.length ? regeln.slice(0, 2).map((x) => <span class="wm-status verstoss" key={x.regel + x.text}>⚠ {x.regel}: {x.text}</span>)
-          : <span class="wm-status ok">✓ keine Warnung</span>)}
-        {!leer && nurK && <span class="wm-status verstoss">⚠ nur {v.k} von {v.n} Fahrzeugen – Bestand reicht nicht</span>}
+        {/* seit 2.7 (I5): eine Zeile – alle Warnungen hintereinander (ganz im Tooltip), damit die Meldung gleich hoch bleibt */}
+        {!leer && (regeln.length || nurK ? (
+          <span class="wm-status verstoss" title={[...regeln.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])].join("\n")}>
+            ⚠ {[...regeln.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])].join(" · ")}
+          </span>
+        ) : <span class="wm-status ok">✓ keine Warnung</span>)}
       </span>
     </label>
   );
@@ -253,8 +279,8 @@ function Kleingedrucktes(p: { inh: Inhalte }) {
 export function ZBAnsicht(p: { s: Sicht }) {
   const { s } = p;
   const st = useStand(s);
-  useEntfallHinweis(s, st);
   const t = useSpielzeit(s, 250);
+  useEntfallHinweis(s, st, t);
   const inh = s.inh;
   const z = st.zustand;
   const start = inh.szenario.spieluhr.start;
@@ -271,6 +297,8 @@ export function ZBAnsicht(p: { s: Sicht }) {
   const fx = useMemo(() => effekte(inh, z, bekannteZiele(inh, z)), [inh, z]);
   const injects = injectsFuer(inh, z);
   const unterwegs = z.reihenfolge.map((id) => z.meldungen[id]).filter((x) => x.stufe === "wirkung" && !x.wirkung);
+  // Vermerke der letzten VERMERK_S Spielzeit, der neueste zuerst
+  const vm = vermerke(inh, z, t).filter((v) => t - v.t < VERMERK_S).reverse();
   // Öffnen merken (Spielzeit), für die Sekunden „ab Öffnen“ (H2.4)
   const geoeffnet = useRef(new Map<string, number>());
   if (gewaehlt && !geoeffnet.current.has(gewaehlt)) geoeffnet.current.set(gewaehlt, t);
@@ -318,17 +346,18 @@ export function ZBAnsicht(p: { s: Sicht }) {
 
   return (
     <main class="inhalt ansicht-zb">
-      <LageFeed s={s} injects={injects} />
+      <LageFeed s={s} injects={injects} t={t} />
       <section class="panel ohne-rand karten-feld" data-testid="zb-karte" data-tour="karte">
         <LagekarteAnsicht inh={inh} lagebild={lagebild} vorschau={vs?.vorschau ?? null} gewaehlt={gewaehlt}
-          onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele"
+          onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele" fuellen={KARTE_MITTE_ZB}
           uhr={() => s.kartenUhr()} effekte={fx} marken={marken}
           banner={vs && <div class={`karte-banner ${vs.vorschau.ok ? "ok" : "verstoss"}`} data-testid="karte-banner">
             {inh.wirkmittel[vorschauWm!].kurz}: Einschlag in {mss(vs.v.einschlag.t - t)} – {vs.vorschau.ok ? "keine Warnung" : `${vs.v.pruefung.verstoesse.map((x) => x.regel).join(", ")} verletzt`}
           </div>} />
       </section>
       <aside class="zb-rechts">
-        <EingangListe inh={inh} z={z} t={t} offen={offen} unterwegs={unterwegs} gewaehlt={gewaehlt} waehle={oeffnen} />
+        <UnterwegsLeiste inh={inh} z={z} t={t} unterwegs={unterwegs} />
+        <EingangListe inh={inh} z={z} t={t} offen={offen} vermerke={vm} gewaehlt={gewaehlt} waehle={oeffnen} />
         <section class="zb-meldung" data-tour="entscheiden" data-testid="offene-meldung" data-meldung={ms?.id}>
           {!m || !ms || !a ? (
             <div class="zb-warten" data-testid="zb-warten">
@@ -358,21 +387,22 @@ export function ZBAnsicht(p: { s: Sicht }) {
                     waehle={() => setWm(id)} zeige={(an) => setZeigeWm(an ? id : null)} />
                 ))}
               </div>
-              <div class="zb-knoepfe">
-                <button type="button" class="knopf gross toedlich" disabled={gesperrt || !wm} onClick={() => entscheiden("bekaempfen")} data-testid="zb-bekaempfen"
-                  title={!wm ? "zuerst ein Wirkmittel wählen" : gewaehltV && !gewaehltV.pruefung.zulaessig ? "trotz Warnung – wird protokolliert" : undefined}>
-                  {bekText}<span class="unterzeile">{bekUnter}{gewaehltV && !gewaehltV.pruefung.zulaessig ? " · ⚠ trotz Warnung" : ""}</span>
-                </button>
-                <button type="button" class="knopf gross" disabled={gesperrt || ms.zurueckgestellt} onClick={() => entscheiden("zurueckstellen")} data-testid="zb-zurueckstellen"
-                  title={ms.zurueckgestellt ? "schon zurückgestellt" : "beobachten, später entscheiden"}>
-                  ZURÜCKSTELLEN<span class="unterzeile">beobachten</span>
-                </button>
-                <button type="button" class="knopf gross" disabled={gesperrt} onClick={() => entscheiden("ablehnen")} data-testid="zb-ablehnen">
-                  ABLEHNEN<span class="unterzeile">nicht bekämpfen</span>
-                </button>
-              </div>
             </>
           )}
+          {/* seit 2.7 (I5.1): die Knöpfe stehen immer an derselben Stelle (ohne Meldung gesperrt) */}
+          <div class="zb-knoepfe" data-testid="zb-knoepfe">
+            <button type="button" class="knopf gross toedlich" disabled={gesperrt || !wm} onClick={() => entscheiden("bekaempfen")} data-testid="zb-bekaempfen"
+              title={!m ? undefined : !wm ? "zuerst ein Wirkmittel wählen" : gewaehltV && !gewaehltV.pruefung.zulaessig ? "trotz Warnung – wird protokolliert" : undefined}>
+              {bekText}<span class="unterzeile">{m ? bekUnter : "keine Meldung offen"}{gewaehltV && !gewaehltV.pruefung.zulaessig ? " · ⚠ trotz Warnung" : ""}</span>
+            </button>
+            <button type="button" class="knopf gross" disabled={gesperrt || !!ms?.zurueckgestellt} onClick={() => entscheiden("zurueckstellen")} data-testid="zb-zurueckstellen"
+              title={ms?.zurueckgestellt ? "schon zurückgestellt" : "beobachten, später entscheiden"}>
+              ZURÜCKSTELLEN<span class="unterzeile">beobachten</span>
+            </button>
+            <button type="button" class="knopf gross" disabled={gesperrt} onClick={() => entscheiden("ablehnen")} data-testid="zb-ablehnen">
+              ABLEHNEN<span class="unterzeile">nicht bekämpfen</span>
+            </button>
+          </div>
         </section>
       </aside>
     </main>

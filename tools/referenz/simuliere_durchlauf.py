@@ -35,6 +35,7 @@ import verluste as V
 from pruefe_szenario import pruefe
 
 T_NAIV, T_IDEAL = 20, 35      # Sekunden je Entscheidung (eine Rolle, seit 2.6)
+AUSWAHL_ARGUS = ["MRS", "LM", "PZA"]   # „ARGUS allein“ (seit 2.7, G2.1): Mörser ohne Warnung, sonst LM, sonst Kanone
 REIHENFOLGE = ["PZA", "ART", "MRS", "PRZ", "LM"]   # nicht vorhandene Wirkmittel werden übersprungen
 VERSTAERKUNG_STANDARD = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960}          # alle vier Minuten bis 10:16
 VERSTAERKUNG_ZU_SPAET = {"V-1": 240, "V-2": 480, "V-3": 720, "V-4": 960, "V-5": 1200}   # zusätzlich V-5 um 10:20
@@ -75,7 +76,7 @@ def lauf(d, team, detail=None, einspielen=None):
     dauer = sz["spieluhr"]["dauer_s"]
     bestand = {k: (v["bestand"] if v["bestand"] is not None else 10 ** 6) for k, v in wm.items()}
     frei = 0                     # das Team ist frei ab (eine Rolle: eine Meldung nach der anderen)
-    dauer_je = T_NAIV if team == "naiv" else T_IDEAL
+    dauer_je = T_NAIV if team == "naiv" else T_IDEAL if team == "ideal" else 0
     log, treffer_schutz, injects = [], [], []
     det = detail if detail is not None else []
     for i in sz["injects"]:
@@ -87,21 +88,38 @@ def lauf(d, team, detail=None, einspielen=None):
     hg = {h["ziel"]: h["t_s"] for h in (sz.get("hintergrund") or {}).get("ereignisse", [])
           if h["art"] == "panzerabwehr" and h.get("folge") == "zerstoert"}
     e01 = sz.get("ereignisse", [])
+    aufloesungen = sz.get("aufloesungen", [])
     freigabe_t = {}
+
+    zmap_e = {x["id"]: x for x in sz["ziele"]}
+
+    def e01_abbruch(e):
+        """Früheste Freigabe auf die Bedingungsziele; liegt sie bis zum Zeitpunkt der Bedingung, entfällt das Ereignis ganz."""
+        b = e["bedingung"]
+        ab = min([freigabe_t.get(x, 1e9) for x in b["ziele"]])
+        return -1 if ab <= b["t_s"] else ab
+
+    def e01_wirkungen(z):
+        """Wirkungen der Skriptereignisse (seit 2.7, I3.1: je Schuss das erste stehende Fahrzeug an der Brücke Ost), wie die Engine."""
+        out = []
+        for e in e01:
+            if e["bedingung"]["typ"] != "keine_freigabe_bis":
+                continue
+            ab = e01_abbruch(e)
+            if ab < 0:
+                continue
+            # ein Schuss genau zur Zeit einer Freigabe entfällt (Freigabe zählt bis einschließlich w.t_s, wie ablauf.ts)
+            out.append((e, L.ereignis_wirkungen(zmap_e, e, z, ab + 1e-9 if ab < 1e9 else 1e9)))
+        return out
 
     def zerstoert():
         z = dict(hg)
         for k, t in team_z.items():
             z[k] = min(z.get(k, 1e9), t)
-        for e in e01:
-            b = e["bedingung"]
-            if b["typ"] != "keine_freigabe_bis":
-                continue
-            abbruch = min([freigabe_t.get(x, 1e9) for x in b["ziele"]])
-            for w in sorted(e["wirkungen"], key=lambda w: w["t_s"]):
-                if w["t_s"] >= abbruch or z.get(w["von"], 1e9) <= w["t_s"] or z.get(w["ziel"], 1e9) <= w["t_s"]:
-                    continue
-                z[w["ziel"]] = w["t_s"]
+        for e, liste in e01_wirkungen(z):
+            for nr, t, von, zid, wirkt, grund in liste:
+                if wirkt:
+                    z[zid] = min(z.get(zid, 1e9), t)
         return z
 
     # Durchbruch (seit 2.1): Eine Gruppe, die bis t_s nicht aufgehalten ist, fährt ab t_s ihre Durchbruch-Route. Die Welt zur
@@ -152,6 +170,18 @@ def lauf(d, team, detail=None, einspielen=None):
             out.append(w)
         return out
 
+    def waehle_argus(m, t):
+        """„ARGUS allein“: Mörser, wenn am Einschlagort ohne Warnung zulässig, sonst LM (solange Bestand), sonst Kanone."""
+        z = zerstoert()
+        dw = welt(t)
+        for w in AUSWAHL_ARGUS:
+            if w not in wm or bestand[w] <= 0:
+                continue
+            if w == AUSWAHL_ARGUS[0] and not L.wirkung(dw, m["ziele"], w, t, z, rest(w))["zulaessig"]:
+                continue
+            return w
+        return None
+
     def wirkung_beim_einschlag(m, wahl, t):
         """Einschläge nach der Welt bei der Freigabe (vorausberechnet), Treffer je Einschlag nach der Welt beim Einschlag;
         seit 2.4 (E3) je Fahrzeug des Zuges nacheinander (LM, PzAbw) oder als Fläche (Mörser)."""
@@ -179,25 +209,53 @@ def lauf(d, team, detail=None, einspielen=None):
             log.append((m["id"], "entfällt (Ziel schon zerstört oder weg)"))
             continue
         loes = m.get("loesung") or {"entscheid": "BEKÄMPFEN"}
+        # seit 2.7 (I3.2): Auflösung nach Zeit – ohne Freigabe bis t_aufl ist die Meldung danach weg (als verbündet erkannt)
+        aufl = next((x for x in aufloesungen if x["meldung"] == m["id"]), None)
+        t_aufl = m["t_s"] + aufl["nach_s"] if aufl else None
+        if team == "argus":
+            # „ARGUS allein“ (seit 2.7, G2.1): BEKÄMPFEN zur Meldezeit ohne Prüfung; Mörser, wenn ohne Warnung zulässig, sonst LM, sonst
+            # Kanone. PRÜFEN, UNKLAR und NICHT BEKÄMPFEN bleiben liegen.
+            t = m["t_s"]
+            if a["empfehlung"] != "BEKÄMPFEN":
+                ev["ende"] = "Spielende"
+                log.append((m["id"], f"bleibt liegen ({a['empfehlung']})"))
+                continue
+            ev.update(t_entscheid=t, t_offen=t, sek_eingang=0.0, sek_offen=0.0)
+            wahl = waehle_argus(m, t)
+        else:
+            wahl = None
         # Das Team öffnet die Meldung, sobald es frei ist (die älteste zuerst). Eine Meldung, deren Fahrzeuge alle zerstört oder
         # abgezogen sind, verschwindet aus dem Eingang, sobald sie dran wäre – oder während das Team sie ansieht.
         t_offen = max(m["t_s"], frei)
-        if alle_weg(m["ziele"], t_offen):
+        if team == "argus":
+            pass
+        elif t_aufl is not None and t_offen > t_aufl:
+            ev["ende"] = "aufgelöst"
+            log.append((m["id"], f"aufgelöst {L.mmss(t_aufl)} ({aufl['als']}), bevor das Team sie öffnete"))
+            continue
+        if team != "argus" and alle_weg(m["ziele"], t_offen):
             ev["ende"] = "entfällt"
             log.append((m["id"], f"entfällt vor der Entscheidung {L.mmss(t_offen)} (Ziel inzwischen zerstört oder weg)"))
             continue
-        t = t_offen + dauer_je
-        if t >= dauer:
-            ev["ende"] = "Spielende"
-            log.append((m["id"], "bei Spielende noch offen"))
-            continue
-        frei = t
-        if alle_weg(m["ziele"], t):       # wie die Engine: entfällt, sobald das letzte Fahrzeug weg ist (auch während der Bearbeitung)
-            ev["ende"] = "entfällt"
-            log.append((m["id"], f"entfällt beim Team {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
-            continue
-        ev.update(t_entscheid=t, t_offen=t_offen, sek_eingang=round(t - m["t_s"], 1), sek_offen=round(t - t_offen, 1))
-        if team == "naiv":
+        if team != "argus":
+            t = t_offen + dauer_je
+            if t >= dauer:
+                ev["ende"] = "Spielende"
+                log.append((m["id"], "bei Spielende noch offen"))
+                continue
+            frei = t
+            if alle_weg(m["ziele"], t):       # wie die Engine: entfällt, sobald das letzte Fahrzeug weg ist (auch während der Bearbeitung)
+                ev["ende"] = "entfällt"
+                log.append((m["id"], f"entfällt beim Team {L.mmss(t)} (Ziel inzwischen zerstört oder weg)"))
+                continue
+            if t_aufl is not None and t > t_aufl and not any(freigabe_t.get(x, 1e9) <= t_aufl for x in m["ziele"]):
+                ev["ende"] = "aufgelöst"
+                log.append((m["id"], f"aufgelöst {L.mmss(t_aufl)} ({aufl['als']}), während das Team sie ansah"))
+                continue
+            ev.update(t_entscheid=t, t_offen=t_offen, sek_eingang=round(t - m["t_s"], 1), sek_offen=round(t - t_offen, 1))
+        if team == "argus":
+            pass
+        elif team == "naiv":
             if a["empfehlung"] == "UNKLAR":
                 ev.update(entscheid="ABLEHNEN", ende="abgelehnt")
                 log.append((m["id"], f"ABLEHNEN {L.mmss(t)}"))
@@ -281,10 +339,14 @@ def lauf(d, team, detail=None, einspielen=None):
             det.append({"ereignis": e["id"], "entfaellt": True})
             log.append((e["id"], "entfällt (Gegenangriff abgebrochen)"))
             continue
-        for w in e["wirkungen"]:
-            if z_end.get(w["ziel"]) == w["t_s"]:
-                det.append({"ereignis": e["id"], "t": w["t_s"], "von": w["von"], "ziel": w["ziel"]})
-                log.append((e["id"], f"{w['von']} trifft {w['ziel']} um {L.mmss(w['t_s'])}"))
+    z0 = dict(hg)
+    for k, t in team_z.items():
+        z0[k] = min(z0.get(k, 1e9), t)
+    for e, liste in e01_wirkungen(z0):
+        for nr, t, von, zid, wirkt, grund in liste:
+            if wirkt:
+                det.append({"ereignis": e["id"], "nr": nr, "t": t, "von": von, "ziel": zid})
+                log.append((e["id"], f"{von} trifft {zid} um {L.mmss(t)}"))
     # Durchbruch: Ereignisse je Gruppe (nach t_s), Lagemeldung beim ersten Fahrzeug über dem Bach, Kennzahl
     z_end = zerstoert()
     erste_ueber = None

@@ -202,9 +202,13 @@ def main():
         print("H3.3/F2.7 – Lagemeldungen (24:50, ohne weitere Entscheidungen)")
         zeit("24:50")
         time.sleep(1.5)
-        zb.get_by_test_id("feed-frueher").click()
-        texte = zb.evaluate("""() => [...document.querySelectorAll("[data-testid=feed] [data-inject]")].map(e => ({
-            id: e.dataset.inject, kopf: e.querySelector('.feed-von')?.textContent, text: e.getAttribute('title') || e.querySelector('.feed-text')?.textContent }))""")
+        # Seit 2.7 (I4) zeigt der Feed nur ungelesene Meldungen der letzten 30 s. Geprüft wird, was das Team im Lauf bekam: Zustand
+        # des Teamfensters, Absender und Text wie im Feed (src/kern/verluste.ts injectAnzeige).
+        texte = zb.evaluate("""() => { const s = window.argus; const z = s.stand.zustand; const inh = s.inh;
+            const vm = (inh.basis ?? inh).szenario.verluste?.meldungen;
+            const mss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+            return z.injectReihenfolge.map((id) => { const i = z.injects[id]; const plan = inh.injects[id];
+              return { id, kopf: `${mss(i.erschienen.t_s)} · ${plan?.von ?? (vm?.von || '1. Kp')}`, text: i.text ?? plan?.text ?? '' }; }); }""")
         def sek(kopf):
             m, s_ = kopf.split(" · ")[0].split(":")
             return int(m) * 60 + int(s_)
@@ -235,7 +239,12 @@ def main():
         # ---------------------------------------------------------------- D5 Auswertung
         print("F2.9 – Auswertung „Preis des Abwartens“ (Beispiel, 7 Teams)")
         aw = seite("Auswertung", f"{a.basis}?auswertung=demo")
-        warte(lambda: aw.locator("button[data-kapitel=preis]").count() == 1, 30, "Kapitel Preis")
+        # seit 2.7 (G1.1) ist „Preis des Abwartens“ zuschaltbar: über ＋ in der Kapitelleiste dazunehmen
+        warte(lambda: aw.get_by_test_id("kapitel-plus").count() == 1, 30, "Kapitelleiste")
+        aw.get_by_test_id("kapitel-plus").click()
+        aw.locator("[data-zusatz=preis]").check()
+        aw.keyboard.press("Escape")
+        warte(lambda: aw.locator("button[data-kapitel=preis]").count() == 1, 10, "Kapitel Preis")
         aw.click("button[data-kapitel=preis]")
         warte(lambda: aw.get_by_test_id("preis").count() == 1, 10, "Preis des Abwartens")
         time.sleep(0.6)
@@ -253,7 +262,8 @@ def main():
         svg_f = aw.evaluate("() => { const s = document.querySelector('[data-testid=preis] svg'); const r = s.getBoundingClientRect(); return r.width / s.viewBox.baseVal.width }")
         pruefe(klein * (svg_f if svg_f < 1 else 1) >= 13, f"kleinste Schrift ≥ 13 px (≈ {klein * min(svg_f, 1):.1f} px)")
         budget = aw.get_by_test_id("zeitbudget").inner_text()
-        pruefe("01:00" in budget and "12:00" in budget, f"Zeitbudget Kapitel 1:00, gesamt 12:00 ({budget.split()})")
+        # seit 2.7 (G1): 15:00 im Standard, mit „Preis des Abwartens“ (1:00) zusammen 16:00
+        pruefe("01:00" in budget and "16:00" in budget, f"Zeitbudget Kapitel 1:00, gesamt 15:00 + 1:00 ({budget.split()})")
         foto(aw, "f2_preis_des_abwartens")
 
         browser.close()

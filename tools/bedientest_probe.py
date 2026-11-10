@@ -142,8 +142,9 @@ def main():
             knopf = zb.get_by_test_id("zb-bekaempfen")
             assert re.search(r"BEKÄMPFEN mit LM", knopf.inner_text()) and "Bestand" in knopf.inner_text(), knopf.inner_text()
             knopf.click()
-            ein = zb.locator("[data-unterwegs=M01]")
-            warte(lambda: ein.count() == 1 and re.search(r"Einschlag in \d+:\d\d", ein.inner_text()) is not None, 10, "Countdown „Einschlag in m:ss“")
+            # seit 2.7 (I5.1): Chip „Ziel 1 0:43“ in der Zeile „Wirkung unterwegs“ über dem Eingang
+            ein = zb.get_by_test_id("unterwegs").locator(".unterwegs-chip", has=zb.get_by_text("Ziel 1", exact=True))
+            warte(lambda: ein.count() == 1 and re.search(r"\d+:\d\d", ein.inner_text()) is not None, 10, "Countdown m:ss unter „Wirkung unterwegs“")
 
         def z_7():
             lm = zb.get_by_test_id("bestand").locator("[data-wm=LM]")
@@ -159,13 +160,16 @@ def main():
             warte(lambda: eingang() == vorher - 1, 10, "Eingang eins weniger")
 
         def z_9():
-            # Lagemeldungen: die neue steht oben und rutscht nach ca. 8 s in „frühere Meldungen“; dort noch einmal lesen
-            knopf = zb.get_by_test_id("feed-frueher")
-            warte(lambda: knopf.is_enabled(), 20, "frühere Meldungen")
-            knopf.click()
-            m = zb.locator(".feed-liste .feed-meldung").first
+            # Lagemeldungen (seit 2.7, I4): eine steht 30 s oder bis zum Klick, dann ist sie ganz weg. Die SL lässt die Uhr bis
+            # 03:00 laufen (Lagemeldung der Brigade zur Schule) und hält an; die Testperson liest sie und klickt sie weg.
+            sl.get_by_role("button", name="▶ Start").click()
+            feed = zb.get_by_test_id("feed-frisch").locator(".feed-meldung")
+            warte(lambda: feed.count() >= 1, 30, "Lagemeldung im Feed")
+            sl.get_by_role("button", name="❚❚ Anhalten").click()
+            m = feed.filter(has_text="Schule").first
+            assert m.count() == 1, f"keine Lagemeldung zur Schule im Feed: {zb.get_by_test_id('feed').inner_text()}"
             m.click()
-            warte(lambda: "ganz" in (m.get_attribute("class") or ""), 5, "Lagemeldung ganz zu lesen")
+            warte(lambda: feed.filter(has_text="Schule").count() == 0, 5, "Lagemeldung nach dem Klick weg")
 
         def z_10():
             leiste = zb.get_by_test_id("panzer-leiste")
@@ -176,7 +180,7 @@ def main():
         for n, f in [("Z-1 Eingang und Wartezeit ablesen", z_1), ("Z-2 Ziel 3 öffnen, was meldet ARGUS", z_2),
                      ("Z-3 Lupe im Drohnenbild", z_3), ("Z-4 Mörser: Warnung R3", z_4), ("Z-5 zurückstellen, wieder öffnen", z_5),
                      ("Z-6 bekämpfen ohne Warnung, Countdown", z_6), ("Z-7 Bestand LM in der Kopfzeile", z_7),
-                     ("Z-8 ablehnen", z_8), ("Z-9 frühere Lagemeldung lesen", z_9), ("Z-10 die vier Panzer", z_10)]:
+                     ("Z-8 ablehnen", z_8), ("Z-9 Lagemeldung lesen und wegklicken", z_9), ("Z-10 die vier Panzer", z_10)]:
             aufgabe(n, f)
 
         def z_11():
@@ -210,7 +214,7 @@ def main():
             solo.get_by_role("button", name="❚❚").click()
             solo.locator("label[data-wm=MRS]").click()
             solo.get_by_test_id("zb-bekaempfen").click()
-            warte(lambda: solo.locator("[data-unterwegs=M01]").count() == 1, 10, "Ziel 1 bekämpft")
+            warte(lambda: solo.locator(".unterwegs-chip[data-unterwegs=M01]").count() == 1, 10, "Ziel 1 bekämpft")
 
         aufgabe("S-1 allein testen: Uhr oben rechts, Ziel 1 bekämpfen", s_1)
         if not ergebnis[-1][1]:

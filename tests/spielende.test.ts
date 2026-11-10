@@ -63,24 +63,29 @@ describe("Bedingte Injects für die Spielleitung", () => {
     ["entscheid", { meldung: "M20", entscheid: "zurueckstellen", sek_eingang: 25 }, 1240],
   ];
 
-  it("ohne Freigabe: I-08a wartet, I-08b und E-01 kommen zur festen Zeit, I-09 wartet", async () => {
+  it("ohne Freigabe: I-08a wartet, I-08b und E-01 kommen zur festen Zeit, I-09 wartet; Auflösung A-01 um 21:45", async () => {
     const inh = await inhalte();
     const st = Object.fromEntries(bedingtStand(inh, zustandAus(ereignisse(basis), inh), 1300).map((b) => [b.id, b]));
     expect(st["I-08a"].status).toBe("wartet");
     expect(st["I-08b"].status).toBe("wartet");
-    expect(st["I-08b"].t).toBe(1480);
+    expect(st["I-08b"].t).toBe(1400); // seit 2.7 nach dem letzten Schuss der PT-91 (23:20)
     expect(st["E-01"].art).toBe("ereignis");
+    expect(st["E-01"].t).toBe(1245); // seit 2.7 (I3.1) ab dem ersten Halt südlich der Brücke, 20:45
     expect(st["I-09"].status).toBe("wartet");
+    // seit 2.7 (I3.2): 90 s nach M20 ohne Freigabe als verbündet erkannt
+    expect(st["A-01"]).toMatchObject({ art: "ereignis", status: "wartet", t: 1305 });
+    expect(Object.fromEntries(bedingtStand(inh, zustandAus(ereignisse(basis), inh), 1310).map((b) => [b.id, b]))["A-01"].status).toBe("erfuellt");
   });
 
-  it("BEKÄMPFEN der PT-91: I-08a kommt 60 s später, I-08b und E-01 entfallen", async () => {
+  it("BEKÄMPFEN der PT-91 vor 20:45: I-08a kommt 60 s später, I-08b, E-01 und die Auflösung entfallen", async () => {
     const inh = await inhalte();
-    const z = zustandAus(ereignisse([...basis, ["entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", sek_eingang: 35 }, 1250]]), inh);
-    const st = Object.fromEntries(bedingtStand(inh, z, 1260).map((b) => [b.id, b]));
+    const z = zustandAus(ereignisse([...basis, ["entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", sek_eingang: 28 }, 1243]]), inh);
+    const st = Object.fromEntries(bedingtStand(inh, z, 1250).map((b) => [b.id, b]));
     expect(st["I-08a"].status).toBe("erfuellt");
-    expect(st["I-08a"].t).toBe(1310);
+    expect(st["I-08a"].t).toBe(1303);
     expect(st["I-08b"].status).toBe("entfaellt");
     expect(st["E-01"].status).toBe("entfaellt");
+    expect(st["A-01"].status).toBe("entfaellt");
   });
 
   it("I-09 wartet bis zum Einschlag und entfällt, wenn die Wirkung auf den Mörser keine Zivilpersonen trifft", async () => {

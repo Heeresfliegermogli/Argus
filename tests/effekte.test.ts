@@ -180,8 +180,14 @@ describe("Effekte (kern/effekte.ts)", () => {
         const ziel = e.id.match(/^(Z-\d+|V\d-\d)-[wsx]$/)?.[1];
         if (ziel) expect(kennt.has(ziel), e.id).toBe(true);
       }
-      // E-01 auf Z-27/Z-28 (ungemeldet): kein Treffer, keine Leuchtspur beim Team
-      expect(fx.some((e) => e.id.startsWith("E-01-0-") && e.art !== "muendung")).toBe(false);
+      // E-01 (seit 2.7, I3.1): Die PT-91 kämpfen sichtbar mit – wer sie aus M20 kennt, sieht Mündungsfeuer, Leuchtspur und Treffer, auch
+      // an einem ungemeldeten Fahrzeug (Z-27/Z-28); ohne die Meldung der PT-91 nur Treffer an Zielen, die das Team kennt
+      for (const [nr, w] of Object.entries(m.z.ereignisse["E-01"]?.wirkungen ?? {})) {
+        if (!w.wirkt) continue;
+        const von = inh.szenario.ereignisse[0].wirkungen[Number(nr)].von;
+        expect(fx.some((e) => e.id === `E-01-${nr}-s`), `E-01 ${nr} Leuchtspur`).toBe(kennt.has(von));
+        expect(fx.some((e) => e.id === `E-01-${nr}-x`), `E-01 ${nr} Treffer`).toBe(kennt.has(von) || kennt.has(w.ziel!));
+      }
       const pl = effekte(inh, m.z, "umgebung");
       // seit 2.3 auch Feuer auf die eigene Truppe (V-…, seit 2.5 je Panzer, Rauch an ausgefallenen Panzern): verrät kein Ziel
       const erlaubt = (e: Effekt) =>

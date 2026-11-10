@@ -244,6 +244,8 @@ export function LagekarteAnsicht(p: {
   fokus?: { pos: Punkt; faktor: number; schluessel: string };
   /** Fahrwege der Einheiten (Kontrollkarte, B10; Knopf „Fahrwege“ blendet sie aus) und Vorschau einer Verstärkung */
   fahrwege?: Fahrweg[];
+  /** seit 2.7 (G4b): beim Start das Feld füllen, Mitte des Ausschnitts in Metern (Zoom und Verschieben bleiben) */
+  fuellen?: Punkt;
 }) {
   const { man, fertig } = useManifestStatus();
   const host = useRef<HTMLDivElement>(null);
@@ -369,6 +371,7 @@ export function LagekarteAnsicht(p: {
       hintergrund: grund,
       sprites: p.sprites,
       zeichenGroesse: p.zeichenGroesse,
+      fuellen: p.fuellen,
       onKlick: (o) => o.meldung && wahlRef.current?.(o.meldung),
       onInfo: setInfo,
       onZoom: (z) => {

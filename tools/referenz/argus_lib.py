@@ -830,3 +830,55 @@ def zu_nah(ziele, dauer, halt=None, schwelle=15.0, schritt=1.0):
             if d[k] < schwelle:
                 out.append((a, b, float(d[k]), float(ts[k])))
     return out
+
+
+# ----------------------------------------------------------------------------- Skriptereignis E-01 (seit 2.7, I3.1)
+def im_bereich(p, bereich):
+    """Liegt p im Rechteck bereich {x: [min, max], y: [min, max]}? Ohne Bereich immer."""
+    if not bereich:
+        return True
+    return bereich["x"][0] <= p[0] <= bereich["x"][1] and bereich["y"][0] <= p[1] <= bereich["y"][1]
+
+
+def ereignis_ziel(ziele_map, e, zerstoert, t):
+    """Ziel eines Schusses ohne festes Ziel: das erste Fahrzeug aus ziele_reihenfolge, das zur Zeit t im Raum steht, nicht zerstört
+    (zerstoert[x] > t), ein legitimes Ziel und im bereich ist; sonst None. Wie src/engine/ablauf.ts (ereignisZiel)."""
+    for zid in e.get("ziele_reihenfolge", []):
+        z = ziele_map.get(zid)
+        if not z or not vorhanden(z, t) or zerstoert.get(zid, 1e9) <= t or not gt_bei(z, t)["legitim"]:
+            continue
+        if im_bereich(position(z, t), e.get("bereich")):
+            return zid
+    return None
+
+
+def ereignis_wirkungen(ziele_map, e, zerstoert, abbruch=1e9):
+    """Wirkungen eines Skriptereignisses nacheinander: [(nr, t, von, ziel, wirkt, grund)]. abbruch = früheste Freigabe auf die
+    Bedingungsziele (Wirkungen ab dann entfallen). zerstoert wird nicht verändert; was gewirkt hat, zählt für die nächsten Schüsse."""
+    z = dict(zerstoert)
+    out = []
+    for nr, w in sorted(enumerate(e["wirkungen"]), key=lambda x: (x[1]["t_s"], x[0])):
+        t = w["t_s"]
+        if t >= abbruch:
+            out.append((nr, t, w["von"], w.get("ziel"), False, "abgebrochen"))
+            continue
+        if z.get(w["von"], 1e9) <= t:
+            out.append((nr, t, w["von"], w.get("ziel"), False, f"{w['von']} ist ausgefallen"))
+            continue
+        if w.get("ziel"):
+            zid = w["ziel"]
+            zz = ziele_map.get(zid)
+            if not zz or not vorhanden(zz, t) or z.get(zid, 1e9) <= t:
+                out.append((nr, t, w["von"], zid, False, f"{zid} {'schon zerstört' if z.get(zid, 1e9) <= t else 'nicht im Raum'}"))
+                continue
+            if not gt_bei(zz, t)["legitim"]:
+                out.append((nr, t, w["von"], zid, False, f"{zid} ist kein legitimes Ziel"))
+                continue
+        else:
+            zid = ereignis_ziel(ziele_map, e, z, t)
+            if zid is None:
+                out.append((nr, t, w["von"], None, False, f"kein Feind {('an der ' + e['bereich']['name']) if e.get('bereich', {}).get('name') else 'im Bereich'}"))
+                continue
+        z[zid] = t
+        out.append((nr, t, w["von"], zid, True, None))
+    return out

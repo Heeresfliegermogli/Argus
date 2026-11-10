@@ -15,9 +15,13 @@
 // mit – an der Position des ersten noch stehenden Fahrzeugs der Meldung, mit dem Zeichen der ARGUS-Klasse
 // (nie Ground Truth). Sind alle Fahrzeuge zerstört, bleibt das Zeichen durchgestrichen am Wrack; nach der
 // eigenen Wirkung bleibt es beim bekämpften Fahrzeug am Einschlagort (Rest eines Zuges meldet ARGUS neu).
-// Zieht ein Ziel ab, verschwindet seine Spur, sobald die Meldung erledigt ist.
+// Seit 2.7 (I1.2) verschwindet kein gemeldetes Ziel ohne Erklärung: Verlässt es den Raum, bleibt das Zeichen am Kartenrand stehen,
+// wo es hinausfuhr – „durchgebrochen“ (über Brücke oder Furt nach Westen) oder „abgezogen“; der Eingang zeigt einen Vermerk
+// (kern/sichten.ts, vermerke). Seit 2.7 (I3.2): Nach der Auflösung (A-01) zeigt das Zeichen der PT-91 blau „PL-PzKp (verbündet)“, nach
+// Eigenbeschuss (I-08a) „verbündet, getroffen“.
 import type { ArgusAusgabe, GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
-import { ZEICHEN_KONTAKT, zeichenArgus, zeichenZiel } from "../karte/zeichen";
+import { ZEICHEN_KONTAKT, sidc, zeichenArgus, zeichenZiel } from "../karte/zeichen";
+import { durchbruchUeber } from "./durchbruch";
 import { ausrichtung, dist, feinlage, gtBei, imPolygon, position, vorhanden } from "./geometrie";
 import { einschlaegeVon, offeneEinschlaege } from "./lage";
 import { gemeldetePosition } from "./regeln";
@@ -90,6 +94,12 @@ export interface KartenObjekt {
    * zugweisen Meldung am Einschlagort (C8). Kleiner gezeichnet, ohne Marke, nicht anklickbar.
    */
   art?: "kontakt" | "teil" | "wrack";
+  /** seit 2.7 (I1.2): hat den Raum verlassen – das Zeichen steht am Kartenrand, wo das Fahrzeug hinausfuhr */
+  weg?: "durchgebrochen" | "abgezogen";
+  /** seit 2.7 (I3.2): als verbündet erkannt (blau), nicht mehr zu bekämpfen */
+  verbuendet?: boolean;
+  /** trotz Zustand „erledigt“ voll sichtbar (verbündet, durchgebrochen) */
+  hervor?: boolean;
 }
 
 export interface PersonenMarke {
@@ -260,6 +270,20 @@ const RANG: Record<ObjektZustand, number> = { offen: 5, zurueckgestellt: 4, frei
  *  bekommt es ein eigenes kleines Zeichen (seit 2.2). */
 export const GRUPPE_RADIUS_M = 40;
 
+/** So weit vom Kartenrand (m) steht das Zeichen eines Ziels, das den Raum verlassen hat (seit 2.7, I1.2). */
+export const RAND_M = 14;
+
+/** Punkt auf die Karte ziehen (mit Abstand RAND_M vom Rand). */
+function amRand(inh: Inhalte, p: Punkt): Punkt {
+  const { breite, hoehe } = inh.karte.ausdehnung_m;
+  return [Math.max(RAND_M, Math.min(breite - RAND_M, p[0])), Math.max(RAND_M, Math.min(hoehe - RAND_M, p[1]))];
+}
+
+/** Zeichen einer verbündeten Kraft nach der Auflösung (seit 2.7, I3.2): Panzer-Einheit, Größe Kompanie; getroffen = beschädigt. */
+export function zeichenVerbuendet(getroffen: boolean, zerstoert = false): string {
+  return sidc("F", "UCA", { status: zerstoert ? "X" : getroffen ? "D" : "P", groesse: "E" });
+}
+
 /** Liegt die Position im Wald? Dort sieht die Drohne keine Bewegung (kein Kontakt, seit 2.2). */
 export function imWald(inh: Inhalte, p: Punkt): boolean {
   return inh.karte.flaechen.some((f) => f.art === "wald" && imPolygon(p, f.punkte as Punkt[]));
@@ -313,6 +337,11 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
     let menge = m.ziele.length > 1 ? m.ziele.length : undefined;
     let anzahl = m.ziele.length;
     const wirkung = bekaempft ? liste.map((x) => x.st.wirkung).find((w) => !!w) : undefined;
+    let weg: KartenObjekt["weg"];
+    // seit 2.7 (I3.2): nach Zeit als verbündet erkannt – oder nach Eigenbeschuss als verbündet gemeldet (I-08a)
+    const aufl = (inh.basis ?? inh).szenario.aufloesungen?.find((a) => ids.includes(a.meldung));
+    const verbuendet = aufl ? (z.aufloesungen?.[aufl.id] ? { name: aufl.name, getroffen: false }
+      : aufl.getroffen && z.injects[aufl.getroffen.inject] ? { name: aufl.getroffen.name, getroffen: true } : null) : null;
     if (tLage !== undefined) {
       const stehend = m.ziele.filter((id) => stehtNoch(inh, z, id, tLage));
       const wracks = m.ziele.filter((id) => z.zerstoert[id] !== undefined && z.zerstoert[id] <= tLage + 1e-6);
@@ -336,12 +365,15 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
         anzahl = 1;
         menge = undefined;
       } else {
-        if (zustand === "erledigt" || zustand === "bekaempft") continue; // abgezogen: keine Spur mehr
-        // abgezogen, aber noch offen: das Zeichen bleibt an der letzten Stelle
-        const b = zielBahn(inh, z, m.ziele[0]);
-        bahn = b ? { ...b, halt: b.halt ?? tLage } : undefined;
-        const lage = bahn && bahnLage(bahn, tLage);
-        if (lage) pos = lage.pos;
+        // seit 2.7 (I1.2): kein Fahrzeug mehr im Raum – das Zeichen bleibt am Rand, wo das (erste nicht zerstörte) Fahrzeug hinausfuhr,
+        // „durchgebrochen“ über Brücke oder Furt, sonst „abgezogen“; die Karte bewegt es nicht mehr
+        const fz = m.ziele.find((id) => z.zerstoert[id] === undefined && inh.ziele[id]) ?? m.ziele[0];
+        const b = zielBahn(inh, z, fz);
+        const tAus = b?.bis !== undefined ? Math.min(b.bis - 0.05, tLage) : tLage;
+        const lage = b && bahnLage({ ...b, halt: tAus }, tAus);
+        pos = amRand(inh, lage ? lage.pos : pos);
+        bahn = undefined;
+        weg = durchbruchUeber(inh, z, m.ziele) ? "durchgebrochen" : "abgezogen";
         anzahl = 1;
         menge = undefined;
       }
@@ -351,25 +383,33 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
     const nummern = ids.map((id) => zielNr(inh, z, id));
     // bekämpft, aber Fahrzeuge stehen noch: das Zeichen der übrigen ist erledigt (blass), das Wrack trägt das Kreuz (C8)
     const objZustand: ObjektZustand = zerstoert && bekaempft ? "bekaempft" : zustand === "bekaempft" ? "erledigt" : zustand;
+    const ueber = weg === "durchgebrochen" ? durchbruchUeber(inh, z, m.ziele) : null;
     const o: KartenObjekt = {
       id: nr,
       pos,
-      // seit 2.4 (E4): das Zeichen zeigt, was ARGUS zur Meldezeit meldete (bei gestörtem Datenlink unsicherer)
-      sidc: zeichenArgus(inh, argusBei(inh, m, st.gestoert).klasse, argusBei(inh, m, st.gestoert).konfidenz, zeichenStatus, anzahl),
-      menge,
-      text: `Ziel ${nummern.join("/")}`,
-      titel: `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
+      // seit 2.4 (E4): das Zeichen zeigt, was ARGUS zur Meldezeit meldete (bei gestörtem Datenlink unsicherer); seit 2.7 nach der
+      // Auflösung blau (verbündet)
+      sidc: verbuendet ? zeichenVerbuendet(verbuendet.getroffen, zerstoert)
+        : zeichenArgus(inh, argusBei(inh, m, st.gestoert).klasse, argusBei(inh, m, st.gestoert).konfidenz, zeichenStatus, anzahl),
+      menge: verbuendet ? undefined : menge,
+      text: verbuendet ? verbuendet.name : `Ziel ${nummern.join("/")}${weg === "durchgebrochen" ? " durchgebrochen" : weg === "abgezogen" ? " abgezogen" : ""}`,
+      titel: verbuendet ? `${verbuendet.name} · war Ziel ${nummern.join(", ")}` : `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
       zeilen: [
-        `gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
+        `gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert && !weg ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
         ...liste.map((x) => `Ziel ${zielNr(inh, z, x.m.id)}: ${standText(x.st)}`),
         ...(zerstoert && !bekaempft ? ["Ziel zerstört"] : []),
-        ...(menge ? [`${menge} Fahrzeuge${anzahl < m.ziele.length ? ` (von ${m.ziele.length})` : ""}`] : []),
+        ...(weg === "durchgebrochen" ? [`über ${ueber ?? "den Bach"} durchgebrochen, westlich aus dem Raum`] : weg === "abgezogen" ? ["aus dem Raum abgezogen"] : []),
+        ...(verbuendet ? [verbuendet.getroffen ? "verbündet – Eigenbeschuss" : (aufl?.vermerk ?? "verbündet – nicht bekämpfen")] : []),
+        ...(menge && !verbuendet ? [`${menge} Fahrzeuge${anzahl < m.ziele.length ? ` (von ${m.ziele.length})` : ""}`] : []),
       ],
       zustand: tLage === undefined && bekaempft ? "bekaempft" : objZustand,
       meldung: m.id,
       meldungen: ids,
       bahn,
       zerstoert: zerstoert || (bekaempft && tLage === undefined),
+      ...(weg ? { weg } : {}),
+      ...(verbuendet ? { verbuendet: true } : {}),
+      ...(verbuendet || weg === "durchgebrochen" ? { hervor: true } : {}),
     };
     objekte.push(o);
     zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern, argus: argusBei(inh, m, st.gestoert) });

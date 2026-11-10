@@ -70,6 +70,8 @@ export interface Ziel {
   im_gebaeude?: string;
   /** Seit 2.4 (S8): von ARGUS nie gemeldet, aber kein ungemeldetes Ziel – steht als Kontakt auf den Karten (Grund) */
   nur_kontakt?: string;
+  /** Seit 2.7 (I2.2): erste Meldung später als 90 s nach der Einfahrt oder nach dem ersten Schuss – gewollt (Grund) */
+  spaet_gewollt?: string;
 }
 
 /** Seit 2.4 (E6.3): was im Drohnenbild erkennbar sein muss (statt Sensordaten), geprüft mit tools/drohne_probe.py */
@@ -126,6 +128,8 @@ export interface Meldung {
   folge_von?: string;
   /** Seit 2.2 (C3): Die Pause vor dieser Meldung ist länger als 60 s und gewollt (Grund) */
   pause_gewollt?: string;
+  /** Seit 2.7: Der Abstand zur vorigen Meldung ist kürzer als üblich und gewollt (Grund) */
+  dicht_gewollt?: string;
   argus: ArgusAusgabe;
   /** Seit 2.4 (E6.3): nur noch für Spielleitung und Drehbuch; die Spieler sehen keine Sensordaten */
   sensor: {
@@ -216,9 +220,33 @@ export interface Skriptereignis {
   name: string;
   fall?: string;
   bedingung: Bedingung;
-  wirkungen: { t_s: number; von: string; ziel: string }[];
+  /** Schüsse; ohne festes Ziel (seit 2.7, I3.1) je Schuss das erste stehende Fahrzeug aus ziele_reihenfolge im Bereich */
+  wirkungen: { t_s: number; von: string; ziel?: string }[];
+  /** Seit 2.7: Ziele in der Reihenfolge ihrer Ankunft (z. B. an der Brücke Ost) */
+  ziele_reihenfolge?: string[];
+  /** Seit 2.7: nur Fahrzeuge in diesem Rechteck (m) zählen */
+  bereich?: { x: [number, number]; y: [number, number]; name?: string };
   regel: string;
   papier?: string;
+}
+
+/**
+ * Seit 2.7 (I3.2): Auflösung nach Zeit. Hat das Team bis nach_s nach der Meldung keine Wirkung auf die Ziele freigegeben, sind sie
+ * erkannt (als: „verbuendet“): Zeichen blau mit `name`, Meldung weg aus dem Eingang mit `vermerk`, Lagemeldung `inject`. Nach einer
+ * Freigabe vorher wird das Zeichen mit der Lagemeldung `getroffen.inject` (Eigenbeschuss) zu `getroffen.name`.
+ */
+export interface Aufloesung {
+  id: string;
+  meldung: string;
+  ziele: string[];
+  nach_s: number;
+  als: string;
+  fall?: string;
+  name: string;
+  vermerk: string;
+  inject?: string;
+  getroffen?: { inject: string; name: string };
+  hinweis?: string;
 }
 
 // ---------------------------------------------------------------- Hintergrundgefecht und Verstärkungen (seit Szenario 2.0)
@@ -447,12 +475,55 @@ export interface Szenario {
   eloka?: EloKa;
   schluesselfaelle: Schluesselfall[];
   nebenfaelle: Nebenfall[];
+  /** Seit 2.7 (I3.2): Auflösungen nach Zeit (A-01: PT-91 als verbündet erkannt) */
+  aufloesungen?: Aufloesung[];
   anforderungen_technik?: { schritt: string; text: string }[];
-  auswertung: {
-    einstieg: string; kernaussage: string; schlussfrage: string;
-    /** Seit 2.4 (E5): Replay-Reihenfolge (Standard) und zuschaltbare Fälle, Zeitbudget in s */
-    replay?: { standard: string[]; zuschaltbar: string[]; budget_s: number; hinweis?: string };
-  };
+  auswertung: AuswertungInhalt;
+}
+
+/** Ein Kapitel der Auswertung (seit 2.7, G1): Kennung und Soll-Zeit in s; zuschaltbare mit dem Kapitel, nach dem sie stehen. */
+export interface AuswertungKapitel {
+  id: string;
+  titel: string;
+  sek: number;
+  nach?: string;
+}
+
+/** Folie des Impulses (seit 2.7, G3): Zitat ohne Quelle, aufgedeckt mit Quelle, weitere Zitate zuschaltbar. Wörtlich nach Liste G. */
+export interface ImpulsFolie {
+  id: string;
+  ohne_quelle?: boolean;
+  zuschaltbar?: boolean;
+  gegenstimme?: boolean;
+  original?: string;
+  deutsch?: string;
+  titel?: string;
+  quelle?: string;
+  vorspann?: string;
+  punkte?: { text: string; zitat?: string }[];
+  pflicht?: string;
+  wer?: string;
+  rolle?: string;
+  anlass?: string;
+}
+
+export interface AuswertungInhalt {
+  einstieg: string; kernaussage: string; schlussfrage: string;
+  /** Seit 2.4 (E5): Replay-Reihenfolge (Standard) und zuschaltbare Fälle, Zeitbudget in s (seit 2.7 nur das Replay, 240 s) */
+  replay?: { standard: string[]; zuschaltbar: string[]; budget_s: number; hinweis?: string };
+  /** Seit 2.7 (G1.1): Kapitel im Standard (15 min) und zuschaltbare */
+  kapitel?: AuswertungKapitel[];
+  zuschaltbar?: AuswertungKapitel[];
+  /** Seit 2.7 (G2.1): Referenzlauf „ARGUS allein“ */
+  referenz?: { name: string; regel: string; reihenfolge_wirkmittel: string[] };
+  /** Seit 2.7 (G2): Texte der Bilanz */
+  bilanz?: { titel: string; hinweis_sl: string; nicht_in_bilanz: string; zitat?: { text: string; quelle: string } };
+  /** Seit 2.7 (G3): Impuls */
+  impuls?: { frage: string; folien: ImpulsFolie[]; hinweis?: string };
+  /** Seit 2.7 (G4.1): Wertekompass und Leitfragen */
+  diskussion?: { titel: string; quelle: string; werte: string[]; tugenden: string[]; leitfragen: { titel: string; werte: string[]; text: string }[] };
+  /** Seit 2.7 (G4.2): Kernaussagen */
+  abschluss?: { kernaussagen: { titel: string; text: string }[] };
 }
 
 /** Seit 2.4 (E4): Solange das Ziel im Raum steht und nicht zerstört ist, ist der Datenlink gestört. */
@@ -591,6 +662,20 @@ export interface Regeln {
   eigene_kraefte?: string;
   /** Seit 2.3 (D2): Verlustmodell der eigenen Truppe (seit 2.5 je Panzer) */
   verluste?: RegelnVerluste;
+  /** Seit 2.7 (G2.4): Spielwerte der Bilanz in der Auswertung */
+  bilanz?: RegelnBilanz;
+}
+
+/** Spielwerte der Bilanz (seit 2.7, G2.4): Mio € je Fahrzeugtyp, € je Schuss, Arten der Fehlbekämpfung (ohne Eurowert). */
+export interface RegelnBilanz {
+  hinweis?: string;
+  fahrzeuge_mio_eur: Record<string, number>;
+  munition_eur: Record<string, number>;
+  fuss: string;
+  /** Fehlbekämpfungen (Teil 2, ohne Eurowert) in der Reihenfolge der Anzeige; einheit: was gezählt wird (Personen, Fahrzeug, Panzer …) */
+  fehl: { id: string; text: string; zeichen: string; kinder?: boolean; einheit?: string }[];
+  /** Ziele, die eine Gruppe von Menschen darstellen (ohne Personenliste, z. B. Verwundete): so viele Personen zählen */
+  personen_je_typ?: Record<string, number>;
 }
 
 export type VerlustArt = "direkt" | "steil" | "artillerie" | "attrappe" | "durchbruch" | "beobachter";

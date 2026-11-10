@@ -108,14 +108,25 @@ export interface EreignisDaten {
    * aufgehalten, die Fahrzeuge fahren ab t_ab ihre Durchbruch-Route; sonst grund (z. B. „Z-14 zerstört“).
    */
   durchbruch: { gruppe: string; t_ab: number; durch: boolean; grund?: string };
-  /** Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. */
+  /**
+   * Skriptereignis (E-01): je Wirkung ein Eintrag (wirkt oder nicht, mit grund) oder entfaellt als Ganzes. Seit 2.7 (I3.1) steht das Ziel
+   * eines Schusses ohne festes Ziel hier (das erste stehende Fahrzeug aus ziele_reihenfolge im Bereich).
+   */
   ereignis: { ereignis: string; nr?: number; von?: string; ziel?: string; wirkt?: boolean; entfaellt?: boolean; grund?: string };
+  /**
+   * Seit 2.7 (I3.2): Auflösung nach Zeit (szenario.aufloesungen) – ohne Freigabe bis nach_s nach der Meldung sind die Ziele erkannt
+   * (z. B. als verbündet); die Meldung ist danach nicht mehr offen, keine Freigabe mehr möglich.
+   */
+  aufloesung: { aufloesung: string; meldung: string; als: string };
   /**
    * Lagemeldung an die Führung. Seit 2.3 (D3): Druckmeldungen der eigenen Truppe (K-01 …) und Lagemeldungen mit Platzhaltern
    * (I-07, I-06, I-13) tragen den Text mit dem Stand dieses Teams, Druckmeldungen dazu Zug und Stufe der Dringlichkeit.
    */
   inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number };
-  /** Seit 2.6: Lagemeldung im Feed angeklickt (gelesen); ohne Klick rutscht sie nach einigen Sekunden in „frühere Meldungen“. */
+  /**
+   * Seit 2.6: Lagemeldung im Feed angeklickt (gelesen). Seit 2.7 (I4): ohne Klick ist sie nach regeln.anzeige.lagemeldung_s (30 s
+   * Spielzeit) weg – ob und nach wie vielen Sekunden sie angeklickt wurde, steht damit im Protokoll (Zeit des Klicks − Eingang).
+   */
   inject_quittiert: { inject: string };
   /** Beobachtung der Spielleitung (SL 2), optional zu einem Schlüssel- oder Nebenfall (S1–S8, N1–N4) für die Auswertung. */
   notiz: { text: string; fall?: string };
@@ -127,7 +138,7 @@ export type EreignisTyp = keyof EreignisDaten;
 
 export const EREIGNIS_TYPEN: EreignisTyp[] = [
   "spiel_neu", "uhr", "meldung", "meldung_entfaellt", "entscheid", "wirkung", "inject", "inject_quittiert", "notiz", "spielende",
-  "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis", "durchbruch",
+  "aktion_abgelehnt", "verstaerkung", "hintergrund", "ereignis", "durchbruch", "aufloesung",
 ];
 
 export type Ereignis = {

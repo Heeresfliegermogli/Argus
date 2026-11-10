@@ -8,13 +8,20 @@
 //
 // Aufruf: npx vite-node tools/drehbuch_plan.ts -- <ziel.json>
 import { readFileSync, writeFileSync } from "node:fs";
+import { argusAllein } from "../src/engine/referenzlauf";
 import { auswerten } from "../src/kern/auswertung";
+import { type Bilanz, bilanz } from "../src/kern/bilanz";
 import { inhalte } from "../tests/hilfen";
 import { type DrehbuchReferenz, START_MS, drehbuchTeams, spieleDurch } from "../tests/modellteam";
 
 const ref = JSON.parse(readFileSync(new URL("../tests/referenz_durchlauf.json", import.meta.url), "utf-8")) as DrehbuchReferenz;
 
 const ziel = process.argv.slice(2).filter((a) => a !== "--")[0] ?? "drehbuch_plan.json";
+
+/** Bilanz für den Plan (Vergleich in auswertung_probe.py). */
+function bilanzPlan(b: Bilanz | null) {
+  return b ? { fahrzeuge: b.fahrzeuge, wert_mio: b.wertMio, munition_eur: b.munitionEur, median_s: b.medianS, hingeschaut_s: b.hingeschautS, panzer: b.panzer, fehl: b.fehl, kinder: b.kinder } : null;
+}
 const inh = await inhalte();
 // das Team klickt Lagemeldungen an (Team 3 erst nach einer Minute) – für Kennzahlen und Replay der Auswertung
 const teams = spieleDurch(inh, drehbuchTeams(ref));
@@ -38,8 +45,12 @@ const plan = teams.map((m, i) => ({
         fehl: k.fehl.wirkungen, warnung: k.trotzWarnung, widerspruch: k.widerspruch.gesamt, zu_recht: k.widerspruch.zuRecht,
         lm_gelesen: k.lagemeldungen[0]?.gelesen ?? null, sek_median: k.zeiten.alle.eingang, entscheidungen: k.zeiten.alle.n,
       },
+      // seit 2.7 (G2): Bilanz „Das ist es wert“
+      bilanz: bilanzPlan(t.bilanz),
     };
   })(),
 }));
-writeFileSync(ziel, JSON.stringify({ szenario: inh.szenario.version, zeiten: ref.zeiten, teams: plan }, null, 1));
+// Referenzlauf „ARGUS allein“ (G2.1), wie ihn die Auswertung beim Öffnen rechnet
+const referenz = bilanzPlan(bilanz(inh, argusAllein(inh).z));
+writeFileSync(ziel, JSON.stringify({ szenario: inh.szenario.version, zeiten: ref.zeiten, referenz, teams: plan }, null, 1));
 console.log(`${plan.length} Teams, ${plan.reduce((n, t) => n + t.aktionen.length, 0)} Aktionen, ${plan.reduce((n, t) => n + t.protokoll.length, 0)} Ereignisse → ${ziel}`);

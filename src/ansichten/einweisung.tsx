@@ -31,11 +31,11 @@ export interface TourSchritt {
 }
 
 export const TOUR: TourSchritt[] = [
-  { ziel: "eingang", titel: "Hier kommen die Meldungen rein", text: <>Jede ARGUS-Meldung landet im Eingang, die Zeit daneben läuft mit: so lange wartet sie schon. Die älteste öffnet sich von selbst, ein Klick öffnet eine andere.</> },
+  { ziel: "eingang", titel: "Hier kommen die Meldungen rein", text: <>Jede ARGUS-Meldung landet im Eingang, die Zeit daneben läuft mit: so lange wartet sie schon. Die älteste öffnet sich von selbst, ein Klick öffnet eine andere. Darüber: was gerade unterwegs ist, mit Countdown bis zum Einschlag.</> },
   { ziel: "entscheiden", titel: "Hier entscheidet ihr", text: <>Die geöffnete Meldung: Drohnenbild live (Klick: groß mit Lupe), was ARGUS meldet, die Wirkmittel – und die drei Knöpfe <M k="toedlich">BEKÄMPFEN mit …</M> <M>ZURÜCKSTELLEN</M> <M>ABLEHNEN</M>. Ohne eure Entscheidung wird nichts bekämpft.</> },
   { ziel: "karte", titel: "Die Lagekarte", text: <>Meldungen stehen als Marke am Ziel (Klick öffnet). Bekämpfte Ziele zeigen den Countdown bis zum Einschlag. Rot: No-Strike-Zone, orange gestrichelt: Einschränkungsgebiet. Mausrad zoomt.</> },
   { ziel: "panzer", titel: "Hier eure vier Panzer", text: <>Die 1. Kp am Westrand: 1/1 bis 1/4 mit ihrem Zustand. Wird ein Panzer getroffen, blinkt er rot.</> },
-  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 1. Kp melden sich hier. Eine neue steht kurz oben, dann rutscht sie nach „frühere Meldungen“ – ein Klick darauf zeigt sie wieder.</> },
+  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 1. Kp melden sich hier. Eine Meldung steht 30 Sekunden – oder bis ihr sie anklickt (✕). Danach ist sie weg.</> },
   { ziel: "bestand", titel: "Hier Wirkmittel und Bestand", text: <>Mörser und Loitering Munition (LM) sind begrenzt, die Kanone der 1. Kp nicht – sie reicht aber nur bis zum Bach. Wird es knapp, wird die Zahl gelb.</> },
   { ziel: "uhr", titel: "Spieluhr", text: <>25 Minuten in Echtzeit, die Spielleitung startet für alle Teams gleichzeitig. Daneben die Phase.</> },
 ];

@@ -12,16 +12,16 @@
 // bleiben offen.
 //
 // Lagemeldungen (für Kennzahlen und Replay der Auswertung): Das Team klickt jede Lagemeldung im Feed eine feste Zeit nach Eingang an
-// (ideal nach 20 s; naiv nach 40 s, die zum polnischen Gegenangriff – I-04, Fall S3 – erst nach 270 s). Klicks ändern den Ablauf der
-// Meldungen nicht (Vergleich mit der Simulation).
+// (ideal nach 20 s; naiv nach 25 s, die zum polnischen Gegenangriff – I-04, Fall S3 – gar nicht: Seit 2.7 (I4) steht eine Lagemeldung nur
+// 30 s im Feed, dann ist sie weg). Klicks ändern den Ablauf der Meldungen nicht (Vergleich mit der Simulation).
 import { NACH, naechsteFaelligkeit } from "../src/engine/ablauf";
 import { Host } from "../src/engine/host";
+import { zerstoertPrognose } from "../src/engine/referenzlauf";
 import type { Inhalte, Meldung } from "../src/inhalte/typen";
 import type { Absender, Aktion, AktionsDaten, AktionsTyp, Ereignis } from "../src/kern/ereignisse";
 import { argusBei } from "../src/kern/eloka";
-import { offeneEinschlaege, weltFuer } from "../src/kern/lage";
-import { SCHUTZ_KATEGORIEN, vorhersage, wirkungBeimEinschlag } from "../src/kern/regeln";
-import { weg } from "../src/kern/geometrie";
+import { weltFuer } from "../src/kern/lage";
+import { SCHUTZ_KATEGORIEN, vorhersage } from "../src/kern/regeln";
 import type { Spielzustand } from "../src/kern/zustand";
 import type { Abmelden } from "../src/sync/adapter";
 
@@ -34,8 +34,8 @@ const SCHUTZ = new Set([...SCHUTZ_KATEGORIEN, "sanitaet", "attrappe"]);
 export interface LageVerhalten {
   /** klickt jede Lagemeldung so viele s nach Eingang an */
   quittieren_s: number;
-  /** Lagemeldung zu Fall S3 (I-04): eigene Zeit in s nach Eingang */
-  i04_s?: number;
+  /** Lagemeldung zu Fall S3 (I-04): eigene Zeit in s nach Eingang; null = nie (ungelesen verschwunden) */
+  i04_s?: number | null;
 }
 
 /** So viele Sekunden vor Spielende klickt das Modellteam nichts mehr an. */
@@ -43,7 +43,7 @@ export const LAGE_VOR_ENDE_S = 10;
 
 export const LAGE_STANDARD: Record<Team, LageVerhalten> = {
   ideal: { quittieren_s: 20 },
-  naiv: { quittieren_s: 40, i04_s: 270 },
+  naiv: { quittieren_s: 25, i04_s: null },
 };
 
 /** Modellzeit je Entscheidung (s ab Öffnen), wie simuliere_durchlauf.py (T_NAIV, T_IDEAL). */
@@ -184,7 +184,8 @@ export class Modellteam {
     const out: [string, number][] = [];
     for (const id of this.z.injectReihenfolge) {
       if (this.quittiert.has(id) || this.z.injects[id].quittiert) continue;
-      out.push([id, this.z.injects[id].erschienen.t_s + (id === i04 && l.i04_s !== undefined ? l.i04_s : l.quittieren_s)]);
+      if (id === i04 && l.i04_s === null) continue;
+      out.push([id, this.z.injects[id].erschienen.t_s + (id === i04 && typeof l.i04_s === "number" ? l.i04_s : l.quittieren_s)]);
     }
     // nichts mehr kurz vor Spielende: im Browser käme der Klick erst nach dem Ende an
     const schluss = this.inh.szenario.spieluhr.dauer_s - LAGE_VOR_ENDE_S;
@@ -205,31 +206,9 @@ export class Modellteam {
 
   // ---------------------------------------------------------------- Prognose wie die Simulation
 
-  /** Zerstörungen, die die Simulation zur Zeit der Entscheidung schon kennt: Hintergrundgefecht und Wirkungen im Anflug. */
+  /** Zerstörungen, die die Simulation zur Zeit der Entscheidung schon kennt (src/engine/referenzlauf.ts, wie „ARGUS allein“). */
   private zerstoertPrognose(): Record<string, number> {
-    const inh = this.welt;
-    const z = this.z;
-    const p: Record<string, number> = { ...z.zerstoert };
-    for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
-      if (h.art !== "panzerabwehr" || h.folge !== "zerstoert" || z.hintergrund[h.id]) continue;
-      const ziel = inh.ziele[h.ziel];
-      if (ziel && !weg(ziel, h.t_s, z.zerstoert)) p[h.ziel] = Math.min(p[h.ziel] ?? Infinity, h.t_s);
-    }
-    for (const id of z.reihenfolge) {
-      const st = z.meldungen[id];
-      if (st.stufe !== "wirkung" || !st.freigabe?.wirkmittel) continue;
-      // je ausstehendem Einschlag eines Zuges, nacheinander
-      const zer = { ...z.zerstoert };
-      for (const { e } of offeneEinschlaege(inh, z, id)) {
-        for (const g of wirkungBeimEinschlag(inh, e, st.freigabe.wirkmittel, zer).getroffen) {
-          if (g.was !== "personen") {
-            p[g.ziel] = Math.min(p[g.ziel] ?? Infinity, e.t);
-            zer[g.ziel] = Math.min(zer[g.ziel] ?? Infinity, e.t);
-          }
-        }
-      }
-    }
-    return p;
+    return zerstoertPrognose(this.welt, this.z);
   }
 
   /**
@@ -312,7 +291,7 @@ export interface DrehbuchReferenz {
 
 /**
  * Die fünf Teams des Drehbuchs (tools/drehbuch_plan.ts für tools/e2e_drehbuch.py, Demo der Auswertung): die Läufe der Simulation,
- * Lagemeldungen nach LAGE_STANDARD. Team 3 (naiv + 4 Verstärkungen) klickt I-04 nach einer Minute an – bekämpft die PT-91 aber trotzdem
+ * Lagemeldungen nach LAGE_STANDARD. Team 3 (naiv + 4 Verstärkungen) klickt I-04 nach 25 s an – bekämpft die PT-91 aber trotzdem
  * (folgt ARGUS): Die Information kam an, entschieden hat sie nicht. Am Ausgang der Meldungen ändert das nichts.
  */
 export function drehbuchTeams(ref: DrehbuchReferenz, notizen: Record<number, ModellOptionen["notizen"]> = {}): { name: string; opt: ModellOptionen }[] {
@@ -320,7 +299,7 @@ export function drehbuchTeams(ref: DrehbuchReferenz, notizen: Record<number, Mod
     name: `team${i + 1}`,
     opt: {
       team: l.team, einspielen: l.einspielen, dauer: ref.zeiten[l.team], reihenfolge: ref.reihenfolge_wirkmittel,
-      ...(i === 2 ? { lage: { quittieren_s: 30, i04_s: 60 } } : {}),
+      ...(i === 2 ? { lage: { quittieren_s: 20, i04_s: 25 } } : {}),
       ...(notizen[i] ? { notizen: notizen[i] } : {}),
     },
   }));

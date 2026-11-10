@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { Sicht, SichtStand } from "../../sitzung/sicht";
 import { meldeSicht } from "../../sitzung/fehlersuche";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
+import { vermerke } from "../../kern/sichten";
 import { zielName } from "../../kern/zielnummern";
 
 /**
@@ -44,24 +45,25 @@ export function useSpielzeit(s: Sicht, intervallMs = 250): number {
 }
 
 /**
- * „Meldung entfällt“ (Schritt 7): Fallen Meldungen im Eingang weg, weil jedes ihrer Fahrzeuge zerstört oder abgezogen ist, sagt
- * ein kurzer Hinweis unten rechts, welche und warum – sonst verschwände die gerade geöffnete Meldung kommentarlos.
+ * „Meldung entfällt“ (Schritt 7), seit 2.7 (I1.2, I3.2) für jeden Vermerk: Fällt eine Meldung aus dem Eingang (Fahrzeuge zerstört,
+ * durchgebrochen, abgezogen, als verbündet erkannt) oder verlässt ein schon entschiedenes Ziel den Raum, sagt ein kurzer Hinweis unten
+ * rechts, welches und warum – zusätzlich zum Vermerk im Eingang und dem Zeichen am Kartenrand.
  */
-export function useEntfallHinweis(s: Sicht, st: SichtStand): void {
+export function useEntfallHinweis(s: Sicht, st: SichtStand, t: number): void {
   const z = st.zustand;
-  const ids = z.reihenfolge.filter((id) => z.meldungen[id].entfallen);
+  const liste = vermerke(s.inh, z, t);
   const bekannt = useRef<Set<string> | null>(null);
-  const schl = ids.join(",");
+  const schl = liste.map((v) => `${v.meldung}|${v.art}`).join(",");
   useEffect(() => {
     if (!st.geladen) return;
     if (bekannt.current) {
-      for (const id of ids) {
-        if (bekannt.current.has(id)) continue;
-        const e = z.meldungen[id].entfallen!;
-        s.hinweis("info", `${zielName(s.inh, z, id, false)} entfällt – ${e.grund}`);
+      for (const v of liste) {
+        const k = `${v.meldung}|${v.art}`;
+        if (bekannt.current.has(k)) continue;
+        s.hinweis("info", `${zielName(s.inh, z, v.meldung, false)}: ${v.text}`);
       }
     }
-    bekannt.current = new Set(ids);
+    bekannt.current = new Set(liste.map((v) => `${v.meldung}|${v.art}`));
   }, [schl, st.geladen, st.lauf]);
 }
 

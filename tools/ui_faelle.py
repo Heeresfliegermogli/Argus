@@ -7,7 +7,10 @@ Ergänzt tools/ui_bilder.py (kurzer Ablauf bis S1). Hier:
   • die Schlüsselfälle im Drohnenbild mit Vergrößerung auf das entscheidende Detail
     (S2 Rotes Kreuz M12, S4 Kinder M18, S3 drei Panzer M20, N2 weißes Tuch M21),
   • Mörser bei M12 mit mehreren Warnungen am vorausberechneten Einschlagort, BEKÄMPFEN trotz Warnung, ZURÜCKSTELLEN (M18),
-  • viele bekämpfte Ziele mit Countdown im Eingang, Feed mit vielen früheren Lagemeldungen, längste Notiz der Spielleitung,
+  • viele bekämpfte Ziele mit Countdown in der Zeile „Wirkung unterwegs“, längste Notiz der Spielleitung,
+  • seit 2.7 (I4): Lagemeldungen stehen 30 s (Spielzeit) oder bis zum Klick im Feed, dann sind sie ganz weg,
+  • seit 2.7 (I5.2): in einem zweiten Raum 8 gleichzeitige Wirkungen und mindestens 10 Meldungen im Eingang – nichts verschiebt sich,
+    nichts abgeschnitten, die Knöpfe bleiben an ihrer Stelle; „+n“ zeigt alle Wirkungen als Überlagerung,
   • Wirkungen mit Fehltreffern auf Kontrollkarte, in der Auswertung und in der Auflösung, Kontrollkarte gezoomt (Sprites).
 Prüft wie ui_bilder.py: kein Rollbalken, nichts abgeschnitten, keine Fehler in der Konsole.
 
@@ -27,6 +30,70 @@ ROLLEN = ["sl", "zb", "plenum"]
 NOTIZ_500 = ("Team hat das Rote Kreuz in der Lupe gesehen, aber nicht angesprochen; nach 20 s BEKÄMPFEN mit Mörser trotz Warnung. "
              "Auf Nachfrage: „ARGUS sagt 88 %, das reicht.“ Danach drei Meldungen in 40 s ohne Blick ins Drohnenbild. ") * 3
 NOTIZ_500 = NOTIZ_500[:500]
+
+
+KAESTEN_JS = """() => Object.fromEntries(['unterwegs', 'eingang', 'offene-meldung', 'zb-knoepfe', 'zb-bekaempfen', 'zb-zurueckstellen', 'zb-ablehnen', 'zb-karte', 'feed']
+    .map((id) => { const r = document.querySelector(`[data-testid=${id}]`).getBoundingClientRect(); return [id, [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]]; }))"""
+
+
+def pruefe_i5(ctx, a, fehler, foto, senden, konsole):
+    """I5.2: eigener Raum, kein Team hat entschieden; Spielzeit 20:50 bei stehender Uhr – über 20 Meldungen im Eingang. Acht davon
+    mit dem Mörser bekämpfen (stehende Uhr: alle bleiben unterwegs), dazwischen und danach messen: Zeile „Wirkung unterwegs“, Eingang,
+    geöffnete Meldung und Knöpfe stehen auf den Pixel gleich; „+n“ zeigt alle als Überlagerung."""
+    raum = f"{a.raum}-i5"
+    sl, zb = ctx.new_page(), ctx.new_page()
+    for r, pg in (("sl", sl), ("zb", zb)):
+        pg.on("console", lambda m, r=r: konsole.append(f"i5 {r}: {m.type}: {m.text}") if m.type in ("error", "warning") else None)
+        pg.on("pageerror", lambda e, r=r: konsole.append(f"i5 {r}: pageerror: {e}"))
+        pg.goto(adresse(a.basis, r, raum))
+    warte(lambda: sl.locator(".rahmen[data-host='1']").count() == 1, 20, "I5: SL steuert")
+    warte(lambda: zb.get_by_test_id("tour").count() == 1, 15, "I5: Übersicht")
+    zb.get_by_test_id("tour-ueberspringen").click()
+    warte(lambda: zb.get_by_test_id("einweisung-zb").count() == 1, 10, "I5: Einweisung")
+    zb.get_by_test_id("einweisung-ueberspringen").click()
+    vorher = zb.evaluate(KAESTEN_JS)
+    sl.fill("[data-testid=sl-zeit]", "20:50")
+    sl.get_by_text("Spielzeit setzen").click()
+    offen = lambda: zb.evaluate("() => { const z = window.argus.stand.zustand; return z.reihenfolge.filter((id) => z.meldungen[id].stufe === 'offen') }")  # noqa: E731
+    warte(lambda: len(offen()) >= 18, 20, "I5: mindestens 18 Meldungen im Eingang")
+    zb.wait_for_timeout(600)
+    if zb.evaluate(KAESTEN_JS) != vorher:
+        fehler.append(f"I5: Aufteilung verschoben, als der Eingang voll wurde: {vorher} → {zb.evaluate(KAESTEN_JS)}")
+    for mid in offen()[:8]:
+        senden(zb, "entscheid", {"meldung": mid, "entscheid": "bekaempfen", "wirkmittel": "MRS"})
+        zb.wait_for_timeout(250)
+        jetzt = zb.evaluate(KAESTEN_JS)
+        if jetzt != vorher:
+            fehler.append(f"I5: nach BEKÄMPFEN {mid} verschoben: {vorher} → {jetzt}")
+            break
+    n_unterwegs = zb.evaluate("() => { const z = window.argus.stand.zustand; return z.reihenfolge.filter((id) => z.meldungen[id].stufe === 'wirkung' && !z.meldungen[id].wirkung).length }")
+    n_offen = len(offen())
+    chips = zb.locator("[data-testid=unterwegs] .unterwegs-chips .unterwegs-chip").count()
+    mehr = zb.get_by_test_id("unterwegs-mehr").inner_text() if zb.get_by_test_id("unterwegs-mehr").count() else ""
+    print(f"  I5: {n_unterwegs} Wirkungen unterwegs ({chips} Chips + „{mehr}“), {n_offen} Meldungen im Eingang")
+    if n_unterwegs < 8 or n_offen < 10:
+        fehler.append(f"I5: nur {n_unterwegs} Wirkungen / {n_offen} Meldungen")
+    if mehr != f"+{n_unterwegs - chips}":
+        fehler.append(f"I5: „+n“ zeigt {mehr!r}, erwartet +{n_unterwegs - chips}")
+    eingang = zb.evaluate("() => { const l = document.querySelector('[data-testid=eingang] .eingang-liste'); return [l.scrollHeight, l.clientHeight]; }")
+    if eingang[0] <= eingang[1]:
+        fehler.append(f"I5: Eingang rollt nicht ({eingang})")
+    foto(zb, "zb_I5_8_wirkungen")
+    zb.get_by_test_id("unterwegs-mehr").click()
+    warte(lambda: zb.get_by_test_id("unterwegs-alle").count() == 1, 5, "I5: alle Wirkungen als Überlagerung")
+    if zb.locator("[data-testid=unterwegs-alle] .unterwegs-chip").count() != n_unterwegs:
+        fehler.append("I5: Überlagerung zeigt nicht alle Wirkungen")
+    if zb.evaluate(KAESTEN_JS) != vorher:
+        fehler.append("I5: Überlagerung verschiebt die Aufteilung")
+    foto(zb, "zb_I5_ueberlagerung")
+    zb.get_by_test_id("unterwegs-alle").click()
+    # Knöpfe auch mit geöffneter Meldung und gewähltem Wirkmittel an derselben Stelle
+    zb.locator("label[data-wm=LM]").click()
+    zb.wait_for_timeout(300)
+    if zb.evaluate(KAESTEN_JS) != vorher:
+        fehler.append("I5: Wirkmittel gewählt – Knöpfe verschoben")
+    sl.close()
+    zb.close()
 
 
 def main():
@@ -113,7 +180,7 @@ def main():
         if "trotz Warnung" not in zb.get_by_test_id("zb-bekaempfen").inner_text():
             fehler.append("M12 mit Mörser: Knopf ohne „trotz Warnung“")
         zb.get_by_test_id("zb-bekaempfen").click()
-        warte(lambda: zb.locator("[data-unterwegs=M12]").count() == 1, 10, "M12 bekämpft (Countdown im Eingang)")
+        warte(lambda: zb.locator("[data-unterwegs=M12]").count() == 1, 10, "M12 bekämpft (Countdown über dem Eingang)")
         for mid in offen():
             senden(zb, "entscheid", {"meldung": mid, "entscheid": "ablehnen"})
         warte(lambda: zb.get_by_test_id("eingang-zahl").inner_text() == "0", 15, "Eingang leer")
@@ -136,12 +203,22 @@ def main():
             senden(zb, "entscheid", {"meldung": mid, "entscheid": "bekaempfen", "wirkmittel": "LM"})
         zb.wait_for_timeout(600)
         foto(zb, "zb_einschlaege_countdown")
-        # frühere Lagemeldungen aufklappen (viele auf einmal)
-        warte(lambda: zb.get_by_test_id("feed-frueher").is_enabled(), 20, "frühere Lagemeldungen")
-        zb.get_by_test_id("feed-frueher").click()
-        zb.locator(".feed-liste .feed-meldung").first.click()
-        zb.wait_for_timeout(400)
-        foto(zb, "zb_feed_frueher")
+        # seit 2.7 (I4): im Feed nur, was höchstens 30 s alt und nicht angeklickt ist; ein Klick nimmt sie ganz weg
+        if zb.get_by_test_id("feed-frueher").count():
+            fehler.append("Feed: „frühere Meldungen“ gibt es seit 2.7 nicht mehr")
+        soll = zb.evaluate("""() => { const z = window.argus.stand.zustand; const t = z.uhr.t_s;
+            return z.injectReihenfolge.filter((id) => !z.injects[id].quittiert && t - z.injects[id].erschienen.t_s < 30).reverse(); }""")
+        ist = zb.eval_on_selector_all("[data-testid=feed-frisch] .feed-meldung", "es => es.map((e) => e.dataset.inject)")
+        if ist != soll:
+            fehler.append(f"Feed: {ist} / erwartet (höchstens 30 s alt, ungelesen) {soll}")
+        alt = zb.evaluate("() => { const z = window.argus.stand.zustand; return z.injectReihenfolge.filter((id) => z.uhr.t_s - z.injects[id].erschienen.t_s >= 30).length; }")
+        print(f"  Feed bei 20:50: {len(ist)} Lagemeldungen sichtbar, {alt} ältere ganz weg")
+        foto(zb, "zb_feed_30s")
+        if ist:
+            zb.locator(f"[data-testid=feed-frisch] [data-inject='{ist[0]}']").click()
+            warte(lambda: zb.locator(f"[data-testid=feed-frisch] [data-inject='{ist[0]}']").count() == 0, 5, "Lagemeldung nach Klick weg")
+            if not any(e["typ"] == "inject_quittiert" and e["daten"]["inject"] == ist[0] for e in protokoll(zb)):
+                fehler.append("Feed: Klick nicht im Protokoll (inject_quittiert)")
         oeffne("M18")
         zb.wait_for_timeout(500)
         foto(zb, "zb_M18_zurueckgestellt")
@@ -190,6 +267,7 @@ def main():
         pl.wait_for_timeout(1800)
         foto(pl, "plenum_aufloesung_fehltreffer")
         foto(zb, "zb_spielende")
+        pruefe_i5(ctx, a, fehler, foto, senden, konsole)
         browser.close()
 
     relevante = [k for k in konsole if "favicon" not in k and "GPU stall" not in k and "WebGL" not in k]

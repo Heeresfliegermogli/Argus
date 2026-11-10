@@ -12,6 +12,7 @@ Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
 """
 import argparse
 import os
+import re
 import sys
 import time
 import urllib.parse
@@ -186,10 +187,11 @@ def main():
             fehler.append(f"Knopf BEKÄMPFEN ohne Wirkmittel und Bestand: „{knopf}“")
         foto(zb, "zb_wahl_lm")
         zb.get_by_test_id("zb-bekaempfen").click()
-        warte(lambda: zb.locator(".eingang-zeile.unterwegs[data-unterwegs=M11]").count() == 1, 10, "M11 bekämpft (Countdown)")
+        # seit 2.7 (I5): Countdown in der Zeile „Wirkung unterwegs“ über dem Eingang
+        warte(lambda: zb.locator(".unterwegs-chip[data-unterwegs=M11]").count() == 1, 10, "M11 bekämpft (Countdown)")
         zb.wait_for_timeout(400)
-        if "Einschlag in" not in zb.locator(".eingang-zeile.unterwegs[data-unterwegs=M11]").inner_text():
-            fehler.append("kein Countdown „Einschlag in …“ in der Liste")
+        if not re.search(r"\d:\d\d", zb.locator(".unterwegs-chip[data-unterwegs=M11]").inner_text()):
+            fehler.append("kein Countdown in der Zeile „Wirkung unterwegs“")
         foto(zb, "zb_countdown")
         sl.get_by_role("button", name="×1", exact=True).click()
         sl.get_by_role("button", name="▶ Start").click()

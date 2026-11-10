@@ -1,4 +1,4 @@
-# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“, Stand H vom 09.11.2026)
+# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand G+I vom 10.11.2026, Szenario 2.7)
 
 **Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Teil B). Startseite und Lobby sind ohne
 Erklärung bedienbar (Teil A – kommt vor Teil B, dauert ca. 6 min).
@@ -35,11 +35,14 @@ sichtbare Beschriftungen – das ersetzt den Test mit Menschen nicht.
 
 ## Teil B: Ansicht Zielbearbeitung
 
-Aufbau der Ansicht (1530 × 800): links schmal der **Feed der Lagemeldungen** (Brigade, Nachbarn, 1. Kp; eine neue steht ca.
-8 s oben und rutscht dann in „frühere Meldungen“), in der Mitte die **Lagekarte** (Marken der Meldungen, bekämpfte Ziele mit
-Countdown bis zum Einschlag), rechts der **Eingang** mit der Wartezeit je Meldung und darunter die geöffnete Meldung:
-Live-Drohnenbild (Klick: groß mit Lupe), ARGUS-Ausgabe („Panzer · Feind 91 %“, Empfehlung), Wirkmittel mit Bestand,
-Countdown und Warnungen, die drei Knöpfe. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, der Bestand groß.
+Aufbau der Ansicht (1530 × 800): links schmal der **Feed der Lagemeldungen** (Brigade, Nachbarn, 1. Kp; seit 2.7 steht eine
+Meldung 30 s oder bis sie angeklickt wird – kleines ✕ –, danach ist sie ganz weg), in der Mitte die **Lagekarte** (Marken der
+Meldungen, bekämpfte Ziele mit Countdown bis zum Einschlag), rechts fest aufgeteilt (nichts verschiebt sich): oben die Zeile
+**„Wirkung unterwegs“** (je bekämpftem Ziel ein Chip mit Countdown, z. B. „Ziel 17 ×3 0:23“, mehr als drei hinter „+n“),
+darunter der **Eingang** mit der Wartezeit je Meldung (feste Höhe, eigene Rollleiste; Vermerke wie „Ziel 15 über die Brücke
+durchgebrochen“ stehen dort eine Minute), darunter die geöffnete Meldung: Live-Drohnenbild (Klick: groß mit Lupe),
+ARGUS-Ausgabe („Panzer · Feind 91 %“, Empfehlung), Wirkmittel mit Bestand, Countdown und Warnungen, die drei Knöpfe an
+fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, der Bestand groß.
 
 ## Aufbau
 
@@ -58,7 +61,8 @@ Countdown und Warnungen, die drei Knöpfe. Kopfzeile: Uhr und Phase, die vier Pa
    schauen sich die Ansicht an. SL startet gleichzeitig die Uhr (▶ Start, Tempo ×1). Um 00:20 kommt Ziel 1, um 00:30 die
    erste Lagemeldung der Brigade, um 01:15 Ziel 2, um 02:10 Ziel 3 (etwa eine Meldung pro Minute).
 2. **Aufgaben** (unten) vorlesen, eine nach der anderen, ab 02:10 (dann liegen Ziel 1–3 im Eingang); die SL hält die Uhr
-   dafür an. Keine Hilfe. Zeit und Auffälligkeiten notieren. Die Personen wechseln sich ab (A: 1–5, B: 6–11).
+   dafür an (vor Aufgabe 9 lässt sie die Uhr bis 03:00 weiterlaufen – dann kommt die Lagemeldung der Brigade zur Schule – und
+   hält wieder an). Keine Hilfe. Zeit und Auffälligkeiten notieren. Die Personen wechseln sich ab (A: 1–5, B: 6–11).
 3. Um ca. 05:00 anhalten (❚❚ Anhalten).
 
 ## Aufgaben
@@ -70,10 +74,10 @@ Countdown und Warnungen, die drei Knöpfe. Kopfzeile: Uhr und Phase, die vier Pa
 | 3 | „Sieh dir das Fahrzeug genauer an.“ | Klick auf das Drohnenbild („Klick: groß mit Lupe“), Lupe auf dem Fahrzeug, Schließen/Esc |
 | 4 | „Wähle für Ziel 3 den Mörser. Was sagt das System?“ | nennt die Warnung (R3, Ortschaft) am Mörser oder im Banner der Karte, zeigt den roten Kreis |
 | 5 | „Stell Ziel 3 zurück und öffne es danach wieder.“ | ZURÜCKSTELLEN; Zeile mit ◷ unter „+ 1 zurückgestellt“ angeklickt |
-| 6 | „Bekämpft Ziel 1 mit einem Wirkmittel ohne Warnung. Wann schlägt es ein?“ | LM oder Mörser mit „✓ keine Warnung“, BEKÄMPFEN; liest „Einschlag in m:ss“ (Eingang oder Karte) |
+| 6 | „Bekämpft Ziel 1 mit einem Wirkmittel ohne Warnung. Wann schlägt es ein?“ | LM oder Mörser mit „✓ keine Warnung“, BEKÄMPFEN; liest den Countdown m:ss im Chip „Ziel 1“ unter „Wirkung unterwegs“ (oder auf der Karte) |
 | 7 | „Wie viele Loitering Munition habt ihr noch?“ | liest den Bestand in der Kopfzeile („LM 18“) oder am Wirkmittel |
 | 8 | „Lehnt Ziel 2 ab.“ | Zeile „Ziel 2“, ABLEHNEN |
-| 9 | „Wo kommen Lagemeldungen von Brigade und Nachbarn an? Lest die erste noch einmal.“ | Feed links, „frühere Meldungen“ aufgeklappt, Meldung angeklickt |
+| 9 | „Was meldet die Brigade gerade? Klickt die Meldung danach weg.“ (Uhr vorher bis 03:00) | liest im Feed links „Evakuierung KRÄHE unvollständig …“ (Schule, Kinder), Klick auf die Meldung (✕) – sie ist weg |
 | 10 | „Wie geht es euren Panzern?“ | zeigt auf 1/1–1/4 in der Kopfzeile, nennt den Zustand |
 | 11 | „Ruft die Einweisung noch einmal auf.“ | **? Einweisung** oben rechts |
 
@@ -92,7 +96,7 @@ Zusätzlich beim Bedientest beobachten (ohne Aufgabe):
   einem Treffer das rote Blinken in der Kopfzeile und den kurzen roten Rand am Bildschirm?
 - Finden sie das kleine „i“ an der Meldung (Angaben des Herstellers)? Es ist absichtlich unauffällig.
 - Nach den Aufgaben, nur mit Unbeteiligten, die nicht am Lehrgang teilnehmen: SL setzt die Spielzeit auf 18:20, die
-  Personen öffnen Ziel 21 (S4) – erkennen sie mit der Lupe die zwei Kinder? Im Live-Bild sind sie kleinere Figuren in
+  Personen öffnen Ziel 26 (S4) – erkennen sie mit der Lupe die zwei Kinder? Im Live-Bild sind sie kleinere Figuren in
   Draufsicht.
 
 ## Bewertung

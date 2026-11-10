@@ -56,6 +56,8 @@ export interface MeldungsStand {
   };
   /** entfallen, solange sie offen war (jedes Fahrzeug zerstört oder weg) */
   entfallen?: Schritt & { grund: string };
+  /** seit 2.7 (I3.2): nach Zeit aufgelöst (z. B. als verbündet erkannt) – nicht mehr offen, keine Freigabe mehr */
+  aufgeloest?: Schritt & { als: string; aufloesung: string };
   /** seq aller Ereignisse zu dieser Meldung (für Verlauf und Replay) */
   verlauf: number[];
 }
@@ -98,8 +100,10 @@ export interface Spielzustand {
   hintergrund: Record<string, Schritt & { wirkt?: boolean; grund?: string }>;
   /** Durchbruch-Gruppen (seit 2.1): entschieden nach ihrem Angriffszeitpunkt, durch = nicht aufgehalten */
   durchbrueche: Record<string, Schritt & { t_ab: number; durch: boolean; grund?: string }>;
-  /** Skriptereignisse: entfallen oder je Wirkung (nr) abgearbeitet */
-  ereignisse: Record<string, { entfaellt?: Schritt & { grund?: string }; wirkungen: Record<number, Schritt & { wirkt: boolean; grund?: string }> }>;
+  /** Skriptereignisse: entfallen oder je Wirkung (nr) abgearbeitet; seit 2.7 mit dem Ziel des Schusses */
+  ereignisse: Record<string, { entfaellt?: Schritt & { grund?: string }; wirkungen: Record<number, Schritt & { wirkt: boolean; grund?: string; ziel?: string }> }>;
+  /** seit 2.7 (I3.2): Auflösungen nach Zeit (A-01) */
+  aufloesungen: Record<string, Schritt & { meldung: string; als: string }>;
   abgelehnt: (Schritt & { aktionstyp: string; grund: string; aktion?: string })[];
   /** Aktion → seq des Ereignisses, das sie erledigt hat */
   aktionen: Record<string, number>;
@@ -125,6 +129,7 @@ export function anfangsZustand(inh: Inhalte): Spielzustand {
     hintergrund: {},
     durchbrueche: {},
     ereignisse: {},
+    aufloesungen: {},
     abgelehnt: [],
     aktionen: {},
   };
@@ -270,9 +275,18 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
         break;
       }
       if (d.nr === undefined || alt.wirkungen[d.nr]) break;
-      n.ereignisse = { ...n.ereignisse, [d.ereignis]: { ...alt, wirkungen: { ...alt.wirkungen, [d.nr]: { ...s, wirkt: !!d.wirkt, grund: d.grund } } } };
+      n.ereignisse = { ...n.ereignisse, [d.ereignis]: { ...alt, wirkungen: { ...alt.wirkungen, [d.nr]: { ...s, wirkt: !!d.wirkt, grund: d.grund, ...(d.ziel ? { ziel: d.ziel } : {}) } } } };
       const plan = inh.szenario.ereignisse?.find((x) => x.id === d.ereignis)?.wirkungen[d.nr]?.t_s;
       if (d.wirkt && d.ziel) zerstoeren(d.ziel, d.ereignis, plan ?? e.t_s);
+      break;
+    }
+    case "aufloesung": {
+      // seit 2.7 (I3.2): nach Zeit erkannt – eine offene (auch zurückgestellte) Meldung ist danach erledigt, ohne Entscheidung des Teams
+      const d = e.daten;
+      if (n.aufloesungen?.[d.aufloesung]) break;
+      n.aufloesungen = { ...(n.aufloesungen ?? {}), [d.aufloesung]: { ...s, meldung: d.meldung, als: d.als } };
+      const m = n.meldungen[d.meldung];
+      if (m && m.stufe === "offen") meldungAendern(d.meldung, () => ({ stufe: "erledigt", aufgeloest: { ...s, als: d.als, aufloesung: d.aufloesung } }));
       break;
     }
     case "inject": {

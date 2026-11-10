@@ -5,14 +5,14 @@
  "hinweis": "Alle Pfade relativ zu assets/. Übungslage, alles fiktiv und prozedural erzeugt. Drohnenbilder ohne HUD und ohne ARGUS-Markierung: Die Oberfläche zeichnet Rahmen (ziele[].box, Pixel im Bild), Klasse, Konfidenz und Uhrzeit aus Szenario und Manifest.",
  "szenario": {
   "id": "kraehe-01",
-  "version": "2.6",
+  "version": "2.7",
   "datei": "szenario_kraehe_01.json"
  },
  "koordinaten": "Meter, x nach Osten, y nach Süden, Ursprung oben links; hdg in Grad, 0 = Osten, im Uhrzeigersinn",
  "groessen_bytes": {
-  "drohne": 1887070,
-  "zielbilder": 97168,
-  "drohne_ebenen": 1994914,
+  "drohne": 1914742,
+  "zielbilder": 96884,
+  "drohne_ebenen": 2035448,
   "karte_start": 649192,
   "karte_kacheln": 1294782,
   "karte_sonst": 469444,
@@ -1129,7 +1129,9 @@
    "bilder": [
     "M12"
    ],
-   "auch_in": []
+   "auch_in": [
+    "M16"
+   ]
   },
   "Z-13": {
    "typ": "spw_btr80",
@@ -1150,7 +1152,6 @@
     "M14"
    ],
    "auch_in": [
-    "M16",
     "M21",
     "SL-Z27"
    ]
@@ -1206,6 +1207,7 @@
    "sprite": "kpz_t72.png",
    "sprite_wrack": "kpz_t72_wrack.png",
    "bilder": [
+    "M37",
     "M19"
    ],
    "auch_in": [
@@ -1259,9 +1261,7 @@
    "bilder": [
     "M26"
    ],
-   "auch_in": [
-    "M23"
-   ]
+   "auch_in": []
   },
   "Z-26": {
    "typ": "spaehpz_brdm2",
@@ -1395,6 +1395,7 @@
     "M17"
    ],
    "auch_in": [
+    "M37",
     "M19",
     "SL-Z28"
    ]
@@ -1434,6 +1435,7 @@
    "sprite": "kpz_t72.png",
    "sprite_wrack": "kpz_t72_wrack.png",
    "bilder": [
+    "M37",
     "M19"
    ],
    "auch_in": [
@@ -3678,6 +3680,172 @@
    },
    "bytes": 41206
   },
+  "M16": {
+   "datei": "drohne/M16.webp",
+   "breite": 1024,
+   "hoehe": 640,
+   "t_s": 970,
+   "uhr": "16:10",
+   "pq": "E5",
+   "ausschnitt_m": {
+    "x": 422.25,
+    "y": 374.51,
+    "breite": 125.0,
+    "hoehe": 78.12
+   },
+   "m_pro_px": 0.1221,
+   "ziele": [
+    {
+     "id": "Z-18",
+     "mitte": [
+      473.1,
+      241.6
+     ],
+     "hdg": -173.0,
+     "box": [
+      437,
+      218,
+      71,
+      46
+     ],
+     "verdeckt": 0.336
+    },
+    {
+     "id": "Z-47",
+     "mitte": [
+      550.9,
+      398.4
+     ],
+     "hdg": -173.2,
+     "box": [
+      515,
+      375,
+      71,
+      46
+     ],
+     "verdeckt": 0.0
+    }
+   ],
+   "objekte": [
+    {
+     "id": "Z-02",
+     "mitte": [
+      440.3,
+      4.0
+     ],
+     "hdg": 171.0
+    },
+    {
+     "id": "Z-11",
+     "mitte": [
+      612.4,
+      20.4
+     ],
+     "hdg": 159.0,
+     "zustand": "zerstoert"
+    },
+    {
+     "id": "Z-12",
+     "mitte": [
+      1030.1,
+      69.6
+     ],
+     "hdg": 176.0
+    }
+   ],
+   "personen": [],
+   "sicht": [
+    {
+     "art": "rauch",
+     "anteil": 0.3,
+     "lage": "Ziel",
+     "seite": "vorn",
+     "anteil_ist": 0.336,
+     "bezug": "Ziel"
+    }
+   ],
+   "wracks": [
+    {
+     "id": "Z-11",
+     "staerke": 1.0
+    }
+   ],
+   "ebenen": {
+    "boden": "drohne/ebenen/M16-boden.webp",
+    "kronen": "drohne/ebenen/M16-kronen.webp",
+    "stoerung": "drohne/ebenen/M16-stoerung.webp",
+    "bytes": 36510,
+    "fahrzeuge": [
+     {
+      "id": "Z-02",
+      "sprite": "spaehpz_brdm2.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       440.3,
+       4.0
+      ],
+      "hdg": 171.0
+     },
+     {
+      "id": "Z-11",
+      "sprite": "spz_bmp2_wrack.png",
+      "zustand": "zerstoert",
+      "hauptziel": false,
+      "mitte": [
+       612.4,
+       20.4
+      ],
+      "hdg": 159.0,
+      "seit_s": 556,
+      "effekte": [
+       "feuer",
+       "rauch"
+      ]
+     },
+     {
+      "id": "Z-12",
+      "sprite": "san_rad.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       1030.1,
+       69.6
+      ],
+      "hdg": 176.0
+     },
+     {
+      "id": "Z-18",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       473.1,
+       241.6
+      ],
+      "hdg": -173.0
+     },
+     {
+      "id": "Z-47",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       550.9,
+       398.4
+      ],
+      "hdg": -173.2
+     }
+    ],
+    "figuren": [],
+    "verdeckt": {
+     "Z-18": 0.336,
+     "Z-47": 0.0
+    },
+    "figuren_verdeckt": {}
+   },
+   "bytes": 36254
+  },
   "M32": {
    "datei": "drohne/M32.webp",
    "breite": 1024,
@@ -3876,175 +4044,175 @@
    },
    "bytes": 20012
   },
-  "M16": {
-   "datei": "drohne/M16.webp",
+  "M33": {
+   "datei": "drohne/M33.webp",
    "breite": 1024,
    "hoehe": 640,
    "t_s": 1020,
    "uhr": "17:00",
-   "pq": "E5",
+   "pq": "J4",
    "ausschnitt_m": {
-    "x": 417.5,
-    "y": 373.94,
-    "breite": 125.0,
-    "hoehe": 78.12
+    "x": 870.0,
+    "y": 295.62,
+    "breite": 110.0,
+    "hoehe": 68.75
    },
-   "m_pro_px": 0.1221,
+   "m_pro_px": 0.1074,
    "ziele": [
     {
-     "id": "Z-18",
+     "id": "Z-43",
      "mitte": [
       512.0,
-      246.3
+      552.7
      ],
-     "hdg": -173.0,
+     "hdg": 93.5,
      "box": [
-      476,
-      223,
-      71,
-      46
-     ],
-     "verdeckt": 0.314
-    },
-    {
-     "id": "Z-47",
-     "mitte": [
-      512.0,
-      393.7
-     ],
-     "hdg": -173.0,
-     "box": [
-      476,
-      371,
-      71,
-      46
+      494,
+      522,
+      36,
+      61
      ],
      "verdeckt": 0.0
     }
    ],
    "objekte": [
     {
-     "id": "Z-02",
+     "id": "Z-40",
      "mitte": [
-      479.2,
-      8.7
+      744.7,
+      -5.8
      ],
-     "hdg": 171.0
+     "hdg": -92.5
     },
     {
-     "id": "Z-11",
+     "id": "Z-39",
      "mitte": [
-      651.3,
-      25.1
+      512.0,
+      40.7
      ],
-     "hdg": 159.0,
-     "zustand": "zerstoert"
+     "hdg": -92.6
     },
     {
-     "id": "Z-14",
+     "id": "Z-38",
      "mitte": [
-      1078.4,
-      78.9
+      279.3,
+      87.3
      ],
-     "hdg": 174.1
+     "hdg": -95.4
     }
    ],
-   "personen": [],
-   "sicht": [
+   "personen": [
     {
-     "art": "rauch",
-     "anteil": 0.3,
-     "lage": "Ziel",
-     "seite": "vorn",
-     "anteil_ist": 0.314,
-     "bezug": "Ziel"
+     "bei": "Z-43",
+     "art": "zivil",
+     "anzahl": 2,
+     "verdeckt": 0.0,
+     "punkte": [
+      [
+       465.3,
+       495.7
+      ],
+      [
+       451.2,
+       495.4
+      ]
+     ]
     }
    ],
-   "wracks": [
-    {
-     "id": "Z-11",
-     "staerke": 1.0
-    }
-   ],
+   "sicht": [],
    "ebenen": {
-    "boden": "drohne/ebenen/M16-boden.webp",
-    "kronen": "drohne/ebenen/M16-kronen.webp",
-    "stoerung": "drohne/ebenen/M16-stoerung.webp",
-    "bytes": 36260,
+    "boden": "drohne/ebenen/M33-boden.webp",
+    "kronen": "drohne/ebenen/M33-kronen.webp",
+    "stoerung": null,
+    "bytes": 40104,
     "fahrzeuge": [
      {
-      "id": "Z-02",
-      "sprite": "spaehpz_brdm2.png",
+      "id": "Z-40",
+      "sprite": "spw_btr80.png",
       "zustand": "intakt",
       "hauptziel": false,
       "mitte": [
-       479.2,
-       8.7
+       744.7,
+       -5.8
       ],
-      "hdg": 171.0
+      "hdg": -92.5
      },
      {
-      "id": "Z-11",
-      "sprite": "spz_bmp2_wrack.png",
-      "zustand": "zerstoert",
-      "hauptziel": false,
-      "mitte": [
-       651.3,
-       25.1
-      ],
-      "hdg": 159.0,
-      "seit_s": 556,
-      "effekte": [
-       "feuer",
-       "rauch"
-      ]
-     },
-     {
-      "id": "Z-14",
-      "sprite": "kpz_t72.png",
+      "id": "Z-39",
+      "sprite": "spw_btr80.png",
       "zustand": "intakt",
       "hauptziel": false,
       "mitte": [
-       1078.4,
-       78.9
+       512.0,
+       40.7
       ],
-      "hdg": 174.1
+      "hdg": -92.6
      },
      {
-      "id": "Z-18",
-      "sprite": "spz_bmp2.png",
+      "id": "Z-38",
+      "sprite": "spw_btr80.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       279.3,
+       87.3
+      ],
+      "hdg": -95.4
+     },
+     {
+      "id": "Z-43",
+      "sprite": "pkw_presse.png",
       "zustand": "intakt",
       "hauptziel": true,
       "mitte": [
        512.0,
-       246.3
+       552.7
       ],
-      "hdg": -173.0,
-      "darstellung": "feuert",
-      "effekte": [
-       "muendungsblitz"
-      ]
-     },
-     {
-      "id": "Z-47",
-      "sprite": "spz_bmp2.png",
-      "zustand": "intakt",
-      "hauptziel": true,
-      "mitte": [
-       512.0,
-       393.7
-      ],
-      "hdg": -173.0
+      "hdg": 93.5
      }
     ],
-    "figuren": [],
+    "figuren": [
+     {
+      "bei": "Z-43",
+      "art": "zivil",
+      "sprite": "person_zivil_c2.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       0.99,
+       -0.12
+      ],
+      "hdg": 358.1,
+      "px": [
+       465.3,
+       495.7
+      ],
+      "gruppe": 0
+     },
+     {
+      "bei": "Z-43",
+      "art": "zivil",
+      "sprite": "person_zivil_c4.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       -0.53,
+       -0.16
+      ],
+      "hdg": 144.2,
+      "px": [
+       451.2,
+       495.4
+      ],
+      "gruppe": 0
+     }
+    ],
     "verdeckt": {
-     "Z-18": 0.314,
-     "Z-47": 0.0
+     "Z-43": 0.0
     },
-    "figuren_verdeckt": {}
+    "figuren_verdeckt": {
+     "Z-43/zivil": 0.0
+    }
    },
-   "bytes": 35840
+   "bytes": 37962
   },
   "M17": {
    "datei": "drohne/M17.webp",
@@ -4105,6 +4273,192 @@
     "figuren_verdeckt": {}
    },
    "bytes": 31558
+  },
+  "M34": {
+   "datei": "drohne/M34.webp",
+   "breite": 1024,
+   "hoehe": 640,
+   "t_s": 1075,
+   "uhr": "17:55",
+   "pq": "J4",
+   "ausschnitt_m": {
+    "x": 885.0,
+    "y": 279.38,
+    "breite": 130.0,
+    "hoehe": 81.25
+   },
+   "m_pro_px": 0.127,
+   "ziele": [
+    {
+     "id": "Z-38",
+     "mitte": [
+      118.2,
+      201.8
+     ],
+     "hdg": -95.4,
+     "box": [
+      97,
+      165,
+      41,
+      74
+     ],
+     "verdeckt": 0.0
+    },
+    {
+     "id": "Z-39",
+     "mitte": [
+      315.1,
+      162.5
+     ],
+     "hdg": -92.6,
+     "box": [
+      296,
+      126,
+      38,
+      73
+     ],
+     "verdeckt": 0.0
+    },
+    {
+     "id": "Z-40",
+     "mitte": [
+      512.0,
+      123.1
+     ],
+     "hdg": -92.5,
+     "box": [
+      493,
+      86,
+      37,
+      73
+     ],
+     "verdeckt": 0.0
+    }
+   ],
+   "objekte": [
+    {
+     "id": "Z-43",
+     "mitte": [
+      315.1,
+      595.7
+     ],
+     "hdg": 93.5
+    }
+   ],
+   "personen": [
+    {
+     "bei": "Z-43",
+     "art": "zivil",
+     "anzahl": 2,
+     "verdeckt": 0.0,
+     "punkte": [
+      [
+       274.7,
+       548.1
+      ],
+      [
+       261.2,
+       549.1
+      ]
+     ]
+    }
+   ],
+   "sicht": [],
+   "ebenen": {
+    "boden": "drohne/ebenen/M34-boden.webp",
+    "kronen": "drohne/ebenen/M34-kronen.webp",
+    "stoerung": null,
+    "bytes": 45420,
+    "fahrzeuge": [
+     {
+      "id": "Z-43",
+      "sprite": "pkw_presse.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       315.1,
+       595.7
+      ],
+      "hdg": 93.5
+     },
+     {
+      "id": "Z-40",
+      "sprite": "spw_btr80.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       512.0,
+       123.1
+      ],
+      "hdg": -92.5
+     },
+     {
+      "id": "Z-39",
+      "sprite": "spw_btr80.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       315.1,
+       162.5
+      ],
+      "hdg": -92.6
+     },
+     {
+      "id": "Z-38",
+      "sprite": "spw_btr80.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       118.2,
+       201.8
+      ],
+      "hdg": -95.4
+     }
+    ],
+    "figuren": [
+     {
+      "bei": "Z-43",
+      "art": "zivil",
+      "sprite": "person_zivil_c4.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       0.88,
+       -0.04
+      ],
+      "hdg": 165.9,
+      "px": [
+       274.7,
+       548.1
+      ],
+      "gruppe": 0
+     },
+     {
+      "bei": "Z-43",
+      "art": "zivil",
+      "sprite": "person_zivil_c2.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       -0.84,
+       0.08
+      ],
+      "hdg": 82.3,
+      "px": [
+       261.2,
+       549.1
+      ],
+      "gruppe": 0
+     }
+    ],
+    "verdeckt": {
+     "Z-38": 0.0,
+     "Z-39": 0.0,
+     "Z-40": 0.0
+    },
+    "figuren_verdeckt": {
+     "Z-43/zivil": 0.0
+    }
+   },
+   "bytes": 43184
   },
   "M18": {
    "datei": "drohne/M18.webp",
@@ -4377,175 +4731,112 @@
    },
    "bytes": 20008
   },
-  "M33": {
-   "datei": "drohne/M33.webp",
+  "M37": {
+   "datei": "drohne/M37.webp",
    "breite": 1024,
    "hoehe": 640,
-   "t_s": 1125,
-   "uhr": "18:45",
-   "pq": "J4",
+   "t_s": 1110,
+   "uhr": "18:30",
+   "pq": "G5",
    "ausschnitt_m": {
-    "x": 870.0,
-    "y": 295.62,
-    "breite": 110.0,
-    "hoehe": 68.75
+    "x": 587.56,
+    "y": 380.23,
+    "breite": 150.0,
+    "hoehe": 93.75
    },
-   "m_pro_px": 0.1074,
+   "m_pro_px": 0.1465,
    "ziele": [
     {
-     "id": "Z-43",
+     "id": "Z-20",
      "mitte": [
-      512.0,
-      552.7
+      412.9,
+      254.4
      ],
-     "hdg": 93.5,
+     "hdg": 172.9,
      "box": [
-      494,
-      522,
-      36,
-      61
+      382,
+      233,
+      61,
+      41
+     ],
+     "verdeckt": 0.0
+    },
+    {
+     "id": "Z-48",
+     "mitte": [
+      611.1,
+      139.9
+     ],
+     "hdg": 175.7,
+     "box": [
+      581,
+      120,
+      60,
+      39
      ],
      "verdeckt": 0.0
     }
    ],
    "objekte": [
     {
-     "id": "Z-40",
+     "id": "Z-36",
      "mitte": [
-      744.7,
-      -5.8
+      747.1,
+      489.9
      ],
-     "hdg": -92.5
-    },
-    {
-     "id": "Z-39",
-     "mitte": [
-      512.0,
-      40.7
-     ],
-     "hdg": -92.6
-    },
-    {
-     "id": "Z-38",
-     "mitte": [
-      279.3,
-      87.3
-     ],
-     "hdg": -95.4
+     "hdg": 173.0
     }
    ],
-   "personen": [
-    {
-     "bei": "Z-43",
-     "art": "zivil",
-     "anzahl": 2,
-     "verdeckt": 0.0,
-     "punkte": [
-      [
-       465.3,
-       495.7
-      ],
-      [
-       451.2,
-       495.4
-      ]
-     ]
-    }
-   ],
+   "personen": [],
    "sicht": [],
    "ebenen": {
-    "boden": "drohne/ebenen/M33-boden.webp",
-    "kronen": "drohne/ebenen/M33-kronen.webp",
+    "boden": "drohne/ebenen/M37-boden.webp",
+    "kronen": "drohne/ebenen/M37-kronen.webp",
     "stoerung": null,
-    "bytes": 40104,
+    "bytes": 40284,
     "fahrzeuge": [
      {
-      "id": "Z-40",
-      "sprite": "spw_btr80.png",
+      "id": "Z-36",
+      "sprite": "spz_bmp2.png",
       "zustand": "intakt",
       "hauptziel": false,
       "mitte": [
-       744.7,
-       -5.8
+       747.1,
+       489.9
       ],
-      "hdg": -92.5
+      "hdg": 173.0
      },
      {
-      "id": "Z-39",
-      "sprite": "spw_btr80.png",
-      "zustand": "intakt",
-      "hauptziel": false,
-      "mitte": [
-       512.0,
-       40.7
-      ],
-      "hdg": -92.6
-     },
-     {
-      "id": "Z-38",
-      "sprite": "spw_btr80.png",
-      "zustand": "intakt",
-      "hauptziel": false,
-      "mitte": [
-       279.3,
-       87.3
-      ],
-      "hdg": -95.4
-     },
-     {
-      "id": "Z-43",
-      "sprite": "pkw_presse.png",
+      "id": "Z-48",
+      "sprite": "kpz_t72.png",
       "zustand": "intakt",
       "hauptziel": true,
       "mitte": [
-       512.0,
-       552.7
+       611.1,
+       139.9
       ],
-      "hdg": 93.5
-     }
-    ],
-    "figuren": [
-     {
-      "bei": "Z-43",
-      "art": "zivil",
-      "sprite": "person_zivil_c2.png",
-      "bezug": "gruppe",
-      "versatz_m": [
-       0.99,
-       -0.12
-      ],
-      "hdg": 358.1,
-      "px": [
-       465.3,
-       495.7
-      ],
-      "gruppe": 0
+      "hdg": 175.7
      },
      {
-      "bei": "Z-43",
-      "art": "zivil",
-      "sprite": "person_zivil_c4.png",
-      "bezug": "gruppe",
-      "versatz_m": [
-       -0.53,
-       -0.16
+      "id": "Z-20",
+      "sprite": "kpz_t72.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       412.9,
+       254.4
       ],
-      "hdg": 144.2,
-      "px": [
-       451.2,
-       495.4
-      ],
-      "gruppe": 0
+      "hdg": 172.9
      }
     ],
+    "figuren": [],
     "verdeckt": {
-     "Z-43": 0.0
+     "Z-20": 0.0,
+     "Z-48": 0.0
     },
-    "figuren_verdeckt": {
-     "Z-43/zivil": 0.0
-    }
+    "figuren_verdeckt": {}
    },
-   "bytes": 37962
+   "bytes": 27168
   },
   "M35": {
    "datei": "drohne/M35.webp",
@@ -5214,191 +5505,101 @@
    },
    "bytes": 27758
   },
-  "M34": {
-   "datei": "drohne/M34.webp",
+  "M22": {
+   "datei": "drohne/M22.webp",
    "breite": 1024,
    "hoehe": 640,
    "t_s": 1275,
    "uhr": "21:15",
-   "pq": "J4",
+   "pq": "H6",
    "ausschnitt_m": {
-    "x": 885.0,
-    "y": 279.38,
-    "breite": 130.0,
-    "hoehe": 81.25
+    "x": 727.5,
+    "y": 530.94,
+    "breite": 125.0,
+    "hoehe": 78.12
    },
-   "m_pro_px": 0.127,
+   "m_pro_px": 0.1221,
    "ziele": [
     {
-     "id": "Z-38",
-     "mitte": [
-      118.2,
-      201.8
-     ],
-     "hdg": -95.4,
-     "box": [
-      97,
-      165,
-      41,
-      74
-     ],
-     "verdeckt": 0.0
-    },
-    {
-     "id": "Z-39",
-     "mitte": [
-      315.1,
-      162.5
-     ],
-     "hdg": -92.6,
-     "box": [
-      296,
-      126,
-      38,
-      73
-     ],
-     "verdeckt": 0.0
-    },
-    {
-     "id": "Z-40",
+     "id": "Z-21",
      "mitte": [
       512.0,
-      123.1
+      238.1
      ],
-     "hdg": -92.5,
+     "hdg": -162.9,
      "box": [
-      493,
-      86,
-      37,
-      73
+      474,
+      210,
+      75,
+      56
      ],
-     "verdeckt": 0.0
-    }
-   ],
-   "objekte": [
+     "verdeckt": 0.535
+    },
     {
-     "id": "Z-43",
+     "id": "Z-49",
      "mitte": [
-      315.1,
-      595.7
+      512.0,
+      401.9
      ],
-     "hdg": 93.5
+     "hdg": -162.9,
+     "box": [
+      474,
+      374,
+      75,
+      56
+     ],
+     "verdeckt": 0.008
     }
    ],
-   "personen": [
+   "objekte": [],
+   "personen": [],
+   "sicht": [
     {
-     "bei": "Z-43",
-     "art": "zivil",
-     "anzahl": 2,
-     "verdeckt": 0.0,
-     "punkte": [
-      [
-       274.7,
-       548.1
-      ],
-      [
-       261.2,
-       549.1
-      ]
-     ]
+     "art": "baeume",
+     "anteil": 0.55,
+     "lage": "Ziel",
+     "seite": "hinten",
+     "anteil_ist": 0.535,
+     "bezug": "Ziel"
     }
    ],
-   "sicht": [],
    "ebenen": {
-    "boden": "drohne/ebenen/M34-boden.webp",
-    "kronen": "drohne/ebenen/M34-kronen.webp",
-    "stoerung": null,
-    "bytes": 45420,
+    "boden": "drohne/ebenen/M22-boden.webp",
+    "kronen": "drohne/ebenen/M22-kronen.webp",
+    "stoerung": "drohne/ebenen/M22-stoerung.webp",
+    "bytes": 70332,
     "fahrzeuge": [
      {
-      "id": "Z-43",
-      "sprite": "pkw_presse.png",
-      "zustand": "intakt",
-      "hauptziel": false,
-      "mitte": [
-       315.1,
-       595.7
-      ],
-      "hdg": 93.5
-     },
-     {
-      "id": "Z-40",
-      "sprite": "spw_btr80.png",
+      "id": "Z-21",
+      "sprite": "spz_bmp2.png",
       "zustand": "intakt",
       "hauptziel": true,
       "mitte": [
        512.0,
-       123.1
+       238.1
       ],
-      "hdg": -92.5
+      "hdg": -162.9
      },
      {
-      "id": "Z-39",
-      "sprite": "spw_btr80.png",
+      "id": "Z-49",
+      "sprite": "spz_bmp2.png",
       "zustand": "intakt",
       "hauptziel": true,
       "mitte": [
-       315.1,
-       162.5
+       512.0,
+       401.9
       ],
-      "hdg": -92.6
-     },
-     {
-      "id": "Z-38",
-      "sprite": "spw_btr80.png",
-      "zustand": "intakt",
-      "hauptziel": true,
-      "mitte": [
-       118.2,
-       201.8
-      ],
-      "hdg": -95.4
+      "hdg": -162.9
      }
     ],
-    "figuren": [
-     {
-      "bei": "Z-43",
-      "art": "zivil",
-      "sprite": "person_zivil_c4.png",
-      "bezug": "gruppe",
-      "versatz_m": [
-       0.88,
-       -0.04
-      ],
-      "hdg": 165.9,
-      "px": [
-       274.7,
-       548.1
-      ],
-      "gruppe": 0
-     },
-     {
-      "bei": "Z-43",
-      "art": "zivil",
-      "sprite": "person_zivil_c2.png",
-      "bezug": "gruppe",
-      "versatz_m": [
-       -0.84,
-       0.08
-      ],
-      "hdg": 82.3,
-      "px": [
-       261.2,
-       549.1
-      ],
-      "gruppe": 0
-     }
-    ],
+    "figuren": [],
     "verdeckt": {
-     "Z-38": 0.0,
-     "Z-39": 0.0,
-     "Z-40": 0.0
+     "Z-21": 0.535,
+     "Z-49": 0.008
     },
-    "figuren_verdeckt": {
-     "Z-43/zivil": 0.0
-    }
+    "figuren_verdeckt": {}
    },
-   "bytes": 43184
+   "bytes": 68174
   },
   "M23": {
    "datei": "drohne/M23.webp",
@@ -5431,16 +5632,7 @@
      "verdeckt": 0.191
     }
    ],
-   "objekte": [
-    {
-     "id": "Z-25",
-     "mitte": [
-      692.0,
-      647.3
-     ],
-     "hdg": 352.0
-    }
-   ],
+   "objekte": [],
    "personen": [
     {
      "bei": "Z-19",
@@ -5510,17 +5702,6 @@
     "stoerung": "drohne/ebenen/M23-stoerung.webp",
     "bytes": 58756,
     "fahrzeuge": [
-     {
-      "id": "Z-25",
-      "sprite": "lkw_ural.png",
-      "zustand": "intakt",
-      "hauptziel": false,
-      "mitte": [
-       692.0,
-       647.3
-      ],
-      "hdg": 352.0
-     },
      {
       "id": "Z-19",
       "sprite": "moerser_trupp.png",
@@ -5689,7 +5870,7 @@
      "Z-19/zivil": 0.0
     }
    },
-   "bytes": 39966
+   "bytes": 40058
   },
   "M24": {
    "datei": "drohne/M24.webp",
@@ -5855,7 +6036,7 @@
       80.7,
       94.3
      ],
-     "hdg": 187.0,
+     "hdg": 173.0,
      "box": [
       48,
       72,
@@ -5945,7 +6126,7 @@
        80.7,
        94.3
       ],
-      "hdg": 187.0
+      "hdg": 173.0
      },
      {
       "id": "Z-48",
@@ -5966,103 +6147,7 @@
     },
     "figuren_verdeckt": {}
    },
-   "bytes": 24158
-  },
-  "M22": {
-   "datei": "drohne/M22.webp",
-   "breite": 1024,
-   "hoehe": 640,
-   "t_s": 1410,
-   "uhr": "23:30",
-   "pq": "H6",
-   "ausschnitt_m": {
-    "x": 727.5,
-    "y": 530.94,
-    "breite": 125.0,
-    "hoehe": 78.12
-   },
-   "m_pro_px": 0.1221,
-   "ziele": [
-    {
-     "id": "Z-21",
-     "mitte": [
-      512.0,
-      238.1
-     ],
-     "hdg": -162.9,
-     "box": [
-      474,
-      210,
-      75,
-      56
-     ],
-     "verdeckt": 0.535
-    },
-    {
-     "id": "Z-49",
-     "mitte": [
-      512.0,
-      401.9
-     ],
-     "hdg": -162.9,
-     "box": [
-      474,
-      374,
-      75,
-      56
-     ],
-     "verdeckt": 0.008
-    }
-   ],
-   "objekte": [],
-   "personen": [],
-   "sicht": [
-    {
-     "art": "baeume",
-     "anteil": 0.55,
-     "lage": "Ziel",
-     "seite": "hinten",
-     "anteil_ist": 0.535,
-     "bezug": "Ziel"
-    }
-   ],
-   "ebenen": {
-    "boden": "drohne/ebenen/M22-boden.webp",
-    "kronen": "drohne/ebenen/M22-kronen.webp",
-    "stoerung": "drohne/ebenen/M22-stoerung.webp",
-    "bytes": 70332,
-    "fahrzeuge": [
-     {
-      "id": "Z-21",
-      "sprite": "spz_bmp2.png",
-      "zustand": "intakt",
-      "hauptziel": true,
-      "mitte": [
-       512.0,
-       238.1
-      ],
-      "hdg": -162.9
-     },
-     {
-      "id": "Z-49",
-      "sprite": "spz_bmp2.png",
-      "zustand": "intakt",
-      "hauptziel": true,
-      "mitte": [
-       512.0,
-       401.9
-      ],
-      "hdg": -162.9
-     }
-    ],
-    "figuren": [],
-    "verdeckt": {
-     "Z-21": 0.535,
-     "Z-49": 0.008
-    },
-    "figuren_verdeckt": {}
-   },
-   "bytes": 68174
+   "bytes": 24156
   },
   "M26": {
    "datei": "drohne/M26.webp",
@@ -6548,7 +6633,7 @@
    "datei": "drohne/V3-M1.webp",
    "breite": 1024,
    "hoehe": 640,
-   "t_s": 130,
+   "t_s": 90,
    "uhr": null,
    "pq": "G2",
    "ausschnitt_m": {
@@ -7131,7 +7216,7 @@
       111.7,
       273.5
      ],
-     "hdg": 187.0
+     "hdg": 173.0
     },
     {
      "id": "Z-36",
@@ -7167,7 +7252,7 @@
     }
    ],
    "nur_spielleitung": true,
-   "bytes": 34654
+   "bytes": 34370
   },
   "SL-Z44": {
    "datei": "drohne/SL-Z44.webp",

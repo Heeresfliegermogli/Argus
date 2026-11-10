@@ -18,7 +18,7 @@ describe("Inhalte", () => {
     const inh = await inhalte();
     const b = pruefeInhalte(inh);
     expect(b.fehler).toEqual([]);
-    expect(inh.szenario.meldungen).toHaveLength(36); // seit 2.4: M31–M36 (E5)
+    expect(inh.szenario.meldungen).toHaveLength(37); // seit 2.4: M31–M36 (E5), seit 2.7: M37 (I2.2)
     expect(Object.keys(inh.ziele)).toHaveLength(49); // seit 2.4: Z-38–Z-49 (E2, E5)
   });
 });

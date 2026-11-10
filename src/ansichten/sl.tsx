@@ -232,6 +232,8 @@ export function SLAnsicht(p: { s: Sicht }) {
         </Panel>
       </div>
 
+      {/* Seit 2.7 (G4b) geprüft: Die Kontrollkarte zeigt weiter die ganze Karte – Ground Truth vom Ostrand (Einfahrten, Mörser im Wald
+          MARDER) bis zu den eigenen Panzern am Westrand; füllen hieße hier rund ein Viertel der Breite abschneiden. */}
       <Panel titel="Kontrollkarte" klasse="ohne-rand"
         rechts={<span class="klein sehr-leise">{vorschauV ? `Vorschau ${vorschauV}: Fahrwege grau, Einheiten am Start` : `Ground Truth, Lage ${uhrzeit(start, tLage)} · Ziele mit Maus zeigen · Mausrad zoomt`}</span>}>
         <LagekarteAnsicht inh={inh} lagebild={lagebild} hintergrund="luftbild" sprites legende="kontrolle" zeichenGroesse={17} testid="kontrollkarte"

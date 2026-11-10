@@ -621,14 +621,14 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .chip.fehl { background: #5a2522; color: #ffd9d6; }
 
 .auswertung-rahmen .kopf { grid-template-columns: auto 1fr auto; gap: 12px; }
-.kapitel-leiste { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; }
-.kapitel-chip { border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text-2); border-radius: 6px; padding: 5px 11px; font-size: 16px;
+.kapitel-leiste { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; }
+.kapitel-chip { border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text-2); border-radius: 6px; padding: 5px 9px; font-size: 15.5px;
   font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .kapitel-chip .kapitel-nr { font-size: 13px; color: var(--text-3); }
-.kapitel-chip.fall { min-width: 46px; justify-content: center; }
+.kapitel-chip.fall { min-width: 40px; justify-content: center; }
 .kapitel-chip.an { background: var(--plenum); border-color: var(--plenum); color: #14100a; }
 .kapitel-chip.an .kapitel-nr { color: #3b3220; }
-.kapitel-pfeil { font-size: 18px; padding: 3px 13px; }
+.kapitel-pfeil { font-size: 18px; padding: 3px 11px; }
 .zeitbudget { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0; line-height: 1.1; background: none; border: 0; cursor: pointer;
   font: 600 14px/1.15 var(--mono); color: var(--text-2); padding: 0 4px; }
 .zeitbudget .sehr-leise { font-size: 12px; font-weight: 500; }
@@ -800,7 +800,7 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .fall-marke { display: inline-grid; place-items: center; min-width: 34px; height: 24px; padding: 0 6px; border-radius: 5px; background: var(--plenum); color: #14100a; font-weight: 700; font-size: 15px; }
 .fall-marke.gross { min-width: 46px; height: 32px; font-size: 20px; margin-right: 10px; vertical-align: 2px; }
 .replay-uhr { font-size: 20px; font-weight: 600; color: var(--text); }
-.replay-rechts { display: flex; flex-direction: column; gap: 9px; min-height: 0; }
+.replay-rechts { display: flex; flex-direction: column; gap: 7px; min-height: 0; }
 .fall-kopf h1 { font-size: 23px; line-height: 1.15; }
 .fall-info { font-size: 14.5px; margin-top: 3px; line-height: 1.22; }
 .fall-ausgang { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 15px; flex-wrap: wrap; }
@@ -808,7 +808,7 @@ canvas.lupe-glas { background: #0b0e10; z-index: 2; }
 .g1-bild-rahmen { position: relative; width: 384px; height: 240px; border: 2px solid var(--g1); border-radius: 6px; overflow: hidden; }
 .g1-bild-hinweis { position: absolute; left: 0; right: 0; top: 24px; background: rgba(16, 20, 24, .88); color: var(--argus);
   text-align: center; font-weight: 700; font-size: 17px; padding: 6px 10px; pointer-events: none; }
-.leitfragen ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 3px; font-size: 15.5px; line-height: 1.24; }
+.leitfragen ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.22; }
 .leitfragen .bezuege { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
 .leitfragen .bezuege .chip { font-size: 13.5px; white-space: normal; }
 .notizen-sl { min-height: 44px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -997,30 +997,38 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .ansicht-zb { grid-template-columns: 226px minmax(0, 1fr) 540px; padding: 8px; gap: 8px; }
 .ansicht-zb .karten-feld { min-height: 0; }
 
-/* Feed der Lagemeldungen (H5.5) */
+/* Feed der Lagemeldungen (H5.5; seit 2.7, I4: bis zum Klick oder 30 s, dann ganz weg – der Balken unten zeigt die Restzeit) */
 .feed { display: flex; flex-direction: column; min-height: 0; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); overflow: hidden; }
 .feed h2 { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid var(--linie); color: var(--text-2); }
-.feed-frisch { display: flex; flex-direction: column; gap: 6px; padding: 7px; flex: 0 0 auto; max-height: 64%; overflow: hidden; }
+.feed-frisch { display: flex; flex-direction: column; gap: 6px; padding: 7px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .feed-leer { color: var(--text-3); font-size: 13px; padding: 6px 2px; }
-.feed-meldung { display: block; width: 100%; text-align: left; border: 1px solid var(--linie-2); background: var(--flaeche-2); border-radius: 6px; padding: 6px 8px; cursor: pointer; color: var(--text); font: inherit; }
+.feed-meldung { display: block; position: relative; width: 100%; text-align: left; border: 1px solid var(--linie-2); background: var(--flaeche-2); border-radius: 6px; padding: 6px 8px 8px; cursor: pointer; color: var(--text); font: inherit; flex: 0 0 auto; overflow: hidden; }
+.feed-x { float: right; margin-left: 6px; color: var(--text-2); font-size: 12px; line-height: 1; padding: 1px 3px; border-radius: 3px; }
+.feed-meldung:hover .feed-x { color: var(--text); background: var(--flaeche-3); }
+.feed-rest { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--argus); opacity: .75; transition: width .25s linear; }
+.feed-meldung.dringend .feed-rest { background: #e0564b; }
 .feed-meldung.frisch { border-color: var(--argus); background: var(--argus-flaeche); animation: feed-neu 1.2s ease-out 1; }
 .feed-meldung.dringend { border-color: #c0453c; }
 .feed-meldung.frisch.dringend { background: #3a1b18; }
 .feed-von { font-size: 12px; color: var(--text-3); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
 .feed-text { font-size: 13.5px; line-height: 1.3; }
-.feed-text.einzeilig { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feed-frueher { border-top: 1px solid var(--linie); min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
-.feed-frueher-kopf { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: transparent; border: 0; color: var(--text-2); font: inherit; font-size: 13px; cursor: pointer; text-align: left; }
-.feed-frueher-kopf:disabled { cursor: default; opacity: .6; }
-.feed-liste { overflow-y: auto; padding: 0 7px 7px; display: flex; flex-direction: column; gap: 4px; min-height: 0; scrollbar-width: none; }
-.feed-liste::-webkit-scrollbar { display: none; }
-.feed-meldung.alt { padding: 4px 7px; background: transparent; border-color: var(--linie); }
-.feed-meldung.alt .feed-text { font-size: 12.5px; color: var(--text-2); }
 @keyframes feed-neu { from { box-shadow: 0 0 0 4px rgba(233,170,59,.6); } to { box-shadow: 0 0 0 0 rgba(233,170,59,0); } }
 
-/* rechte Spalte */
-.zb-rechts { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
-.eingang { display: flex; flex-direction: column; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); min-height: 0; flex: 0 0 auto; max-height: 196px; overflow: hidden; white-space: normal; font-weight: 400; }
+/* rechte Spalte (seit 2.7, I5.1): feste Aufteilung – Zeile „Wirkung unterwegs“ 30 px, Eingang 186 px mit eigener Rollleiste, darunter die
+   geöffnete Meldung mit den Knöpfen unten; nichts verschiebt sich, wenn Wirkungen, Meldungen oder Vermerke dazukommen */
+.zb-rechts { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.unterwegs-leiste { position: relative; flex: 0 0 30px; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 8px; background: var(--flaeche);
+  border: 1px solid var(--linie); border-radius: var(--radius); white-space: nowrap; z-index: 5; }
+.unterwegs-titel { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.unterwegs-chips { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+.unterwegs-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 1px 8px; border-radius: 11px; background: #2a1c1b; border: 1px solid #5a2a25;
+  font-size: 13px; max-width: 132px; overflow: hidden; }
+.unterwegs-chip .zahl { font: 600 13px/1.25 var(--mono); }
+.unterwegs-mehr { margin-left: auto; font: inherit; font-size: 13px; font-weight: 600; line-height: 1; padding: 3px 9px; border-radius: 11px; border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text); cursor: pointer; }
+.unterwegs-alle { position: absolute; top: calc(100% + 4px); left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: var(--flaeche-3);
+  border: 1px solid var(--linie-2); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); cursor: pointer; }
+.unterwegs-alle .unterwegs-chip { max-width: none; }
+.eingang { display: flex; flex-direction: column; background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--radius); min-height: 0; flex: 0 0 186px; height: 186px; overflow: hidden; white-space: normal; font-weight: 400; }
 .eingang > header { display: flex; align-items: center; gap: 9px; padding: 4px 10px; border-bottom: 1px solid var(--linie); min-height: 34px; }
 .eingang > header h2 { font-size: 15px; }
 .eingang .eingang-zahl { font-size: 18px; min-width: 32px; padding: 2px 7px; }
@@ -1032,7 +1040,13 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .eingang-zeile.gewaehlt { border-color: var(--zb); box-shadow: inset 3px 0 0 var(--zb); background: var(--flaeche-3); }
 .eingang-zeile.zurueck { opacity: .72; }
 .eingang-zeile.lange .ez-zeit { color: var(--argus); font-weight: 700; }
-.eingang-zeile.unterwegs { cursor: default; background: #2a1c1b; grid-template-columns: 74px minmax(0, 1fr) auto; }
+/* Vermerke (seit 2.7, I1.2/I3.2): warum ein Ziel aus dem Eingang fiel – nicht anklickbar */
+.eingang-zeile.vermerk { cursor: default; background: transparent; border: 1px dashed var(--linie-2); grid-template-columns: 74px minmax(0, 1fr) auto; color: var(--text-2); min-height: 26px; }
+.eingang-zeile.vermerk:hover { border-color: var(--linie-2); }
+.eingang-zeile.vermerk .ez-argus { font-style: italic; }
+.eingang-zeile.vermerk.verbuendet { border-color: #3d6da8; }
+.eingang-zeile.vermerk.verbuendet .ez-argus { color: #a9cdff; font-style: normal; font-weight: 600; }
+.eingang-zeile.vermerk.durchgebrochen .ez-argus { color: #ffb0a6; }
 .ez-ziel { white-space: nowrap; }
 .ez-argus { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); font-size: 14px; }
 .ez-zeit { text-align: right; font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -1062,6 +1076,8 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .wm-bestand.leer b { color: #ff8f86; }
 .wm-info { display: flex; flex-direction: column; min-width: 0; font-size: 13.5px; line-height: 1.22; }
 .wm-info .wm-status { margin: 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* seit 2.7 (I5): höchstens zwei Zeilen je Wirkmittel (Einschlag, eine Zeile Warnungen) – die Meldung bleibt gleich hoch */
+.wm-wahl { max-height: 42px; overflow: hidden; }
 .zb-knoepfe { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 7px; margin-top: auto; }
 .zb-knoepfe .knopf.gross { padding: 9px 10px; font-size: 16px; }
 .zb-knoepfe .knopf .unterzeile { font-size: 12px; }
@@ -1206,3 +1222,107 @@ a.knopf.aus { opacity: .45; pointer-events: none; }
 .kennzahlen td[data-kz=fehl] .chips { display: inline-flex; flex-wrap: wrap; vertical-align: top; margin: 2px 0 0 6px; max-width: calc(100% - 44px); white-space: normal; }
 .kennzahlen .chips .chip { font-size: 13px; padding: 0 6px; }
 .kennzahlen .team-spalte .klein { font-size: 13px; }
+
+/* ---- Auswertung 15 min (seit 2.7, G1–G4) */
+.kapitel-chip.zusatz { border-style: dashed; }
+.kapitel-plus { font-size: 17px; padding: 3px 10px; }
+.menue-zeile input { margin: 0 6px 0 0; }
+.menue-zeile { justify-content: flex-start; }
+.menue-zeile .sehr-leise { margin-left: auto; }
+
+/* Replay: Wie lange habt ihr hingeschaut? – neben dem Drohnenbild, mit „20 seconds for each target“ */
+.g1-bild-zeile { display: flex; gap: 10px; align-items: stretch; }
+.hingeschaut { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-left: 3px solid var(--argus);
+  background: var(--flaeche); border-radius: 0 6px 6px 0; font-size: 15px; line-height: 1.25; }
+.hingeschaut b { font: 700 30px/1 var(--mono); color: var(--argus); }
+.hingeschaut-zitat { font-size: 13.5px; color: var(--text-2); font-style: italic; line-height: 1.3; }
+.hingeschaut-zitat i { font-style: normal; color: var(--text-3); }
+
+/* Bilanz „Das ist es wert“ (G2): Teams nebeneinander, „ARGUS allein“ abgesetzt; Teil 2 ohne Eurowert */
+.tafel-bilanz { gap: 8px; }
+table.bilanz { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 15px; }
+table.bilanz col.bz-c-titel { width: 250px; }
+table.bilanz col.bz-c-argus { width: 182px; }
+table.bilanz th, table.bilanz td { padding: 4px 9px; border-bottom: 1px solid var(--linie); text-align: center; vertical-align: middle; }
+table.bilanz th.bz-titel { text-align: left; font-weight: 600; color: var(--text); font-size: 15px; }
+.bz-unter { font-size: 13px; font-weight: 400; color: var(--text-3); line-height: 1.2; margin-top: 1px; }
+.bz-zitat { font-style: italic; color: var(--text-2); }
+.bz-zitat i { font-style: normal; color: var(--text-3); }
+.bz-kopf { font-weight: 600; }
+.bz-kopf .klein { font-size: 13px; font-weight: 400; line-height: 1.15; }
+td.bz-argus, th.bz-argus { background: var(--argus-flaeche); border-left: 3px solid var(--argus); }
+th.bz-argus { color: var(--argus); }
+th.bz-argus .klein { color: var(--text-2); }
+.bz-haupt td, .bz-haupt th { padding-top: 9px; padding-bottom: 9px; }
+.bz-wert { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bz-wert b { font: 700 27px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.bz-wert .leise { font-size: 13px; }
+.bz-balken { display: block; height: 8px; min-width: 2px; border-radius: 4px; background: #6d8aa6; align-self: flex-start; }
+td.bz-argus .bz-balken { background: var(--argus); }
+.bz-zahl { font: 600 18px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.bz-panzer { display: inline-flex; align-items: center; gap: 3px; }
+.bz-panzer i { width: 11px; height: 11px; border-radius: 2px; background: #5a2522; border: 1px solid #8a3b35; }
+.bz-panzer i.an { background: #2f6fc4; border-color: #5d93dc; }
+.bz-panzer b { margin-left: 6px; font: 600 17px/1 var(--mono); }
+.bz-trenner th { text-align: left; border-bottom: 1px solid var(--linie-2); padding-top: 10px; }
+.bz-aufdecken { font-size: 16px; font-weight: 700; padding: 5px 14px; }
+.bz-aufdecken.an { background: #3a1b18; border-color: #8a3b35; color: #ffd9d6; }
+.bz-fehl th.bz-titel { font-weight: 500; }
+.bz-zeichen { display: inline-block; min-width: 18px; text-align: center; color: #ff9d94; }
+.bz-einheit { color: var(--text-3); font-size: 13px; }
+.bz-fehlzahl b { font: 700 18px/1 var(--mono); color: #ffd9d6; }
+td.bz.fehl { background: #2a1615; }
+td.bz-argus.fehl { background: #3a2412; }
+.bz-fuss { display: flex; flex-direction: column; gap: 3px; margin-top: auto; font-size: 13px; }
+.bz-fuss .sehr-leise { font-size: 13px; }
+.bz-hinweis { font-size: 13px; color: var(--text-3); }
+
+/* Impuls (G3) */
+.tafel-impuls { align-items: center; justify-content: center; gap: 18px; position: relative; }
+.impuls-folie { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 1180px; text-align: center; }
+.impuls-zitat { margin: 0; font-size: 26px; line-height: 1.35; font-style: italic; color: #f6f2e6; }
+.impuls-zitat.gross { font-size: 36px; line-height: 1.3; }
+.impuls-deutsch { margin: 0; font-size: 21px; line-height: 1.4; color: var(--text-2); max-width: 1050px; }
+.impuls-frage { margin: 10px 0 0; font-size: 54px; font-weight: 700; color: var(--argus); }
+.impuls-frage.klein-frage { font-size: 30px; margin-top: 4px; }
+.impuls-aufdecken { font-size: 16px; }
+.impuls-titel { font-size: 27px !important; line-height: 1.2; }
+.impuls-quelle { font-size: 17px; color: var(--text-2); margin-top: -8px; }
+.impuls-vorspann { margin: 0; font-size: 18px; color: var(--text-2); }
+.impuls-punkte { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 20px; line-height: 1.35; text-align: left; }
+.impuls-punkte li::before { content: "▸ "; color: var(--argus); }
+.impuls-punkte q { font-style: italic; color: #f6f2e6; }
+.impuls-pflicht { margin: 4px 0 0; font-size: 17px; padding: 6px 12px; border: 1px solid var(--linie-2); border-radius: 6px; color: var(--text); background: var(--flaeche); }
+.impuls-wer { margin: 0; font-size: 22px; color: var(--text-2); }
+.impuls-marke { font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #a9cdff; border: 1px solid #3d6da8; border-radius: 99px; padding: 2px 12px; }
+.impuls-folie.gegenstimme .impuls-zitat { color: #cfe3ff; }
+.impuls-punkte-nav { position: absolute; bottom: 4px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+.impuls-punkt { border: 1px solid var(--linie-2); background: var(--flaeche-2); color: var(--text-3); border-radius: 99px; padding: 2px 11px; font-size: 13px; cursor: pointer; }
+.impuls-punkt.an { background: var(--plenum); border-color: var(--plenum); color: #14100a; }
+
+/* Diskussion: Wertekompass mit Leitfragen (G4.1) */
+.tafel-diskussion { flex-direction: row; gap: 30px; align-items: stretch; }
+.kompass { flex: 0 0 470px; display: flex; flex-direction: column; gap: 8px; }
+.kompass h1 { font-size: 34px !important; }
+.kompass h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); margin-top: 12px; }
+.kompass-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.kompass-chip { font-size: 19px; padding: 6px 13px; border-radius: 8px; border: 1px solid var(--linie-2); background: var(--flaeche-2); }
+.kompass-chip.wert { border-color: #3d6da8; }
+.kompass-chip.tugend { border-color: #6a5a2a; }
+.kompass-chip.genannt { background: var(--plenum); color: #14100a; border-color: var(--plenum); font-weight: 700; }
+.leitfragen-diskussion { flex: 1; margin: 0; padding-left: 30px; display: flex; flex-direction: column; justify-content: center; gap: 15px; font-size: 18px; }
+.leitfragen-diskussion li b { font-size: 21px; }
+.leitfragen-diskussion li p { margin: 3px 0 0; line-height: 1.38; color: var(--text); }
+
+/* Abschluss: Kernaussagen (G4.2) */
+.kernaussagen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 1450px; }
+.kernaussage-karte { position: relative; padding: 14px 16px 14px 52px; border: 1px solid var(--linie-2); border-radius: 8px; background: var(--flaeche); font-size: 17px; line-height: 1.3; }
+.kernaussage-karte b { display: block; font-size: 19px; margin-bottom: 4px; }
+.kernaussage-karte p { margin: 0; color: var(--text-2); }
+.kernaussage-nr { position: absolute; left: 14px; top: 13px; font: 700 26px/1 var(--mono); color: var(--plenum); }
+.tafel-schluss .schlussfrage { font-size: 46px; }
+.tafel-schluss .schluss-zahl { min-width: 190px; padding: 9px 12px; }
+.tafel-schluss .schluss-zahl b { font-size: 30px; }
+/* Replay-Zeitleiste (seit 2.7): Auflösung (S3, verbündet) und ungelesen verschwundene Lagemeldung */
+.zl-marke.aufgeloest { background: #1d3550; color: #bcd8ff; }
+.zl-marke.ungelesen { opacity: .5; text-decoration: line-through; }

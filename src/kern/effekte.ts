@@ -294,16 +294,22 @@ export function effekte(inh: Inhalte, z: Spielzustand, sichtbar: Sichtbarkeit = 
     const stand = z.ereignisse[e.id];
     if (!stand) continue;
     e.wirkungen.forEach((w, nr) => {
-      if (!stand.wirkungen[nr]?.wirkt) return;
+      const st = stand.wirkungen[nr];
+      if (!st?.wirkt) return;
+      const zielId = st.ziel ?? w.ziel;
       const von = inh.ziele[w.von];
-      const ziel = inh.ziele[w.ziel];
+      const ziel = zielId ? inh.ziele[zielId] : undefined;
       if (!von || !ziel) return;
       const pv = position(von, w.t_s);
       const pz = position(ziel, w.t_s);
       const q = { feuert: "kanone" };
-      if (kennt(w.von)) out.push({ id: `${e.id}-${nr}-m`, art: "muendung", quelle: q, t: w.t_s - LEUCHTSPUR_S / 2, pos: muendung(pv, pz), richtung: grad(pv, pz) });
-      if (!kennt(w.ziel)) return;
-      if (kennt(w.von)) out.push({ id: `${e.id}-${nr}-s`, art: "flug", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz, von: muendung(pv, pz), echtzeit_s: LEUCHTSPUR_S / 2 });
+      // seit 2.7 (I3.1): Wer die Schützen kennt (S3: die Meldung der PT-91), sieht Mündungsfeuer, Leuchtspur und Treffer – auch auf ein
+      // Fahrzeug, das ARGUS nie gemeldet hat (die PT-91 kämpfen sichtbar mit)
+      if (!kennt(w.von) && !kennt(zielId)) return;
+      if (kennt(w.von)) {
+        out.push({ id: `${e.id}-${nr}-m`, art: "muendung", quelle: q, t: w.t_s - LEUCHTSPUR_S / 2, pos: muendung(pv, pz), richtung: grad(pv, pz) });
+        out.push({ id: `${e.id}-${nr}-s`, art: "flug", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz, von: muendung(pv, pz), echtzeit_s: LEUCHTSPUR_S / 2 });
+      }
       out.push({ id: `${e.id}-${nr}-x`, art: "einschlag", quelle: { hintergrund: "panzerabwehr" }, t: w.t_s, pos: pz });
     });
   }

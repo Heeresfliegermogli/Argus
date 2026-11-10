@@ -27,6 +27,7 @@ import verluste as V
 FREIGABE_RICHTWERT_S = 120      # Meldung bis Bekämpfung, wenn sich Meldungen stauen (seit 2.6 eine Rolle; Richtwert unverändert)
 FENSTER_S = (30, 300)           # Freigabe frühestens/spätestens so viele Sekunden nach der Meldung (Lösungshilfe)
 LUECKE_MAX_S = 60               # längste Pause ohne neue Meldung (seit 2.2, C3)
+ABSTAND_MIN_S = 15              # kürzester Abstand zweier Meldungen ohne Begründung (bis 2.6: 30 s, seit 2.7 wegen I2.2)
 RAND_M = 20                     # so nah am Kartenrand erscheint und verschwindet ein Fahrzeug (seit 2.2, C1)
 ABSTAND_GRUPPE_M = 15           # Abstand der Fahrzeuge einer Meldung oder Gruppe (seit 2.2, C6)
 ABSTAND_M = 10                  # Abstand aller anderen Fahrzeuge (Sprites dürfen sich nicht überlappen)
@@ -133,6 +134,148 @@ def lagemeldung_laengste(sz, inject):
     return f"{inject['von']}: {V.fmt(text, LAENGSTE)}"
 
 
+MELDUNG_NACH_EINFAHRT_S = 90    # seit 2.7 (I2.2): erste Meldung höchstens so lange nach der Einfahrt (erstmals sichtbar)
+
+
+def waelder(karte):
+    return [f["punkte"] for f in karte["flaechen"] if f["art"] == "wald"]
+
+
+def einfahrt(z, karte, dauer, ab=None):
+    """Erstmals sichtbar (seit 2.7, I2.2): im Kartenausschnitt und nicht im Wald (dort sieht die Drohne nichts) – wie der Kontakt auf
+    der Karte des Teams (src/kern/lagebild.ts). None, wenn nie sichtbar."""
+    W, H = karte["ausdehnung_m"]["breite"], karte["ausdehnung_m"]["hoehe"]
+    w = waelder(karte)
+    t = L.ab_s(z) if ab is None else ab
+    ende = min(dauer, z.get("bis_s", 10 ** 9))
+    while t < ende:
+        p = L.position(z, t)
+        if 0 <= p[0] <= W and 0 <= p[1] <= H and not any(L.im_polygon(p, poly) for poly in w):
+            return t
+        t += 1
+    return None
+
+
+def erste_schuesse(d, ziele_liste):
+    """Erster Schuss je Fahrzeug auf die eigenen Panzer (Verlustmodell ohne Zerstörungen); {ziel: t}."""
+    dd = dict(d)
+    dd["szenario"] = dict(d["szenario"], ziele=ziele_liste)
+    out = {}
+    for e in V.zeitlinie(dd, {}, None, []):
+        if e["art"] in ("direkt", "steil", "beobachter") and (e["quelle"] not in out or e["ts"] < out[e["quelle"]]):
+            out[e["quelle"]] = e["ts"]
+    return out
+
+
+def meldung_frueh(d, nach_s=MELDUNG_NACH_EINFAHRT_S):
+    """Regel I2.2 (seit 2.7): Die erste Meldung eines Fahrzeugs kommt höchstens nach_s nach seiner Einfahrt und vor seinem ersten Schuss
+    auf die eigenen Panzer. Ausnahmen: ungemeldet, nur_kontakt, spaet_gewollt (Grund). Verstärkungen relativ zum Einspielen (bei t0 = 300 s).
+    Liefert Fehlertexte."""
+    sz, karte = d["szenario"], d["karte"]
+    dauer = sz["spieluhr"]["dauer_s"]
+    fehler = []
+
+    def pruefe_satz(ziele_liste, meldungen, wer=""):
+        erste = {}
+        for m in meldungen:
+            for zid in m["ziele"]:
+                if zid not in erste or m["t_s"] < erste[zid][0]:
+                    erste[zid] = (m["t_s"], m["id"])
+        schuss = erste_schuesse(d, ziele_liste) if d["regeln"].get("verluste") else {}
+        for z in ziele_liste:
+            if z.get("ungemeldet") or z.get("nur_kontakt") or z.get("spaet_gewollt") or z["id"] not in erste:
+                continue
+            ein = einfahrt(z, karte, dauer)
+            tm, mid = erste[z["id"]]
+            if ein is not None and tm - ein > nach_s:
+                fehler.append(f"{wer}{z['id']}: erste Meldung {mid} {L.mmss(tm)} kommt {tm - ein:.0f} s nach der Einfahrt {L.mmss(ein)} "
+                              f"(höchstens {nach_s} s, sonst spaet_gewollt)")
+            ts = schuss.get(z["id"])
+            if ts is not None and ts <= tm:
+                fehler.append(f"{wer}{z['id']}: schießt ab {L.mmss(ts)} auf die eigenen Panzer, gemeldet erst {L.mmss(tm)} ({mid})")
+
+    pruefe_satz(sz["ziele"], sz["meldungen"])
+    t0 = 300
+    for g in (sz.get("verstaerkungen") or {}).get("gruppen", []):
+        zl = [L.verstaerkung_ziel(z, t0) for z in g["ziele"]]
+        ml = [dict(m, t_s=t0 + m["dt_s"]) for m in g["meldungen"]]
+        pruefe_satz(sz["ziele"] + zl, ml, wer=f"{g['id']} (relativ zum Einspielen): ")
+    # nur die Fahrzeuge der Verstärkungen zählen dort; die Fehler der Grundlage stehen schon oben
+    return list(dict.fromkeys(f for f in fehler if not f.startswith("V-") or any(f.split(": ", 1)[1].startswith(z["id"])
+                for g in (sz.get("verstaerkungen") or {}).get("gruppen", []) for z in g["ziele"])))
+
+
+def verschwinden_erklaert(d):
+    """Kein gemeldetes Ziel verschwindet ohne Erklärung (seit 2.7, I1.2): Wer den Raum verlässt, tut das am Kartenrand – nach Westen nur
+    über eine Durchbruch-Route (dann „durchgebrochen“), sonst nach Norden, Osten oder Süden („abgezogen“). Liefert Fehlertexte."""
+    sz, karte = d["szenario"], d["karte"]
+    W, H = karte["ausdehnung_m"]["breite"], karte["ausdehnung_m"]["hoehe"]
+    dauer = sz["spieluhr"]["dauer_s"]
+    fehler = []
+    gemeldet = {zid for m in sz["meldungen"] for zid in m["ziele"]}
+    for z in sz["ziele"]:
+        if z["id"] not in gemeldet or z.get("bis_s") is None or z["bis_s"] >= dauer:
+            continue
+        p = L.position(z, z["bis_s"] - 0.01)
+        rand = min(p[0], W - p[0], p[1], H - p[1])
+        if rand > RAND_M:
+            fehler.append(f"{z['id']}: verschwindet um {L.mmss(z['bis_s'])} bei ({p[0]:.0f}, {p[1]:.0f}) mitten im Bild")
+        elif p[0] <= RAND_M:
+            fehler.append(f"{z['id']}: verlässt den Raum nach Westen ohne Durchbruch-Route (wäre unerklärt durchgebrochen)")
+    return fehler
+
+
+AUSWERTUNG_S = 900              # seit 2.7 (G1.1): Kapitelplan der Auswertung 15 min
+
+
+def auswertung_plan(d):
+    """Auswertung (seit 2.7, G1–G3): Kapitelplan 15:00, Replay-Budget und Fälle, Spielwert für jedes legitime Feindfahrzeug (Personen
+    und Beobachter ohne Wert, Typen mit feuer_effekt „keiner“), Preis je Wirkmittel, Fehlbekämpfungen ohne Eurowert, Impuls zuerst
+    ohne Quelle, dann mit Quelle und Pflichtzeile. Liefert Fehlertexte."""
+    sz, reg, fz, wm = d["szenario"], d["regeln"], d["fahrzeuge"], d["wirkmittel"]
+    au = sz.get("auswertung") or {}
+    fehler = []
+    kap = au.get("kapitel")
+    if kap:
+        summe = sum(k["sek"] for k in kap)
+        if summe != AUSWERTUNG_S:
+            fehler.append(f"Auswertung: Kapitelplan {L.mmss(summe)} statt {L.mmss(AUSWERTUNG_S)}")
+        rp = next((k for k in kap if k["id"] == "replay"), None)
+        replay = au.get("replay") or {}
+        if rp and replay.get("budget_s") not in (None, rp["sek"]):
+            fehler.append(f"Auswertung: Replay-Budget {replay['budget_s']} s ≠ Kapitel {rp['sek']} s")
+        faelle = {f["id"] for f in sz["schluesselfaelle"] + sz.get("nebenfaelle", [])}
+        for f in replay.get("standard", []) + replay.get("zuschaltbar", []):
+            if f not in faelle:
+                fehler.append(f"Auswertung: Fall {f} im Replay unbekannt")
+        for k in kap:
+            if k["id"] in ("bilanz", "impuls", "diskussion", "abschluss") and not au.get(k["id"]):
+                fehler.append(f"Auswertung: Kapitel {k['id']} ohne Inhalt in szenario.auswertung.{k['id']}")
+    bil = reg.get("bilanz")
+    if bil:
+        werte, preis = bil.get("fahrzeuge_mio_eur", {}), bil.get("munition_eur", {})
+        alle = list(sz["ziele"]) + [z for g in (sz.get("verstaerkungen") or {}).get("gruppen", []) for z in g["ziele"]]
+        for z in alle:
+            gt = z.get("gt") or {}
+            if gt.get("kategorie") == "feind" and gt.get("legitim") and fz.get(z["typ"], {}).get("feuer_effekt") != "keiner" \
+                    and z["typ"] not in werte:
+                fehler.append(f"Bilanz: kein Spielwert für {z['typ']} ({z['id']})")
+        for w in wm:
+            if w not in preis:
+                fehler.append(f"Bilanz: kein Preis für Wirkmittel {w}")
+        if any("eur" in k or "wert" in k for f in bil.get("fehl", []) for k in f):
+            fehler.append("Bilanz: Fehlbekämpfungen mit Eurowert (G2.3: ohne Preis)")
+    imp = au.get("impuls")
+    if imp:
+        folien = imp.get("folien", [])
+        if not folien or not folien[0].get("ohne_quelle") or folien[0].get("quelle"):
+            fehler.append("Impuls: erste Folie muss das Zitat ohne Quelle zeigen")
+        auf = next((f for f in folien if f.get("id") == "aufgedeckt"), None)
+        if not auf or not auf.get("quelle") or not auf.get("pflicht"):
+            fehler.append("Impuls: Folie „aufgedeckt“ ohne Quelle oder Pflichtzeile")
+    return fehler
+
+
 def pruefe(d):
     """Prüft das Szenario und rechnet Lösungshilfe und Kennzahlen. Gibt ein dict zurück."""
     sz, karte, fz, wm, regeln = d["szenario"], d["karte"], d["fahrzeuge"], d["wirkmittel"], d["regeln"]
@@ -172,11 +315,20 @@ def pruefe(d):
         if zid in gemeldet and ziele[zid].get("ungemeldet"):
             fehler.append(f"{zid}: ungemeldet, steht aber in einer Meldung")
     for e in sz.get("ereignisse", []):
-        for zid in e["bedingung"].get("ziele", []) + [w["ziel"] for w in e["wirkungen"]] + [w["von"] for w in e["wirkungen"]]:
+        # seit 2.7 (I3.1): Wirkungen ohne festes Ziel nehmen je Schuss das erste stehende Fahrzeug aus ziele_reihenfolge
+        feste = [w["ziel"] for w in e["wirkungen"] if w.get("ziel")]
+        if any(not w.get("ziel") for w in e["wirkungen"]) and not e.get("ziele_reihenfolge"):
+            fehler.append(f"{e['id']}: Wirkung ohne Ziel und ohne ziele_reihenfolge")
+        for zid in e["bedingung"].get("ziele", []) + feste + e.get("ziele_reihenfolge", []) + [w["von"] for w in e["wirkungen"]]:
             if zid not in ziele:
                 fehler.append(f"{e['id']}: Ziel {zid} unbekannt")
         if any(w["t_s"] >= dauer for w in e["wirkungen"]):
             fehler.append(f"{e['id']}: Wirkung nach Spielende")
+    for a in sz.get("aufloesungen", []):     # seit 2.7 (I3.2)
+        if a["meldung"] not in mids:
+            fehler.append(f"{a['id']}: Meldung {a['meldung']} unbekannt")
+        if a.get("inject") and a["inject"] not in {i["id"] for i in sz["injects"]}:
+            fehler.append(f"{a['id']}: Lagemeldung {a['inject']} unbekannt")
     # Gruppen: Kennung = erstes–letztes Mitglied, alle Mitglieder in derselben (ersten) Meldung
     gruppen = {}
     for z in sz["ziele"]:
@@ -195,9 +347,11 @@ def pruefe(d):
         fehler.append("Meldungen nicht zeitlich sortiert")
     if max(ts) >= dauer:
         fehler.append("Meldung nach Spielende")
-    abst = [b - a for a, b in zip(ts, ts[1:])]
-    if min(abst) < 30:
-        warn.append(f"Meldungsabstand unter 30 s ({min(abst)} s)")
+    # seit 2.7 (I2.2): Meldungen folgen der Einfahrt der Fahrzeuge, im Hauptangriff deshalb teils im Abstand von 15–20 s (im Mittel ca.
+    # 30 s). Warnung erst unter ABSTAND_MIN_S; noch kürzer nur mit Begründung an der späteren Meldung (dicht_gewollt)
+    abst = [b["t_s"] - a["t_s"] for a, b in zip(sz["meldungen"], sz["meldungen"][1:]) if not b.get("dicht_gewollt")]
+    if abst and min(abst) < ABSTAND_MIN_S:
+        warn.append(f"Meldungsabstand unter {ABSTAND_MIN_S} s ({min(abst)} s)")
     if ts[0] > 30:
         warn.append(f"erste Meldung erst nach {ts[0]} s (Soll ca. 20 s)")
     # Meldedichte (seit 2.2, C3): ca. eine Meldung pro Minute, keine Pause über LUECKE_MAX_S ohne Absicht (pause_gewollt an der
@@ -378,18 +532,20 @@ def pruefe(d):
         if z["gt"].get("vorher") and not any(h.get("ziel") == z["id"] and h.get("folge") == "ausser_gefecht" for h in hg):
             fehler.append(f"{z['id']}: gt.vorher ohne Ereignis im Hintergrundgefecht, das den Zustand wechselt")
     for e in sz.get("ereignisse", []):
-        for w in e["wirkungen"]:
-            z = ziele.get(w["ziel"])
-            if z and not L.gt_bei(z, w["t_s"])["legitim"]:
-                fehler.append(f"{e['id']}: wirkt auf {w['ziel']} ({L.gt_bei(z, w['t_s'])['kategorie']})")
-            if z and not L.vorhanden(z, w["t_s"]):
-                fehler.append(f"{e['id']}: {w['ziel']} ist um {L.mmss(w['t_s'])} nicht im Raum")
-            if zerstoert_hg.get(w["ziel"], 1e9) <= w["t_s"]:
-                warn.append(f"{e['id']}: {w['ziel']} ist dann schon durch das Hintergrundgefecht zerstört")
-            if w["von"] in ziele and z:
-                a = L.dist(L.position(ziele[w["von"]], w["t_s"]), L.position(z, w["t_s"]))
+        # seit 2.7 (I3.1): ohne Bekämpfung durch das Team – jeder Schuss trifft ein legitimes Ziel im Raum, nicht zu weit weg
+        for nr, t, von, zid, wirkt, grund in L.ereignis_wirkungen(ziele, e, zerstoert_hg):
+            z = ziele.get(zid) if zid else None
+            if e["wirkungen"][nr].get("ziel"):
+                if z and not L.gt_bei(z, t)["legitim"]:
+                    fehler.append(f"{e['id']}: wirkt auf {zid} ({L.gt_bei(z, t)['kategorie']})")
+                if z and not L.vorhanden(z, t):
+                    fehler.append(f"{e['id']}: {zid} ist um {L.mmss(t)} nicht im Raum")
+                if zerstoert_hg.get(zid, 1e9) <= t:
+                    warn.append(f"{e['id']}: {zid} ist dann schon durch das Hintergrundgefecht zerstört")
+            if wirkt and von in ziele and z:
+                a = L.dist(L.position(ziele[von], t), L.position(z, t))
                 if a > 600:
-                    warn.append(f"{e['id']}: {w['von']} → {w['ziel']} {a:.0f} m")
+                    warn.append(f"{e['id']}: {von} → {zid} {a:.0f} m")
     for m in sz["meldungen"]:
         if all(zerstoert_hg.get(z, 1e9) <= m["t_s"] for z in m["ziele"]):
             fehler.append(f"{m['id']}: alle Fahrzeuge sind zur Meldezeit schon durch das Hintergrundgefecht zerstört")
@@ -459,7 +615,7 @@ def pruefe(d):
     KEIN_DURCHBRUCH = ("spaehpz_brdm2", "gfz_tigr", "moerser_trupp", "lkw_ural", "eloka_lkw", "traktor", "san_rad", "attrappe_kpz")
     bach = L.linie(karte, "bach_elster")
     db_info = []
-    e01 = {w["ziel"]: w["t_s"] for e in sz.get("ereignisse", []) for w in e["wirkungen"]}
+    e01 = {zid: t for e in sz.get("ereignisse", []) for nr, t, von, zid, wirkt, grund in L.ereignis_wirkungen(ziele, e, zerstoert_hg) if wirkt}
     hg_ziele = {h["ziel"]: h["t_s"] for h in hg if h["art"] == "panzerabwehr"}
 
     def pruefe_db(gid, ziele_map, gruppe, wer):
@@ -714,6 +870,14 @@ def pruefe(d):
                     fehler.append(f"Druckmeldung {st_}: unbekannter Platzhalter in „{vorlage}“")
                 if len(lang) > MAX_LAGE:
                     fehler.append(f"Druckmeldung {st_} ({art}) bis {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
+
+    # ---------------------------------------------------------------- Seit 2.7 (I2.2): Meldung früh genug, kein Verschwinden ohne Erklärung
+    for f in meldung_frueh(d):
+        fehler.append(f)
+    for f in verschwinden_erklaert(d):
+        fehler.append(f)
+    # seit 2.7 (G1–G3): Auswertung in 15 min, Bilanz mit Spielwerten, Impuls
+    fehler += auswertung_plan(d)
 
     # ---------------------------------------------------------------- Kennzahlen
     falsch = [h for h in hilfe if h["argus_falsch"]]

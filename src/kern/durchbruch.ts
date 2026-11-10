@@ -87,3 +87,16 @@ export function durchgebrochen(
   }
   return { fahrzeuge: fahrzeuge.sort(), gruppen, erstesUeber: erstes };
 }
+
+/**
+ * Über welchen Übergang Fahrzeuge durchgebrochen sind („die Brücke ELSTER“, „die Furt Nord“), wenn eines davon zu einer
+ * durchgebrochenen Gruppe gehört (seit 2.7, I1.2: kein gemeldetes Ziel verschwindet ohne Erklärung); sonst null.
+ */
+export function durchbruchUeber(
+  inh: Inhalte, z: { durchbrueche: Record<string, { durch: boolean }>; verstaerkungen: readonly { gruppe: string; t0: number }[] }, ziele: string[],
+): string | null {
+  for (const g of durchbruchGruppen(inh, z.verstaerkungen)) {
+    if (z.durchbrueche[g.id]?.durch && g.ziele.some((x) => ziele.includes(x))) return `die ${g.ueber}`;
+  }
+  return null;
+}

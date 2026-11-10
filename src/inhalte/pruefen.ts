@@ -70,11 +70,16 @@ export function pruefeInhalte(inh: Inhalte): Pruefbericht {
     warnungen.push("Durchbruch ohne Lagemeldung (Inject mit bedingung.typ durchbruch)");
   }
   for (const e of sz.ereignisse ?? []) {
-    const ids = [...e.bedingung.ziele, ...e.wirkungen.flatMap((w) => [w.von, w.ziel])];
+    const ids = [...e.bedingung.ziele, ...e.wirkungen.flatMap((w) => [w.von, ...(w.ziel ? [w.ziel] : [])]), ...(e.ziele_reihenfolge ?? [])];
+    if (e.wirkungen.some((w) => !w.ziel) && !e.ziele_reihenfolge?.length) fehler.push(`${e.id}: Wirkung ohne Ziel und ohne ziele_reihenfolge`);
     for (const zid of ids) if (!inh.ziele[zid]) fehler.push(`${e.id}: Ziel ${zid} unbekannt`);
   }
   for (const f of sz.schluesselfaelle) {
     if (!inh.meldungen[f.meldung]) fehler.push(`${f.id}: Meldung ${f.meldung} unbekannt`);
+  }
+  for (const a of sz.aufloesungen ?? []) {
+    if (!inh.meldungen[a.meldung]) fehler.push(`${a.id}: Meldung ${a.meldung} unbekannt`);
+    for (const zid of a.ziele) if (!inh.ziele[zid]) fehler.push(`${a.id}: Ziel ${zid} unbekannt`);
   }
   for (const w of Object.values(inh.wirkmittel)) {
     if (!(w.wirkradius_m > 0) || !(w.vorlauf_s >= 0)) fehler.push(`${w.id}: Wirkradius oder Vorlauf ungültig`);

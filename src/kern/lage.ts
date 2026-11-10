@@ -1,7 +1,7 @@
 // Lage eines Teams: Welt (Inhalte plus Verstärkungen), welche Fahrzeuge weg sind, Freigaben und Einschläge.
 // Reine Funktionen von Inhalten und Spielstand; Engine (Zeitplan), Lagebild und Übersicht nutzen sie gemeinsam.
-import type { Inhalte, Punkt } from "../inhalte/typen";
-import { weg } from "./geometrie";
+import type { Inhalte, Punkt, Skriptereignis } from "../inhalte/typen";
+import { gtBei, position, vorhanden, weg } from "./geometrie";
 import { type Einschlag, einschlag } from "./regeln";
 import { welt } from "./welt";
 import type { Spielzustand } from "./zustand";
@@ -93,3 +93,19 @@ export function offeneEinschlaege(inh: Inhalte, z: Spielzustand, id: string): { 
   return einschlaegeVon(inh, z, id).map((e, nr) => ({ nr, e })).filter((x) => !da.has(x.nr));
 }
 
+
+/**
+ * Ziel eines Schusses eines Skriptereignisses ohne festes Ziel (seit 2.7, I3.1: die PT-91 schießen auf die Feindkräfte an der Brücke
+ * Ost): das erste Fahrzeug aus ziele_reihenfolge, das zur Zeit t im Raum steht, nicht zerstört ist, ein legitimes Ziel ist und im
+ * Bereich liegt; sonst null. Wie argus_lib.ereignis_ziel.
+ */
+export function ereignisZiel(inh: Inhalte, e: Skriptereignis, zerstoert: Record<string, number>, t: number): string | null {
+  for (const id of e.ziele_reihenfolge ?? []) {
+    const ziel = inh.ziele[id];
+    if (!ziel || !vorhanden(ziel, t) || (zerstoert[id] ?? Infinity) <= t || !gtBei(ziel, t).legitim) continue;
+    const b = e.bereich;
+    const p = position(ziel, t);
+    if (!b || (b.x[0] <= p[0] && p[0] <= b.x[1] && b.y[0] <= p[1] && p[1] <= b.y[1])) return id;
+  }
+  return null;
+}

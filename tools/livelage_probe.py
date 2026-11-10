@@ -13,7 +13,10 @@ Teil A – ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync),
       an der Brücke (10:00, Kontrollkarte gezoomt mit Sprites).
   A6  Bildrate: 13:30–14:15 bei Tempo ×1 (Feindartillerie, Bewegung, Flug) in SL, Zielbearbeitung und Plenum.
   A7  Z-24 außer Gefecht (19:35): Zustands-Sprite „Kette ab“, kein Brand.
-  A8  E-01 (23:30,3, angehalten): Mündungsblitz am PT-91, Treffer auf Z-27; Auflösung im Plenum.
+  A8  seit 2.7 (I3): die PT-91 kämpfen mit – E-01 ab 20:45 alle 20 s (Mündungsfeuer, Leuchtspur nach Norden, Treffer) auf der Karte
+      des Teams; ohne Freigabe um 21:45 als verbündet erkannt: Zeichen blau „PL-PzKp (verbündet)“, Vermerk im Eingang, I-17 im Feed.
+  A9  seit 2.7 (I1): D-03 bricht durch, Ziel 15 (BTR-80) fährt über die Brücke und westlich aus dem Bild – das Zeichen bleibt am
+      Westrand „Ziel 15 durchgebrochen“, Vermerk im Eingang, I-13; Auflösung im Plenum.
 Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung (ohne Verstärkungsmenü):
   B1  V-1 an beide Teams, V-3 nur an Team B (über die Sitzung) → in den Protokollen; die Zeile zeigt „+n V“.
   B2  V-2 um 12:00 für alle gesperrt (Szenario 2.1: 11:15–17:15) – abgelehnt mit Grund.
@@ -54,6 +57,25 @@ LAYOUT_JS = """
 KARTE_JS = """
 (id) => { const e = document.querySelector(`[data-testid=${id}] .karte-leinwand`); return e && e.argusKarte ? e.argusKarte.diagnose : null }
 """
+
+
+SZENARIO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "daten", "szenario_kraehe_01.json")
+
+
+def schusszeiten(ziel_id):
+    """Schusszeiten eines feuernden Ziels aus den Szenariodaten (wie src/kern/effekte.ts schuesse)."""
+    with open(SZENARIO, encoding="utf-8") as f:
+        ziel = next(z for z in json.load(f)["ziele"] if z["id"] == ziel_id)
+    zeiten = []
+    for fe in ziel.get("feuert", []):
+        t = fe["von_s"]
+        while t < fe["bis_s"]:
+            for i in range(fe.get("salve", 1)):
+                ts = t + i * fe["takt_s"]
+                if ts < fe["bis_s"]:
+                    zeiten.append(ts)
+            t += fe.get("salve", 1) * fe["takt_s"] + fe.get("pause_s", 0)
+    return sorted(zeiten)
 
 
 def warte(bedingung, sek=15, text="Bedingung"):
@@ -205,12 +227,18 @@ def main():
         grund = next(g for g in abgelehnt() if "V-2" in g)
         pruefe("jetzt nicht" in grund and not any(v["gruppe"] == "V-2" for v in zustand()["v"]), f"A4 V-2 um 07:00 gesperrt: „{grund}“")
 
-        # A4b Feuer und Staub: Mörser Z-06 schießt seit 2.5 (F2.8) in Feuerstößen – 2 Schuss im Takt 2 s, dann 28 s Pause, ab 05:02
-        # (05:02, 05:04, 05:34, 05:36 … 07:10, 07:12). Uhr direkt 0,2 s nach den Schuss um 430 s stellen (der Blitz dauert 0,44 s
-        # Echtzeit, beim Anhalten wäre er vorbei).
-        sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", 430.2)
-        warte(lambda: abs(zustand()["t"] - 430.2) < 0.05, 5, "Spielzeit 430,2 s")
-        sl.wait_for_timeout(300)
+        # A4b Feuer und Staub: Mörser Z-06 schießt seit 2.5 (F2.8) in Feuerstößen – 2 Schuss im Takt 2 s, dann 28 s Pause
+        # (2.7: ab 05:52, also 05:52, 05:54, 06:24, 06:26 …). Die Schusszeiten kommen aus den Szenariodaten (wie effekte.schuesse);
+        # Uhr direkt 0,2 s nach den ersten Schuss ab 07:00 stellen (der Blitz dauert 0,44 s Echtzeit, beim Anhalten wäre er vorbei).
+        t_schuss = next(t for t in schusszeiten("Z-06") if t >= 420) + 0.2
+        sl.evaluate("(t) => window.argus.senden('uhr', { befehl: 'setzen', t_s: t })", t_schuss)
+        warte(lambda: abs(zustand()["t"] - t_schuss) < 0.05, 5, f"Spielzeit {t_schuss:.1f} s")
+        # Die Uhr steht: Blitz und Rauch bleiben im Bild. Auf das nächste gezeichnete Bild warten (ohne Grafikkarte zeichnet die
+        # Karte hier mitunter nur 0–1 Bild/s; das Diagnosefeld gilt für das zuletzt gezeichnete Bild).
+        try:
+            warte(lambda: "muendungsblitz_steil" in ((sl.evaluate(KARTE_JS, "kontrollkarte") or {}).get("gezeigt") or []), 10, "Mündungsblitz gezeichnet")
+        except AssertionError:
+            pass
         d = sl.evaluate(KARTE_JS, "kontrollkarte")
         foto(sl, "A4b_sl_moerser_feuert")
         pruefe(d and "muendungsblitz_steil" in d["gezeigt"] and "abschussrauch" in d["gezeigt"],
@@ -269,14 +297,51 @@ def main():
         sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.ganzeKarte()")
         pruefe(zustand()["h"].get("H-11", {}).get("wirkt") is True and "Z-24" not in zustand()["zerstoert"], "A7 H-11: Z-24 außer Gefecht, nicht zerstört")
 
-        # A8 E-01
-        zeit("23:28", tempo=1)
-        laufen_bis(1410.25)
+        # A8 E-01 (seit 2.7, I3.1): die PT-91 schießen ab 20:45 auf die Feindkräfte an der Brücke Ost – sichtbar für das Team
+        objekte = "(m) => document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte.lb.objekte.filter((o) => (o.meldungen ?? []).includes(m)).map((o) => ({ text: o.text, sidc: o.sidc, weg: o.weg ?? null, pos: o.pos }))"
+        zeit("20:43", tempo=1)
+        laufen_bis(1245.3)
         sl.wait_for_timeout(300)
+        zb.wait_for_timeout(300)
         foto(sl, "A8_sl_e01")
-        foto(zb, "A8_zb_e01")
+        foto(zb, "A8_zb_e01_mitkaempfen")
         e01 = zustand()["ereignisse"].get("E-01", {})
-        pruefe(e01.get("wirkungen", {}).get("0", {}).get("wirkt") is True, f"A8 E-01: PT-91 trifft Z-27 ({e01.get('wirkungen', {}).get('0')})")
+        w0 = e01.get("wirkungen", {}).get("0", {})
+        pruefe(w0.get("wirkt") is True and w0.get("ziel"), f"A8 E-01 20:45: PT-91 trifft {w0.get('ziel')} an der Brücke Ost")
+        fx = zb.evaluate("() => { const k = document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte; return k.diagnose.effektIds ?? null }")
+        if fx is not None:
+            pruefe(any(x.startswith("E-01-0-s") for x in fx), "A8 Leuchtspur der PT-91 auf der Karte des Teams")
+        # A8b Auflösung 21:45 ohne Freigabe
+        laufen_bis(1306)
+        zb.wait_for_timeout(500)
+        st20 = zb.evaluate("() => window.argus.stand.zustand.meldungen.M20")
+        pruefe(st20["stufe"] == "erledigt" and (st20.get("aufgeloest") or {}).get("als") == "verbuendet", f"A8 M20 21:45 aufgelöst ({st20['stufe']}, {st20.get('aufgeloest')})")
+        vm = zb.locator(".eingang-zeile.vermerk[data-vermerk=M20]")
+        pruefe(vm.count() == 1 and "verbündet – nicht bekämpfen" in vm.inner_text(), f"A8 Vermerk im Eingang: „{vm.inner_text() if vm.count() else '–'}“")
+        o20 = zb.evaluate(objekte, "M20")
+        pruefe(o20 and o20[0]["text"] == "PL-PzKp (verbündet)" and o20[0]["sidc"][1] == "F", f"A8 Zeichen der PT-91 blau: {o20}")
+        feed = zb.get_by_test_id("feed").inner_text()
+        pruefe("Feuerstellung Feldweg Süd bezogen" in feed, "A8 I-17 im Feed")
+        foto(zb, "A8_zb_verbuendet")
+        abgelehnt_vorher = len(abgelehnt())
+        zb.evaluate("() => window.argus.senden('entscheid', { meldung: 'M20', entscheid: 'bekaempfen', wirkmittel: 'PZA' })")
+        warte(lambda: len(abgelehnt()) > abgelehnt_vorher, 5, "BEKÄMPFEN nach der Auflösung abgelehnt")
+        pruefe("nicht (mehr) offen" in abgelehnt()[-1], f"A8 nach 21:45 keine Freigabe mehr: „{abgelehnt()[-1]}“")
+        # A9 Durchbruch D-03 (seit 2.7, I1): Ziel 15 verschwindet nicht ohne Erklärung
+        aus = sl.evaluate("() => { const z = window.argus.stand.zustand; return z.durchbrueche['D-03'] ?? null }")
+        pruefe(aus and aus.get("durch") is True, f"A9 D-03 bricht durch ({aus})")
+        zeit("23:30", tempo=1)
+        laufen_bis(1425)
+        zb.wait_for_timeout(500)
+        st11 = zb.evaluate("() => window.argus.stand.zustand.meldungen.M11")
+        o11 = zb.evaluate(objekte, "M11")
+        vm11 = zb.locator(".eingang-zeile.vermerk[data-vermerk=M11]")
+        print(f"  A9 M11: {st11['stufe']} {st11.get('entfallen')} · Zeichen {o11} · Vermerk {vm11.inner_text() if vm11.count() else '–'}")
+        pruefe(o11 and o11[0]["weg"] == "durchgebrochen" and o11[0]["text"] == "Ziel 15 durchgebrochen" and o11[0]["pos"][0] < 20,
+               f"A9 Zeichen „Ziel 15 durchgebrochen“ am Westrand ({o11})")
+        pruefe(vm11.count() == 1 and "über die Brücke ELSTER durchgebrochen" in vm11.inner_text(), "A9 Vermerk im Eingang „über die Brücke ELSTER durchgebrochen“")
+        pruefe(zb.evaluate("() => !!window.argus.stand.zustand.injects['I-13']"), "A9 Lagemeldung I-13")
+        foto(zb, "A9_zb_durchgebrochen")
         zeit("24:58", tempo=1)
         sl.get_by_role("button", name="▶ Start").click()
         warte(lambda: zustand()["ende"], 20, "Spielende")

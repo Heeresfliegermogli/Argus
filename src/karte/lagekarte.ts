@@ -86,6 +86,11 @@ export interface KartenOptionen {
   onZoom?: (faktor: number) => void;
   /** nach jedem gezeichneten Bild: Lage der Marken (siehe setzeMarken) */
   onBild?: (b: KartenBild) => void;
+  /**
+   * Seit 2.7 (G4b): Beim Start füllt die Karte ihr Feld (kein leerer Rand) – Mitte des Ausschnitts in Metern, z. B. zwischen eigenen
+   * Panzern, Brücke und Ortschaft. Zoom und Verschieben bleiben; „Ganze Karte“ (⤢) zeigt wieder alles.
+   */
+  fuellen?: Punkt;
 }
 
 const FARBE = {
@@ -399,6 +404,7 @@ export class Lagekarte {
   }
 
   zoom(faktor: number, um?: Punkt): void {
+    this.benutzer = true;
     const neu = Math.max(1, Math.min(ZOOM_MAX, this.zoomFaktor * faktor));
     const p = um ?? [this.breite / 2, this.hoehe / 2];
     const welt: Punkt = [(p[0] - this.x) / this.s, (p[1] - this.y) / this.s];
@@ -412,6 +418,7 @@ export class Lagekarte {
   }
 
   ganzeKarte(): void {
+    this.benutzer = true;
     this.zoomFaktor = 1;
     this.s = this.fit;
     this.begrenzen();
@@ -449,6 +456,17 @@ export class Lagekarte {
 
   // ---------------------------------------------------------------- Ansicht
 
+  /** Seit 2.7 (G4b): Zoom, bei dem die Karte das Feld ganz füllt (mindestens 1). */
+  fuellFaktor(): number {
+    const k = this.inh.karte.ausdehnung_m;
+    if (!this.breite || !this.hoehe) return 1;
+    return Math.max(1, Math.max(this.breite / k.breite, this.hoehe / k.hoehe) / Math.min(this.breite / k.breite, this.hoehe / k.hoehe));
+  }
+
+  private gefuellt = false;
+  /** Zoom oder Ausschnitt vom Benutzer gewählt (dann füllt eine Größenänderung nicht neu) */
+  private benutzer = false;
+
   private groesse(w: number, h: number): void {
     const welt: Punkt = this.breite ? [(this.breite / 2 - this.x) / this.s, (this.hoehe / 2 - this.y) / this.s] : this.zentrum;
     this.breite = w;
@@ -456,6 +474,18 @@ export class Lagekarte {
     this.app.renderer.resize(w, h);
     const k = this.inh.karte.ausdehnung_m;
     this.fit = Math.min(w / k.breite, h / k.hoehe);
+    // seit 2.7 (G4b): ohne Benutzer-Zoom füllt die Karte ihr Feld auch nach einer Größenänderung
+    if (this.opt.fuellen && w && h && (!this.gefuellt || !this.benutzer) && !this.fokusAusstehend) {
+      this.gefuellt = true;
+      this.zoomFaktor = this.fuellFaktor();
+      this.s = this.fit * this.zoomFaktor;
+      this.x = w / 2 - this.opt.fuellen[0] * this.s;
+      this.y = h / 2 - this.opt.fuellen[1] * this.s;
+      this.begrenzen();
+      this.opt.onZoom?.(this.zoomFaktor);
+      this.zeichnen();
+      return;
+    }
     this.s = this.fit * this.zoomFaktor;
     this.x = w / 2 - welt[0] * this.s;
     this.y = h / 2 - welt[1] * this.s;
@@ -502,6 +532,7 @@ export class Lagekarte {
         const dy = p[1] - this.ziehen.py;
         if (Math.hypot(dx, dy) > 4) this.ziehen.bewegt = true;
         if (this.ziehen.bewegt && this.zoomFaktor > 1) {
+          this.benutzer = true;
           this.x = this.ziehen.x + dx;
           this.y = this.ziehen.y + dy;
           this.begrenzen();
@@ -1199,7 +1230,7 @@ export class Lagekarte {
       }
       const gew = istGewaehlt(o);
       // seit 2.2: Kontakte, Teil- und Wrackzeichen kleiner; Kontakte kräftig genug, um das Einfahren zu sehen
-      const alpha = o.art === "kontakt" ? 0.9 : o.art === "wrack" ? 0.8 : o.zustand === "erledigt" ? 0.42 : 1;
+      const alpha = o.art === "kontakt" ? 0.9 : o.art === "wrack" ? 0.8 : o.zustand === "erledigt" && !o.hervor ? 0.42 : 1;
       const spriteName = o.sprite && t !== null ? spriteZur(o.sprite, t, this.atlasTexturen) : o.sprite?.name;
       if (spritesZeigen && o.sprite && spriteName && this.atlasTexturen?.[spriteName]) {
         const tex = this.atlasTexturen[spriteName];
@@ -1216,7 +1247,7 @@ export class Lagekarte {
         sp.rotation = ((o.bahn && t !== null ? lage.hdg : o.sprite.hdg) * Math.PI) / 180;
         sp.position.set(x, y);
         sp.visible = true;
-        sp.alpha = o.zustand === "erledigt" ? 0.75 : 1;
+        sp.alpha = o.zustand === "erledigt" && !o.hervor ? 0.75 : 1;
         // Schatten: derselbe Sprite schwarz, Alpha 0,45, 1,2 m nach Südost (docs/ASSETS.md)
         let sch = this.schattenSprites.get(o.id);
         if (!sch) {
@@ -1260,7 +1291,7 @@ export class Lagekarte {
       if (!ids.length && !m.o.text) continue; // Kontakt, Wrack: ohne Beschriftung (Tooltip)
       const st = ids.length ? this.markenStil()
         : m.gew ? { ...this.stil(12.5, "700", 0x5a3a00), stroke: { color: 0xffe2a0, width: 4, join: "round" as const } }
-          : this.stil(m.o.art ? 10.5 : 11.5, m.o.zustand === "erledigt" || m.o.art ? "500" : "700");
+          : this.stil(m.o.art ? 10.5 : 11.5, (m.o.zustand === "erledigt" && !m.o.hervor) || m.o.art ? "500" : "700");
       const t = this.beschriften(`obj-${m.o.id}`, ids.length ? ids.map((id) => this.marken.get(id)!).join(MARKEN_ABSTAND) : m.o.text, st, [
         [m.x, m.y + m.unten + 1, 0.5, 0],
         [m.x, m.y - m.oben - 1, 0.5, 1],

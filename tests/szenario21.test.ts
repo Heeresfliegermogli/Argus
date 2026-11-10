@@ -79,14 +79,19 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     expect(weltFuer(inh, { ...(await lauf())[1].z, durchbrueche: {} }).ziele["Z-27"].bis_s).toBeUndefined();
   });
 
-  it("naiv: BEKÄMPFEN der PT-91 → E-01 fällt aus, die letzten Feindkräfte brechen auf; mit Verstärkungen kommen zwei über den Bach (I-13)", async () => {
-    const [naiv, , naivV] = await lauf();
-    // ohne Verstärkungen: die Gruppen D-04/D-05 brechen auf, das schnelle Team trifft sie mit dem Mörser, bevor sie über dem Bach sind
+  it("naiv: BEKÄMPFEN der PT-91 → E-01 fällt aus, die letzten Feindkräfte brechen durch und kommen über den Bach (I-13)", async () => {
+    const [naiv, ideal, naivV] = await lauf();
+    // seit 2.7 (I3.1): ohne den Gegenangriff der PT-91 bricht D-04/D-05 auf; das naive Team ist erst nach 24:00 an M26/M27 – Z-27 und
+    // Z-28 kommen über den Bach, I-13 10 s nach dem ersten (wie simuliere_durchlauf.py, Lauf 1)
     expect(naiv.z.meldungen.M20.wirkung).toBeDefined();
     expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
-    expect(durchgebrochen(weltFuer(naiv.inh, naiv.z), naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen).fahrzeuge).toEqual([]);
-    expect(naiv.z.injects["I-13"]).toBeUndefined();
-    // mit Verstärkungen (mehr Meldungen, später dran): Z-27 und Z-28 brechen durch, I-13 kommt 10 s nach dem ersten über dem Bach
+    const d0 = durchgebrochen(weltFuer(naiv.inh, naiv.z), naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen);
+    expect(d0.fahrzeuge).toEqual(["Z-27", "Z-28"]);
+    expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d0.erstesUeber! + 10, 1);
+    // ideal: die PT-91 zerschlagen die letzten Feindkräfte an der Brücke Ost (E-01), nichts bricht durch
+    expect(durchgebrochen(weltFuer(ideal.inh, ideal.z), ideal.z.durchbrueche, ideal.z.zerstoert, ideal.z.verstaerkungen).fahrzeuge).toEqual([]);
+    expect(ideal.z.injects["I-13"]).toBeUndefined();
+    // mit Verstärkungen ebenso: Z-27 und Z-28 brechen durch, I-13 kommt 10 s nach dem ersten über dem Bach
     const inh = weltFuer(naivV.inh, naivV.z);
     const d = durchgebrochen(inh, naivV.z.durchbrueche, naivV.z.zerstoert, naivV.z.verstaerkungen);
     expect(d.fahrzeuge).toEqual(["Z-27", "Z-28"]); // wie simuliere_durchlauf.py (Lauf 3)

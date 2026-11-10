@@ -42,7 +42,8 @@ describe("Zielnummern (B7)", () => {
   it("Meldungen des Szenarios: Platz in der Zeitleiste, für alle Teams gleich", async () => {
     const inh = await inhalte();
     expect(zielNr(inh, null, "M01")).toBe("1");
-    expect(zielNr(inh, null, "M20")).toBe("28"); // seit 2.4 kommen M25, M31–M33, M35 und M36 vorher (Platz in der Zeitleiste)
+    // seit 2.4 kommen M25, M31–M33, M35 und M36 vorher (Platz in der Zeitleiste); seit 2.7 (I2) auch M34 und die neue M37 vor M20
+    expect(zielNr(inh, null, "M20")).toBe("30");
     expect(zielNr(inh, null, "M28")).toBe("3");
     expect(zielName(inh, null, "M01")).toBe(`Ziel 1${inh.meldungen.M01.ziele.length > 1 ? ` (${inh.meldungen.M01.ziele.length} Fz)` : ""}`);
     expect(zielName(inh, null, "M01", false)).toBe("Ziel 1");

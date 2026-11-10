@@ -34,7 +34,7 @@ const NEU = ["S5", "S6", "S7", "S8"];
 describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
   it("E1: das Menü „Verstärkung“ ist per Schalter in den Regeln aus", async () => {
     const inh = await inhalte();
-    expect(["2.4", "2.5", "2.6"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H)
+    expect(["2.4", "2.5", "2.6", "2.7"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I)
     expect(inh.regeln.spielleitung?.verstaerkung_menue).toBe(false);
     // die Verstärkungen bleiben in den Daten (Schalter, kein Löschen)
     expect(inh.szenario.verstaerkungen?.gruppen.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
     // 2.3: 37 Ziele, 30 Meldungen
     expect(sz.ziele.length / 37).toBeGreaterThanOrEqual(1.3);
     expect(sz.ziele.length / 37).toBeLessThanOrEqual(1.5);
-    expect(sz.meldungen).toHaveLength(36);
+    expect(sz.meldungen).toHaveLength(37); // seit 2.7 (I2.2) M37: Z-20 und Z-48 einzeln gemeldet
     // die neuen Fahrzeuge (Z-38–Z-49) gehören zu Meldungen ab dem Hauptangriff (Phase 4, ab 14:00)
     const erste = (id: string) => sz.meldungen.find((m) => m.ziele.includes(id))?.t_s;
     const neu = sz.ziele.filter((z) => Number(z.id.slice(2)) >= 38);
@@ -57,9 +57,12 @@ describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
     // Hauptangriff und Krise (14:00–25:00) mit mehr Meldungen je Minute als die ersten 14 min
     const rate = (von: number, bis: number) => sz.meldungen.filter((m) => m.t_s >= von && m.t_s < bis).length / ((bis - von) / 60);
     expect(rate(840, 1500)).toBeGreaterThan(rate(0, 840));
-    // höchstens 40 s zwischen zwei Meldungen im Hauptangriff
+    // höchstens 40 s zwischen zwei Meldungen im Hauptangriff; seit 2.7 (I2.2) kommt der Traktor (M22) schon um 21:15 statt 23:30 –
+    // danach eine Pause von 60 s vor M26 (23:00–24:00)
     const t = sz.meldungen.map((m) => m.t_s).filter((x) => x >= 840).sort((a, b) => a - b);
-    expect(Math.max(...t.slice(1).map((x, i) => x - t[i]))).toBeLessThanOrEqual(45);
+    const luecken = t.slice(1).map((x, i) => x - t[i]);
+    expect(Math.max(...luecken)).toBeLessThanOrEqual(60);
+    expect(luecken.filter((x) => x > 45)).toHaveLength(1);
   });
 
   it("E6.2: ARGUS kennt nur Panzer, Fahrzeug, Infanterie (Katalog: Klasse je Typ, Zeichen je Klasse); S3 bleibt „Panzer · Feind 96 %“", async () => {
@@ -215,7 +218,8 @@ describe("Szenario 2.4: neue Schlüsselfälle S5–S8 (E5)", () => {
       expect(m.bild.merkmale?.length, id).toBeGreaterThan(0);
       for (const zid of f.ziele) expect(inh.ziele[zid].gt.text.length, `${id} ${zid}`).toBeGreaterThan(20);
     }
-    expect(inh.szenario.auswertung.replay).toMatchObject({ standard: ["S3", "S2", "S1", "S4"], zuschaltbar: NEU, budget_s: 720 });
+    // seit 2.7 (G1.1): Replay 4 min, Standard S3 und S2; S1, S4 und die neuen Fälle zuschaltbar
+    expect(inh.szenario.auswertung.replay).toMatchObject({ standard: ["S3", "S2"], zuschaltbar: ["S1", "S4", ...NEU], budget_s: 240 });
     // ARGUS: in S6 und S8 (Presse) falsch, in S5 und S7 liegt es richtig – die Frage ist dort das Wann und das Wie
     expect(argusFalsch(inh, inh.meldungen.M35)).toBe(true);
     expect(argusFalsch(inh, inh.meldungen.M33)).toBe(true);

@@ -19,16 +19,16 @@ const NOTIZEN: Record<number, { t: number; fall?: string; text: string }[]> = {
   0: [
     { t: 540, fall: "S1", text: "Bild nicht vergrößert, nur auf die 93 % geschaut – nach 20 s bekämpft." },
     { t: 1125, fall: "S4", text: "„1/4 ist schon getroffen, wir müssen schießen.“ ARGUS-Warnung vorgelesen, trotzdem bekämpft." },
-    { t: 1300, fall: "S3", text: "I-04 erst nach dem Einschlag angeklickt – der Feed lief unter." },
+    { t: 1300, fall: "S3", text: "I-04 nicht gesehen – nach 30 s war sie aus dem Feed verschwunden." },
   ],
   1: [
     { t: 560, fall: "S1", text: "Laut: „Netz hängt durch, keine Spuren – das ist eine Attrappe.“ Abgelehnt." },
     { t: 1060, fall: "S3", text: "Liest I-04 laut vor, merkt sich Feldweg Süd." },
-    { t: 1280, fall: "S3", text: "Bei Ziel 28 kurz gezögert, dann mit Verweis auf I-04 abgelehnt." },
+    { t: 1290, fall: "S3", text: "Ziel 30 noch im Eingang – auf der Karte schießen die Panzer schon nach Norden auf den Feind: „Das sind die Polen.“" },
   ],
   2: [
     { t: 830, fall: "S2", text: "Das Rote Kreuz gesehen, aber gedacht, „der Feind tarnt sich so“." },
-    { t: 1240, fall: "S3", text: "I-04 angeklickt – „Steht aber T-72 da, 96 %.“" },
+    { t: 1240, fall: "S3", text: "I-04 gelesen – bei Ziel 30 trotzdem: „Steht aber T-72 da, 96 %.“" },
   ],
   3: [{ t: 845, fall: "S2", text: "Mit der Lupe auf das Dach gezoomt, nach 40 s abgelehnt." }],
 };

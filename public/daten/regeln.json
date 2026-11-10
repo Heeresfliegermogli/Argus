@@ -129,8 +129,33 @@
   },
   "sensordaten": "Seit 2.4 (E6.3): Sensordaten und Infrarot entfallen für die Spieler. Ob etwas fährt, zeigt das Live-Drohnenbild; was bisher nur in den Sensordaten stand, ist im Bild erkennbar (meldungen[].bild.merkmale). meldungen[].sensor bleibt für Spielleitung und Drehbuch.",
   "anzeige": {
-    "lagemeldung_s": 8,
+    "lagemeldung_s": 30,
     "bestand_knapp": {"LM": 4, "MRS": 3},
-    "hinweis": "Seit 2.6: Eine neue Lagemeldung steht lagemeldung_s Sekunden (Echtzeit) oben im Feed und rutscht dann ohne Klick in die einklappbare Liste „frühere Meldungen“; ein Klick liest sie sofort. Bestand ab bestand_knapp und weniger: Warnung in Kopfzeile und am Knopf."
+    "hinweis": "Seit 2.7 (I4): Eine Lagemeldung steht lagemeldung_s Sekunden (Spielzeit) im Feed oder bis sie angeklickt wird (✕), dann ist sie ganz weg – keine Liste „frühere Meldungen“. Das Protokoll zeigt, ob und nach wie vielen Sekunden sie angeklickt wurde. Bestand ab bestand_knapp und weniger: Warnung in Kopfzeile und am Knopf."
+  },
+  "bilanz": {
+    "hinweis": "Seit 2.7 (G2.4): grobe, gerundete Spielwerte nur für die Bilanz der Auswertung („Das ist es wert“). Personen und Beobachter haben keinen Wert; Fehlbekämpfungen erscheinen ohne Eurowert.",
+    "fahrzeuge_mio_eur": {
+      "kpz_t72": 1.2,
+      "spz_bmp2": 0.3,
+      "spw_btr80": 0.3,
+      "spaehpz_brdm2": 0.15,
+      "gfz_tigr": 0.2,
+      "lkw_ural": 0.1,
+      "eloka_lkw": 0.5,
+      "moerser_trupp": 0.1
+    },
+    "munition_eur": {"LM": 100000, "MRS": 2000, "PZA": 10000},
+    "fuss": "Grobe Spielwerte nach öffentlichen Schätzungen (z. B. T-72 ca. 1,2 Mio USD, BMP-2 Export über 0,3 Mio USD, Switchblade 600 geschätzt 80–176 Tsd. USD).",
+    "fehl": [
+      {"id": "sanitaet", "text": "Sanitätsfahrzeug", "zeichen": "✚", "einheit": "Fahrzeug"},
+      {"id": "zivil", "text": "Zivilpersonen", "zeichen": "●", "kinder": true, "einheit": "Personen"},
+      {"id": "kamerateam", "text": "Kamerateam", "zeichen": "▣", "einheit": "Personen"},
+      {"id": "verwundete", "text": "Verwundete", "zeichen": "✚", "einheit": "Personen"},
+      {"id": "weisses_tuch", "text": "Besatzung mit weißem Tuch", "zeichen": "⚑", "einheit": "Personen"},
+      {"id": "verbuendet", "text": "Verbündete", "zeichen": "◆", "einheit": "Panzer"},
+      {"id": "attrappe", "text": "Attrappe", "zeichen": "◇", "einheit": "Attrappe"}
+    ],
+    "personen_je_typ": {"verwundete": 4}
   }
 }
