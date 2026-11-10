@@ -1,4 +1,4 @@
-# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand G+I vom 10.11.2026, Szenario 2.7)
+# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste J vom 10.11.2026, Szenario 2.7)
 
 **Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Teil B). Startseite und Lobby sind ohne
 Erklärung bedienbar (Teil A – kommt vor Teil B, dauert ca. 6 min).
