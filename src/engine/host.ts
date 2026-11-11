@@ -5,6 +5,12 @@
 //
 // Start mit Verzug (H1.4): Das Startsignal der Spielleitung trägt ihre Serverzeit. Kommt es verspätet an, läuft die Uhr ab dieser
 // Zeit (ab_ts, höchstens 60 s nachgeholt) – alle Teams haben dieselbe Spielzeit, auch wenn das Netz trödelt.
+//
+// Spät verbundener Laptop (Liste K, K3.2): Start und Pause der Spielleitung stehen im Kanal des Teams und werden ausgeführt, sobald
+// der Laptop (wieder) rechnet. Liegen mehrere alte Start-/Pause-Befehle an (die Spielleitung hat gestartet und wieder angehalten,
+// während der Laptop fehlte), gilt nur der letzte – die überholten werden als „nicht ausgeführt“ protokolliert. Dafür sammelt der Host
+// ab einem alten Start-/Pause-Befehl die Aktionen aus dem Netz und arbeitet sie gleich nach dem laufenden Schritt ab (frische
+// Aktionen und die Entscheidungen des Teams weiter sofort).
 import type { Inhalte } from "../inhalte/typen";
 import { type Absender, type Aktion, type Ereignis, bereinigt } from "../kern/ereignisse";
 import { spielzeit } from "../kern/uhr";
@@ -29,6 +35,14 @@ export interface HostOptionen {
 
 /** So viel Verzug beim Startsignal holt die Uhr höchstens nach. */
 export const NACHHOLEN_MAX_MS = 60000;
+/** Ab diesem Alter gilt ein Start-/Pause-Befehl als „alt“: Folgt im selben Schub ein späterer, ist er überholt (K3.2). */
+export const UHR_ALT_MS = 3000;
+
+function uhrSchalter(a: Aktion): "start" | "pause" | null {
+  if (a.typ !== "uhr") return null;
+  const b = (a.daten as { befehl?: string }).befehl;
+  return b === "start" || b === "pause" ? b : null;
+}
 
 const SYSTEM: Absender = { rolle: "system" };
 
@@ -40,6 +54,7 @@ export class Host {
   private gestoppt = false;
   private warteschlange: Aktion[] = [];
   private arbeitet = false;
+  private geplant = false;
 
   constructor(
     private readonly inh: Inhalte,
@@ -67,7 +82,7 @@ export class Host {
       this.ausgeben(entwurf("spiel_neu", { lauf: this.lauf, szenario: sz.id, version: sz.version, titel: sz.titel }, { von: this.ich }));
       this.ausgeben(entwurf("uhr", { befehl: "setzen", laeuft: false, t_s: 0, tempo: sz.spieluhr.tempo || 1 }, { von: this.ich }));
     }
-    this.abmelden.push(this.kanal.aufAktionen(this.lauf, (a) => this.aktion(a)));
+    this.abmelden.push(this.kanal.aufAktionen(this.lauf, (a) => this.aktionVomNetz(a)));
     const takt = this.opt.taktMs ?? 250;
     if (takt > 0) this.timer = setInterval(() => this.takt(), takt);
     this.takt();
@@ -94,6 +109,25 @@ export class Host {
     this.abarbeiten();
   }
 
+  /**
+   * Aktion der Spielleitung aus dem Netz: sammeln und gleich nach dem laufenden Schritt abarbeiten. Beim (Wieder-)Verbinden liefert
+   * der Kanal alle Aktionen des Laufs auf einmal – so sieht der Host, ob auf einen alten Start schon eine Pause folgt (K3.2).
+   */
+  aktionVomNetz(a: Aktion): void {
+    if (this.gestoppt || !a?.id) return;
+    if (this.z.aktionen[a.id] !== undefined || this.warteschlange.some((x) => x.id === a.id)) return;
+    // Frische Aktionen sofort (wie bisher). Gesammelt wird nur ab einem alten Start-/Pause-Befehl – dann könnte ein späterer folgen.
+    const alt = !!uhrSchalter(a) && typeof a.ts === "number" && this.kanal.serverJetzt() - a.ts > UHR_ALT_MS;
+    if (!this.geplant && !alt) return this.aktion(a);
+    this.warteschlange.push(a);
+    if (this.geplant) return;
+    this.geplant = true;
+    queueMicrotask(() => {
+      this.geplant = false;
+      this.abarbeiten();
+    });
+  }
+
   private abarbeiten(): void {
     if (this.arbeitet) return; // eine Ausgabe löst eine Aktion aus (Tests): erst die laufende fertig machen
     this.arbeitet = true;
@@ -104,6 +138,18 @@ export class Host {
         this.takt(); // Zeitplan erst nachziehen, damit die Aktion auf den aktuellen Stand trifft
         const jetzt = this.jetztT();
         const server = this.kanal.serverJetzt();
+        // K3.2: alter Start/Pause, auf den im selben Schub ein späterer Start/Pause folgt – überholt, nur der letzte gilt
+        const schalter = uhrSchalter(a);
+        if (schalter && typeof a.ts === "number" && server - a.ts > UHR_ALT_MS) {
+          const spaeter = this.warteschlange.find((x) => uhrSchalter(x) && this.z.aktionen[x.id] === undefined);
+          if (spaeter) {
+            this.ausgeben(entwurf("aktion_abgelehnt", {
+              aktionstyp: "uhr",
+              grund: `${schalter === "start" ? "Start" : "Anhalten"} überholt – der Laptop war nicht verbunden, es gilt der spätere Befehl (${uhrSchalter(spaeter) === "start" ? "Start" : "Anhalten"})`,
+            }, { von: bereinigt(a.von), aktion: a.id, ts_aktion: a.ts, t_geplant: jetzt }));
+            continue;
+          }
+        }
         // Spielzeit des Klicks (Serverzeit der Aktion), nie vor dem letzten Ereignis und nie in der Zukunft.
         const tKlick = Math.min(jetzt, Math.max(this.letzteT, spielzeit(this.z.uhr, Math.min(a.ts ?? 0, server))));
         // Uhr-Befehle wirken ab jetzt (eine laufende Uhr springt nicht zurück)

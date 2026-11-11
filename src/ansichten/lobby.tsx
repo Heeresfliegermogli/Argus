@@ -5,9 +5,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { SPIELERNAME_MAX, TEAMNAME_MAX, teamnameVorschlag } from "../kern/sitzungen";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
-import { Hinweise, Panel } from "./gemeinsam/bausteine";
+import { UEBERNAHME_MS } from "../sync/adapter";
+import { BestaetigenKnopf, Hinweise, Panel } from "./gemeinsam/bausteine";
 import { useSitzung } from "./gemeinsam/hooks";
-import { RegelBanner, TeamMarke } from "./gemeinsam/rahmen";
+import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 
 /** Eigener Name je Tab (sessionStorage): übersteht Neuladen, gilt aber nicht für andere Fenster am selben PC. */
 function gemerkterName(): string {
@@ -37,11 +38,20 @@ function TeamKarte(p: { s: Sitzung; t: TeamStand }) {
     await s.teamBeitreten(t.id);
     setWarte(false);
   };
+  // Liste K (K2.1): Der Laptop des Teams ist weg – nach 20 s kann dieses Fenster das Spiel sichtbar übernehmen
+  const jetzt = s.adapter.serverJetzt();
+  const weg = !!rechner && !t.rechnerOnline && rechner.client !== s.client;
+  const rest = Math.ceil((UEBERNAHME_MS - (jetzt - (t.rechnerWegSeit ?? jetzt))) / 1000);
+  const uebernehmen = async () => {
+    setWarte(true);
+    await s.teamUebernehmen(t.id);
+    setWarte(false);
+  };
   return (
     <section class={`team-karte ${eigen ? "eigen" : ""}`} style={{ "--teamfarbe": t.farbe }} data-team={t.id} data-teamname={t.name}>
       <header>
         <TeamMarke name={t.name} farbe={t.farbe} />
-        <span class="klein sehr-leise">{t.lauf ? "Spiel offen" : eigen ? "dein Team" : da.length ? "Laptop da" : "kein Laptop"}</span>
+        <span class={`klein ${weg ? "wartet-text" : "sehr-leise"}`} data-testid="karte-stand">{weg ? `Laptop nicht verbunden · ${seitText(t.rechnerWegSeit, jetzt)}` : t.lauf ? "Spiel offen" : eigen ? "dein Team" : da.length ? "Laptop da" : "kein Laptop"}</span>
       </header>
       <div class="team-wer">
         {t.spieler.length === 0 ? <span class="sehr-leise">noch niemand</span> : t.spieler.map((x) => (
@@ -50,8 +60,15 @@ function TeamKarte(p: { s: Sitzung; t: TeamStand }) {
           </span>
         ))}
       </div>
+      {weg && (t.uebernehmbar ? (
+        <BestaetigenKnopf klasse="klein warn" gesperrt={warte} onClick={() => void uebernehmen()} testid={`weiterfuehren-${t.id}`}
+          frage="Wirklich? Nur wenn der andere Laptop aus ist"
+          titel={`Der Laptop von Team ${t.name} (${rechner!.name}) ist seit ${seitText(t.rechnerWegSeit, jetzt)} nicht verbunden. Dieser Laptop führt das Spiel dann weiter – ab dem, was im Netz steht.`}>
+          Spiel hier weiterführen
+        </BestaetigenKnopf>
+      ) : <span class="klein leise" data-testid="karte-warten">Weiterführen hier in {Math.max(1, rest)} s möglich</span>)}
       {!eigen && (
-        <button type="button" class="knopf klein weiter" disabled={warte} onClick={() => void beitreten()} data-beitreten={t.name}
+        <button type="button" class={`knopf klein ${weg ? "leise" : "weiter"}`} disabled={warte} onClick={() => void beitreten()} data-beitreten={t.name}
           title={rechner ? `Team ${t.name} hat schon einen Laptop (${rechner.name}${t.rechnerOnline ? "" : ", gerade nicht verbunden"}) – hier nur zuschauen` : `Team ${t.name} beitreten – dieser Laptop rechnet dann das Spiel`}>
           {rechner ? "zuschauen" : "beitreten"}
         </button>
@@ -118,6 +135,7 @@ export function Lobby(p: { s: Sitzung }) {
                 <div class="zeile"><TeamMarke name={eigen.name} farbe={eigen.farbe} /></div>
                 <div>{st.ich.rechnet ? "Dieser Laptop spielt für das Team." : <>Das Spiel des Teams läuft am Laptop von <b>{eigen.spieler.find((x) => x.client === eigen.rechner)?.name ?? "?"}</b> – hier nur zuschauen.</>}</div>
                 <div class="hinweis-box">Die Spielleitung öffnet das Spiel für alle Teams. Dann erscheint hier eure Ansicht mit einer kurzen Einweisung.</div>
+                {st.ich.abgeloest && <div class="hinweis-box" data-testid="lobby-abgeloest">Das Spiel wird an einem anderen Laptop weitergeführt.</div>}
                 <button type="button" class="knopf klein leise" style="align-self:flex-start" onClick={() => void s.teamVerlassen()}>Team verlassen</button>
               </div>
             </Panel>

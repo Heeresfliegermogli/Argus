@@ -35,6 +35,8 @@ export class FirebaseAdapter implements SyncAdapter {
   private timer: ReturnType<typeof setInterval>[] = [];
   private anwRef: DatabaseReference | null = null;
   private anwTimer: ReturnType<typeof setInterval> | null = null;
+  private anwLetzte: Omit<Teilnehmer, "puls"> | null = null;
+  private anwPause = false;
   private hostId: string | null = null;
   private hostTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -211,7 +213,18 @@ export class FirebaseAdapter implements SyncAdapter {
 
   // ---------------------------------------------------------------- Anwesenheit
 
+  pausiereAnwesenheit(ja: boolean): void {
+    this.anwPause = ja;
+    if (ja) {
+      if (this.anwTimer) clearInterval(this.anwTimer);
+      this.anwTimer = null;
+      if (this.anwRef) void set(this.anwRef, null).catch(() => {});
+    } else if (this.anwLetzte) this.meldeAnwesenheit(this.anwLetzte);
+  }
+
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void {
+    this.anwLetzte = t;
+    if (this.anwPause) return;
     this.anwRef = this.r(`anwesenheit/${t.client}`);
     const r = this.anwRef;
     // Seit Liste J (J2.4): Die Fenstergröße reist im Feld version mit („0.9.0 1536x730“, höchstens 20 Zeichen) – so bleiben die
@@ -282,17 +295,26 @@ export class FirebaseAdapter implements SyncAdapter {
 /**
  * Anwesenheit für Firebase (seit Liste J, J2.4): Fenstergröße an version anhängen („0.9.0 1536x730“). Die Regeln erlauben in version
  * bis 20 Zeichen und kein eigenes Feld fenster – so muss niemand die Regeln neu veröffentlichen. Zu lang: ohne Fenster.
+ * Seit Liste K (K3.4) reist dort auch das Zeichen „!R“ mit („0.9.0 !R 1536x730“): Bei diesem Fenster lehnen die Regeln ab.
  */
-export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehmer, "puls" | "fenster"> {
-  const { fenster, ...rest } = t;
-  if (!fenster || !/^\d{2,5}x\d{2,5}$/.test(fenster)) return rest;
-  const version = `${rest.version ?? ""} ${fenster}`.trim();
-  return version.length <= 20 ? { ...rest, version } : rest;
+export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehmer, "puls" | "fenster" | "regeln"> {
+  const { fenster, regeln, ...rest } = t;
+  const teile = [rest.version ?? "", regeln ? "!R" : "", fenster && /^\d{2,5}x\d{2,5}$/.test(fenster) ? fenster : ""];
+  // zu lang (Regel: höchstens 20 Zeichen): erst ohne Fenster, dann ohne Zeichen
+  for (const weg of [[], [2], [1, 2]]) {
+    const version = teile.filter((x, i) => x && !weg.includes(i)).join(" ");
+    if (version.length <= 20) return version ? { ...rest, version } : rest;
+  }
+  return rest;
 }
 
-/** Gegenstück zu anwesenheitSchreiben: „0.9.0 1536x730“ → version „0.9.0“, fenster „1536x730“. */
+/** Gegenstück zu anwesenheitSchreiben: „0.9.0 !R 1536x730“ → version „0.9.0“, regeln, fenster „1536x730“. */
 export function anwesenheitLesen(t: Teilnehmer): Teilnehmer {
-  const m = typeof t?.version === "string" ? t.version.match(/^(.*?)\s*(\d{2,5}x\d{2,5})$/) : null;
-  if (!m) return t;
-  return { ...t, version: m[1] || undefined, fenster: m[2] };
+  if (typeof t?.version !== "string") return t;
+  const teile = t.version.split(/\s+/).filter(Boolean);
+  const fenster = teile.find((x) => /^\d{2,5}x\d{2,5}$/.test(x));
+  const regeln = teile.includes("!R");
+  if (!fenster && !regeln) return t;
+  const version = teile.filter((x) => x !== fenster && x !== "!R").join(" ");
+  return { ...t, version: version || undefined, ...(fenster ? { fenster } : {}), ...(regeln ? { regeln: true } : {}) };
 }

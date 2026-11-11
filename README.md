@@ -99,6 +99,9 @@ python3 tools/e2e_teams.py http://localhost:4173/                               
 python3 tools/e2e_teams.py file://$PWD/dist/argus-offline.html                   # Offline-Datei
 python3 tools/e2e_teams.py http://localhost:4173/ --sync firebase --transport auto \
   --db "http://localhost:5555?ns=argus-test" --verzug 5000                        # Firebase-Nachbildung mit Regeln und 5 s Verzug
+python3 tools/neuoeffnen_probe.py http://localhost:4173/                         # Liste K: Tab schließen/neu öffnen, übernehmen, freigeben, beenden
+python3 tools/neuoeffnen_probe.py http://localhost:4173/ --sync firebase --transport auto \
+    --db "http://localhost:5555?ns=argus-k"                                      # dasselbe gegen die Firebase-Nachbildung mit Regeln
 python3 tools/lobby_probe.py http://localhost:4173/                              # 20 Aufgaben Startseite und Lobby
 ```
 

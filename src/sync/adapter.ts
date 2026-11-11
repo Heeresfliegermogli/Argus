@@ -54,6 +54,8 @@ export interface Teilnehmer {
   team?: string;
   /** seit Liste J (J2.4): Fenstergröße „1536x730“ – zeigt die Spielleitung je Team (Laptop zu klein?) */
   fenster?: string;
+  /** seit Liste K (K3.4): Bei diesem Fenster lehnen die Firebase-Regeln ab – die Spielleitung zeigt den roten Balken */
+  regeln?: boolean;
 }
 
 export interface HostInfo {
@@ -140,6 +142,11 @@ export interface SyncAdapter {
   // ---- Anwesenheit und Host (für die ganze Sitzung)
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void;
   aufAnwesenheit(cb: (liste: Teilnehmer[]) => void): Abmelden;
+  /**
+   * Nur für Tests und Vorführung (künstliche Trennung, verzug.ts): Anwesenheit dieses Fensters aussetzen (true) – die anderen sehen
+   * es als nicht verbunden, wie bei einem echten Netzausfall – und wieder aufnehmen (false).
+   */
+  pausiereAnwesenheit?(ja: boolean): void;
   /** Host-Rolle beanspruchen; gelingt, wenn frei, veraltet, schon eigen oder erzwungen. */
   beanspruche(host: Omit<HostInfo, "puls">, erzwingen: boolean): Promise<boolean>;
   gibFrei(id: string): Promise<void>;
@@ -187,6 +194,8 @@ export function regelFehler(e: unknown): boolean {
 /** Nach dieser Zeit ohne Puls gilt ein Host oder Teilnehmer als weg. */
 export const PULS_INTERVALL_MS = 5000;
 export const VERALTET_MS = 20000;
+/** Liste K (K2.1): So lange muss der Laptop eines Teams nicht verbunden sein, bevor ein anderes Fenster sichtbar übernehmen darf. */
+export const UEBERNAHME_MS = 20000;
 
 export function istVeraltet(puls: number | undefined, jetzt: number): boolean {
   return typeof puls !== "number" || jetzt - puls > VERALTET_MS;

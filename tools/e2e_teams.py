@@ -138,8 +138,12 @@ def main():
         q = urllib.parse.urlencode({"sitzung": code, "rolle": "plenum"})
         pl.goto(startseite(a.basis, a) + "&" + q)
 
+        geraete = [0]
+
         def beitreten(s, i):
-            s.goto(startseite(a.basis, a))
+            # seit Liste K: je Fenster ein eigenes „Gerät“ (sonst nähme derselbe Browser die gemerkte Kennung des ersten Fensters wieder)
+            geraete[0] += 1
+            s.goto(startseite(a.basis, a) + f"&geraet=g{geraete[0]}")
             s.get_by_test_id("ich-spiele-mit").click()
             # Teilnehmer tippen den Code so, wie er am Smartboard steht – Team 2 klein
             s.get_by_test_id("code-eingabe").fill(code.lower() if i == 1 else code)

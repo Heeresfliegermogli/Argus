@@ -15,6 +15,11 @@ export interface SpielAblage {
   lade(team: string, lauf: string): Ereignis[];
   /** Ereignisse anhängen (in seq-Reihenfolge, lückenlos an das Gespeicherte). */
   anhaengen(team: string, lauf: string, neu: Ereignis[]): void;
+  /**
+   * Protokoll eines Laufs ersetzen (Liste K, K2.2): Der rechnende Laptop übernimmt, was im Netz steht, wenn dort ein anderer
+   * Spielstand weitergeführt wurde – sonst könnte er nie wieder hochladen.
+   */
+  ersetze(team: string, lauf: string, liste: Ereignis[]): void;
 }
 
 const STUECK = 100;
@@ -23,6 +28,7 @@ const MAX_LAEUFE = 3;
 export const keineAblage: SpielAblage = {
   lade: () => [],
   anhaengen: () => {},
+  ersetze: () => {},
 };
 
 export class SpeicherAblage implements SpielAblage {
@@ -87,6 +93,22 @@ export class SpeicherAblage implements SpielAblage {
       if (!this.gemeldet) console.warn("ARGUS: Ablage des Spiels nicht möglich", e);
       this.gemeldet = true;
     }
+  }
+
+  ersetze(team: string, lauf: string, liste: Ereignis[]): void {
+    const p = this.praefix(team, lauf);
+    try {
+      const weg: string[] = [];
+      for (let i = 0; i < this.speicher.length; i++) {
+        const k = this.speicher.key(i);
+        if (k?.startsWith(p)) weg.push(k);
+      }
+      weg.forEach((k) => this.speicher.removeItem(k));
+    } catch {
+      /* gesperrt */
+    }
+    this.laenge.set(p, 0);
+    this.anhaengen(team, lauf, liste);
   }
 
   /** Ältere Läufe dieses Teams entfernen (höchstens MAX_LAEUFE bleiben, der aktuelle immer). */

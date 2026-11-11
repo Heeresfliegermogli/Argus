@@ -58,6 +58,13 @@ export interface SichtStand {
   rechnerName: string | null;
   /** dieser Team-Laptop ist gerade verbunden */
   rechnerOnline: boolean;
+  /** Liste K: Serverzeit, seit der der Team-Laptop nicht verbunden ist; ob dieses Fenster übernehmen darf (länger als 20 s weg) */
+  rechnerWegSeit: number | null;
+  uebernehmbar: boolean;
+  /** K2.2: Dieses Fenster hat das Spiel gerechnet – jetzt führt es ein anderer Laptop weiter */
+  abgeloest: boolean;
+  /** K1.3: zweiter Tab desselben Browsers (sieht nur zu) */
+  gast: boolean;
 }
 
 export class Sicht {
@@ -134,6 +141,10 @@ export class Sicht {
       direkt: ss.direkt,
       rechnerName: team?.rechner ? team.spieler.find((x) => x.client === team.rechner)?.name ?? null : null,
       rechnerOnline: !!team?.rechnerOnline,
+      rechnerWegSeit: team?.rechnerWegSeit ?? null,
+      uebernehmbar: !!team?.uebernehmbar,
+      abgeloest: ss.ich.abgeloest && ss.ich.team === sp.team,
+      gast: ss.gast,
     };
   }
 
@@ -143,6 +154,7 @@ export class Sicht {
       st.lauf, st.geladen ? 1 : 0, st.istHost ? 1 : 0, st.host?.id ?? "", st.verbindung.verbunden ? 1 : 0, st.verbindung.fehler ?? "",
       st.teamName, st.teamFarbe, st.name, st.teilnehmer.map((t) => `${t.client}${t.rollen.join("")}`).join(","),
       st.rechnet ? 1 : 0, st.regelFehler ? 1 : 0, st.rechnerName ?? "", st.rechnerOnline ? 1 : 0,
+      st.rechnerOnline ? "" : Math.floor((this.sitzung.adapter.serverJetzt() - (st.rechnerWegSeit ?? 0)) / 1000), st.uebernehmbar ? 1 : 0, st.abgeloest ? 1 : 0, st.gast ? 1 : 0,
     ].join("|");
   }
 
@@ -194,5 +206,10 @@ export class Sicht {
   /** Team-Fenster, das nur zusieht: das Spiel hier weiterführen (der Team-Laptop ist weg). */
   async uebernehmenTeam(): Promise<void> {
     await this.sitzung.uebernehmenTeam();
+  }
+
+  /** K4.2: Team verlassen, auch während eines Laufs (hält den Host an und lädt den Rest hoch). */
+  async teamVerlassen(): Promise<void> {
+    await this.sitzung.teamVerlassen();
   }
 }

@@ -10,6 +10,16 @@
 //    steuernde Spielleitung ist eine (host in der Datenbank); fällt sie aus, übernimmt eine zweite. Sie rechnet kein Spiel.
 //  • Plenum: sieht alle Teams, sendet nichts.
 //
+// Seit Liste K (11.11.2026) – Spiele sauber schließen und wieder öffnen:
+//  • K1: Das Team-Fenster merkt sich Kennung und Team je Sitzung (Merker, localStorage). Derselbe Browser ist nach Tab-Schließen
+//    sofort wieder der Laptop seines Teams. Ein zweiter Tab desselben Browsers sieht als Gast zu (Tab-Wache in main.tsx).
+//  • K2: Ist der Laptop eines Teams länger als 20 s nicht verbunden, kann ein anderes Fenster sichtbar übernehmen
+//    (teamUebernehmen). Kommt der alte Laptop zurück, ist er nicht mehr das früheste Fenster und stoppt seinen Host („abgelöst“).
+//    Die Spielleitung kann ein totes Fenster aus dem Team nehmen (laptopFreigeben).
+//  • K3: Aktionen der Spielleitung gelten höchstens 10 s als „gesendet …“; Start/Pause stehen im Kanal und wirken beim
+//    Wiederverbinden. Regelfehler eines Team-Fensters reisen in der Anwesenheit zur Spielleitung.
+//  • K4: „Sitzung beenden“ setzt eine Marke unter teams/ (ENDE_TEAM); Team-Fenster schließen ab und vergessen die Sitzung.
+//
 // Direktaufruf ohne Lobby (…/?rolle=zb&raum=…, …/?rolle=sl&raum=…): ein Team. Das Team-Fenster legt Sitzung, Team und Lauf an, wenn
 // sie fehlen, und rechnet das Spiel; eine Spielleitung im selben Raum steuert und sieht zu.
 import type { Inhalte } from "../inhalte/typen";
@@ -17,14 +27,15 @@ import { type Absender, type AktionsDaten, type AktionsTyp, type Rolle, neueLauf
 import { fensterJetzt, fensterKennung } from "../kern/fenster";
 import { ROLLEN_NAME } from "../kern/sichten";
 import {
-  DIREKT_TEAM, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, freieFarbe, neueTeamId, rollenAus, rollenText, teamnameBereinigt,
+  DIREKT_TEAM, ENDE_NAME, ENDE_TEAM, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, freieFarbe, neueTeamId, rollenAus, rollenText, teamnameBereinigt,
 } from "../kern/sitzungen";
 import type { TeamStatus } from "../kern/uebersicht";
 import {
   type Abmelden, type FensterArt, type HostInfo, PULS_INTERVALL_MS, type SitzungsInfo, type SpielerEintrag, type SyncAdapter,
-  type TeamDaten, type Teilnehmer, type Verbindung, istVeraltet, regelFehler, teamKanal,
+  type TeamDaten, type Teilnehmer, UEBERNAHME_MS, type Verbindung, istVeraltet, regelFehler, teamKanal,
 } from "../sync/adapter";
 import { SpeicherAblage, leseProtokollDatei } from "./ablage";
+import type { Merker } from "./gemerkt";
 import { Hinweisgeber } from "./hinweise";
 import { Spiel } from "./spiel";
 
@@ -53,6 +64,10 @@ export interface TeamStand {
   rechner: string | null;
   /** der Team-Laptop ist gerade verbunden (Anwesenheit frisch) */
   rechnerOnline: boolean;
+  /** K2: Serverzeit (ms), seit der der Team-Laptop nicht verbunden ist (soweit dieses Fenster es weiß); null, wenn verbunden oder kein Laptop */
+  rechnerWegSeit: number | null;
+  /** K2.1: Der Team-Laptop ist länger als 20 s nicht verbunden – ein anderes Fenster darf das Spiel sichtbar übernehmen */
+  uebernehmbar: boolean;
 }
 
 export interface SitzungsStand {
@@ -74,8 +89,17 @@ export interface SitzungsStand {
   host: HostInfo | null;
   /** dieses Fenster steuert (Spielleitung) */
   istHost: boolean;
-  /** eigenes Team (Team-Fenster) und ob dieses Fenster das Spiel des Teams rechnet */
-  ich: { team: string | null; rollen: GruppenRolle[]; rechnet: boolean };
+  /**
+   * eigenes Team (Team-Fenster) und ob dieses Fenster das Spiel des Teams rechnet. `abgeloest` (K2.2): Dieses Fenster hat das Spiel
+   * gerechnet, jetzt führt es ein anderer Laptop weiter.
+   */
+  ich: { team: string | null; rollen: GruppenRolle[]; rechnet: boolean; abgeloest: boolean };
+  /** K1.3: zweiter Tab desselben Browsers – sieht dem eigenen Team nur zu, steht nicht im Team */
+  gast: boolean;
+  /** K4.1: Serverzeit, zu der die Spielleitung die Sitzung beendet hat (sonst null) */
+  beendet: number | null;
+  /** K3.4: Namen der Team-Fenster, bei denen die Firebase-Regeln ablehnen (aus der Anwesenheit) */
+  regelFehlerBei: string[];
   /** Statusmeldungen der Teams (Spielleitung, Plenum) */
   status: Record<string, TeamStatus>;
   /** Firebase-Regeln lehnen ab (H1.5: in der Konsole neu veröffentlichen) */
@@ -95,13 +119,28 @@ export interface SitzungsOptionen {
   takt?: { hostMs?: number; statusMs?: number; uploadMs?: number };
   /** Tests: Speicher für die Ablage des Spiels (Standard localStorage) */
   speicher?: Storage;
+  /** K1.1: Merker des Team-Fensters (Kennung und Team je Sitzung im localStorage) */
+  merker?: Merker;
+  /** K1.3: zweiter Tab desselben Browsers – sieht dem Team dieser Kennung zu, ohne beizutreten */
+  gastVon?: string;
+  /** Tests: Zeitlimit für „gesendet …“ (Standard 10 s) und Wartezeit bis zur Übernahme (Standard 20 s) */
+  zeitlimitMs?: number;
+  uebernahmeMs?: number;
+}
+
+/** Was teamStaende über „wie lange weg“ wissen muss (K2). */
+export interface WegAngaben {
+  jetzt: number;
+  /** Serverzeit, seit der das Fenster nicht verbunden ist */
+  wegSeit: (client: string, team: string) => number;
+  uebernahmeMs?: number;
 }
 
 /** Teams mit Anwesenheit zusammenführen (reine Funktion, auch für Tests). */
-export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilnehmer[]): TeamStand[] {
+export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilnehmer[], weg?: WegAngaben): TeamStand[] {
   const online = new Map(teilnehmer.map((t) => [t.client, t]));
   return Object.entries(teams)
-    .filter(([, d]) => d && typeof d.name === "string")
+    .filter(([id, d]) => id !== ENDE_TEAM && d && typeof d.name === "string")
     .map(([id, d]) => {
       const spieler = Object.entries(d.spieler ?? {})
         .map(([client, s]) => {
@@ -111,7 +150,10 @@ export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilne
         .filter((s) => s.rollen.length > 0)
         .sort((a, b) => a.seit - b.seit || a.client.localeCompare(b.client));
       const rechner = spieler[0]?.client ?? null;
-      return { id, name: d.name, farbe: d.farbe, erstellt: d.erstellt ?? 0, lauf: d.lauf ?? null, spieler, rechner, rechnerOnline: !!spieler[0]?.online };
+      const rechnerOnline = !!spieler[0]?.online;
+      const rechnerWegSeit = rechner && !rechnerOnline && weg ? weg.wegSeit(rechner, id) : null;
+      const uebernehmbar = rechnerWegSeit !== null && weg!.jetzt - rechnerWegSeit >= (weg!.uebernahmeMs ?? UEBERNAHME_MS);
+      return { id, name: d.name, farbe: d.farbe, erstellt: d.erstellt ?? 0, lauf: d.lauf ?? null, spieler, rechner, rechnerOnline, rechnerWegSeit, uebernehmbar };
     })
     .sort((a, b) => a.erstellt - b.erstellt || a.id.localeCompare(b.id));
 }
@@ -130,6 +172,12 @@ export class Sitzung {
   private direktErledigt = false;
   private gestartet = false;
   private ablage: SpeicherAblage | undefined;
+  // K2: wann welches Fenster zuletzt verbunden war (Serverzeit), und seit wann dieses Fenster die Anwesenheit kennt
+  private zuletztOnline = new Map<string, number>();
+  private beobachtetAb = 0;
+  private statusAbo: Abmelden | null = null;
+  // K2.2: Dieses Fenster hat das Spiel dieses Teams gerechnet (in diesem Tab oder laut Merker)
+  private rechneteTeam: string | null = null;
 
   constructor(
     readonly inh: Inhalte,
@@ -152,13 +200,18 @@ export class Sitzung {
       teilnehmer: [],
       host: null,
       istHost: false,
-      ich: { team: null, rollen: [], rechnet: false },
+      ich: { team: null, rollen: [], rechnet: false, abgeloest: false },
+      gast: !!opt.gastVon,
+      beendet: null,
+      regelFehlerBei: [],
       status: {},
       regelFehler: false,
       direkt: !!opt.direkt,
     };
     // Ablage des eigenen Spiels nur im Team-Fenster mit Netz (lokal liegt das Protokoll ohnehin auf diesem Rechner)
-    if (opt.art === "tt" && adapter.art === "firebase") {
+    const g = opt.merker?.lies();
+    if (g?.rechnete && g.client === this.client) this.rechneteTeam = g.team;
+    if (opt.art === "tt" && adapter.art === "firebase" && !opt.gastVon) {
       try {
         this.ablage = new SpeicherAblage(adapter.sitzung, opt.speicher ?? globalThis.localStorage);
       } catch {
@@ -195,6 +248,8 @@ export class Sitzung {
     this.gestartet = true;
     this.abos.push(this.adapter.aufVerbindung((v) => this.verbindungGeaendert(v)));
     this.meldeAnwesenheit();
+    // K1.1: Kennung gleich merken – auch wer den Tab schon in der Lobby schließt, kommt als dasselbe Fenster wieder
+    if (this.opt.merker && this.opt.merker.lies()?.client !== this.client) this.merken(null);
     // seit Liste J (J2.4): Fenstergröße neu melden, wenn das Fenster größer oder kleiner gezogen wird
     if (typeof window !== "undefined") {
       window.addEventListener("resize", this.fensterGeaendert);
@@ -204,7 +259,12 @@ export class Sitzung {
       });
     }
     this.abos.push(this.adapter.aufAnwesenheit((liste) => {
-      this.aendern({ teilnehmer: liste });
+      const jetzt = this.adapter.serverJetzt();
+      if (!this.beobachtetAb) this.beobachtetAb = jetzt;
+      // „nicht verbunden seit“ zählt ab dem letzten Lebenszeichen (Puls, alle 5 s) – auch wenn der Eintrag erst später als veraltet gilt
+      for (const t of liste) this.zuletztOnline.set(t.client, typeof t.puls === "number" ? Math.min(t.puls, jetzt) : jetzt);
+      const bei = liste.filter((t) => t.regeln).map((t) => t.name || "Team-Laptop");
+      this.aendern({ teilnehmer: liste, ...(bei.join("|") !== this.s.regelFehlerBei.join("|") ? { regelFehlerBei: bei } : {}) });
       this.teamsNeu();
     }));
     this.abos.push(this.adapter.aufInfo((info) => {
@@ -217,8 +277,12 @@ export class Sitzung {
       this.teamsNeu();
     }));
     this.abos.push(this.adapter.aufHost((h) => this.hostGeaendert(h)));
-    if (this.s.art !== "tt") this.abos.push(this.adapter.aufStatus((st) => this.aendern({ status: st ?? {} })));
+    this.statusAbgleichen();
     if (this.s.art === "sl") this.timer.push(setInterval(() => this.hostPruefen(), PULS_INTERVALL_MS));
+    // K2: „länger als 20 s nicht verbunden“ wird ohne neues Ereignis wahr – jede Sekunde nachsehen, solange ein Laptop fehlt
+    this.timer.push(setInterval(() => {
+      if (this.s.teams.some((t) => t.rechner && !t.rechnerOnline)) this.teamsNeu();
+    }, 1000));
     if (this.opt.direkt && this.s.art === "tt") void this.direktBeitreten();
   }
 
@@ -229,6 +293,8 @@ export class Sitzung {
     this.spielAbos.clear();
     this.abos.forEach((a) => a());
     this.abos = [];
+    this.statusAbo?.();
+    this.statusAbo = null;
     this.timer.forEach(clearInterval);
     this.timer = [];
     if (this.gestartet) this.adapter.trennen();
@@ -237,17 +303,47 @@ export class Sitzung {
 
   private verbindungGeaendert(v: Verbindung): void {
     const regel = !!v.fehler && regelFehler(v.fehler);
-    this.aendern({ verbindung: v, ...(regel ? { regelFehler: true } : {}) });
+    if (regel && !this.s.regelFehler) this.setzeRegelFehler();
+    this.aendern({ verbindung: v });
+  }
+
+  /** Die Firebase-Regeln lehnen ab: Balken in diesem Fenster und – über die Anwesenheit – bei der Spielleitung (K3.4). */
+  private setzeRegelFehler(): void {
+    if (this.s.regelFehler) return;
+    this.aendern({ regelFehler: true });
+    if (this.gestartet) this.meldeAnwesenheit();
   }
 
   private meldeAnwesenheit(): void {
+    // K1.3: Ein Gast (zweiter Tab) steht in keinem Team und meldet sich nicht an – die Spielleitung sähe sonst ein „Fenster ohne Team“
+    if (this.opt.gastVon) return;
     const f = fensterJetzt();
     this.gemeldetesFenster = f.breite && f.hoehe ? fensterKennung(f) : "";
     this.adapter.meldeAnwesenheit({
       client: this.client, art: this.s.art, name: this.s.name, version: __ARGUS_VERSION__,
       ...(this.s.ich.team ? { team: this.s.ich.team } : {}),
       ...(this.gemeldetesFenster ? { fenster: this.gemeldetesFenster } : {}),
+      ...(this.s.regelFehler && this.s.art === "tt" ? { regeln: true } : {}),
     });
+  }
+
+  /** Statusmeldungen: Spielleitung und Plenum immer; ein Team-Fenster nur, solange es nicht selbst rechnet (für „seit wann weg“, K2). */
+  private statusAbgleichen(): void {
+    const noetig = this.gestartet && (this.s.art !== "tt" || !this.s.ich.rechnet);
+    if (noetig && !this.statusAbo) this.statusAbo = this.adapter.aufStatus((st) => this.aendern({ status: st ?? {} }));
+    else if (!noetig && this.statusAbo) {
+      this.statusAbo();
+      this.statusAbo = null;
+    }
+  }
+
+  /** K2: Serverzeit, seit der ein Fenster nicht verbunden ist – zuletzt gesehen, sonst seine letzte Statusmeldung, sonst seit dieses Fenster zusieht. */
+  private wegSeit(client: string, team: string): number {
+    const gesehen = this.zuletztOnline.get(client);
+    if (gesehen) return gesehen;
+    const st = this.s.status[team];
+    if (st && st.client === client && typeof st.ts === "number") return st.ts;
+    return this.beobachtetAb || this.adapter.serverJetzt();
   }
 
   /** zuletzt gemeldete Fenstergröße; ändert sie sich (1 s Ruhe nach dem Ziehen), meldet das Fenster sich neu (J2.4) */
@@ -274,19 +370,41 @@ export class Sitzung {
 
   /** Teams neu zusammenstellen (nach Änderung der Teams oder der Anwesenheit). */
   private teamsNeu(): void {
-    const teams = teamStaende(this.rohTeams, this.s.teilnehmer);
-    const eigen = teams.find((t) => t.spieler.some((x) => x.client === this.client));
-    const meinEintrag = eigen?.spieler.find((x) => x.client === this.client);
+    const teams = teamStaende(this.rohTeams, this.s.teilnehmer, {
+      jetzt: this.adapter.serverJetzt(), wegSeit: (c, t) => this.wegSeit(c, t), uebernahmeMs: this.opt.uebernahmeMs,
+    });
+    // K1.3: Der Gast (zweiter Tab) sieht dem Team der eigentlichen Kennung zu
+    const wer = this.opt.gastVon ?? this.client;
+    const eigen = teams.find((t) => t.spieler.some((x) => x.client === wer));
+    const meinEintrag = eigen?.spieler.find((x) => x.client === wer);
     // Das früheste Fenster des Teams rechnet – auch ohne Netz (H1.3). Kein anderes übernimmt von selbst: Ein Laptop ohne Netz
-    // spielt weiter, ein zweites Fenster würde sonst einen zweiten Spielstand anfangen. Übernehmen nur von Hand (uebernehmenTeam).
-    const ich = { team: eigen?.id ?? null, rollen: meinEintrag?.rollen ?? [], rechnet: !!eigen && eigen.spieler[0]?.client === this.client };
+    // spielt weiter, ein zweites Fenster würde sonst einen zweiten Spielstand anfangen. Übernehmen nur von Hand (teamUebernehmen).
+    const rechnet = !this.opt.gastVon && !!eigen && eigen.spieler[0]?.client === this.client && this.s.beendet === null;
+    if (rechnet) this.rechneteTeam = eigen!.id;
+    // K2.2: Dieses Fenster hat gerechnet, jetzt ist ein anderes das früheste – ein anderer Laptop führt das Spiel weiter
+    const abgeloest = !this.opt.gastVon && !!eigen && !rechnet && this.rechneteTeam === eigen.id && eigen.rechner !== this.client;
+    const ich = { team: eigen?.id ?? null, rollen: meinEintrag?.rollen ?? [], rechnet, abgeloest };
     const teamWechsel = ich.team !== this.s.ich.team;
-    if (meinEintrag && this.s.art === "tt" && meinEintrag.name !== this.s.name && !this.opt.direkt) {
+    const geaendert = teamWechsel || rechnet !== this.s.ich.rechnet || abgeloest !== this.s.ich.abgeloest;
+    if (abgeloest && !this.s.ich.abgeloest) this.hinweis("warnung", "Das Spiel wird an einem anderen Laptop weitergeführt – dieser rechnet nicht mehr.");
+    if (meinEintrag && this.s.art === "tt" && meinEintrag.name !== this.s.name && !this.opt.direkt && !this.opt.gastVon) {
       // Name aus dem Team übernehmen (z. B. nach Neuladen)
       this.s = { ...this.s, name: meinEintrag.name };
     }
-    this.aendern({ teams, ich });
+    // K4.1: Marke „Sitzung beendet“
+    const ende = this.rohTeams[ENDE_TEAM];
+    const beendet = ende ? ende.erstellt || 1 : null;
+    const neuBeendet = beendet !== null && this.s.beendet === null;
+    this.aendern({ teams, ich, beendet });
     if (teamWechsel) this.meldeAnwesenheit();
+    if (geaendert || (eigen && this.opt.merker?.lies()?.teamName !== eigen.name)) this.merken(eigen ?? null);
+    this.statusAbgleichen();
+    if (neuBeendet) {
+      void this.beiBeendet();
+      return;
+    }
+    // beendet: Team-Fenster haben abgeschlossen; Spielleitung und Plenum lesen die Protokolle weiter (Auswertung)
+    if (this.s.beendet !== null && this.s.art === "tt") return;
     this.spieleAbgleichen();
     void this.direktPruefen();
     if (this.s.istHost) void this.farbenPruefen();
@@ -313,16 +431,49 @@ export class Sitzung {
           taktMs: this.opt.takt?.hostMs,
           statusMs: this.opt.takt?.statusMs,
           upload: this.opt.takt?.uploadMs !== undefined ? { warteMs: this.opt.takt.uploadMs } : undefined,
+          zeitlimitMs: this.opt.zeitlimitMs,
+          aktionenLesen: this.s.art === "sl",
+          beiUeberfaellig: () => this.antwortetNicht(id),
         });
         this.spiele.set(id, sp);
         this.spielAbos.set(id, sp.abonnieren(() => {
-          if (sp!.stand.upload.regeln && !this.s.regelFehler) this.aendern({ regelFehler: true });
+          if (sp!.stand.upload.regeln && !this.s.regelFehler) this.setzeRegelFehler();
           this.hoerer.forEach((cb) => cb());
         }));
       }
       // Team-Fenster: das früheste anwesende Fenster des Teams rechnet das Spiel
       sp.setzeHost(this.s.art === "tt" && this.s.ich.team === id && this.s.ich.rechnet);
       sp.folgeLauf(this.team(id)?.lauf ?? null);
+    }
+  }
+
+  /** K1.1: Kennung und Team im Merker festhalten (nur Team-Fenster einer Sitzung mit Lobby, nicht der Gast). */
+  private merken(eigen: TeamStand | null): void {
+    const m = this.opt.merker;
+    if (!m || this.s.art !== "tt" || this.opt.gastVon || this.s.beendet !== null) return;
+    m.schreibe({
+      client: this.client, team: eigen?.id ?? null, teamName: eigen?.name ?? null,
+      rechnete: !!eigen && this.rechneteTeam === eigen.id, sync: this.adapter.art,
+    });
+  }
+
+  /** K3.1: Eine Aktion der Spielleitung steht nach 10 s nicht im Protokoll – sagen, warum (statt dauerhaft „gesendet …“). */
+  private antwortetNicht(team: string): void {
+    const t = this.team(team);
+    if (!t) return;
+    const grund = !t.rechner ? "kein Laptop im Team" : !t.rechnerOnline ? "Laptop nicht verbunden" : "Laptop verbunden, die Antwort fehlt noch";
+    this.hinweis("warnung", `Team ${t.name} antwortet nicht – ${grund}. Der Befehl bleibt stehen und wird ausgeführt, sobald der Laptop rechnet.`);
+  }
+
+  /**
+   * K4.1: Die Spielleitung hat die Sitzung beendet. Team-Fenster: Host anhalten, Rest hochladen, Sitzung vergessen. Alle Fenster
+   * behalten, was sie haben (Protokolle bleiben für die Auswertung).
+   */
+  private async beiBeendet(): Promise<void> {
+    if (this.s.art === "tt") {
+      this.opt.merker?.vergiss();
+      await Promise.all([...this.spiele.values()].map((sp) => sp.abschliessen()));
+      this.aendern({ ich: { ...this.s.ich, rechnet: false } });
     }
   }
 
@@ -350,6 +501,7 @@ export class Sitzung {
 
   /** Neues Team anlegen und beitreten (dieser Laptop wird der Team-Laptop). Gibt die Team-Kennung zurück. */
   async teamErstellen(name: string): Promise<string | null> {
+    if (this.nichtMehr()) return null;
     const n = teamnameBereinigt(name);
     if (!n) {
       this.hinweis("warnung", "Bitte einen Teamnamen eingeben (oder würfeln).");
@@ -374,24 +526,60 @@ export class Sitzung {
    * ist); sonst rechnet es das Spiel des Teams.
    */
   async teamBeitreten(team: string): Promise<boolean> {
+    if (this.nichtMehr()) return false;
     const t = this.team(team);
     if (!t) return false;
     if (this.s.ich.team === team) return true;
     return this.schreibe(() => this.adapter.setzeSpieler(team, this.client, this.eintrag(), this.meineTeams()));
   }
 
-  /** Das Spiel des eigenen Teams an diesem Fenster weiterführen (der bisherige Team-Laptop ist weg). */
-  async uebernehmenTeam(): Promise<boolean> {
-    const t = this.team(this.s.ich.team);
-    if (!t) return false;
-    const frueheste = Math.min(...t.spieler.filter((x) => x.client !== this.client).map((x) => x.seit), Math.round(this.adapter.serverJetzt()));
-    return this.schreibe(() => this.adapter.setzeSpieler(t.id, this.client, this.eintrag(false, Math.max(0, frueheste - 1))));
+  /** Gast (zweiter Tab) und beendete Sitzung schreiben nichts in die Lobby. */
+  private nichtMehr(): boolean {
+    if (this.s.beendet !== null) this.hinweis("warnung", "Die Sitzung ist beendet.");
+    return this.s.beendet !== null || !!this.opt.gastVon;
   }
 
+  /**
+   * K2.1: Das Spiel eines Teams an diesem Fenster weiterführen, weil sein Laptop weg ist – aus der Lobby (tritt dabei bei) oder als
+   * Zuschauer im Team. Geht nur, solange der bisherige Laptop NICHT verbunden ist: nie zwei rechnende Fenster. Kommt er zurück, ist
+   * er nicht mehr das früheste Fenster, stoppt seinen Host und zeigt „wird an einem anderen Laptop weitergeführt“ (K2.2).
+   */
+  async teamUebernehmen(team: string | null = this.s.ich.team): Promise<boolean> {
+    if (this.nichtMehr()) return false;
+    const t = this.team(team);
+    if (!t) return false;
+    if (t.rechner === this.client) return true;
+    if (t.rechner && t.rechnerOnline) {
+      this.hinweis("warnung", `Der Laptop von Team ${t.name} ist verbunden und rechnet – hier nur zuschauen.`);
+      return false;
+    }
+    const frueheste = Math.min(...t.spieler.filter((x) => x.client !== this.client).map((x) => x.seit), Math.round(this.adapter.serverJetzt()));
+    const ok = await this.schreibe(() => this.adapter.setzeSpieler(t.id, this.client, this.eintrag(false, Math.max(0, frueheste - 1)), this.meineTeams().filter((x) => x !== t.id)));
+    if (ok) this.hinweis("info", `Dieser Laptop führt das Spiel von Team ${t.name} weiter.`);
+    return ok;
+  }
+
+  /** wie teamUebernehmen für das eigene Team (Name seit 2.6). */
+  async uebernehmenTeam(): Promise<boolean> {
+    return this.teamUebernehmen(this.s.ich.team);
+  }
+
+  /**
+   * Team verlassen – seit Liste K (K4.2) auch während eines Laufs: Rechnet dieses Fenster, hält es den Host an und lädt den Rest des
+   * Protokolls hoch, bevor es geht. Danach rechnet das nächste Fenster des Teams oder eines, das neu beitritt.
+   */
   async teamVerlassen(): Promise<boolean> {
     const alt = this.meineTeams();
     if (!alt.length) return true;
-    return this.schreibe(() => this.adapter.setzeSpieler(null, this.client, null, alt));
+    const sp = this.spiel(this.s.ich.team);
+    if (sp?.hostAktiv) {
+      const ganz = await sp.abschliessen();
+      if (!ganz) this.hinweis("warnung", "Das Protokoll ist nicht ganz im Netz – es bleibt auf diesem Laptop gespeichert.");
+    }
+    const ok = await this.schreibe(() => this.adapter.setzeSpieler(null, this.client, null, alt));
+    if (ok) this.rechneteTeam = null;
+    else sp?.wiederAufnehmen();
+    return ok;
   }
 
   // ---------------------------------------------------------------- Spielleitung: Teams verwalten
@@ -415,15 +603,50 @@ export class Sitzung {
     return this.schreibe(() => this.adapter.setzeSpieler(team, client, { name: name || "Team", rollen: rollenText(["zb"]), seit: Math.round(this.adapter.serverJetzt()) }, alt));
   }
 
+  /** K2.3: Spielleitung gibt den Laptop eines Teams frei (totes Fenster aus dem Team; das nächste oder ein neu beitretendes rechnet). */
+  async laptopFreigeben(team: string): Promise<boolean> {
+    const t = this.team(team);
+    if (!t?.rechner) return false;
+    const naechster = t.spieler[1];
+    const ok = await this.spielerSetzen(t.rechner, null);
+    if (ok) this.hinweis("info", naechster ? `Team ${t.name}: Laptop freigegeben – jetzt rechnet „${naechster.name}“.` : `Team ${t.name}: Laptop freigegeben – das nächste Fenster, das beitritt, rechnet.`);
+    return ok;
+  }
+
   /** Steuernde Spielleitung: Spiel für diese Teams öffnen (Lauf anlegen; Ansicht und Einweisung erscheinen am Team-Laptop). */
   async spielOeffnen(teams: string[]): Promise<boolean> {
     if (!this.s.istHost && !(this.opt.direkt && this.s.art === "tt")) {
       this.hinweis("warnung", "Nur die steuernde Spielleitung kann Spiele öffnen.");
       return false;
     }
-    return this.schreibe(async () => {
+    if (this.s.beendet !== null) {
+      this.hinweis("warnung", "Die Sitzung ist beendet.");
+      return false;
+    }
+    const ok = await this.schreibe(async () => {
       await Promise.all(teams.map((t) => this.adapter.aendereTeam(t, { lauf: neueLaufId() })));
     });
+    // K3.3: Team ohne rechnenden Laptop – sagen, was passiert, statt still nichts zu tun
+    if (ok && this.s.art === "sl") {
+      const ohne = teams.map((t) => this.team(t)).filter((t): t is TeamStand => !!t && !t.rechnerOnline);
+      if (ohne.length) {
+        this.hinweis("warnung", `${ohne.length === 1 ? `Team ${ohne[0].name}` : `${ohne.length} Teams (${ohne.map((t) => t.name).join(", ")})`}: kein Laptop verbunden – das Spiel startet, sobald einer beitritt.`);
+      }
+    }
+    return ok;
+  }
+
+  /**
+   * K4.1: Sitzung beenden (steuernde Spielleitung). Setzt die Marke unter teams/; Team-Fenster halten an, laden den Rest hoch und
+   * vergessen die Sitzung, das Plenum geht zur Startseite. Die Protokolle bleiben für die Auswertung.
+   */
+  async sitzungBeenden(): Promise<boolean> {
+    if (this.s.art !== "sl" || !this.s.istHost) {
+      this.hinweis("warnung", "Nur die steuernde Spielleitung kann die Sitzung beenden.");
+      return false;
+    }
+    if (this.s.beendet !== null) return true;
+    return this.schreibe(() => this.adapter.setzeTeam(ENDE_TEAM, { name: ENDE_NAME, farbe: "#000000", erstellt: Math.round(this.adapter.serverJetzt()) }));
   }
 
   /** Steuernde Spielleitung: neuen Lauf für ein Team beginnen. Der alte Lauf bleibt gespeichert. */
@@ -465,7 +688,7 @@ export class Sitzung {
       await f();
       return true;
     } catch (e) {
-      if (regelFehler(e)) this.aendern({ regelFehler: true });
+      if (regelFehler(e)) this.setzeRegelFehler();
       this.hinweis("fehler", `Nicht gespeichert: ${(e as Error).message}`);
       return false;
     }
@@ -499,7 +722,7 @@ export class Sitzung {
       void this.direktPruefen();
       void this.farbenPruefen();
     } catch (e) {
-      if (regelFehler(e)) this.aendern({ regelFehler: true });
+      if (regelFehler(e)) this.setzeRegelFehler();
       this.hinweis("fehler", `Steuerung nicht möglich: ${(e as Error).message}`);
     } finally {
       this.bewirbt = false;

@@ -6,14 +6,15 @@
 // Seit 2.6 rechnet jeder Team-Laptop sein Spiel selbst; die Spielleitung steuert Start und Pause für alle. Die Wahl steht im Anker
 // der Adresse (#mitspielen, #spielleitung), damit Neuladen und Zurück funktionieren.
 import { useEffect, useState } from "preact/hooks";
-import { type Einstellungen, adresseFuer, gemerkterWert, letzteSitzung, merke, merken, sitzungsAdresse } from "../config";
+import { type Einstellungen, adresseFuer, gemerkterWert, letzteSitzung, merke, merken, sitzungsAdresse, vergissSitzung } from "../config";
 import { ladeInhalte } from "../inhalte/laden";
 import type { Inhalte } from "../inhalte/typen";
 import { RAUM_MUSTER, type Rolle } from "../kern/ereignisse";
 import { ROLLEN_NAME } from "../kern/sichten";
 import { CODE_LAENGE, SPIELERNAME_MAX, codeAnzeige, codeNormalisieren, neuerCode } from "../kern/sitzungen";
 import { Sitzung } from "../sitzung/sitzung";
-import { adapterFuer, sitzungVorhanden } from "../sync/fabrik";
+import { type GemerkteSitzung, gemerkteSitzungen } from "../sitzung/gemerkt";
+import { type SitzungsKurzinfo, adapterFuer, sitzungsKurzinfo } from "../sync/fabrik";
 
 const ROLLEN_TEXT: Record<Rolle, string> = {
   zb: "das Team: Meldungen entscheiden",
@@ -38,7 +39,13 @@ async function oeffne(e: Einstellungen, eingabe: string, setze: (p: Pruefung) =>
   }
   setze({ art: "laeuft" });
   try {
-    const da = await sitzungVorhanden(e, code);
+    const kurz = await sitzungsKurzinfo(e, code);
+    const da = kurz.gefunden;
+    // Liste K (K4.1): Eine beendete Sitzung nimmt keine Teilnehmer und kein Plenum mehr an (die Spielleitung kommt noch an die Auswertung)
+    if (da === "da" && kurz.beendet && extra.rolle !== "sl") {
+      setze({ art: "fehler", text: `Die Sitzung ${codeAnzeige(code)} ist beendet. Bitte den neuen Code der Spielleitung eingeben.` });
+      return;
+    }
     if (da === "fehlt") {
       setze({ art: "fehler", text: `Die Sitzung ${codeAnzeige(code)} gibt es nicht. Bitte den Code prüfen.` });
       return;
@@ -87,13 +94,45 @@ function Wahl(p: { gehe: (s: Seite) => void }) {
   );
 }
 
-/** Mitspielen: nur der Code. */
+/**
+ * Liste K (K1.2): Hat dieser Browser schon in einer Sitzung gespielt, die es noch gibt (und die nicht beendet ist), steht oben ein
+ * großer Knopf „Zurück zu Team Adler (Code P9P)“ – er führt mit der gemerkten Kennung zurück an den Laptop des Teams.
+ */
+function useGemerkt(e: Einstellungen): { g: GemerkteSitzung; team: string | null } | null {
+  const [wert, setWert] = useState<{ g: GemerkteSitzung; team: string | null } | null>(null);
+  useEffect(() => {
+    let aus = false;
+    (async () => {
+      for (const g of gemerkteSitzungen(e.geraet).slice(0, 3)) {
+        const kurz = await sitzungsKurzinfo({ ...e, sync: g.sync }, g.sitzung, 5000).catch(() => null);
+        if (aus) return;
+        if (kurz?.gefunden === "da" && !kurz.beendet) {
+          setWert({ g, team: kurz.teamVon(g.client) });
+          return;
+        }
+      }
+    })();
+    return () => { aus = true; };
+  }, []);
+  return wert;
+}
+
+/** Mitspielen: nur der Code – und, wenn dieser Browser schon dabei war, der Weg zurück (K1.2). */
 function Mitspielen(p: { e: Einstellungen; zurueck: () => void }) {
   const [code, setCode] = useState("");
   const [tt, setTt] = useState<Pruefung>(null);
+  const gemerkt = useGemerkt(p.e);
   return (
     <section class="start-karte start-tt start-mitte" data-testid="start-tt">
       <h2>Mitspielen</h2>
+      {gemerkt && (
+        <a class="knopf weiter gross start-zurueck-team" style="text-decoration:none" data-testid="zurueck-zum-team"
+          href={sitzungsAdresse({ ...p.e, sync: gemerkt.g.sync }, gemerkt.g.sitzung, { ich: gemerkt.g.client })} onClick={() => merken({ ...p.e, sync: gemerkt.g.sync })}>
+          {gemerkt.team ? <>Zurück zu Team {gemerkt.team} (Code {codeAnzeige(gemerkt.g.sitzung)})</> : <>Zurück in die Sitzung {codeAnzeige(gemerkt.g.sitzung)}</>}
+          <span>{gemerkt.team ? "dieser Laptop war schon dabei – das Spiel läuft hier weiter" : "dieser Laptop war schon in der Lobby"}</span>
+        </a>
+      )}
+      {gemerkt && <div class="klein sehr-leise">Oder einen anderen Code eingeben:</div>}
       <form class="stapel" style="gap:12px" onSubmit={(ev) => { ev.preventDefault(); void oeffne(p.e, code, setTt); }}>
         <label for="code" class="leise">Code der Sitzung</label>
         <input id="code" class="feld code-feld" autoFocus autoComplete="off" spellcheck={false} placeholder="K7P" maxLength={12}
@@ -118,7 +157,20 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
   const [neu, setNeu] = useState<Pruefung>(p.ladeFehler ? { art: "fehler", text: p.ladeFehler } : null);
   const [weiter, setWeiter] = useState<Pruefung>(null);
   const [raum, setRaum] = useState(e.raum ?? gemerkterWert("raum") ?? "kraehe");
-  const letzte = letzteSitzung();
+  const gemerkte = letzteSitzung();
+  // Liste K (K4.3): Datum und Zahl der Teams; eine beendete oder verschwundene Sitzung wird nicht mehr angeboten
+  const [kurz, setKurz] = useState<SitzungsKurzinfo | null>(null);
+  useEffect(() => {
+    if (!gemerkte) return;
+    let aus = false;
+    sitzungsKurzinfo({ ...e, sync: gemerkte.sync }, gemerkte.code, 6000).then((k) => {
+      if (aus) return;
+      setKurz(k);
+      if (k.gefunden === "fehlt" || k.beendet) vergissSitzung(gemerkte.code);
+    }).catch(() => {});
+    return () => { aus = true; };
+  }, []);
+  const letzte = gemerkte && !(kurz && (kurz.gefunden === "fehlt" || kurz.beendet)) ? gemerkte : null;
   const raumOk = RAUM_MUSTER.test(raum);
   const direkt: Einstellungen = { ...e, raum };
   const name = slName.trim() || undefined;
@@ -160,7 +212,9 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
           <h2>Sitzung</h2>
           {letzte && (
             <div class="stapel start-letzte" style="gap:8px" data-testid="letzte-sitzung">
-              <div>Zuletzt genutzt: Sitzung <b class="mono">{codeAnzeige(letzte.code)}</b> <span class="sehr-leise klein">· {uhr(letzte.zeit)} · {letzte.sync === "lokal" ? "lokal" : "Firebase"}</span></div>
+              <div>Zuletzt genutzte Sitzung fortsetzen: <b class="mono">{codeAnzeige(letzte.code)}</b>{" "}
+                <span class="sehr-leise klein" data-testid="letzte-info">· {kurz?.info ? `angelegt ${uhr(kurz.info.erstellt)}` : `geöffnet ${uhr(letzte.zeit)}`}
+                  {kurz?.gefunden === "da" ? ` · ${kurz.teams} ${kurz.teams === 1 ? "Team" : "Teams"}` : ""} · {letzte.sync === "lokal" ? "lokal" : "Firebase"}</span></div>
               <div class="zeile" style="flex-wrap:nowrap">
                 <button type="button" class="knopf weiter" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("sl")} data-testid="fortsetzen">Fortsetzen als Spielleitung</button>
                 <button type="button" class="knopf" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("plenum")}>Plenum</button>

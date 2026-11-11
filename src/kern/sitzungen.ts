@@ -28,6 +28,12 @@ export const TEAMNAME_MAX = 24;
 export const SPIELERNAME_MAX = 40;
 /** Team des Direktaufrufs …/?rolle=zb&raum=… bzw. ?rolle=sl&raum=… (ein Team, ohne Lobby, für Tests und Probeläufe). */
 export const DIREKT_TEAM = "traum";
+/**
+ * Marke „Sitzung beendet“ (Liste K, K4.1): ein Eintrag unter teams/ mit dieser festen Kennung – kein Team (neue Teams haben „t“ + 5
+ * Zeichen). So braucht „Sitzung beenden“ keine neuen Firebase-Regeln; jedes Fenster liest die Teams ohnehin mit.
+ */
+export const ENDE_TEAM = "tbeendet";
+export const ENDE_NAME = "Sitzung beendet";
 
 /**
  * Zeichen der Codes ohne verwechselbare Paare: kein 0/O/Q/D, 1/I/L, 2/Z, 5/S, 8/B, 6/G, U (zu V). Groß angezeigt,

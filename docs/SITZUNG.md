@@ -1,6 +1,6 @@
 # ARGUS – Sitzung, Lobby und Teams
 
-Stand 09.11.2026 (Szenario 2.6, Änderungen H). Spielform: **7 Teams** (15 TT: sechs zu zweit, eines zu dritt), je Team
+Stand 11.11.2026 (Szenario 2.7, Änderungen H und Liste K „Schließen, wieder öffnen, übernehmen“). Spielform: **7 Teams** (15 TT: sechs zu zweit, eines zu dritt), je Team
 **ein Laptop und eine Rolle**, die Zielbearbeitung (intern `zb`). Alle Teams spielen dieselbe Lage parallel in **getrennten
 Spielständen**. Die Spielleitung legt eine Sitzung mit Code an, die Teilnehmer bilden in der Lobby ihre Teams.
 
@@ -17,13 +17,36 @@ ging Laptop → Firebase → SL → Firebase → Laptop (Desync bis ca. 5 s im T
 | SL 1 | Startseite → **Spielleitung** → Name → **Neue Sitzung anlegen**. Der Code (drei Zeichen, z. B. `K7P`) steht oben in der Mitte. Beim nächsten Mal bietet die Seite unter **Spielleitung** die zuletzt genutzte Sitzung an: **Fortsetzen als Spielleitung** oder **Plenum**. | `…/Argus/` |
 | SL 1 | **Plenum öffnen**: Das Smartboard zeigt Seite, Code und die Teams, die sich bilden. | Übersicht |
 | TT | Startseite → **Ich spiele mit** → Code eingeben (Groß-/Kleinschreibung, Leerzeichen und Punkte egal: `k 7 p`) → **Beitreten**. Mehr sehen Teilnehmer auf der Startseite nicht. | `…/Argus/` |
-| TT | Lobby: Namen (freiwillig, z. B. „Lt Müller, Lt Schmidt“), Teamname (≤ 24 Zeichen, 🎲 schlägt einen vor) → **Team anlegen** – „Dieser Laptop spielt für das Team.“ Keine Rollenwahl. Ein zweites Fenster desselben Teams (Knopf **zuschauen**) sieht nur zu. Bis zum Start: **Team verlassen**. | Lobby |
+| TT | Lobby: Namen (freiwillig, z. B. „Lt Müller, Lt Schmidt“), Teamname (≤ 24 Zeichen, 🎲 schlägt einen vor) → **Team anlegen** – „Dieser Laptop spielt für das Team.“ Keine Rollenwahl. Ein zweites Fenster desselben Teams (Knopf **zuschauen**) sieht nur zu. **Team verlassen** jederzeit (im Lauf mit Nachfrage). | Lobby |
 | SL 1 | In der Übersicht prüfen (je Team ein Laptop, verbunden), ggf. umbenennen, Fenster verschieben oder einem Team ohne Laptop zuweisen, löschen. Dann **Spiel öffnen – alle Teams**: Jedes Team bekommt einen eigenen Lauf, am Team-Laptop erscheint die Ansicht mit der Einweisung (Übersicht mit Pfeilen, dann Folien), die Uhr steht. | Übersicht |
 | SL 1 | **▶ Start für alle**: Startsignal mit der Serverzeit des Klicks an alle Team-Laptops; jede Uhr läuft ab diesem Augenblick (H1.4, auch wenn das Signal später ankommt – bis 60 s holt der Laptop nach). Anhalten, Tempo, Spielzeit, Reserve ebenso für alle; einzeln über die Zeile oder die Teamansicht. | Übersicht |
 | SL 2 | Startseite → **Spielleitung** → Code bei „Bestehende Sitzung öffnen“ → **als Spielleitung**. Beobachtet, notiert (✎ Notiz), kann **Steuerung übernehmen** (ohne Puls nach 20 s von selbst). | Übersicht |
 
 Wer später kommt, legt ein Team an; die Spielleitung öffnet sein Spiel einzeln (**öffnen** in der Zeile). Neuladen führt an den
 Team-Laptop zurück (die Adresse trägt `ich=…`, die Kennung des Fensters) – der Spielstand liegt in der Ablage des Laptops.
+
+## Schließen, wieder öffnen, übernehmen (seit Liste K, 11.11.2026)
+
+Bis Stand J blockierte ein geschlossener Team-Tab sein Team für immer: Das früheste Fenster rechnet, auch wenn es weg ist; wer über
+die Startseite neu kam, bekam eine neue Kennung und durfte nur zuschauen. Jetzt gilt:
+
+| Fall | Was passiert | Was zu tun ist |
+|---|---|---|
+| **Tab geschlossen, Browser neu gestartet, Laptop zugeklappt** – derselbe Browser kommt wieder | Der Browser hat sich Kennung und Team je Sitzung gemerkt (`localStorage`, `argus:ich:<sitzung>`). Er ist sofort wieder der Laptop des Teams; das Spiel läuft aus der Ablage weiter wie nach Neuladen. | Startseite → **Ich spiele mit** → oben der große Knopf **„Zurück zu Team Adler (Code P9P)“** – oder den Code eingeben, oder das Lesezeichen. Die Spielleitung muss nichts tun. |
+| **Zwei Tabs im selben Browser** | Der zweite Tab erkennt, dass die Kennung schon lebt, und sieht nur zu: „Das Spiel läuft schon in einem anderen Tab dieses Browsers“. | **hierher holen** hält den anderen Tab sauber an; das Spiel läuft dann hier. („anderes Team …“ ist nur für Tests mit mehreren Teams an einem PC.) |
+| **Der Laptop ist wirklich weg** (Akku, anderer Rechner) | Ist der Laptop eines Teams **länger als 20 s nicht verbunden**, zeigt die Teamkarte in der Lobby jedes anderen Geräts **„Spiel hier weiterführen“** (mit Nachfrage), ebenso das Banner eines Zuschauers. Das neue Fenster rechnet ab dem hochgeladenen Protokoll. | Am neuen Gerät: Code eingeben → Teamkarte → **Spiel hier weiterführen**. |
+| **Der alte Laptop kommt zurück** | Er ist nicht mehr das früheste Fenster, **stoppt seinen Host** und zeigt „Das Spiel wird an einem anderen Laptop weitergeführt“ (mit **⇩ Protokoll dieses Laptops**). Nie zwei verbundene rechnende Fenster. | Nichts – zuschauen oder **Team verlassen**. |
+| **Die Spielleitung räumt auf** | In der Zeile des Teams steht „nicht verbunden seit 0:45“ und **Laptop freigeben** (Nachfrage): nimmt das tote Fenster aus dem Team. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt. | Übersicht → Zeile → **Laptop freigeben**. |
+| **Ein Gerät sauber freigeben** | **⎋ Team verlassen** steht jetzt auch in der Ansicht während des Laufs (Nachfrage): Der Laptop hält an, lädt das Protokoll hoch und geht in die Lobby. | Danach tritt ein anderes Gerät dem Team bei (**beitreten**) und führt weiter. |
+| **Start, Pause, Tempo, während ein Laptop fehlt** | Die Befehle stehen im Kanal des Teams. Die Übersicht zeigt **„Start wartet auf Laptop“**; nach 10 s kommt der Hinweis „Team … antwortet nicht – Laptop nicht verbunden“ (kein Knopf bleibt auf „gesendet …“). Beim Wiederverbinden wird der Befehl ausgeführt: die Uhr läuft ab der Startzeit, höchstens 60 s nachgeholt (H1.4). Hat die Spielleitung inzwischen wieder angehalten, gilt nur der letzte Befehl. | Nichts – oder **Laptop freigeben** und ein anderes Gerät beitreten lassen. |
+| **Spiel öffnen / Neues Spiel ohne Laptop** | Hinweis „kein Laptop verbunden – das Spiel startet, sobald einer beitritt“. | – |
+| **Sitzung beenden** | Spielleitung, oben rechts **Sitzung beenden** (Nachfrage): Team-Fenster zeigen „Sitzung beendet – danke“, halten an, laden hoch und vergessen die Sitzung; das Plenum geht zur Startseite; der Code nimmt niemanden mehr an. Die Protokolle bleiben – die Spielleitung kommt weiter an die **Auswertung**. Auf der Startseite steht die Sitzung nicht mehr unter „Zuletzt genutzte Sitzung fortsetzen“ (dort sonst mit Datum und Zahl der Teams). | Danach **Neue Sitzung anlegen** – neuer Code, keine Reste. |
+
+Was bleibt, wie es war: **Kein Fenster übernimmt von selbst** (ein Laptop ohne Netz spielt weiter, H1.3). Übernehmen ist immer ein
+sichtbarer Klick – und erst möglich, wenn der Laptop 20 s kein Lebenszeichen gegeben hat (Puls alle 5 s). Spielt der alte Laptop
+ohne Netz weiter, während ein anderer übernimmt, gilt ab der Übernahme der neue: Der alte stoppt, sobald er wieder Netz hat; was er
+ohne Netz noch gespielt hat, bleibt als Datei („⇩ Protokoll dieses Laptops“).
+
 
 ## Adressen
 
@@ -36,6 +59,9 @@ Team-Laptop zurück (die Adresse trägt `ich=…`, die Kennung des Fensters) –
 | Plenum | `…/Argus/?sitzung=K7P&rolle=plenum` |
 | Test ohne Lobby, allein (das Team steuert die Uhr oben rechts) | `…/Argus/?rolle=zb&raum=kraehe` (Startseite → Spielleitung → „Test ohne Lobby: ein Team“ → **Allein testen**) |
 | Test ohne Lobby, Team und Spielleitung | `…/Argus/?rolle=zb&raum=kraehe` und `…?rolle=sl&raum=kraehe` (**Team und Spielleitung öffnen**) |
+
+Seit Liste K für Tests und Vorführung: `geraet=a` gibt dem Fenster einen eigenen Merkbereich – so lassen sich an EINEM Rechner
+mehrere „Geräte“ in einem Browser nachstellen (lokaler Sync, Proben). Ohne den Parameter ist ein Browser ein Gerät.
 
 Weiter wie bisher: `sync=lokal` (alle Fenster an einem PC), `transport=auto`, `db=…`, `szenario=…`. Neu für Tests und
 Vorführung: `verzug=5000` legt um die Verbindung des Fensters einen künstlichen Netzverzug in ms je Richtung
@@ -71,7 +97,7 @@ Haben alle Teams das Spielende erreicht, zeigt es die **Auswertung über alle Te
   Fenstern (★ = Team-Laptop) und dem Knopf **beitreten** (Team ohne Laptop: dieser Laptop rechnet dann) oder **zuschauen**.
   Teamfarben werden automatisch vergeben, stehen nie ohne Namen und sind keine Signalfarbe.
 * **Ansicht:** eine für alle (siehe [`UI.md`](UI.md)). Ein zweites Fenster des Teams sieht zu („Das Spiel dieses Teams rechnet der
-  Laptop von … Hier nur zuschauen.“). Ist der Team-Laptop nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
+  Laptop von … Hier nur zuschauen.“). Ist der Team-Laptop länger als 20 s nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
   Fall, dass der Laptop aus ist.
 * Kopfzeile: Team (Farbe und Name), Uhr und Phase, die vier Panzer, Bestand, Verbindung („verbunden · n offen“ = so viele
   Einträge noch nicht im Netz; „offline – Spiel läuft“), **⇩ Protokoll** (als Datei speichern), **? Einweisung**.
@@ -98,7 +124,17 @@ wieder getrennt (`anwesenheitSchreiben`/`anwesenheitLesen` in `src/sync/firebase
 
 * **Wer rechnet:** das früheste Fenster des Teams (`seit`), auch wenn es gerade nicht verbunden ist. Kein anderes Fenster übernimmt
   von selbst – ein Laptop ohne Netz spielt weiter, ein zweites Fenster würde sonst einen zweiten Spielstand anfangen. Übernehmen
-  nur von Hand („Spiel hier weiterführen“).
+  nur von Hand („Spiel hier weiterführen“): Das übernehmende Fenster trägt sich mit `seit` um 1 ms vor dem bisher frühesten ein.
+* **Seit Liste K:** Kennung je Sitzung im `localStorage` (`src/sitzung/gemerkt.ts`), Tab-Wache je Kennung über BroadcastChannel
+  (`src/sitzung/tabwache.ts`: `wer`/`ich`/`abgeben`/`frei`), „nicht verbunden seit“ ab dem letzten Puls der Anwesenheit (sonst der
+  letzten Statusmeldung), Übernahme erst nach `UEBERNAHME_MS` = 20 s. Steht nach einer Übernahme im Netz ein anderer Spielstand (der
+  alte Laptop hat beim Wiederverbinden noch hochgeladen), übernimmt ihn der Laptop, der rechnet – das Protokoll ist nur zum Anhängen.
+* **Aktionen der Spielleitung** stehen in `aktionen/` und bleiben dort. Die Spielleitung liest sie mit: Was dort steht und noch nicht
+  im Protokoll ist, steht aus („Start wartet auf Laptop“ – auch nach Neuladen und bei der zweiten Spielleitung). Der Host sammelt alte
+  Start-/Pause-Befehle (älter als 3 s) und führt nur den letzten aus; überholte stehen als `aktion_abgelehnt` im Protokoll.
+* **Sitzung beendet** ist ein Eintrag `teams/tbeendet` („Sitzung beendet“) – kein Team (neue Teams haben `t` + 5 Zeichen). So braucht
+  es keine neuen Regeln. **Regelfehler** eines Team-Fensters reisen als `!R` im Feld `version` der Anwesenheit zur Spielleitung
+  („0.9.0 !R 1536x730“, höchstens 20 Zeichen).
 * **Ablage:** Jedes Ereignis liegt sofort im `localStorage` des Team-Laptops (`src/sitzung/ablage.ts`), erst danach geht es ins Netz.
   Nach Neuladen gewinnt das längere gültige Protokoll (Ablage oder Netz).
 * **Upload:** in Stücken (höchstens 100 Ereignisse je Schreibvorgang, ein Mehrpfad-Update), bei Fehlern nach einer Pause von
@@ -122,6 +158,7 @@ wieder getrennt (`anwesenheitSchreiben`/`anwesenheitLesen` in `src/sync/firebase
 | `src/sitzung/sitzung.ts` | ein Fenster in einer Sitzung: Lobby, Teamverwaltung der SL, wer rechnet, je Team ein Spiel, Protokoll aus Datei |
 | `src/sitzung/spiel.ts` | Spielstand eines Teams: **rechnen** (Team-Laptop: Host, Ablage, Upload, Status) oder **folgen** (SL, Plenum, Zuschauer) |
 | `src/sitzung/ablage.ts` | Protokoll je Team und Lauf im `localStorage` des Team-Laptops |
+| `src/sitzung/gemerkt.ts`, `tabwache.ts` | seit Liste K: gemerkte Kennung und Team je Sitzung; ein Tab je Kennung („hierher holen“) |
 | `src/sitzung/sicht.ts` | was eine Ansicht bekommt: ein Team aus Sicht der Zielbearbeitung, der SL oder des Plenums, optional nur lesen |
 | `src/engine/host.ts` | Engine eines Teams; nimmt Entscheidungen direkt und Aktionen der SL über das Netz an, Start mit Verzug |
 | `src/ansichten/start.tsx`, `lobby.tsx`, `tt-fenster.tsx`, `uebersicht.tsx`, `sl-fenster.tsx` | Startseite, Lobby, Fenster des Teams, Übersicht, Fenster der Spielleitung und des Plenums |
@@ -145,6 +182,14 @@ Offline-Datei liegt das „hochgeladene“ Protokoll ohnehin im localStorage.
 > Projekt `argus-sync-e9fbc` → Realtime Database → Regeln → Inhalt durch `firebase/database.rules.json` ersetzen → Veröffentlichen.
 > Danach einmal Sitzung anlegen, ein Team beitreten lassen, Spiel öffnen, Start. Lehnt Firebase ab, zeigt jede Ansicht einen roten
 > Balken mit dieser Anleitung. Der Testmodus der Datenbank endet ca. 18.11.2026.
+
+## Nachweis Liste K (11.11.2026)
+
+| Prüfung | Ergebnis |
+|---|---|
+| `tests/neuoeffnen.test.ts` (14 Tests): Merker, Tab schließen und neu öffnen, Tab-Wache, Gast, Übernahme erst nach der Wartezeit und nie bei verbundenem Laptop, alter Laptop kommt zurück, Test mit Trennung, Laptop freigeben, Zeitlimit „gesendet …“, Start für den spät verbundenen Laptop, nur der letzte Start/Pause gilt, Team verlassen im Lauf, Sitzung beenden und neu anlegen | bestanden |
+| `tests/firebase_regeln.test.ts`: Marke „beendet“, Übernehmen, Freigeben, `!R` in `version`, Start ohne Laptop – mit den **unveränderten** Regeln von Stand H | bestanden |
+| `tools/neuoeffnen_probe.py` über die Oberfläche: lokal 14/14, Firebase-Nachbildung mit Regeln 15/15 (dort zusätzlich „Browser neu gestartet“: neuer Browserkontext mit gleichem Speicher) | bestanden |
 
 ## Nachweis „Fertig, wenn“ (2.6)
 

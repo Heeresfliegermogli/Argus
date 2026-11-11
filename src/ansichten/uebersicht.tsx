@@ -17,7 +17,7 @@ import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { istVeraltet } from "../sync/adapter";
 import { BestaetigenKnopf, Leer, Menue, Panel } from "./gemeinsam/bausteine";
 import { useSitzung, useTakt } from "./gemeinsam/hooks";
-import { RegelBanner, TeamMarke } from "./gemeinsam/rahmen";
+import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
 import { plenumOeffnen } from "./sl";
 
@@ -95,6 +95,15 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
         </span>
       ))}
       {rechner?.online && <FensterGroesse kennung={rechner.fenster} />}
+      {rechner && !rechner.online && (
+        <div class="klein laptop-weg" data-laptop-weg={t.name}>
+          <span class="rot" title="Der Laptop, der das Spiel dieses Teams rechnet, ist nicht verbunden. Kommt derselbe Browser wieder, rechnet er sofort weiter; ein anderes Gerät kann nach 20 s in der Lobby übernehmen.">nicht verbunden seit {seitText(t.rechnerWegSeit, s.adapter.serverJetzt())}</span>{" "}
+          <BestaetigenKnopf klasse="klein mini" frage="freigeben?" testid={`freigeben-${t.id}`} onClick={() => void s.laptopFreigeben(t.id)}
+            titel={`Laptop freigeben: nimmt das Fenster „${rechner.name}“ aus Team ${t.name}. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt (ab dem hochgeladenen Protokoll).`}>
+            Laptop freigeben
+          </BestaetigenKnopf>
+        </div>
+      )}
     </td>
   );
 }
@@ -195,8 +204,15 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
   const ohneLauf = st.teams.filter((t) => !t.lauf);
   const ids = mitLauf.map((x) => x.t.id);
   const allen = <T extends AktionsTyp>(typ: T, daten: AktionsDaten[T], nur?: string[]) => s.sendenAn(nur ?? ids, typ, daten);
-  const laeuft = (x: TeamZeile) => !!x.st?.laeuft;
+  // Liste K (K3.2): Start und Pause gelten für alle Teams, auch wenn ein Laptop fehlt. Was die Spielleitung zuletzt wollte und noch
+  // nicht ausgeführt ist, steht im Kanal des Teams (ausstehendeUhr) – daran hängen die Knöpfe, nicht nur an der Statusmeldung.
+  const wartetUhr = (x: TeamZeile) => s.spiel(x.t.id)?.ausstehendeUhr() ?? null;
+  const laeuft = (x: TeamZeile) => {
+    const w = wartetUhr(x);
+    return w ? w === "start" : !!x.st?.laeuft;
+  };
   const laufend = mitLauf.filter(laeuft).length;
+  const beendet = st.beendet !== null;
   const tempi = new Set(mitLauf.map((x) => x.st?.tempo));
   const ohne = ohneTeam(s);
   const panzerNamen = panzer(inh).map((x) => x.name);
@@ -218,19 +234,19 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
         ) : <span class="badge gut" data-testid="host">steuert alle Teams</span>}>
         <div class="steuer-zeile">
           {ohneLauf.length > 0 && (
-            <button type="button" class="knopf gut gross" disabled={!st.istHost} data-testid="alle-oeffnen"
+            <button type="button" class="knopf gut gross" disabled={!st.istHost || beendet} data-testid="alle-oeffnen"
               title="Legt für jedes Team einen Spielstand an. Die Teams sehen ihre Ansicht mit der Einweisung, die Uhr steht noch."
               onClick={() => void s.spielOeffnen(ohneLauf.map((t) => t.id))}>
               Spiel öffnen – {ohneLauf.length === st.teams.length ? "alle Teams" : `${ohneLauf.length} Team${ohneLauf.length > 1 ? "s" : ""}`}
               <span class="unterzeile">Ansicht und Einweisung erscheinen, Uhr steht</span>
             </button>
           )}
-          <button type="button" class="knopf gut gross" disabled={!darfSteuern || !ids.length || laufend === ids.length} data-testid="alle-start"
+          <button type="button" class="knopf gut gross" disabled={!darfSteuern || beendet || !ids.length || laufend === ids.length} data-testid="alle-start"
             title="Startsignal an alle Team-Laptops – jede Uhr läuft ab diesem Klick"
             onClick={() => allen("uhr", { befehl: "start" }, mitLauf.filter((x) => !laeuft(x) && !x.st?.ende).map((x) => x.t.id))}>
             ▶ Start für alle
           </button>
-          <button type="button" class="knopf warn gross" disabled={!darfSteuern || laufend === 0} data-testid="alle-halt"
+          <button type="button" class="knopf warn gross" disabled={!darfSteuern || beendet || laufend === 0} data-testid="alle-halt"
             onClick={() => allen("uhr", { befehl: "pause" }, mitLauf.filter(laeuft).map((x) => x.t.id))}>
             ❚❚ Anhalten – alle
           </button>
@@ -269,13 +285,20 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
           {p.auswertung && ids.length > 0 && <button type="button" class="knopf klein weiter" onClick={p.auswertung} data-testid="auswertung-knopf"
             title="Teamvergleich, Kennzahlen, Replay je Schlüsselfall, Export – dieselbe Ansicht wie im Plenum">Auswertung ›</button>}
           {ids.length > 0 && <ProtokollLaden s={s} />}
-          {ids.length > 0 && <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost} onClick={() => void s.spielOeffnen(ids)}
-            frage="Wirklich? Klick = neues Spiel für alle" titel="Neuer Lauf für alle Teams. Die jetzigen Läufe bleiben gespeichert.">
+          {ids.length > 0 && <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost || beendet} onClick={() => void s.spielOeffnen(ids)}
+            frage="Wirklich? Klick = neues Spiel für alle" testid="neues-spiel-alle" titel="Neuer Lauf für alle Teams. Die jetzigen Läufe bleiben gespeichert.">
             Neues Spiel – alle
           </BestaetigenKnopf>}
         </div>
       </Panel>
-      {st.regelFehler && <RegelBanner />}
+      {(st.regelFehler || st.regelFehlerBei.length > 0) && <RegelBanner bei={st.regelFehlerBei} />}
+      {beendet && (
+        <div class="ende-banner" role="status" data-testid="ende-banner">
+          <b>Sitzung beendet</b> ({new Date(st.beendet!).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}). Die Team-Laptops haben angehalten, die Protokolle bleiben für die Auswertung.
+          {p.auswertung && ids.length > 0 && <button type="button" class="knopf klein weiter" onClick={p.auswertung}>Auswertung ›</button>}
+          <a class="knopf klein" style="text-decoration:none" href={`${location.pathname}#spielleitung`} data-testid="neue-sitzung">Zur Startseite – neue Sitzung</a>
+        </div>
+      )}
 
       <Panel titel="Teams" liste testid="team-tabelle"
         rechts={<span class="klein sehr-leise">Name: umbenennen · Laptop: verschieben · Stand aus den Statusmeldungen der Team-Laptops (etwa alle 5 s)</span>}>
@@ -302,7 +325,11 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                 const u = x.st;
                 const tt = u ? statusUhr(u, jetzt, dauer) : 0;
                 const faelle: FallStand[] = u ? statusFaelle(inh, u) : [];
-                const status = !t.lauf ? "Lobby" : !u ? (t.rechnerOnline ? "lädt …" : t.rechner ? "Laptop nicht verbunden" : "kein Laptop") : u.ende ? "Spielende" : u.laeuft ? `läuft${u.tempo !== 1 ? ` ×${u.tempo}` : ""}` : tt === 0 ? "bereit" : "angehalten";
+                // K3.2: Start oder Pause der Spielleitung steht noch aus – „wartet auf Laptop“ statt nichts
+                const wartet = t.lauf ? wartetUhr(x) : null;
+                const grund = t.rechnerOnline ? "wartet auf Antwort" : "wartet auf Laptop";
+                const basis = !t.lauf ? "Lobby" : !u ? (t.rechnerOnline ? "lädt …" : t.rechner ? "Laptop nicht verbunden" : "kein Laptop") : u.ende ? "Spielende" : u.laeuft ? `läuft${u.tempo !== 1 ? ` ×${u.tempo}` : ""}` : tt === 0 ? "bereit" : "angehalten";
+                const status = wartet && !u?.ende ? `${wartet === "start" ? "Start" : "Anhalten"} ${grund}` : basis;
                 const z = s.spiel(t.id)?.stand.zustand;
                 const hochNetz = s.spiel(t.id)?.stand.zustand.seq ?? 0;
                 const alt = x.alterS !== null && x.alterS > 15;
@@ -310,7 +337,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                   <tr key={t.id} data-team-zeile={t.name} data-team={t.id} class={u?.laeuft ? "laeuft" : ""} data-status-seq={u?.seq ?? ""} data-netz-seq={hochNetz}>
                     <td><TeamName s={s} t={t} /></td>
                     <LaptopZelle s={s} t={t} />
-                    <td class="zahl"><b data-testid="team-uhr">{u ? uhrzeit(start, tt) : "–"}</b><div class="klein sehr-leise">{status}
+                    <td class="zahl"><b data-testid="team-uhr">{u ? uhrzeit(start, tt) : "–"}</b><div class={`klein ${wartet ? "wartet-text" : "sehr-leise"}`} data-testid="team-status" data-wartet={wartet ?? ""}>{status}
                       {z && z.verstaerkungen.length > 0 && <span data-verstaerkungen={z.verstaerkungen.map((v) => v.gruppe).join(",")}> · +{z.verstaerkungen.length} V</span>}</div></td>
                     <td class="zahl">{u ? <span class="eingang">{u.eingang}{u.zurueck ? ` (${u.zurueck})` : ""}</span> : "–"}</td>
                     <td>{u ? (
@@ -328,9 +355,9 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                     ) : "–"}</td>
                     <td class="aktionen">
                       {!t.lauf ? (
-                        <button type="button" class="knopf klein gut" disabled={!st.istHost} onClick={() => void s.spielOeffnen([t.id])} data-oeffnen={t.name}>öffnen</button>
-                      ) : u && !u.ende ? (
-                        u.laeuft
+                        <button type="button" class="knopf klein gut" disabled={!st.istHost || beendet} onClick={() => void s.spielOeffnen([t.id])} data-oeffnen={t.name}>öffnen</button>
+                      ) : !u?.ende ? (
+                        laeuft(x)
                           ? <button type="button" class="knopf klein warn" disabled={!darfSteuern} onClick={() => allen("uhr", { befehl: "pause" }, [t.id])} title={`Uhr von ${t.name} anhalten`}>❚❚</button>
                           : <button type="button" class="knopf klein gut" disabled={!darfSteuern} onClick={() => allen("uhr", { befehl: "start" }, [t.id])} title={`Uhr von ${t.name} starten`}>▶</button>
                       ) : null}

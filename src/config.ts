@@ -17,6 +17,9 @@
 //              Fenstern an einem PC; wird im Browser gemerkt, fps=30 stellt zurück.
 //   verzug     künstlicher Netzverzug in ms (0–60000) um den Adapter dieses Fensters, für den Nachweis H1.6 und Vorführungen
 //              (window.argusVerzug.trennenSimuliert(true) trennt zeitweise). Nicht für das Seminar.
+//   geraet     (seit Liste K) eigener Merkbereich für die Kennung des Team-Fensters, 1–8 Zeichen: stellt an EINEM Rechner mehrere
+//              „Geräte“ in einem Browser nach (lokaler Sync, Proben). Ohne: ein Browser = ein Gerät – ein zweiter Tab derselben
+//              Sitzung sieht dem ersten nur zu (K1.3). Nicht für das Seminar.
 // Direktaufruf: …/?rolle=zb&raum=kraehe (Team allein, Uhr selbst starten), …/?rolle=sl&raum=kraehe (steuert dasselbe Team).
 import { STANDARD_SZENARIO } from "./inhalte/laden";
 import { RAUM_MUSTER, ROLLEN, type Rolle } from "./kern/ereignisse";
@@ -41,6 +44,8 @@ export interface Einstellungen {
   fps: number;
   /** künstlicher Netzverzug in ms (0 = aus) */
   verzug: number;
+  /** eigener Merkbereich (Tests, Vorführung: mehrere „Geräte“ in einem Browser), sonst null */
+  geraet: string | null;
 }
 
 function gemerkt(k: string): string | null {
@@ -79,6 +84,15 @@ export function merkeSitzung(code: string, sync: "firebase" | "lokal"): void {
   merke("letzte_sitzung", JSON.stringify({ code, sync, zeit: Date.now() } satisfies LetzteSitzung));
 }
 
+/** Sitzung beendet (K4.3): nicht mehr unter „Zuletzt genutzt“ anbieten. */
+export function vergissSitzung(code: string): void {
+  try {
+    if (letzteSitzung()?.code === code) localStorage.removeItem("argus:einst:letzte_sitzung");
+  } catch {
+    /* privater Modus */
+  }
+}
+
 export function letzteSitzung(): LetzteSitzung | null {
   try {
     const l = JSON.parse(gemerkt("letzte_sitzung") ?? "null") as LetzteSitzung | null;
@@ -95,6 +109,7 @@ export function leseEinstellungen(search: string = location.search): Einstellung
   const sitzungRoh = q.get("sitzung")?.trim().toLowerCase() ?? null;
   const syncRoh = q.get("sync") ?? gemerkt("sync") ?? (__ARGUS_OFFLINE__ ? "lokal" : "firebase");
   const ich = q.get("ich");
+  const geraet = q.get("geraet")?.trim().toLowerCase() ?? "";
   return {
     rolle: rolle && ROLLEN.includes(rolle) ? rolle : null,
     sitzung: sitzungRoh && SITZUNG_MUSTER.test(sitzungRoh) ? sitzungRoh : null,
@@ -107,12 +122,14 @@ export function leseEinstellungen(search: string = location.search): Einstellung
     szenario: q.get("szenario") ?? STANDARD_SZENARIO,
     fps: Math.max(1, Math.min(30, Math.round(Number(q.get("fps") ?? gemerkt("fps") ?? 30)) || 30)),
     verzug: Math.max(0, Math.min(60000, Math.round(Number(q.get("verzug") ?? 0)) || 0)),
+    geraet: /^[a-z0-9]{1,8}$/.test(geraet) ? geraet : null,
   };
 }
 
 function technik(e: Einstellungen, q: URLSearchParams): void {
   q.set("sync", e.sync);
   if (e.verzug) q.set("verzug", String(e.verzug));
+  if (e.geraet) q.set("geraet", e.geraet);
   if (e.db !== FIREBASE_DB) q.set("db", e.db);
   if (e.transport !== "lp") q.set("transport", e.transport);
   if (e.szenario !== STANDARD_SZENARIO) q.set("szenario", e.szenario);

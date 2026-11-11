@@ -416,7 +416,8 @@ def main():
         for i, tp in enumerate(plan["teams"]):
             name = TEAMNAMEN[i % len(TEAMNAMEN)][:24]
             s = seite(f"T{i + 1}")
-            s.goto(startseite(a.basis, a))
+            # seit Liste K: je Fenster ein eigenes „Gerät“ (sonst nähme derselbe Browser die gemerkte Kennung des ersten Fensters wieder)
+            s.goto(startseite(a.basis, a, geraet=f"g{i + 1}"))
             s.get_by_test_id("ich-spiele-mit").click()
             s.get_by_test_id("code-eingabe").fill(code)
             s.get_by_test_id("beitreten").click()

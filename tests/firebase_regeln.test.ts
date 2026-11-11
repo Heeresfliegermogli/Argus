@@ -18,6 +18,7 @@ import { LokalAdapter } from "../src/sync/lokal";
 import { bis, inhalte } from "./hilfen";
 import { type DrehbuchReferenz, type Modellteam, START_MS, drehbuchTeams, spieleDurch } from "./modellteam";
 
+import { ENDE_NAME, ENDE_TEAM } from "../src/kern/sitzungen";
 const require = createRequire(import.meta.url);
 const targaryen = require("targaryen") as {
   database(rules: unknown, data: unknown): Db;
@@ -153,6 +154,39 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
     expect(anwesenheitLesen({ ...eintrag, puls: 1 })).toMatchObject({ version: "0.9.0", fenster: "1536x730" });
     expect(anwesenheitLesen({ client: "abc123", art: "tt", name: "x", puls: 1, version: "0.8.0" })).toMatchObject({ version: "0.8.0" });
     expect(anwesenheitLesen({ client: "abc123", art: "tt", name: "x", puls: 1, version: "0.8.0" }).fenster).toBeUndefined();
+  });
+
+  it("Liste K: Sitzung beenden, Laptop übernehmen und freigeben, Regelfehler melden – alles mit den Regeln von Stand H", () => {
+    let db = leer();
+    const jetzt = Date.now();
+    const schreibe = (pfad: string, wert: unknown) => {
+      const erg = db.write(pfad, wert);
+      expect(erg.allowed, `${pfad}: ${erg.info.slice(-300)}`).toBe(true);
+      db = erg.newDatabase;
+    };
+    schreibe(`${S}/info`, info());
+    schreibe(`${S}/teams/${TEAM}`, team({ spieler: { abc123: { name: "Lt Anders", rollen: "zb", seit: jetzt } } }));
+    // K4.1: Marke „Sitzung beendet“ ist ein Eintrag unter teams/ mit fester Kennung (wie setzeTeam: Mehrpfad-Update)
+    expect(ENDE_TEAM).toMatch(/^t[a-z0-9]{4,8}$/);
+    const ende = db.update(`${S}/teams/${ENDE_TEAM}`, { name: ENDE_NAME, farbe: "#000000", erstellt: jetzt });
+    expect(ende.allowed, ende.info.slice(-300)).toBe(true);
+    // K2.1: ein anderes Fenster übernimmt (seit um 1 früher), K2.3/K4.2: Fenster aus dem Team nehmen
+    const ueber = db.update(`${S}/teams`, { [`${TEAM}/spieler/xyz789`]: { name: "Lt Berg", rollen: "zb", seit: jetzt - 1 } });
+    expect(ueber.allowed, ueber.info.slice(-300)).toBe(true);
+    const frei = ueber.newDatabase.update(`${S}/teams`, { [`${TEAM}/spieler/abc123`]: null });
+    expect(frei.allowed, frei.info.slice(-300)).toBe(true);
+    // K3.4: Zeichen „!R“ in version (höchstens 20 Zeichen); ein eigenes Feld regeln würde abgewiesen
+    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "0.9.0", team: TEAM, fenster: "1536x730", regeln: true };
+    const eintrag = anwesenheitSchreiben(t);
+    expect(eintrag.version).toBe("0.9.0 !R 1536x730");
+    schreibe(`${S}/anwesenheit/abc123`, { ...eintrag, puls: jetzt });
+    expect(db.write(`${S}/anwesenheit/abc123`, { ...eintrag, regeln: true, puls: jetzt }).allowed).toBe(false);
+    // künstliche Trennung (Tests): Anwesenheit löschen ist erlaubt
+    expect(db.write(`${S}/anwesenheit/abc123`, null).allowed).toBe(true);
+    // K3.2: Start der Spielleitung steht im Kanal, auch wenn kein Laptop da ist
+    schreibe(`${A}/-OdQ1111xyzABCDEFGH`, { id: "-OdQ1111xyzABCDEFGH", typ: "uhr", ts: jetzt, von: { rolle: "sl", client: "sl0001", name: "SL 1" }, daten: { befehl: "start" } });
+    // … und die Ablehnung „überholt“ passt ins Protokoll
+    schreibe(`${P}/e000001`, ereignis(1, { typ: "aktion_abgelehnt", aktion: "-OdQ1111xyzABCDEFGH", ts_aktion: jetzt, daten: { aktionstyp: "uhr", grund: "Start überholt – der Laptop war nicht verbunden, es gilt der spätere Befehl (Anhalten)" } } as never));
   });
 
   it("Protokoll: nur anhängen, nicht überschreiben oder löschen; Form wird geprüft", () => {

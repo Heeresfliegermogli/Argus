@@ -1,4 +1,4 @@
-# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste J vom 10.11.2026, Szenario 2.7)
+# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste K vom 11.11.2026, Szenario 2.7)
 
 **Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Teil B). Startseite und Lobby sind ohne
 Erklärung bedienbar (Teil A – kommt vor Teil B, dauert ca. 6 min).
@@ -29,6 +29,19 @@ bekommen je ein Fenster mit der Startseite und den Zettel. Nichts erklären.
 Bestanden, wenn beide A1–A6 ohne Hilfe lösen (eine Rückfrage erlaubt). Unklarheiten in die Änderungsliste.
 Zusätzlich beobachten: Sucht jemand auf der ersten Seite nach „Sitzung anlegen“, obwohl er nur mitspielt? Versteht B,
 dass das zweite Fenster nur zusieht (Hinweis oben: „… rechnet der Laptop von … Hier nur zuschauen.“)?
+**Seit Liste K (11.11.2026) – Schließen und Wiederöffnen** (zwei Laptops, eine Spielleitung; ohne Erklärung, nur fragen „was würdet
+ihr tun?“):
+
+| Nr | Aufgabe | gelöst, wenn |
+|---|---|---|
+| K-1 | „Euer Tab ist versehentlich zu. Kommt zurück in euer Spiel.“ | über „Zurück zu Team …“, den Code oder den Verlauf wieder am eigenen Spiel, ohne die Spielleitung zu rufen |
+| K-2 | „Euer Laptop ist ausgefallen (zuklappen). Spielt am Nachbar-Laptop weiter.“ | Code eingeben, Teamkarte „Spiel hier weiterführen“ (nach 20 s), Nachfrage bestätigt |
+| K-3 | Der erste Laptop wird wieder aufgeklappt. „Was seht ihr?“ | der Hinweis „wird an einem anderen Laptop weitergeführt“ wird gelesen und verstanden |
+| K-4 | Spielleitung: „Team … hat keinen Laptop mehr. Was tun Sie?“ | „nicht verbunden seit …“ gesehen, „Laptop freigeben“ gefunden |
+| K-5 | Spielleitung: „Die Stunde ist vorbei.“ | „Sitzung beenden“ gefunden; danach neue Sitzung angelegt |
+
+`tools/neuoeffnen_probe.py` löst diese und weitere Aufgaben über die Oberfläche (lokal und gegen die Firebase-Nachbildung).
+
 `tools/lobby_probe.py` löst dieselben Aufgaben und weitere (falscher Code, Team ohne Laptop, zwei Laptops gleichzeitig,
 Spielleitung verschiebt/benennt um/löscht, Plenum, Neuladen, später Beitritt, zuletzt genutzte Sitzung fortsetzen) nur über
 sichtbare Beschriftungen – das ersetzt den Test mit Menschen nicht.

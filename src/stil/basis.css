@@ -1408,3 +1408,13 @@ td.bz-argus.fehl { background: #3a2412; }
 /* Replay-Zeitleiste (seit 2.7): Auflösung (S3, verbündet) und ungelesen verschwundene Lagemeldung */
 .zl-marke.aufgeloest { background: #1d3550; color: #bcd8ff; }
 .zl-marke.ungelesen { opacity: .5; text-decoration: line-through; }
+
+/* Liste K (11.11.2026): Laptop nicht verbunden / freigeben, Sitzung beendet, zweiter Tab */
+.knopf.klein.mini { padding: 1px 6px; font-size: 12px; }
+.laptop-weg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; white-space: nowrap; }
+.ende-banner { background: #3a3320; border: 1px solid #a8893a; color: #f4e7c2; padding: 8px 14px; border-radius: 6px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.wartet-text { color: #ffb86b; }
+.zuschau-banner { max-width: calc(100% - 24px); flex-wrap: wrap; justify-content: center; }
+a.start-zurueck-team, a.start-zurueck-team:visited { color: #eef4ff; }
+.start-zurueck-team { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; }
+.start-zurueck-team span { font-size: 13px; font-weight: 500; opacity: .85; }

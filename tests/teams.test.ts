@@ -85,13 +85,13 @@ describe("Lobby (eine Rolle je Team)", () => {
     // B tritt Falke bei: A bleibt der Team-Laptop, B sieht nur zu
     expect(await b.teamBeitreten(ta!)).toBe(true);
     await bis(() => b.stand.ich.team === ta && a.team(ta)!.spieler.length === 2, 3000, "B im Team");
-    expect(b.stand.ich).toEqual({ team: ta, rollen: ["zb"], rechnet: false });
+    expect(b.stand.ich).toMatchObject({ team: ta, rollen: ["zb"], rechnet: false });
     expect(a.stand.ich.rechnet).toBe(true);
 
     // B gründet ein eigenes Team und verlässt damit Falke
     const tb = await b.teamErstellen("Orion");
     await bis(() => a.stand.teams.length === 2 && a.team(ta)!.spieler.length === 1, 3000);
-    expect(b.stand.ich).toEqual({ team: tb, rollen: ["zb"], rechnet: true });
+    expect(b.stand.ich).toMatchObject({ team: tb, rollen: ["zb"], rechnet: true });
     expect(a.stand.teams[0].farbe).not.toBe(a.stand.teams[1].farbe);
 
     // Wer das Fenster schließt, ist nicht mehr da: der Team-Laptop bleibt eingetragen, ist aber nicht verbunden

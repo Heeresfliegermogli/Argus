@@ -27,6 +27,8 @@ export class VerzugAdapter implements SyncAdapter {
   /** Verbindung trennen (true) oder wiederherstellen (false). */
   trennenSimuliert(ja: boolean): void {
     this.getrennt = ja;
+    // Liste K: Getrennt ist das Fenster für die anderen nicht verbunden (wie bei einem echten Netzausfall)
+    this.a.pausiereAnwesenheit?.(ja);
     this.verbHoerer.forEach((cb) => cb(this.verbindung()));
     if (!ja) {
       const l = this.liegen;

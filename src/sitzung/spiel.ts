@@ -7,6 +7,13 @@
 //  • folgen (Spielleitung, Plenum): liest das hochgeladene Protokoll (mit Verzug) und schickt Aktionen über das Netz an den
 //    Team-Laptop (Start, Pause, Reserve, Notiz).
 // Welcher Lauf aktuell ist, sagt die Sitzung (teams/<team>/lauf); das Spiel folgt ihm.
+//
+// Seit Liste K (11.11.2026):
+//  • Eine gesendete Aktion der Spielleitung gilt höchstens 10 s als „gesendet …“ (K3.1). Danach meldet das Spiel sie als überfällig
+//    (Hinweis „Team … antwortet nicht“); sie bleibt im Kanal des Teams und wird ausgeführt, sobald der Laptop wieder rechnet (K3.2).
+//  • Die Spielleitung liest den Kanal der Aktionen mit: Was dort steht und noch nicht im Protokoll ist, steht aus – auch nach
+//    Neuladen und für die zweite Spielleitung („Start wartet auf Laptop“).
+//  • abschliessen(): Host anhalten und den Rest hochladen (Team verlassen, Sitzung beendet).
 import { Host } from "../engine/host";
 import type { Inhalte } from "../inhalte/typen";
 import type { Absender, Aktion, AktionsDaten, AktionsTyp, Ereignis } from "../kern/ereignisse";
@@ -42,6 +49,12 @@ export interface SpielStand {
   upload: UploadStand;
   /** Protokoll aus einer Datei geladen (Spielleitung, H1.3) – folgt dann nicht mehr dem Netz */
   ausDatei?: boolean;
+  /** gesendete Aktionen, die nach 10 s noch nicht im Protokoll stehen (K3.1) – kein „gesendet …“ mehr, sie stehen aber noch aus */
+  ueberfaellig: Record<string, true>;
+  /** Aktionen im Kanal des Teams, die noch nicht im Protokoll stehen (nur beim Folgen mit `aktionenLesen`, K3.2) */
+  ausstehend: Aktion[];
+  /** abgeschlossen (Team verlassen, Sitzung beendet): rechnet nicht mehr */
+  abgeschlossen?: boolean;
 }
 
 export interface SpielOptionen {
@@ -58,7 +71,16 @@ export interface SpielOptionen {
   taktMs?: number;
   /** Upload: höchstens so viele Ereignisse je Schreibvorgang, frühestens alle … ms */
   upload?: { stueck?: number; warteMs?: number };
+  /** K3.1: so lange gilt eine gesendete Aktion als „gesendet …“ (Standard 10 000 ms) */
+  zeitlimitMs?: number;
+  /** K3.1: eine gesendete Aktion ist nach dem Zeitlimit nicht im Protokoll – die Sitzung meldet es mit Teamnamen */
+  beiUeberfaellig?: (a: Aktion) => void;
+  /** K3.2: beim Folgen den Kanal der Aktionen mitlesen (Spielleitung) */
+  aktionenLesen?: boolean;
 }
+
+/** K3.1: Kein Knopf der Spielleitung bleibt länger als 10 s auf „gesendet …“. */
+export const ZEITLIMIT_MS = 10000;
 
 /**
  * Höchstens so viele Ereignisse je Schreibvorgang. Ein Lauf hat 300–500 Ereignisse; bei 15 s Verzug (H1.6) dauert ein Schreibvorgang
@@ -84,6 +106,11 @@ export class Spiel {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private statusLaeuft = false;
   private letzterStatus = "";
+  // K3: Zeitlimit je gesendeter Aktion, mitgelesene Aktionen des Kanals
+  private fristen = new Map<string, ReturnType<typeof setTimeout>>();
+  private aktionenAbo: Abmelden | null = null;
+  private imKanal = new Map<string, Aktion>();
+  private abschluss = false;
 
   constructor(
     readonly inh: Inhalte,
@@ -100,6 +127,8 @@ export class Spiel {
       offen: {},
       rechnet: false,
       upload: { hoch: 0 },
+      ueberfaellig: {},
+      ausstehend: [],
     };
   }
 
@@ -130,6 +159,10 @@ export class Spiel {
     this.hostStoppen();
     this.protokollAbo?.();
     this.protokollAbo = null;
+    this.aktionenAbo?.();
+    this.aktionenAbo = null;
+    this.fristen.forEach(clearTimeout);
+    this.fristen.clear();
     if (this.lueckenTimer) clearTimeout(this.lueckenTimer);
     this.hoerer.clear();
   }
@@ -156,18 +189,38 @@ export class Spiel {
       return null;
     }
     this.aendern({ offen: { ...this.s.offen, [a.id]: a } });
+    this.ausstehendNeu();
+    // K3.1: höchstens 10 s „gesendet …“ – danach überfällig (die Aktion bleibt im Kanal und wird später ausgeführt, K3.2)
+    this.fristen.set(a.id, setTimeout(() => {
+      this.fristen.delete(a.id);
+      if (this.gestoppt || !this.s.offen[a.id]) return;
+      this.aendern({ ueberfaellig: { ...this.s.ueberfaellig, [a.id]: true } });
+      this.opt.beiUeberfaellig?.(a);
+    }, this.opt.zeitlimitMs ?? ZEITLIMIT_MS));
     this.kanal.sendeAktion(lauf, a).catch((e: Error) => {
       const { [a.id]: _weg, ...rest } = this.s.offen;
+      this.fristAus(a.id);
+      this.imKanal.delete(a.id);
       this.aendern({ offen: rest });
+      this.ausstehendNeu();
       this.opt.hinweise.hinweis("fehler", `Senden fehlgeschlagen: ${e.message}`);
     });
     return a.id;
   }
 
-  /** Ist eine Aktion dieses Typs (optional zu dieser Meldung/diesem Inject) noch unterwegs? */
+  private fristAus(id: string): void {
+    const t = this.fristen.get(id);
+    if (t) clearTimeout(t);
+    this.fristen.delete(id);
+  }
+
+  /**
+   * Ist eine Aktion dieses Typs (optional zu dieser Meldung/diesem Inject) noch unterwegs? Höchstens 10 s nach dem Senden (K3.1) –
+   * danach zeigt kein Knopf mehr „gesendet …“; ob sie noch aussteht, sagt `ausstehend`.
+   */
   wartetAuf(typ: AktionsTyp, bezug?: string): boolean {
     return Object.values(this.s.offen).some((a) => {
-      if (a.typ !== typ) return false;
+      if (a.typ !== typ || this.s.ueberfaellig[a.id]) return false;
       if (bezug === undefined) return true;
       const d = a.daten as { meldung?: string; inject?: string };
       return d.meldung === bezug || d.inject === bezug;
@@ -188,7 +241,12 @@ export class Spiel {
     this.protokollAbo = null;
     this.hostStoppen();
     this.puffer.clear();
-    this.aendern({ lauf, geladen: false, zustand: anfangsZustand(this.inh), protokoll: [], offen: {}, upload: { hoch: 0 } });
+    this.aktionenAbo?.();
+    this.aktionenAbo = null;
+    this.imKanal.clear();
+    this.fristen.forEach(clearTimeout);
+    this.fristen.clear();
+    this.aendern({ lauf, geladen: false, zustand: anfangsZustand(this.inh), protokoll: [], offen: {}, upload: { hoch: 0 }, ueberfaellig: {}, ausstehend: [] });
     if (!lauf) {
       this.aendern({ geladen: true });
       return;
@@ -204,16 +262,19 @@ export class Spiel {
     if (nr !== this.laufWechsel || this.gestoppt) return; // inzwischen anderer Lauf
     const gueltigNetz = this.gueltig(netz);
     const gemeinsam = this.gemeinsam(lokal, gueltigNetz);
-    const basis = gueltigNetz.length > lokal.length && gemeinsam === lokal.length ? gueltigNetz : lokal.length ? lokal : gueltigNetz;
+    // Liste K (K2.2): Steht im Netz ein anderer Spielstand (ein anderer Laptop hat weitergeführt), übernimmt ihn der Laptop, der
+    // jetzt rechnet – das Netz ist nur zum Anhängen, sonst käme er mit seinem Stand nie wieder hinein.
+    const anders = lokal.length > gemeinsam && gueltigNetz.length > gemeinsam;
+    const basis = anders || (gueltigNetz.length > lokal.length && gemeinsam === lokal.length) ? gueltigNetz : lokal.length ? lokal : gueltigNetz;
     let z = anfangsZustand(this.inh);
     for (const e of basis) z = anwenden(z, e, this.inh);
     // was im Netz schon steht (gleich wie hier), muss nicht noch einmal hoch
     const hoch = basis === gueltigNetz ? gueltigNetz.length : gemeinsam;
-    if (basis === gueltigNetz && gueltigNetz.length > lokal.length) this.ablage.anhaengen(this.team, lauf, gueltigNetz.slice(lokal.length));
-    const fremd = this.hostErlaubt && gueltigNetz.length > gemeinsam && basis === lokal && lokal.length > 0;
-    this.aendern({ zustand: z, protokoll: basis, geladen: true, upload: { hoch, ...(fremd ? { fremd: true, fehler: "Im Netz steht ein anderer Spielstand" } : {}) } });
+    if (anders) this.ablage.ersetze(this.team, lauf, gueltigNetz);
+    else if (basis === gueltigNetz && gueltigNetz.length > lokal.length) this.ablage.anhaengen(this.team, lauf, gueltigNetz.slice(lokal.length));
+    this.aendern({ zustand: z, protokoll: basis, geladen: true, upload: { hoch } });
     this.pruefeSzenario(z);
-    if (this.hostErlaubt) this.hostStarten();
+    if (this.hostErlaubt && !this.abschluss) this.hostStarten();
     else this.folgen(lauf, z.seq);
   }
 
@@ -243,6 +304,36 @@ export class Spiel {
   private folgen(lauf: string, abSeq: number): void {
     this.protokollAbo?.();
     this.protokollAbo = this.kanal.aufProtokoll(lauf, abSeq, (e) => this.empfange(e));
+    // K3.2: Spielleitung liest die Aktionen des Laufs mit – was noch nicht im Protokoll steht, steht aus
+    if (this.opt.aktionenLesen && !this.aktionenAbo) {
+      this.aktionenAbo = this.kanal.aufAktionen(lauf, (a) => {
+        if (!a?.id || this.imKanal.has(a.id) || lauf !== this.s.lauf) return;
+        this.imKanal.set(a.id, a);
+        this.ausstehendNeu();
+      });
+    }
+  }
+
+  /** Aktionen im Kanal (und eigene gesendete), die noch nicht im Protokoll stehen – in der Reihenfolge des Sendens. */
+  private ausstehendNeu(z: Spielzustand = this.s.zustand, melden = true): Aktion[] {
+    const alle = new Map<string, Aktion>([...this.imKanal, ...Object.entries(this.s.offen)]);
+    const liste = [...alle.values()].filter((a) => z.aktionen[a.id] === undefined).sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0) || (a.id < b.id ? -1 : 1));
+    const gleich = liste.length === this.s.ausstehend.length && liste.every((a, i) => a.id === this.s.ausstehend[i].id);
+    if (!gleich && melden) this.aendern({ ausstehend: liste });
+    return gleich ? this.s.ausstehend : liste;
+  }
+
+  /**
+   * K3.2: Was die Spielleitung zuletzt für die Uhr dieses Teams wollte und was noch nicht ausgeführt ist („Start wartet auf
+   * Laptop“): der letzte ausstehende Start- oder Pause-Befehl, sonst null.
+   */
+  ausstehendeUhr(): "start" | "pause" | null {
+    for (let i = this.s.ausstehend.length - 1; i >= 0; i--) {
+      const a = this.s.ausstehend[i];
+      const b = a.typ === "uhr" ? (a.daten as { befehl?: string }).befehl : undefined;
+      if (b === "start" || b === "pause") return b;
+    }
+    return null;
   }
 
   private empfange(e: Ereignis): void {
@@ -267,14 +358,21 @@ export class Spiel {
       return;
     }
     let offen = this.s.offen;
+    let ueberfaellig = this.s.ueberfaellig;
     for (const n of neu) {
       if (n.aktion && offen[n.aktion]) {
         const { [n.aktion]: _erledigt, ...rest } = offen;
         offen = rest;
+        this.fristAus(n.aktion);
+        if (ueberfaellig[n.aktion]) {
+          const { [n.aktion]: _spaet, ...uebrig } = ueberfaellig;
+          ueberfaellig = uebrig;
+        }
         if (n.typ === "aktion_abgelehnt") this.opt.hinweise.hinweis("warnung", `Nicht ausgeführt: ${n.daten.grund}`);
       }
     }
-    this.aendern({ zustand: z, protokoll: [...this.s.protokoll, ...neu], offen, upload: { hoch: z.seq } });
+    this.s = { ...this.s, offen };
+    this.aendern({ zustand: z, protokoll: [...this.s.protokoll, ...neu], offen, ueberfaellig, ausstehend: this.ausstehendNeu(z, false), upload: { hoch: z.seq } });
   }
 
   private pruefeSzenario(z: Spielzustand): void {
@@ -325,7 +423,7 @@ export class Spiel {
   }
 
   private hostStarten(): void {
-    if (!this.hostErlaubt || this.host || !this.s.lauf || !this.s.geladen || this.gestoppt) return;
+    if (!this.hostErlaubt || this.host || !this.s.lauf || !this.s.geladen || this.gestoppt || this.abschluss) return;
     const lauf = this.s.lauf;
     const h = new Host(this.inh, this.kanal, lauf, this.s.protokoll, this.opt.hostAbsender(), {
       taktMs: this.opt.taktMs,
@@ -351,6 +449,48 @@ export class Spiel {
     this.host.stoppen();
     this.host = null;
     this.aendern({ rechnet: false });
+  }
+
+  /**
+   * Abschließen (K4.1 Sitzung beendet, K4.2 Team verlassen): Host anhalten – ab jetzt entsteht hier kein Ereignis mehr – und den Rest
+   * des Protokolls hochladen (höchstens `ms` warten). true, wenn alles im Netz ist.
+   */
+  async abschliessen(ms = 4000): Promise<boolean> {
+    const war = !!this.host;
+    const lauf = this.s.lauf;
+    this.abschluss = true;
+    // letzter Stand für die Spielleitung, dann sofort anhalten (kein Ereignis mehr nach diesem Aufruf)
+    const st = war && lauf ? teamStatus(this.inh, this.s.zustand, this.kanal.serverJetzt(), { client: this.opt.client, lauf, hoch: this.s.upload.hoch }) : null;
+    this.hostStoppen();
+    this.aendern({ abgeschlossen: true });
+    if (st) void this.kanal.schreibeStatus(st).catch(() => {});
+    if (!war || !lauf) return true;
+    const fertig = () => this.s.upload.hoch >= this.s.protokoll.length;
+    if (!fertig() && !this.s.upload.fremd) void this.hochladen();
+    const ende = Date.now() + ms;
+    while (!fertig() && Date.now() < ende && !this.gestoppt && !this.s.upload.fremd) await new Promise((r) => setTimeout(r, 50));
+    return fertig();
+  }
+
+  /** Abschluss zurücknehmen (Team verlassen ging nicht): wieder rechnen, wenn dieses Fenster der Team-Laptop ist. */
+  wiederAufnehmen(): void {
+    if (!this.abschluss || this.gestoppt) return;
+    this.abschluss = false;
+    this.aendern({ abgeschlossen: false });
+    if (this.hostErlaubt && this.s.lauf) void this.wechsleLauf(this.s.lauf);
+  }
+
+  /**
+   * Protokoll dieses Rechners aus der Ablage, wenn es von dem abweicht, was dieses Fenster gerade zeigt (K2.2: Ein anderer Laptop
+   * führt das Spiel weiter – das eigene Protokoll bleibt als Datei greifbar). Sonst null.
+   */
+  eigenesProtokoll(): Ereignis[] | null {
+    const lauf = this.s.lauf;
+    if (!lauf || this.host) return null;
+    const lokal = this.ablage.lade(this.team, lauf);
+    if (!lokal.length) return null;
+    const gemeinsam = this.gemeinsam(lokal, this.s.protokoll);
+    return gemeinsam === lokal.length ? null : lokal;
   }
 
   /** Für Tests und Anzeige: rechnet dieses Fenster gerade das Spiel dieses Teams? */
@@ -430,8 +570,12 @@ export class Spiel {
     if (this.gestoppt || lauf !== this.s.lauf) return;
     const gemeinsam = this.gemeinsam(this.s.protokoll, netz);
     if (netz.length > gemeinsam) {
-      this.aendern({ upload: { hoch: gemeinsam, fremd: true, fehler: "Im Netz steht ein anderer Spielstand" } });
-      this.opt.hinweise.hinweis("fehler", "Ein anderes Fenster hat das Spiel dieses Teams weitergeführt. Bitte „Protokoll speichern“ und der Spielleitung geben.");
+      // Liste K (K2.2): Im Netz steht ein anderer Spielstand – der vorige Laptop hat beim Wiederverbinden noch hochgeladen. Dieser
+      // Laptop rechnet jetzt für das Team: Er übernimmt, was im Netz steht (nur anhängen möglich), und rechnet ab dort weiter.
+      this.opt.hinweise.hinweis("warnung", "Im Netz steht ein anderer Spielstand dieses Teams (der vorige Laptop hat noch hochgeladen). Dieser Laptop übernimmt ihn und rechnet ab dort weiter.");
+      this.ablage.ersetze(this.team, lauf, netz);
+      this.hochWarte = 0;
+      void this.wechsleLauf(lauf);
       return;
     }
     this.aendern({ upload: { hoch: gemeinsam } });

@@ -97,8 +97,13 @@ def main():
         plenum = neu.value
         tt = {}
 
+        geraete = [0]
+
         def mitspielen(pg):
-            pg.goto(start)
+            # Seit Liste K nimmt derselbe Browser in einer Sitzung seine gemerkte Kennung wieder (ein zweiter Tab sähe nur zu). Alle
+            # Fenster dieser Probe teilen sich einen Browser – jedes Teilnehmerfenster ist deshalb ein eigenes „Gerät“ (geraet=…).
+            geraete[0] += 1
+            pg.goto(f"{start}&geraet=g{geraete[0]}")
             pg.get_by_role("button", name="Ich spiele mit").click()
 
         def teilnehmer(n, eingabe=None):

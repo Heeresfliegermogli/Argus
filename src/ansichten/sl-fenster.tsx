@@ -11,18 +11,18 @@
 //
 // Auswertung: dieselbe Ansicht im Plenum (Smartboard) und bei der Spielleitung („Auswertung ›“ in der Übersicht);
 // bei der Spielleitung mit Notizfeld je Fall. Während des Spiels notiert SL 2 über „✎ Notiz“ in der Teamansicht.
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { type FallDef, type TeamLauf, faelle } from "../kern/auswertung";
 import { TEXT_MAX } from "../kern/ereignisse";
 import { DIREKT_TEAM } from "../kern/sitzungen";
 import { ROLLEN_NAME } from "../kern/sichten";
-import { seitenAdresse } from "../config";
+import { seitenAdresse, vergissSitzung } from "../config";
 import { Sicht } from "../sitzung/sicht";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import type { Spiel } from "../sitzung/spiel";
 import { EinweisungFenster } from "./einweisung";
 import { AuswertungAnsicht } from "./auswertung";
-import { Hinweise, Menue } from "./gemeinsam/bausteine";
+import { BestaetigenKnopf, Hinweise, Menue } from "./gemeinsam/bausteine";
 import { useMeldeSicht, useSitzung, useSitzungWert } from "./gemeinsam/hooks";
 import { Rahmen } from "./gemeinsam/rahmen";
 import { type Beitritt, PlenumAnsicht, PlenumEinweisung } from "./plenum";
@@ -153,6 +153,13 @@ function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void; ausw
             <span class="punkt" />{st.verbindung.verbunden ? `verbunden · ${st.teilnehmer.length}` : "keine Verbindung"}
           </span>
           <button type="button" class="knopf klein" onClick={() => setEinweisung(true)} data-testid="einweisung-knopf" title="Einweisungskarte der Spielleitung">Einweisung</button>
+          {!st.direkt && st.beendet === null && (
+            <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost} testid="sitzung-beenden" onClick={() => void p.s.sitzungBeenden()}
+              frage="Wirklich beenden? Alle Team-Laptops halten an"
+              titel="Sitzung beenden: Die Team-Laptops halten an, laden ihr Protokoll hoch und zeigen „Sitzung beendet – danke“; das Plenum geht zur Startseite. Die Protokolle bleiben für die Auswertung. Danach kann eine neue Sitzung angelegt werden.">
+              Sitzung beenden
+            </BestaetigenKnopf>
+          )}
         </div>
       </header>
       <Uebersicht s={p.s} ansehen={p.ansehen} auswertung={p.auswertung} />
@@ -169,6 +176,12 @@ export function SLFenster(p: { s: Sitzung }) {
   // Direktaufruf (ein Team ohne Lobby): gleich die Steuerung des Teams, wie bis Schritt 6
   const [wahl, setWahl] = useState<Wahl | null>(st.direkt ? { team: DIREKT_TEAM, rolle: "sl" } : null);
   const [auswertung, setAuswertung] = useState(false);
+  // K4.3: Eine beendete Sitzung erscheint nicht mehr unter „Zuletzt genutzt“
+  const beendet = s.stand.beendet !== null;
+  useSitzungWert(s, (x) => String(x.beendet));
+  useEffect(() => {
+    if (beendet) vergissSitzung(s.stand.sitzung);
+  }, [beendet]);
   const team = wahl ? s.team(wahl.team) : undefined;
   const spiel = wahl ? s.spiel(wahl.team) : null;
   if (auswertung) return <AuswertungFenster s={s} art="sl" zurueck={{ text: "◂ Übersicht", aktion: () => setAuswertung(false) }} />;
@@ -225,8 +238,14 @@ function PlenumTeam(p: { s: Sitzung; spiel: Spiel; teams: TeamStand[]; setze: (t
 
 export function PlenumFenster(p: { s: Sitzung }) {
   const { s } = p;
-  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.rechner ?? ""}:${s.spiel(t.id) ? 1 : 0}:${s.spiel(t.id)?.stand.zustand.ende ? "E" : ""}`)].join("|"));
+  const st = useSitzungWert(s, (x) => [x.verbindung.verbunden, x.beendet, ...x.teams.map((t) => `${t.id}:${t.lauf ?? ""}:${t.name}:${t.farbe}:${t.rechner ?? ""}:${s.spiel(t.id) ? 1 : 0}:${s.spiel(t.id)?.stand.zustand.ende ? "E" : ""}`)].join("|"));
   const [wahl, setWahl] = useState<string | null>(null);
+  // K4.1: Sitzung beendet – das Plenum geht zur Startseite
+  useEffect(() => {
+    if (st.beendet === null || st.direkt) return;
+    const t = setTimeout(() => { location.href = location.pathname; }, 1500);
+    return () => clearTimeout(t);
+  }, [st.beendet]);
   const mitLauf = st.teams.filter((t) => t.lauf && s.spiel(t.id));
   const team = mitLauf.find((t) => t.id === wahl) ?? mitLauf[0];
   const spiel = team ? s.spiel(team.id) : null;
@@ -234,6 +253,9 @@ export function PlenumFenster(p: { s: Sitzung }) {
   const alleEnde = mitLauf.length > 0 && mitLauf.every((t) => s.spiel(t.id)?.stand.zustand.ende);
   const [ansicht, setAnsicht] = useState<{ auswertung: boolean; bei: boolean } | null>(null);
   const auswertung = ansicht && ansicht.bei === alleEnde ? ansicht.auswertung : alleEnde;
+  if (st.beendet !== null && !st.direkt) {
+    return <div class="start" data-testid="plenum-beendet"><div class="start-karte stapel" style="gap:10px"><h1>ARGUS</h1><div style="font-size:20px"><b>Sitzung beendet.</b></div><div class="leise">Zur Startseite …</div></div></div>;
+  }
   if (team && spiel && auswertung) return <AuswertungFenster s={s} art="plenum" zurueck={{ text: "◂ Spiel", aktion: () => setAnsicht({ auswertung: false, bei: alleEnde }) }} />;
   if (team && spiel) return <PlenumTeam key={team.id} s={s} spiel={spiel} teams={mitLauf} setze={setWahl} zurAuswertung={() => setAnsicht({ auswertung: true, bei: alleEnde })} />;
   // Noch kein Spiel geöffnet: Einweisung mit Code, damit die Teilnehmer beitreten können

@@ -1,6 +1,7 @@
 // Einstieg: Einstellungen aus der Adresse lesen, Inhalte laden, Sitzung starten, Fenster zeigen.
 //   ohne Parameter               Startseite (Code eingeben, Sitzung anlegen)
-//   ?sitzung=CODE                Teilnehmer: Lobby, dann die Ansicht der eigenen Rolle(n)
+//   ?sitzung=CODE                Teilnehmer: Lobby, dann die Ansicht des Teams. Seit Liste K nimmt derselbe Browser seine gemerkte
+//                                Kennung wieder (K1.1); ein zweiter Tab desselben Browsers sieht nur zu (K1.3, Tab-Wache)
 //   ?sitzung=CODE&rolle=sl       Spielleitung: Übersicht aller Teams, Steuerung, Zuschauen
 //   ?sitzung=CODE&rolle=plenum   Smartboard
 //   ?rolle=g1&raum=kraehe        Direktaufruf ohne Lobby (ein Team, für Tests und Probeläufe)
@@ -23,7 +24,9 @@ import { type Ereignis, type Rolle, zufall } from "./kern/ereignisse";
 import { ROLLEN_NAME } from "./kern/sichten";
 import { zustandAus } from "./kern/zustand";
 import { meldeSitzung } from "./sitzung/fehlersuche";
+import { Merker } from "./sitzung/gemerkt";
 import { Sitzung } from "./sitzung/sitzung";
+import { TabWache } from "./sitzung/tabwache";
 import type { FensterArt } from "./sync/adapter";
 import { adapterFuer } from "./sync/fabrik";
 import "@fontsource/barlow-semi-condensed/latin-400.css";
@@ -38,13 +41,14 @@ import "./stil/basis.css";
 const KENNUNG = /^[a-z0-9]{6}$/;
 
 /**
- * Kennung des Fensters. Teilnehmer in einer Sitzung: aus der Adresse (ich=…, wird beim ersten Öffnen
- * gesetzt), damit Neuladen und Lesezeichen ins eigene Team zurückführen. Sonst je Tab im sessionStorage:
- * Eine neu geladene Spielleitung ist sofort wieder dieselbe und übernimmt ihre Steuerung ohne Wartezeit.
+ * Kennung des Fensters. Teilnehmer in einer Sitzung: aus der Adresse (ich=…, Neuladen und Lesezeichen), sonst – seit Liste K (K1.1) –
+ * die im Browser gemerkte Kennung dieser Sitzung (Startseite → Code nach dem Schließen des Tabs), sonst eine neue. Sie steht danach
+ * in der Adresse und im Merker. Spielleitung und Plenum je Tab im sessionStorage: Eine neu geladene Spielleitung ist sofort wieder
+ * dieselbe und übernimmt ihre Steuerung ohne Wartezeit.
  */
-function kennung(e: Einstellungen, art: FensterArt, rolle: Rolle | null): string {
+function kennung(e: Einstellungen, art: FensterArt, rolle: Rolle | null, merker?: Merker): string {
   if (e.sitzung && art === "tt") {
-    const id = e.ich ?? zufall(6);
+    const id = e.ich ?? merker?.lies()?.client ?? zufall(6);
     if (!e.ich) history.replaceState(null, "", sitzungsAdresse(e, e.sitzung, { ich: id }));
     return id;
   }
@@ -60,6 +64,17 @@ function kennung(e: Einstellungen, art: FensterArt, rolle: Rolle | null): string
   }
 }
 
+/** Neue Kennung für diesen Tab (Test ohne Lobby: zweites Fenster, dessen Kennung schon ein anderer Tab führt). */
+function neueTabKennung(e: Einstellungen, art: FensterArt, rolle: Rolle): string {
+  const neu = zufall(6);
+  try {
+    sessionStorage.setItem(`argus:kennung:${art}:${rolle}:${e.sitzung ?? e.raum ?? ""}`, neu);
+  } catch {
+    /* privater Modus */
+  }
+  return neu;
+}
+
 function artVon(rolle: Rolle | null): FensterArt {
   return rolle === "sl" ? "sl" : rolle === "plenum" ? "plenum" : "tt";
 }
@@ -68,16 +83,61 @@ function Fenster(p: { e: Einstellungen }) {
   const { e } = p;
   const [sitzung, setSitzung] = useState<Sitzung | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabStand>({ art: "inhaber" });
   const art = artVon(e.rolle);
   useEffect(() => {
     let s: Sitzung | null = null;
+    let wache: TabWache | null = null;
     let aus = false;
     (async () => {
       const inh = await ladeInhalte(e.szenario);
       if (aus) return;
       const schluessel = e.sitzung ?? e.raum ?? "kraehe";
       const direkt = !e.sitzung && e.rolle ? { rolle: e.rolle } : undefined;
-      s = new Sitzung(inh, adapterFuer(e, schluessel), { art, client: kennung(e, art, direkt?.rolle ?? null), name: e.name, direkt });
+      // Team-Fenster: gemerkte Kennung (K1.1) und Tab-Wache (K1.3). In einer Sitzung mit Lobby sieht ein zweiter Tab desselben
+      // Browsers als Gast zu. Im Test ohne Lobby (…?rolle=zb&raum=…) ist ein zweites Fenster wie bisher ein eigenes Fenster des
+      // Teams (sieht zu) – aber wer den einzigen Tab schließt und neu öffnet, ist wieder der Team-Laptop.
+      const direktZb = direkt?.rolle === "zb";
+      let merker = (e.sitzung && art === "tt") || direktZb ? new Merker(schluessel, e.geraet) : undefined;
+      let client = kennung(e, art, direkt?.rolle ?? null, merker);
+      let gastVon: string | undefined;
+      const holen = async () => {
+        await wache?.holen();
+        location.reload();
+      };
+      if (merker) {
+        const eigene = client;
+        if (direktZb) client = merker.lies()?.client ?? eigene;
+        wache = new TabWache(`${schluessel}:${client}${e.geraet ? `@${e.geraet}` : ""}`);
+        if (await wache.beanspruchen()) {
+          // „hierher holen“ in einem anderen Tab: sauber anhalten (Rest hochladen), dann erst frei melden
+          wache.aufVerlust(() => {
+            const alt = s;
+            s = null;
+            setTab({ art: "abgegeben", holen });
+            setSitzung(null);
+            meldeSitzung(null);
+            void (async () => {
+              const sp = alt?.spiel(alt.stand.ich.team);
+              if (sp?.hostAktiv) await sp.abschliessen(1500);
+              alt?.stoppen();
+            })();
+          });
+        } else if (direktZb) {
+          // Test ohne Lobby: zweites Fenster mit eigener Kennung (je Tab), ohne Merker
+          wache.stoppen();
+          wache = null;
+          merker = undefined;
+          client = eigene !== client ? eigene : neueTabKennung(e, art, "zb");
+        } else {
+          gastVon = client;
+          setTab({ art: "zweiter", holen });
+        }
+        if (aus) return;
+      }
+      s = new Sitzung(inh, adapterFuer(e, schluessel), {
+        art, client: gastVon ? zufall(6) : client, name: e.name, direkt, merker: gastVon ? undefined : merker, gastVon,
+      });
       await s.starten();
       merken(e);
       // Spielleitung einer Sitzung: auf der Startseite „Fortsetzen“ anbieten
@@ -88,14 +148,31 @@ function Fenster(p: { e: Einstellungen }) {
     return () => {
       aus = true;
       s?.stoppen();
+      wache?.stoppen();
       meldeSitzung(null);
     };
   }, []);
   if (fehler) return <div class="start"><div class="start-karte warnung">Start fehlgeschlagen: {fehler}</div></div>;
+  if (tab.art === "abgegeben") return <TabAbgegeben holen={tab.holen} />;
   if (!sitzung) return <div class="start"><div class="leise">ARGUS wird geladen …</div></div>;
   if (art === "sl") return <SLFenster s={sitzung} />;
   if (art === "plenum") return <PlenumFenster s={sitzung} />;
-  return <TTFenster s={sitzung} />;
+  return <TTFenster s={sitzung} zweiterTab={tab.art === "zweiter" ? { holen: tab.holen, neuesGeraet: () => { location.href = sitzungsAdresse({ ...e, geraet: zufall(4) }, e.sitzung!); } } : undefined} />;
+}
+
+/** K1.3: Was dieser Tab für die Kennung ist – Inhaber (rechnet), zweiter Tab (sieht zu) oder abgegeben („hierher holen“ im anderen Tab). */
+type TabStand = { art: "inhaber" } | { art: "zweiter"; holen: () => Promise<void> } | { art: "abgegeben"; holen: () => Promise<void> };
+
+function TabAbgegeben(p: { holen: () => Promise<void> }) {
+  return (
+    <div class="start">
+      <div class="start-karte stapel" style="gap:12px;width:min(560px,100%)" data-testid="tab-abgegeben">
+        <h1>ARGUS</h1>
+        <div>Das Spiel läuft jetzt in einem <b>anderen Tab</b> dieses Browsers. Dieser Tab kann geschlossen werden.</div>
+        <button type="button" class="knopf weiter" style="align-self:flex-start" onClick={() => void p.holen()} data-testid="tab-holen">Spiel wieder hierher holen</button>
+      </div>
+    </div>
+  );
 }
 
 /** Druckseite der Einweisungskarten (…/?druck=einweisung), ohne Sitzung. */

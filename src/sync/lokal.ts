@@ -53,6 +53,7 @@ export class LokalAdapter implements SyncAdapter {
   private statusHoerer = new Set<(s: Record<string, TeamStatus>) => void>();
   private timer: ReturnType<typeof setInterval>[] = [];
   private anwesenheit: Omit<Teilnehmer, "puls"> | null = null;
+  private pausiert: Omit<Teilnehmer, "puls"> | null = null;
   private hostId: string | null = null;
   private zaehler = 0;
   private readonly kennung = zufall(4);
@@ -256,8 +257,27 @@ export class LokalAdapter implements SyncAdapter {
   // ---------------------------------------------------------------- Anwesenheit
 
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void {
+    if (this.pausiert) {
+      this.pausiert = t;
+      return;
+    }
     this.anwesenheit = t;
     this.pulsen();
+  }
+
+  pausiereAnwesenheit(ja: boolean): void {
+    if (ja) {
+      if (!this.anwesenheit) return;
+      this.pausiert = this.anwesenheit;
+      this.ablage.removeItem(`${this.p}anw:${this.anwesenheit.client}`);
+      this.anwesenheit = null;
+      this.meldeAnw();
+      this.senden({ t: "anw" });
+    } else if (this.pausiert) {
+      const t = this.pausiert;
+      this.pausiert = null;
+      this.meldeAnwesenheit(t);
+    }
   }
 
   aufAnwesenheit(cb: (liste: Teilnehmer[]) => void): Abmelden {
