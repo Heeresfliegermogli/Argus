@@ -189,7 +189,7 @@ Offline-Datei liegt das „hochgeladene“ Protokoll ohnehin im localStorage.
 |---|---|
 | `tests/neuoeffnen.test.ts` (14 Tests): Merker, Tab schließen und neu öffnen, Tab-Wache, Gast, Übernahme erst nach der Wartezeit und nie bei verbundenem Laptop, alter Laptop kommt zurück, Test mit Trennung, Laptop freigeben, Zeitlimit „gesendet …“, Start für den spät verbundenen Laptop, nur der letzte Start/Pause gilt, Team verlassen im Lauf, Sitzung beenden und neu anlegen | bestanden |
 | `tests/firebase_regeln.test.ts`: Marke „beendet“, Übernehmen, Freigeben, `!R` in `version`, Start ohne Laptop – mit den **unveränderten** Regeln von Stand H | bestanden |
-| `tools/neuoeffnen_probe.py` über die Oberfläche: lokal 14/14, Firebase-Nachbildung mit Regeln 15/15 (dort zusätzlich „Browser neu gestartet“: neuer Browserkontext mit gleichem Speicher) | bestanden |
+| `tools/neuoeffnen_probe.py` über die Oberfläche: lokal 15/15, Firebase-Nachbildung mit Regeln 16/16 (dort zusätzlich „Browser neu gestartet“: neuer Browserkontext mit gleichem Speicher) | bestanden |
 
 ## Nachweis „Fertig, wenn“ (2.6)
 

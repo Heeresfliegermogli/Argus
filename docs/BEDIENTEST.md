@@ -29,6 +29,7 @@ bekommen je ein Fenster mit der Startseite und den Zettel. Nichts erklären.
 Bestanden, wenn beide A1–A6 ohne Hilfe lösen (eine Rückfrage erlaubt). Unklarheiten in die Änderungsliste.
 Zusätzlich beobachten: Sucht jemand auf der ersten Seite nach „Sitzung anlegen“, obwohl er nur mitspielt? Versteht B,
 dass das zweite Fenster nur zusieht (Hinweis oben: „… rechnet der Laptop von … Hier nur zuschauen.“)?
+
 **Seit Liste K (11.11.2026) – Schließen und Wiederöffnen** (zwei Laptops, eine Spielleitung; ohne Erklärung, nur fragen „was würdet
 ihr tun?“):
 
