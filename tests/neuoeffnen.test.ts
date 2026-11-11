@@ -268,10 +268,12 @@ describe("K2 – ein anderes Gerät übernimmt, wenn der Laptop weg ist", () => 
     const team = (await a.teamErstellen("Adler"))!;
     const z = await oeffne(code, "tt", { name: "Lt Zuschauer" });
     await bis(() => z.stand.teams.length === 1, 3000);
+    // Beitritt in derselben Millisekunde wie das Anlegen: dann entscheidet die Kennung, wer rechnet (genau einer) – hier soll es A sein
+    await warte(5);
     await z.teamBeitreten(team);
-    await bis(() => sl.team(team)?.spieler.length === 2, 3000);
-    await sl.spielOeffnen([team]);
-    await bis(() => !!a.spiel(team)?.hostAktiv, 3000);
+    await bis(() => sl.team(team)?.spieler.length === 2 && sl.team(team)!.rechner === a.client, 3000, "A ist der Team-Laptop, Z sieht zu");
+    expect(await sl.spielOeffnen([team])).toBe(true);
+    await bis(() => !!a.spiel(team)?.hostAktiv, 3000, "A rechnet");
     expect(z.stand.ich.rechnet).toBe(false);
     schliesse(a);
     await bis(() => !sl.team(team)!.rechnerOnline, 3000);
