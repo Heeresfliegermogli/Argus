@@ -79,7 +79,8 @@ Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mi
    Fenstergröße steht unten in der Einweisung und bei der Spielleitung in der Übersicht.
 2. https://heeresfliegermogli.github.io/Argus/ → **Spielleitung** → Synchronisation **Lokal** → „Test ohne Lobby: ein Team“
    aufklappen → Raum `bedientest` → **Team und Spielleitung öffnen** (zwei Fenster). Ein Plenum-Fenster ist nicht nötig.
-   (Mit zwei Rechnern: Synchronisation Firebase, gleicher Raum, je Rechner ein Fenster.)
+   (Mit zwei Rechnern seit Liste L nicht über den Testraum, sondern: Synchronisation Firebase → **Neue Sitzung anlegen**, am
+   zweiten Rechner den Code eingeben und ein Team anlegen – der Testraum ist für einen PC allein.)
 3. Der Testleiter bedient die Spielleitung. Allein geht es auch mit **Allein testen (ein Fenster)**: Die Uhr steuert dann
    das Team selbst oben rechts (▶ Start, ×1/×5/×20).
 4. Nichts erklären. Die Testpersonen sitzen **zu zweit** am Fenster der Zielbearbeitung (wie im Seminar); die Einweisung
