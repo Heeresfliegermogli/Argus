@@ -65,6 +65,7 @@ export default defineConfig({
   define: {
     __ARGUS_VERSION__: JSON.stringify(paket.version),
     __ARGUS_STAND__: JSON.stringify(`${gitStand()} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`),
+    __ARGUS_COMMIT__: JSON.stringify(gitStand()),
     __ARGUS_OFFLINE__: JSON.stringify(false),
   },
   build: {

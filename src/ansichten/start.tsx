@@ -11,10 +11,12 @@ import { ladeInhalte } from "../inhalte/laden";
 import type { Inhalte } from "../inhalte/typen";
 import { RAUM_MUSTER, type Rolle } from "../kern/ereignisse";
 import { ROLLEN_NAME } from "../kern/sichten";
-import { CODE_LAENGE, SPIELERNAME_MAX, codeAnzeige, codeNormalisieren, neuerCode } from "../kern/sitzungen";
+import { CODE_LAENGE, CODE_MUSTER, SPIELERNAME_MAX, codeAnzeige, codeNormalisieren, neuerCode } from "../kern/sitzungen";
 import { Sitzung } from "../sitzung/sitzung";
-import { type GemerkteSitzung, gemerkteSitzungen } from "../sitzung/gemerkt";
-import { type SitzungsKurzinfo, adapterFuer, sitzungsKurzinfo } from "../sync/fabrik";
+import { type GemerkteSitzung, gemerkteSitzungen, selberTag, vergissAlleSitzungen } from "../sitzung/gemerkt";
+import { type SitzungsKurzinfo, adapterFuer, alleSitzungenBeenden, sitzungsKurzinfo } from "../sync/fabrik";
+import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
+import { useSelbstNeuLaden } from "./gemeinsam/version";
 
 const ROLLEN_TEXT: Record<Rolle, string> = {
   zb: "das Team: Meldungen entscheiden",
@@ -103,10 +105,12 @@ function useGemerkt(e: Einstellungen): { g: GemerkteSitzung; team: string | null
   useEffect(() => {
     let aus = false;
     (async () => {
-      for (const g of gemerkteSitzungen(e.geraet).slice(0, 3)) {
+      // nur Sitzungen mit Lobby (Code aus drei Zeichen) – ein gemerkter Testraum ist keine Sitzung, in die man „zurück“ geht
+      for (const g of gemerkteSitzungen(e.geraet).filter((x) => CODE_MUSTER.test(x.sitzung)).slice(0, 3)) {
         const kurz = await sitzungsKurzinfo({ ...e, sync: g.sync }, g.sitzung, 5000).catch(() => null);
         if (aus) return;
-        if (kurz?.gefunden === "da" && !kurz.beendet) {
+        // Liste L (L5.1): nur Sitzungen vom selben Tag – ein Merker von gestern führt nicht in eine alte Sitzung
+        if (kurz?.gefunden === "da" && !kurz.beendet && kurz.info && selberTag(kurz.info.erstellt)) {
           setWert({ g, team: kurz.teamVon(g.client) });
           return;
         }
@@ -166,11 +170,25 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
     sitzungsKurzinfo({ ...e, sync: gemerkte.sync }, gemerkte.code, 6000).then((k) => {
       if (aus) return;
       setKurz(k);
-      if (k.gefunden === "fehlt" || k.beendet) vergissSitzung(gemerkte.code);
+      if (k.gefunden === "fehlt" || k.beendet || (k.info && !selberTag(k.info.erstellt))) vergissSitzung(gemerkte.code);
     }).catch(() => {});
     return () => { aus = true; };
   }, []);
-  const letzte = gemerkte && !(kurz && (kurz.gefunden === "fehlt" || kurz.beendet)) ? gemerkte : null;
+  // Liste L (L5.1): „Zuletzt genutzt“ nur für eine Sitzung von heute (und nicht beendet, auch nicht durch „Alle Sitzungen beenden“)
+  const letzte = gemerkte && selberTag(gemerkte.zeit) && !(kurz && (kurz.gefunden === "fehlt" || kurz.beendet || (kurz.info && !selberTag(kurz.info.erstellt)))) ? gemerkte : null;
+  const notbremse = async () => {
+    const erg = await alleSitzungenBeenden(e);
+    if (erg === "ok") {
+      vergissAlleSitzungen();
+      try {
+        sessionStorage.setItem("argus:meldung", "reset");
+      } catch {
+        /* privater Modus */
+      }
+      location.reload();
+    }
+    return erg;
+  };
   const raumOk = RAUM_MUSTER.test(raum);
   const direkt: Einstellungen = { ...e, raum };
   const name = slName.trim() || undefined;
@@ -210,29 +228,28 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
       <div class="start-spalten">
         <section class="start-karte start-sl">
           <h2>Sitzung</h2>
-          {letzte && (
-            <div class="stapel start-letzte" style="gap:8px" data-testid="letzte-sitzung">
-              <div>Zuletzt genutzte Sitzung fortsetzen: <b class="mono">{codeAnzeige(letzte.code)}</b>{" "}
-                <span class="sehr-leise klein" data-testid="letzte-info">· {kurz?.info ? `angelegt ${uhr(kurz.info.erstellt)}` : `geöffnet ${uhr(letzte.zeit)}`}
-                  {kurz?.gefunden === "da" ? ` · ${kurz.teams} ${kurz.teams === 1 ? "Team" : "Teams"}` : ""} · {letzte.sync === "lokal" ? "lokal" : "Firebase"}</span></div>
-              <div class="zeile" style="flex-wrap:nowrap">
-                <button type="button" class="knopf weiter" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("sl")} data-testid="fortsetzen">Fortsetzen als Spielleitung</button>
-                <button type="button" class="knopf" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("plenum")}>Plenum</button>
-              </div>
-              {weiter?.art === "fehler" && <div class="warnung">{weiter.text}</div>}
-            </div>
-          )}
           <div class="stapel" style="gap:8px">
-            <div class="klein leise">{letzte ? "Oder neu anlegen – die Spielleitung steuert dann alle Teams dieser Sitzung" : "Neue Sitzung – die Spielleitung steuert alle Teams dieser Sitzung"}</div>
+            <div class="klein leise" data-testid="neu-empfehlung"><b>Für jeden Durchgang eine neue Sitzung anlegen</b> – neuer Code, keine Reste. Die Spielleitung steuert dann alle Teams dieser Sitzung.</div>
             <div class="zeile" style="flex-wrap:nowrap">
               <input class="feld" placeholder="Name, z. B. SL 1" maxLength={SPIELERNAME_MAX} value={slName}
                 onInput={(ev) => setSlName((ev.target as HTMLInputElement).value)} data-testid="sl-name" />
-              <button type="button" class={`knopf ${letzte ? "" : "weiter"}`} style="white-space:nowrap" disabled={!p.inh || neu?.art === "laeuft"} onClick={() => void anlegen()} data-testid="sitzung-anlegen">
+              <button type="button" class="knopf weiter" style="white-space:nowrap" disabled={!p.inh || neu?.art === "laeuft"} onClick={() => void anlegen()} data-testid="sitzung-anlegen">
                 {neu?.art === "laeuft" ? "wird angelegt …" : "Neue Sitzung anlegen"}
               </button>
             </div>
             {neu?.art === "fehler" && <div class="warnung">{neu.text}</div>}
           </div>
+          {letzte && (
+            <div class="stapel start-letzte klein" style="gap:4px" data-testid="letzte-sitzung">
+              <div class="sehr-leise">Zuletzt genutzt: <b class="mono">{codeAnzeige(letzte.code)}</b>{" "}
+                <span data-testid="letzte-info">· {kurz?.info ? `angelegt ${uhr(kurz.info.erstellt)}` : `geöffnet ${uhr(letzte.zeit)}`}
+                  {kurz?.gefunden === "da" ? ` · ${kurz.teams} ${kurz.teams === 1 ? "Team" : "Teams"}` : ""} · {letzte.sync === "lokal" ? "lokal" : "Firebase"}</span>{" "}
+                <button type="button" class="link-knopf" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("sl")} data-testid="fortsetzen">fortsetzen als Spielleitung</button>{" · "}
+                <button type="button" class="link-knopf" disabled={weiter?.art === "laeuft"} onClick={() => fortsetzen("plenum")}>Plenum</button>
+              </div>
+              {weiter?.art === "fehler" && <div class="warnung">{weiter.text}</div>}
+            </div>
+          )}
         </section>
 
         <section class="start-karte">
@@ -275,6 +292,7 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
               title="Ein Fenster: das Team spielt allein, die Uhr startet oben rechts" data-testid="solo">Allein testen (ein Fenster)</a>
             <button type="button" class="knopf klein" disabled={!raumOk} onClick={zweiFenster}>Team und Spielleitung öffnen</button>
           </div>
+          <div class="klein hinweis-box" data-testid="test-hinweis"><b>Nur für einen PC allein.</b> Für Tests mit mehreren Laptops: Spielleitung → Neue Sitzung, Code an den Laptops eingeben.</div>
           <div class="rollenwahl">
             {(["zb", "sl", "plenum"] as const).map((r) => (
               <a key={r} href={raumOk ? adresseFuer(direkt, r) : undefined} class={`rolle-${r}`} onClick={() => merken(direkt)}>
@@ -286,7 +304,10 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
       </details>
 
       <div class="zeile zwischen">
-        <button type="button" class="knopf klein leise" onClick={p.zurueck}>◂ zurück</button>
+        <span class="zeile" style="gap:10px">
+          <button type="button" class="knopf klein leise" onClick={p.zurueck}>◂ zurück</button>
+          <Notbremse ausloesen={notbremse} />
+        </span>
         <span class="zeile klein" style="gap:14px">
           {!__ARGUS_OFFLINE__ && <a style="color:var(--info)" href={`${location.pathname}?auswertung=demo`} target="_blank" rel="noopener" data-testid="auswertung-demo"
             title="Auswertung mit sieben Beispielteams (Modellteams des Drehbuchs) – zum Üben der Auflösung ohne Spiel">Auswertung üben (Beispiel, 7 Teams)</a>}
@@ -310,18 +331,39 @@ export function Start(p: { e: Einstellungen }) {
     window.addEventListener("hashchange", anker);
     return () => window.removeEventListener("hashchange", anker);
   }, []);
+  // Liste L (L4.3): Der Wechsel zwischen Startseite, „Ich spiele mit“ und „Spielleitung“ lädt die Seite neu (nicht nur das # in der
+  // Adresse) – ein lange offener Tab holt sich so den aktuellen Programmstand.
   const gehe = (s: Seite) => {
-    setSeite(s);
-    history.pushState(null, "", s === "wahl" ? `${location.pathname}${location.search}` : `#${s}`);
+    history.pushState(null, "", `${location.pathname}${location.search}${s === "wahl" ? "" : `#${s}`}`);
+    location.reload();
   };
+  // L4.1: gibt es eine neue Version, lädt die Startseite selbst neu
+  useSelbstNeuLaden();
+  // L3.2: einmalige Meldung nach „Alle Sitzungen beenden“
+  const [meldung, setMeldung] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const m = sessionStorage.getItem("argus:meldung");
+      if (m) sessionStorage.removeItem("argus:meldung");
+      setMeldung(m);
+    } catch {
+      /* privater Modus */
+    }
+  }, []);
   return (
     <div class="start">
       <div class={`start-rahmen seite-${seite}`}>
         <Kopf />
+        {meldung === "reset" && (
+          <div class="ende-banner" role="status" data-testid="reset-meldung">
+            <b>Die Spielleitung hat alle Sitzungen beendet.</b> Dieses Fenster hat angehalten und sein Protokoll hochgeladen. Für das nächste Spiel legt die Spielleitung eine neue Sitzung an und nennt den neuen Code.
+          </div>
+        )}
         {seite === "wahl" && <Wahl gehe={gehe} />}
         {seite === "mitspielen" && <Mitspielen e={e} zurueck={() => gehe("wahl")} />}
         {seite === "spielleitung" && <Spielleitung e={e} setE={setE} inh={inh} ladeFehler={ladeFehler} zurueck={() => gehe("wahl")} />}
         <Fuss />
+        <VersionsBanner />
       </div>
     </div>
   );

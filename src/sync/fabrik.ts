@@ -1,8 +1,8 @@
 // Welcher Sync-Adapter für ein Fenster: Firebase (Variante A, mehrere Rechner) oder lokal
 // (Variante C, ein Rechner mit mehreren Fenstern). Nur hier wird zwischen beiden gewählt.
 import type { Einstellungen } from "../config";
-import { ENDE_TEAM } from "../kern/sitzungen";
-import type { SitzungsInfo, SyncAdapter, TeamDaten } from "./adapter";
+import { CODE_MUSTER, ENDE_TEAM } from "../kern/sitzungen";
+import { type SitzungsInfo, type SyncAdapter, type TeamDaten, regelFehler } from "./adapter";
 import { FirebaseAdapter } from "./firebase";
 import { LokalAdapter } from "./lokal";
 import { VerzugAdapter } from "./verzug";
@@ -46,11 +46,13 @@ export interface SitzungsKurzinfo {
   beendet: boolean;
   /** Name des Teams, in dem diese Kennung steht (K1.2), sonst null */
   teamVon: (client: string) => string | null;
+  /** Liste L (L3.3): Marke „Alle Sitzungen beendet“ (Serverzeit) oder null; eine Sitzung von vor der Marke zählt als beendet */
+  reset: number | null;
 }
 
 /** Verbindet kurz, liest info und Teams und trennt wieder. */
 export async function sitzungsKurzinfo(e: Pick<Einstellungen, "sync" | "db" | "transport">, sitzung: string, wartenMs = 8000): Promise<SitzungsKurzinfo> {
-  const leer = (gefunden: SitzungGefunden): SitzungsKurzinfo => ({ gefunden, info: null, teams: 0, beendet: false, teamVon: () => null });
+  const leer = (gefunden: SitzungGefunden): SitzungsKurzinfo => ({ gefunden, info: null, teams: 0, beendet: false, teamVon: () => null, reset: null });
   const a = adapterFuer(e, sitzung);
   await a.verbinden();
   const abos: (() => void)[] = [];
@@ -59,23 +61,46 @@ export async function sitzungsKurzinfo(e: Pick<Einstellungen, "sync" | "db" | "t
       const t = setTimeout(() => ok(leer("keine_antwort")), wartenMs);
       let info: SitzungsInfo | null | undefined;
       let teams: Record<string, TeamDaten> | undefined;
+      // Marke „Alle Sitzungen beendet“ (L3.3); nicht lesbar (alte Regeln) = keine Marke. Höchstens 2,5 s darauf warten.
+      let reset: number | null | undefined;
+      const resetFrist = setTimeout(() => { if (reset === undefined) { reset = null; fertig(); } }, Math.min(2500, wartenMs));
       const fertig = () => {
-        if (info === undefined || (info && teams === undefined)) return;
+        if (info === undefined || (info && (teams === undefined || reset === undefined))) return;
+        clearTimeout(resetFrist);
         clearTimeout(t);
         if (!info) return ok(leer("fehlt"));
         const liste = Object.entries(teams ?? {}).filter(([id, d]) => id !== ENDE_TEAM && d && typeof d.name === "string");
         ok({
-          gefunden: "da", info, teams: liste.length, beendet: !!teams?.[ENDE_TEAM],
+          gefunden: "da", info, teams: liste.length, reset: reset ?? null,
+          beendet: !!teams?.[ENDE_TEAM] || (!!reset && CODE_MUSTER.test(sitzung) && info.erstellt < reset),
           teamVon: (client) => liste.find(([, d]) => d.spieler?.[client])?.[1].name ?? null,
         });
       };
       abos.push(a.aufInfo((i) => { info = i; fertig(); }));
       abos.push(a.aufTeams((x) => { teams = x ?? {}; fertig(); }));
+      abos.push(a.aufReset((ts) => { reset = ts; fertig(); }));
     });
   } finally {
     queueMicrotask(() => {
       abos.forEach((ab) => ab());
       a.trennen();
     });
+  }
+}
+
+/**
+ * Liste L (L3.1): Notbremse von der Startseite – setzt die globale Marke, ohne in einer Sitzung zu sein. „regeln“: Die Datenbank lehnt
+ * ab (Firebase-Regeln ohne den Pfad argus/v1/reset – neu veröffentlichen).
+ */
+export async function alleSitzungenBeenden(e: Pick<Einstellungen, "sync" | "db" | "transport">): Promise<"ok" | "regeln" | "fehler"> {
+  const a = adapterFuer(e, "kraehe");
+  await a.verbinden();
+  try {
+    await Promise.race([a.setzeReset(), new Promise<never>((_, nein) => setTimeout(() => nein(new Error("keine Antwort")), 8000))]);
+    return "ok";
+  } catch (err) {
+    return regelFehler(err) ? "regeln" : "fehler";
+  } finally {
+    setTimeout(() => a.trennen(), 300);
   }
 }

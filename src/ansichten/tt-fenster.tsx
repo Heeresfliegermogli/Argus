@@ -2,6 +2,7 @@
 // Zielbearbeitung (seit 2.6 eine Rolle je Team). Rechnet dieses Fenster das Spiel des Teams (Team-Laptop), ist es bedienbar; ein
 // zweites Fenster desselben Teams sieht nur zu. Verschiebt die Spielleitung das Fenster in ein anderes Team, folgt es.
 import { useMemo } from "preact/hooks";
+import { geraeteName } from "../kern/sitzungen";
 import { Sicht } from "../sitzung/sicht";
 import type { Sitzung } from "../sitzung/sitzung";
 import type { Spiel } from "../sitzung/spiel";
@@ -32,6 +33,29 @@ function Beendet(p: { s: Sitzung }) {
   );
 }
 
+/**
+ * Liste L (L2.3, L1.1): Die Spielleitung hat diesen Laptop abgemeldet bzw. den Testraum geleert. Der Host ist angehalten, der Rest
+ * des Protokolls geht noch ins Netz; die Sitzung ist vergessen.
+ */
+function Entfernt(p: { s: Sitzung; art: "abgemeldet" | "geleert" }) {
+  const st = p.s.stand;
+  const geleert = p.art === "geleert";
+  return (
+    <div class="start">
+      <div class="start-karte stapel" style="gap:12px;width:min(600px,100%)" data-testid="entfernt" data-art={p.art}>
+        <h1>ARGUS</h1>
+        <div style="font-size:20px"><b>{geleert ? "Testraum geleert – neu laden" : "Von der Spielleitung abgemeldet"}</b></div>
+        <div class="leise">{geleert
+          ? <>Die Spielleitung hat den Testraum <b class="mono">{st.code}</b> geleert und ein neues Spiel angelegt. Dieser Laptop ({geraeteName(st.client)}) rechnet nicht mehr.</>
+          : <>Dieser Laptop ({geraeteName(st.client)}) rechnet nicht mehr; das Spiel des Teams geht an einem anderen Laptop weiter. Was hier gespielt wurde, ist hochgeladen.</>}</div>
+        {st.direkt
+          ? <button type="button" class="knopf weiter" style="align-self:flex-start" onClick={() => location.reload()} data-testid="neu-beitreten">{geleert ? "neu laden" : "neu beitreten"}</button>
+          : <button type="button" class="knopf weiter" style="align-self:flex-start" onClick={() => p.s.neuBeitreten()} data-testid="neu-beitreten">neu beitreten</button>}
+      </div>
+    </div>
+  );
+}
+
 /** K1.3: zweiter Tab desselben Browsers, solange das Team noch in der Lobby ist (danach steht der Hinweis über der Ansicht). */
 function ZweiterTabKarte(p: { s: Sitzung; z: ZweiterTab; team?: string }) {
   return (
@@ -55,7 +79,7 @@ export function TTFenster(p: { s: Sitzung; zweiterTab?: ZweiterTab }) {
   // Lobby und Spiel zeichnen sich selbst neu; hier zählt nur, was gezeigt wird.
   const st = useSitzungWert(s, (x) => {
     const t = x.ich.team ? x.teams.find((y) => y.id === x.ich.team) : undefined;
-    return [x.teamsGeladen, x.infoGeladen, !!x.info, x.direkt, x.ich.team, x.ich.rechnet, t?.lauf, !!s.spiel(x.ich.team), x.beendet, t?.name].join("|");
+    return [x.teamsGeladen, x.infoGeladen, !!x.info, x.direkt, x.ich.team, x.ich.rechnet, t?.lauf, !!s.spiel(x.ich.team), x.beendet, t?.name, x.ich.entfernt].join("|");
   });
   const team = s.team(st.ich.team);
   const spiel = s.spiel(st.ich.team);
@@ -72,6 +96,7 @@ export function TTFenster(p: { s: Sitzung; zweiterTab?: ZweiterTab }) {
     );
   }
   if (st.beendet !== null) return <Beendet s={s} />;
+  if (st.ich.entfernt) return <Entfernt s={s} art={st.ich.entfernt} />;
   if (team && team.lauf && spiel) return <TeamSpiel key={`${team.id}`} s={s} spiel={spiel} rechnet={st.ich.rechnet} zweiterTab={p.zweiterTab} />;
   if (p.zweiterTab) return <ZweiterTabKarte s={s} z={p.zweiterTab} team={team?.name} />;
   if (st.direkt) return <Warten s={s} text="Das Spiel wird angelegt …" />;

@@ -36,6 +36,31 @@ export const ENDE_TEAM = "tbeendet";
 export const ENDE_NAME = "Sitzung beendet";
 
 /**
+ * Gerätename eines Team-Fensters (Liste L, L1.3): „Laptop SU2A“ – die ersten vier Zeichen der Kennung in Großbuchstaben. Im Test
+ * ohne Lobby hießen alle Fenster „Zielbearbeitung“; welcher PC rechnet, sah niemand.
+ */
+export function geraeteKurz(client: string | null | undefined): string {
+  return (client ?? "").slice(0, 4).toUpperCase() || "????";
+}
+
+export function geraeteName(client: string | null | undefined): string {
+  return `Laptop ${geraeteKurz(client)}`;
+}
+
+/** „Laptop SU2A (Lt Müller)“ – Gerätename, dazu der eingegebene Name, wenn er etwas sagt. */
+export function laptopText(client: string | null | undefined, name?: string | null): string {
+  const g = geraeteName(client);
+  const n = (name ?? "").trim();
+  return !n || n === g || n === "Team" || n === "Zielbearbeitung" ? g : `${g} (${n})`;
+}
+
+/**
+ * Test ohne Lobby (L1.2): Ein Laptop-Eintrag im Testraum, der länger als 2 h kein Lebenszeichen hat, zählt nicht mehr – der Testraum
+ * blockiert sich nicht mehr für immer mit dem frühesten Eintrag.
+ */
+export const TESTRAUM_VERFALL_MS = 2 * 3600 * 1000;
+
+/**
  * Zeichen der Codes ohne verwechselbare Paare: kein 0/O/Q/D, 1/I/L, 2/Z, 5/S, 8/B, 6/G, U (zu V). Groß angezeigt,
  * klein gespeichert. 21 Zeichen ⇒ 9 261 Codes; beim Anlegen wird ein belegter Code verworfen.
  */

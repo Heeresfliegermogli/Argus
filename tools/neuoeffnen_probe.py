@@ -9,7 +9,7 @@ alles, was Liste K dazu festlegt:
        gleichem Speicher = Browser neu gestartet. Dasselbe Team rechnet sofort weiter, ohne Zutun der Spielleitung.
        Zwei Tabs im selben Browser: der zweite sieht nur zu; „hierher holen“.
   K2   Anderes Gerät übernimmt ein verwaistes Team („Spiel hier weiterführen“, erst nach 20 s), der alte Laptop kommt zurück
-       („wird an einem anderen Laptop weitergeführt“) – nie zwei rechnende Fenster. Spielleitung: „Laptop freigeben“.
+       („wird an einem anderen Laptop weitergeführt“) – nie zwei rechnende Fenster. Spielleitung: „Laptop abmelden“ (bis Liste K „Laptop freigeben“).
   K3   „▶ Start für alle“ mit einem fehlenden Team („Start wartet auf Laptop“, Start kommt beim Wiederverbinden an); kein Knopf
        länger als 10 s auf „gesendet …“; „Neues Spiel“ ohne Laptop mit Hinweis.
   K4   „Team verlassen“ im Lauf, „Sitzung beenden“, neue Sitzung ohne Reste.
@@ -240,8 +240,8 @@ def main():
             pg.close()  # ohne „Team verlassen“
             warte(lambda: zeile("Adler").locator("[data-laptop-weg]").count() == 1, WEG, "SL: Laptop nicht verbunden seit …")
             assert "nicht verbunden seit" in zeile("Adler").locator("[data-laptop-weg]").inner_text()
-            assert zeile("Adler").get_by_role("button", name="Laptop freigeben").count() == 1, "Knopf „Laptop freigeben“ fehlt"
-            layout(sl, "SL-Übersicht mit „Laptop freigeben“")
+            assert zeile("Adler").get_by_role("button", name="Laptop abmelden").count() == 1, "Knopf „Laptop abmelden“ (bis K: „Laptop freigeben“) fehlt"
+            layout(sl, "SL-Übersicht mit „Laptop abmelden“")
             bild(sl, "sl-laptop-weg")
             pg = ueber_code("a")
             warte(lambda: in_lobby_rechnet(pg, "Adler"), 10, "nach Neuöffnen sofort wieder der Laptop von Adler (nicht „nur zuschauen“)")
@@ -360,7 +360,7 @@ def main():
             warte(lambda: weg.count() == 1, WEG, "SL: nicht verbunden seit …")
             warte(lambda: re.search(r"nicht verbunden seit \d+:\d\d", weg.inner_text()) is not None, 5, "Zeitangabe m:ss")
             assert sieht_zu(f["a"]), "a rechnet schon vor der Freigabe (nichts von selbst)"
-            bestaetige(weg.get_by_role("button"), "freigeben\\?")
+            bestaetige(weg.get_by_role("button"), "abmelden\\?")
             warte(lambda: rechnet(f["a"]), 15, "nach der Freigabe rechnet das nächste Fenster")
             warte(lambda: zeile("Adler").locator(".spieler-chip").count() == 1 and weg.count() == 0, 10, "SL: ein Laptop, verbunden")
             assert host_zahl(f["a"]) == 1
@@ -379,8 +379,8 @@ def main():
             t0 = time.time()
             sl.get_by_role("button", name="▶ Start für alle").click()
             warte(lambda: "läuft" in status("Adler") and uhr_laeuft(f["a"]), 15, "Adler läuft")
-            warte(lambda: status("Bussard") == "Start wartet auf Laptop", 5, f"Bussard: „Start wartet auf Laptop“ (ist „{status('Bussard')}“)")
-            warte(lambda: hinweis(sl, "Team Bussard antwortet nicht – Laptop nicht verbunden"), 14, "Hinweis „antwortet nicht“ nach 10 s")
+            warte(lambda: re.fullmatch(r"Start wartet auf Laptop( [A-Z0-9]{4})?", status("Bussard")) is not None, 5, f"Bussard: „Start wartet auf Laptop“ (ist „{status('Bussard')}“)")
+            warte(lambda: hinweis(sl, "Team Bussard antwortet nicht – Laptop [A-Z0-9]{4} nicht verbunden"), 14, "Hinweis „antwortet nicht“ nach 10 s")
             assert 8 <= time.time() - t0 <= 13, f"Hinweis nach {time.time() - t0:.1f} s (soll 10 s)"
             layout(sl, "SL-Übersicht „wartet auf Laptop“")
             bild(sl, "sl-start-wartet")
@@ -410,7 +410,7 @@ def main():
             del knopf
             sl.get_by_role("button", name="◂ Übersicht").click()
             warte(lambda: sl.get_by_test_id("team-tabelle").count() == 1, 10, "zurück zur Übersicht")
-            warte(lambda: status("Bussard") == "Anhalten wartet auf Laptop", 5, f"Bussard: „Anhalten wartet auf Laptop“ (ist „{status('Bussard')}“)")
+            warte(lambda: re.fullmatch(r"Anhalten wartet auf Laptop( [A-Z0-9]{4})?", status("Bussard")) is not None, 5, f"Bussard: „Anhalten wartet auf Laptop“ (ist „{status('Bussard')}“)")
             # Laptop kommt wieder: das Anhalten wird ausgeführt
             c = ueber_knopf("c", "Bussard")
             warte(lambda: rechnet(c) and not uhr_laeuft(c), 15, "Anhalten kommt beim Wiederverbinden an")
@@ -582,7 +582,7 @@ def main():
         aufgabe("K1.3 zwei Tabs im selben Browser: der zweite sieht zu, „hierher holen“", k1_zwei_tabs)
         aufgabe("K2.1 anderes Gerät übernimmt das verwaiste Team („Spiel hier weiterführen“ nach 20 s)", k2_uebernehmen)
         aufgabe("K2.2 alter Laptop kommt zurück: „wird an einem anderen Laptop weitergeführt“, nie zwei Hosts", k2_alter_kommt_zurueck)
-        aufgabe("K2.3 Spielleitung: „nicht verbunden seit …“, „Laptop freigeben“ – das nächste Fenster rechnet", k2_freigeben)
+        aufgabe("K2.3 Spielleitung: „nicht verbunden seit …“, „Laptop abmelden“ – das nächste Fenster rechnet", k2_freigeben)
         aufgabe("K3.2 „▶ Start für alle“ mit einem fehlenden Team: „Start wartet auf Laptop“, Start kommt beim Wiederverbinden an", k3_start_mit_fehlendem_team)
         aufgabe("K3.1 kein Knopf länger als 10 s auf „gesendet …“", k3_gesendet_hoechstens_10s)
         aufgabe("K3.3 neues Spiel nach Neuöffnen, ohne Laptop mit Hinweis", k3_neues_spiel)

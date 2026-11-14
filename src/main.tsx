@@ -138,6 +138,26 @@ function Fenster(p: { e: Einstellungen }) {
       s = new Sitzung(inh, adapterFuer(e, schluessel), {
         art, client: gastVon ? zufall(6) : client, name: e.name, direkt, merker: gastVon ? undefined : merker, gastVon,
       });
+      // Liste L (L3.2): Notbremse „Alle Sitzungen beenden“ – das Fenster hat abgeschlossen (Host aus, Rest hochgeladen, Sitzungen
+      // vergessen) und geht zur Startseite; dort steht einmal „Die Spielleitung hat alle Sitzungen beendet“.
+      const fenster = s;
+      fenster.abonnieren(() => {
+        if (!fenster.stand.alleBeendet || aus) return;
+        aus = true;
+        try {
+          sessionStorage.setItem("argus:meldung", "reset");
+          // Kennung dieses Tabs (Spielleitung, Testraum) nicht wiederverwenden
+          for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const k = sessionStorage.key(i);
+            if (k?.startsWith("argus:kennung:")) sessionStorage.removeItem(k);
+          }
+        } catch {
+          /* privater Modus */
+        }
+        fenster.stoppen();
+        wache?.stoppen();
+        location.href = location.pathname;
+      });
       await s.starten();
       merken(e);
       // Spielleitung einer Sitzung: auf der Startseite „Fortsetzen“ anbieten

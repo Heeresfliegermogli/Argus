@@ -169,7 +169,9 @@ describe.skipIf(!vorhanden)("Firebase-Adapter (Nachbildung mit Regeln)", () => {
       expect(sl.spiel(ids[0])!.stand.zustand.aktionen[id0]).toBeDefined();
       // das Plenum sieht dieselben Stände
       await bis(() => ids.every((id) => plenum.spiel(id)?.stand.zustand.seq === sl.spiel(id)!.stand.zustand.seq), verzug * 4 + 8000, "Plenum");
-      expect(laptops.every((s, i) => s.spiel(ids[i])!.stand.upload.hoch === s.spiel(ids[i])!.stand.zustand.seq)).toBe(true);
+      // Die Bestätigung des letzten Schreibvorgangs kommt beim Laptop mit demselben Verzug an wie das Ereignis bei der Spielleitung –
+      // wenige ms früher oder später (bei zwei Kernen im Wechsel). Deshalb kurz warten statt sofort prüfen (seit Liste L).
+      await bis(() => laptops.every((s, i) => s.spiel(ids[i])!.stand.upload.hoch === s.spiel(ids[i])!.stand.zustand.seq), 5000, "alle Laptops: Protokoll vollständig im Netz");
     }, 180000);
   }
 });

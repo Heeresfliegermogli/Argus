@@ -9,6 +9,7 @@ import { TEXT_MAX } from "../kern/ereignisse";
 import { effekte } from "../kern/effekte";
 import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, standText } from "../kern/sichten";
+import { laptopText } from "../kern/sitzungen";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { panzerName } from "../kern/verluste";
 import { verstaerkungStand } from "../kern/welt";
@@ -16,7 +17,9 @@ import { fahrwegeAlle, verstaerkungVorschau } from "../kern/fahrwege";
 import { zielNr } from "../kern/zielnummern";
 import { istVeraltet } from "../sync/adapter";
 import { protokollDatei, speichereDatei } from "../sitzung/ablage";
+import { diagnoseText, kopiere } from "../sitzung/diagnose";
 import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
+import type { Sitzung } from "../sitzung/sitzung";
 import { AktionsKnopf, BestaetigenKnopf, Leer, Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
@@ -38,6 +41,34 @@ function exportieren(s: Sicht): void {
   speichereDatei(protokollDatei({
     szenario: sz.id, version: sz.version, sitzung: st.raum, team: st.teamName, team_id: st.team, farbe: st.teamFarbe, lauf: st.lauf, protokoll: st.protokoll,
   }));
+}
+
+/** L6.1: „Diagnose kopieren“ – Text für den Chat (Sitzung, Fenster, Teams, was aussteht). */
+export function DiagnoseKnopf(p: { s: Sitzung; klasse?: string }) {
+  const [stand, setStand] = useState<"" | "kopiert" | "zeigen">("");
+  const [text, setText] = useState("");
+  const los = async () => {
+    const t = diagnoseText(p.s);
+    setText(t);
+    (window as { argusDiagnose?: string }).argusDiagnose = t;
+    const ok = await kopiere(t);
+    setStand(ok ? "kopiert" : "zeigen");
+    if (ok) setTimeout(() => setStand(""), 2500);
+  };
+  return (
+    <>
+      <button type="button" class={`knopf klein ${p.klasse ?? ""}`} onClick={() => void los()} data-testid="diagnose" data-stand={stand}
+        title="Kopiert einen Text in die Zwischenablage: Sitzung, Programmstand, Verbindung, je Fenster Gerät, Stand, Fenstergröße und Puls, je Team Lauf, Protokoll und ausstehende Befehle – zum Einfügen in den Chat">
+        {stand === "kopiert" ? "kopiert ✓" : "Diagnose kopieren"}
+      </button>
+      {stand === "zeigen" && (
+        <div class="diagnose-text" data-testid="diagnose-text">
+          <div class="klein leise">Kopieren war nicht möglich – Text markieren (Strg+A, Strg+C): <button type="button" class="knopf klein mini" onClick={() => setStand("")}>schließen</button></div>
+          <textarea class="feld mono" readOnly rows={10} value={text} ref={(el) => el?.select()} />
+        </div>
+      )}
+    </>
+  );
 }
 
 export function plenumOeffnen(): void {
@@ -131,6 +162,10 @@ export function SLAnsicht(p: { s: Sicht }) {
               onClick={() => s.senden("uhr", { befehl: z.uhr.laeuft ? "pause" : "start" })}>
               {z.uhr.laeuft ? "❚❚ Anhalten" : "▶ Start"}
             </AktionsKnopf>
+            {st.uhrGrund && (
+              <div class="uhr-grund" role="status" data-testid="uhr-grund" data-befehl={st.uhrGrund.befehl}>{st.uhrGrund.text}</div>
+            )}
+            {st.zwei && <div class="uhr-grund" role="alert" data-testid="zwei-hinweis"><b>Lauf hat zwei Verläufe – Neues Spiel empfohlen.</b></div>}
             <div class="zeile" style="gap:4px">
               <span class="klein leise" style="margin-right:4px">Tempo</span>
               {TEMPI.map((v) => (
@@ -143,10 +178,19 @@ export function SLAnsicht(p: { s: Sicht }) {
               <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={zeitSetzen}>Spielzeit setzen</button>
             </div>
             <div class="klein sehr-leise" data-testid="sl-netz">
-              Protokoll hier: {z.seq} Einträge{st.upload.fehler ? ` · ${st.upload.fehler}` : ""} · rechnet: {st.rechnerName ?? "kein Team-Laptop da"}
+              Protokoll hier: {z.seq} Einträge{st.upload.fehler ? ` · ${st.upload.fehler}` : ""} · rechnet: <span data-testid="sl-rechnet" class={st.rechnerGeraet && !st.rechnerOnline ? "rot" : ""}>{st.rechnerGeraet
+                ? `${st.rechnerGeraet} · ${st.rechnerOnline ? "verbunden" : "nicht verbunden"}${st.rechnerZuletzt ? ` · zuletzt vor ${mmss(Math.max(0, Math.round((jetzt - st.rechnerZuletzt) / 1000)))}` : ""}`
+                : "kein Team-Laptop da"}</span>
             </div>
-            <div class="knopf-reihe">
+            <div class={st.direkt ? "knopf-zeile" : "knopf-reihe"}>
               <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
+              {st.direkt && (
+                <BestaetigenKnopf klasse="klein" gesperrt={!st.istHost} testid="testraum-leeren" onClick={() => void s.testraumLeeren()}
+                  frage="Wirklich? Alle Laptops abmelden, neuer Lauf"
+                  titel="Testraum leeren: nimmt alle Laptop-Einträge aus „Team 1“ und legt einen neuen Lauf an. Offene Team-Fenster halten an („Testraum geleert – neu laden“); das nächste Team-Fenster, das (neu) öffnet, rechnet.">
+                  Testraum leeren
+                </BestaetigenKnopf>
+              )}
               <BestaetigenKnopf klasse="schlecht klein" gesperrt={!st.istHost} onClick={() => void s.neuesSpiel()}
                 frage="Wirklich? Klick = neues Spiel" titel="Neuer Lauf für dieses Team. Der jetzige Lauf bleibt gespeichert.">
                 Neues Spiel
@@ -206,7 +250,7 @@ export function SLAnsicht(p: { s: Sicht }) {
             ))}
           </div>
         </Panel>
-        <Panel titel={`Fenster · ${st.teamName}`} klasse="flach" rechts={<span class="badge">{st.teilnehmer.length}</span>}>
+        <Panel titel={`Fenster · ${st.teamName}`} klasse="flach" rechts={<span class="zeile" style="gap:6px;flex-wrap:nowrap"><DiagnoseKnopf s={s.sitzung} klasse="mini" /><span class="badge">{st.teilnehmer.length}</span></span>}>
           <div class="fenster-liste" data-testid="fenster">
             {[...st.teilnehmer].sort((a, b) => fensterRang(a) - fensterRang(b) || a.name.localeCompare(b.name)).map((x) => {
               const alter = Math.max(0, Math.round((jetzt - x.puls) / 1000));
@@ -215,11 +259,18 @@ export function SLAnsicht(p: { s: Sicht }) {
               return (
                 <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`} data-fenster={x.fenster ?? ""}
                   title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""} · letzte Rückmeldung vor ${alter} s`}>
-                  <i class={`rolle-${marke}`} />{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}
+                  <i class={`rolle-${marke}`} />{x.art === "tt" ? laptopText(x.client, x.name) : <>{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}</>}
                   {st.host?.id === x.client && <b> ★</b>}<span class="sehr-leise zahl">{alter} s</span>
                 </span>
               );
             })}
+              {st.rechnerGeraet && (
+                <BestaetigenKnopf klasse="klein mini" gesperrt={!darfSteuern} testid="laptop-abmelden" onClick={() => void s.laptopAbmelden()}
+                  frage={st.rechnerOnline ? "verbunden und rechnet – wirklich abmelden?" : "wirklich abmelden?"}
+                  titel={`${st.rechnerGeraet} ${st.rechnerOnline ? "ist verbunden und rechnet – wirklich abmelden?" : "abmelden?"} Das Spiel geht am nächsten Fenster des Teams weiter (ab dem hochgeladenen Protokoll); das abgemeldete Fenster hält an.`}>
+                  Laptop abmelden ({st.rechnerGeraet.slice(7, 11)})
+                </BestaetigenKnopf>
+              )}
           </div>
         </Panel>
         <Panel titel="Notiz ins Protokoll" klasse="flach">

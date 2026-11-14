@@ -24,6 +24,7 @@ import { EinweisungFenster } from "./einweisung";
 import { AuswertungAnsicht } from "./auswertung";
 import { BestaetigenKnopf, Hinweise, Menue } from "./gemeinsam/bausteine";
 import { useMeldeSicht, useSitzung, useSitzungWert } from "./gemeinsam/hooks";
+import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
 import { Rahmen } from "./gemeinsam/rahmen";
 import { type Beitritt, PlenumAnsicht, PlenumEinweisung } from "./plenum";
 import { ANSICHTEN } from "./register";
@@ -160,10 +161,12 @@ function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void; ausw
               Sitzung beenden
             </BestaetigenKnopf>
           )}
+          <Notbremse ausloesen={() => p.s.alleBeenden()} />
         </div>
       </header>
       <Uebersicht s={p.s} ansehen={p.ansehen} auswertung={p.auswertung} />
       {einweisung && <EinweisungFenster inh={p.s.inh} rolle="sl" schliessen={() => setEinweisung(false)} />}
+      <VersionsBanner />
       <Hinweise liste={p.s.hinweise.liste} />
     </div>
   );
@@ -277,6 +280,7 @@ export function PlenumFenster(p: { s: Sitzung }) {
         <div class="plenum-kopf"><h2 style="font-size:20px">{s.inh.szenario.titel}</h2></div>
         <PlenumEinweisung inh={s.inh} beitritt={beitritt(s)} />
       </main>
+      <VersionsBanner />
     </div>
   );
 }

@@ -27,15 +27,17 @@ import { type Absender, type AktionsDaten, type AktionsTyp, type Rolle, neueLauf
 import { fensterJetzt, fensterKennung } from "../kern/fenster";
 import { ROLLEN_NAME } from "../kern/sichten";
 import {
-  DIREKT_TEAM, ENDE_NAME, ENDE_TEAM, type GruppenRolle, SPIELERNAME_MAX, codeAnzeige, freieFarbe, neueTeamId, rollenAus, rollenText, teamnameBereinigt,
+  DIREKT_TEAM, ENDE_NAME, ENDE_TEAM, type GruppenRolle, SPIELERNAME_MAX, TESTRAUM_VERFALL_MS, codeAnzeige, freieFarbe, geraeteName, laptopText, neueTeamId,
+  rollenAus, rollenText, teamnameBereinigt,
 } from "../kern/sitzungen";
+import { mmss } from "../kern/uhr";
 import type { TeamStatus } from "../kern/uebersicht";
 import {
   type Abmelden, type FensterArt, type HostInfo, PULS_INTERVALL_MS, type SitzungsInfo, type SpielerEintrag, type SyncAdapter,
   type TeamDaten, type Teilnehmer, UEBERNAHME_MS, type Verbindung, istVeraltet, regelFehler, teamKanal,
 } from "../sync/adapter";
 import { SpeicherAblage, leseProtokollDatei } from "./ablage";
-import type { Merker } from "./gemerkt";
+import { type Merker, vergissAlleSitzungen } from "./gemerkt";
 import { Hinweisgeber } from "./hinweise";
 import { Spiel } from "./spiel";
 
@@ -48,6 +50,11 @@ export interface SpielerStand {
   seit: number;
   /** seit Liste J (J2.4): Fenstergröße aus der Anwesenheit, „1536x730“ */
   fenster?: string;
+  /** seit Liste L (L4.2): Programmstand (Commit) des Fensters und ob sein Tab im Hintergrund liegt – aus der Anwesenheit */
+  version?: string;
+  hintergrund?: boolean;
+  /** seit Liste L (L2.4): Das Fenster meldet zwei Verläufe im Lauf (kann nicht hochladen) */
+  zwei?: boolean;
 }
 
 export interface TeamStand {
@@ -68,6 +75,8 @@ export interface TeamStand {
   rechnerWegSeit: number | null;
   /** K2.1: Der Team-Laptop ist länger als 20 s nicht verbunden – ein anderes Fenster darf das Spiel sichtbar übernehmen */
   uebernehmbar: boolean;
+  /** L2.1: Serverzeit des letzten Lebenszeichens des Team-Laptops (Puls oder Statusmeldung), soweit dieses Fenster es weiß */
+  rechnerZuletzt: number | null;
 }
 
 export interface SitzungsStand {
@@ -93,7 +102,7 @@ export interface SitzungsStand {
    * eigenes Team (Team-Fenster) und ob dieses Fenster das Spiel des Teams rechnet. `abgeloest` (K2.2): Dieses Fenster hat das Spiel
    * gerechnet, jetzt führt es ein anderer Laptop weiter.
    */
-  ich: { team: string | null; rollen: GruppenRolle[]; rechnet: boolean; abgeloest: boolean };
+  ich: { team: string | null; rollen: GruppenRolle[]; rechnet: boolean; abgeloest: boolean; entfernt: Entfernt | null };
   /** K1.3: zweiter Tab desselben Browsers – sieht dem eigenen Team nur zu, steht nicht im Team */
   gast: boolean;
   /** K4.1: Serverzeit, zu der die Spielleitung die Sitzung beendet hat (sonst null) */
@@ -106,6 +115,27 @@ export interface SitzungsStand {
   regelFehler: boolean;
   /** Direktaufruf ohne Lobby (ein Team) */
   direkt: boolean;
+  /**
+   * Liste L (L3): globale Marke „Alle Sitzungen beendet“. `ts` Serverzeit oder null; `lesbar` false = die Datenbank lässt sie nicht
+   * lesen (alte Firebase-Regeln) – dann gilt „keine Marke“; `geladen`, sobald die erste Antwort da ist.
+   */
+  reset: { ts: number | null; lesbar: boolean; geladen: boolean };
+  /** L3.2: Die Marke kam, während dieses Fenster offen war – es hat abgeschlossen und geht zur Startseite */
+  alleBeendet: boolean;
+  /** L3.4: „Alle Sitzungen beenden“ wurde von den (alten) Firebase-Regeln abgelehnt */
+  resetRegelFehler: boolean;
+}
+
+/** L2.3 / L1.1: Dieses Team-Fenster wurde von der Spielleitung aus dem Team genommen bzw. der Testraum wurde geleert. */
+export type Entfernt = "abgemeldet" | "geleert";
+
+/** L2.1: Warum ein Start- oder Pause-Befehl der Spielleitung noch nicht ausgeführt ist. */
+export interface UhrGrund {
+  befehl: "start" | "pause";
+  /** ganzer Satz für den Knopf der Teamansicht */
+  text: string;
+  /** kurz für die Zeile der Übersicht: „Start wartet auf Laptop SU2A“ */
+  kurz: string;
 }
 
 export interface SitzungsOptionen {
@@ -126,6 +156,8 @@ export interface SitzungsOptionen {
   /** Tests: Zeitlimit für „gesendet …“ (Standard 10 s) und Wartezeit bis zur Übernahme (Standard 20 s) */
   zeitlimitMs?: number;
   uebernahmeMs?: number;
+  /** Tests: Verfall eines Laptop-Eintrags im Testraum (Standard 2 h, L1.2) */
+  verfallMs?: number;
 }
 
 /** Was teamStaende über „wie lange weg“ wissen muss (K2). */
@@ -134,6 +166,10 @@ export interface WegAngaben {
   /** Serverzeit, seit der das Fenster nicht verbunden ist */
   wegSeit: (client: string, team: string) => number;
   uebernahmeMs?: number;
+  /** L1.2/L3.2: Zählt dieser Eintrag (noch)? Im Testraum verfallen alte Einträge. Ohne: alle zählen. */
+  gilt?: (client: string, team: string, eintrag: SpielerEintrag) => boolean;
+  /** L2.1: letztes Lebenszeichen eines Fensters (Serverzeit) oder null */
+  zuletzt?: (client: string, team: string) => number | null;
 }
 
 /** Teams mit Anwesenheit zusammenführen (reine Funktion, auch für Tests). */
@@ -142,10 +178,14 @@ export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilne
   return Object.entries(teams)
     .filter(([id, d]) => id !== ENDE_TEAM && d && typeof d.name === "string")
     .map(([id, d]) => {
-      const spieler = Object.entries(d.spieler ?? {})
+      const spieler: SpielerStand[] = Object.entries(d.spieler ?? {})
+        .filter(([client, s]) => !weg?.gilt || weg.gilt(client, id, s))
         .map(([client, s]) => {
           const anw = online.get(client);
-          return { client, name: s.name, rollen: rollenAus(s.rollen), online: !!anw, seit: s.seit ?? 0, ...(anw?.fenster ? { fenster: anw.fenster } : {}) };
+          return {
+            client, name: s.name, rollen: rollenAus(s.rollen), online: !!anw, seit: s.seit ?? 0, ...(anw?.fenster ? { fenster: anw.fenster } : {}),
+            ...(anw?.version ? { version: anw.version } : {}), ...(anw?.hintergrund ? { hintergrund: true } : {}), ...(anw?.zwei ? { zwei: true } : {}),
+          };
         })
         .filter((s) => s.rollen.length > 0)
         .sort((a, b) => a.seit - b.seit || a.client.localeCompare(b.client));
@@ -153,7 +193,8 @@ export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilne
       const rechnerOnline = !!spieler[0]?.online;
       const rechnerWegSeit = rechner && !rechnerOnline && weg ? weg.wegSeit(rechner, id) : null;
       const uebernehmbar = rechnerWegSeit !== null && weg!.jetzt - rechnerWegSeit >= (weg!.uebernahmeMs ?? UEBERNAHME_MS);
-      return { id, name: d.name, farbe: d.farbe, erstellt: d.erstellt ?? 0, lauf: d.lauf ?? null, spieler, rechner, rechnerOnline, rechnerWegSeit, uebernehmbar };
+      const rechnerZuletzt = rechner ? weg?.zuletzt?.(rechner, id) ?? null : null;
+      return { id, name: d.name, farbe: d.farbe, erstellt: d.erstellt ?? 0, lauf: d.lauf ?? null, spieler, rechner, rechnerOnline, rechnerWegSeit, uebernehmbar, rechnerZuletzt };
     })
     .sort((a, b) => a.erstellt - b.erstellt || a.id.localeCompare(b.id));
 }
@@ -178,6 +219,18 @@ export class Sitzung {
   private statusAbo: Abmelden | null = null;
   // K2.2: Dieses Fenster hat das Spiel dieses Teams gerechnet (in diesem Tab oder laut Merker)
   private rechneteTeam: string | null = null;
+  // Liste L
+  /** L2.3: von der Spielleitung aus dem Team genommen / Testraum geleert (bis „neu beitreten“) */
+  private entfernt: Entfernt | null = null;
+  /** dieses Fenster verlässt sein Team gerade selbst (dann ist das Verschwinden des Eintrags keine Abmeldung) */
+  private selbstRaus = false;
+  /** Testraum: Stand („geleert um“) des Teams, als dieses Fenster zuerst darin stand */
+  private raumStandBeiBeitritt: number | null = null;
+  /** Testraum: verfallene Einträge, die dieses Fenster schon weggeräumt hat */
+  private weggeraeumt = new Set<string>();
+  /** L3: Marke beim Öffnen des Fensters (undefined = noch keine Antwort) */
+  private resetBeiStart: number | null | undefined = undefined;
+  private zweiGemeldet = new Set<string>();
 
   constructor(
     readonly inh: Inhalte,
@@ -191,7 +244,8 @@ export class Sitzung {
       code: codeAnzeige(adapter.sitzung),
       art: opt.art,
       client: this.client,
-      name: (opt.name?.trim() || rolleName).slice(0, SPIELERNAME_MAX),
+      // L1.3: Im Test ohne Lobby hießen alle Team-Fenster „Zielbearbeitung“ – jetzt trägt jedes seinen Gerätenamen („Laptop SU2A“)
+      name: (opt.name?.trim() || (opt.direkt?.rolle === "zb" ? geraeteName(this.client) : rolleName)).slice(0, SPIELERNAME_MAX),
       verbindung: { verbunden: false, art: adapter.art },
       info: null,
       infoGeladen: false,
@@ -200,13 +254,16 @@ export class Sitzung {
       teilnehmer: [],
       host: null,
       istHost: false,
-      ich: { team: null, rollen: [], rechnet: false, abgeloest: false },
+      ich: { team: null, rollen: [], rechnet: false, abgeloest: false, entfernt: null },
       gast: !!opt.gastVon,
       beendet: null,
       regelFehlerBei: [],
       status: {},
       regelFehler: false,
       direkt: !!opt.direkt,
+      reset: { ts: null, lesbar: true, geladen: false },
+      alleBeendet: false,
+      resetRegelFehler: false,
     };
     // Ablage des eigenen Spiels nur im Team-Fenster mit Netz (lokal liegt das Protokoll ohnehin auf diesem Rechner)
     const g = opt.merker?.lies();
@@ -269,8 +326,31 @@ export class Sitzung {
     }));
     this.abos.push(this.adapter.aufInfo((info) => {
       this.aendern({ info, infoGeladen: true });
+      // L3.3: Eine Sitzung, die vor der Marke angelegt wurde, gilt als beendet
+      if (this.s.teamsGeladen) this.teamsNeu();
       void this.direktPruefen();
     }));
+    // Liste L (L3): globale Marke „Alle Sitzungen beendet“. Bleibt die Antwort aus (kein Netz), gilt nach 3 s „keine Marke“.
+    this.abos.push(this.adapter.aufReset((ts, lesbar) => this.resetGeaendert(ts, lesbar)));
+    const resetFrist = setTimeout(() => { if (!this.s.reset.geladen) this.resetGeaendert(null, true, true); }, 3000);
+    this.abos.push(() => clearTimeout(resetFrist));
+    // L4.2: Tab im Hintergrund – in der Anwesenheit melden
+    if (typeof document !== "undefined") {
+      // nicht mehr, wenn die Seite gerade geschlossen wird (pagehide kommt vor visibilitychange) – sonst trüge sich das Fenster
+      // beim Schließen noch einmal als „verbunden“ ein
+      let geht = false;
+      const weg = () => { geht = true; };
+      const da = () => { geht = false; };
+      const sicht = () => { if (this.gestartet && !geht) this.meldeAnwesenheit(); };
+      window.addEventListener("pagehide", weg);
+      window.addEventListener("pageshow", da);
+      document.addEventListener("visibilitychange", sicht);
+      this.abos.push(() => {
+        document.removeEventListener("visibilitychange", sicht);
+        window.removeEventListener("pagehide", weg);
+        window.removeEventListener("pageshow", da);
+      });
+    }
     this.abos.push(this.adapter.aufTeams((t) => {
       this.rohTeams = t ?? {};
       this.aendern({ teamsGeladen: true });
@@ -283,7 +363,6 @@ export class Sitzung {
     this.timer.push(setInterval(() => {
       if (this.s.teams.some((t) => t.rechner && !t.rechnerOnline)) this.teamsNeu();
     }, 1000));
-    if (this.opt.direkt && this.s.art === "tt") void this.direktBeitreten();
   }
 
   stoppen(): void {
@@ -319,18 +398,53 @@ export class Sitzung {
     if (this.opt.gastVon) return;
     const f = fensterJetzt();
     this.gemeldetesFenster = f.breite && f.hoehe ? fensterKennung(f) : "";
+    this.gemeldetZwei = this.s.art === "tt" && !!this.spiel(this.s.ich.team)?.stand.upload.zwei;
     this.adapter.meldeAnwesenheit({
-      client: this.client, art: this.s.art, name: this.s.name, version: __ARGUS_VERSION__,
+      // seit Liste L (L4.2): Programmstand (Commit) statt der Versionsnummer – die Spielleitung sieht, wer noch alten Code hat
+      client: this.client, art: this.s.art, name: this.s.name, version: __ARGUS_COMMIT__,
       ...(this.s.ich.team ? { team: this.s.ich.team } : {}),
       ...(this.gemeldetesFenster ? { fenster: this.gemeldetesFenster } : {}),
       ...(this.s.regelFehler && this.s.art === "tt" ? { regeln: true } : {}),
+      ...(this.gemeldetZwei ? { zwei: true } : {}),
+      ...(typeof document !== "undefined" && document.hidden ? { hintergrund: true } : {}),
     });
+  }
+  private gemeldetZwei = false;
+
+  /** L2.1: letztes Lebenszeichen eines Fensters – Puls der Anwesenheit oder seine Statusmeldung. */
+  private zuletzt(client: string, team: string): number | null {
+    const st = this.s.status[team];
+    const ts = Math.max(this.zuletztOnline.get(client) ?? 0, st && st.client === client && typeof st.ts === "number" ? st.ts : 0);
+    return ts > 0 ? ts : null;
+  }
+
+  /**
+   * L1.2 / L3.2: Zählt ein Laptop-Eintrag im Testraum noch? Nicht, wenn er vor der Marke „Alle Sitzungen beendet“ entstand, und nicht,
+   * wenn er länger als 2 h kein Lebenszeichen gab (Beitritt, Puls, Statusmeldung). In Sitzungen mit Lobby zählen alle Einträge.
+   */
+  private gilt(client: string, team: string, e: SpielerEintrag): boolean {
+    if (!this.opt.direkt || team !== DIREKT_TEAM) return true;
+    const seit = e.seit ?? 0;
+    // vor der Marke oder vor dem letzten „Testraum leeren“ (teams/traum/erstellt) beigetreten: zählt nicht – auch der eigene Eintrag
+    // (<=: ein Beitritt in derselben Millisekunde zählt als davor; neue Beitritte liegen immer mindestens 1 ms danach, nachMarke)
+    if ((this.s.reset.ts && seit <= this.s.reset.ts) || seit <= (this.rohTeams[DIREKT_TEAM]?.erstellt ?? -1)) return false;
+    if (client === this.client) return true;
+    // erst urteilen, wenn die Anwesenheit da ist – sonst gälte ein lebendiger Laptop kurz als verfallen (zwei rechnende Fenster)
+    if (!this.beobachtetAb) return true;
+    if (this.s.teilnehmer.some((t) => t.client === client)) return true;
+    return this.adapter.serverJetzt() - Math.max(seit, this.zuletzt(client, team) ?? 0) <= (this.opt.verfallMs ?? TESTRAUM_VERFALL_MS);
   }
 
   /** Statusmeldungen: Spielleitung und Plenum immer; ein Team-Fenster nur, solange es nicht selbst rechnet (für „seit wann weg“, K2). */
   private statusAbgleichen(): void {
     const noetig = this.gestartet && (this.s.art !== "tt" || !this.s.ich.rechnet);
-    if (noetig && !this.statusAbo) this.statusAbo = this.adapter.aufStatus((st) => this.aendern({ status: st ?? {} }));
+    if (noetig && !this.statusAbo) {
+      this.statusAbo = this.adapter.aufStatus((st) => {
+        this.aendern({ status: st ?? {} });
+        // Testraum (L1.2): ob ein Eintrag verfallen ist, hängt auch an der letzten Statusmeldung
+        if (this.opt.direkt && this.statusAbo) this.teamsNeu();
+      });
+    }
     else if (!noetig && this.statusAbo) {
       this.statusAbo();
       this.statusAbo = null;
@@ -372,6 +486,7 @@ export class Sitzung {
   private teamsNeu(): void {
     const teams = teamStaende(this.rohTeams, this.s.teilnehmer, {
       jetzt: this.adapter.serverJetzt(), wegSeit: (c, t) => this.wegSeit(c, t), uebernahmeMs: this.opt.uebernahmeMs,
+      gilt: (c, t, e) => this.gilt(c, t, e), zuletzt: (c, t) => this.zuletzt(c, t),
     });
     // K1.3: Der Gast (zweiter Tab) sieht dem Team der eigentlichen Kennung zu
     const wer = this.opt.gastVon ?? this.client;
@@ -383,31 +498,146 @@ export class Sitzung {
     if (rechnet) this.rechneteTeam = eigen!.id;
     // K2.2: Dieses Fenster hat gerechnet, jetzt ist ein anderes das früheste – ein anderer Laptop führt das Spiel weiter
     const abgeloest = !this.opt.gastVon && !!eigen && !rechnet && this.rechneteTeam === eigen.id && eigen.rechner !== this.client;
-    const ich = { team: eigen?.id ?? null, rollen: meinEintrag?.rollen ?? [], rechnet, abgeloest };
+    // Liste L (L2.3, L1.1): Dieses Fenster stand in einem Team und steht ohne eigenes Zutun in keinem mehr – die Spielleitung hat es
+    // abgemeldet („Laptop abmelden“, „aus dem Team nehmen“, Team gelöscht) oder den Testraum geleert.
+    const vorher = this.s.ich.team;
+    if (eigen) {
+      this.selbstRaus = false;
+      if (this.opt.direkt && this.raumStandBeiBeitritt === null) this.raumStandBeiBeitritt = this.rohTeams[eigen.id]?.erstellt ?? 0;
+    } else if (vorher && this.s.art === "tt" && !this.opt.gastVon && this.s.beendet === null && !this.s.alleBeendet) {
+      if (this.selbstRaus) this.selbstRaus = false;
+      else {
+        const alt = this.s.teams.find((t) => t.id === vorher);
+        const geleert = !!this.opt.direkt && (this.rohTeams[DIREKT_TEAM]?.erstellt ?? 0) > (this.raumStandBeiBeitritt ?? 0);
+        if (this.opt.direkt || alt?.lauf) {
+          this.entfernt = geleert ? "geleert" : "abgemeldet";
+          this.hinweis("warnung", geleert ? "Die Spielleitung hat den Testraum geleert – dieses Fenster rechnet nicht mehr." : "Die Spielleitung hat diesen Laptop abgemeldet – er rechnet nicht mehr.");
+        } else this.hinweis("warnung", "Die Spielleitung hat dieses Fenster aus dem Team genommen.");
+        this.beiEntfernt(vorher);
+      }
+    }
+    const ich = { team: eigen?.id ?? null, rollen: meinEintrag?.rollen ?? [], rechnet, abgeloest, entfernt: eigen ? null : this.entfernt };
+    if (eigen) this.entfernt = null;
     const teamWechsel = ich.team !== this.s.ich.team;
-    const geaendert = teamWechsel || rechnet !== this.s.ich.rechnet || abgeloest !== this.s.ich.abgeloest;
+    const geaendert = teamWechsel || rechnet !== this.s.ich.rechnet || abgeloest !== this.s.ich.abgeloest || ich.entfernt !== this.s.ich.entfernt;
     if (abgeloest && !this.s.ich.abgeloest) this.hinweis("warnung", "Das Spiel wird an einem anderen Laptop weitergeführt – dieser rechnet nicht mehr.");
     if (meinEintrag && this.s.art === "tt" && meinEintrag.name !== this.s.name && !this.opt.direkt && !this.opt.gastVon) {
       // Name aus dem Team übernehmen (z. B. nach Neuladen)
       this.s = { ...this.s, name: meinEintrag.name };
     }
     // K4.1: Marke „Sitzung beendet“
+    // L3.3: Eine Sitzung mit Lobby, die vor der Marke „Alle Sitzungen beendet“ angelegt wurde, gilt ebenfalls als beendet
     const ende = this.rohTeams[ENDE_TEAM];
-    const beendet = ende ? ende.erstellt || 1 : null;
+    const marke = this.s.reset.ts;
+    const vorMarke = !this.opt.direkt && marke !== null && !!this.s.info && this.s.info.erstellt < marke;
+    const beendet = ende ? ende.erstellt || 1 : vorMarke ? marke : null;
     const neuBeendet = beendet !== null && this.s.beendet === null;
     this.aendern({ teams, ich, beendet });
     if (teamWechsel) this.meldeAnwesenheit();
-    if (geaendert || (eigen && this.opt.merker?.lies()?.teamName !== eigen.name)) this.merken(eigen ?? null);
+    if ((geaendert && !ich.entfernt) || (eigen && this.opt.merker?.lies()?.teamName !== eigen.name)) this.merken(eigen ?? null);
     this.statusAbgleichen();
+    this.zweiPruefen();
     if (neuBeendet) {
       void this.beiBeendet();
       return;
     }
     // beendet: Team-Fenster haben abgeschlossen; Spielleitung und Plenum lesen die Protokolle weiter (Auswertung)
     if (this.s.beendet !== null && this.s.art === "tt") return;
+    if (this.s.alleBeendet) return;
     this.spieleAbgleichen();
     void this.direktPruefen();
+    this.testraumAufraeumen();
     if (this.s.istHost) void this.farbenPruefen();
+  }
+
+  /**
+   * L2.3: Dieses Fenster ist nicht mehr im Team. Host sofort anhalten (kein Ereignis mehr), den Rest hochladen, die Sitzung vergessen.
+   * Das Spiel des alten Teams gehört diesem Fenster danach nicht mehr.
+   */
+  private beiEntfernt(team: string): void {
+    const sp = this.spiele.get(team);
+    this.rechneteTeam = null;
+    if (this.entfernt) this.opt.merker?.vergiss();
+    if (!sp) return;
+    this.spiele.delete(team);
+    this.spielAbos.get(team)?.();
+    this.spielAbos.delete(team);
+    void sp.abschliessen().catch(() => false).then(() => sp.stoppen());
+  }
+
+  /** L2.3: nach „Von der Spielleitung abgemeldet“ zurück in die Lobby („neu beitreten“). */
+  neuBeitreten(): void {
+    this.entfernt = null;
+    this.aendern({ ich: { ...this.s.ich, entfernt: null } });
+    this.merken(null);
+  }
+
+  /**
+   * Testraum (L1.2, L3.2): Das rechnende Team-Fenster nimmt Einträge, die nicht mehr zählen (verfallen, älter als die Marke), auch aus
+   * der Datenbank – sonst sammeln sie sich wie zwischen dem 24.10. und dem 12.11. („vier Laptops, alle heißen Zielbearbeitung“).
+   */
+  private testraumAufraeumen(): void {
+    if (!this.opt.direkt || !((this.s.art === "tt" && this.s.ich.rechnet) || (this.s.art === "sl" && this.s.istHost))) return;
+    if (!this.beobachtetAb || !this.s.reset.geladen) return;
+    const roh = this.rohTeams[DIREKT_TEAM]?.spieler ?? {};
+    const zaehlt = new Set(this.team(DIREKT_TEAM)?.spieler.map((x) => x.client));
+    for (const client of Object.keys(roh)) {
+      if (zaehlt.has(client) || this.weggeraeumt.has(client)) continue;
+      this.weggeraeumt.add(client);
+      void this.adapter.setzeSpieler(null, client, null, [DIREKT_TEAM]).catch(() => {});
+    }
+  }
+
+  /** L2.4: zwei Verläufe – eigener Befund (Spiel) in die Anwesenheit; Spielleitung: Hinweis je Team einmal. */
+  private zweiPruefen(): void {
+    if (this.s.art === "tt") {
+      if (!!this.spiel(this.s.ich.team)?.stand.upload.zwei !== this.gemeldetZwei && this.gestartet) this.meldeAnwesenheit();
+      return;
+    }
+    if (this.s.art !== "sl") return;
+    for (const t of this.s.teams) {
+      const schl = `${t.id}:${t.lauf ?? ""}`;
+      if (!this.zweiVerlaeufe(t.id) || this.zweiGemeldet.has(schl)) continue;
+      this.zweiGemeldet.add(schl);
+      this.hinweis("fehler", `Team ${t.name}: Lauf hat zwei Verläufe – Neues Spiel empfohlen.`);
+    }
+  }
+
+  /** L2.4: Hat der aktuelle Lauf dieses Teams zwei Verläufe (meldet der Team-Laptop oder sieht dieses Fenster selbst)? */
+  zweiVerlaeufe(team: string): boolean {
+    const t = this.team(team);
+    if (!t?.lauf) return false;
+    return !!this.spiele.get(team)?.stand.upload.zwei || !!t.spieler.find((x) => x.client === t.rechner)?.zwei;
+  }
+
+  /**
+   * L2.1: Warum ist Start oder Pause für dieses Team noch nicht ausgeführt? Bleibt stehen, bis der Befehl im Protokoll steht oder die
+   * Spielleitung neu klickt (dann wieder höchstens 10 s „gesendet …“). null: nichts steht aus.
+   */
+  uhrGrund(team: string): UhrGrund | null {
+    const sp = this.spiele.get(team);
+    const t = this.team(team);
+    if (!sp || !t || !t.lauf || sp.stand.lauf !== t.lauf || sp.stand.zustand.ende) return null;
+    const befehl = sp.ausstehendeUhr();
+    if (!befehl || sp.wartetAuf("uhr")) return null;
+    const was = befehl === "start" ? "Start" : "Anhalten";
+    const jetzt = this.adapter.serverJetzt();
+    const r = t.spieler.find((x) => x.client === t.rechner);
+    if (!r) {
+      return { befehl, kurz: `${was} wartet auf Laptop`, text: `${was} nicht ausgeführt – im Team ist kein Laptop. Das Fenster des Teams an einem Laptop öffnen; der Befehl wird dann ausgeführt.` };
+    }
+    const laptop = geraeteName(r.client);
+    const vor = t.rechnerZuletzt ? `zuletzt vor ${mmss(Math.max(0, Math.round((jetzt - t.rechnerZuletzt) / 1000)))}` : "noch kein Lebenszeichen";
+    if (!t.rechnerOnline) {
+      return {
+        befehl, kurz: `${was} wartet auf ${laptop}`,
+        text: `${was} nicht ausgeführt – ${laptop} rechnet nicht (${vor}). Fenster an einem Laptop öffnen oder hier „Laptop abmelden“.`,
+      };
+    }
+    return {
+      befehl, kurz: `${was} wartet auf Antwort von ${laptop}`,
+      text: `${was} nicht ausgeführt – ${laptop} ist verbunden, antwortet aber nicht (${vor}). Dort neu laden oder hier „Laptop abmelden“.`,
+    };
   }
 
   /** Welche Teams dieses Fenster als Spiel braucht: Spielleitung und Plenum alle (folgen), Team-Fenster das eigene. */
@@ -438,6 +668,7 @@ export class Sitzung {
         this.spiele.set(id, sp);
         this.spielAbos.set(id, sp.abonnieren(() => {
           if (sp!.stand.upload.regeln && !this.s.regelFehler) this.setzeRegelFehler();
+          if (sp!.stand.upload.zwei) this.zweiPruefen();
           this.hoerer.forEach((cb) => cb());
         }));
       }
@@ -450,7 +681,7 @@ export class Sitzung {
   /** K1.1: Kennung und Team im Merker festhalten (nur Team-Fenster einer Sitzung mit Lobby, nicht der Gast). */
   private merken(eigen: TeamStand | null): void {
     const m = this.opt.merker;
-    if (!m || this.s.art !== "tt" || this.opt.gastVon || this.s.beendet !== null) return;
+    if (!m || this.s.art !== "tt" || this.opt.gastVon || this.s.beendet !== null || this.s.alleBeendet) return;
     m.schreibe({
       client: this.client, team: eigen?.id ?? null, teamName: eigen?.name ?? null,
       rechnete: !!eigen && this.rechneteTeam === eigen.id, sync: this.adapter.art,
@@ -461,7 +692,7 @@ export class Sitzung {
   private antwortetNicht(team: string): void {
     const t = this.team(team);
     if (!t) return;
-    const grund = !t.rechner ? "kein Laptop im Team" : !t.rechnerOnline ? "Laptop nicht verbunden" : "Laptop verbunden, die Antwort fehlt noch";
+    const grund = !t.rechner ? "kein Laptop im Team" : !t.rechnerOnline ? `${geraeteName(t.rechner)} nicht verbunden` : `${geraeteName(t.rechner)} verbunden, die Antwort fehlt noch`;
     this.hinweis("warnung", `Team ${t.name} antwortet nicht – ${grund}. Der Befehl bleibt stehen und wird ausgeführt, sobald der Laptop rechnet.`);
   }
 
@@ -482,7 +713,14 @@ export class Sitzung {
   /** Eintrag dieses Fensters im Team. `seit` nur beim Beitritt neu, sonst bleibt der alte Wert. */
   private eintrag(neu = true, seit?: number): SpielerEintrag {
     const alt = this.team(this.s.ich.team)?.spieler.find((x) => x.client === this.client)?.seit;
-    return { name: this.s.name || "Team", rollen: rollenText(["zb"]), seit: seit ?? (neu || !alt ? Math.round(this.adapter.serverJetzt()) : alt) };
+    // L3.2: ein neuer Beitritt liegt immer nach der Marke „Alle Sitzungen beendet“ (auch wenn die Uhr dieses Rechners nachgeht)
+    return { name: this.s.name || "Team", rollen: rollenText(["zb"]), seit: seit ?? (neu || !alt ? this.nachMarke() : alt) };
+  }
+
+  /** Serverzeit jetzt, aber sicher nach der Marke „Alle Sitzungen beendet“. */
+  private nachMarke(): number {
+    const raum = this.opt.direkt ? this.rohTeams[DIREKT_TEAM]?.erstellt ?? 0 : 0;
+    return Math.max(Math.round(this.adapter.serverJetzt()), (this.s.reset.ts ?? 0) + 1, raum + 1);
   }
 
   /** Teams, in denen dieses Fenster eingetragen ist (normalerweise höchstens eines). */
@@ -576,9 +814,13 @@ export class Sitzung {
       const ganz = await sp.abschliessen();
       if (!ganz) this.hinweis("warnung", "Das Protokoll ist nicht ganz im Netz – es bleibt auf diesem Laptop gespeichert.");
     }
+    this.selbstRaus = true;
     const ok = await this.schreibe(() => this.adapter.setzeSpieler(null, this.client, null, alt));
     if (ok) this.rechneteTeam = null;
-    else sp?.wiederAufnehmen();
+    else {
+      this.selbstRaus = false;
+      sp?.wiederAufnehmen();
+    }
     return ok;
   }
 
@@ -609,8 +851,100 @@ export class Sitzung {
     if (!t?.rechner) return false;
     const naechster = t.spieler[1];
     const ok = await this.spielerSetzen(t.rechner, null);
-    if (ok) this.hinweis("info", naechster ? `Team ${t.name}: Laptop freigegeben – jetzt rechnet „${naechster.name}“.` : `Team ${t.name}: Laptop freigegeben – das nächste Fenster, das beitritt, rechnet.`);
+    if (ok) this.hinweis("info", naechster ? `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – jetzt rechnet ${laptopText(naechster.client, naechster.name)}.` : `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – das nächste Fenster, das beitritt, rechnet.`);
     return ok;
+  }
+
+  /**
+   * L2.2: „Laptop abmelden“ – wie laptopFreigeben, aber auch wenn der Laptop verbunden ist und rechnet (die Ansicht fragt nach). Der
+   * Eintrag verschwindet aus teams/<team>/spieler; das abgemeldete Fenster hält an und lädt den Rest hoch (L2.3), das nächste Fenster
+   * des Teams rechnet ab dem hochgeladenen Protokoll. Ohne Regeländerung.
+   */
+  async laptopAbmelden(team: string): Promise<boolean> {
+    return this.laptopFreigeben(team);
+  }
+
+  /**
+   * L1.1: Testraum leeren (Spielleitung im Test ohne Lobby). Nimmt alle Laptop-Einträge aus „Team 1“ und legt einen neuen Lauf an;
+   * offene Team-Fenster halten an („Testraum geleert – neu laden“), das nächste Team-Fenster, das (neu) öffnet, rechnet. Der Stand
+   * „geleert um“ steht in teams/traum/erstellt – ohne Regeländerung.
+   */
+  async testraumLeeren(still = false): Promise<boolean> {
+    if (!this.opt.direkt) return false;
+    if (this.s.art === "sl" && !this.s.istHost) {
+      if (!still) this.hinweis("warnung", "Nur die steuernde Spielleitung kann den Testraum leeren.");
+      return false;
+    }
+    const roh = this.rohTeams[DIREKT_TEAM];
+    const clients = Object.keys(roh?.spieler ?? {});
+    // „geleert um“: nach jedem bisherigen Beitritt (auch wenn die Uhr eines Laptops vorgeht). Der Stand allein macht alle bisherigen
+    // Einträge ungültig (gilt()) – alle offenen Fenster halten im selben Augenblick an; das Entfernen danach räumt nur auf.
+    const um = Math.max(this.nachMarke(), ...Object.values(roh?.spieler ?? {}).map((e) => (e.seit ?? 0) + 1));
+    const ok = await this.schreibe(async () => {
+      await this.adapter.setzeTeam(DIREKT_TEAM, { ...this.direktKopf(), erstellt: um });
+      await this.adapter.aendereTeam(DIREKT_TEAM, { lauf: neueLaufId() });
+      await Promise.all(clients.map((c) => this.adapter.setzeSpieler(null, c, null, [DIREKT_TEAM])));
+    });
+    if (ok && !still) this.hinweis("info", `Testraum geleert${clients.length ? ` (${clients.length} ${clients.length === 1 ? "Laptop-Eintrag" : "Laptop-Einträge"} entfernt)` : ""}, neuer Lauf angelegt. Das nächste Team-Fenster, das (neu) öffnet, rechnet.`);
+    return ok;
+  }
+
+  // ---------------------------------------------------------------- Notbremse (Liste L, L3)
+
+  /**
+   * L3.1: „Alle Sitzungen beenden“ – setzt die globale Marke argus/v1/reset. Jedes offene Fenster jeder Sitzung (und des Testraums)
+   * schließt ab und geht zur Startseite. Mit den alten Firebase-Regeln lehnt die Datenbank ab: „regeln“ (sonst bricht nichts).
+   */
+  async alleBeenden(): Promise<"ok" | "regeln" | "fehler"> {
+    try {
+      await this.adapter.setzeReset();
+      return "ok";
+    } catch (e) {
+      if (regelFehler(e)) {
+        this.aendern({ resetRegelFehler: true });
+        return "regeln";
+      }
+      this.hinweis("fehler", `Nicht gesendet: ${(e as Error).message}`);
+      return "fehler";
+    }
+  }
+
+  /** Die Marke hat sich geändert (oder die erste Antwort ist da). `ersatz`: keine Antwort nach 3 s – weiter ohne Marke. */
+  private resetGeaendert(ts: number | null, lesbar: boolean, ersatz = false): void {
+    const erste = this.resetBeiStart === undefined;
+    if (erste && !ersatz) this.resetBeiStart = ts;
+    this.aendern({ reset: { ts, lesbar, geladen: true } });
+    // jünger als das Öffnen dieses Fensters: abschließen und zur Startseite (L3.2)
+    if (!erste && !ersatz && ts !== null && ts > (this.resetBeiStart ?? 0) && !this.s.alleBeendet) {
+      void this.beiAlleBeendet();
+      return;
+    }
+    if (this.s.teamsGeladen) this.teamsNeu();
+    void this.direktPruefen();
+  }
+
+  /**
+   * L3.2: wie „Sitzung beendet“ (K4.1), für alle Sitzungen: Host anhalten, Rest hochladen, ALLE gemerkten Sitzungen vergessen; im
+   * Testraum nimmt das Team-Fenster seinen Eintrag heraus, die steuernde Spielleitung leert den Raum. Danach zeigt main.tsx die
+   * Startseite mit „Die Spielleitung hat alle Sitzungen beendet“.
+   */
+  private async beiAlleBeendet(): Promise<void> {
+    vergissAlleSitzungen();
+    this.opt.merker?.vergiss();
+    const spiele = [...this.spiele.values()];
+    // sofort: kein Fenster rechnet mehr
+    const fertig = this.s.art === "tt" ? Promise.all(spiele.map((sp) => sp.abschliessen(3000).catch(() => false))) : Promise.resolve([]);
+    this.aendern({ ich: { ...this.s.ich, rechnet: false } });
+    try {
+      await fertig;
+      if (this.opt.direkt && this.s.art === "tt" && this.meineTeams().length) {
+        this.selbstRaus = true;
+        await this.adapter.setzeSpieler(null, this.client, null, this.meineTeams()).catch(() => {});
+      }
+      if (this.opt.direkt && this.s.art === "sl" && this.s.istHost) await this.testraumLeeren(true);
+    } finally {
+      this.aendern({ alleBeendet: true });
+    }
   }
 
   /** Steuernde Spielleitung: Spiel für diese Teams öffnen (Lauf anlegen; Ansicht und Einweisung erscheinen am Team-Laptop). */
@@ -750,13 +1084,21 @@ export class Sitzung {
 
   // ---------------------------------------------------------------- Direktaufruf ohne Lobby
 
+  /**
+   * Test ohne Lobby: Das Team-Fenster trägt sich in „Team 1“ ein – seit Liste L erst, wenn Teams und Marke geladen sind, damit der
+   * Beitritt sicher nach „Alle Sitzungen beenden“ und nach dem letzten „Testraum leeren“ liegt (nachMarke).
+   */
+  private direktBeigetreten = false;
   private async direktBeitreten(): Promise<void> {
-    if (this.opt.direkt?.rolle !== "zb") return;
+    if (this.opt.direkt?.rolle !== "zb" || this.s.art !== "tt" || this.direktBeigetreten) return;
+    if (!this.s.teamsGeladen || !this.s.reset.geladen || this.s.alleBeendet) return;
+    this.direktBeigetreten = true;
     await this.schreibe(() => this.adapter.setzeTeam(DIREKT_TEAM, this.direktKopf(), { client: this.client, eintrag: this.eintrag() }));
   }
 
   private direktKopf() {
-    return { name: "Team 1", farbe: freieFarbe([]), erstellt: 0 };
+    // erstellt = Stand „geleert um“ des Testraums (L1.1) – beim Beitreten nicht zurücksetzen
+    return { name: "Team 1", farbe: freieFarbe([]), erstellt: this.rohTeams[DIREKT_TEAM]?.erstellt ?? 0 };
   }
 
   /**
@@ -764,7 +1106,8 @@ export class Sitzung {
    * (dann ohne Spielleitung: Test allein an einem Rechner).
    */
   private async direktPruefen(): Promise<void> {
-    if (!this.opt.direkt || this.direktErledigt || !this.s.infoGeladen || !this.s.teamsGeladen) return;
+    void this.direktBeitreten();
+    if (!this.opt.direkt || this.direktErledigt || !this.s.infoGeladen || !this.s.teamsGeladen || !this.s.reset.geladen || this.s.alleBeendet) return;
     const zb = this.s.art === "tt" && this.opt.direkt.rolle === "zb";
     if (!(this.s.art === "sl" && this.s.istHost) && !zb) return;
     this.direktErledigt = true;
@@ -776,6 +1119,17 @@ export class Sitzung {
       }).catch(() => false);
     }
     if (!this.rohTeams[DIREKT_TEAM]) await this.schreibe(() => this.adapter.setzeTeam(DIREKT_TEAM, this.direktKopf()));
+    // L3.2: Der Raum stammt von vor der Marke „Alle Sitzungen beendet“ – wie „Testraum leeren“: neuer Stand, neuer Lauf (die alten
+    // Einträge zählen ohnehin nicht mehr, siehe gilt())
+    const marke = this.s.reset.ts;
+    const raum = this.rohTeams[DIREKT_TEAM];
+    if (marke && raum && (raum.erstellt ?? 0) < marke) {
+      await this.schreibe(async () => {
+        // Stand = die Marke selbst (nicht „jetzt“): Einträge bis zur Marke zählen ohnehin nicht, der eigene Beitritt liegt danach
+        await this.adapter.setzeTeam(DIREKT_TEAM, { ...this.direktKopf(), erstellt: marke });
+        if (raum.lauf) await this.adapter.aendereTeam(DIREKT_TEAM, { lauf: neueLaufId() });
+      });
+    }
     if (!this.rohTeams[DIREKT_TEAM]?.lauf) {
       await this.schreibe(() => this.adapter.aendereTeam(DIREKT_TEAM, { lauf: neueLaufId() }));
     }
@@ -789,7 +1143,9 @@ export class Sitzung {
       const a = adapterFuer(code.toLowerCase());
       await a.verbinden();
       try {
-        const ok = await a.legeAn({ code, szenario: sz.id, version: sz.version, titel: sz.titel, erstellt: Math.round(a.serverJetzt()), von: name });
+        // L3.3: Die neue Sitzung muss nach der Marke „Alle Sitzungen beendet“ liegen – auch wenn die Uhr dieses Rechners nachgeht
+        const marke = await resetEinmal(a);
+        const ok = await a.legeAn({ code, szenario: sz.id, version: sz.version, titel: sz.titel, erstellt: Math.max(Math.round(a.serverJetzt()), (marke ?? 0) + 1), von: name });
         if (ok) return a.sitzung;
       } finally {
         a.trennen();
@@ -797,4 +1153,21 @@ export class Sitzung {
     }
     return null;
   }
+}
+
+/** L3: Marke „Alle Sitzungen beendet“ einmal lesen (höchstens `ms` warten; nicht lesbar oder keine Antwort = keine Marke). */
+export function resetEinmal(a: SyncAdapter, ms = 3000): Promise<number | null> {
+  return new Promise((ok) => {
+    let ab: Abmelden | null = null;
+    let fertig = false;
+    const ende = (ts: number | null) => {
+      if (fertig) return;
+      fertig = true;
+      clearTimeout(frist);
+      queueMicrotask(() => ab?.());
+      ok(ts);
+    };
+    const frist = setTimeout(() => ende(null), ms);
+    ab = a.aufReset((ts) => ende(ts));
+  });
 }

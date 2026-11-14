@@ -18,6 +18,7 @@ import type { Sicht } from "../../sitzung/sicht";
 import { UEBERNAHME_MS, istVeraltet } from "../../sync/adapter";
 import { EinweisungFenster } from "../einweisung";
 import { BestaetigenKnopf, Hinweise } from "./bausteine";
+import { VersionsBanner } from "./notbremse";
 import { fensterText, useFenster, zuKlein } from "./fenster";
 import { useSpielzeit, useStand } from "./hooks";
 
@@ -211,22 +212,23 @@ function ZuschauBanner(p: { s: Sicht; speichern: (eigenes?: boolean) => void; zw
       </div>
     );
   }
-  const name = st.rechnerName ? <b>{st.rechnerName}</b> : "jemand anderem";
+  // L1.3: der Laptop beim Gerätenamen („Laptop SU2A (Lt Müller)“)
+  const name = st.rechnerGeraet ? <b>{st.rechnerGeraet}</b> : "ein anderer Laptop";
   if (st.abgeloest) {
     return (
       <div class="zuschau-banner" data-testid="zuschau-banner" data-art="abgeloest">
-        <span>Das Spiel wird an einem <b>anderen Laptop</b> weitergeführt{st.rechnerName && st.rechnerName !== "Team" ? <> (Laptop von {name})</> : ""}. Dieser rechnet nicht mehr.</span>
+        <span>Das Spiel wird an einem <b>anderen Laptop</b> weitergeführt{st.rechnerGeraet ? <> ({name})</> : ""}. Dieser rechnet nicht mehr.</span>
         <button type="button" class="knopf klein" data-testid="eigenes-protokoll" onClick={() => p.speichern(true)}
           title="Protokoll dieses Laptops als Datei speichern (für die Spielleitung, falls hier noch Einträge fehlen)">⇩ Protokoll dieses Laptops</button>
         {!st.rechnerOnline && st.uebernehmbar && <button type="button" class="knopf klein warn" data-testid="uebernehmen" onClick={() => void p.s.uebernehmenTeam()}>Spiel hier weiterführen</button>}
       </div>
     );
   }
-  if (st.rechnerOnline) return <div class="zuschau-banner" data-testid="zuschau-banner" data-art="zuschauen"><span>Das Spiel dieses Teams rechnet der Laptop von {name}. Hier nur zuschauen.</span></div>;
+  if (st.rechnerOnline) return <div class="zuschau-banner" data-testid="zuschau-banner" data-art="zuschauen"><span>Das Spiel dieses Teams rechnet {name}. Hier nur zuschauen.</span></div>;
   const rest = Math.ceil((UEBERNAHME_MS - (jetzt - (st.rechnerWegSeit ?? jetzt))) / 1000);
   return (
     <div class="zuschau-banner" data-testid="zuschau-banner" data-art="weg">
-      <span>Der Team-Laptop{st.rechnerName ? <> von <b>{st.rechnerName}</b></> : ""} ist seit {seitText(st.rechnerWegSeit, jetzt)} nicht verbunden.{" "}
+      <span>Der Team-Laptop{st.rechnerGeraet ? <> <b>{st.rechnerGeraet}</b></> : ""} ist seit {seitText(st.rechnerWegSeit, jetzt)} nicht verbunden.{" "}
         {st.uebernehmbar ? "Spielt er ohne Netz weiter, kommt sein Protokoll nach. Nur wenn er aus ist:" : `Weiterführen hier in ${Math.max(1, rest)} s möglich.`}</span>
       {st.uebernehmbar && <button type="button" class="knopf klein warn" data-testid="uebernehmen" onClick={() => void p.s.uebernehmenTeam()}>Spiel hier weiterführen</button>}
     </div>
@@ -320,6 +322,7 @@ export function Rahmen(p: {
           {p.band ?? <div class={`rollenband rolle-${rolle}`}><span class="marke">ARGUS</span><span>{ROLLEN_NAME[rolle]}</span></div>}
           {p.links}
           {zeigeTeam && <TeamMarke name={st.teamName} farbe={st.teamFarbe} />}
+          {team && !p.band && !st.gast && <span class="geraet-marke" data-testid="geraet" title="Name dieses Laptops – so nennt ihn die Spielleitung">{st.geraet}</span>}
           {!zeigeTeam && !p.teamImBand && !team && st.name !== ROLLEN_NAME[rolle] && <span class="leise">{st.name}</span>}
         </div>
         <UhrAnzeige inh={inh} z={z} t={t} lauf={st.lauf} kurz={false} />
@@ -354,6 +357,13 @@ export function Rahmen(p: {
       </header>
       {st.regelFehler && <RegelBanner />}
       {team && st.nurLesen && !p.band && st.lauf && st.geladen && <ZuschauBanner s={p.s} speichern={speichern} zweiterTab={p.zweiterTab} />}
+      {team && !p.band && st.rechnet && st.zwei && (
+        <div class="zuschau-banner zwei-banner" role="alert" data-testid="zwei-banner">
+          <span><b>Lauf hat zwei Verläufe – Neues Spiel empfohlen.</b> Im Netz steht ein anderer Verlauf; dieser Laptop kann nicht hochladen. Bitte der Spielleitung Bescheid geben.</span>
+          <button type="button" class="knopf klein" onClick={() => speichern()}>⇩ Protokoll</button>
+        </div>
+      )}
+      <VersionsBanner />
       {p.children}
       {team && z.ende && !sperreZu && !st.nurLesen && (
         <div class="sperre" data-testid="spielende">

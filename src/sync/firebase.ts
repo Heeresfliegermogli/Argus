@@ -16,6 +16,9 @@ import {
   type TeamDaten, type TeamKopf, type Teilnehmer, type Verbindung, istVeraltet,
 } from "./adapter";
 
+/** Liste L (L3): globale Marke „Alle Sitzungen beendet“ – eigener Pfad in firebase/database.rules.json. */
+export const RESET_PFAD = "argus/v1/reset";
+
 export interface FirebaseEinstellungen {
   /** z. B. https://argus-sync-e9fbc-default-rtdb.firebaseio.com */
   databaseURL: string;
@@ -286,6 +289,21 @@ export class FirebaseAdapter implements SyncAdapter {
     return this.abo(onValue(this.r("host"), (s) => cb((s.val() as HostInfo | null) ?? null)));
   }
 
+  // ---------------------------------------------------------------- Notbremse (Liste L, L3)
+
+  aufReset(cb: (ts: number | null, lesbar: boolean) => void): Abmelden {
+    // Eigener Fehlerweg: Mit den alten Regeln ist der Pfad nicht lesbar – das ist kein Regelfehler der Sitzung (kein roter Balken),
+    // sondern heißt nur „keine Marke“.
+    return this.abo(onValue(ref(this.d, RESET_PFAD), (s) => {
+      const v = s.val() as unknown;
+      cb(typeof v === "number" && v > 0 ? v : null, true);
+    }, () => cb(null, false)));
+  }
+
+  async setzeReset(): Promise<void> {
+    await set(ref(this.d, RESET_PFAD), serverTimestamp());
+  }
+
   private fehler(e: Error): void {
     this.verbindung = { ...this.verbindung, fehler: e.message };
     this.verbHoerer.forEach((cb) => cb(this.verbindung));
@@ -293,14 +311,18 @@ export class FirebaseAdapter implements SyncAdapter {
 }
 
 /**
- * Anwesenheit für Firebase (seit Liste J, J2.4): Fenstergröße an version anhängen („0.9.0 1536x730“). Die Regeln erlauben in version
- * bis 20 Zeichen und kein eigenes Feld fenster – so muss niemand die Regeln neu veröffentlichen. Zu lang: ohne Fenster.
- * Seit Liste K (K3.4) reist dort auch das Zeichen „!R“ mit („0.9.0 !R 1536x730“): Bei diesem Fenster lehnen die Regeln ab.
+ * Anwesenheit für Firebase (seit Liste J, J2.4): Fenstergröße an version anhängen. Die Regeln erlauben in version bis 20 Zeichen und
+ * kein eigenes Feld fenster – so muss niemand die Regeln neu veröffentlichen.
+ * Seit Liste K (K3.4) reist dort auch das Zeichen „!R“ mit: Bei diesem Fenster lehnen die Regeln ab.
+ * Seit Liste L: version ist der Programmstand (Commit, „90b7bef“, L4.2); Zeichen in EINEM Wort „!R“, „!2“ (zwei Verläufe, L2.4) oder
+ * „!R2“; liegt der Tab im Hintergrund, steht die Fenstergröße mit großem X („1536X730“, L4.2). Beispiel: „90b7bef !2 1536X730“.
+ * Zu lang (über 20 Zeichen): erst ohne Fenster, dann ohne Zeichen.
  */
-export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehmer, "puls" | "fenster" | "regeln"> {
-  const { fenster, regeln, ...rest } = t;
-  const teile = [rest.version ?? "", regeln ? "!R" : "", fenster && /^\d{2,5}x\d{2,5}$/.test(fenster) ? fenster : ""];
-  // zu lang (Regel: höchstens 20 Zeichen): erst ohne Fenster, dann ohne Zeichen
+export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehmer, "puls" | "fenster" | "regeln" | "zwei" | "hintergrund"> {
+  const { fenster, regeln, zwei, hintergrund, ...rest } = t;
+  const zeichen = regeln || zwei ? `!${regeln ? "R" : ""}${zwei ? "2" : ""}` : "";
+  const gross = fenster && /^\d{2,5}x\d{2,5}$/.test(fenster) ? (hintergrund ? fenster.replace("x", "X") : fenster) : "";
+  const teile = [(rest.version ?? "").slice(0, 12), zeichen, gross];
   for (const weg of [[], [2], [1, 2]]) {
     const version = teile.filter((x, i) => x && !weg.includes(i)).join(" ");
     if (version.length <= 20) return version ? { ...rest, version } : rest;
@@ -308,13 +330,17 @@ export function anwesenheitSchreiben(t: Omit<Teilnehmer, "puls">): Omit<Teilnehm
   return rest;
 }
 
-/** Gegenstück zu anwesenheitSchreiben: „0.9.0 !R 1536x730“ → version „0.9.0“, regeln, fenster „1536x730“. */
+/** Gegenstück zu anwesenheitSchreiben: „90b7bef !R2 1536X730“ → version „90b7bef“, regeln, zwei, fenster „1536x730“, hintergrund. */
 export function anwesenheitLesen(t: Teilnehmer): Teilnehmer {
   if (typeof t?.version !== "string") return t;
   const teile = t.version.split(/\s+/).filter(Boolean);
-  const fenster = teile.find((x) => /^\d{2,5}x\d{2,5}$/.test(x));
-  const regeln = teile.includes("!R");
-  if (!fenster && !regeln) return t;
-  const version = teile.filter((x) => x !== fenster && x !== "!R").join(" ");
-  return { ...t, version: version || undefined, ...(fenster ? { fenster } : {}), ...(regeln ? { regeln: true } : {}) };
+  const gross = teile.find((x) => /^\d{2,5}[xX]\d{2,5}$/.test(x));
+  const zeichen = teile.find((x) => /^![R2]{1,2}$/.test(x));
+  if (!gross && !zeichen) return t;
+  const version = teile.filter((x) => x !== gross && x !== zeichen).join(" ");
+  return {
+    ...t, version: version || undefined,
+    ...(gross ? { fenster: gross.replace("X", "x") } : {}), ...(gross?.includes("X") ? { hintergrund: true } : {}),
+    ...(zeichen?.includes("R") ? { regeln: true } : {}), ...(zeichen?.includes("2") ? { zwei: true } : {}),
+  };
 }

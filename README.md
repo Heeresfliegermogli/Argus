@@ -103,6 +103,12 @@ python3 tools/neuoeffnen_probe.py http://localhost:4173/                        
 python3 tools/neuoeffnen_probe.py http://localhost:4173/ --sync firebase --transport auto \
     --db "http://localhost:5555?ns=argus-k"                                      # dasselbe gegen die Firebase-Nachbildung mit Regeln
 python3 tools/lobby_probe.py http://localhost:4173/                              # 20 Aufgaben Startseite und Lobby
+python3 tools/notbremse_probe.py http://localhost:4173/ --dist dist              # Liste L: Testraum, Laptop abmelden, Notbremse, neue Version, Diagnose
+python3 tools/notbremse_probe.py http://localhost:4173/ --dist dist --sync firebase --transport auto \
+    --db "http://localhost:5555?ns=argus-l"                                      # dasselbe gegen die Firebase-Nachbildung mit den neuen Regeln
+REGELN=tests/regeln_stand_h.json node tools/firebase-testserver/start.js 5556 &  # Nachbildung mit den ALTEN Regeln (Stand H–K)
+python3 tools/notbremse_probe.py http://localhost:4173/ --sync firebase --transport auto \
+    --db "http://localhost:5556?ns=argus-alt" --alte-regeln                      # Notbremse meldet den Regelfehler, sonst läuft alles
 ```
 
 Oberfläche seit Liste J in 1536 × 730 (Dienst-Laptop) und den Prüfgrößen 1366 × 650, 1530 × 800, 1920 × 960 (`tools/pruefgroessen.py`:
@@ -141,7 +147,9 @@ Nach Änderungen an Szenario oder Regeln: `python3 tools/referenz/erzeuge_refere
   (`.github/workflows/pages.yml`). Einmalig: Repository → Settings → Pages → Source „GitHub Actions“.
 * **Firebase-Regeln** (`firebase/database.rules.json`): Firebase-Konsole → Projekt `argus-sync-e9fbc`
   → Realtime Database → Regeln → Inhalt ersetzen → Veröffentlichen. **Seit 2.6 neu zu veröffentlichen** (Rolle `zb`, Pfad
-  `status/<team>`). Die Regeln ersetzen den Testmodus (läuft ca. 18.11.2026 ab): nur Sitzungen `argus/v1/sitzungen/<code>/…`
+  `status/<team>`) und **seit Liste L (14.11.2026) noch einmal** (neuer Pfad `argus/v1/reset` für die Notbremse „Alle Sitzungen
+  beenden“; Anleitung in docs/SITZUNG.md – mit den alten Regeln läuft alles außer der Notbremse). Die Regeln sind keine
+  Testmodus-Regeln und laufen nicht ab: nur Sitzungen `argus/v1/sitzungen/<code>/…`
   (Code aus drei Zeichen `ACEFHJKMNPRTVWXY34679`, klein gespeichert, oder ein Raum des Tests ohne Lobby mit 4–32 Zeichen; Info,
   Teams, Status, Anwesenheit, Host, Läufe je Team) und der Sync-Test (`rooms/…`) sind beschreibbar, eine Liste aller
   Sitzungen ist nicht lesbar, Protokoll und Aktionen nur anhängbar, Formate werden geprüft.

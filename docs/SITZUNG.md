@@ -1,6 +1,6 @@
 # ARGUS – Sitzung, Lobby und Teams
 
-Stand 11.11.2026 (Szenario 2.7, Änderungen H und Liste K „Schließen, wieder öffnen, übernehmen“). Spielform: **7 Teams** (15 TT: sechs zu zweit, eines zu dritt), je Team
+Stand 14.11.2026 (Szenario 2.7, Änderungen H, Liste K „Schließen, wieder öffnen, übernehmen“ und Liste L „Testraum, Laptop abmelden, Notbremse“). Spielform: **7 Teams** (15 TT: sechs zu zweit, eines zu dritt), je Team
 **ein Laptop und eine Rolle**, die Zielbearbeitung (intern `zb`). Alle Teams spielen dieselbe Lage parallel in **getrennten
 Spielständen**. Die Spielleitung legt eine Sitzung mit Code an, die Teilnehmer bilden in der Lobby ihre Teams.
 
@@ -36,7 +36,7 @@ die Startseite neu kam, bekam eine neue Kennung und durfte nur zuschauen. Jetzt 
 | **Zwei Tabs im selben Browser** | Der zweite Tab erkennt, dass die Kennung schon lebt, und sieht nur zu: „Das Spiel läuft schon in einem anderen Tab dieses Browsers“. | **hierher holen** hält den anderen Tab sauber an; das Spiel läuft dann hier. („anderes Team …“ ist nur für Tests mit mehreren Teams an einem PC.) |
 | **Der Laptop ist wirklich weg** (Akku, anderer Rechner) | Ist der Laptop eines Teams **länger als 20 s nicht verbunden**, zeigt die Teamkarte in der Lobby jedes anderen Geräts **„Spiel hier weiterführen“** (mit Nachfrage), ebenso das Banner eines Zuschauers. Das neue Fenster rechnet ab dem hochgeladenen Protokoll. | Am neuen Gerät: Code eingeben → Teamkarte → **Spiel hier weiterführen**. |
 | **Der alte Laptop kommt zurück** | Er ist nicht mehr das früheste Fenster, **stoppt seinen Host** und zeigt „Das Spiel wird an einem anderen Laptop weitergeführt“ (mit **⇩ Protokoll dieses Laptops**). Nie zwei verbundene rechnende Fenster. | Nichts – zuschauen oder **Team verlassen**. |
-| **Die Spielleitung räumt auf** | In der Zeile des Teams steht „nicht verbunden seit 0:45“ und **Laptop freigeben** (Nachfrage): nimmt das tote Fenster aus dem Team. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt. | Übersicht → Zeile → **Laptop freigeben**. |
+| **Die Spielleitung räumt auf** | In der Zeile des Teams steht „Laptop SU2A nicht verbunden seit 0:45“ und **Laptop abmelden** (bis Liste K „Laptop freigeben“; Nachfrage): nimmt das tote Fenster aus dem Team. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt. | Übersicht → Zeile → **Laptop abmelden** (seit Liste L auch bei verbundenem Laptop). |
 | **Ein Gerät sauber freigeben** | **⎋ Team verlassen** steht jetzt auch in der Ansicht während des Laufs (Nachfrage): Der Laptop hält an, lädt das Protokoll hoch und geht in die Lobby. | Danach tritt ein anderes Gerät dem Team bei (**beitreten**) und führt weiter. |
 | **Start, Pause, Tempo, während ein Laptop fehlt** | Die Befehle stehen im Kanal des Teams. Die Übersicht zeigt **„Start wartet auf Laptop“**; nach 10 s kommt der Hinweis „Team … antwortet nicht – Laptop nicht verbunden“ (kein Knopf bleibt auf „gesendet …“). Beim Wiederverbinden wird der Befehl ausgeführt: die Uhr läuft ab der Startzeit, höchstens 60 s nachgeholt (H1.4). Hat die Spielleitung inzwischen wieder angehalten, gilt nur der letzte Befehl. | Nichts – oder **Laptop freigeben** und ein anderes Gerät beitreten lassen. |
 | **Spiel öffnen / Neues Spiel ohne Laptop** | Hinweis „kein Laptop verbunden – das Spiel startet, sobald einer beitritt“. | – |
@@ -48,6 +48,74 @@ ohne Netz weiter, während ein anderer übernimmt, gilt ab der Übernahme der ne
 ohne Netz noch gespielt hat, bleibt als Datei („⇩ Protokoll dieses Laptops“).
 
 
+## Wenn nichts passiert: Testraum, Laptop abmelden, Notbremse (seit Liste L, 14.11.2026)
+
+Anlass war der Export der Datenbank vom 12.11.: Alle Tests seit dem 10.11. liefen im **Test ohne Lobby** (`raum=kraehe`). Der Raum
+bestand seit dem 24.10. und räumte nie auf – vier Laptop-Einträge, alle hießen „Zielbearbeitung“, der früheste galt für immer als der
+Laptop, der rechnet. „▶ Start“ wurde nie ausgeführt; die Spielleitung sah 10 s „gesendet …“ und dann wieder „▶ Start“.
+
+> **Tests mit mehreren Laptops nur über die Lobby:** Startseite → Spielleitung → **Neue Sitzung anlegen** → Code an den Laptops
+> eingeben. Für jeden Durchgang eine neue Sitzung. Die Links „Test ohne Lobby“ (`raum=…`) sind für **einen PC allein**.
+
+**Jeder Laptop hat einen Gerätenamen:** „Laptop SU2A“ – die ersten vier Zeichen seiner Kennung. Er steht oben links im Fenster des
+Teams; die Spielleitung nennt ihn überall („rechnet: Laptop SU2A · nicht verbunden · zuletzt vor 0:45“, in der Übersicht `SU2A`
+am Laptop). Am Telefon oder im Hörsaal: „Wer ist Laptop SU2A?“
+
+| Was Sie sehen | Was los ist | Was tun |
+|---|---|---|
+| Unter „▶ Start“ bleibt ein gelber Kasten stehen: **„Start nicht ausgeführt – Laptop SU2A rechnet nicht (zuletzt vor 0:45). Fenster an einem Laptop öffnen oder hier ‚Laptop abmelden‘.“** In der Übersicht: „Start wartet auf Laptop SU2A“. | Der Laptop, der das Spiel des Teams rechnet, ist zu, aus oder hängt. Der Befehl steht im Kanal des Teams und wird ausgeführt, sobald ein Laptop rechnet. Der Kasten bleibt, bis das geschieht oder neu geklickt wird. | Am Laptop SU2A das Fenster wieder öffnen – **oder „Laptop abmelden“** (Teamansicht: Kasten „Fenster“; Übersicht: unter dem Laptop). Dann rechnet das nächste Fenster des Teams, der Start läuft. |
+| „… Laptop SU2A ist verbunden, antwortet aber nicht“ | Der Tab hängt, liegt im Hintergrund oder hat einen alten Programmstand. | Dort neu laden – oder „Laptop abmelden“. |
+| **„Laptop abmelden“** bei einem verbundenen Laptop | Nachfrage: „Laptop SU2A ist verbunden und rechnet – wirklich abmelden? Das Spiel geht am nächsten Fenster des Teams weiter.“ Das abgemeldete Fenster hält sofort an, lädt den Rest hoch, vergisst die Sitzung und zeigt **„Von der Spielleitung abgemeldet“** mit „neu beitreten“. Das nächste Fenster des Teams rechnet ab dem hochgeladenen Protokoll. Nie zwei verbundene rechnende Fenster. | – |
+| Test ohne Lobby: **„Testraum leeren“** (Steuerung, mit Nachfrage) | Alle Laptop-Einträge aus „Team 1“ sind weg, ein neuer Lauf ist angelegt. Offene Team-Fenster halten an: **„Testraum geleert – neu laden“**. Das nächste Team-Fenster, das (neu) öffnet, rechnet. | Am Team-PC „neu laden“, dann „▶ Start“. |
+| Test ohne Lobby, alter Raum | Ein Laptop-Eintrag, der **länger als 2 h** kein Lebenszeichen gab, zählt nicht mehr. Wer dann öffnet, rechnet sofort, ohne Klick, und räumt die alten Einträge weg. | – |
+| Rot in der Zeile des Teams / unter „▶ Start“: **„Lauf hat zwei Verläufe – Neues Spiel empfohlen“** (am Team-Laptop ein Balken mit „⇩ Protokoll“) | Zwei Fenster haben denselben Lauf gerechnet. Der Laptop hat Plätze im Protokoll anders gefüllt als im Netz – er spielt weiter, kann aber nicht hochladen. | **Neues Spiel** für dieses Team (bzw. „Testraum leeren“). Wichtig ist das Protokoll? Am Laptop „⇩ Protokoll“ und bei der Spielleitung „Protokoll laden“. |
+| Übersicht, unter dem Laptop rot: **„Stand 90b7bef ≠ SL – neu laden!“** | Der Laptop läuft mit einem anderen Programmstand als die Spielleitung (alter Tab). | Am Laptop neu laden (dort steht auch „Neue Version – bitte neu laden“). |
+| Übersicht, gelb: **„Tab im Hintergrund“** | Der ARGUS-Tab des Laptops ist nicht vorn; der Browser bremst dort die Uhr. | Am Laptop den Tab nach vorn holen. |
+| Unten blau: **„Neue Version – bitte neu laden“** | Auf dem Server liegt ein neuer Programmstand (`version.json`, Abfrage jede Minute). Startseite und Lobby laden selbst neu. | „neu laden“ – das Spiel läuft an derselben Stelle weiter. |
+| Nichts hilft, mehrere Sitzungen und alte Tabs durcheinander | – | **„Alle Sitzungen beenden“** (Notbremse, siehe unten), dann neue Sitzung. |
+| Sie wollen es im Chat klären | – | **„Diagnose kopieren“** (Übersicht; Teamansicht/Testraum: Kasten „Fenster“) und den Text einfügen: Sitzung, Programmstand, Transport, Abweichung der Serverzeit; je Fenster Gerät, Stand, Fenstergröße, Hintergrund, Puls, rechnet; je Team Lauf, Protokoll im Netz und beim Laptop, ausstehende Befehle. Keine Namen der Teilnehmer. |
+
+### Notbremse „Alle Sitzungen beenden“
+
+Auf der Startseite der Spielleitung (unten links) und in der Übersicht (oben rechts neben „Sitzung beenden“). Bestätigung durch
+Eintippen von **RESET**. Die Spielleitung setzt damit eine Marke in der Datenbank (`argus/v1/reset` = Serverzeit); **jedes** offene
+ARGUS-Fenster – Teams, Spielleitung, Plenum, jede Sitzung, auch der Testraum – liest sie:
+
+* Das Fenster hält den Host an, lädt den Rest des Protokolls hoch, vergisst **alle** gemerkten Sitzungen („Zurück zu Team …“,
+  „Zuletzt genutzt“) und geht zur Startseite: **„Die Spielleitung hat alle Sitzungen beendet.“** In der Probe: 7 Fenster in unter 1 s.
+* Sitzungen, die **vor** der Marke angelegt wurden, gelten als beendet: Der Code wird abgewiesen („ist beendet“), kein „Zurück zu
+  Team“. Die Spielleitung kommt über „Bestehende Sitzung öffnen → als Spielleitung“ weiter an die **Auswertung**.
+* Der Testraum wird dabei geleert wie mit „Testraum leeren“ (Einträge von vor der Marke zählen nicht mehr, neuer Lauf).
+* **Daten werden nicht gelöscht.** Löschen geht nur in der Firebase-Konsole: Realtime Database → Daten → `argus/v1/sitzungen`
+  (und `argus/v1/raeume`, `rooms`) auswählen → ⋮ → „Löschen“. Die Marke `argus/v1/reset` darf stehen bleiben (oder mitgelöscht werden).
+* Eine neue Sitzung danach läuft sofort (sie wird sicher *nach* der Marke angelegt, auch wenn die Uhr des PCs nachgeht).
+
+Die Notbremse braucht die **neuen Firebase-Regeln** (Pfad `argus/v1/reset`, siehe unten). Mit den alten Regeln bricht nichts: Die
+Marke gilt als „nicht vorhanden“, der Knopf meldet **„Firebase-Regeln veraltet – bitte veröffentlichen“** – alles andere aus Liste L
+(Testraum leeren, Laptop abmelden, Gerätenamen, Programmstand, Diagnose) geht auch mit den alten Regeln.
+
+### Technik zu Liste L
+
+* **Testraum:** `teams/traum/erstellt` ist der Stand „geleert um“ (bisher immer 0). Ein Eintrag in `teams/traum/spieler` zählt nur,
+  wenn sein `seit` nach diesem Stand und nach der Marke `argus/v1/reset` liegt und er in den letzten 2 h ein Lebenszeichen gab
+  (Beitritt, Puls der Anwesenheit, Statusmeldung; `TESTRAUM_VERFALL_MS`). Das rechnende Fenster und die steuernde Spielleitung nehmen
+  ungültige Einträge auch aus der Datenbank. Der Beitritt geschieht erst, wenn Teams und Marke geladen sind (`nachMarke`).
+* **Abmelden:** Verschwindet der eigene Eintrag ohne eigenes Zutun, schließt das Fenster sein Spiel ab (`Spiel.abschliessen`) und zeigt
+  „Von der Spielleitung abgemeldet“ bzw. „Testraum geleert – neu laden“ (`ich.entfernt`). In der Lobby vor Spielbeginn bleibt es beim
+  Zurückfallen in die Lobby.
+* **Bleibender Grund:** `Sitzung.uhrGrund(team)` – aus den ausstehenden Befehlen im Kanal (`ausstehendeUhr`), nicht aus einem Hinweis.
+* **Zwei Verläufe:** `Spiel` prüft nach einem fehlgeschlagenen Upload und beim Laden, ob im Netz **hinter einer Lücke** Einträge
+  stehen, die das eigene Protokoll an denselben Plätzen anders hat (`upload.zwei`); der Laptop meldet es über die Anwesenheit. Steht
+  der fremde Verlauf lückenlos im Netz, übernimmt ihn der Laptop wie seit Liste K (Festlegung 4) – das deckt den Fall vom 12.11.
+  („Upload 10 von 122“) nur, wenn keine Lücke dazwischen liegt; mit Lücke versuchte der Laptop es bis Stand K endlos.
+* **Anwesenheit** (Feld `version`, ≤ 20 Zeichen, Regeln unverändert): „90b7bef 1536x730“ = Programmstand (Commit) und Fenstergröße;
+  dazu ein Wort `!R` (Regelfehler), `!2` (zwei Verläufe) oder `!R2`; liegt der Tab im Hintergrund, steht die Fenstergröße mit großem
+  X („1536X730“).
+* **Merker:** `argus:ich:<sitzung>` gilt 12 h (bis K 7 Tage); „Zurück zu Team …“ und „Zuletzt genutzt“ nur für Sitzungen von heute.
+* **Programmstand:** Der Build legt `version.json` (`{ commit, zeit }`) neben `index.html`; `src/ansichten/gemeinsam/version.ts` fragt
+  alle 60 s und beim Zurückkommen in den Tab (ohne Zwischenspeicher). Die Offline-Datei fragt nicht. Der Wechsel zwischen Startseite,
+  „Ich spiele mit“ und „Spielleitung“ lädt die Seite neu.
+
 ## Adressen
 
 | Fenster | Adresse |
@@ -57,7 +125,7 @@ ohne Netz noch gespielt hat, bleibt als Datei („⇩ Protokoll dieses Laptops�
 | Teilnehmer | `…/Argus/?sitzung=K7P` (Lobby, dann die Ansicht; `&ich=…` kommt beim ersten Öffnen dazu) |
 | Spielleitung | `…/Argus/?sitzung=K7P&rolle=sl&name=SL%201` |
 | Plenum | `…/Argus/?sitzung=K7P&rolle=plenum` |
-| Test ohne Lobby, allein (das Team steuert die Uhr oben rechts) | `…/Argus/?rolle=zb&raum=kraehe` (Startseite → Spielleitung → „Test ohne Lobby: ein Team“ → **Allein testen**) |
+| Test ohne Lobby, allein (das Team steuert die Uhr oben rechts) – **nur für einen PC allein** (seit Liste L: für mehrere Laptops eine Sitzung anlegen) | `…/Argus/?rolle=zb&raum=kraehe` (Startseite → Spielleitung → „Test ohne Lobby: ein Team“ → **Allein testen**) |
 | Test ohne Lobby, Team und Spielleitung | `…/Argus/?rolle=zb&raum=kraehe` und `…?rolle=sl&raum=kraehe` (**Team und Spielleitung öffnen**) |
 
 Seit Liste K für Tests und Vorführung: `geraet=a` gibt dem Fenster einen eigenen Merkbereich – so lassen sich an EINEM Rechner
@@ -109,12 +177,14 @@ Haben alle Teams das Spielende erreicht, zeigt es die **Auswertung über alle Te
 ```
 info                                   { code, szenario, version, titel, erstellt, von }  einmal angelegt
 host                                   { id, name, puls }  steuernde Spielleitung
-anwesenheit/<client>                   { client, art: tt|sl|plenum, name, puls, version, team? }  (seit J: version „0.9.0 1536x730“ = Fenstergröße)
+anwesenheit/<client>                   { client, art: tt|sl|plenum, name, puls, version, team? }  (seit L: version „90b7bef 1536x730“ = Programmstand und Fenstergröße)
 teams/<team>                           { name, farbe, erstellt, lauf?, spieler/<client> { name, rollen: "zb", seit } }
 status/<team>                          Statusmeldung des Team-Laptops (neu in 2.6, flache Felder, siehe unten)
 laeufe/<team>/<lauf>/protokoll/e000001 Ereignisse, nur anhängen – schreibt nur der Team-Laptop (Upload)
 laeufe/<team>/<lauf>/aktionen/<id>     Aktionen der Spielleitung an den Team-Laptop, nur anhängen
 ```
+
+Außerhalb der Sitzungen (seit Liste L): `argus/v1/reset` = Serverzeit der Notbremse „Alle Sitzungen beenden“ (lokal `argus:reset:v1`).
 
 Seit Liste J (J2.4) meldet jedes Fenster mit der Anwesenheit seine **Fenstergröße**, damit die Spielleitung am Tag sieht, ob ein
 Laptop zu klein ist (Übersicht: „Fenster 1536 × 730“, rot mit „F11!“ unter 1280 × 600). Die Regeln kennen für `anwesenheit` kein
@@ -181,7 +251,30 @@ Offline-Datei liegt das „hochgeladene“ Protokoll ohnehin im localStorage.
 > **Neu veröffentlichen (seit 2.6 nötig):** Die Regeln von 2.5 kennen weder die Rolle `zb` noch den Pfad `status`. Firebase-Konsole →
 > Projekt `argus-sync-e9fbc` → Realtime Database → Regeln → Inhalt durch `firebase/database.rules.json` ersetzen → Veröffentlichen.
 > Danach einmal Sitzung anlegen, ein Team beitreten lassen, Spiel öffnen, Start. Lehnt Firebase ab, zeigt jede Ansicht einen roten
-> Balken mit dieser Anleitung. Der Testmodus der Datenbank endet ca. 18.11.2026.
+> Balken mit dieser Anleitung.
+
+> **Seit Liste L (14.11.2026) neu veröffentlichen – ein Pfad ist dazugekommen:** `argus/v1/reset` (lesen und schreiben erlaubt, Wert:
+> Zahl ≤ jetzt + 10 min) für die Notbremse „Alle Sitzungen beenden“. Sonst ist die Datei unverändert (Stand H).
+>
+> 1. https://console.firebase.google.com → Projekt **argus-sync-e9fbc** → links **Realtime Database** → Reiter **Regeln**.
+> 2. Alles im Editor markieren und durch den Inhalt von `firebase/database.rules.json` ersetzen
+>    (GitHub: Heeresfliegermogli/Argus → `firebase/database.rules.json` → „Raw“ → alles kopieren).
+> 3. **Veröffentlichen** klicken.
+> 4. Prüfen: Startseite → Spielleitung → unten links **Alle Sitzungen beenden** → RESET → es erscheint „Die Spielleitung hat alle
+>    Sitzungen beendet“. Steht dort stattdessen „Firebase-Regeln veraltet – bitte veröffentlichen“, sind noch die alten Regeln aktiv.
+>
+> Solange die alten Regeln veröffentlicht sind, läuft alles außer der Notbremse normal.
+>
+> Richtigstellung: Bis Stand K stand hier „Der Testmodus der Datenbank endet ca. 18.11.2026“. Das trifft nicht zu – die
+> veröffentlichten Regeln sind keine Testmodus-Regeln und laufen nicht ab (geprüft 11.11.).
+
+## Nachweis Liste L (14.11.2026)
+
+| Prüfung | Ergebnis |
+|---|---|
+| `tests/notbremse.test.ts` (17 Tests): Gerätenamen, Testraum mit vier alten Einträgen, Verfall nach 2 h, Befund 5 (Grund bleibt, „Laptop abmelden“ → B rechnet), „Testraum leeren“, verbundenen Laptop abmelden (nie zwei rechnende Fenster), zwei Verläufe, Notbremse mit 2 Sitzungen + Testraum + 7 Fenstern, Einträge von vor der Marke, alte Regeln, Programmstand in der Anwesenheit, Merker 12 h, Diagnose | bestanden |
+| `tests/firebase_regeln.test.ts`: neuer Pfad `argus/v1/reset`; die neuen Regeln unterscheiden sich von Stand H nur darin; Testraum leeren, Laptop abmelden und die Anwesenheit mit Programmstand gehen mit den **alten** Regeln (`tests/regeln_stand_h.json`) | bestanden |
+| `tools/notbremse_probe.py` über die Oberfläche: lokal 11/11, Firebase-Nachbildung mit den neuen Regeln 11/11, mit den **alten** Regeln (`REGELN=tests/regeln_stand_h.json`) 1/1 – die Notbremse meldet den Regelfehler, sonst läuft alles | bestanden |
 
 ## Nachweis Liste K (11.11.2026)
 

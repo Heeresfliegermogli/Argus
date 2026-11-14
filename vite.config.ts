@@ -24,10 +24,19 @@ export default defineConfig(({ mode }) => {
   const offline = mode === "offline";
   const quelle = offline ? "./src/inhalte/quelle-eingebettet.ts" : "./src/inhalte/quelle-fetch.ts";
   const assetquelle = offline ? "./src/assets/quelle-eingebettet.ts" : "./src/assets/quelle-netz.ts";
+  const commit = gitStand();
+  const zeit = new Date().toISOString().slice(0, 16).replace("T", " ");
+  // Liste L (L4.1): version.json neben index.html – jedes offene Fenster fragt nach und zeigt „Neue Version – bitte neu laden“
+  const versionsDatei = {
+    name: "argus-version-json",
+    generateBundle(this: { emitFile: (f: { type: "asset"; fileName: string; source: string }) => void }) {
+      this.emitFile({ type: "asset", fileName: "version.json", source: `${JSON.stringify({ commit, zeit })}\n` });
+    },
+  };
   return {
     base: "./",
     publicDir: offline ? false : "public",
-    plugins: [preact(), ...(offline ? [viteSingleFile()] : [])],
+    plugins: [preact(), ...(offline ? [viteSingleFile()] : [versionsDatei])],
     resolve: {
       alias: {
         "@quelle": fileURLToPath(new URL(quelle, import.meta.url)),
@@ -36,7 +45,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       __ARGUS_VERSION__: JSON.stringify(process.env.npm_package_version ?? "0.0.0"),
-      __ARGUS_STAND__: JSON.stringify(`${gitStand()} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`),
+      __ARGUS_STAND__: JSON.stringify(`${commit} · ${zeit}`),
+      __ARGUS_COMMIT__: JSON.stringify(commit),
       __ARGUS_OFFLINE__: JSON.stringify(offline),
     },
     build: {

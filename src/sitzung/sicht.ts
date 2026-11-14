@@ -10,7 +10,8 @@ import type { GruppenRolle } from "../kern/sitzungen";
 import type { Spielzustand } from "../kern/zustand";
 import type { Abmelden, FensterArt, HostInfo, SyncAdapter, Verbindung } from "../sync/adapter";
 import type { Hinweis } from "./hinweise";
-import type { Sitzung } from "./sitzung";
+import type { Sitzung, UhrGrund } from "./sitzung";
+import { geraeteName, laptopText } from "../kern/sitzungen";
 import type { Spiel, UploadStand } from "./spiel";
 
 export interface SichtTeilnehmer {
@@ -65,6 +66,15 @@ export interface SichtStand {
   abgeloest: boolean;
   /** K1.3: zweiter Tab desselben Browsers (sieht nur zu) */
   gast: boolean;
+  /** Liste L (L1.3): Gerätename dieses Fensters („Laptop SU2A“) und des Laptops, der rechnet („Laptop SU2A (Lt Müller)“) */
+  geraet: string;
+  rechnerGeraet: string | null;
+  /** L2.1: letztes Lebenszeichen des Team-Laptops (Serverzeit) */
+  rechnerZuletzt: number | null;
+  /** L2.1: warum Start/Pause der Spielleitung noch nicht ausgeführt ist (bleibt am Knopf stehen) */
+  uhrGrund: UhrGrund | null;
+  /** L2.4: Der Lauf hat zwei Verläufe – Neues Spiel empfohlen */
+  zwei: boolean;
 }
 
 export class Sicht {
@@ -145,6 +155,11 @@ export class Sicht {
       uebernehmbar: !!team?.uebernehmbar,
       abgeloest: ss.ich.abgeloest && ss.ich.team === sp.team,
       gast: ss.gast,
+      geraet: geraeteName(ss.client),
+      rechnerGeraet: team?.rechner ? laptopText(team.rechner, team.spieler.find((x) => x.client === team.rechner)?.name) : null,
+      rechnerZuletzt: team?.rechnerZuletzt ?? null,
+      uhrGrund: this.rolle === "sl" ? this.sitzung.uhrGrund(sp.team) : null,
+      zwei: this.sitzung.zweiVerlaeufe(sp.team) || !!sp.upload.zwei,
     };
   }
 
@@ -155,6 +170,7 @@ export class Sicht {
       st.teamName, st.teamFarbe, st.name, st.teilnehmer.map((t) => `${t.client}${t.rollen.join("")}`).join(","),
       st.rechnet ? 1 : 0, st.regelFehler ? 1 : 0, st.rechnerName ?? "", st.rechnerOnline ? 1 : 0,
       st.rechnerOnline ? "" : Math.floor((this.sitzung.adapter.serverJetzt() - (st.rechnerWegSeit ?? 0)) / 1000), st.uebernehmbar ? 1 : 0, st.abgeloest ? 1 : 0, st.gast ? 1 : 0,
+      st.rechnerGeraet ?? "", st.uhrGrund?.text ?? "", st.zwei ? 1 : 0,
     ].join("|");
   }
 
@@ -206,6 +222,16 @@ export class Sicht {
   /** Team-Fenster, das nur zusieht: das Spiel hier weiterführen (der Team-Laptop ist weg). */
   async uebernehmenTeam(): Promise<void> {
     await this.sitzung.uebernehmenTeam();
+  }
+
+  /** L2.2: Spielleitung meldet den Laptop dieses Teams ab (auch wenn er verbunden ist). */
+  async laptopAbmelden(): Promise<void> {
+    await this.sitzung.laptopAbmelden(this.spiel.team);
+  }
+
+  /** L1.1: Spielleitung im Test ohne Lobby leert den Testraum. */
+  async testraumLeeren(): Promise<void> {
+    await this.sitzung.testraumLeeren();
   }
 
   /** K4.2: Team verlassen, auch während eines Laufs (hält den Host an und lädt den Rest hoch). */

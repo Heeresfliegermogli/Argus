@@ -13,6 +13,7 @@
 //   laeufe/<team>/<lauf>/protokoll/<e…>   Ereignisse, nur anhängen. Seit 2.6 (H1) rechnet der Team-Laptop sein Spiel selbst und
 //                                         lädt das Protokoll in Stücken hoch (Upload); Spielleitung und Plenum lesen es.
 //   laeufe/<team>/<lauf>/aktionen/<id>    Aktionen an den Team-Laptop (Start, Pause, Tempo, Reserve, Notiz der Spielleitung)
+// Außerhalb der Sitzungen (seit Liste L): argus/v1/reset = Serverzeit der Notbremse „Alle Sitzungen beenden“ (lokal argus:reset:v1).
 // Die Teamliste ist klein (Lobby), die Protokolle liegen getrennt darunter: Wer die Lobby zeigt,
 // lädt keine Protokolle. Eine Liste aller Sitzungen gibt es nicht. Alte Läufe bleiben erhalten
 // (Testlauf und echter Durchlauf lassen sich später auswerten).
@@ -56,6 +57,10 @@ export interface Teilnehmer {
   fenster?: string;
   /** seit Liste K (K3.4): Bei diesem Fenster lehnen die Firebase-Regeln ab – die Spielleitung zeigt den roten Balken */
   regeln?: boolean;
+  /** seit Liste L (L2.4): Dieses Fenster rechnet, kann aber nicht hochladen – im Netz steht ein anderer Verlauf desselben Laufs */
+  zwei?: boolean;
+  /** seit Liste L (L4.2): Der Tab liegt im Hintergrund (document.hidden) – Browser drosseln dort Zeitgeber */
+  hintergrund?: boolean;
 }
 
 export interface HostInfo {
@@ -151,6 +156,15 @@ export interface SyncAdapter {
   beanspruche(host: Omit<HostInfo, "puls">, erzwingen: boolean): Promise<boolean>;
   gibFrei(id: string): Promise<void>;
   aufHost(cb: (h: HostInfo | null) => void): Abmelden;
+
+  // ---- Notbremse (seit Liste L, L3): globale Marke argus/v1/reset, gilt für ALLE Sitzungen und den Testraum
+  /**
+   * Marke „Alle Sitzungen beendet“ (Serverzeit in ms) oder null. `lesbar` false: Die Datenbank lässt die Marke nicht lesen (alte
+   * Firebase-Regeln ohne den Pfad) – dann gibt es für dieses Fenster keine Marke, sonst bricht nichts.
+   */
+  aufReset(cb: (ts: number | null, lesbar: boolean) => void): Abmelden;
+  /** Marke setzen (Serverzeit). Schlägt mit einem Regelfehler fehl, solange die neuen Regeln nicht veröffentlicht sind. */
+  setzeReset(): Promise<void>;
 }
 
 /**

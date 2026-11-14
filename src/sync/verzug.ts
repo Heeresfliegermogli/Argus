@@ -180,4 +180,12 @@ export class VerzugAdapter implements SyncAdapter {
   aufHost(cb: (h: HostInfo | null) => void): Abmelden {
     return this.a.aufHost(this.hoer(cb));
   }
+
+  aufReset(cb: (ts: number | null, lesbar: boolean) => void): Abmelden {
+    return this.a.aufReset((ts, lesbar) => this.liefern(() => cb(ts, lesbar)));
+  }
+
+  setzeReset(): Promise<void> {
+    return this.netz(() => this.a.setzeReset());
+  }
 }

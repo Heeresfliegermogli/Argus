@@ -287,6 +287,11 @@
               ".validate": false
             }
           }
+        },
+        "reset": {
+          ".read": true,
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() <= now + 600000"
         }
       }
     },

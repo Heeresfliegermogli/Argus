@@ -3,12 +3,14 @@
 // das Team anlegt, rechnet sein Spiel; ein weiteres Fenster desselben Teams sieht nur zu.
 // Sobald die Spielleitung das Spiel für das eigene Team öffnet, wechselt das Fenster in die Ansicht.
 import { useEffect, useState } from "preact/hooks";
-import { SPIELERNAME_MAX, TEAMNAME_MAX, teamnameVorschlag } from "../kern/sitzungen";
+import { SPIELERNAME_MAX, TEAMNAME_MAX, geraeteKurz, laptopText, teamnameVorschlag } from "../kern/sitzungen";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { UEBERNAHME_MS } from "../sync/adapter";
 import { BestaetigenKnopf, Hinweise, Panel } from "./gemeinsam/bausteine";
 import { useSitzung } from "./gemeinsam/hooks";
+import { VersionsBanner } from "./gemeinsam/notbremse";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
+import { useSelbstNeuLaden } from "./gemeinsam/version";
 
 /** Eigener Name je Tab (sessionStorage): übersteht Neuladen, gilt aber nicht für andere Fenster am selben PC. */
 function gemerkterName(): string {
@@ -55,15 +57,15 @@ function TeamKarte(p: { s: Sitzung; t: TeamStand }) {
       </header>
       <div class="team-wer">
         {t.spieler.length === 0 ? <span class="sehr-leise">noch niemand</span> : t.spieler.map((x) => (
-          <span key={x.client} class={`spieler-chip ${x.online ? "" : "weg"}`} title={x.client === t.rechner ? "Team-Laptop: rechnet das Spiel" : "sieht zu"}>
-            <i class="punkt" />{x.name || "Team"}{x.client === s.client ? " (du)" : ""}{x.client === t.rechner ? " ★" : ""}
+          <span key={x.client} class={`spieler-chip ${x.online ? "" : "weg"}`} title={`${laptopText(x.client, x.name)} · ${x.client === t.rechner ? "Team-Laptop: rechnet das Spiel" : "sieht zu"}`}>
+            <i class="punkt" />{x.name || "Team"}{x.client === s.client ? " (du)" : ""}{x.client === t.rechner ? " ★" : ""} <span class="geraet-kurz">{geraeteKurz(x.client)}</span>
           </span>
         ))}
       </div>
       {weg && (t.uebernehmbar ? (
         <BestaetigenKnopf klasse="klein warn" gesperrt={warte} onClick={() => void uebernehmen()} testid={`weiterfuehren-${t.id}`}
           frage="Wirklich? Nur wenn der andere Laptop aus ist"
-          titel={`Der Laptop von Team ${t.name} (${rechner!.name}) ist seit ${seitText(t.rechnerWegSeit, jetzt)} nicht verbunden. Dieser Laptop führt das Spiel dann weiter – ab dem, was im Netz steht.`}>
+          titel={`Der Laptop von Team ${t.name} (${laptopText(rechner!.client, rechner!.name)}) ist seit ${seitText(t.rechnerWegSeit, jetzt)} nicht verbunden. Dieser Laptop führt das Spiel dann weiter – ab dem, was im Netz steht.`}>
           Spiel hier weiterführen
         </BestaetigenKnopf>
       ) : <span class="klein leise" data-testid="karte-warten">Weiterführen hier in {Math.max(1, rest)} s möglich</span>)}
@@ -85,6 +87,8 @@ export function Lobby(p: { s: Sitzung }) {
   const [warte, setWarte] = useState(false);
   const eigen = s.team(st.ich.team);
   const vergeben = st.teams.map((t) => t.name);
+  // Liste L (L4.1): Die Lobby lädt bei einer neuen Version selbst neu (Kennung und Team bleiben, K1.1)
+  useSelbstNeuLaden();
 
   // Gemerkten Namen beim Öffnen übernehmen
   useEffect(() => {
@@ -121,6 +125,7 @@ export function Lobby(p: { s: Sitzung }) {
         </div>
       </header>
       {st.regelFehler && <RegelBanner />}
+      <VersionsBanner />
       <main class="inhalt lobby-inhalt">
         <div class="stapel">
           <Panel titel="Eure Namen" klasse="flach">

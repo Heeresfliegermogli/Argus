@@ -1418,3 +1418,23 @@ td.bz-argus.fehl { background: #3a2412; }
 a.start-zurueck-team, a.start-zurueck-team:visited { color: #eef4ff; }
 .start-zurueck-team { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; }
 .start-zurueck-team span { font-size: 13px; font-weight: 500; opacity: .85; }
+
+/* ---------------------------------------------------------------- Liste L (14.11.2026): Gerätenamen, bleibender Grund, Notbremse, neue Version */
+.geraet-marke { font-family: var(--mono, "IBM Plex Mono", monospace); font-size: 12px; color: #b9c6d6; border: 1px solid #44566b; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.geraet-kurz { font-family: var(--mono, "IBM Plex Mono", monospace); font-size: max(12px, 0.85em); opacity: 0.75; letter-spacing: 0.02em; }
+.uhr-grund { background: #3a3320; border: 1px solid #a8893a; color: #f4e7c2; padding: 6px 9px; border-radius: 6px; font-size: 13px; line-height: 1.3; }
+.laptop-stand .gelb, .gelb { color: #e8c14a; }
+.notbremse { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 560px; }
+.notbremse.warnung { display: inline-block; font-size: 13px; line-height: 1.3; }
+.notbremse-knopf { opacity: 0.7; }
+.notbremse-knopf:hover { opacity: 1; }
+.versions-banner { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 70; background: #234467; color: #dcebff; border: 1px solid #5d8fc9; padding: 7px 12px; border-radius: 6px; font-size: 14px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 14px #0008; max-width: calc(100% - 24px); }
+.zwei-banner { background: #6b2a22; color: #fff0ee; }
+.link-knopf { background: none; border: 0; padding: 0; color: var(--info); cursor: pointer; font: inherit; text-decoration: underline; }
+.link-knopf:disabled { opacity: 0.5; cursor: default; }
+.diagnose-text { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); z-index: 80; background: #1b2530; border: 1px solid #44566b; border-radius: 8px; padding: 10px; width: min(900px, calc(100% - 40px)); box-shadow: 0 8px 30px #000a; }
+.diagnose-text textarea { width: 100%; font-size: 12px; margin-top: 6px; }
+.knopf-zeile { display: flex; flex-wrap: wrap; gap: 6px; }
+.knopf-zeile .knopf { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+.ansicht-sl .uhr-grund { font-size: 12.5px; padding: 5px 8px; }
+.knopf.klein.mini { padding: 2px 7px; font-size: 12.5px; }

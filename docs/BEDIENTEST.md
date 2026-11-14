@@ -1,4 +1,4 @@
-# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste K vom 11.11.2026, Szenario 2.7)
+# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste L vom 14.11.2026, Szenario 2.7)
 
 **Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Teil B). Startseite und Lobby sind ohne
 Erklärung bedienbar (Teil A – kommt vor Teil B, dauert ca. 6 min).
@@ -38,10 +38,23 @@ ihr tun?“):
 | K-1 | „Euer Tab ist versehentlich zu. Kommt zurück in euer Spiel.“ | über „Zurück zu Team …“, den Code oder den Verlauf wieder am eigenen Spiel, ohne die Spielleitung zu rufen |
 | K-2 | „Euer Laptop ist ausgefallen (zuklappen). Spielt am Nachbar-Laptop weiter.“ | Code eingeben, Teamkarte „Spiel hier weiterführen“ (nach 20 s), Nachfrage bestätigt |
 | K-3 | Der erste Laptop wird wieder aufgeklappt. „Was seht ihr?“ | der Hinweis „wird an einem anderen Laptop weitergeführt“ wird gelesen und verstanden |
-| K-4 | Spielleitung: „Team … hat keinen Laptop mehr. Was tun Sie?“ | „nicht verbunden seit …“ gesehen, „Laptop freigeben“ gefunden |
+| K-4 | Spielleitung: „Team … hat keinen Laptop mehr. Was tun Sie?“ | „nicht verbunden seit …“ gesehen, „Laptop abmelden“ (bis Liste K: „Laptop freigeben“) gefunden |
 | K-5 | Spielleitung: „Die Stunde ist vorbei.“ | „Sitzung beenden“ gefunden; danach neue Sitzung angelegt |
 
 `tools/neuoeffnen_probe.py` löst diese und weitere Aufgaben über die Oberfläche (lokal und gegen die Firebase-Nachbildung).
+
+**Seit Liste L (14.11.2026) – Test mit der echten Datenbank an zwei bis drei Laptops** (im Dienstnetz läuft Long-Polling; die
+Nachbildung kann nur WebSocket – diese vier Aufgaben sind deshalb am echten Netz zu machen). Vorher die neuen Firebase-Regeln
+veröffentlichen (docs/SITZUNG.md, „Firebase-Regeln“). Über die **Lobby** (Neue Sitzung, Code), nicht über „Test ohne Lobby“.
+
+| Nr | Aufgabe | gelöst, wenn |
+|---|---|---|
+| L-1 | Laptop A legt ein Team an, die Spielleitung öffnet das Spiel. A klappt zu (oder schließt den Tab). Laptop B tritt demselben Team bei. Spielleitung: „▶ Start für alle“. „Was sehen Sie, was tun Sie?“ | die Zeile zeigt dauerhaft „Start wartet auf Laptop XXXX“ (in der Teamansicht der gelbe Kasten mit „zuletzt vor …“); „Laptop abmelden“ gefunden; danach rechnet B und die Uhr läuft **≤ 10 s** (Zeit notieren – mit Long-Polling kann es bis zu einer Minute dauern, bis A als nicht verbunden gilt) |
+| L-2 | A und B sind im selben Team, A rechnet und ist verbunden. Spielleitung: „Laptop abmelden“ bei A. | Nachfrage „… ist verbunden und rechnet – wirklich abmelden?“ gelesen; A zeigt „Von der Spielleitung abgemeldet“; B rechnet weiter, die Uhr läuft, **nie beide** bedienbar; Zeit notieren |
+| L-3 | Drei Laptops in zwei Sitzungen (zwei Codes) und ein vergessener Tab „Test ohne Lobby“. Spielleitung: „Alle Sitzungen beenden“ (RESET). | **alle** Fenster stehen nach ≤ 10 s auf der Startseite mit „Die Spielleitung hat alle Sitzungen beendet“ (Zeit je Laptop notieren); der alte Code wird abgewiesen; neue Sitzung anlegen, beitreten, Start – die Uhr läuft |
+| L-4 | An einem Laptop einen ARGUS-Tab vom Vortag offen lassen (oder einen Tab in den Hintergrund legen); Spielleitung sieht in die Übersicht und klickt „Diagnose kopieren“. | unter dem Laptop steht rot „Stand … ≠ SL – neu laden!“ bzw. gelb „Tab im Hintergrund“; am Laptop erscheint „Neue Version – bitte neu laden“; der Diagnose-Text lässt sich in den Chat einfügen und nennt jeden Laptop beim Gerätenamen |
+
+`tools/notbremse_probe.py` löst diese Abläufe über die Oberfläche (lokal, Firebase-Nachbildung mit neuen und mit alten Regeln).
 
 `tools/lobby_probe.py` löst dieselben Aufgaben und weitere (falscher Code, Team ohne Laptop, zwei Laptops gleichzeitig,
 Spielleitung verschiebt/benennt um/löscht, Plenum, Neuladen, später Beitritt, zuletzt genutzte Sitzung fortsetzen) nur über

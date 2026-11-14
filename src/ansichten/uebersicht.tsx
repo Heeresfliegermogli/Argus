@@ -8,7 +8,7 @@
 // Die Zahlen kommen etwa alle 5 s – bei Netzverzug später, die Uhr läuft aus der letzten Meldung weiter.
 import { useRef, useState } from "preact/hooks";
 import type { AktionsDaten, AktionsTyp } from "../kern/ereignisse";
-import { TEAMNAME_MAX } from "../kern/sitzungen";
+import { TEAMNAME_MAX, geraeteKurz, geraeteName, laptopText } from "../kern/sitzungen";
 import { fensterText, leseFensterKennung, zuKlein } from "../kern/fenster";
 import { type FallStand, type FallStatus, type TeamStatus, statusFaelle, statusPanzer, statusUhr, teamStatus } from "../kern/uebersicht";
 import { mmss, uhrzeit } from "../kern/uhr";
@@ -19,7 +19,7 @@ import { BestaetigenKnopf, Leer, Menue, Panel } from "./gemeinsam/bausteine";
 import { useSitzung, useTakt } from "./gemeinsam/hooks";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
-import { plenumOeffnen } from "./sl";
+import { DiagnoseKnopf, plenumOeffnen } from "./sl";
 
 const TEMPI = [1, 2, 5, 10, 20];
 const FALL_TEXT: Record<FallStatus, string> = { wartet: "kommt noch", offen: "offen", richtig: "richtig", falsch: "falsch" };
@@ -86,8 +86,8 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
       {t.spieler.map((x) => (
         <span class="menue-anker" key={x.client}>
           <button type="button" class={`spieler-chip ${x.online ? "" : "weg"}`} onClick={() => setMenue(x.client)}
-            title={`${x.name} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""} – Klick: verschieben`}>
-            <i class="punkt" />{x.name || "Team"}{x.client === t.rechner && t.spieler.length > 1 ? " ★" : ""}
+            title={`${laptopText(x.client, x.name)} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""}${x.version ? ` · Stand ${x.version}` : ""} – Klick: verschieben`}>
+            <i class="punkt" />{x.name && x.name !== geraeteName(x.client) ? x.name : "Laptop"} <span class="geraet-kurz" data-geraet={geraeteKurz(x.client)}>{geraeteKurz(x.client)}</span>{x.client === t.rechner && t.spieler.length > 1 ? " ★" : ""}
           </button>
           <Menue offen={menue === x.client} schliessen={() => setMenue(null)}>
             <FensterMenue s={s} t={t} client={x.client} name={x.name} online={x.online} schliessen={() => setMenue(null)} />
@@ -95,12 +95,27 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
         </span>
       ))}
       {rechner?.online && <FensterGroesse kennung={rechner.fenster} />}
+      {rechner?.online && (
+        <div class="klein laptop-stand" data-laptop-stand={t.name}>
+          {rechner.version && (
+            <span class={rechner.version !== __ARGUS_COMMIT__ ? "rot" : "sehr-leise"} data-testid="laptop-version" data-abweichung={rechner.version !== __ARGUS_COMMIT__ ? "1" : "0"}
+              title={rechner.version !== __ARGUS_COMMIT__ ? `Programmstand ${rechner.version} weicht von dem der Spielleitung (${__ARGUS_COMMIT__}) ab – am Laptop neu laden.` : "Programmstand des Team-Laptops (wie bei der Spielleitung)"}>
+              Stand {rechner.version}{rechner.version !== __ARGUS_COMMIT__ ? " ≠ SL – neu laden!" : ""}
+            </span>
+          )}
+          {rechner.hintergrund && <span class="gelb" data-testid="laptop-hintergrund" title="Der Tab des Team-Laptops liegt im Hintergrund – der Browser bremst dort die Uhr. Am Laptop den ARGUS-Tab nach vorn holen."> · Tab im Hintergrund</span>}{" "}
+          <BestaetigenKnopf klasse="klein mini" frage={`${geraeteKurz(rechner.client)} verbunden und rechnet – wirklich abmelden?`} testid={`abmelden-${t.id}`} onClick={() => void s.laptopAbmelden(t.id)}
+            titel={`${geraeteName(rechner.client)} ist verbunden und rechnet – wirklich abmelden? Das Spiel geht am nächsten Fenster des Teams weiter (ab dem hochgeladenen Protokoll); das abgemeldete Fenster hält an und zeigt „Von der Spielleitung abgemeldet“.`}>
+            Laptop abmelden
+          </BestaetigenKnopf>
+        </div>
+      )}
       {rechner && !rechner.online && (
         <div class="klein laptop-weg" data-laptop-weg={t.name}>
-          <span class="rot" title="Der Laptop, der das Spiel dieses Teams rechnet, ist nicht verbunden. Kommt derselbe Browser wieder, rechnet er sofort weiter; ein anderes Gerät kann nach 20 s in der Lobby übernehmen.">nicht verbunden seit {seitText(t.rechnerWegSeit, s.adapter.serverJetzt())}</span>{" "}
-          <BestaetigenKnopf klasse="klein mini" frage="freigeben?" testid={`freigeben-${t.id}`} onClick={() => void s.laptopFreigeben(t.id)}
-            titel={`Laptop freigeben: nimmt das Fenster „${rechner.name}“ aus Team ${t.name}. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt (ab dem hochgeladenen Protokoll).`}>
-            Laptop freigeben
+          <span class="rot" title="Der Laptop, der das Spiel dieses Teams rechnet, ist nicht verbunden. Kommt derselbe Browser wieder, rechnet er sofort weiter; ein anderes Gerät kann nach 20 s in der Lobby übernehmen.">{geraeteName(rechner.client)} nicht verbunden seit {seitText(t.rechnerWegSeit, s.adapter.serverJetzt())}</span>{" "}
+          <BestaetigenKnopf klasse="klein mini" frage="abmelden?" testid={`freigeben-${t.id}`} onClick={() => void s.laptopFreigeben(t.id)}
+            titel={`Laptop abmelden: nimmt ${laptopText(rechner.client, rechner.name)} aus Team ${t.name}. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt (ab dem hochgeladenen Protokoll).`}>
+            Laptop abmelden
           </BestaetigenKnopf>
         </div>
       )}
@@ -285,6 +300,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
           {p.auswertung && ids.length > 0 && <button type="button" class="knopf klein weiter" onClick={p.auswertung} data-testid="auswertung-knopf"
             title="Teamvergleich, Kennzahlen, Replay je Schlüsselfall, Export – dieselbe Ansicht wie im Plenum">Auswertung ›</button>}
           {ids.length > 0 && <ProtokollLaden s={s} />}
+          <DiagnoseKnopf s={s} />
           {ids.length > 0 && <BestaetigenKnopf klasse="klein schlecht" gesperrt={!st.istHost || beendet} onClick={() => void s.spielOeffnen(ids)}
             frage="Wirklich? Klick = neues Spiel für alle" testid="neues-spiel-alle" titel="Neuer Lauf für alle Teams. Die jetzigen Läufe bleiben gespeichert.">
             Neues Spiel – alle
@@ -327,9 +343,12 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                 const faelle: FallStand[] = u ? statusFaelle(inh, u) : [];
                 // K3.2: Start oder Pause der Spielleitung steht noch aus – „wartet auf Laptop“ statt nichts
                 const wartet = t.lauf ? wartetUhr(x) : null;
+                // L2.1: der Grund bleibt stehen und nennt den Laptop beim Namen („Start wartet auf Laptop SU2A“)
+                const ug = t.lauf ? s.uhrGrund(t.id) : null;
+                const zwei = s.zweiVerlaeufe(t.id);
                 const grund = t.rechnerOnline ? "wartet auf Antwort" : "wartet auf Laptop";
                 const basis = !t.lauf ? "Lobby" : !u ? (t.rechnerOnline ? "lädt …" : t.rechner ? "Laptop nicht verbunden" : "kein Laptop") : u.ende ? "Spielende" : u.laeuft ? `läuft${u.tempo !== 1 ? ` ×${u.tempo}` : ""}` : tt === 0 ? "bereit" : "angehalten";
-                const status = wartet && !u?.ende ? `${wartet === "start" ? "Start" : "Anhalten"} ${grund}` : basis;
+                const status = ug ? ug.kurz : wartet && !u?.ende ? `${wartet === "start" ? "Start" : "Anhalten"} ${grund}` : basis;
                 const z = s.spiel(t.id)?.stand.zustand;
                 const hochNetz = s.spiel(t.id)?.stand.zustand.seq ?? 0;
                 const alt = x.alterS !== null && x.alterS > 15;
@@ -337,7 +356,8 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                   <tr key={t.id} data-team-zeile={t.name} data-team={t.id} class={u?.laeuft ? "laeuft" : ""} data-status-seq={u?.seq ?? ""} data-netz-seq={hochNetz}>
                     <td><TeamName s={s} t={t} /></td>
                     <LaptopZelle s={s} t={t} />
-                    <td class="zahl"><b data-testid="team-uhr">{u ? uhrzeit(start, tt) : "–"}</b><div class={`klein ${wartet ? "wartet-text" : "sehr-leise"}`} data-testid="team-status" data-wartet={wartet ?? ""}>{status}
+                    <td class="zahl"><b data-testid="team-uhr">{u ? uhrzeit(start, tt) : "–"}</b><div class={`klein ${wartet ? "wartet-text" : "sehr-leise"}`} data-testid="team-status" data-wartet={wartet ?? ""} title={ug?.text}>{status}
+                      {zwei && <div class="rot" data-testid="zwei-verlaeufe" title="Im Netz stehen zwei Verläufe dieses Laufs (zwei Fenster haben gerechnet). Der Team-Laptop kann nicht hochladen. „Neues Spiel“ für dieses Team legt einen sauberen Lauf an.">Lauf hat zwei Verläufe – Neues Spiel empfohlen</div>}
                       {z && z.verstaerkungen.length > 0 && <span data-verstaerkungen={z.verstaerkungen.map((v) => v.gruppe).join(",")}> · +{z.verstaerkungen.length} V</span>}</div></td>
                     <td class="zahl">{u ? <span class="eingang">{u.eingang}{u.zurueck ? ` (${u.zurueck})` : ""}</span> : "–"}</td>
                     <td>{u ? (

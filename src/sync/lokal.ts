@@ -36,6 +36,9 @@ export interface KanalFabrik {
   (name: string): { postMessage(m: unknown): void; onmessage: ((ev: { data: unknown }) => void) | null; close(): void };
 }
 
+/** Liste L (L3): Marke „Alle Sitzungen beendet“ dieses Rechners (außerhalb von argus:v1:, das beim Aufräumen geleert wird). */
+export const RESET_SCHLUESSEL = "argus:reset:v1";
+
 /** Läufe je Team und Sitzungen, die im localStorage bleiben (ca. 5 MB Platz). */
 const MAX_LAEUFE = 4;
 const MAX_SITZUNGEN = 4;
@@ -51,6 +54,8 @@ export class LokalAdapter implements SyncAdapter {
   private anwHoerer = new Set<(l: Teilnehmer[]) => void>();
   private hostHoerer = new Set<(h: HostInfo | null) => void>();
   private statusHoerer = new Set<(s: Record<string, TeamStatus>) => void>();
+  private resetHoerer = new Set<(ts: number | null, lesbar: boolean) => void>();
+  private resetKanal: ReturnType<KanalFabrik> | null = null;
   private timer: ReturnType<typeof setInterval>[] = [];
   private anwesenheit: Omit<Teilnehmer, "puls"> | null = null;
   private pausiert: Omit<Teilnehmer, "puls"> | null = null;
@@ -92,6 +97,8 @@ export class LokalAdapter implements SyncAdapter {
     this.timer = [];
     this.kanal?.close();
     this.kanal = null;
+    this.resetKanal?.close();
+    this.resetKanal = null;
   }
 
   aufVerbindung(cb: (v: Verbindung) => void): Abmelden {
@@ -257,6 +264,9 @@ export class LokalAdapter implements SyncAdapter {
   // ---------------------------------------------------------------- Anwesenheit
 
   meldeAnwesenheit(t: Omit<Teilnehmer, "puls">): void {
+    // Nach dem Trennen (Tab wird geschlossen: pagehide) nichts mehr eintragen – seit Liste L meldet sich ein Fenster auch bei
+    // „visibilitychange“ neu, und das feuert beim Schließen NACH pagehide: Der Eintrag stünde sonst 20 s als „verbunden“ da.
+    if (!this.kanal) return;
     if (this.pausiert) {
       this.pausiert = t;
       return;
@@ -311,6 +321,43 @@ export class LokalAdapter implements SyncAdapter {
     return () => this.hostHoerer.delete(cb);
   }
 
+  // ---------------------------------------------------------------- Notbremse (Liste L, L3): eine Marke für alle Sitzungen dieses Rechners
+
+  private resetLesen(): number | null {
+    const v = Number(this.ablage.getItem(RESET_SCHLUESSEL));
+    return v > 0 ? v : null;
+  }
+
+  private meldeReset(): void {
+    const v = this.resetLesen();
+    this.resetHoerer.forEach((cb) => cb(v, true));
+  }
+
+  aufReset(cb: (ts: number | null, lesbar: boolean) => void): Abmelden {
+    this.resetHoerer.add(cb);
+    if (!this.resetKanal) {
+      try {
+        this.resetKanal = this.kanalFabrik(RESET_SCHLUESSEL);
+        this.resetKanal.onmessage = () => this.meldeReset();
+      } catch {
+        this.resetKanal = null;
+      }
+    }
+    cb(this.resetLesen(), true);
+    return () => this.resetHoerer.delete(cb);
+  }
+
+  async setzeReset(): Promise<void> {
+    // immer größer als die bisherige Marke, auch bei zwei Klicks in derselben Millisekunde
+    this.ablage.setItem(RESET_SCHLUESSEL, String(Math.max(Date.now(), (this.resetLesen() ?? 0) + 1)));
+    this.meldeReset();
+    try {
+      (this.resetKanal ?? this.kanalFabrik(RESET_SCHLUESSEL)).postMessage({ t: "reset" });
+    } catch {
+      /* Fenster wird gerade geschlossen */
+    }
+  }
+
   // ---------------------------------------------------------------- intern
 
   private empfange(n: Nachricht): void {
@@ -342,6 +389,10 @@ export class LokalAdapter implements SyncAdapter {
   /** Änderung aus einem anderen Fenster, jetzt in diesem lesbar. */
   private speicherGeaendert(ev: StorageEvent): void {
     if (ev.storageArea && ev.storageArea !== this.ablage) return;
+    if (ev.key === RESET_SCHLUESSEL) {
+      this.meldeReset();
+      return;
+    }
     if (ev.key === null) {
       // ganzer Speicher geleert
       this.meldeTeams();

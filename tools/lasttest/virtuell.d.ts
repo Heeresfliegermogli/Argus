@@ -11,4 +11,5 @@ declare module "virtual:argus-laeufe" {
 // Vom Build gesetzt (define)
 declare const __ARGUS_VERSION__: string;
 declare const __ARGUS_STAND__: string;
+declare const __ARGUS_COMMIT__: string;
 declare const __ARGUS_OFFLINE__: boolean;

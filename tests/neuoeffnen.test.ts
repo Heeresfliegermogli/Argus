@@ -314,7 +314,7 @@ describe("K3 – keine hängenden „gesendet …“", () => {
     expect(sl.spiel(team)!.wartetAuf("uhr")).toBe(true);
     await bis(() => !sl.spiel(team)!.wartetAuf("uhr"), 2000, "Zeitlimit");
     expect(Date.now() - t0).toBeLessThan(1500); // im Test 400 ms, im Spiel 10 s (ZEITLIMIT_MS)
-    expect(sl.hinweise.liste.some((h) => /Team Adler antwortet nicht – Laptop nicht verbunden/.test(h.text))).toBe(true);
+    expect(sl.hinweise.liste.some((h) => /Team Adler antwortet nicht – Laptop [A-Z0-9]{4} nicht verbunden/.test(h.text))).toBe(true);
     // die Aktion steht aus: „Start wartet auf Laptop“
     expect(sl.spiel(team)!.ausstehendeUhr()).toBe("start");
     expect(sl.spiel(team)!.stand.zustand.uhr.laeuft).toBe(false);

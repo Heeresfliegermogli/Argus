@@ -33,6 +33,12 @@ export interface UploadStand {
   regeln?: boolean;
   /** ein anderes Fenster hat dieses Spiel weitergeführt – kein Upload mehr, nur noch Datei */
   fremd?: boolean;
+  /**
+   * Liste L (L2.4): Der Lauf hat zwei Verläufe, die sich nicht zusammenführen lassen – im Netz stehen hinter einer Lücke Einträge
+   * eines anderen Fensters. Der Team-Laptop kann nicht hochladen (und spielt weiter), die Spielleitung kann nicht folgen. Abhilfe:
+   * „Neues Spiel“.
+   */
+  zwei?: boolean;
 }
 
 export interface SpielStand {
@@ -78,6 +84,9 @@ export interface SpielOptionen {
   /** K3.2: beim Folgen den Kanal der Aktionen mitlesen (Spielleitung) */
   aktionenLesen?: boolean;
 }
+
+/** L2.4: Text für Team-Fenster und Spielleitung. */
+export const ZWEI_TEXT = "Lauf hat zwei Verläufe – Neues Spiel empfohlen.";
 
 /** K3.1: Kein Knopf der Spielleitung bleibt länger als 10 s auf „gesendet …“. */
 export const ZEITLIMIT_MS = 10000;
@@ -237,10 +246,12 @@ export class Spiel {
 
   private async wechsleLauf(lauf: string | null): Promise<void> {
     const nr = ++this.laufWechsel;
+    if (lauf !== this.s.lauf) this.zweiGemeldet = false;
     this.protokollAbo?.();
     this.protokollAbo = null;
     this.hostStoppen();
     this.puffer.clear();
+    this.hochGrenze = Infinity;
     this.aktionenAbo?.();
     this.aktionenAbo = null;
     this.imKanal.clear();
@@ -262,6 +273,7 @@ export class Spiel {
     if (nr !== this.laufWechsel || this.gestoppt) return; // inzwischen anderer Lauf
     const gueltigNetz = this.gueltig(netz);
     const gemeinsam = this.gemeinsam(lokal, gueltigNetz);
+
     // Liste K (K2.2): Steht im Netz ein anderer Spielstand (ein anderer Laptop hat weitergeführt), übernimmt ihn der Laptop, der
     // jetzt rechnet – das Netz ist nur zum Anhängen, sonst käme er mit seinem Stand nie wieder hinein.
     const anders = lokal.length > gemeinsam && gueltigNetz.length > gemeinsam;
@@ -272,7 +284,13 @@ export class Spiel {
     const hoch = basis === gueltigNetz ? gueltigNetz.length : gemeinsam;
     if (anders) this.ablage.ersetze(this.team, lauf, gueltigNetz);
     else if (basis === gueltigNetz && gueltigNetz.length > lokal.length) this.ablage.anhaengen(this.team, lauf, gueltigNetz.slice(lokal.length));
-    this.aendern({ zustand: z, protokoll: basis, geladen: true, upload: { hoch } });
+    // Liste L (L2.4): Der Team-Laptop hat Einträge an Plätzen, die im Netz hinter einer Lücke schon ein anderes Fenster belegt hat –
+    // zwei Verläufe, die niemand zusammenführen kann (weder hochladen noch übernehmen)
+    const luecke = this.hostErlaubt ? this.hinterLuecke(netz, gueltigNetz.length, basis) : null;
+    const zwei = !!luecke?.kollidiert;
+    this.hochGrenze = luecke && !zwei ? luecke.ab - 1 : Infinity;
+    this.aendern({ zustand: z, protokoll: basis, geladen: true, upload: zwei ? { hoch, zwei: true, fehler: ZWEI_TEXT } : { hoch } });
+    if (zwei) this.meldeZwei();
     this.pruefeSzenario(z);
     if (this.hostErlaubt && !this.abschluss) this.hostStarten();
     else this.folgen(lauf, z.seq);
@@ -292,6 +310,33 @@ export class Spiel {
       out.push(e);
     }
     return out;
+  }
+
+  /**
+   * L2.4: Stehen im Netz Einträge hinter einer Lücke (seq größer als das lückenlose Stück)? `ab`: erster solcher Platz;
+   * `kollidiert`: das eigene Protokoll hat an einem dieser Plätze schon einen ANDEREN Eintrag – dann gibt es zwei Verläufe. Sonst
+   * (das eigene Protokoll ist noch nicht so weit) lädt der Laptop bis vor die Lücke hoch; erreicht er den Platz, greift K Festlegung 4.
+   */
+  private hinterLuecke(roh: Ereignis[], lueckenlos: number, eigen: Ereignis[]): { ab: number; kollidiert: boolean } | null {
+    const fremd = roh.filter((e) => typeof e?.seq === "number" && e.seq > lueckenlos);
+    if (!fremd.length) return null;
+    const kollidiert = fremd.some((e) => {
+      const l = eigen[e.seq - 1];
+      return !!l && !(l.typ === e.typ && l.ts === e.ts);
+    });
+    return { ab: Math.min(...fremd.map((e) => e.seq)), kollidiert };
+  }
+
+  /** L2.4: nur bis vor diesen Platz hochladen (dahinter stehen im Netz Einträge eines anderen Fensters) */
+  private hochGrenze = Infinity;
+
+  private zweiGemeldet = false;
+  private meldeZwei(): void {
+    if (this.zweiGemeldet) return;
+    this.zweiGemeldet = true;
+    this.opt.hinweise.hinweis("fehler", this.hostErlaubt
+      ? `${ZWEI_TEXT} Dieser Laptop spielt weiter, kann aber nicht hochladen – Protokoll mit „⇩ Protokoll“ sichern.`
+      : ZWEI_TEXT);
   }
 
   /** Länge des gemeinsamen Anfangs zweier Protokolle (gleiche seq, typ, ts). */
@@ -466,9 +511,9 @@ export class Spiel {
     if (st) void this.kanal.schreibeStatus(st).catch(() => {});
     if (!war || !lauf) return true;
     const fertig = () => this.s.upload.hoch >= this.s.protokoll.length;
-    if (!fertig() && !this.s.upload.fremd) void this.hochladen();
+    if (!fertig() && !this.s.upload.fremd && !this.s.upload.zwei) void this.hochladen();
     const ende = Date.now() + ms;
-    while (!fertig() && Date.now() < ende && !this.gestoppt && !this.s.upload.fremd) await new Promise((r) => setTimeout(r, 50));
+    while (!fertig() && Date.now() < ende && !this.gestoppt && !this.s.upload.fremd && !this.s.upload.zwei) await new Promise((r) => setTimeout(r, 50));
     return fertig();
   }
 
@@ -518,7 +563,7 @@ export class Spiel {
   // ---------------------------------------------------------------- Upload und Status
 
   private hochladenBald(ms: number): void {
-    if (this.gestoppt || !this.s.lauf || this.s.upload.fremd) return;
+    if (this.gestoppt || !this.s.lauf || this.s.upload.fremd || this.s.upload.zwei) return;
     if (this.hochLaeuft) return; // läuft gerade; nimmt danach den Rest mit
     if (this.hochTimer) {
       if (ms > 0) return;
@@ -532,12 +577,12 @@ export class Spiel {
 
   private async hochladen(): Promise<void> {
     const lauf = this.s.lauf;
-    if (!lauf || this.hochLaeuft || this.gestoppt || this.s.upload.fremd) return;
+    if (!lauf || this.hochLaeuft || this.gestoppt || this.s.upload.fremd || this.s.upload.zwei) return;
     this.hochLaeuft = true;
     try {
       const stueck = this.opt.upload?.stueck ?? STUECK;
-      while (!this.gestoppt && lauf === this.s.lauf && this.s.upload.hoch < this.s.protokoll.length) {
-        const teil = this.s.protokoll.slice(this.s.upload.hoch, this.s.upload.hoch + stueck);
+      while (!this.gestoppt && lauf === this.s.lauf && this.s.upload.hoch < Math.min(this.s.protokoll.length, this.hochGrenze)) {
+        const teil = this.s.protokoll.slice(this.s.upload.hoch, Math.min(this.s.upload.hoch + stueck, this.hochGrenze));
         await this.kanal.schreibeEreignisse(lauf, teil);
         if (lauf !== this.s.lauf) return;
         this.hochWarte = 0;
@@ -553,15 +598,22 @@ export class Spiel {
     } finally {
       this.hochLaeuft = false;
     }
-    if (!this.gestoppt && lauf === this.s.lauf && !this.s.upload.fehler && this.s.upload.hoch < this.s.protokoll.length) this.hochladenBald(0);
+    if (this.gestoppt || lauf !== this.s.lauf || this.s.upload.fehler) return;
+    if (this.s.upload.hoch >= this.hochGrenze && this.s.protokoll.length > this.hochGrenze) {
+      // L2.4: Das eigene Protokoll hat den Platz erreicht, den im Netz ein anderes Fenster belegt – neu abgleichen (K Festlegung 4)
+      this.hochGrenze = Infinity;
+      void this.abgleichen(lauf);
+    } else if (this.s.upload.hoch < Math.min(this.s.protokoll.length, this.hochGrenze)) this.hochladenBald(0);
   }
 
   /** Nach einem Fehler: Was steht im Netz? Passt es zum eigenen Protokoll, geht es dort weiter; sonst kein Upload mehr. */
   private async abgleichen(lauf: string): Promise<void> {
     if (this.gestoppt || lauf !== this.s.lauf || !this.host) return;
     let netz: Ereignis[];
+    let roh: Ereignis[];
     try {
-      netz = this.gueltig(await this.ladeNetz(lauf, true));
+      roh = await this.ladeNetz(lauf, true);
+      netz = this.gueltig(roh);
     } catch {
       this.hochWarte = Math.min(30000, Math.max(2000, this.hochWarte * 2));
       setTimeout(() => void this.abgleichen(lauf), this.hochWarte);
@@ -578,6 +630,16 @@ export class Spiel {
       void this.wechsleLauf(lauf);
       return;
     }
+    const luecke = this.hinterLuecke(roh, netz.length, this.s.protokoll);
+    if (luecke?.kollidiert) {
+      // Liste L (L2.4): Hinter einer Lücke stehen Einträge eines anderen Fensters, und dieser Laptop hat dieselben Plätze schon anders
+      // belegt. Übernehmen geht nicht (kein lückenloser Stand), hochladen auch nicht (ein Stück ist ganz oder gar nicht) – bis
+      // Stand K versuchte er es endlos („Upload hängt bei 10 von 122“). Jetzt: sagen, was los ist.
+      this.aendern({ upload: { hoch: gemeinsam, zwei: true, fehler: ZWEI_TEXT } });
+      this.meldeZwei();
+      return;
+    }
+    this.hochGrenze = luecke ? luecke.ab - 1 : Infinity;
     this.aendern({ upload: { hoch: gemeinsam } });
     void this.hochladen();
   }

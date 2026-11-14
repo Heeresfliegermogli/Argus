@@ -466,3 +466,71 @@ describe("Firebase-Regeln: Drehbuch mit fünf Teams", () => {
     });
   });
 });
+
+// Liste L (14.11.2026): Notbremse „Alle Sitzungen beenden“ – neuer Pfad argus/v1/reset. Alles andere aus Liste L (Testraum leeren,
+// Laptop abmelden, Gerätename, Programmstand in der Anwesenheit) geht mit den Regeln von Stand H–K (tests/regeln_stand_h.json).
+describe("Firebase-Regeln: Liste L – Marke argus/v1/reset (neu) und alles Übrige mit den alten Regeln", () => {
+  const alteRegeln = require("./regeln_stand_h.json");
+  const alt = () => targaryen.database(alteRegeln, {}).with({ debug: true }).as(null);
+  const R = "/argus/v1/reset";
+
+  it("neue Regeln: Marke lesen und setzen (Zahl, höchstens 10 min voraus), sonst nichts dort", () => {
+    expect(leer().read(R).allowed).toBe(true);
+    expect(leer().write(R, Date.now()).allowed).toBe(true);
+    expect(leer().write(R, { ".sv": "timestamp" }).allowed).toBe(true);
+    expect(leer().write(R, Date.now() + 3600_000).allowed).toBe(false);
+    expect(leer().write(R, "jetzt").allowed).toBe(false);
+    expect(leer().write(R, { a: 1 }).allowed).toBe(false);
+    expect(leer().write(`${R}/kind`, 1).allowed).toBe(false);
+    // weiterhin keine Sitzungsliste, kein Lesen von argus/v1
+    expect(leer().read("/argus/v1").allowed).toBe(false);
+    expect(leer().read("/argus/v1/sitzungen").allowed).toBe(false);
+    expect(leer().write("/argus/v1/anderes", 1).allowed).toBe(false);
+  });
+
+  it("alte Regeln (Stand H–K): die Marke ist weder les- noch schreibbar – die Notbremse meldet den Regelfehler", () => {
+    expect(alt().read(R).allowed).toBe(false);
+    expect(alt().write(R, Date.now()).allowed).toBe(false);
+    // die neuen Regeln unterscheiden sich NUR in diesem Pfad
+    const neu = JSON.parse(JSON.stringify(regeln));
+    delete neu.rules.argus.v1.reset;
+    expect(neu).toEqual(alteRegeln);
+  });
+
+  it("alte Regeln: Testraum leeren (Stand in teams/traum/erstellt, neuer Lauf, Einträge heraus) und Laptop abmelden", () => {
+    const raum = "/argus/v1/sitzungen/kraehe";
+    const jetzt = Date.now();
+    let db = alt().write(`${raum}/teams/traum`, { name: "Team 1", farbe: "#e8839b", erstellt: 0, lauf: LAUF, spieler: {
+      su2a26: { name: "Zielbearbeitung", rollen: "zb", seit: jetzt - 4 * 86400000 },
+      faj4jn: { name: "Laptop FAJ4", rollen: "zb", seit: jetzt - 1000 },
+    } }).newDatabase;
+    // Testraum leeren: Stand „geleert um“, neuer Lauf, dann die Einträge einzeln heraus
+    let erg = db.update(`${raum}/teams/traum`, { name: "Team 1", farbe: "#e8839b", erstellt: jetzt });
+    expect(erg.allowed).toBe(true);
+    erg = erg.newDatabase.update(`${raum}/teams/traum`, { lauf: "20261114-1940-abcd" });
+    expect(erg.allowed).toBe(true);
+    for (const c of ["su2a26", "faj4jn"]) {
+      erg = erg.newDatabase.update(`${raum}/teams`, { [`traum/spieler/${c}`]: null });
+      expect(erg.allowed).toBe(true);
+    }
+    db = erg.newDatabase;
+    // neuer Beitritt mit Gerätenamen
+    expect(db.update(`${raum}/teams/traum`, { name: "Team 1", farbe: "#e8839b", erstellt: jetzt, "spieler/hevmvq": { name: "Laptop HEVM", rollen: "zb", seit: jetzt + 1 } }).allowed).toBe(true);
+    // Laptop abmelden in einer Sitzung mit Lobby: der Eintrag des verbundenen Laptops verschwindet
+    const mitTeam = alt().write(`${S}/teams/${TEAM}`, team({ lauf: LAUF, spieler: { abc123: { name: "Lt Anders", rollen: "zb", seit: jetzt } } })).newDatabase;
+    expect(mitTeam.update(`${S}/teams`, { [`${TEAM}/spieler/abc123`]: null }).allowed).toBe(true);
+  });
+
+  it("alte Regeln: Anwesenheit mit Programmstand, Zeichen und Fenstergröße in version (≤ 20 Zeichen)", () => {
+    for (const t of [
+      { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "90b7bef", team: "traum", fenster: "1536x730" },
+      { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "90b7bef", team: TEAM, fenster: "1536x730", zwei: true, hintergrund: true },
+      { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "90b7bef", team: TEAM, fenster: "1920x1080", zwei: true, regeln: true },
+      { client: "abc123", art: "sl" as const, name: "SL 1", version: "lokal", fenster: "1536x730", hintergrund: true },
+    ]) {
+      const eintrag = { ...anwesenheitSchreiben(t), puls: Date.now() };
+      expect(alt().write(`${S}/anwesenheit/abc123`, eintrag).allowed, JSON.stringify(eintrag)).toBe(true);
+      expect(anwesenheitLesen(eintrag as never).version).toBe(t.version);
+    }
+  });
+});

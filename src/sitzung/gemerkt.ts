@@ -6,7 +6,7 @@
 // sofort wieder der Laptop seines Teams.
 //
 // Schlüssel: argus:ich:<sitzung> (mit ?geraet=x für Tests und Vorführung: argus:ich:<sitzung>@x – so lassen sich an einem Rechner
-// mehrere „Geräte“ in einem Browser nachstellen). Einträge älter als 7 Tage werden entfernt.
+// mehrere „Geräte“ in einem Browser nachstellen). Einträge älter als 12 h werden entfernt und gelten nicht mehr (Liste L, L5.1; bis Liste K 7 Tage).
 export interface GemerkteSitzung {
   /** Pfadschlüssel der Sitzung, z. B. p9p */
   sitzung: string;
@@ -23,7 +23,8 @@ export interface GemerkteSitzung {
 }
 
 const PRAEFIX = "argus:ich:";
-const MAX_ALTER_MS = 7 * 24 * 3600 * 1000;
+/** Liste L (L5.1): 12 h statt 7 Tage – ein Merker vom Vortag führt nicht mehr in eine alte Sitzung. */
+export const MERKER_MAX_ALTER_MS = 12 * 3600 * 1000;
 const KENNUNG = /^[a-z0-9]{6}$/;
 
 function schluessel(sitzung: string, geraet: string | null): string {
@@ -53,7 +54,7 @@ export class Merker {
   lies(): GemerkteSitzung | null {
     try {
       const g = JSON.parse(this.speicher?.getItem(schluessel(this.sitzung, this.geraet)) ?? "null") as unknown;
-      return gueltig(g, this.sitzung) ? g : null;
+      return gueltig(g, this.sitzung) && Date.now() - g.zeit <= MERKER_MAX_ALTER_MS ? g : null;
     } catch {
       return null;
     }
@@ -76,7 +77,7 @@ export class Merker {
   }
 }
 
-/** Alle gemerkten Sitzungen dieses Browsers (dieses „Geräts“), neueste zuerst; räumt Einträge älter als 7 Tage weg. */
+/** Alle gemerkten Sitzungen dieses Browsers (dieses „Geräts“), neueste zuerst; räumt Einträge älter als 12 h weg. */
 export function gemerkteSitzungen(geraet: string | null = null, speicher: Storage | undefined = globalThis.localStorage): GemerkteSitzung[] {
   const out: GemerkteSitzung[] = [];
   const weg: string[] = [];
@@ -92,7 +93,7 @@ export function gemerkteSitzungen(geraet: string | null = null, speicher: Storag
       } catch {
         /* beschädigt */
       }
-      if (!gueltig(wert) || Date.now() - wert.zeit > MAX_ALTER_MS) {
+      if (!gueltig(wert) || Date.now() - wert.zeit > MERKER_MAX_ALTER_MS) {
         weg.push(k);
         continue;
       }
@@ -103,4 +104,29 @@ export function gemerkteSitzungen(geraet: string | null = null, speicher: Storag
     return [];
   }
   return out.sort((a, b) => b.zeit - a.zeit);
+}
+
+/**
+ * Liste L (L3.2): Notbremse „Alle Sitzungen beenden“ – dieser Browser vergisst ALLE gemerkten Sitzungen (argus:ich:*, auch die der
+ * Test-„Geräte“) und die zuletzt genutzte Sitzung der Spielleitung.
+ */
+export function vergissAlleSitzungen(speicher: Storage | undefined = globalThis.localStorage): void {
+  try {
+    if (!speicher) return;
+    const weg: string[] = [];
+    for (let i = 0; i < speicher.length; i++) {
+      const k = speicher.key(i);
+      if (k && (k.startsWith(PRAEFIX) || k === "argus:einst:letzte_sitzung")) weg.push(k);
+    }
+    weg.forEach((k) => speicher.removeItem(k));
+  } catch {
+    /* privater Modus */
+  }
+}
+
+/** Derselbe Kalendertag (Ortszeit)? L5.1: „Zurück zu Team …“ und „Zuletzt genutzt“ nur für Sitzungen von heute. */
+export function selberTag(a: number, b: number = Date.now()): boolean {
+  const x = new Date(a);
+  const y = new Date(b);
+  return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
 }
