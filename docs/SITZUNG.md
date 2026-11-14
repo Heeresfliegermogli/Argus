@@ -14,7 +14,7 @@ ging Laptop → Firebase → SL → Firebase → Laptop (Desync bis ca. 5 s im T
 
 | Wer | Schritt | Wo |
 |---|---|---|
-| SL 1 | Startseite → **Spielleitung** → Name → **Neue Sitzung anlegen**. Der Code (drei Zeichen, z. B. `K7P`) steht oben in der Mitte. Beim nächsten Mal bietet die Seite unter **Spielleitung** die zuletzt genutzte Sitzung an: **Fortsetzen als Spielleitung** oder **Plenum**. | `…/Argus/` |
+| SL 1 | Startseite → **Spielleitung** → Name → **Neue Sitzung anlegen**. Der Code (drei Zeichen, z. B. `K7P`) steht oben in der Mitte. **Für jeden Durchgang eine neue Sitzung** (seit Liste L); eine Sitzung von heute steht darunter klein als „Zuletzt genutzt: … fortsetzen als Spielleitung · Plenum“. | `…/Argus/` |
 | SL 1 | **Plenum öffnen**: Das Smartboard zeigt Seite, Code und die Teams, die sich bilden. | Übersicht |
 | TT | Startseite → **Ich spiele mit** → Code eingeben (Groß-/Kleinschreibung, Leerzeichen und Punkte egal: `k 7 p`) → **Beitreten**. Mehr sehen Teilnehmer auf der Startseite nicht. | `…/Argus/` |
 | TT | Lobby: Namen (freiwillig, z. B. „Lt Müller, Lt Schmidt“), Teamname (≤ 24 Zeichen, 🎲 schlägt einen vor) → **Team anlegen** – „Dieser Laptop spielt für das Team.“ Keine Rollenwahl. Ein zweites Fenster desselben Teams (Knopf **zuschauen**) sieht nur zu. **Team verlassen** jederzeit (im Lauf mit Nachfrage). | Lobby |
@@ -38,7 +38,7 @@ die Startseite neu kam, bekam eine neue Kennung und durfte nur zuschauen. Jetzt 
 | **Der alte Laptop kommt zurück** | Er ist nicht mehr das früheste Fenster, **stoppt seinen Host** und zeigt „Das Spiel wird an einem anderen Laptop weitergeführt“ (mit **⇩ Protokoll dieses Laptops**). Nie zwei verbundene rechnende Fenster. | Nichts – zuschauen oder **Team verlassen**. |
 | **Die Spielleitung räumt auf** | In der Zeile des Teams steht „Laptop SU2A nicht verbunden seit 0:45“ und **Laptop abmelden** (bis Liste K „Laptop freigeben“; Nachfrage): nimmt das tote Fenster aus dem Team. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt. | Übersicht → Zeile → **Laptop abmelden** (seit Liste L auch bei verbundenem Laptop). |
 | **Ein Gerät sauber freigeben** | **⎋ Team verlassen** steht jetzt auch in der Ansicht während des Laufs (Nachfrage): Der Laptop hält an, lädt das Protokoll hoch und geht in die Lobby. | Danach tritt ein anderes Gerät dem Team bei (**beitreten**) und führt weiter. |
-| **Start, Pause, Tempo, während ein Laptop fehlt** | Die Befehle stehen im Kanal des Teams. Die Übersicht zeigt **„Start wartet auf Laptop“**; nach 10 s kommt der Hinweis „Team … antwortet nicht – Laptop nicht verbunden“ (kein Knopf bleibt auf „gesendet …“). Beim Wiederverbinden wird der Befehl ausgeführt: die Uhr läuft ab der Startzeit, höchstens 60 s nachgeholt (H1.4). Hat die Spielleitung inzwischen wieder angehalten, gilt nur der letzte Befehl. | Nichts – oder **Laptop freigeben** und ein anderes Gerät beitreten lassen. |
+| **Start, Pause, Tempo, während ein Laptop fehlt** | Die Befehle stehen im Kanal des Teams. Die Übersicht zeigt **„Start wartet auf Laptop SU2A“** (seit Liste L mit Gerätenamen, bleibt stehen); nach 10 s kommt der Hinweis „Team … antwortet nicht – Laptop SU2A nicht verbunden“ (kein Knopf bleibt auf „gesendet …“), und in der Teamansicht bleibt der Grund unter dem Knopf stehen. Beim Wiederverbinden wird der Befehl ausgeführt: die Uhr läuft ab der Startzeit, höchstens 60 s nachgeholt (H1.4). Hat die Spielleitung inzwischen wieder angehalten, gilt nur der letzte Befehl. | Nichts – oder **Laptop abmelden** und ein anderes Gerät beitreten lassen. |
 | **Spiel öffnen / Neues Spiel ohne Laptop** | Hinweis „kein Laptop verbunden – das Spiel startet, sobald einer beitritt“. | – |
 | **Sitzung beenden** | Spielleitung, oben rechts **Sitzung beenden** (Nachfrage): Team-Fenster zeigen „Sitzung beendet – danke“, halten an, laden hoch und vergessen die Sitzung; das Plenum geht zur Startseite; der Code nimmt niemanden mehr an. Die Protokolle bleiben – die Spielleitung kommt weiter an die **Auswertung**. Auf der Startseite steht die Sitzung nicht mehr unter „Zuletzt genutzte Sitzung fortsetzen“ (dort sonst mit Datum und Zahl der Teams). | Danach **Neue Sitzung anlegen** – neuer Code, keine Reste. |
 
@@ -164,8 +164,8 @@ Haben alle Teams das Spielende erreicht, zeigt es die **Auswertung über alle Te
   Spielleitung“); links Namen, neues Team bzw. das eigene Team, „So spielt ihr“ in zwei Sätzen; rechts alle Teams als Karten mit den
   Fenstern (★ = Team-Laptop) und dem Knopf **beitreten** (Team ohne Laptop: dieser Laptop rechnet dann) oder **zuschauen**.
   Teamfarben werden automatisch vergeben, stehen nie ohne Namen und sind keine Signalfarbe.
-* **Ansicht:** eine für alle (siehe [`UI.md`](UI.md)). Ein zweites Fenster des Teams sieht zu („Das Spiel dieses Teams rechnet der
-  Laptop von … Hier nur zuschauen.“). Ist der Team-Laptop länger als 20 s nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
+* **Ansicht:** eine für alle (siehe [`UI.md`](UI.md)). Ein zweites Fenster des Teams sieht zu („Das Spiel dieses Teams rechnet
+  Laptop SU2A (Lt Müller). Hier nur zuschauen.“). Ist der Team-Laptop länger als 20 s nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
   Fall, dass der Laptop aus ist.
 * Kopfzeile: Team (Farbe und Name), Uhr und Phase, die vier Panzer, Bestand, Verbindung („verbunden · n offen“ = so viele
   Einträge noch nicht im Netz; „offline – Spiel läuft“), **⇩ Protokoll** (als Datei speichern), **? Einweisung**.
@@ -272,7 +272,7 @@ Offline-Datei liegt das „hochgeladene“ Protokoll ohnehin im localStorage.
 
 | Prüfung | Ergebnis |
 |---|---|
-| `tests/notbremse.test.ts` (17 Tests): Gerätenamen, Testraum mit vier alten Einträgen, Verfall nach 2 h, Befund 5 (Grund bleibt, „Laptop abmelden“ → B rechnet), „Testraum leeren“, verbundenen Laptop abmelden (nie zwei rechnende Fenster), zwei Verläufe, Notbremse mit 2 Sitzungen + Testraum + 7 Fenstern, Einträge von vor der Marke, alte Regeln, Programmstand in der Anwesenheit, Merker 12 h, Diagnose | bestanden |
+| `tests/notbremse.test.ts` (18 Tests): Gerätenamen, Testraum mit vier alten Einträgen, Verfall nach 2 h, Befund 5 (Grund bleibt, „Laptop abmelden“ → B rechnet), „Testraum leeren“, verbundenen Laptop abmelden (nie zwei rechnende Fenster), zwei Verläufe, Notbremse mit 2 Sitzungen + Testraum + 7 Fenstern, Einträge von vor der Marke, alte Regeln, Programmstand in der Anwesenheit, Merker 12 h, Diagnose | bestanden |
 | `tests/firebase_regeln.test.ts`: neuer Pfad `argus/v1/reset`; die neuen Regeln unterscheiden sich von Stand H nur darin; Testraum leeren, Laptop abmelden und die Anwesenheit mit Programmstand gehen mit den **alten** Regeln (`tests/regeln_stand_h.json`) | bestanden |
 | `tools/notbremse_probe.py` über die Oberfläche: lokal 11/11, Firebase-Nachbildung mit den neuen Regeln 11/11, mit den **alten** Regeln (`REGELN=tests/regeln_stand_h.json`) 1/1 – die Notbremse meldet den Regelfehler, sonst läuft alles | bestanden |
 
