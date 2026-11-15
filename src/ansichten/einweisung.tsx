@@ -20,6 +20,7 @@ import { ROLLEN_NAME } from "../kern/sichten";
 import { uhrzeit } from "../kern/uhr";
 import { useManifest } from "./gemeinsam/drohnenbild";
 import { aktuelleSkala, fensterText, useFenster, zuKlein } from "./gemeinsam/fenster";
+import { LogoGanz } from "./gemeinsam/logo";
 
 type KartenRolle = Exclude<Rolle, "plenum">;
 
@@ -393,7 +394,7 @@ function slFolien(inh: Inhalte): Folie[] {
       titel: "Spielende",
       inhalt: (
         <div class="los-folie">
-          <p>Um {bis} hält die Uhr an, die Ansichten der Teams sperren. Das Plenum zeigt die Auswertung über alle Teams, sobald alle Protokolle da sind.</p>
+          <p>Um {bis} hält die Uhr an, die Ansichten der Teams sperren. Sind alle Protokolle da, zeigt das Plenum „Gefecht beendet“, dann die Schlüsselfälle einzeln und „Gesamt“ mit der Zahl (ca. 5 min) – danach weiter in der PowerPoint.</p>
           <p>Fehlt ein Protokoll (Netz), am Team-Laptop „⇩ Protokoll“ speichern und in der Übersicht mit „Protokoll laden“ einlesen.</p>
         </div>
       ),
@@ -507,13 +508,15 @@ function AnsichtSkizze() {
 }
 
 /** Druckkarte für das Team (A5 quer): Skizze der Ansicht, Phasen, Klassen, Wirkmittel. */
-export function Einweisungskarte(p: { inh: Inhalte; rolle: KartenRolle }) {
+export function Einweisungskarte(p: { inh: Inhalte; rolle: KartenRolle; druck?: boolean }) {
+  // Liste O (O2.2): im Druck das ganze Logo (heller Grund) rechts im Fuß
+  const logo = p.druck ? <LogoGanz hoehe={44} /> : null;
   if (p.rolle === "sl") {
     return (
       <article class="ekarte druck sl" data-testid="einweisung-sl">
         <header class="ekarte-kopf"><h1>{ROLLEN_NAME.sl}</h1><span class="unter">Steuern, beobachten, nicht eingreifen</span></header>
         <div class="druck-folien n4">{slFolien(p.inh).map((f) => <section><b class="folie-titel">{f.titel}</b>{f.inhalt}</section>)}</div>
-        <footer class="ekarte-fuss"><span>{p.inh.szenario.anzeige} · {p.inh.szenario.fiktiv}</span></footer>
+        <footer class="ekarte-fuss"><span>{p.inh.szenario.anzeige} · {p.inh.szenario.fiktiv}</span>{logo}</footer>
       </article>
     );
   }
@@ -532,7 +535,7 @@ export function Einweisungskarte(p: { inh: Inhalte; rolle: KartenRolle }) {
           <p><M k="toedlich">BEKÄMPFEN mit …</M> (Wirkmittel wählen) · <M>ZURÜCKSTELLEN</M> · <M>ABLEHNEN</M>. Ihr verantwortet jede Wirkung.</p>
         </section>
       </div>
-      <footer class="ekarte-fuss"><span>{p.inh.szenario.anzeige} · {p.inh.szenario.fiktiv}</span></footer>
+      <footer class="ekarte-fuss"><span>{p.inh.szenario.anzeige} · {p.inh.szenario.fiktiv}</span>{logo}</footer>
     </article>
   );
 }
@@ -545,7 +548,7 @@ export function EinweisungDruck(p: { inh: Inhalte }) {
         <span>Einweisungskarten {p.inh.szenario.anzeige} – A5 quer, eine Karte je Seite (je Team eine Karte)</span>
         <button type="button" class="knopf" onClick={() => window.print()}>Drucken</button>
       </div>
-      {(["zb", "sl"] as const).map((r) => <Einweisungskarte inh={p.inh} rolle={r} />)}
+      {(["zb", "sl"] as const).map((r) => <Einweisungskarte inh={p.inh} rolle={r} druck />)}
     </div>
   );
 }

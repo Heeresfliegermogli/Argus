@@ -69,10 +69,10 @@ describe("Szenario 2.3: Druckmeldungen (D3) und Auswertung (D5) mit den Drehbuch
     }
     const laeufe: TeamLauf[] = teams.map((m, i) => ({ id: `t${i}`, name: `Team ${i + 1}`, farbe: "#888888", zustand: m.z, protokoll: m.kanal.protokoll }));
     const a = auswerten(inh, laeufe);
-    // seit 2.7 (G1.1): „Preis des Abwartens“ zuschaltbar (nach dem Replay), 15 min ohne ihn
+    // seit 2.7 (G1.1): „Preis des Abwartens“ zuschaltbar; seit Liste O nach „Gesamt“ im kurzen Plenum (5 min ohne ihn)
     const kap = kapitelListe(inh, { zusatz: ["preis"] });
-    expect(kap.map((k) => k.id)).toEqual(["teams", "S3", "S2", "preis", "bilanz", "impuls", "diskussion", "abschluss"]);
-    expect(kap.reduce((s, k) => s + k.budget, 0)).toBe(16 * 60);
+    expect(kap.map((k) => k.id)).toEqual(["gefecht", "fall-S3", "fall-S2", "fall-S1", "fall-S4", "gesamt", "preis"]);
+    expect(kap.reduce((s, k) => s + k.budget, 0)).toBe(6 * 60);
     // F2.9: Modellteam „ideal“ (Team 2) endet spürbar schlechter als „naiv“ (Team 1): mehr Panzer ausgefallen
     expect(a.teams[1].kennzahlen.verluste!.ausgefallen).toBeGreaterThan(a.teams[0].kennzahlen.verluste!.ausgefallen);
     for (const t of a.teams) {

@@ -44,6 +44,7 @@ import "@fontsource/ibm-plex-mono/latin-400.css";
 import "@fontsource/ibm-plex-mono/latin-500.css";
 import "@fontsource/ibm-plex-mono/latin-600.css";
 import "./stil/basis.css";
+import { ArgusMarke, ArgusTitel } from "./ansichten/gemeinsam/logo";
 
 const KENNUNG = /^[a-z0-9]{6}$/;
 
@@ -198,7 +199,7 @@ function TabAbgegeben(p: { holen: () => Promise<void> }) {
   return (
     <div class="start">
       <div class="start-karte stapel" style="gap:12px;width:min(560px,100%)" data-testid="tab-abgegeben">
-        <h1>ARGUS</h1>
+        <ArgusTitel hoehe={72} />
         <div>Das Spiel läuft jetzt in einem <b>anderen Tab</b> dieses Browsers. Dieser Tab kann geschlossen werden.</div>
         <button type="button" class="knopf weiter" style="align-self:flex-start" onClick={() => void p.holen()} data-testid="tab-holen">Spiel wieder hierher holen</button>
       </div>
@@ -260,7 +261,7 @@ function AbschlussDemo(p: { e: Einstellungen }) {
     <div class="rahmen" data-rolle={t ? "zb" : "plenum"} data-ansicht="abschluss-demo">
       <header class="kopf">
         <div class="kopf-links">
-          <div class={`rollenband rolle-${t ? "zb" : "plenum"}`}><span class="marke">ARGUS</span><span>{t ? "Zielbearbeitung" : "Plenum"}</span></div>
+          <div class={`rollenband rolle-${t ? "zb" : "plenum"}`}><ArgusMarke /><span>{t ? "Zielbearbeitung" : "Plenum"}</span></div>
           <span class="sehr-leise klein">Beispiel · Modellteams</span>
         </div>
         <div />

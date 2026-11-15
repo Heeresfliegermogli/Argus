@@ -23,6 +23,7 @@ import { VersionsBanner } from "./notbremse";
 import { fensterText, useFenster, zuKlein } from "./fenster";
 import { imPult } from "./pult";
 import { useSpielzeit, useStand } from "./hooks";
+import { ArgusMarke } from "./logo";
 
 /**
  * Einweisung schon gesehen? Je Lauf – seit Liste K auch im localStorage: Wer den Tab schließt und sein Spiel wieder öffnet (K1), soll
@@ -321,7 +322,7 @@ export function Rahmen(p: {
       data-host={st.istHost ? "1" : "0"} data-rechnet={st.rechnet ? "1" : "0"} data-hoch={up.hoch} data-team={st.team}>
       <header class="kopf">
         <div class="kopf-links">
-          {p.band ?? <div class={`rollenband rolle-${rolle}`}><span class="marke">ARGUS</span><span>{ROLLEN_NAME[rolle]}</span></div>}
+          {p.band ?? <div class={`rollenband rolle-${rolle}`}><ArgusMarke /><span>{ROLLEN_NAME[rolle]}</span></div>}
           {p.links}
           {zeigeTeam && <TeamMarke name={st.teamName} farbe={st.teamFarbe} />}
           {team && !p.band && !st.gast && <span class="geraet-marke" data-testid="geraet" title="Name dieses Laptops – so nennt ihn die Spielleitung">{st.geraet}</span>}

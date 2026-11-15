@@ -11,6 +11,7 @@ import { useSitzung } from "./gemeinsam/hooks";
 import { VersionsBanner } from "./gemeinsam/notbremse";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { useSelbstNeuLaden } from "./gemeinsam/version";
+import { ArgusMarke, ArgusTitel } from "./gemeinsam/logo";
 
 /** Eigener Name je Tab (sessionStorage): übersteht Neuladen, gilt aber nicht für andere Fenster am selben PC. */
 function gemerkterName(): string {
@@ -113,7 +114,7 @@ export function Lobby(p: { s: Sitzung }) {
     <div class="rahmen lobby" data-rolle="lobby" data-sitzung={st.sitzung}>
       <header class="kopf">
         <div class="kopf-links">
-          <div class="rollenband rolle-lobby"><span class="marke">ARGUS</span><span>Lobby</span></div>
+          <div class="rollenband rolle-lobby"><ArgusMarke /><span>Lobby</span></div>
           <span class="leise">Sitzung <b class="mono" data-testid="code">{st.code}</b></span>
           <span class="sehr-leise klein">{s.inh.szenario.anzeige} · Übungslage, fiktiv</span>
         </div>
@@ -191,7 +192,7 @@ export function Warten(p: { s: Sitzung; text: string }) {
   return (
     <div class="start">
       <div class="start-karte stapel" style="gap:10px;width:min(560px,100%)">
-        <h1>ARGUS</h1>
+        <ArgusTitel hoehe={72} />
         <div>{p.text}</div>
         <div class="klein sehr-leise">Sitzung {st.code} · {st.verbindung.verbunden ? "verbunden" : "keine Verbindung"}</div>
       </div>

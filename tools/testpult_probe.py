@@ -307,7 +307,7 @@ def main():
             assert pg.get_by_test_id("pult-punkt-plenum").count() == 1, "Punkt am Reiter Plenum weg, bevor das Plenum vorn war"
             reiter("plenum")
             pl = frame("plenum")
-            warte(lambda: pl.locator(".rahmen[data-ansicht=abschluss]").count() == 1, 5, "„Gefecht beendet“ im Plenum")
+            warte(lambda: pl.locator(".rahmen[data-ansicht=auswertung] main[data-kapitel=gefecht]").count() == 1, 5, "„Gefecht beendet“ im Plenum")
             assert "Gefecht beendet" in pl.locator("main").inner_text()
             assert pg.get_by_test_id("pult-punkt-plenum").count() == 0, "Punkt am Reiter Plenum bleibt, obwohl das Plenum vorn ist"
             pg.wait_for_timeout(600)
@@ -336,7 +336,7 @@ def main():
             warte(lambda: zb("() => !!window.argus?.stand?.geladen && window.argus.stand.zustand.ende"), 20, "Spiel nach dem Neuladen geladen")
             nach = zb("() => [window.argus.stand.lauf, window.argus.stand.zustand.seq, window.argus.stand.zustand.ende]")
             assert nach[0] == vor[0] and nach[1] >= vor[1] and nach[2], f"vorher {vor}, nachher {nach}"
-            warte(lambda: frame("plenum").locator(".rahmen[data-ansicht=abschluss]").count() == 1, 10, "Plenum nach dem Neuladen")
+            warte(lambda: frame("plenum").locator(".rahmen[data-ansicht=auswertung] main[data-kapitel=gefecht]").count() == 1, 10, "Plenum nach dem Neuladen")
             st["lauf"] = nach[0]
             # Zähler neu setzen (T8 prüft, dass das Pult selbst nicht neu lädt)
             pg.evaluate("() => { window.__pultZaehler = 4711; }")

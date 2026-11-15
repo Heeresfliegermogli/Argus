@@ -18,6 +18,7 @@ import { type GemerkteSitzung, gemerkteSitzungen, selberTag, vergissAlleSitzunge
 import { type SitzungsKurzinfo, adapterFuer, alleSitzungenBeenden, sitzungsKurzinfo } from "../sync/fabrik";
 import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
 import { useSelbstNeuLaden } from "./gemeinsam/version";
+import { ArgusTitel } from "./gemeinsam/logo";
 
 const ROLLEN_TEXT: Record<Rolle, string> = {
   zb: "das Team: Meldungen entscheiden",
@@ -68,7 +69,7 @@ async function oeffne(e: Einstellungen, eingabe: string, setze: (p: Pruefung) =>
 function Kopf() {
   return (
     <div class="start-titel">
-      <h1>ARGUS</h1>
+      <ArgusTitel hoehe={120} />
       <div class="leise">Planspiel „Auswirkungen von KI auf die Entscheidungsfindung“ · Übungslage, alles fiktiv</div>
     </div>
   );

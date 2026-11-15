@@ -16,9 +16,11 @@ Hier laufen dieselben Entscheidungen durch die echten Browserfenster:
   4. Bis zum Spielende; unterwegs Bildschirmfotos und Messung der Bildrate der Karten (Kontrollkarte SL 2, Team 1, Plenum).
      SL 2 notiert über „✎ Notiz“ eine Beobachtung zu S3 (der Fall ist vorgewählt).
   5. Gefecht beendet (seit Liste M): Jeder Team-Laptop zeigt sein Abschlussbild, das Plenum schaltet nach Spielende in allen Teams
-     selbst auf „Gefecht beendet“ (eine Karte je Team), die Übersicht der Spielleitung zeigt dieselben Karten – Zahlen wie im Prozess.
-  6. Auswertung: Über „Auswertung – alle Teams ›“ im Plenum; sie wird wie am Smartboard Kapitel für Kapitel durchgegangen
-     (tools/auswertung_probe.py). Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
+     selbst auf „Gefecht beendet“ (seit Liste O Kapitel 1 des kurzen Plenums, eine Karte je Team), die Übersicht der Spielleitung zeigt
+     dieselben Karten und die eine Zahl für die Folie („kopieren“) – Zahlen wie im Prozess.
+  6. Kurzes Plenum (Liste O): Schlüsselfälle einzeln (Bild, aufdecken, „x von n Teams falsch behandelt“), „Gesamt“ mit der Zahl,
+     „Zurück zur Präsentation“; dann die Kapitel von 2.7 zugeschaltet – wie am Smartboard (tools/auswertung_probe.py). Die
+     Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“: gleiche Zahl wie im Plenum und in der Übersicht.
 Geprüft wird:
   • alle fünf Teams erreichen das Spielende, keine Aktion abgelehnt, je Team gleicher Stand (seq, Fingerabdruck) am Laptop und
     bei der Spielleitung (hochgeladenes Protokoll);
@@ -49,7 +51,7 @@ import urllib.parse
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from auswertung_probe import bericht as auswertung_bericht, pruefe_auswertung  # noqa: E402
+from auswertung_probe import bericht as auswertung_bericht, pruefe_auswertung, zuschalten as auswertung_zuschalten  # noqa: E402
 
 from pruefgroessen import STANDARD  # noqa: E402
 
@@ -382,6 +384,10 @@ def main():
                                           "--disable-background-timer-throttling", "--disable-renderer-backgrounding",
                                           "--disable-backgrounding-occluded-windows"])
         ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
+        try:   # Liste O: „kopieren“ der Zahl bei der Spielleitung
+            ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=urllib.parse.urlsplit(a.basis)._replace(path="", query="", fragment="").geturl())
+        except Exception:  # noqa: BLE001 – file:// und ältere Browser: der Knopf fällt auf execCommand zurück
+            pass
         if a.sync == "firebase" and a.transport == "auto":
             # Die Nachbildung (firebase-server) kann nur WebSocket; das SDK soll nicht auf Long-Polling ausweichen
             # (wie tools/e2e_teams.py).
@@ -685,8 +691,8 @@ def main():
             foto(teams[0]["laptop"], "team1_karte_nach_ende")
             teams[0]["laptop"].get_by_test_id("ab-zurueck").click()
             warte(lambda: teams[0]["laptop"].get_by_test_id("abschluss").count() == 1, 5, "Team 1: wieder das Abschlussbild")
-            # Plenum: „Gefecht beendet“ mit einer Karte je Team in der Reihenfolge der Lobby
-            warte(lambda: pl.locator("[data-ansicht=abschluss] [data-testid=abschluss-karte]").count() == len(teams), 30, "Plenum: Gefecht beendet")
+            # Plenum: „Gefecht beendet“ (seit Liste O Kapitel 1 des kurzen Plenums) mit einer Karte je Team in der Reihenfolge der Lobby
+            warte(lambda: pl.locator("[data-ansicht=auswertung] [data-kapitel=gefecht] [data-testid=abschluss-karte]").count() == len(teams), 30, "Plenum: Gefecht beendet")
             pl.wait_for_timeout(800)
             namen = [e.get_attribute("data-team") for e in pl.locator("[data-testid=abschluss-karte]").all()]
             if namen != [t["name"] for t in teams]:
@@ -705,16 +711,25 @@ def main():
             pl_werte = [ab_werte(e) for e in pl.locator("[data-testid=abschluss-karte]").all()]
             if sl_werte != pl_werte:
                 fehler.append(f"Übersicht und Plenum zeigen andere Zahlen: {sl_werte} / {pl_werte}")
+            # Liste O (O1.7): die Zahl für die Folie in der Übersicht, mit „kopieren“
+            zahl_sl = sl.get_by_test_id("sl-zahl").get_attribute("data-zahl") if sl.get_by_test_id("sl-zahl").count() else None
+            soll_zahl = (plan.get("plenum") or {}).get("zahl", {}).get("sekunden")
+            if zahl_sl is None or (soll_zahl is not None and abs(int(zahl_sl) - soll_zahl) > 3):   # ±3 s: Verzug der Modellpersonen
+                fehler.append(f"Übersicht: die Zahl {zahl_sl!r} / im Prozess {soll_zahl}")
+            sl.get_by_test_id("sl-zahl-kopieren").click()
+            sl.wait_for_timeout(300)
+            if "kopiert" not in sl.get_by_test_id("sl-zahl-kopieren").inner_text():
+                fehler.append(f"Übersicht: „kopieren“ – {sl.get_by_test_id('sl-zahl-kopieren').inner_text()!r}")
+            print(f"  Übersicht der Spielleitung: die Zahl {zahl_sl} s (im Prozess {soll_zahl} s)")
             foto(sl, "sl_uebersicht_gefecht_beendet")
             sl.get_by_test_id("reiter-teams").click()
-            pl.get_by_test_id("ab-zur-auswertung").click()
         except AssertionError as e:
             fehler.append(f"Abschlussbild: {e}")
             foto(pl, "abschluss_fehler")
         try:
-            warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Plenum: Auswertung")
+            warte(lambda: pl.locator("[data-ansicht=auswertung] main[data-kapitel=gefecht]").count() == 1, 30, "Plenum: kurzes Plenum")
             pl.wait_for_timeout(1000)
-            plan_teams = {"teams": plan["teams"]} if all("auswertung" in t for t in plan["teams"]) else None
+            plan_teams = {"teams": plan["teams"], "plenum": plan.get("plenum")} if all("auswertung" in t for t in plan["teams"]) else None
             if not plan_teams:
                 fehler.append("Plan ohne Auswertung (tools/drehbuch_plan.ts neu erzeugen)")
             ab = os.path.join(a.bilder, "auswertung")
@@ -722,17 +737,29 @@ def main():
             t_aw = time.time()
             f_aw, prot_aw, schritte_aw = pruefe_auswertung(pl, plan_teams, ab, False)
             fehler += [f"Auswertung: {f}" for f in f_aw]
-            # Notiz der SL 2 erscheint bei S3 (seit 2.7, G1: das erste Replay direkt nach dem Teamvergleich)
-            pl.keyboard.press("Home")
-            pl.keyboard.press("PageDown")
+            pl.locator(".kapitel-leiste [data-kapitel=gesamt]").click()   # die Zahl im Plenum (Kapitel „Gesamt“)
+            warte(lambda: pl.get_by_test_id("pk-gesamt").count() == 1, 10, "Plenum: Gesamt")
+            zahl_pl = pl.get_by_test_id("pk-gesamt").get_attribute("data-zahl")
+            # Notiz der SL 2 erscheint im Replay S3 (seit Liste O zuschaltbar)
+            auswertung_zuschalten(pl, ["replay"])
+            pl.locator(".kapitel-leiste [data-kapitel='S3']").click()
             warte(lambda: pl.locator("section.replay[data-fall='S3']").count() == 1, 10, "Replay S3")
             if NOTIZ_TEXT not in pl.get_by_test_id("notizen-sl").inner_text():
                 fehler.append("Auswertung S3: Notiz der SL 2 fehlt")
+            auswertung_zuschalten(pl, ["replay"], an=False)
             auswertung_bericht(prot_aw, schritte_aw)
             print(f"  Auswertung im Plenum durchgegangen in {time.time() - t_aw:.0f} s (mit Prüfungen)")
             # Spielleitung: dieselbe Auswertung über „Auswertung ›“ und zurück
             sl.get_by_test_id("auswertung-knopf").click()
-            warte(lambda: sl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 20, "Auswertung bei der Spielleitung")
+            warte(lambda: sl.locator("[data-ansicht=auswertung] main[data-kapitel=gefecht]").count() == 1, 20, "Auswertung bei der Spielleitung")
+            sl.locator(".kapitel-leiste [data-kapitel=gesamt]").click()
+            warte(lambda: sl.get_by_test_id("pk-gesamt").count() == 1, 10, "SL: Gesamt")
+            zahl_sl2 = sl.get_by_test_id("pk-gesamt").get_attribute("data-zahl")
+            if not (zahl_pl == zahl_sl2 == zahl_sl):
+                fehler.append(f"Die Zahl: Plenum {zahl_pl}, Auswertung der SL {zahl_sl2}, Übersicht {zahl_sl} – nicht gleich")
+            auswertung_zuschalten(sl, ["teams"])
+            sl.locator(".kapitel-leiste [data-kapitel=teams]").click()
+            warte(lambda: sl.locator("[data-testid=teamvergleich]").count() == 1, 10, "SL: Teamvergleich zugeschaltet")
             n_sl = sl.locator("[data-testid=teamvergleich] td[data-fall]").count()
             if n_sl != len(teams) * 12:
                 fehler.append(f"Auswertung SL: {n_sl} Zellen, erwartet {len(teams) * 12}")
@@ -744,10 +771,8 @@ def main():
             foto(pl, "auswertung_fehler")
 
         # Fotos zum Schluss (nach den Prüfungen)
-        pl.get_by_test_id("auswertung-zurueck").click()
+        pl.get_by_test_id("auswertung-zurueck").click()   # seit Liste O: „◂ Spiel“ führt direkt zur Ansicht je Team
         pl.wait_for_timeout(800)
-        if pl.get_by_test_id("ab-zum-spiel").count():   # seit Liste M: zurück führt zu „Gefecht beendet“, von dort zum Spiel
-            pl.get_by_test_id("ab-zum-spiel").click()
         pl.wait_for_timeout(1500)
         foto(pl, "plenum_aufloesung")
         if len(teams) > 1:

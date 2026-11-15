@@ -10,7 +10,9 @@
 //    gehören seine Meldung und Folgemeldungen mit demselben `fall` (S4: M18 und M23, S5: M32 und M36, S8: M33 und M34).
 //    Seit 2.4 (E5) sind S5–S8 `zuschaltbar`: Sie stehen im Teamvergleich, das Replay zeigt sie nur, wenn die
 //    Spielleitung sie zuschaltet. Seit 2.7 (G1) hat das Replay 4 min (Standard S3 und S2, die übrigen zuschaltbar, die Zeit je Fall
-//    sinkt) in einer Auswertung von 15 min: Teamvergleich, Replay, Bilanz, Impuls, Diskussion, Abschluss (kapitelPlan).
+//    sinkt) in einer Auswertung von 15 min: Teamvergleich, Replay, Bilanz, Impuls, Diskussion, Abschluss (kapitelPlan). Seit Liste O
+//    (O1) ist das Plenum kurz (ca. 5 min): „Gefecht beendet“, je Schlüsselfall eine Folie (S3, S2, S1, S4; wie viele Teams ihn falsch
+//    behandelt haben, fallQuote), „Gesamt“ (gesamtQuote und die eine Zahl, hinschauZahl); die Kapitel von 2.7 sind zuschaltbar.
 //  • Ausgang eines Falls je Team:
 //      falsch          – eine Bekämpfung traf Verbündete, Geschütztes, Zivilpersonen, die Attrappe oder Wehrlose,
 //                        oder schlug unter Verstoß gegen R2/R3 ein (Lage beim Einschlag)
@@ -149,7 +151,39 @@ export function replayPlan(inh: Inhalte, auswahl?: string[] | null): ReplayPlan 
   };
 }
 
-/** Kapitel der Auswertung (seit 2.7, G1): Standard aus den Daten, zuschaltbare nach Wahl der Spielleitung; das Replay je Fall. */
+/** Seit Liste O (O1.2): Soll je Schlüsselfall-Folie im Plenum in s, wenn das Szenario keines nennt. */
+export const FALL_FOLIE_S = 45;
+
+/** Schlüsselfälle als Folien im Plenum (seit Liste O, O1.2): je Fall eine Folie, Soll je Fall fest (zugeschaltete verlängern). */
+export interface FolienPlan {
+  faelle: FallDef[];
+  jeFall: number;
+  summe: number;
+  /** Fälle, die zugeschaltet werden können und noch nicht gewählt sind */
+  zuschaltbar: FallDef[];
+}
+
+/**
+ * Welche Schlüsselfälle das Plenum einzeln zeigt (seit Liste O): Standard aus szenario.auswertung.faelle (S3, S2, S1, S4), S5–S8
+ * zuschaltbar, Reihenfolge nach Wahl der Spielleitung. Unbekannte, doppelte und Nebenfälle in `auswahl` fallen weg.
+ */
+export function folienPlan(inh: Inhalte, auswahl?: string[] | null): FolienPlan {
+  const sz = (inh.basis ?? inh).szenario;
+  const fd = sz.auswertung.faelle;
+  const alle = faelle(inh).filter((f) => f.art === "schluessel");
+  const nachId = new Map(alle.map((f) => [f.id, f]));
+  const standard = fd?.standard ?? alle.filter((f) => !f.zuschaltbar).map((f) => f.id);
+  const ids = [...new Set(auswahl ?? standard)].filter((id) => nachId.has(id));
+  const jeFall = fd?.je_fall_s ?? FALL_FOLIE_S;
+  const reihe = [...(fd?.zuschaltbar ?? []), ...alle.map((f) => f.id)];
+  const zu = [...new Set(reihe)].filter((id) => nachId.has(id) && !ids.includes(id)).map((id) => nachId.get(id)!);
+  return { faelle: ids.map((id) => nachId.get(id)!), jeFall, summe: jeFall * ids.length, zuschaltbar: zu };
+}
+
+/**
+ * Kapitel der Auswertung (seit 2.7, G1): Standard aus den Daten, zuschaltbare nach Wahl der Spielleitung. Ein Kapitel mit `fall` ist
+ * das Replay eines Schlüsselfalls (seit 2.7), eines mit `folie` die Folie eines Schlüsselfalls im kurzen Plenum (seit Liste O).
+ */
 export interface KapitelDef {
   id: string;
   titel: string;
@@ -157,17 +191,22 @@ export interface KapitelDef {
   kurz: string;
   /** Soll in s */
   sek: number;
+  /** Replay dieses Falls (Kontrollkarte, Zeitleiste) */
   fall?: FallDef;
+  /** Folie dieses Falls im Plenum (Bild, aufdecken, „x von n Teams“) – seit Liste O */
+  folie?: FallDef;
   zuschaltbar?: boolean;
   /** Kapitel, nach dem ein zuschaltbares steht */
   nach?: string;
 }
 
 export interface KapitelWahl {
-  /** zugeschaltete Kapitel (kennzahlen, konfidenz, preis) */
+  /** zugeschaltete Kapitel (seit Liste O: teams, kennzahlen, konfidenz, replay, preis, bilanz, impuls, diskussion, abschluss) */
   zusatz?: string[];
-  /** Fälle des Replays (null: Standard) */
+  /** Fälle der Folien im Plenum, in dieser Reihenfolge (null: Standard S3, S2, S1, S4) */
   faelle?: string[] | null;
+  /** Fälle des Replays, wenn es zugeschaltet ist (null: Standard S3, S2) */
+  replay?: string[] | null;
 }
 
 /** Standard, wenn das Szenario keinen Kapitelplan hat (vor 2.7): Teamvergleich, Kennzahlen, Konfidenz, Replay, Preis, Abschluss. */
@@ -178,36 +217,146 @@ const KAPITEL_ALT = [
 ];
 
 const KURZ: Record<string, string> = {
-  teams: "Teams", kennzahlen: "Kennzahlen", konfidenz: "Konfidenz", preis: "Preis", bilanz: "Bilanz", impuls: "Impuls", diskussion: "Diskussion",
-  abschluss: "Abschluss",
+  gefecht: "Gefecht beendet", gesamt: "Gesamt", teams: "Teams", kennzahlen: "Kennzahlen", konfidenz: "Konfidenz", preis: "Preis",
+  bilanz: "Bilanz", impuls: "Impuls", diskussion: "Diskussion", abschluss: "Abschluss", replay: "Replay",
+};
+/** Seit Liste O: zugeschaltete Kapitel stehen knapper in der Kapitelleiste (der volle Titel im Tooltip) – alle passen in 1530 px. */
+const KURZ_ZUSATZ: Record<string, string> = {
+  teams: "Teams", kennzahlen: "Kennz.", konfidenz: "Konfid.", preis: "Preis", bilanz: "Bilanz", impuls: "Impuls", diskussion: "Diskuss.",
+  abschluss: "Schluss",
 };
 
+/** Id des Kapitels „Folie eines Schlüsselfalls“ (das Replay desselben Falls heißt wie der Fall, z. B. „S3“). */
+export function folienKapitel(fall: string): string {
+  return `fall-${fall}`;
+}
+
 /**
- * Kapitelplan der Auswertung (seit 2.7, G1.1): Teamvergleich 60 s, Replay 240 s (Standard S3, S2 je 120 s), Bilanz 120 s, Impuls 60 s,
- * Diskussion 360 s, Abschluss 60 s – 15 min. Kennzahlen, Konfidenz und „Preis des Abwartens“ (nur mit Verlustmodell) sind zuschaltbar
- * und stehen dann nach ihrem Kapitel (`nach`); zugeschaltete Fälle teilen sich das Replay-Budget.
+ * Kapitelplan der Auswertung (seit 2.7, G1.1; seit Liste O, O1): Standard „Gefecht beendet“ 60 s, je Schlüsselfall eine Folie 45 s
+ * (S3, S2, S1, S4), „Gesamt“ 60 s – 5 min. Zuschaltbar (Menü ＋) die Kapitel von 2.7 – Teamvergleich, Kennzahlen, Konfidenz, Replay
+ * (Standard S3, S2, 4 min geteilt), Preis des Abwartens (nur mit Verlustmodell), Bilanz, Impuls, Diskussion, Abschluss; sie stehen
+ * nach ihrem Kapitel (`nach`, seit Liste O alle nach „Gesamt“, in der Reihenfolge der Daten). Zugeschaltetes verlängert die Summe.
  */
-export function kapitelPlan(inh: Inhalte, wahl: KapitelWahl = {}): { kapitel: KapitelDef[]; summe: number; replay: ReplayPlan; zuschaltbar: KapitelDef[] } {
+export function kapitelPlan(inh: Inhalte, wahl: KapitelWahl = {}): {
+  kapitel: KapitelDef[]; summe: number; replay: ReplayPlan; folien: FolienPlan; zuschaltbar: KapitelDef[];
+} {
   const sz = (inh.basis ?? inh).szenario;
   const au = sz.auswertung;
   const mitPreis = mitVerlusten(inh);
-  const replay = replayPlan(inh, wahl.faelle ?? null);
+  const replay = replayPlan(inh, wahl.replay ?? null);
+  const folien = folienPlan(inh, wahl.faelle ?? null);
   const zusatzAlle: KapitelDef[] = (au.zuschaltbar ?? []).filter((k) => k.id !== "preis" || mitPreis)
-    .map((k) => ({ id: k.id, titel: k.titel, kurz: KURZ[k.id] ?? k.titel, sek: k.sek, zuschaltbar: true, nach: k.nach }));
+    .map((k) => ({ id: k.id, titel: k.titel, kurz: KURZ_ZUSATZ[k.id] ?? KURZ[k.id] ?? k.titel, sek: k.sek, zuschaltbar: true, nach: k.nach }));
   const an = new Set(wahl.zusatz ?? []);
   const out: KapitelDef[] = [];
+  const setze = (k: { id: string; titel: string; sek: number }, zu?: KapitelDef) => {
+    const extra = zu ? { zuschaltbar: true, ...(zu.nach ? { nach: zu.nach } : {}) } : {};
+    if (k.id === "replay") {
+      for (const f of replay.faelle) {
+        out.push({ id: f.id, titel: `Replay ${f.id} · ${f.titel}`, kurz: zu ? `▶${f.id}` : f.id, sek: replay.jeFall, fall: f, ...extra });
+      }
+    } else if (k.id === "faelle") {
+      for (const f of folien.faelle) out.push({ id: folienKapitel(f.id), titel: `${f.id} · ${f.titel}`, kurz: f.id, sek: folien.jeFall, folie: f });
+    } else {
+      out.push({ id: k.id, titel: k.titel, kurz: (zu ? KURZ_ZUSATZ[k.id] : undefined) ?? KURZ[k.id] ?? k.titel, sek: k.sek, ...extra });
+    }
+  };
+  const gesetzt = new Set<string>();
   const dazu = (nach: string) => {
-    for (const k of zusatzAlle) if (k.nach === nach && an.has(k.id)) out.push(k);
+    for (const k of zusatzAlle) {
+      if (k.nach !== nach || !an.has(k.id) || gesetzt.has(k.id)) continue;
+      gesetzt.add(k.id);
+      setze(k, k);
+      dazu(k.id);
+    }
   };
   for (const k of au.kapitel ?? KAPITEL_ALT) {
-    if (k.id === "replay") {
-      for (const f of replay.faelle) out.push({ id: f.id, titel: `${f.id} · ${f.titel}`, kurz: f.id, sek: replay.jeFall, fall: f });
-    } else {
-      out.push({ id: k.id, titel: k.titel, kurz: KURZ[k.id] ?? k.titel, sek: k.sek });
-    }
+    setze(k);
     dazu(k.id);
   }
-  return { kapitel: out, summe: out.reduce((x, k) => x + k.sek, 0), replay, zuschaltbar: zusatzAlle };
+  return { kapitel: out, summe: out.reduce((x, k) => x + k.sek, 0), replay, folien, zuschaltbar: zusatzAlle };
+}
+
+// ---------------------------------------------------------------- Plenum kurz (seit Liste O)
+
+/** „Falsch behandelt“ (O1.5): Ausgang falsch oder zu Unrecht abgelehnt. Richtig = richtig; alles andere ist „ohne Entscheidung“. */
+export const FALSCH_BEHANDELT: readonly FallAusgang[] = ["falsch", "verpasst"];
+
+/** Wie die Teams einen Schlüsselfall behandelt haben – nur Zahlen, keine Teamnamen (O1.4). */
+export interface FallQuote {
+  fall: string;
+  richtig: number;
+  falsch: number;
+  /** offen, entfallen, nicht erreicht – zählt nicht in den Prozentsatz */
+  ohne: number;
+  /** Nenner: Teams mit richtig oder falsch behandelt */
+  n: number;
+  /** falsch / n in ganzen Prozent; null, wenn kein Team den Fall entschieden hat */
+  prozent: number | null;
+}
+
+export function fallQuote(a: Auswertung, fall: string): FallQuote {
+  let richtig = 0;
+  let falsch = 0;
+  let ohne = 0;
+  for (const t of a.teams) {
+    const e = t.faelle[fall];
+    if (!e) continue;
+    if (e.ausgang === "richtig") richtig += 1;
+    else if (FALSCH_BEHANDELT.includes(e.ausgang)) falsch += 1;
+    else ohne += 1;
+  }
+  const n = richtig + falsch;
+  return { fall, richtig, falsch, ohne, n, prozent: n ? Math.round((100 * falsch) / n) : null };
+}
+
+/** Alle gezeigten Schlüsselfälle zusammen (O1.6): falsch und richtig behandelt in % (zusammen 100), dazu je Fall. */
+export interface GesamtQuote {
+  faelle: FallQuote[];
+  richtig: number;
+  falsch: number;
+  ohne: number;
+  /** Entscheidungen (Team × Fall) mit richtig oder falsch */
+  n: number;
+  prozentFalsch: number | null;
+  prozentRichtig: number | null;
+}
+
+export function gesamtQuote(a: Auswertung, faelleIds: string[]): GesamtQuote {
+  const fs = faelleIds.map((f) => fallQuote(a, f));
+  const summe = (k: "richtig" | "falsch" | "ohne") => fs.reduce((x, q) => x + q[k], 0);
+  const richtig = summe("richtig");
+  const falsch = summe("falsch");
+  const n = richtig + falsch;
+  const pf = n ? Math.round((100 * falsch) / n) : null;
+  return { faelle: fs, richtig, falsch, ohne: summe("ohne"), n, prozentFalsch: pf, prozentRichtig: pf === null ? null : 100 - pf };
+}
+
+/**
+ * Die eine Zahl (O1.7): Median über alle Entscheidungen aller Teams (alle Meldungen, nicht nur die Schlüsselfälle) – Sekunden vom
+ * Öffnen der Meldung bis zur Entscheidung (`sek_offen`; fehlt sie in einem alten Protokoll, ab Eingang), in ganzen Sekunden.
+ * Dieselbe Zahl im Plenum („Gesamt“), in der Übersicht der Spielleitung und in den Tests.
+ */
+export interface HinschauZahl {
+  /** gerundet auf ganze Sekunden; null ohne Entscheidung */
+  sekunden: number | null;
+  median: number | null;
+  /** Zahl der Entscheidungen */
+  n: number;
+}
+
+export function hinschauZahl(a: Auswertung): HinschauZahl {
+  const werte: number[] = [];
+  for (const t of a.teams) {
+    for (const mv of t.verlaeufe.values()) {
+      for (const e of mv.entscheidungen) {
+        const s = e.sekOffen ?? e.sekEingang;
+        if (s !== undefined && Number.isFinite(s)) werte.push(s);
+      }
+    }
+  }
+  const m = median(werte);
+  return { sekunden: m === null ? null : Math.round(m), median: m, n: werte.length };
 }
 
 // ---------------------------------------------------------------- Verlauf je Meldung aus dem Protokoll

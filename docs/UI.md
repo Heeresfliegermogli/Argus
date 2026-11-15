@@ -28,7 +28,7 @@ ELSTER durchgebrochen“, „Ziel 30 · verbündet – nicht bekämpfen“), daz
 weit vergrößert, dass kein grauer Rand bleibt; „ganze Karte“ (⤢) zeigt wieder alles. Zielbearbeitung: rund 690 m von den eigenen
 Panzern am Westrand über Bach und Brücke bis in die Ortschaft (mehr Breite geht bei vollem Feld nicht; Meldungen außerhalb zeigt
 der Pfeil am Rand). Plenum: volle Breite, oben und unten je ca. 60 m weniger. Die **Kontrollkarte** der Spielleitung zeigt geprüft
-weiter die ganze Karte (Ground Truth vom Ostrand mit den Einfahrten und dem Mörser im Wald MARDER bis zu den eigenen Panzern). Die Auswertung ist neu gegliedert (15 min, siehe
+weiter die ganze Karte (Ground Truth vom Ostrand mit den Einfahrten und dem Mörser im Wald MARDER bis zu den eigenen Panzern). Die Auswertung ist neu gegliedert (15 min; seit Liste O ein kurzes Plenum von 5 min, siehe
 [`AUSWERTUNG.md`](AUSWERTUNG.md)).
 
 **Seit Szenario 2.6 (Änderungen H, 09.11.2026):** drei Ansichten in 1530 × 800 ohne Rollbalken – **Zielbearbeitung** (eine Rolle je
@@ -145,7 +145,7 @@ unten links über der Karte und lassen Klicks durch – rechts unten sind die Kn
 * Fenster kleiner als 1280 × 600: die ganze Ansicht wird gleichmäßig verkleinert, ein Hinweis bittet um Vollbild (F11); die Übersicht der
   Spielleitung zeigt die Fenstergröße rot.
 * **Seit Liste M (M4): Bei Spielende das Abschlussbild „Gefecht beendet – Team Adler“** statt der gesperrten Ansicht (Kopf in der Teamfarbe, „Bitte zum Plenum“): links **Abgeschossen** – die zerstörten Feindfahrzeuge der Bilanz (`kern/abschluss.ts` aus `kern/bilanz.ts`, dieselbe Rechnung wie die Auswertung) je Typ als Reihe von Wrack-Sprites aus dem Fahrzeug-Atlas der Karte, leicht schräg, mit kleinen Rauchwölkchen (CSS, ohne Bewegung bei „weniger Bewegung“), und „8 × KPz T-72“; rechts **Eure Panzer** – 1/1–1/4 als Leopard-Sprites (gespiegelt, sie blicken zu den Wracks) mit Zustand in %, Stufe und Treffern, einsatzbereit und Verwundete gesamt, darunter „Verbraucht: Mrs 7/12 · LM 20/20“; unten die neutrale Zeile **„Dazu x weitere bekämpfte Ziele – mehr in der Auswertung.“** (Trupps, Attrappe, Sanität, Verbündete, Zivilpersonen … je Objekt bzw. Personengruppe einmal – nie einzeln, nie als Figur). Kein €, keine Zeiten, keine Fälle. **Karte ansehen** blendet das Bild aus, „Gefecht beendet ›“ holt es zurück. Ist das Protokoll noch nicht ganz im Netz, steht dort „Protokoll speichern“. Passt ohne Rollen in 1536 × 730 und 1366 × 650. Beispiel ohne Spiel: `…/?abschluss=demo&team=2`.
-* **Plenum nach Spielende aller Teams: „Gefecht beendet“** mit einer Karte je Team (Reihenfolge der Lobby, keine Summe, kein Sortieren, kein „bestes Team“), daraus **„Auswertung – alle Teams ›“**; aus der Auswertung führt „◂ Gefecht beendet“ zurück, von dort „◂ Spiel“ zur Auflösung je Team. Die Spielleitung sieht dieselben Karten in der Übersicht (Reiter „Gefecht beendet“ neben „Teams“, von selbst vorn, wenn alle fertig sind). Ab fünf Teams in Fenstern unter 700 px Höhe ohne Sprites, nur Zahlen. Beispiel: `…/?abschluss=demo`.
+* **Plenum nach Spielende aller Teams: „Gefecht beendet“** mit einer Karte je Team (Reihenfolge der Lobby, keine Summe, kein Sortieren, kein „bestes Team“) – seit Liste O Kapitel 1 des kurzen Plenums („weiter ›“ zu den Schlüsselfällen); „◂ Spiel“ führt zur Auflösung je Team. Die Spielleitung sieht dieselben Karten in der Übersicht (Reiter „Gefecht beendet“ neben „Teams“, von selbst vorn, wenn alle fertig sind). Ab fünf Teams in Fenstern unter 700 px Höhe ohne Sprites, nur Zahlen. Beispiel: `…/?abschluss=demo`.
 
 ## Bis 2.5: die Ansichten Aufklärung, Zielprüfung, Führung (6b – 2.5, abgelöst)
 
@@ -170,7 +170,7 @@ Meldungsfeld** (440 px, Führung 470 px). Die Nummern ①②③ stehen gleich in
 | **Zielprüfung** | ① Eingang (+ zurückgestellt) · Zielmeldung kompakt (Ziel, Lage, Klasse, Konfidenz, ARGUS) · ② Wirkmittel mit Bestand, „Einschlag in n s (Uhrzeit)“, Warnungen je Wirkmittel und Abstände am **vorausberechneten Einschlagort**; Vorschau des Wirkradius auf der Karte dort (grün/rot, Zonen mit Verstoß hervorgehoben, Einsatzgrenze, Linie vom Ziel jetzt zum Einschlagort), auch beim Zeigen auf ein Wirkmittel, Banner „… bei Freigabe jetzt: Einschlag …“ | ③ BEKÄMPFEN mit … (erst nach Wirkmittelwahl) / BEOBACHTEN / NICHT BEKÄMPFEN, Begründung |
 | **Führung** | ① Eingang, Fast-Track (EIN/AUS, Knopf) · ② Zielmeldung kompakt, „Zielprüfung empfiehlt …“ mit Begründung, live „Freigabe jetzt: Einschlag … – keine Regelwarnung“ bzw. die Verstöße dort („Die Zielprüfung hat dazu gewarnt“); Warnungen, die jetzt nicht mehr gelten, als „⚠ bei der Zielprüfung: …“ · Postfach „Lagemeldungen“ (neue aufgeklappt, „Gelesen“, Hinweis unten rechts bei neuer Meldung) · Lagehinweis an Aufklärung und Zielprüfung | FREIGABE / ABLEHNEN / ZURÜCK an die Zielprüfung, Bemerkung |
 | **Spielleitung** | Steuerung (Start/Anhalten, Tempo, Spielzeit, Fast-Track, Plenum, neues Spiel) · bedingte Injects (wartet / kommt um … / ausgelöst / entfällt) mit „jetzt“, E-01 (automatisch, Stand live), Reserve R-01–R-04, Verstärkung V-1–V-5 („einspielen“, gesperrt mit Grund; **Zeigen auf die Zeile oder Fokus auf „einspielen“ zeigt Fahrwege und Einheiten grau auf der Kontrollkarte**, B10) · Fenster im Raum · Notiz · **Kontrollkarte** (Ground Truth, ungemeldete Ziele, Personen, Wirkungen mit Fehltreffern, **Fahrwege der Einheiten** – Knopf „Fahrwege“, Zoom bis zu Sprites mit Schatten und Wracks) · Zeitplan mit „Ziel n“ und interner Kennung klein, „jetzt“, Protokoll („Ziel 7 (M07) …“, Rollennamen) mit Export | – |
-| **Plenum** | schaltet selbst um: **Einweisung** (Lage für alle, die drei Rollen, Karte) vor dem Start → **Lage** (Uhr, Karte ohne Ziele, Stand) während des Spiels → **Gefecht beendet** (seit Liste M: eine Karte je Team) und von dort die **Auswertung über alle Teams** (Schritt 8, [`AUSWERTUNG.md`](AUSWERTUNG.md)), sobald alle Teams das Spielende erreicht haben; „◂ Spiel“ zeigt je Team die **Auflösung** (Kontrollkarte, Kennzahlen auf einen Blick, alle Wirkungen); von Hand umschaltbar | – |
+| **Plenum** | schaltet selbst um: **Einweisung** (Lage für alle, die drei Rollen, Karte) vor dem Start → **Lage** (Uhr, Karte ohne Ziele, Stand) während des Spiels → seit Liste O das **kurze Plenum** über alle Teams (ca. 5 min, [`AUSWERTUNG.md`](AUSWERTUNG.md)): „Gefecht beendet“ (eine Karte je Team), die Schlüsselfälle einzeln (Bild, aufdecken), „Gesamt“ mit der Zahl, „Zurück zur Präsentation“; weitere Kapitel über ＋ – sobald alle Teams das Spielende erreicht haben; „◂ Spiel“ zeigt je Team die **Auflösung** (Kontrollkarte, Kennzahlen auf einen Blick, alle Wirkungen); von Hand umschaltbar | – |
 
 Bei Spielende sperrt eine Tafel die Gruppenansichten („Ansicht ansehen“ blendet sie aus, Eingaben
 bleiben gesperrt). Beim Zuschauen (Spielleitung in einer Sitzung, „nur lesen“) sind es dieselben Ansichten ohne
@@ -397,3 +397,23 @@ Texte der Einweisung: Phasen, Wirkmittel, Klassenbeispiele und Spielzeit aus den
   Lagemeldung oben links auf der Karte gesehen? Stört die Legende unten links?
 * Bildrate am Dienst-PC (WebGL 2) für Karte und Live-Drohnenbild bestätigen (`data-fps` an Karte und Leinwand).
 * Schritt 8 ist umgesetzt (Auswertung, [`AUSWERTUNG.md`](AUSWERTUNG.md)); offen: Probe am Smartboard im Hörsaal (Lesbarkeit aus 4–8 m, Presenter).
+
+## Logo (seit Liste O, O2)
+
+Logo des Kameraden (Schild mit Auge, Schriftzug „ARGUS“), freigestellt in `public/assets/argus_logo.png` (240 × 265; Schild Zeilen
+0–210, leere Trennzeile y = 211, darunter der Schriftzug). `tools/logo/logo_varianten.py` erzeugt daraus `argus_schild.png`,
+`argus_schrift.png`, die Favicons 32/64 px und trägt beide als data-Adresse in `index.html` ein (auch die Offline-Datei hat so ein
+Favicon); mit `--frei VORLAGE` stellt es das Logo aus der Vorlage (`tools/logo/bild1_vorlage.png`, weißer Grund) neu frei. Liefert der
+Kamerad eine größere Fassung: freigestellt als `argus_logo.png` ablegen, Skript ohne `--frei` aufrufen.
+
+Der Schriftzug des Logos ist dunkelrot/schwarz – auf dem dunklen Grund der App kaum lesbar. Dort stehen deshalb das **Schild** und
+„ARGUS“ in der hellen Schrift der App; das ganze Logo nur auf hellem Grund. Einsatzorte (`src/ansichten/gemeinsam/logo.tsx`):
+
+| Ort | Form |
+|---|---|
+| Favicon | Schild 32/64 px |
+| Startseite | Schild 120 px über „ARGUS“ (`ArgusTitel`); Lobby, Beitritt, „Sitzung beendet“: 72 px |
+| Kopfzeile aller Ansichten | Schild 26 px vor „ARGUS“ im Rollenband (`ArgusMarke`); in schmalen Fenstern der Zielbearbeitung (unter 1460 px) nur das Schild; Testpult-Leiste 24 px |
+| Plenum | Einweisung/Titel (Schild 34 px vor dem Titel), Kopf des kurzen Plenums, Abschlussbildschirm „ARGUS – Planspiel beendet“ (230 px) |
+| Druck der Einweisung | ganzes Logo (44 px) rechts im Fuß jeder Karte, heller Grund |
+| **nicht** | im Drohnenbild |

@@ -17,6 +17,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { type Einstellungen, pultFensterAdresse } from "../config";
 import { type PultReiter, type PultStandZB, pultNachricht } from "./gemeinsam/pult";
+import { Schild } from "./gemeinsam/logo";
 
 export const PULT_REITER: PultReiter[] = ["sl", "zb", "plenum"];
 const NAME: Record<PultReiter, string> = { sl: "Spielleitung", zb: "Zielbearbeitung", plenum: "Plenum" };
@@ -114,7 +115,9 @@ export function Testpult(p: { e: Einstellungen }) {
       else if (d.art === "stand" && von === "zb") setZb(d.stand as PultStandZB);
       else if (d.art === "stand" && von === "plenum") {
         const bild = String((d.stand as { bild?: unknown }).bild ?? "");
-        if (plenumBild.current !== null && bild !== plenumBild.current && bild === "abschluss" && vornRef.current !== "plenum") setPlenumPunkt(true);
+        // Punkt, wenn das Plenum auf „Gefecht beendet“ wechselt – seit Liste O ist das Kapitel 1 der Auswertung (Bild „auswertung“)
+        const ende = (b: string | null) => b === "abschluss" || b === "auswertung";
+        if (plenumBild.current !== null && !ende(plenumBild.current) && ende(bild) && vornRef.current !== "plenum") setPlenumPunkt(true);
         plenumBild.current = bild;
       } else if (d.art === "reiter" && PULT_REITER.includes(d.ziel as PultReiter)) waehle(d.ziel as PultReiter);
       else if (d.art === "neuLaden") location.reload();
@@ -157,7 +160,7 @@ export function Testpult(p: { e: Einstellungen }) {
   return (
     <div class="pult" data-testid="pult" data-vorn={vorn}>
       <nav class="pult-leiste" data-testid="pult-leiste">
-        <span class="pult-marke">ARGUS <span>Testpult</span></span>
+        <span class="pult-marke"><Schild hoehe={24} />ARGUS <span>Testpult</span></span>
         <div class="pult-reiter" role="tablist">
           {PULT_REITER.map((r) => (
             <button type="button" role="tab" key={r} aria-selected={r === vorn} class={`pult-tab pult-${r} ${r === vorn ? "an" : ""}`}

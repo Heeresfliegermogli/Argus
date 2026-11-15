@@ -74,9 +74,9 @@
       "inhalt": "Spieluhr 00:00–25:00, alle Teams parallel, jeder Team-Laptop rechnet sein Spiel selbst; Meldungen, Lagemeldungen und Hintergrundgefecht nach Zeitleiste"
     },
     {
-      "phase": "Auswertung",
-      "dauer_min": 15,
-      "inhalt": "Teamvergleich, Replay S3 und S2, Bilanz „Das ist es wert“ mit ARGUS allein, Impuls (Zitat), Diskussion mit Wertekompass, Abschluss"
+      "phase": "Plenum",
+      "dauer_min": 5,
+      "inhalt": "Gefecht beendet, die Schlüsselfälle S3, S2, S1, S4 einzeln (erst das Bild, dann aufgedeckt, wie viele Teams sie falsch behandelt haben), Gesamt mit der einen Zahl (Sekunden je Ziel); danach zurück in die PowerPoint: These, Zitat, Diskussion"
     }
   ],
   "argus_system": {
@@ -3017,6 +3017,7 @@
       "id": "S3",
       "reihenfolge": 1,
       "titel": "Polnische PT-91 als T-72 erkannt",
+      "wirklich": "Polnische PT-91 – verbündet: der Entsatz von Süden.",
       "meldung": "M20",
       "ziele": ["Z-15", "Z-16", "Z-17"],
       "info_bei": "Lagemeldung I-04 im Feed (17:00); ab 20:45 auf der Karte: sie schießen auf den Feind; im Bild nicht erkennbar",
@@ -3040,6 +3041,7 @@
       "id": "S2",
       "reihenfolge": 2,
       "titel": "Sanitätsfahrzeug neben der Schule",
+      "wirklich": "Sanitätsfahrzeug neben der Schule, mit Rotem Kreuz.",
       "meldung": "M12",
       "ziele": ["Z-12"],
       "info_bei": "im Bild (Rotes Kreuz), auf der Karte (Schule 60 m), im Feed (Schule belegt, I-02)",
@@ -3061,6 +3063,7 @@
       "id": "S1",
       "reihenfolge": 3,
       "titel": "Attrappe am Waldrand FUCHS",
+      "wirklich": "Attrappe am Waldrand FUCHS – Holzrohr unter dem Tarnnetz.",
       "meldung": "M08",
       "ziele": ["Z-07"],
       "info_bei": "nur im Bild (Netz hängt durch, Holzrohr, keine Spuren, bewegt sich nie)",
@@ -3078,6 +3081,7 @@
       "id": "S4",
       "reihenfolge": 4,
       "titel": "Mörser im Hof RABE: ARGUS warnt zu Recht",
+      "wirklich": "Mörser im Hof RABE – vier Zivilpersonen daneben. ARGUS warnte zu Recht.",
       "meldung": "M18",
       "ziele": ["Z-19"],
       "info_bei": "ARGUS-Warnung NICHT BEKÄMPFEN, Zivilpersonen im Bild; Druck im Feed (I-07) und an 1/4",
@@ -3096,6 +3100,7 @@
       "reihenfolge": 5,
       "zuschaltbar": true,
       "titel": "Menschliche Schutzschilde",
+      "wirklich": "Schützenpanzer vor dem Wohnhaus – die Bewohner davor als Schutzschild.",
       "meldung": "M32",
       "ziele": ["Z-41"],
       "info_bei": "im Bild (Zivilpersonen an der Hauswand), auf der Karte (Ortschaft); Druck: Treffer an 1/1",
@@ -3117,6 +3122,7 @@
       "reihenfolge": 6,
       "zuschaltbar": true,
       "titel": "Verwundete am Wrack",
+      "wirklich": "Verwundete Soldaten ohne Waffen am Wrack – außer Gefecht.",
       "meldung": "M35",
       "ziele": ["Z-45"],
       "info_bei": "nur im Bild (Verwundete ohne Waffen)",
@@ -3135,6 +3141,7 @@
       "reihenfolge": 7,
       "zuschaltbar": true,
       "titel": "Kirchturm-Beobachter",
+      "wirklich": "Beobachter im Kirchturm – echtes Ziel, aber nur mit LM, nicht mit dem Mörser.",
       "meldung": "M31",
       "ziele": ["Z-42"],
       "info_bei": "im Bild (Beobachter auf dem Kirchturm), auf der Karte (Ortschaft), Warnung am Mörser; Druck: Treffer an 1/2",
@@ -3157,6 +3164,7 @@
       "reihenfolge": 8,
       "zuschaltbar": true,
       "titel": "Presse und Familie an der Kolonne",
+      "wirklich": "Pressefahrzeug mit Kamerateam – kein Feind.",
       "meldung": "M33",
       "ziele": ["Z-43"],
       "info_bei": "im Bild (PRESS auf dem Dach, Pkw im Live-Bild); Mörser ohne Warnung",
@@ -3247,20 +3255,23 @@
       "standard": ["S3", "S2"],
       "zuschaltbar": ["S1", "S4", "S5", "S6", "S7", "S8"],
       "budget_s": 240,
-      "hinweis": "Seit 2.7 (G1.1): Das Replay hat 4 min; Standard S3 und S2 je 2:00, weitere Fälle zuschaltbar (die Zeit je Fall sinkt)."
+      "hinweis": "Seit 2.7 (G1.1): Das Replay hat 4 min; Standard S3 und S2 je 2:00, weitere Fälle zuschaltbar (die Zeit je Fall sinkt). Seit Liste O nur noch zuschaltbar (Menü ＋ im Plenum)."
     },
     "kapitel": [
-      {"id": "teams", "titel": "Teamvergleich", "sek": 60},
-      {"id": "replay", "titel": "Replay", "sek": 240},
-      {"id": "bilanz", "titel": "Bilanz – Das ist es wert", "sek": 120},
-      {"id": "impuls", "titel": "Impuls", "sek": 60},
-      {"id": "diskussion", "titel": "Diskussion", "sek": 360},
-      {"id": "abschluss", "titel": "Abschluss", "sek": 60}
+      {"id": "gefecht", "titel": "Gefecht beendet", "sek": 60},
+      {"id": "faelle", "titel": "Schlüsselfälle", "sek": 180},
+      {"id": "gesamt", "titel": "Gesamt", "sek": 60}
     ],
     "zuschaltbar": [
-      {"id": "kennzahlen", "titel": "Kennzahlen je Team", "sek": 45, "nach": "teams"},
-      {"id": "konfidenz", "titel": "Was die Konfidenz sagt", "sek": 30, "nach": "teams"},
-      {"id": "preis", "titel": "Preis des Abwartens", "sek": 60, "nach": "replay"}
+      {"id": "teams", "titel": "Teamvergleich", "sek": 60, "nach": "gesamt"},
+      {"id": "kennzahlen", "titel": "Kennzahlen je Team", "sek": 45, "nach": "gesamt"},
+      {"id": "konfidenz", "titel": "Was die Konfidenz sagt", "sek": 30, "nach": "gesamt"},
+      {"id": "replay", "titel": "Replay", "sek": 240, "nach": "gesamt"},
+      {"id": "preis", "titel": "Preis des Abwartens", "sek": 60, "nach": "gesamt"},
+      {"id": "bilanz", "titel": "Bilanz – Das ist es wert", "sek": 120, "nach": "gesamt"},
+      {"id": "impuls", "titel": "Impuls", "sek": 60, "nach": "gesamt"},
+      {"id": "diskussion", "titel": "Diskussion", "sek": 360, "nach": "gesamt"},
+      {"id": "abschluss", "titel": "Abschluss", "sek": 60, "nach": "gesamt"}
     ],
     "referenz": {
       "name": "ARGUS allein",
@@ -3396,6 +3407,12 @@
         },
         {"titel": "Verantwortung lässt sich nicht delegieren.", "text": "Verantwortlich bleibt, wer freigibt."}
       ]
+    },
+    "faelle": {
+      "standard": ["S3", "S2", "S1", "S4"],
+      "zuschaltbar": ["S5", "S6", "S7", "S8"],
+      "je_fall_s": 45,
+      "hinweis": "Seit Liste O (O1.2): je Schlüsselfall eine Folie – erst das Drohnenbild, wie die Teams es sahen, auf Klick aufgedeckt, was es war, und wie viele Teams es falsch behandelt haben (Ausgang falsch oder zu Unrecht abgelehnt; ohne Entscheidung zählt nicht). 0:45 je Fall; weitere Fälle verlängern das Plenum."
     }
   },
   "durchbruch": {

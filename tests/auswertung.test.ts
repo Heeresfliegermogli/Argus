@@ -243,18 +243,19 @@ describe("Notiz der Spielleitung zu einem Fall", () => {
   });
 });
 
-describe("Kapitelplan (seit 2.7, G1.1)", () => {
-  it("Standard: Teamvergleich 1:00, Replay S3/S2 4:00, Bilanz 2:00, Impuls 1:00, Diskussion 6:00, Abschluss 1:00 – 15 min", () => {
+describe("Kapitelplan (seit 2.7, G1.1; seit Liste O kurzes Plenum, Kapitel von 2.7 zuschaltbar)", () => {
+  it("die 15 min von 2.7 lassen sich zuschalten: Teamvergleich, Replay S3/S2 4:00, Bilanz, Impuls, Diskussion, Abschluss", () => {
     const p = kapitelPlan(inh);
-    expect(p.kapitel.map((k) => [k.id, k.sek])).toEqual([
+    expect(p.summe).toBe(5 * 60);
+    const g = ["teams", "replay", "bilanz", "impuls", "diskussion", "abschluss"];
+    const mit = kapitelPlan(inh, { zusatz: g });
+    expect(mit.kapitel.filter((k) => k.zuschaltbar).map((k) => [k.id, k.sek])).toEqual([
       ["teams", 60], ["S3", 120], ["S2", 120], ["bilanz", 120], ["impuls", 60], ["diskussion", 360], ["abschluss", 60],
     ]);
-    expect(p.summe).toBe(15 * 60);
-    // zuschaltbar: Kennzahlen und Konfidenz nach dem Teamvergleich, Preis des Abwartens nach dem Replay (Verlustmodell)
-    expect(p.zuschaltbar.map((k) => [k.id, k.nach])).toEqual([["kennzahlen", "teams"], ["konfidenz", "teams"], ["preis", "replay"]]);
-    const mehr = kapitelPlan(inh, { zusatz: ["preis", "kennzahlen"], faelle: ["S3", "S2", "S1"] });
-    expect(mehr.kapitel.map((k) => k.id)).toEqual(["teams", "kennzahlen", "S3", "S2", "S1", "preis", "bilanz", "impuls", "diskussion", "abschluss"]);
-    expect(mehr.summe).toBe(15 * 60 + 45 + 60);
+    expect(mit.summe - p.summe).toBe(15 * 60);
+    // Kennzahlen, Konfidenz, Preis des Abwartens ebenfalls; Replay-Fälle teilen sich die 4 min wie bisher
+    const mehr = kapitelPlan(inh, { zusatz: ["preis", "kennzahlen", "replay"], replay: ["S3", "S2", "S1"] });
+    expect(mehr.kapitel.map((k) => k.id)).toEqual(["gefecht", "fall-S3", "fall-S2", "fall-S1", "fall-S4", "gesamt", "kennzahlen", "S3", "S2", "S1", "preis"]);
     expect(mehr.kapitel.find((k) => k.id === "S1")!.sek).toBe(80);
   });
 

@@ -9,7 +9,9 @@
 // Aufruf: npx vite-node tools/drehbuch_plan.ts -- <ziel.json>
 import { readFileSync, writeFileSync } from "node:fs";
 import { argusAllein } from "../src/engine/referenzlauf";
-import { auswerten } from "../src/kern/auswertung";
+import { type Auswertung, type TeamLauf, auswerten, fallQuote, gesamtQuote, hinschauZahl } from "../src/kern/auswertung";
+import type { Ereignis } from "../src/kern/ereignisse";
+import { zustandAus } from "../src/kern/zustand";
 import { abschluss } from "../src/kern/abschluss";
 import { type Bilanz, bilanz } from "../src/kern/bilanz";
 import { inhalte } from "../tests/hilfen";
@@ -59,5 +61,18 @@ const plan = teams.map((m, i) => ({
 }));
 // Referenzlauf „ARGUS allein“ (G2.1), wie ihn die Auswertung beim Öffnen rechnet
 const referenz = bilanzPlan(bilanz(inh, argusAllein(inh).z));
-writeFileSync(ziel, JSON.stringify({ szenario: inh.szenario.version, zeiten: ref.zeiten, referenz, teams: plan }, null, 1));
+// Liste O: das kurze Plenum – je Schlüsselfall „x von n Teams falsch behandelt“, gesamt (S3, S2, S1, S4) und die eine Zahl; für die fünf
+// Drehbuch-Teams (Sitzung, e2e_drehbuch.py) und die sieben Beispielteams von ?auswertung=demo (auswertung_probe.py)
+function plenumPlan(x: Auswertung) {
+  return {
+    faelle: Object.fromEntries(["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"].map((f) => [f, fallQuote(x, f)])),
+    gesamt: gesamtQuote(x, ["S3", "S2", "S1", "S4"]),
+    zahl: hinschauZahl(x),
+  };
+}
+const demoDaten = JSON.parse(readFileSync(new URL("../public/demo/auswertung_demo.json", import.meta.url), "utf-8")) as
+  { teams: { id: string; name: string; farbe: string; protokoll: Ereignis[] }[] };
+const demoTeams: TeamLauf[] = demoDaten.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, protokoll: t.protokoll, zustand: zustandAus(t.protokoll, inh) }));
+const demo = { plenum: plenumPlan(auswerten(inh, demoTeams)) };
+writeFileSync(ziel, JSON.stringify({ szenario: inh.szenario.version, zeiten: ref.zeiten, referenz, plenum: plenumPlan(a), demo, teams: plan }, null, 1));
 console.log(`${plan.length} Teams, ${plan.reduce((n, t) => n + t.aktionen.length, 0)} Aktionen, ${plan.reduce((n, t) => n + t.protokoll.length, 0)} Ereignisse → ${ziel}`);

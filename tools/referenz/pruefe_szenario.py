@@ -225,7 +225,7 @@ def verschwinden_erklaert(d):
     return fehler
 
 
-AUSWERTUNG_S = 900              # seit 2.7 (G1.1): Kapitelplan der Auswertung 15 min
+AUSWERTUNG_S = 300              # seit Liste O (O1): kurzes Plenum 5 min (2.7, G1.1: 15 min – die Kapitel sind jetzt zuschaltbar)
 
 
 def auswertung_plan(d):
@@ -240,7 +240,8 @@ def auswertung_plan(d):
         summe = sum(k["sek"] for k in kap)
         if summe != AUSWERTUNG_S:
             fehler.append(f"Auswertung: Kapitelplan {L.mmss(summe)} statt {L.mmss(AUSWERTUNG_S)}")
-        rp = next((k for k in kap if k["id"] == "replay"), None)
+        alle_kap = kap + (au.get("zuschaltbar") or [])
+        rp = next((k for k in alle_kap if k["id"] == "replay"), None)
         replay = au.get("replay") or {}
         if rp and replay.get("budget_s") not in (None, rp["sek"]):
             fehler.append(f"Auswertung: Replay-Budget {replay['budget_s']} s ≠ Kapitel {rp['sek']} s")
@@ -248,7 +249,18 @@ def auswertung_plan(d):
         for f in replay.get("standard", []) + replay.get("zuschaltbar", []):
             if f not in faelle:
                 fehler.append(f"Auswertung: Fall {f} im Replay unbekannt")
-        for k in kap:
+        # seit Liste O (O1.2): je Schlüsselfall eine Folie, Soll je Fall; Kapitel „faelle“ = Standard × je_fall_s
+        fo = au.get("faelle") or {}
+        schluessel = {f["id"]: f for f in sz["schluesselfaelle"]}
+        for f in fo.get("standard", []) + fo.get("zuschaltbar", []):
+            if f not in schluessel:
+                fehler.append(f"Auswertung: Fall {f} der Plenum-Folien unbekannt")
+            elif not schluessel[f].get("wirklich"):
+                fehler.append(f"Auswertung: Fall {f} ohne Satz zur Auflösung (wirklich)")
+        kf = next((k for k in kap if k["id"] == "faelle"), None)
+        if kf and fo and kf["sek"] != len(fo.get("standard", [])) * fo.get("je_fall_s", 45):
+            fehler.append(f"Auswertung: Kapitel Schlüsselfälle {kf['sek']} s ≠ {len(fo['standard'])} Fälle × {fo.get('je_fall_s')} s")
+        for k in alle_kap:
             if k["id"] in ("bilanz", "impuls", "diskussion", "abschluss") and not au.get(k["id"]):
                 fehler.append(f"Auswertung: Kapitel {k['id']} ohne Inhalt in szenario.auswertung.{k['id']}")
     bil = reg.get("bilanz")

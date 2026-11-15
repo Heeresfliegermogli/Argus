@@ -63,7 +63,11 @@ h2 { font-size: 15px; color: var(--text); }
 .kopf-links { height: 100%; }
 .kopf-rechts { justify-content: flex-end; }
 .rollenband { align-self: stretch; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 14px; color: #0e1317; font-weight: 700; font-size: 17px; }
-.rollenband .marke { font-weight: 700; letter-spacing: .12em; font-size: 13px; opacity: .75; }
+.rollenband .marke { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; letter-spacing: .12em; font-size: 13px; }
+.rollenband .marke .marke-text { opacity: .75; }
+/* Liste O (O2): Schild 26 px vor „ARGUS“ in jeder Kopfzeile */
+.argus-schild { display: block; width: auto; flex: none; user-select: none; }
+.marke-schild { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); }
 .rolle-g1 { background: var(--g1); } .rolle-g2 { background: var(--g2); } .rolle-g3 { background: var(--g3); }
 .rolle-sl { background: var(--sl); } .rolle-plenum { background: var(--plenum); } .rolle-zb { background: var(--zb); }
 .uhr { display: flex; align-items: center; gap: 12px; }
@@ -398,6 +402,12 @@ label.wahl input { margin-top: 3px; accent-color: var(--rollenfarbe); }
 .start { --rollenfarbe: var(--info); }
 .start-rahmen { width: min(1040px, 100%); display: flex; flex-direction: column; gap: 14px; }
 .start-titel h1 { font-size: 30px; letter-spacing: .12em; color: var(--argus); }
+/* Liste O (O2): Schild über „ARGUS“ (Startseite ca. 120 px) – auf dunklem Grund nur Schild und die helle Schrift der App */
+.argus-titel { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.argus-titel h1 { font-size: 30px; letter-spacing: .12em; color: var(--argus); line-height: 1; }
+.argus-titel .argus-schild { filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .45)); }
+.start-titel { text-align: center; }
+.start-titel .argus-titel { margin-bottom: 6px; }
 .start-spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
 .start-rahmen .start-karte { width: auto; padding: 20px 24px; }
 .start-karte > h2 { font-size: 19px; margin-bottom: 12px; }
@@ -1182,7 +1192,7 @@ section.eingang .eingang-zahl { font-size: 17px; min-width: 30px; padding: 1px 7
 /* schmale Fenster (1366 × 650): Marke „ARGUS“ im Band und die Wörter an „⇩ Protokoll“ / „▶ Start“ fallen weg, die Zeichen bleiben */
 .rahmen[data-rolle="zb"] .kopf { container: kopf / inline-size; }
 @container kopf (max-width: 1460px) {
-  .rollenband .marke { display: none; }
+  .rollenband .marke .marke-text { display: none; }
   .kopf-rechts .lang { display: none; }
 }
 .rahmen[data-rolle="zb"] .kopf .uhr-info { font-size: 12.5px; white-space: nowrap; }
@@ -1579,3 +1589,109 @@ a.start-zurueck-team, a.start-zurueck-team:visited { color: #eef4ff; }
   .ansicht-sl > .stapel > .panel.flach > .rumpf { padding: 7px 12px; }
   .ansicht-sl .sl-pruefung-warnungen { display: none; }
 }
+
+/* ---------------------------------------------------------------- Liste O: kurzes Plenum (plenum-kurz.tsx) und Logo */
+.pult-marke .argus-schild { margin-right: 2px; }
+.ekarte-fuss .argus-logo-ganz { display: block; flex: none; }
+.plenum-kopf h2 { display: flex; align-items: center; gap: 10px; }
+
+/* Kapitel 1 „Gefecht beendet“ in der Auswertung */
+.pk-gefecht { flex: 1; min-height: 0; padding: 0; }
+
+/* Folie eines Schlüsselfalls: links das Bild, rechts Ort und Frage bzw. Auflösung */
+.pk-fall { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 18px; }
+.pk-links { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.pk-kopf { display: flex; align-items: center; gap: 4px; font-size: 20px; }
+.pk-kopf b { font-size: 21px; }
+.pk-nr { margin-left: auto; font-size: 15px; }
+.pk-bild-feld { flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; }
+.pk-standbild { width: min(100cqw, 160cqh); height: auto; aspect-ratio: 16 / 10; cursor: default; border-radius: 6px; }
+.pk-standbild .argus-marke { font-size: 15px; padding: 1px 6px; }
+.pk-standbild .drohne-kopf, .pk-standbild .drohne-fuss { font-size: 14px; padding: 4px 11px; }
+.pk-argus { font-size: 21px; text-align: center; }
+.pk-argus b { font-family: var(--mono); font-size: 21px; color: var(--argus); }
+.pk-argus-hinweis { font-size: 16px; color: var(--text-2); }
+.pk-rechts { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.pk-ort-feld { display: flex; flex-direction: column; gap: 4px; }
+.pk-feld-titel { font-size: 14px; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+.pk-ort { position: relative; width: 100%; aspect-ratio: 10 / 7; border-radius: 6px; border: 1px solid var(--linie-2);
+  background: #2a2f2a center / 100% 100% no-repeat; overflow: hidden; }
+.pk-ort-ring { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 4px solid #ff4d3d;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, .55), 0 0 18px rgba(255, 77, 61, .8); }
+.pk-ort-ring::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #ff4d3d; }
+.pk-frage-feld { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+  border: 1px dashed var(--linie-2); border-radius: 10px; padding: 16px; }
+.pk-frage { margin: 0; font-size: 38px; font-weight: 700; line-height: 1.15; }
+.pk-aufdecken { font-size: 20px; padding: 8px 22px; }
+.pk-aufloesung { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; background: var(--flaeche);
+  border: 1px solid var(--linie-2); border-radius: 10px; padding: 16px 18px; }
+.pk-es-war { font-size: 24px; line-height: 1.25; }
+.pk-es-war b { font-size: 27px; color: var(--text); }
+.pk-quote { font-size: 28px; line-height: 1.2; font-weight: 600; }
+.pk-prozent { font-size: 54px; line-height: 1; font-weight: 700; color: #ff8f86; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pk-klein { font-size: 16px; }
+.pk-balken { display: flex; height: 34px; border-radius: 6px; overflow: hidden; background: var(--flaeche-3); }
+.pk-balken i { display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 16px; color: #101418; min-width: 0; white-space: nowrap; overflow: hidden; }
+.pk-balken .falsch { background: var(--schlecht); }
+.pk-balken .richtig { background: var(--gut); }
+.pk-balken .ohne { background: var(--flaeche-3); color: var(--text-2); }
+
+/* Folie „Gesamt“ */
+.pk-gesamt { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+.pk-gesamt-kopf { display: flex; align-items: baseline; gap: 16px; }
+.pk-gesamt-kopf h1 { font-size: 34px; }
+.pk-gesamt-kopf .leise { font-size: 18px; }
+.pk-gesamt-oben { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 28px; align-items: start; }
+.pk-gesamt-quote { display: flex; flex-direction: column; gap: 10px; }
+.pk-gesamt-text { font-size: 40px; line-height: 1.15; }
+.pk-gesamt-text .rot { color: #ff8f86; }
+.pk-gesamt-text .gruen { color: #7fd6a2; }
+.pk-gesamt-balken { display: flex; height: 46px; border-radius: 8px; overflow: hidden; background: var(--flaeche-3); }
+.pk-gesamt-balken .falsch { background: var(--schlecht); }
+.pk-gesamt-balken .richtig { background: var(--gut); }
+.pk-je-fall { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pk-je-fall li { display: grid; grid-template-columns: 46px minmax(0, 1fr) 70px 46px; align-items: center; gap: 10px; font-size: 19px; }
+.pk-je-fall b { font-family: var(--mono); text-align: right; }
+.pk-mini { height: 14px; border-radius: 4px; background: var(--flaeche-3); overflow: hidden; }
+.pk-mini i { display: block; height: 100%; background: var(--schlecht); }
+.pk-zahl-feld { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px dashed var(--linie-2); }
+.pk-zahl-feld.an { border: 1px solid var(--argus-rand); background: var(--argus-flaeche); }
+.pk-zahl { display: flex; align-items: center; gap: 40px; padding: 10px 30px; }
+.pk-zahl-wert { font-size: 190px; line-height: .9; font-weight: 700; color: var(--argus); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pk-zahl-text p { margin: 0 0 8px; font-size: 30px; line-height: 1.2; }
+.pk-zahl-text .pk-merkt { font-size: 40px; font-weight: 700; color: var(--text); }
+.pk-zahl-aufdecken { font-size: 26px; padding: 14px 30px; }
+.pk-zahl-aufdecken .sehr-leise { font-size: 16px; margin-left: 10px; }
+.pk-gesamt-fuss { display: flex; justify-content: flex-end; }
+.pk-zur-praesentation, .pk-ende-knopf { font-size: 19px; padding: 9px 22px; }
+.pk-ende-knopf { position: absolute; right: 18px; bottom: 14px; z-index: 5; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+
+/* Ruhiger Abschlussbildschirm „Zurück zur Präsentation“ (O1.8) */
+.pk-ende { position: absolute; inset: 0; z-index: 60; background: #0b0f12; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 26px; }
+.pk-ende-schild { filter: drop-shadow(0 8px 26px rgba(0, 0, 0, .6)); }
+.pk-ende-titel { font-size: 44px; font-weight: 700; letter-spacing: .08em; color: var(--text); }
+.pk-ende-zurueck { position: absolute; left: 14px; bottom: 12px; background: none; border: 0; color: var(--text-3); opacity: .25; font-size: 20px;
+  cursor: pointer; padding: 6px 10px; }
+.pk-ende-zurueck:hover, .pk-ende-zurueck:focus-visible { opacity: .9; }
+
+/* Kapitelleiste mit zugeschalteten Kapiteln (bis 17 Knöpfe in 1530 px): knapper, die Kennung oben links weicht */
+.kapitel-chip.zusatz { font-size: 14px; padding: 5px 6px; }
+.auswertung-kopf.viele .kapitel-leiste { gap: 3px; }
+.auswertung-kopf.viele .kapitel-chip { padding: 5px 6px; }
+.auswertung-kopf.viele .kopf-links > .mono { display: none; }
+.auswertung-kopf.viele .rollenband { padding: 0 10px 0 10px; }
+
+/* Menü ＋: Fälle, Kapitel, Replay nebeneinander */
+.kapitel-menue { display: grid; grid-template-columns: 320px 280px; gap: 18px; }
+.kapitel-menue.drei { grid-template-columns: 320px 280px 320px; }
+.kapitel-menue > div { display: flex; flex-direction: column; gap: 5px; }
+.fall-wahl { display: flex; flex-direction: column; gap: 3px; }
+.fall-wahl .menue-zeile { gap: 6px; }
+.fall-wahl-id { min-width: 24px; }
+.fall-wahl .fall-hoch { margin-left: auto; padding: 0 7px; font-size: 11px; }
+
+/* Übersicht der Spielleitung: die Zahl für die Folie */
+.pk-sl-zahl { display: inline-flex; align-items: baseline; gap: 6px; font-size: 15px; }
+.pk-sl-zahl b { font-size: 21px; color: var(--argus); }
+.pk-sl-zahl .knopf { margin-left: 6px; align-self: center; }

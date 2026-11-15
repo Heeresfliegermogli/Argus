@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Probe der Auswertung (Schritt 8; seit 2.7 15 min nach Änderungsliste G): die Auflösung so durchgehen, wie die Spielleitung es am
-Smartboard tut.
+"""Probe der Auswertung (Schritt 8; seit Liste O, 15.11.2026, das kurze Plenum): die Auflösung so durchgehen, wie die Spielleitung es
+am Smartboard tut.
 
 Ablauf (seit Liste J in 1536 × 730 – Dienst-Laptop; die Auswertung ist für das Smartboard 1530 × 800 gebaut und wird darunter als Ganzes
 verkleinert, J3.3 –; am Ende alle Kapitel noch einmal in 1920 × 960, 1530 × 800 und 1366 × 650):
   1. Auswertung öffnen – Beispiel (…/?auswertung=demo, sieben Modellteams: fünf des Drehbuchs, zwei mit anderem Tempo) oder das
-     Plenum einer Sitzung (Adresse mit sitzung=…&rolle=plenum; nach Spielende schaltet es selbst auf die Auswertung).
-  2. Kapitel für Kapitel mit der Taste „Bild ↓“ (wie ein Presenter): Teamvergleich 1:00, S3 und S2 (Replay, je 2:00), Bilanz 2:00 (erst
-     Teil 1, ein „weiter“ deckt „Nicht in der Bilanz“ auf), Impuls 1:00 (Zitat ohne Quelle, „weiter“ deckt die Quelle auf; weitere
-     Zitate per Klick), Diskussion 6:00 (Wertekompass), Abschluss 1:00 – zusammen 15:00. Je Kapitel: Foto, nichts abgeschnitten (kein
-     Rollbalken, kein Feld zu klein), kleinste Schrift, Zeit bis das Kapitel steht, Uhr Soll/Ist.
-  3. Inhalte: Ausgang je Team und Fall mit den Sekunden bis zur Entscheidung gegen die Auswertung im Prozess (tools/drehbuch_plan.ts,
-     dieselben Modellteams); Bilanz je Team und „ARGUS allein“ gegen den Plan (Feindfahrzeuge, Wert, Fehlbekämpfungen ohne Eurowert);
-     Zitate wörtlich (Liste G, G3.3) mit Quelle und Pflichtzeile; Wertekompass mit fünf Leitfragen; vier Kernaussagen, Schlussfrage.
-  4. Replay je Schlüsselfall: ▶ (läuft im Tempo des Falls, ca. 45 s je Fall), Team per Klick und Ziffer, Sprung über eine Marke der
-     Zeitleiste, Karte steht und zeichnet, Drohnenbild groß mit Lupe (Esc schließt), „Wie lange habt ihr hingeschaut?“, Notizen der SL 2.
-  5. Zuschaltbar (Menü „+“): Kennzahlen, Konfidenz, Preis des Abwartens und Fall S1 – erscheinen an ihrer Stelle, die Uhr wächst; danach
-     wieder der Standard.
-  6. Export: JSON ohne Freitexte (keine Team- und Personennamen, mit Bilanz und Referenzlauf), mit Freitexten, CSV.
+     Plenum einer Sitzung (Adresse mit sitzung=…&rolle=plenum; nach Spielende schaltet es selbst auf „Gefecht beendet“).
+  2. Standard (Liste O, ca. 5 min) mit der Taste „Bild ↓“ (wie ein Presenter): „Gefecht beendet“ 1:00 (eine Karte je Team), je
+     Schlüsselfall S3, S2, S1, S4 eine Folie 0:45 – erst nur das Drohnenbild mit ARGUS-Zeile, Ort auf der Karte, „Was habt ihr
+     entschieden?“, ein „weiter“ deckt auf: was es war und „x von n Teams haben das falsch behandelt – y %“ (keine Teamnamen) –,
+     „Gesamt“ 1:00 (richtig/falsch in %, ein „weiter“ deckt die Zahl auf: Median Sekunden vom Öffnen bis zur Entscheidung, „Merkt euch
+     diese Zahl.“), „Zurück zur Präsentation“ (ruhiger Abschlussbildschirm, Esc zurück). Zahlen gegen die Auswertung im Prozess
+     (tools/drehbuch_plan.ts: plenum für die Sitzung, demo.plenum für das Beispiel). Je Kapitel: Foto, nichts abgeschnitten, kleinste
+     Schrift, Uhr Soll/Ist (Σ 5:00).
+  3. Die Kapitel von 2.7 über das Menü „+“ zuschalten (Teamvergleich, Kennzahlen, Konfidenz, Replay S3/S2, Preis des Abwartens,
+     Bilanz, Impuls, Diskussion, Abschluss) und wie bisher prüfen: Ausgang je Team und Fall gegen den Plan, Bilanz je Team und
+     „ARGUS allein“, Zitate wörtlich (Liste G, G3.3) mit Quelle und Pflichtzeile, Wertekompass, Kernaussagen; Replay je Fall (▶, Team,
+     Sprung, Lupe). Zelle im Teamvergleich → Replay; Fall S5 als Folie und S1 im Replay dazu, Reihenfolge der Folien ändern; zurück
+     zum Standard.
+  4. Export: JSON ohne Freitexte (keine Team- und Personennamen, mit Bilanz und Referenzlauf), mit Freitexten, CSV.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/auswertung_probe.py http://localhost:4173/ --bilder auswertung-probe
@@ -38,9 +39,16 @@ from pruefgroessen import GROESSEN, groessen_argument, groesse_text, lies_groess
 
 W, H = 1536, 730
 HIER = os.path.dirname(os.path.abspath(__file__))
-KAPITEL = ["teams", "S3", "S2", "bilanz", "impuls", "diskussion", "abschluss"]
-BUDGET = {"teams": 60, "S3": 120, "S2": 120, "bilanz": 120, "impuls": 60, "diskussion": 360, "abschluss": 60}
+# seit Liste O: Standard = kurzes Plenum (5 min); die Kapitel von 2.7 sind zuschaltbar und stehen danach
+KAPITEL = ["gefecht", "fall-S3", "fall-S2", "fall-S1", "fall-S4", "gesamt"]
+STANDARD_S = 300
+ALT_ZUSATZ = ["teams", "kennzahlen", "konfidenz", "replay", "preis", "bilanz", "impuls", "diskussion", "abschluss"]
+ALT = ["teams", "kennzahlen", "konfidenz", "S3", "S2", "preis", "bilanz", "impuls", "diskussion", "abschluss"]
+BUDGET = {"gefecht": 60, "fall-S3": 45, "fall-S2": 45, "fall-S1": 45, "fall-S4": 45, "fall-S5": 45, "gesamt": 60,
+          "teams": 60, "kennzahlen": 45, "konfidenz": 30, "S3": 120, "S2": 120, "preis": 60, "bilanz": 120, "impuls": 60, "diskussion": 360,
+          "abschluss": 60}
 FAELLE = ("S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8")
+QUOTE = re.compile(r"(\d+) von (\d+) Teams? (?:haben|hat) das falsch behandelt – (\d+)\u202f%")
 # Zitate wörtlich nach Liste G (G3.3)
 ZITATE = {
     "zitat": "I have much more trust in a statistical mechanism than a soldier who lost a friend two days ago. […] The machine did it coldly. And that made it easier.",
@@ -56,7 +64,7 @@ LAYOUT_JS = """
   const de = document.documentElement;
   const zuGross = [];
   const main = document.querySelector('[data-testid=auswertung]');
-  for (const el of [main, ...main.querySelectorAll('.tafel, .replay, .replay-links, .replay-rechts, .panel > .rumpf, .fall-kopf, .leitfragen, .g1-bild, .vergleich')]) {
+  for (const el of [main, ...main.querySelectorAll('.tafel, .replay, .replay-links, .replay-rechts, .panel > .rumpf, .fall-kopf, .leitfragen, .g1-bild, .vergleich, .pk-fall, .pk-links, .pk-rechts, .pk-aufloesung, .pk-frage-feld, .pk-gesamt, .pk-gesamt-oben, .pk-zahl-feld, .ab-uebersicht, .ab-karte')]) {
     if (!el) continue;
     if (el.scrollHeight > el.clientHeight + 2) zuGross.push(`${el.className}: Höhe ${el.scrollHeight} > ${el.clientHeight}`);
     if (el.scrollWidth > el.clientWidth + 2) zuGross.push(`${el.className}: Breite ${el.scrollWidth} > ${el.clientWidth}`);
@@ -111,14 +119,34 @@ def erwartung(pfad):
     return json.load(open(ziel, encoding="utf-8"))
 
 
+def zuschalten(s, ids, an=True):
+    """Kapitel im Menü „+“ zu- oder abschalten (seit Liste O: die Kapitel von 2.7)."""
+    s.get_by_test_id("kapitel-plus").click()
+    for zid in ids:
+        box = s.locator(f"[data-testid=kapitel-menue] [data-zusatz={zid}]")
+        if box.count():
+            box.check() if an else box.uncheck()
+    s.keyboard.press("Escape")
+    s.wait_for_timeout(200)
+
+
+def chips(s):
+    return s.eval_on_selector_all(".kapitel-leiste [data-kapitel]", "bs => bs.map(b => b.dataset.kapitel)")
+
+
 def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     """Geht die Auswertung im Fenster s Kapitel für Kapitel durch (wie die Spielleitung) und prüft Inhalt, Layout und
-    Bedienung. Gibt Fehler, Bericht (je Kapitel) und die Zahl der Bedienschritte zurück. Auch für tools/e2e_drehbuch.py."""
+    Bedienung. Gibt Fehler, Bericht (je Kapitel) und die Zahl der Bedienschritte zurück. Auch für tools/e2e_drehbuch.py.
+    Seit Liste O zuerst das kurze Plenum (Standard), dann die zugeschalteten Kapitel von 2.7. `plan["plenum"]`: Zahlen des Plenums
+    im Prozess (Fälle, gesamt, die Zahl), wenn vorhanden."""
     fehler, protokoll = [], []
     schritte = 0
     a = argparse.Namespace(bilder=bilder)
-    teams = s.eval_on_selector_all("[data-testid=teamvergleich] thead th[data-team]", "hs => hs.map(h => ({ id: h.dataset.team, name: h.querySelector('.team-marke span').textContent }))")
-    print("Teams:", ", ".join(t["name"] for t in teams))
+    plenum = (plan or {}).get("plenum")
+    karten = s.eval_on_selector_all("[data-testid=auswertung] [data-testid=abschluss-karte]", "ks => ks.map(k => k.dataset.team)")
+    teams = [{"id": None, "name": n} for n in karten]
+    print("Teams:", ", ".join(karten))
+    quoten = {}
 
     def foto(name):
         s.screenshot(path=os.path.join(a.bilder, f"{name}.png"))
@@ -150,7 +178,130 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
         uhr = s.get_by_test_id("zeitbudget").inner_text()
         if k in BUDGET and f"/ {BUDGET[k] // 60:02d}:{BUDGET[k] % 60:02d}" not in uhr:
             fehler.append(f"{k}: Uhr zeigt nicht das Soll {BUDGET[k]} s ({uhr!r})")
-        if k == "teams":
+        if k == "gefecht":
+            n = s.locator("[data-testid=auswertung] [data-testid=abschluss-karte]").count()
+            if n != len(teams) or n == 0:
+                fehler.append(f"Gefecht beendet: {n} Karten für {len(teams)} Teams")
+            if s.get_by_test_id("gefecht-weiter").count() != 1:
+                fehler.append("Gefecht beendet: Knopf „weiter ›“ fehlt")
+            if not s.get_by_test_id("argus-marke").first.locator("img").count():
+                fehler.append("Kopfzeile: Schild vor „ARGUS“ fehlt")
+        elif k.startswith("fall-"):
+            f = k[5:]
+            sek = s.get_by_test_id("pk-fall")
+            warte(lambda: s.locator("[data-testid=pk-standbild] img").count() == 1
+                  and s.locator("[data-testid=pk-standbild] img").evaluate("i => i.complete && i.naturalWidth > 0"), 15, f"{k}: Drohnenbild geladen")
+            if sek.get_attribute("data-fall") != f or sek.get_attribute("data-aufgedeckt") != "0":
+                fehler.append(f"{k}: Folie {sek.get_attribute('data-fall')} aufgedeckt={sek.get_attribute('data-aufgedeckt')} – erwartet erst nur das Bild")
+            if s.get_by_test_id("pk-aufloesung").count() or s.get_by_test_id("pk-quote").count():
+                fehler.append(f"{k}: Auflösung schon vor dem Aufdecken sichtbar")
+            if s.locator("[data-testid=pk-standbild] .argus-rahmen").count() < 1:
+                fehler.append(f"{k}: kein ARGUS-Rahmen im Bild")
+            argus = text("pk-argus")
+            if not re.search(r"\d+ % · (BEKÄMPFEN|NICHT BEKÄMPFEN|PRÜFEN|UNKLAR)", argus):
+                fehler.append(f"{k}: ARGUS-Zeile {argus!r}")
+            if "Was habt ihr entschieden?" not in text("pk-frage"):
+                fehler.append(f"{k}: Frage fehlt")
+            if s.get_by_test_id("pk-ort").count() != 1:
+                fehler.append(f"{k}: Ort auf der Karte fehlt")
+            t_bild = sek.inner_text()
+            for t in teams:
+                if t["name"] and t["name"] in t_bild:
+                    fehler.append(f"{k}: Teamname „{t['name']}“ auf der Folie")
+            layout(f"{k} Bild")
+            foto(f"{nr + 1}_{k}_bild")
+            # „weiter“ deckt auf, ohne das Kapitel zu wechseln
+            s.keyboard.press("PageDown")
+            schritte += 1
+            warte(lambda: sek.get_attribute("data-aufgedeckt") == "1" and s.get_by_test_id("pk-quote").count() == 1, 5, f"{k}: aufgedeckt")
+            if kapitel_jetzt() != k:
+                fehler.append(f"{k}: „weiter“ hat das Kapitel gewechselt statt aufzudecken")
+            q = text("pk-quote")
+            m = QUOTE.search(q)
+            ist = {"falsch": int(sek.get_attribute("data-falsch")), "richtig": int(sek.get_attribute("data-richtig")),
+                   "ohne": int(sek.get_attribute("data-ohne")), "n": int(sek.get_attribute("data-n"))}
+            ist["prozent"] = int(sek.get_attribute("data-prozent")) if sek.get_attribute("data-prozent") else None
+            quoten[f] = ist
+            if ist["n"] and (not m or [int(m.group(1)), int(m.group(2)), int(m.group(3))] != [ist["falsch"], ist["n"], ist["prozent"]]):
+                fehler.append(f"{k}: Text {q!r} passt nicht zu {ist}")
+            if not ist["n"] and "kein Team hat diesen Fall entschieden" not in q:
+                fehler.append(f"{k}: ohne Entscheidung, aber {q!r}")
+            if ist["richtig"] + ist["falsch"] + ist["ohne"] != len(teams):
+                fehler.append(f"{k}: richtig + falsch + ohne = {ist}, {len(teams)} Teams")
+            if plenum and f in plenum["faelle"]:
+                soll = {x: plenum["faelle"][f][x] for x in ("falsch", "richtig", "ohne", "n", "prozent")}
+                if ist != soll:
+                    fehler.append(f"{k}: {ist} / im Prozess {soll}")
+            if not text("pk-wirklich"):
+                fehler.append(f"{k}: „Es war: …“ fehlt")
+            t_auf = sek.inner_text()
+            for t in teams:
+                if t["name"] and t["name"] in t_auf:
+                    fehler.append(f"{k}: Teamname „{t['name']}“ auf der aufgedeckten Folie")
+            print(f"  {k}: {q.splitlines()[0] if q else ''} · {text('pk-aufteilung')} · es war: {text('pk-wirklich')}")
+            layout(f"{k} aufgedeckt")
+            foto(f"{nr + 1}_{k}_aufgedeckt")
+        elif k == "gesamt":
+            g = s.get_by_test_id("pk-gesamt")
+            if g.get_attribute("data-aufgedeckt") != "0" or s.get_by_test_id("pk-zahl").count():
+                fehler.append("Gesamt: die Zahl ist schon vor dem Klick zu sehen")
+            ist = {"falsch": int(g.get_attribute("data-falsch")), "richtig": int(g.get_attribute("data-richtig")), "n": int(g.get_attribute("data-n"))}
+            pf = g.get_attribute("data-prozent-falsch")
+            ist["prozent_falsch"] = int(pf) if pf else None
+            if quoten:
+                sf = sum(q["falsch"] for q in quoten.values() if q)
+                sr = sum(q["richtig"] for q in quoten.values() if q)
+                if [ist["falsch"], ist["richtig"], ist["n"]] != [sf, sr, sf + sr]:
+                    fehler.append(f"Gesamt {ist} ≠ Summe der Folien (falsch {sf}, richtig {sr})")
+            if plenum:
+                soll = plenum["gesamt"]
+                if [ist["falsch"], ist["richtig"], ist["n"], ist["prozent_falsch"]] != [soll["falsch"], soll["richtig"], soll["n"], soll["prozentFalsch"]]:
+                    fehler.append(f"Gesamt {ist} / im Prozess {soll}")
+            tg = text("pk-gesamt-text")
+            if ist["n"] and f"{ist['prozent_falsch']} % falsch behandelt" not in tg:
+                fehler.append(f"Gesamt: Text {tg!r}")
+            n_folien = len([x for x in chips(s) if x.startswith("fall-")])
+            if s.locator("[data-testid=pk-je-fall] li").count() != n_folien:
+                fehler.append(f"Gesamt: je Fall {s.locator('[data-testid=pk-je-fall] li').count()} Zeilen für {n_folien} Folien")
+            layout("gesamt")
+            foto(f"{nr + 1}_gesamt")
+            s.keyboard.press("PageDown")
+            schritte += 1
+            warte(lambda: s.get_by_test_id("pk-zahl").count() == 1, 5, "Gesamt: die Zahl aufgedeckt")
+            tz = text("pk-zahl")
+            zahl = g.get_attribute("data-zahl")
+            if "Merkt euch diese Zahl." not in tz or f"{zahl}\u202fs" not in tz:
+                fehler.append(f"Gesamt: Zahl {zahl!r}, Text {tz[:120]!r}")
+            # im Beispiel genau; nach einem Lauf im Browser handeln die Modellpersonen 1–2 s später als im Prozess (Verzug der
+            # Modellperson, e2e_drehbuch.py) – dort ±3 s, Plenum, Auswertung der SL und Übersicht müssen untereinander gleich sein
+            if plenum and zahl and abs(int(zahl) - plenum["zahl"]["sekunden"]) > (0 if demo else 3):
+                fehler.append(f"Gesamt: Zahl {zahl} s / im Prozess {plenum['zahl']['sekunden']} s")
+            # Zahl der Entscheidungen: im Beispiel genau; nach einem Lauf kann eine Entscheidung der Modellperson kurz vor Spielende im
+            # Browser nach dem Ende liegen (±2)
+            if plenum and abs(plenum["zahl"]["n"] - int(g.get_attribute("data-entscheidungen") or -99)) > (0 if demo else 2):
+                fehler.append(f"Gesamt: {g.get_attribute('data-entscheidungen')} Entscheidungen / im Prozess {plenum['zahl']['n']}")
+            print(f"  gesamt: {tg.strip()} · die Zahl {zahl} s (Median über {g.get_attribute('data-entscheidungen')} Entscheidungen)")
+            layout("gesamt mit Zahl")
+            foto(f"{nr + 1}_gesamt_zahl")
+            # Zurück zur Präsentation: ruhiger Abschlussbildschirm, Esc zurück
+            s.get_by_test_id("zur-praesentation").click()
+            schritte += 1
+            warte(lambda: s.get_by_test_id("praesentation-ende").count() == 1, 5, "Abschlussbildschirm")
+            if "ARGUS – Planspiel beendet" not in text("praesentation-ende") or not s.locator("[data-testid=praesentation-ende] img").count():
+                fehler.append("Abschlussbildschirm: Schild oder „ARGUS – Planspiel beendet“ fehlt")
+            foto(f"{nr + 1}_zurueck_zur_praesentation")
+            s.keyboard.press("Escape")
+            warte(lambda: s.get_by_test_id("praesentation-ende").count() == 0, 5, "Esc vom Abschlussbildschirm")
+            if kapitel_jetzt() != "gesamt" or not s.get_by_test_id("pk-zahl").count():
+                fehler.append("Esc vom Abschlussbildschirm: nicht zurück auf „Gesamt“ mit der Zahl")
+            # auch der Presenter kommt am Ende dorthin
+            s.keyboard.press("PageDown")
+            warte(lambda: s.get_by_test_id("praesentation-ende").count() == 1, 5, "Bild ↓ auf „Gesamt“ → Abschlussbildschirm")
+            s.keyboard.press("PageUp")
+            warte(lambda: s.get_by_test_id("praesentation-ende").count() == 0, 5, "Bild ↑ vom Abschlussbildschirm")
+        elif k == "teams":
+            if not teams or teams[0]["id"] is None:
+                teams[:] = s.eval_on_selector_all("[data-testid=teamvergleich] thead th[data-team]", "hs => hs.map(h => ({ id: h.dataset.team, name: h.querySelector('.team-marke span').textContent }))")
             ist = s.eval_on_selector_all("[data-testid=teamvergleich] td[data-fall]",
                                          "cs => cs.map(c => ({ team: c.dataset.team, fall: c.dataset.fall, ausgang: c.dataset.ausgang, text: c.textContent ?? '' }))")
             tabelle = {}
@@ -169,6 +320,12 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                     for f, z in soll.items():
                         if zeile[f]["ausgang"] != z["ausgang"]:
                             fehler.append(f"Teamvergleich {t['name']} {f}: {zeile[f]['ausgang']} / im Prozess {z['ausgang']}")
+            # Liste O: die Folien zählen wie der Teamvergleich (falsch behandelt = falsch oder zu Unrecht abgelehnt)
+            for f, q in quoten.items():
+                spalte = [tabelle[t["id"]][f]["ausgang"] for t in teams]
+                soll_q = {"falsch": sum(x in ("falsch", "verpasst") for x in spalte), "richtig": spalte.count("richtig")}
+                if [q["falsch"], q["richtig"]] != [soll_q["falsch"], soll_q["richtig"]]:
+                    fehler.append(f"Folie {f}: falsch {q['falsch']}, richtig {q['richtig']} / Teamvergleich {soll_q}")
         elif k == "kennzahlen":
             kz = s.eval_on_selector_all("[data-testid=kennzahlen] tbody tr", """rs => rs.map(r => {
                 const w = (k) => r.querySelector(`[data-kz=${k}] .wert`)?.textContent.trim();
@@ -350,74 +507,95 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
                 fehler.append("Abschluss: nicht vier Kernaussagen")
 
     protokoll_dauer = {}
-    for nr, k in enumerate(KAPITEL):
-        if nr:
-            t1 = time.time()
+
+    def gehe_zu(k, mit_tasten=True):
+        nonlocal schritte
+        t1 = time.time()
+        if mit_tasten:
             for _ in range(8):
                 if kapitel_jetzt() == k:
                     break
                 s.keyboard.press("PageDown")
                 schritte += 1
                 s.wait_for_timeout(150)
-            warte(lambda: kapitel_jetzt() == k, 10, f"Kapitel {k}")
-            protokoll_dauer[k] = time.time() - t1
-        s.wait_for_timeout(700 if k not in FAELLE else 1500)
+        else:
+            s.locator(f".kapitel-leiste [data-kapitel='{k}']").click()
+        warte(lambda: kapitel_jetzt() == k, 10, f"Kapitel {k}")
+        protokoll_dauer[k] = time.time() - t1
+
+    # ---------------------------------------------------------------- Standard: das kurze Plenum (Liste O)
+    if kapitel_jetzt() != "gefecht":
+        fehler.append(f"Plenum beginnt mit {kapitel_jetzt()!r}, nicht mit „Gefecht beendet“")
+    if chips(s) != KAPITEL:
+        fehler.append(f"Kapitel im Standard {chips(s)} / erwartet {KAPITEL}")
+    for nr, k in enumerate(KAPITEL):
+        if nr:
+            gehe_zu(k)
+        s.wait_for_timeout(700 if not k.startswith("fall-") else 1000)
         pruefe_kapitel(nr, k)
     gesamt = s.get_by_test_id("zeitbudget").inner_text()
-    if "/ 15:00" not in gesamt:
-        fehler.append(f"Uhr gesamt: {gesamt!r} (Soll 15:00)")
+    if f"/ {STANDARD_S // 60:02d}:{STANDARD_S % 60:02d}" not in gesamt:
+        fehler.append(f"Uhr gesamt: {gesamt!r} (Soll 05:00)")
+    schritte_standard = schritte
 
-    # ---------------------------------------------------------------- Zuschalten: Kennzahlen, Konfidenz, Preis, Fall S1
-    s.keyboard.press("Home")
-    warte(lambda: kapitel_jetzt() == "teams", 5, "Pos1 zum Teamvergleich")
-    s.get_by_test_id("kapitel-plus").click()
-    for zid in ("kennzahlen", "konfidenz", "preis"):
-        if s.locator(f"[data-zusatz={zid}]").count():
-            s.locator(f"[data-zusatz={zid}]").check()
-    s.locator("[data-fall-wahl=S1]").check()
-    s.keyboard.press("Escape")
-    chips = s.eval_on_selector_all(".kapitel-leiste [data-kapitel]", "bs => bs.map(b => b.dataset.kapitel)")
-    soll_chips = ["teams", "kennzahlen", "konfidenz", "S3", "S2", "S1", "preis", "bilanz", "impuls", "diskussion", "abschluss"]
-    if "preis" not in chips:
-        soll_chips.remove("preis")
-    if chips != soll_chips:
-        fehler.append(f"Zuschalten: Kapitel {chips} / erwartet {soll_chips}")
+    # ---------------------------------------------------------------- Zuschalten: die Kapitel von 2.7 (O1.9)
+    zuschalten(s, ALT_ZUSATZ)
+    soll_chips = KAPITEL + [k for k in ALT if k != "preis" or s.locator(".kapitel-leiste [data-kapitel=preis]").count()]
+    if chips(s) != soll_chips:
+        fehler.append(f"Zuschalten: Kapitel {chips(s)} / erwartet {soll_chips}")
     foto("zusatz_kapitelleiste")
-    for k in ("kennzahlen", "konfidenz", "S1", "preis"):
-        if k not in chips:
-            continue
-        s.locator(f".kapitel-leiste [data-kapitel={k}]").click()
-        warte(lambda: kapitel_jetzt() == k, 10, f"Kapitel {k}")
+    for i, k in enumerate(x for x in ALT if x in chips(s)):
+        gehe_zu(k, mit_tasten=False)
         s.wait_for_timeout(700 if k not in FAELLE else 1500)
-        alt = dict(BUDGET)
-        BUDGET.update({"kennzahlen": 45, "konfidenz": 30, "preis": 60, "S3": 80, "S2": 80, "S1": 80})
-        pruefe_kapitel(len(KAPITEL), k)
-        BUDGET.clear()
-        BUDGET.update(alt)
-    # zurück zum Standard
-    s.get_by_test_id("kapitel-plus").click()
-    for zid in ("kennzahlen", "konfidenz", "preis"):
-        if s.locator(f"[data-zusatz={zid}]").count():
-            s.locator(f"[data-zusatz={zid}]").uncheck()
-    s.locator("[data-fall-wahl=S1]").uncheck()
-    s.keyboard.press("Escape")
-    chips = s.eval_on_selector_all(".kapitel-leiste [data-kapitel]", "bs => bs.map(b => b.dataset.kapitel)")
-    if chips != KAPITEL:
-        fehler.append(f"Standard wiederhergestellt? {chips}")
+        pruefe_kapitel(len(KAPITEL) + i, k)
 
-    # ---------------------------------------------------------------- Navigation zurück
-    s.keyboard.press("End")
-    warte(lambda: kapitel_jetzt() == KAPITEL[-1], 5, "Ende")
-    s.keyboard.press("PageUp")
-    warte(lambda: kapitel_jetzt() == KAPITEL[-2], 5, f"Bild ↑ zurück zu {KAPITEL[-2]}")
-    s.keyboard.press("Home")
-    warte(lambda: kapitel_jetzt() == "teams", 5, "Pos1 zum Teamvergleich")
     # Klick auf eine Zelle im Teamvergleich öffnet das Replay dieses Falls für dieses Team (auch einen nicht gewählten Fall)
+    gehe_zu("teams", mit_tasten=False)
     zelle = s.locator(f"[data-testid=teamvergleich] td[data-team='{teams[-1]['id']}'][data-fall='S1']")
     zelle.click()
     warte(lambda: s.locator("section.replay[data-fall='S1']").count() == 1, 10, "Zelle → Replay S1")
     if s.locator("section.replay").get_attribute("data-team") != teams[-1]["id"]:
         fehler.append("Zelle im Teamvergleich: Replay zeigt nicht das gewählte Team")
+    if "S1" not in chips(s):
+        fehler.append(f"Zelle → Replay: S1 nicht in der Kapitelleiste {chips(s)}")
+    else:
+        s.wait_for_timeout(1500)
+        alt_budget = dict(BUDGET)
+        BUDGET.update({"S3": 80, "S2": 80, "S1": 80})
+        pruefe_kapitel(len(KAPITEL) + len(ALT), "S1")
+        BUDGET.clear()
+        BUDGET.update(alt_budget)
+
+    # Fall S5 als Folie dazu, Reihenfolge der Folien ändern (▲)
+    s.get_by_test_id("kapitel-plus").click()
+    s.locator("[data-testid=wahl-folien] [data-fall-wahl=S5]").check()
+    s.locator("[data-testid=wahl-folien] [data-fall-hoch=S2]").click()
+    s.keyboard.press("Escape")
+    k_jetzt = chips(s)
+    if k_jetzt[:7] != ["gefecht", "fall-S2", "fall-S3", "fall-S1", "fall-S4", "fall-S5", "gesamt"]:
+        fehler.append(f"Folien: S5 dazu und S2 nach vorn – {k_jetzt[:7]}")
+    if "/ " not in s.get_by_test_id("zeitbudget").inner_text():
+        fehler.append("Uhr fehlt")
+    gehe_zu("fall-S5", mit_tasten=False)
+    s.wait_for_timeout(1000)
+    pruefe_kapitel(len(KAPITEL) + len(ALT) + 1, "fall-S5")
+    # zurück zum Standard
+    s.get_by_test_id("kapitel-plus").click()
+    s.locator("[data-testid=wahl-folien] [data-fall-wahl=S5]").uncheck()
+    s.locator("[data-testid=wahl-folien] [data-fall-hoch=S3]").click()
+    s.keyboard.press("Escape")
+    zuschalten(s, ALT_ZUSATZ, an=False)
+    if chips(s) != KAPITEL:
+        fehler.append(f"Standard wiederhergestellt? {chips(s)}")
+
+    # ---------------------------------------------------------------- Navigation
+    s.keyboard.press("End")
+    warte(lambda: kapitel_jetzt() == KAPITEL[-1], 5, "Ende")
+    s.keyboard.press("Home")
+    warte(lambda: kapitel_jetzt() == "gefecht", 5, "Pos1 zu „Gefecht beendet“")
+    s.get_by_test_id("gefecht-weiter").click()
+    warte(lambda: kapitel_jetzt() == "fall-S3", 5, "„weiter ›“ zu den Schlüsselfällen")
+    schritte = schritte_standard
 
     # ---------------------------------------------------------------- Export
     namen = [t["name"] for t in teams]
@@ -451,16 +629,18 @@ def pruefe_auswertung(s, plan, bilder, demo, praefix=""):
     return fehler, protokoll, schritte
 
 
-def kapitel_in_groessen(s, bilder, groessen):
-    """Seit Liste J (J2.3, J3.3): alle Kapitel der Standard-Auswertung in weiteren Fenstergrößen – kein Rollbalken, nichts abgeschnitten,
-    Schrift (im Entwurf) ≥ 12 px. Gibt Fehler und je Größe die Verkleinerung und die kleinste Schrift am Bildschirm zurück."""
+def kapitel_in_groessen(s, bilder, groessen, kapitel=None):
+    """Seit Liste J (J2.3, J3.3): alle Kapitel der Auswertung in weiteren Fenstergrößen – kein Rollbalken, nichts abgeschnitten,
+    Schrift (im Entwurf) ≥ 12 px. Seit Liste O das kurze Plenum (Folien aufgedeckt) und die zugeschalteten Kapitel von 2.7. Gibt Fehler
+    und je Größe die Verkleinerung und die kleinste Schrift am Bildschirm zurück."""
     fehler, ergebnis = [], {}
     alt = s.viewport_size
+    kapitel = kapitel or KAPITEL
     for g in groessen:
         s.set_viewport_size({"width": g[0], "height": g[1]})
         s.wait_for_timeout(600)
         mins = []
-        for k in KAPITEL:
+        for k in kapitel:
             s.locator(f"[data-kapitel-chip='{k}'], .kapitel-chip[data-kapitel='{k}']").first.click()
             warte(lambda: s.locator("[data-testid=auswertung]").get_attribute("data-kapitel") == k, 10, f"{k} in {groesse_text(g)}")
             s.wait_for_timeout(900 if k in ("S3", "S2") else 400)
@@ -474,7 +654,7 @@ def kapitel_in_groessen(s, bilder, groessen):
             mins.append(lay["schrift"]["min"])
             s.screenshot(path=os.path.join(bilder, f"groesse_{groesse_text(g)}_{k}.png"))
         ergebnis[groesse_text(g)] = (lay["schrift"]["skala"], min(mins))
-        print(f"  {groesse_text(g)}: alle {len(KAPITEL)} Kapitel, Verkleinerung {lay['schrift']['skala']:.3f}, kleinste Schrift am Bildschirm {min(mins)} px")
+        print(f"  {groesse_text(g)}: alle {len(kapitel)} Kapitel, Verkleinerung {lay['schrift']['skala']:.3f}, kleinste Schrift am Bildschirm {min(mins)} px")
     s.set_viewport_size(alt)
     return fehler, ergebnis
 
@@ -485,8 +665,8 @@ def bericht(protokoll, schritte):
         if "min" in schrift:
             print(f"  {k:<20} {dauer:>6.2f} s           {schrift['min']:>5.1f} px        {schrift['klein']:>3} von {schrift['n']}")
     summe = sum(BUDGET[k] for k in KAPITEL)
-    print(f"\nZeitbudget: {' + '.join(f'{BUDGET[k] // 60}:{BUDGET[k] % 60:02d}' for k in KAPITEL if BUDGET[k])} = {summe // 60}:{summe % 60:02d} min")
-    print(f"Bedienschritte für die ganze Auflösung: {schritte} (Bild ↓ je Kapitel und Schritt, ▶ je Fall) – dazu nach Bedarf Team (Ziffer/Klick) und Sprung über die Zeitleiste")
+    print(f"\nZeitbudget (Standard): {' + '.join(f'{BUDGET[k] // 60}:{BUDGET[k] % 60:02d}' for k in KAPITEL if BUDGET[k])} = {summe // 60}:{summe % 60:02d} min")
+    print(f"Bedienschritte für das kurze Plenum: {schritte} (Bild ↓ je Kapitel und je Aufdecken, „Zurück zur Präsentation“)")
 
 
 def main():
@@ -514,16 +694,18 @@ def main():
         s.goto(url)
 
         def auswertung_da():
-            # seit Liste M zeigt das Plenum einer Sitzung nach Spielende zuerst „Gefecht beendet“ – von dort „Auswertung ›“
-            if s.get_by_test_id("ab-zur-auswertung").count():
-                s.get_by_test_id("ab-zur-auswertung").click()
-            return s.locator("[data-testid=auswertung]").count() == 1
+            # seit Liste O ist „Gefecht beendet“ Kapitel 1 des kurzen Plenums
+            return s.locator("[data-testid=auswertung] [data-testid=abschluss-karte]").count() > 0
         warte(auswertung_da, 60, "Auswertung sichtbar")
         print(f"Auswertung offen nach {time.time() - t0:.1f} s ({'Beispiel' if demo else 'Sitzung'})")
+        if plan and demo:
+            plan = {**plan, "plenum": (plan.get("demo") or {}).get("plenum")}
         fehler2, protokoll, schritte = pruefe_auswertung(s, plan, a.bilder, demo)
         fehler += fehler2
-        print("Alle Kapitel in den übrigen Prüfgrößen:")
-        fehler3, _ = kapitel_in_groessen(s, a.bilder, [g for g in GROESSEN if g != (w0, h0)])
+        print("Alle Kapitel (Standard und zugeschaltet) in den übrigen Prüfgrößen:")
+        zuschalten(s, ALT_ZUSATZ)
+        fehler3, _ = kapitel_in_groessen(s, a.bilder, [g for g in GROESSEN if g != (w0, h0)], chips(s))
+        zuschalten(s, ALT_ZUSATZ, an=False)
         fehler += fehler3
 
         relevante = [k for k in konsole if "GPU stall" not in k and "WebGL" not in k and "swiftshader" not in k.lower() and "favicon" not in k]
@@ -535,7 +717,7 @@ def main():
     if fehler:
         print("FEHLER:", *fehler[:40], sep="\n  ")
         sys.exit(1)
-    print(f"OK – Auswertung vollständig, in {w0}×{h0} und den übrigen Prüfgrößen ohne Rollbalken, Inhalte wie die Auswertung im Prozess")
+    print(f"OK – kurzes Plenum und zugeschaltete Kapitel vollständig, in {w0}×{h0} und den übrigen Prüfgrößen ohne Rollbalken, Inhalte wie die Auswertung im Prozess")
 
 
 if __name__ == "__main__":

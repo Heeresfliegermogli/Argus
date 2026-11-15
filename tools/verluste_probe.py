@@ -9,8 +9,9 @@ Ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync), Uhr über 
   H5.7 Beschuss der eigenen Panzer deutlich sichtbar (16:45 bei Tempo ×1, direktes Feuer auf 1/1): auf der Karte Mündungsblitz
        am Schützen und Leuchtspur zum Panzer, der getroffene Panzer blinkt in der Kopfzeile, kurzer roter Rand am Bildschirm;
        der erste Beschuss jedes Panzers kommt als Lagemeldung der 1. Kp in den Feed.
-  H3.3 Lagemeldungen am Spielende: Druckmeldungen wegen Artillerie/Mörser mindestens 2 min auseinander, keine Hintergrund-
-       meldungen der Feindartillerie (H-01, H-04, H-12) im Feed, jede Meldung ≤ 140 Zeichen mit Absender.
+  H3.3 Lagemeldungen am Spielende: Druckmeldungen wegen Artillerie/Mörser mindestens 2 min auseinander (seit 2.8, M3.1a, ohne die
+       erste Meldung je Feuerquelle und die drei Feuervorbereitungen, die ohne Abstand kommen; „ausgefallen“ immer), keine weiteren
+       Hintergrundmeldungen der Feindartillerie (H-01, H-04, H-12) im Feed, jede Meldung ≤ 140 Zeichen mit Absender.
   F2.9 Auswertung (Beispiel, 7 Teams): „Preis des Abwartens“ mit dem Zustand der vier Panzer je Team, Marken, Leitfragen.
 Jede Ansicht in 1536 × 730 ohne Rollbalken, keine Konsolenfehler. Fotos in --bilder.
 
@@ -218,9 +219,30 @@ def main():
         pruefe(not lang, f"alle {len(texte)} Lagemeldungen ≤ 140 Zeichen mit Absender" + (f" – zu lang: {lang[:2]}" if lang else ""))
         hg = [t["id"] for t in texte if t["id"] in ("H-01", "H-04", "H-12")]
         pruefe(not hg, f"keine Hintergrundmeldungen der Feindartillerie im Feed ({hg})")
-        art = sorted(sek(t["kopf"]) for t in texte if t["id"].startswith("K-") and any(w in (t["text"] or "") for w in ("Mörser", "Artillerie", "Steilfeuer")))
+        art_alle = [t for t in texte if t["id"].startswith("K-") and any(w in (t["text"] or "") for w in ("Mörser", "Artillerie", "Steilfeuer"))]
+        # ohne Abstand kommen: „ausgefallen“ (immer) und seit 2.8 (M3.1a) die erste Meldung je Feuerquelle bzw. der erste Beschuss eines
+        # Panzers („…, Einschläge noch daneben.“) – sie zählen für keine Drosselung; geprüft wird der Abstand der übrigen
+        # Quelle ≈ Feuerart und Ort im Text („unter Mörserfeuer aus Hof RABE“); die erste Meldung je Quelle darf ohne Abstand kommen.
+        # Die Feuervorbereitungen des Hintergrunds (H-01, H-04, H-12: „… unter Artilleriefeuer, Einschläge noch daneben. Halten
+        # Stellung.“) melden sich je einmal mit ihrem ersten Einschlag, ebenfalls ohne Abstand.
+        def quelle_text(tx):
+            q = tx.split(" unter ", 1)[1] if " unter " in tx else tx
+            return q.split(",", 1)[0]
+        gesehen_q, frei = set(), []
+        for t in sorted(art_alle, key=lambda t: sek(t["kopf"])):
+            if "ausgefallen" in t["text"] or "Halten Stellung." in t["text"]:
+                frei.append(t)
+                continue
+            q = quelle_text(t["text"])
+            if q not in gesehen_q:
+                frei.append(t)
+            gesehen_q.add(q)
+        for t in sorted(art_alle, key=lambda t: sek(t["kopf"])):
+            print(f"    {t['kopf'].split(' · ')[0]} {'frei ' if t in frei else '     '}{t['text'][:110]}")
+        art = sorted(sek(t["kopf"]) for t in art_alle if t not in frei)
         abst = [b_ - a_ for a_, b_ in zip(art, art[1:])]
-        pruefe(all(x >= 120 for x in abst), f"Artilleriemeldungen der Kp mindestens 2 min auseinander ({len(art)} Meldungen, Abstände {abst} s)")
+        pruefe(all(x >= 120 for x in abst), f"Artilleriemeldungen der Kp mindestens 2 min auseinander ({len(art)} gedrosselte Meldungen, "
+               f"Abstände {abst} s; dazu {len(frei)} ohne Abstand: erste je Quelle, Feuervorbereitung, ausgefallen)")
         k_texte = [t for t in texte if t["id"].startswith("K-")]
         pruefe(all(t["kopf"].endswith("1. Kp") for t in k_texte), f"{len(k_texte)} Meldungen der „1. Kp“")
         von_kp = [t for t in texte if t["kopf"].endswith("1. Kp")]
@@ -264,8 +286,8 @@ def main():
         svg_f = aw.evaluate("() => { const s = document.querySelector('[data-testid=preis] svg'); const r = s.getBoundingClientRect(); return r.width / s.viewBox.baseVal.width }")
         pruefe(klein * (svg_f if svg_f < 1 else 1) >= 13, f"kleinste Schrift ≥ 13 px (≈ {klein * min(svg_f, 1):.1f} px)")
         budget = aw.get_by_test_id("zeitbudget").inner_text()
-        # seit 2.7 (G1): 15:00 im Standard, mit „Preis des Abwartens“ (1:00) zusammen 16:00
-        pruefe("01:00" in budget and "16:00" in budget, f"Zeitbudget Kapitel 1:00, gesamt 15:00 + 1:00 ({budget.split()})")
+        # seit Liste O: 5:00 im Standard (kurzes Plenum), mit „Preis des Abwartens“ (1:00) zusammen 6:00 (bis N: 15:00 + 1:00)
+        pruefe("01:00" in budget and "06:00" in budget, f"Zeitbudget Kapitel 1:00, gesamt 5:00 + 1:00 ({budget.split()})")
         foto(aw, "f2_preis_des_abwartens")
 
         browser.close()

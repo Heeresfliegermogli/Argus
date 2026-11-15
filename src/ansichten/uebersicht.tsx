@@ -6,7 +6,8 @@
 //     Statusmeldung ist; Start/Halt einzeln, „ansehen“.
 // Jeder Team-Laptop rechnet sein Spiel selbst; Start und Pause gehen als Signal an alle (die Uhr läuft ab der Serverzeit des Klicks).
 // Die Zahlen kommen etwa alle 5 s – bei Netzverzug später, die Uhr läuft aus der letzten Meldung weiter.
-import { useRef, useState } from "preact/hooks";
+import { useMemo, useRef, useState } from "preact/hooks";
+import { auswerten, hinschauZahl } from "../kern/auswertung";
 import type { AktionsDaten, AktionsTyp } from "../kern/ereignisse";
 import { TEAMNAME_MAX, geraeteKurz, geraeteName, laptopText } from "../kern/sitzungen";
 import { fensterText, leseFensterKennung, zuKlein } from "../kern/fenster";
@@ -20,6 +21,7 @@ import { useSitzung, useTakt, useTeamLaeufe } from "./gemeinsam/hooks";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
 import { AbschlussUebersicht } from "./gemeinsam/abschluss";
+import { ZahlFuerFolie } from "./plenum-kurz";
 import { DiagnoseKnopf, PlenumKnopf } from "./sl";
 
 const TEMPI = [1, 2, 5, 10, 20];
@@ -240,6 +242,8 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
   const alleEnde = mitLauf.length > 0 && endeTeams.length === mitLauf.length;
   const [abschlussWahl, setAbschlussWahl] = useState<{ an: boolean; bei: boolean } | null>(null);
   const zeigeAbschluss = endeTeams.length > 0 && (abschlussWahl && abschlussWahl.bei === alleEnde ? abschlussWahl.an : alleEnde);
+  // Liste O (O1.7): die eine Zahl wie im Plenum („Gesamt“) – für die Folie in der PowerPoint
+  const zahl = useMemo(() => (endeTeams.length ? hinschauZahl(auswerten(inh, laeufe)) : null), [inh, laeufe, endeTeams.length > 0]);
 
   const zeitSetzen = () => {
     const m = zeit.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -332,7 +336,8 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
           </div>) : "Teams"} liste testid="team-tabelle"
         rechts={zeigeAbschluss ? <span class="klein sehr-leise">wie im Plenum: eine Karte je Team, Reihenfolge der Lobby · aus den hochgeladenen Protokollen</span>
           : <span class="klein sehr-leise">Name: umbenennen · Laptop: verschieben · Stand aus den Statusmeldungen der Team-Laptops (etwa alle 5 s)</span>}>
-        {zeigeAbschluss ? <AbschlussUebersicht inh={inh} teams={laeufe.filter((x) => mitLauf.some((m) => m.t.id === x.id))} testid="sl-abschluss" />
+        {zeigeAbschluss ? <AbschlussUebersicht inh={inh} teams={laeufe.filter((x) => mitLauf.some((m) => m.t.id === x.id))} testid="sl-abschluss"
+          knoepfe={zahl && <ZahlFuerFolie zahl={zahl} />} />
         : st.teams.length === 0 ? (
           <Leer>Noch keine Teams. Die Teilnehmer öffnen die Spielseite, geben den Code <b class="mono">{st.code}</b> ein und legen in der Lobby ihre Teams an.</Leer>
         ) : (

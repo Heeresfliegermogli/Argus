@@ -98,9 +98,10 @@ describe("M4: Abschlussbild „Gefecht beendet“", () => {
     const uebersicht = ab.slice(ab.indexOf("export function AbschlussUebersicht"));
     expect(uebersicht).toContain("p.teams.map(");
     expect(uebersicht).not.toMatch(/\.sort\(|reduce\(/);
+    // seit Liste O: „Gefecht beendet“ ist Kapitel 1 des kurzen Plenums (auswertung.tsx); das Plenum schaltet nach Spielende dorthin
     const fenster = quelle("sl-fenster.tsx");
-    expect(fenster).toContain("<AbschlussUebersicht inh={p.s.inh} teams={teams}");
-    expect(fenster).toContain('alleEnde ? "abschluss" : "spiel"');
+    expect(fenster).toContain('alleEnde ? "auswertung" : "spiel"');
+    expect(quelle("auswertung.tsx")).toContain("<AbschlussUebersicht inh={p.inh} teams={p.teams}");
     expect(quelle("uebersicht.tsx")).toContain("<AbschlussUebersicht");
     expect(quelle("gemeinsam/rahmen.tsx")).toContain("<AbschlussBild");
   });

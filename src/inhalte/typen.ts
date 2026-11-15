@@ -429,6 +429,8 @@ export interface Schluesselfall {
   /** Seit 2.4 (E5): im Replay der Auswertung nur, wenn die Spielleitung den Fall zuschaltet */
   zuschaltbar?: boolean;
   titel: string;
+  /** Seit Liste O (O1.4): ein Satz, was es wirklich war – steht im Plenum auf der Folie des Falls, wenn sie aufgedeckt wird */
+  wirklich?: string;
   meldung: string;
   ziele: string[];
   info_bei: string;
@@ -515,8 +517,13 @@ export interface AuswertungInhalt {
   einstieg: string; kernaussage: string; schlussfrage: string;
   /** Seit 2.4 (E5): Replay-Reihenfolge (Standard) und zuschaltbare Fälle, Zeitbudget in s (seit 2.7 nur das Replay, 240 s) */
   replay?: { standard: string[]; zuschaltbar: string[]; budget_s: number; hinweis?: string };
-  /** Seit 2.7 (G1.1): Kapitel im Standard (15 min) und zuschaltbare */
+  /**
+   * Seit 2.7 (G1.1): Kapitel im Standard und zuschaltbare. Seit Liste O (O1): Standard „Gefecht beendet“, „Schlüsselfälle“ (eine Folie
+   * je Fall), „Gesamt“ – ca. 5 min; die Kapitel von 2.7 (Teamvergleich … Abschluss, auch das Replay) sind zuschaltbar.
+   */
   kapitel?: AuswertungKapitel[];
+  /** Seit Liste O (O1.2): Schlüsselfälle im Plenum, je eine Folie – Standard, zuschaltbar, Soll je Fall in s */
+  faelle?: { standard: string[]; zuschaltbar: string[]; je_fall_s: number; hinweis?: string };
   zuschaltbar?: AuswertungKapitel[];
   /** Seit 2.7 (G2.1): Referenzlauf „ARGUS allein“ */
   referenz?: { name: string; regel: string; reihenfolge_wirkmittel: string[] };

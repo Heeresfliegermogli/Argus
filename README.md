@@ -6,7 +6,15 @@ eine Entscheidung (BEKÄMPFEN mit Mörser / LM / Kanone, ZURÜCKSTELLEN, ABLEHNE
 Spiel selbst**; die Spielleitung startet alle Teams, sieht ihren Stand und wertet aus.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-**Neu (Liste N, 15.11.2026, Szenario 2.8):** **Testpult** zum Testen an einem PC – Startseite → Spielleitung → „Test ohne Lobby“ →
+**Neu (Liste O, 15.11.2026, Szenario 2.8):** **Das Plenum ist kurz (ca. 5 min)** – Zitate und Diskussion laufen in der PowerPoint.
+Nach Spielende: „Gefecht beendet“ → die Schlüsselfälle **S3, S2, S1, S4 einzeln** (erst das Drohnenbild mit ARGUS-Zeile, auf Klick
+aufgedeckt: was es war und „x von n Teams haben das falsch behandelt – y %“) → **„Gesamt“** (richtig/falsch in %, auf Klick **die Zahl**:
+Median der Sekunden vom Öffnen bis zur Entscheidung, „Merkt euch diese Zahl.“) → **„Zurück zur Präsentation“** (ruhiger
+Abschlussbildschirm). Die bisherigen Kapitel (Teamvergleich, Replay, Bilanz, Impuls, Diskussion, Abschluss …) sind über **＋**
+zuschaltbar. Die Zahl steht auch in der Übersicht der Spielleitung, mit „kopieren“. Dazu das **ARGUS-Logo** (Schild mit Auge): Favicon,
+Startseite, Kopfzeilen, Plenum, Druck der Einweisung. Firebase-Regeln unverändert.
+
+**Liste N (15.11.2026, Szenario 2.8):** **Testpult** zum Testen an einem PC – Startseite → Spielleitung → „Test ohne Lobby“ →
 **Team und Spielleitung öffnen** öffnet im selben Tab ein Fenster mit den Reitern **Spielleitung · Zielbearbeitung · Plenum**; alle drei
 laufen weiter, egal welcher Reiter vorn ist (die Zielbearbeitung rechnet das Spiel), oben die Zeile „So geht’s“, am Reiter
 Zielbearbeitung die Zahl der neuen Meldungen. Immer lokal, eigener Raum `pult`. „Allein testen (ein Fenster)“ und die einzelnen
@@ -45,11 +53,12 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
    „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte) oder Zuschauen bei der Zielbearbeitung (◉, nur lesen).
 4. **Zweite Spielleitung:** Startseite → **Spielleitung** → Bestehende Sitzung öffnen → Code → **als Spielleitung**; beobachtet und kann
    „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst). In der Teamansicht **✎ Notiz** je Fall.
-5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum zuerst **„Gefecht beendet“** (eine Karte je Team, seit Liste M; die
-   Team-Laptops zeigen ihr Abschlussbild), dann über **Auswertung – alle Teams ›** die Auswertung (Bild ↓ / Presenter: Teamvergleich,
-   Kennzahlen, Konfidenz, S3, S2, S1, S4, Preis des Abwartens, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
-   Übersicht; fehlt ein Protokoll (Netz), **Protokoll laden** mit der Datei, die das Team mit **⇩ Protokoll** gespeichert hat. Üben
-   ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
+5. **Plenum (ca. 5 min, seit Liste O):** Nach Spielende in allen Teams zeigt das Plenum **„Gefecht beendet“** (eine Karte je Team; die
+   Team-Laptops zeigen ihr Abschlussbild), dann mit Bild ↓ / Presenter die Schlüsselfälle **S3, S2, S1, S4** einzeln (Bild → aufdecken),
+   **„Gesamt“** mit der Zahl und **„Zurück zur Präsentation“** – 11 Klicks. Weitere Kapitel (Teamvergleich, Replay, Bilanz, Impuls,
+   Diskussion …) über **＋**. Die Spielleitung: **Auswertung ›** in der Übersicht, dort im Reiter „Gefecht beendet“ auch **die Zahl für
+   die Folie** mit „kopieren“; fehlt ein Protokoll (Netz), **Protokoll laden** mit der Datei, die das Team mit **⇩ Protokoll**
+   gespeichert hat. Üben ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).
 
 | Fenster | Adresse |
 |---|---|

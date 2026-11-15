@@ -7,8 +7,9 @@
 // 1530 × 800). Seit 2.6 (H1) rechnet jeder Team-Laptop sein Spiel selbst; die Spielleitung steuert nur.
 //
 // Plenum: zeigt ein Team (Wahl oben links); vor dem ersten Spiel Einweisung mit Code und Teams. Haben alle Teams das
-// Spielende erreicht, schaltet es von selbst auf „Gefecht beendet“ (Liste M, M4.5: eine Karte je Team in der Reihenfolge der Lobby,
-// keine Summe, keine Rangfolge) und von dort mit „Auswertung ›“ auf die Auswertung über alle Teams (Schritt 8, auswertung.tsx).
+// Spielende erreicht, schaltet es von selbst auf das kurze Plenum (seit Liste O, auswertung.tsx und plenum-kurz.tsx): Kapitel 1
+// „Gefecht beendet“ (Liste M, M4.5: eine Karte je Team in der Reihenfolge der Lobby, keine Summe, keine Rangfolge), dann die
+// Schlüsselfälle einzeln und „Gesamt“. „◂ Spiel“ führt zurück zur Ansicht je Team.
 //
 // Auswertung: dieselbe Ansicht im Plenum (Smartboard) und bei der Spielleitung („Auswertung ›“ in der Übersicht);
 // bei der Spielleitung mit Notizfeld je Fall. Während des Spiels notiert SL 2 über „✎ Notiz“ in der Teamansicht.
@@ -23,7 +24,6 @@ import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import type { Spiel } from "../sitzung/spiel";
 import { EinweisungFenster } from "./einweisung";
 import { AuswertungAnsicht } from "./auswertung";
-import { AbschlussUebersicht } from "./gemeinsam/abschluss";
 import { BestaetigenKnopf, Hinweise, Menue } from "./gemeinsam/bausteine";
 import { useMeldeSicht, useSitzung, useSitzungWert, useTeamLaeufe } from "./gemeinsam/hooks";
 import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
@@ -33,6 +33,7 @@ import { type Beitritt, PlenumAnsicht, PlenumEinweisung } from "./plenum";
 import { ANSICHTEN } from "./register";
 import { plenumOeffnen } from "./sl";
 import { Uebersicht } from "./uebersicht";
+import { ArgusMarke, ArgusTitel, Schild } from "./gemeinsam/logo";
 
 type SLRolle = "sl" | "zb";
 interface Wahl {
@@ -154,7 +155,7 @@ function UebersichtRahmen(p: { s: Sitzung; ansehen: (team: string) => void; ausw
     <div class="rahmen" data-rolle="sl" data-ansicht="uebersicht" data-host={st.istHost ? "1" : "0"} data-sitzung={st.sitzung}>
       <header class="kopf">
         <div class="kopf-links">
-          <div class="rollenband rolle-sl"><span class="marke">ARGUS</span><span>Spielleitung</span></div>
+          <div class="rollenband rolle-sl"><ArgusMarke /><span>Spielleitung</span></div>
           {st.name !== ROLLEN_NAME.sl && <span class="leise">{st.name}</span>}
           <span class="sehr-leise klein">{p.s.inh.szenario.anzeige} · Übungslage, fiktiv</span>
         </div>
@@ -243,41 +244,7 @@ function PlenumTeam(p: { s: Sitzung; spiel: Spiel; teams: TeamStand[]; setze: (t
   );
 }
 
-type PlenumAnsichtArt = "spiel" | "abschluss" | "auswertung";
-
-/**
- * Liste M (M4.5): „Gefecht beendet“ im Plenum – eine Karte je Team in der Reihenfolge der Lobby (Beitritt), keine Summe, kein Sortieren
- * nach Ergebnis, kein „bestes Team“. Zahlen aus den hochgeladenen Protokollen, dieselbe Rechnung wie die Bilanz der Auswertung.
- */
-function GefechtBeendet(p: { s: Sitzung; spiel: () => void; auswertung: () => void }) {
-  const teams = useTeamLaeufe(p.s);
-  const st = p.s.stand;
-  return (
-    <div class="rahmen" data-rolle="plenum" data-ansicht="abschluss">
-      <header class="kopf">
-        <div class="kopf-links">
-          <div class="rollenband rolle-plenum"><span class="marke">ARGUS</span><span>Plenum</span></div>
-          <span class="sehr-leise klein">{p.s.inh.szenario.anzeige} · Übungslage, fiktiv</span>
-        </div>
-        <div />
-        <div class="kopf-rechts">
-          <span class={`badge ${st.verbindung.verbunden ? "gut" : "schlecht"}`} title={st.verbindung.fehler ?? st.verbindung.art}>
-            <span class="punkt" />{st.verbindung.verbunden ? "verbunden" : "keine Verbindung"}
-          </span>
-        </div>
-      </header>
-      <main class="plenum ab-plenum">
-        <AbschlussUebersicht inh={p.s.inh} teams={teams} titel="Gefecht beendet"
-          knoepfe={<>
-            <button type="button" class="knopf" onClick={p.spiel} data-testid="ab-zum-spiel">◂ Spiel</button>
-            <button type="button" class="knopf weiter" onClick={p.auswertung} data-testid="ab-zur-auswertung">Auswertung – alle Teams ›</button>
-          </>} />
-      </main>
-      <VersionsBanner />
-      <Hinweise liste={p.s.hinweise.liste} />
-    </div>
-  );
-}
+type PlenumAnsichtArt = "spiel" | "auswertung";
 
 export function PlenumFenster(p: { s: Sitzung }) {
   const { s } = p;
@@ -292,25 +259,24 @@ export function PlenumFenster(p: { s: Sitzung }) {
   const mitLauf = st.teams.filter((t) => t.lauf && s.spiel(t.id));
   const team = mitLauf.find((t) => t.id === wahl) ?? mitLauf[0];
   const spiel = team ? s.spiel(team.id) : null;
-  // Spielende in allen Teams: zuerst „Gefecht beendet“ (M4.5), von dort die Auswertung über alle Teams (von Hand zurück und wieder hin)
+  // Spielende in allen Teams: das kurze Plenum (Liste O), Kapitel 1 „Gefecht beendet“ (M4.5) – von Hand zurück zum Spiel und wieder hin
   const alleEnde = mitLauf.length > 0 && mitLauf.every((t) => s.spiel(t.id)?.stand.zustand.ende);
   const [ansicht, setAnsicht] = useState<{ a: PlenumAnsichtArt; bei: boolean } | null>(null);
-  const aktuell: PlenumAnsichtArt = ansicht && ansicht.bei === alleEnde ? ansicht.a : alleEnde ? "abschluss" : "spiel";
+  const aktuell: PlenumAnsichtArt = ansicht && ansicht.bei === alleEnde ? ansicht.a : alleEnde ? "auswertung" : "spiel";
   const gehe = (a: PlenumAnsichtArt) => setAnsicht({ a, bei: alleEnde });
   if (st.beendet !== null && !st.direkt) {
-    return <div class="start" data-testid="plenum-beendet"><div class="start-karte stapel" style="gap:10px"><h1>ARGUS</h1><div style="font-size:20px"><b>Sitzung beendet.</b></div><div class="leise">Zur Startseite …</div></div></div>;
+    return <div class="start" data-testid="plenum-beendet"><div class="start-karte stapel" style="gap:10px"><ArgusTitel hoehe={72} /><div style="font-size:20px"><b>Sitzung beendet.</b></div><div class="leise">Zur Startseite …</div></div></div>;
   }
   if (team && spiel && aktuell === "auswertung") {
-    return <AuswertungFenster s={s} art="plenum" zurueck={alleEnde ? { text: "◂ Gefecht beendet", aktion: () => gehe("abschluss") } : { text: "◂ Spiel", aktion: () => gehe("spiel") }} />;
+    return <AuswertungFenster s={s} art="plenum" zurueck={{ text: "◂ Spiel", aktion: () => gehe("spiel") }} />;
   }
-  if (team && spiel && aktuell === "abschluss") return <GefechtBeendet s={s} spiel={() => gehe("spiel")} auswertung={() => gehe("auswertung")} />;
-  if (team && spiel) return <PlenumTeam key={team.id} s={s} spiel={spiel} teams={mitLauf} setze={setWahl} zurAuswertung={() => gehe(alleEnde ? "abschluss" : "auswertung")} />;
+  if (team && spiel) return <PlenumTeam key={team.id} s={s} spiel={spiel} teams={mitLauf} setze={setWahl} zurAuswertung={() => gehe("auswertung")} />;
   // Noch kein Spiel geöffnet: Einweisung mit Code, damit die Teilnehmer beitreten können
   return (
     <div class="rahmen" data-rolle="plenum" data-ansicht="warten">
       <header class="kopf">
         <div class="kopf-links">
-          <div class="rollenband rolle-plenum"><span class="marke">ARGUS</span><span>Plenum</span></div>
+          <div class="rollenband rolle-plenum"><ArgusMarke /><span>Plenum</span></div>
           <span class="sehr-leise klein">{s.inh.szenario.anzeige} · Übungslage, fiktiv</span>
         </div>
         <div />
@@ -321,7 +287,7 @@ export function PlenumFenster(p: { s: Sitzung }) {
         </div>
       </header>
       <main class="plenum" data-modus="einweisung">
-        <div class="plenum-kopf"><h2 style="font-size:20px">{s.inh.szenario.titel}</h2></div>
+        <div class="plenum-kopf"><h2 style="font-size:20px"><Schild hoehe={34} />{s.inh.szenario.titel}</h2></div>
         <PlenumEinweisung inh={s.inh} beitritt={beitritt(s)} />
       </main>
       <VersionsBanner />

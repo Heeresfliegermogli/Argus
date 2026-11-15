@@ -1,15 +1,63 @@
 # ARGUS – Auswertung im Plenum (Schritt 8)
 
-Stand 10.11.2026 (Szenario 2.7, Änderungen G und I): **15 min in sechs Kapiteln** – Teamvergleich, Replay S3/S2, „Bilanz – Das
-ist es wert“ mit dem Referenzlauf **„ARGUS allein“**, Impuls, Diskussion mit dem Wertekompass, Abschluss. Der Plan steht in den Daten
-(`szenario.auswertung.kapitel`, `zuschaltbar`, `replay`), `kapitelPlan(inh, wahl)` in `src/kern/auswertung.ts` baut daraus die Kapitel
-(Prüfung: Summe 15:00). Auflösung nach Spielende am Smartboard, über alle Teams, aus den Protokollen (die vom Team-Laptop
-hochgeladenen; fehlt eines, lädt die Spielleitung die Datei des Teams mit **Protokoll laden**). Gesteuert von der Spielleitung mit
-wenigen Klicks (oder einem Presenter); nichts springt von selbst weiter. Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**,
-nie Namen von Personen, **keine Rangliste, keine Punkte, keine Darstellung getöteter Menschen**. Davor: 22.10.2026 (Schritt 8),
-B3–B9 (25.10.), „Preis des Abwartens“ (D5, 2.3), eine Rolle (H, 2.6; Abschnitte unten mit „bis 2.6“ beschreiben diesen Stand).
+**Stand 15.11.2026 (Liste O, Szenario 2.8): das kurze Plenum, ca. 5 min.** Zitate, Diskussion und Abschluss laufen in der PowerPoint;
+das Programm zeigt nach dem Spiel nur noch „Gefecht beendet“, die Schlüsselfälle einzeln und eine Gesamtübersicht mit **der einen
+Zahl**. Die Kapitel von 2.7 (15 min, unten beschrieben) bleiben erhalten und sind über **＋** zuschaltbar. Davor: 10.11.2026 (Szenario
+2.7, Änderungen G und I): 15 min in sechs Kapiteln; 22.10.2026 (Schritt 8), B3–B9 (25.10.), „Preis des Abwartens“ (D5, 2.3), eine Rolle
+(H, 2.6; Abschnitte unten mit „bis 2.6“ beschreiben diesen Stand).
 
-## Ablauf im Hörsaal: 15 min (seit 2.7, G1)
+Die Auswertung bleibt bei der Ethik: Sie zeigt **Teams**, nie Namen von Personen, **keine Rangliste, keine Punkte, keine Darstellung
+getöteter Menschen**. Auf den Folien der Schlüsselfälle stehen **keine Teamnamen**, nur Summen.
+
+## Ablauf im Unterricht (seit Liste O)
+
+PowerPoint (Ethik-Teil) → Start des Planspiels → **These für später: „Ethik hat auf dem modernen Schlachtfeld zeitlich nichts mehr
+verloren!“** → Spiel (25 min) → **Plenum am Pult (ca. 5 min, dieses Programm)** → zurück in die PowerPoint: These noch einmal, Zitat
+des „Lavender“-Offiziers, Diskussion. In den Daten: `szenario.ablauf_unterricht` = Einweisung 3 min · Spiel 25 min · Plenum 5 min.
+
+## Das kurze Plenum: 5 min (seit Liste O)
+
+Das Plenum-Fenster schaltet von selbst auf Kapitel 1, sobald **alle** Teams das Spielende erreicht haben („◂ Spiel“ führt zur
+Ansicht je Team, „Auswertung – alle Teams ›“ zurück). Die Spielleitung erreicht dieselbe Ansicht über **Auswertung ›**. Gesteuert mit
+**Bild ↓ / Bild ↑** (Presenter) oder Klick; nichts springt von selbst weiter. Der Plan steht in den Daten
+(`szenario.auswertung.kapitel`, `faelle`, `zuschaltbar`), `kapitelPlan` in `src/kern/auswertung.ts` baut daraus die Kapitel.
+
+| Kapitel | Soll | Inhalt |
+|---|---|---|
+| 1 Gefecht beendet | 1:00 | die Karten aus Liste M (M4), unverändert: je Team abgeschossene Feindfahrzeuge, Zustand der vier Panzer, „Dazu x weitere bekämpfte Ziele“; Reihenfolge der Lobby. „weiter ›“ (oder Bild ↓) führt zu den Schlüsselfällen |
+| 2 Schlüsselfälle | je 0:45 | Standard **S3, S2, S1, S4**, je eine Folie (`auswertung.faelle`: S5–S8 zuschaltbar, Reihenfolge änderbar mit ▲ im Menü ＋). **Teil 1:** großes Drohnenbild, wie die Teams es sahen – die Aufnahme der Meldung mit ARGUS-Rahmen und ARGUS-Zeile („Panzer · Feind 96 % · BEKÄMPFEN“) –, Zielnummer und Spielzeit der Meldung, klein der Ort auf der Karte (Ring), darunter **„Was habt ihr entschieden?“**. Keine Auflösung, keine Zahlen. **Klick „aufdecken“ (oder Bild ↓) – Teil 2:** „Es war: …“ (ein Satz aus den Falldaten, `schluesselfaelle[].wirklich`, z. B. „Polnische PT-91 – verbündet: der Entsatz von Süden.“) und groß **„5 von 7 Teams haben das falsch behandelt – 71 %“**, darunter klein richtig / falsch / ohne Entscheidung (Balken und Zahl). Ist der Nenner 0: „kein Team hat diesen Fall entschieden“ |
+| 3 Gesamt | 1:00 | oben **alle gezeigten Schlüsselfälle zusammen**: ein Balken falsch/richtig behandelt in % („60 % falsch behandelt · 40 % richtig“, darunter „aus 20 Entscheidungen in 4 Schlüsselfällen“), daneben klein je Fall der Prozentsatz. **Ein Klick (oder Bild ↓) deckt die Zahl auf:** groß „20 s“ – „So lange habt ihr im Mittel auf ein Ziel geschaut.“ – **„Merkt euch diese Zahl.“**, darunter klein „Median über n Entscheidungen“. Unten **„Zurück zur Präsentation“** |
+| Abschluss | – | „Zurück zur Präsentation“ (oder Bild ↓ auf der letzten Folie) zeigt einen **ruhigen Abschlussbildschirm**: Schild und „ARGUS – Planspiel beendet“, sonst nichts – der Beamer zeigt beim Umschalten zur PowerPoint nichts Zufälliges. Zurück mit Bild ↑, Esc oder dem fast unsichtbaren ◂ unten links |
+| zuschaltbar (＋) | – | **Teamvergleich, Kennzahlen, Konfidenz, Replay (S3, S2; 4 min geteilt, Fälle wählbar), Preis des Abwartens, Bilanz „Das ist es wert“, Impuls (Zitate), Diskussion (Wertekompass), Abschluss** – nach „Gesamt“, in der bisherigen Reihenfolge, wie unten beschrieben; die Kapiteluhr wächst. Klick auf eine Zelle im Teamvergleich schaltet das Replay zu und öffnet den Fall |
+
+Die ganze Folge braucht **11 Bedienschritte** mit dem Presenter (Bild ↓: 1 zu S3, je Fall aufdecken und weiter, die Zahl, das Ende).
+Oben rechts läuft je Kapitel die kleine Uhr „mm:ss / mm:ss“ (Ist / Soll) und Σ (Standard **5:00**).
+
+### Was gezählt wird (O1.5, O1.7)
+
+| Begriff | Festlegung (`src/kern/auswertung.ts`) |
+|---|---|
+| **falsch behandelt** | Ausgang des Falls `falsch` oder `verpasst` (zu Unrecht abgelehnt) – `FALSCH_BEHANDELT`. Bei **S4** (ARGUS warnt zu Recht: NICHT BEKÄMPFEN) heißt das: bekämpft, solange die Zivilpersonen dort standen (Ausgang `falsch`); wer M18 zurückstellt oder ablehnt, hat S4 richtig behandelt |
+| **richtig** | Ausgang `richtig` (S3: auch „bis 21:45 nicht freigegeben, als verbündet erkannt“, I3.3) |
+| **ohne Entscheidung** | `offen`, `entfallen`, `nicht_erreicht` – zählt **nicht** in den Prozentsatz |
+| Prozentsatz je Fall | `fallQuote`: falsch ÷ (richtig + falsch), ganze Prozent (5 von 7 = 71 %); Nenner 0 → kein Prozentsatz |
+| Gesamt | `gesamtQuote`: Summe über die **gezeigten** Fälle; falsch % gerundet, richtig % = 100 − falsch % |
+| **die Zahl** | `hinschauZahl`: **Median** über **alle Entscheidungen aller Teams** (alle Meldungen, nicht nur die Schlüsselfälle; je `entscheid` im Protokoll, auch eine zweite nach ZURÜCKSTELLEN), Sekunden **vom Öffnen der Meldung bis zur Entscheidung** (`sek_offen`; fehlt sie in einem alten Protokoll: ab Eingang), ganze Sekunden. Dieselbe Zahl in der Übersicht der Spielleitung (Reiter „Gefecht beendet“: „Die Zahl für die Folie: 20 s · Median über 155 Entscheidungen“, Knopf **kopieren**) – für die Folie in der PowerPoint. *Hinweis:* Die Zeile „Wie lange habt ihr hingeschaut?“ der Bilanz (zuschaltbar) rechnet je Team ab Eingang |
+
+Werte der Modellteams (`tests/plenum_kurz.test.ts`, `tools/drehbuch_plan.ts`):
+
+| Teams | S3 | S2 | S1 | S4 | Gesamt | die Zahl |
+|---|---|---|---|---|---|---|
+| fünf Drehbuch-Teams (naiv, ideal, naiv+V, ideal+V, naiv+V5) | 3 von 5 – 60 % | 60 % | 60 % | 60 % | 60 % falsch · 40 % richtig (20 Entscheidungen) | **20 s** (155 Entscheidungen) |
+| `?auswertung=demo` (7 Beispielteams) | 4 von 7 – 57 % | 57 % | 57 % | 57 % | 57 % · 43 % (28) | **25 s** (213) |
+| nur naiv / nur ideal | – | – | – | – | – | 20 s / 35 s |
+
+### Üben ohne Spiel
+
+`…/Argus/?auswertung=demo` zeigt dieselben Folien mit den sieben Beispielteams (Smartboard 1530 × 800 und 1920 × 960, Laptop
+1536 × 730 – ohne Rollen; darunter wird die ganze Ansicht verkleinert).
+
+## Bis Liste O: Ablauf im Hörsaal, 15 min (seit 2.7, G1) – heute zuschaltbar
 
 Das Plenum-Fenster schaltet von selbst auf **„Gefecht beendet“** (seit Liste M: eine Karte je Team – abgeschossene Feindfahrzeuge,
 Zustand der vier Panzer, neutrale Zeile „Dazu x weitere bekämpfte Ziele“; Reihenfolge der Lobby, keine Rangfolge), sobald **alle** Teams
@@ -153,6 +201,7 @@ Spalten `kampfkraft_ende` und `verwundete_ende`. **Seit 2.7 (G5)** je Team `bila
 | Datei | Inhalt |
 |---|---|
 | `src/kern/auswertung.ts` | Fälle, Verlauf je Meldung, Kette, Ausgang je Fall, Kennzahlen, Konfidenz, Zeitleiste und Zeitfenster je Fall, Stand zur Zeit t (`zustandBis`), Export (JSON, CSV) |
+| `src/ansichten/plenum-kurz.tsx` (seit Liste O) | Folie je Schlüsselfall (Standbild der Meldung mit ARGUS-Rahmen, Ort auf der Karte, aufdecken), „Gesamt“ mit der Zahl, Abschlussbildschirm, „Die Zahl für die Folie“ in der Übersicht der Spielleitung |
 | `src/ansichten/auswertung.tsx` | Ansicht mit Kapiteln (seit 2.7 nach `kapitelPlan`, Menü ＋ zum Zuschalten), Uhr je Kapitel, Export, Teamvergleich, Kennzahlen, Konfidenz (SVG), Replay (Karte, Zeitleiste, Drohnenbild, „hingeschaut“), Bilanz, Impuls, Diskussion, Abschluss; Tasten für Presenter |
 | `src/ansichten/sl-fenster.tsx` | `AuswertungFenster` (Plenum und Spielleitung), Umschalten im Plenum, „✎ Notiz“ in der Teamansicht |
 | `src/karte/lagekarte.ts`, `src/ansichten/gemeinsam/lagekarte.tsx` | `fokus` (Ausschnitt), wartet, bis die Leinwand ihre Größe hat |
@@ -178,12 +227,17 @@ Protokoll: `notiz` hat ein optionales Feld `fall` (S1–S8, N1–N4; der Host pr
 | automatisch | 114 Tests (12 neu in `tests/auswertung.test.ts`), Build; `tools/auswertung_probe.py` auf `?auswertung=demo`, `ui_faelle.py` (22 Bilder), `bedientest_probe.py` 15/15, `lobby_probe.py` 19/19 |
 | **G+I (10.11.2026, Szenario 2.7)** | `tests/auswertung.test.ts` (Kapitelplan 15:00, Zuschalten, S3 aufgelöst = richtig, I-04 gelesen/ungelesen, Export mit Bilanz), `tests/durchlauf.test.ts` (Referenzlauf „ARGUS allein“ zweimal gleich, = Python, Bilanz = `bilanz.py`), `tests/szenario27.test.ts`; `tools/auswertung_probe.py` auf `?auswertung=demo` mit 7 Teams: alle Kapitel in 1530 × 800, kleinste Schrift 13 px, Zitate wörtlich, Bilanz und Impuls aufdecken, „weitere Zitate“, Zuschalten von Kennzahlen, Konfidenz, Preis und S1, Export mit Bilanz und „ARGUS allein“; `tools/e2e_drehbuch.py` (5 Team-Laptops, SL, SL 2, Plenum, ×5): Auswertung im Plenum mit Bilanz aller Teams und „ARGUS allein“ (14,65 Mio €) wie im Prozess, Notiz der SL 2 bei S3, 11 Bedienschritte, Zeitbudget 15:00 |
 | **H (09.11.2026, Szenario 2.6)** | `tests/auswertung.test.ts` für eine Rolle (Ausgang je Fall, Sekunden ab Eingang/Öffnen, Widerspruch, Export mit `sekunden_ab_eingang`); `tools/auswertung_probe.py` auf `?auswertung=demo` mit **7 Teams**: Teamvergleich gedreht in 1530 × 800 ohne Rollbalken (bisher 2244 px breit), Sekunden in jeder Zelle, Kennzahlen kompakt, kleinste Schrift 13 px; `tools/e2e_drehbuch.py` (5 Team-Laptops, SL, SL 2, Plenum): Plenum schaltet selbst auf die Auswertung, Teamvergleich und Kennzahlen = Auswertung im Prozess, Notiz der SL 2 bei S3 |
+| **O (15.11.2026, Szenario 2.8, kurzes Plenum)** | `tests/plenum_kurz.test.ts` (Kapitelplan 5:00, Standard S3, S2, S1, S4, Zählregel, je Fall und gesamt in %, die Zahl aus dem Protokoll: Drehbuch 20 s, naiv allein 20 s, ideal allein 35 s, Beispiel 25 s; n = 0 → „kein Team hat diesen Fall entschieden“), `tests/logo.test.ts`; `tools/auswertung_probe.py` auf `?auswertung=demo` (7 Teams): 11 Bedienschritte bis „Zurück zur Präsentation“, je Fall „4 von 7 Teams haben das falsch behandelt – 57 %“, Gesamt 57 %/43 % aus 28 Entscheidungen, die Zahl 25 s über 213 Entscheidungen = `demo.plenum` aus `tools/drehbuch_plan.ts`; 1366 × 650, 1530 × 800, 1920 × 960 ohne Rollbalken; `tools/e2e_drehbuch.py` (5 Team-Laptops): Plenum schaltet auf „Gefecht beendet“, je Fall 3 von 5 – 60 % wie im Prozess, die Zahl in Plenum, Auswertung der SL und Übersicht gleich (im Browser 20–21 s, im Prozess 20 s: die Modellpersonen klicken im Browser 1–2 s später) |
 
 Prüfen: `python3 tools/auswertung_probe.py http://localhost:4173/` (Beispiel) bzw. mit `--erwartet plan.json` und der
 Adresse eines Plenums nach einem Lauf; das ganze Drehbuch mit `python3 tools/e2e_drehbuch.py http://localhost:4173/ --tempo 5`.
+Seit Liste O geht die Probe zuerst das kurze Plenum durch (Zahlen gegen `plenum` bzw. `demo.plenum` aus `tools/drehbuch_plan.ts`),
+dann die zugeschalteten Kapitel von 2.7.
 
 ## Offen
 
+- Liste O: Lesart S4 bestätigen (falsch behandelt = M18 bekämpft, solange die Zivilpersonen dort stehen) und ob die Zahl nur ab Öffnen
+  (wie O1.7) oder zusätzlich ab Eingang (wie die Bilanz von 2.7) gezeigt werden soll.
 - Probe am Smartboard im Hörsaal: Lesbarkeit aus 4–8 m (Teamvergleich, Zeitleiste, Diagramm), Presenter (Bild ↓/↑).
   Die Ansicht ist für 1530 × 800 ausgelegt (Dienst-PC mit 125 %); Vollbild (F11) gibt etwas mehr Höhe.
 - Mit der echten Datenbank (Firebase) einmal die ganze Auswertung nach einem Lauf öffnen (lädt alle sieben hochgeladenen Protokolle).

@@ -11,6 +11,9 @@
 //   Abschluss 1:00    – vier Kernaussagen, Schlussfrage
 // Kennzahlen, Konfidenz und „Preis des Abwartens“ sind zuschaltbar (Menü „+“). Eine kleine Uhr je Kapitel zeigt Soll und Ist; nichts
 // springt von selbst weiter. Export der Ergebnisse ohne Namen.
+// Seit Liste O (O1, 15.11.2026) ist der Standard das kurze Plenum (ca. 5 min, plenum-kurz.tsx): „Gefecht beendet“ 1:00, je
+// Schlüsselfall eine Folie 0:45 (S3, S2, S1, S4 – erst das Bild, dann aufdecken), „Gesamt“ 1:00 mit der einen Zahl, dann „Zurück zur
+// Präsentation“. Die Kapitel oben bleiben, sind aber nur noch zuschaltbar (nach „Gesamt“).
 // Gebaut für das Smartboard (1530 × 800). Seit Liste J (J3.3): In kleineren Fenstern (Dienst-Laptop 1536 × 730) wird die Auswertung als
 // Ganzes verkleinert (Mindestgröße 1530 × 800, gemeinsam/fenster.ts) – nichts wird abgeschnitten; ab 1920 × 960 wächst sie mit.
 //
@@ -21,8 +24,8 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../inhalte/typen";
 import {
   AUSGANG_TEXT, type Auswertung, FEHL_TEXT, KONFIDENZ_HOCH, type FallDef, type FallErgebnis, type KapitelDef, type KapitelWahl, kapitelPlan,
-  type TeamAuswertung, type TeamLauf, type ZeitMarke, auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, sekText,
-  zeitleiste, zustandBis,
+  type TeamAuswertung, type TeamLauf, type ZeitMarke, auswerten, ereignisseBis, exportAnonym, exportCsv, fallFenster, fallInjects, gesamtQuote,
+  hinschauZahl, sekText, zeitleiste, zustandBis,
 } from "../kern/auswertung";
 import { type Bilanz, euro, FEHL_IDS, mio } from "../kern/bilanz";
 import { bekannteZiele, effekte } from "../kern/effekte";
@@ -41,11 +44,14 @@ function zielText(inh: Inhalte, id: string): string {
   return `Ziel ${zielNr(inh, null, id)}`;
 }
 import type { LiveLage } from "../drohne/livebild";
+import { AbschlussUebersicht } from "./gemeinsam/abschluss";
 import { Menue } from "./gemeinsam/bausteine";
 import { setzeMindestgroesse } from "./gemeinsam/fenster";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { LiveDrohnenFenster } from "./gemeinsam/livedrohne";
+import { ArgusMarke } from "./gemeinsam/logo";
 import { TeamMarke } from "./gemeinsam/rahmen";
+import { FallFolie, GesamtFolie, PraesentationEnde } from "./plenum-kurz";
 
 /**
  * Wie schnell das Replay läuft (Spielsekunden je Sekunde): so, dass ein Fall in ca. 45 s abläuft (×4 bis ×15) – vom
@@ -66,8 +72,8 @@ export function kapitelListe(inh: Inhalte, wahl: KapitelWahl = {}): Kapitel[] {
   return kapitelPlan(inh, wahl).kapitel.map((k) => ({ ...k, budget: k.sek }));
 }
 
-/** Gesamtbudget, wenn das Szenario keinen Kapitelplan hat (seit 2.7 aus den Daten: 15 min). */
-export const BUDGET_GESAMT = 15 * 60;
+/** Gesamtbudget des Standards (seit Liste O aus den Daten: ca. 5 min; 2.7: 15 min). */
+export const BUDGET_GESAMT = 5 * 60;
 
 export interface AuswertungProps {
   inh: Inhalte;
@@ -115,6 +121,12 @@ interface Schritte {
   folie: number;
   /** Impuls: weitere Zitate zugeschaltet */
   weitere: boolean;
+  /** Seit Liste O: Folien der Schlüsselfälle, die aufgedeckt sind */
+  faelle: string[];
+  /** Seit Liste O: „Gesamt“ – die Zahl aufgedeckt */
+  zahl: boolean;
+  /** Seit Liste O: ruhiger Abschlussbildschirm („Zurück zur Präsentation“) */
+  ende: boolean;
 }
 
 /** Mindestgröße der Auswertung (Smartboard); darunter wird sie gleichmäßig verkleinert (J3.3). */
@@ -131,36 +143,53 @@ export function AuswertungAnsicht(p: AuswertungProps) {
   const [wahl, setWahl] = useState<KapitelWahl>({});
   const plan = useMemo(() => kapitelPlan(p.inh, wahl), [p.inh, wahl]);
   const kapitel: Kapitel[] = useMemo(() => plan.kapitel.map((k) => ({ ...k, budget: k.sek })), [plan]);
-  const [kid, setKid] = useState<string>(kapitel[0]?.id ?? "teams");
+  const [kid, setKid] = useState<string>(kapitel[0]?.id ?? "gefecht");
   const nr = Math.max(0, kapitel.findIndex((k) => k.id === kid));
   const [team, setTeam] = useState<string | null>(null);
   const [spielt, setSpielt] = useState(false);
-  const [schritte, setSchritte] = useState<Schritte>({ aufgedeckt: false, folie: 0, weitere: false });
+  const [schritte, setSchritte] = useState<Schritte>({ aufgedeckt: false, folie: 0, weitere: false, faelle: [], zahl: false, ende: false });
   const k = kapitel[Math.min(nr, kapitel.length - 1)];
   const teamId = team && a.teams.some((t) => t.id === team) ? team : a.teams[0]?.id ?? null;
-  const uhr = useZeitbudget(k.id);
+  const uhr = useZeitbudget(schritte.ende ? "ende" : k.id);
   const folien = p.inh.szenario.auswertung.impuls?.folien ?? [];
   const folienMax = schritte.weitere ? folien.length - 1 : Math.min(1, folien.length - 1);
+  const folienIds = plan.folien.faelle.map((f) => f.id);
+  const gq = useMemo(() => gesamtQuote(a, folienIds), [a, folienIds.join(",")]);
+  const zahl = useMemo(() => hinschauZahl(a), [a]);
+  const fallAuf = (f: string) => schritte.faelle.includes(f);
+  const setzeFall = (f: string, an: boolean) => setSchritte((x) => ({ ...x, faelle: an ? [...new Set([...x.faelle, f])] : x.faelle.filter((y) => y !== f) }));
 
   const geh = (n: number) => {
     setSpielt(false);
     const i = Math.max(0, Math.min(kapitel.length - 1, n));
     setKid(kapitel[i].id);
   };
-  /** Presenter „weiter“: erst die Schritte im Kapitel (Bilanz aufdecken, Impuls-Folien), dann das nächste Kapitel. */
+  /**
+   * Presenter „weiter“: erst die Schritte im Kapitel (Fall aufdecken, Zahl aufdecken, Bilanz aufdecken, Impuls-Folien), dann das nächste
+   * Kapitel; nach dem letzten Kapitel der ruhige Abschlussbildschirm (wie „Zurück zur Präsentation“).
+   */
   const weiter = () => {
+    if (schritte.ende) return;
+    if (k.folie && !fallAuf(k.folie.id)) return setzeFall(k.folie.id, true);
+    if (k.id === "gesamt" && !schritte.zahl && a.teams.length) return setSchritte((x) => ({ ...x, zahl: true }));
     if (k.id === "bilanz" && !schritte.aufgedeckt && a.teams.length) return setSchritte((x) => ({ ...x, aufgedeckt: true }));
     if (k.id === "impuls" && schritte.folie < folienMax) return setSchritte((x) => ({ ...x, folie: x.folie + 1 }));
+    if (nr >= kapitel.length - 1) return setSchritte((x) => ({ ...x, ende: true }));
     geh(nr + 1);
   };
   const zurueck = () => {
+    if (schritte.ende) return setSchritte((x) => ({ ...x, ende: false }));
+    if (k.folie && fallAuf(k.folie.id)) return setzeFall(k.folie.id, false);
+    if (k.id === "gesamt" && schritte.zahl) return setSchritte((x) => ({ ...x, zahl: false }));
     if (k.id === "impuls" && schritte.folie > 0) return setSchritte((x) => ({ ...x, folie: x.folie - 1 }));
     if (k.id === "bilanz" && schritte.aufgedeckt) return setSchritte((x) => ({ ...x, aufgedeckt: false }));
     geh(nr - 1);
   };
-  // Presenter und Tastatur: Bild ↓ / → weiter, Bild ↑ / ← zurück, Pos1/Ende, 1–9 Team, Leertaste/P Replay
-  const tasten = useRef({ nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k });
-  tasten.current = { nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k };
+  const kannZurueck = nr > 0 || schritte.ende || (k.folie ? fallAuf(k.folie.id) : false) || (k.id === "gesamt" && schritte.zahl)
+    || (k.id === "impuls" && schritte.folie > 0) || (k.id === "bilanz" && schritte.aufgedeckt);
+  // Presenter und Tastatur: Bild ↓ / → weiter, Bild ↑ / ← zurück, Pos1/Ende, 1–9 Team, Leertaste/P Replay, Esc vom Abschlussbildschirm zurück
+  const tasten = useRef({ nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k, ende: schritte.ende });
+  tasten.current = { nr, geh, weiter, zurueck, kapitel, a, setTeam, setSpielt, k, ende: schritte.ende };
   useEffect(() => {
     const taste = (e: KeyboardEvent) => {
       const ziel = e.target as HTMLElement | null;
@@ -168,7 +197,8 @@ export function AuswertungAnsicht(p: AuswertungProps) {
       if (document.querySelector(".lupe-schirm")) return; // Vergrößerung des Drohnenbilds offen (Esc schließt)
       const x = tasten.current;
       if (["PageDown", "ArrowRight", "ArrowDown"].includes(e.key)) x.weiter();
-      else if (["PageUp", "ArrowLeft", "ArrowUp", "Backspace"].includes(e.key)) x.zurueck();
+      else if (["PageUp", "ArrowLeft", "ArrowUp", "Backspace"].includes(e.key) || (e.key === "Escape" && x.ende)) x.zurueck();
+      else if (x.ende) return;
       else if (e.key === "Home") x.geh(0);
       else if (e.key === "End") x.geh(x.kapitel.length - 1);
       else if (/^[1-9]$/.test(e.key) && x.a.teams[Number(e.key) - 1]) x.setTeam(x.a.teams[Number(e.key) - 1].id);
@@ -179,24 +209,25 @@ export function AuswertungAnsicht(p: AuswertungProps) {
     window.addEventListener("keydown", taste);
     return () => window.removeEventListener("keydown", taste);
   }, []);
+  const ohneTeams = ["impuls", "diskussion", "abschluss"];
 
   return (
-    <div class="rahmen auswertung-rahmen" data-rolle="plenum" data-ansicht="auswertung">
-      <header class="kopf auswertung-kopf">
+    <div class="rahmen auswertung-rahmen" data-rolle="plenum" data-ansicht="auswertung" data-ende={schritte.ende ? "1" : "0"}>
+      <header class={`kopf auswertung-kopf ${kapitel.length > 9 ? "viele" : ""}`}>
         <div class="kopf-links">
-          <div class="rollenband rolle-plenum"><span class="marke">ARGUS</span><span>Auswertung</span></div>
+          <div class="rollenband rolle-plenum"><ArgusMarke /><span>{k.folie || k.id === "gefecht" || k.id === "gesamt" ? "Plenum" : "Auswertung"}</span></div>
           {p.kennung && <span class="sehr-leise klein mono">{p.kennung}</span>}
         </div>
         <nav class="kapitel-leiste" aria-label="Kapitel der Auswertung">
-          <button type="button" class="knopf kapitel-pfeil" onClick={zurueck} disabled={nr === 0 && !(k.id === "impuls" && schritte.folie > 0)} aria-label="zurück" title="zurück (Bild ↑, ←)">◂</button>
+          <button type="button" class="knopf kapitel-pfeil" onClick={zurueck} disabled={!kannZurueck} aria-label="zurück" title="zurück (Bild ↑, ←)">◂</button>
           {kapitel.map((x, i) => (
-            <button type="button" key={x.id} class={`kapitel-chip ${i === nr ? "an" : ""} ${x.fall ? "fall" : ""} ${x.zuschaltbar ? "zusatz" : ""}`} onClick={() => geh(i)} data-kapitel={x.id}
+            <button type="button" key={x.id} class={`kapitel-chip ${i === nr ? "an" : ""} ${x.fall || x.folie ? "fall" : ""} ${x.zuschaltbar ? "zusatz" : ""}`} onClick={() => geh(i)} data-kapitel={x.id}
               aria-current={i === nr ? "step" : undefined} title={`${x.titel} · ${mmss(x.budget)}`}>
-              {x.fall ? x.kurz : <>{x.kurz}</>}
+              {x.kurz}
             </button>
           ))}
           <KapitelMenue plan={plan} wahl={wahl} setWahl={setWahl} />
-          <button type="button" class="knopf kapitel-pfeil" onClick={weiter} disabled={nr === kapitel.length - 1} aria-label="weiter" title="weiter (Bild ↓, →, Presenter)" data-testid="weiter">▸</button>
+          <button type="button" class="knopf kapitel-pfeil" onClick={weiter} disabled={schritte.ende} aria-label="weiter" title="weiter (Bild ↓, →, Presenter)" data-testid="weiter">▸</button>
         </nav>
         <div class="kopf-rechts">
           <Zeitbudget uhr={uhr} k={k} gesamt={plan.summe} />
@@ -205,10 +236,25 @@ export function AuswertungAnsicht(p: AuswertungProps) {
         </div>
       </header>
       <main class="auswertung" data-kapitel={k.id} data-testid="auswertung">
-        {a.teams.length === 0 && !["impuls", "diskussion", "abschluss"].includes(k.id) ? <div class="leer">Noch kein Team hat gespielt.</div>
+        {a.teams.length === 0 && !ohneTeams.includes(k.id) ? <div class="leer">Noch kein Team hat gespielt.</div>
+          : k.id === "gefecht" ? (
+            <div class="ab-plenum pk-gefecht">
+              <AbschlussUebersicht inh={p.inh} teams={p.teams} titel="Gefecht beendet"
+                knoepfe={<button type="button" class="knopf weiter" onClick={weiter} data-testid="gefecht-weiter" title="zu den Schlüsselfällen (Bild ↓)">weiter ›</button>} />
+            </div>
+          )
+          : k.folie ? <FallFolie key={k.id} a={a} inh={p.inh} fall={k.folie} nr={folienIds.indexOf(k.folie.id) + 1} von={folienIds.length}
+            aufgedeckt={fallAuf(k.folie.id)} aufdecken={() => setzeFall(k.folie!.id, true)} />
+          : k.id === "gesamt" ? <GesamtFolie gq={gq} zahl={zahl} aufgedeckt={schritte.zahl} aufdecken={() => setSchritte((x) => ({ ...x, zahl: true }))}
+            ende={() => setSchritte((x) => ({ ...x, ende: true }))} />
           : k.id === "teams" ? <Teamvergleich a={a} inh={p.inh} waehle={(f, t) => {
             setTeam(t);
-            if (!kapitel.some((x) => x.id === f)) setWahl((w) => ({ ...w, faelle: [...plan.replay.faelle.map((x) => x.id), f] }));
+            const replayIds = plan.replay.faelle.map((x) => x.id);
+            const an = (wahl.zusatz ?? []).includes("replay");
+            setWahl((w) => ({
+              ...w, zusatz: [...new Set([...(w.zusatz ?? []), "replay"])],
+              replay: an && replayIds.includes(f) ? w.replay : [...(an ? replayIds : []), f],
+            }));
             setSpielt(false);
             setKid(f);
           }} />
@@ -221,42 +267,82 @@ export function AuswertungAnsicht(p: AuswertungProps) {
                         setFolie={(f) => setSchritte((x) => ({ ...x, folie: f, weitere: x.weitere || f > 1 }))} />
                         : k.id === "diskussion" ? <DiskussionTafel inh={p.inh} />
                           : <Abschluss a={a} inh={p.inh} />}
+        {k.id !== "gesamt" && nr === kapitel.length - 1 && !schritte.ende && kapitel.some((x) => x.id === "gesamt") && (
+          <button type="button" class="knopf weiter pk-ende-knopf" onClick={() => setSchritte((x) => ({ ...x, ende: true }))} data-testid="zur-praesentation-ende">Zurück zur Präsentation</button>
+        )}
       </main>
+      {schritte.ende && <PraesentationEnde zurueck={() => setSchritte((x) => ({ ...x, ende: false }))} />}
     </div>
   );
 }
 
-/** Menü „+“ (G1.1): zuschaltbare Kapitel (Kennzahlen, Konfidenz, Preis des Abwartens) und Fälle für das Replay. */
+/** Liste zum Wählen und Ordnen (Fälle der Folien, Fälle des Replays): Häkchen schaltet, ▲ zieht einen gewählten Fall nach vorn. */
+function FallWahl(p: { gewaehlt: FallDef[]; weitere: FallDef[]; setze: (ids: string[]) => void; testid: string }) {
+  const ids = p.gewaehlt.map((f) => f.id);
+  const hoch = (i: number) => {
+    if (i <= 0) return;
+    const neu = [...ids];
+    [neu[i - 1], neu[i]] = [neu[i], neu[i - 1]];
+    p.setze(neu);
+  };
+  return (
+    <div class="fall-wahl" data-testid={p.testid}>
+      {p.gewaehlt.map((f, i) => (
+        <label key={f.id} class="menue-zeile">
+          <input type="checkbox" checked onChange={() => ids.length > 1 && p.setze(ids.filter((x) => x !== f.id))} disabled={ids.length === 1} data-fall-wahl={f.id} />
+          <b class="fall-wahl-id">{f.id}</b> {f.titel}
+          <button type="button" class="knopf klein fall-hoch" disabled={i === 0} onClick={(e) => { e.preventDefault(); hoch(i); }} title="nach vorn" data-fall-hoch={f.id}>▲</button>
+        </label>
+      ))}
+      {p.weitere.map((f) => (
+        <label key={f.id} class="menue-zeile">
+          <input type="checkbox" checked={false} onChange={() => p.setze([...ids, f.id])} data-fall-wahl={f.id} />
+          <b class="fall-wahl-id">{f.id}</b> {f.titel}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Menü „+“ (G1.1, seit Liste O): Schlüsselfälle der Folien (S5–S8 zuschalten, Reihenfolge), die Kapitel von 2.7 (Teamvergleich,
+ * Kennzahlen, Konfidenz, Replay, Preis des Abwartens, Bilanz, Impuls, Diskussion, Abschluss) und – wenn das Replay zugeschaltet ist –
+ * seine Fälle.
+ */
 function KapitelMenue(p: { plan: ReturnType<typeof kapitelPlan>; wahl: KapitelWahl; setWahl: (w: KapitelWahl) => void }) {
   const [offen, setOffen] = useState(false);
   const an = new Set(p.wahl.zusatz ?? []);
-  const faelle = p.plan.replay.faelle.map((f) => f.id);
-  const alleFaelle = [...faelle, ...p.plan.replay.zuschaltbar.map((f) => f.id)];
-  const titel = new Map([...p.plan.replay.faelle, ...p.plan.replay.zuschaltbar].map((f) => [f.id, f.titel]));
   const schalteKapitel = (id: string) => {
     const neu = new Set(an);
     if (neu.has(id)) neu.delete(id);
     else neu.add(id);
     p.setWahl({ ...p.wahl, zusatz: [...neu] });
   };
-  const schalteFall = (id: string) => {
-    const neu = faelle.includes(id) ? faelle.filter((x) => x !== id) : [...faelle, id];
-    if (neu.length) p.setWahl({ ...p.wahl, faelle: alleFaelle.filter((x) => neu.includes(x)) });
-  };
+  const fo = p.plan.folien;
+  const rp = p.plan.replay;
   return (
     <span class="menue-anker">
-      <button type="button" class="knopf kapitel-plus" onClick={() => setOffen(!offen)} aria-expanded={offen} title="Kapitel und Fälle zuschalten" data-testid="kapitel-plus">＋</button>
-      <Menue offen={offen} schliessen={() => setOffen(false)} testid="kapitel-menue">
-        <div class="menue-kopf"><b>Zuschalten</b> <span class="sehr-leise">die Zeit der Auswertung wächst; Fälle teilen sich {mmss(p.plan.replay.budget)} Replay</span></div>
-        {p.plan.zuschaltbar.map((k) => (
-          <label key={k.id} class="menue-zeile"><input type="checkbox" checked={an.has(k.id)} onChange={() => schalteKapitel(k.id)} data-zusatz={k.id} />
-            {k.titel} <span class="sehr-leise">+{mmss(k.sek)}</span></label>
-        ))}
-        <div class="menue-kopf"><b>Replay</b> <span class="sehr-leise">{faelle.length} Fälle je {mmss(p.plan.replay.jeFall)}{p.plan.replay.knapp ? " – knapp" : ""}</span></div>
-        {alleFaelle.map((id) => (
-          <label key={id} class="menue-zeile"><input type="checkbox" checked={faelle.includes(id)} onChange={() => schalteFall(id)} data-fall-wahl={id}
-            disabled={faelle.length === 1 && faelle.includes(id)} /> {id} · {titel.get(id)}</label>
-        ))}
+      <button type="button" class="knopf kapitel-plus" onClick={() => setOffen(!offen)} aria-expanded={offen} title="Fälle und Kapitel zuschalten" data-testid="kapitel-plus">＋</button>
+      <Menue offen={offen} schliessen={() => setOffen(false)} testid="kapitel-menue" rechts>
+        <div class={`kapitel-menue ${an.has("replay") ? "drei" : ""}`}>
+          <div>
+            <div class="menue-kopf"><b>Schlüsselfälle</b> <span class="sehr-leise">{fo.faelle.length} Folien je {mmss(fo.jeFall)}</span></div>
+            <FallWahl gewaehlt={fo.faelle} weitere={fo.zuschaltbar} setze={(ids) => p.setWahl({ ...p.wahl, faelle: ids })} testid="wahl-folien" />
+          </div>
+          <div>
+            <div class="menue-kopf"><b>Kapitel zuschalten</b> <span class="sehr-leise">nach „Gesamt“, die Zeit wächst</span></div>
+            {p.plan.zuschaltbar.map((k) => (
+              <label key={k.id} class="menue-zeile"><input type="checkbox" checked={an.has(k.id)} onChange={() => schalteKapitel(k.id)} data-zusatz={k.id} />
+                {k.titel} <span class="sehr-leise">+{mmss(k.sek)}</span></label>
+            ))}
+          </div>
+          {an.has("replay") && (
+            <div>
+              <div class="menue-kopf"><b>Replay</b> <span class="sehr-leise">{rp.faelle.length} Fälle je {mmss(rp.jeFall)}{rp.knapp ? " – knapp" : ""}</span></div>
+              <FallWahl gewaehlt={rp.faelle} weitere={rp.zuschaltbar} setze={(ids) => p.setWahl({ ...p.wahl, replay: ids })} testid="wahl-replay" />
+            </div>
+          )}
+        </div>
       </Menue>
     </span>
   );

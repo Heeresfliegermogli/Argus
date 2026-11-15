@@ -10,6 +10,7 @@ import { useMeldeSicht, useSitzungWert } from "./gemeinsam/hooks";
 import { Rahmen, type ZweiterTab } from "./gemeinsam/rahmen";
 import { Lobby, Warten } from "./lobby";
 import { ZBAnsicht } from "./zb";
+import { ArgusTitel } from "./gemeinsam/logo";
 
 function TeamSpiel(p: { s: Sitzung; spiel: Spiel; rechnet: boolean; zweiterTab?: ZweiterTab }) {
   const { s, spiel, rechnet } = p;
@@ -24,7 +25,7 @@ function Beendet(p: { s: Sitzung }) {
   return (
     <div class="start">
       <div class="start-karte stapel" style="gap:12px;width:min(560px,100%)" data-testid="sitzung-beendet">
-        <h1>ARGUS</h1>
+        <ArgusTitel hoehe={72} />
         <div style="font-size:20px"><b>Sitzung beendet – danke.</b></div>
         <div class="leise">Die Spielleitung hat die Sitzung <b class="mono">{st.code}</b> beendet. Dieser Laptop rechnet nicht mehr; das Protokoll eures Teams liegt bei der Spielleitung.</div>
         <a class="knopf weiter" style="align-self:flex-start;text-decoration:none" href={location.pathname}>Zur Startseite</a>
@@ -43,7 +44,7 @@ function Entfernt(p: { s: Sitzung; art: "abgemeldet" | "geleert" }) {
   return (
     <div class="start">
       <div class="start-karte stapel" style="gap:12px;width:min(600px,100%)" data-testid="entfernt" data-art={p.art}>
-        <h1>ARGUS</h1>
+        <ArgusTitel hoehe={72} />
         <div style="font-size:20px"><b>{geleert ? "Testraum geleert – neu laden" : "Von der Spielleitung abgemeldet"}</b></div>
         <div class="leise">{geleert
           ? <>Die Spielleitung hat den Testraum <b class="mono">{st.code}</b> geleert und ein neues Spiel angelegt. Dieser Laptop ({geraeteName(st.client)}) rechnet nicht mehr.</>
@@ -61,7 +62,7 @@ function ZweiterTabKarte(p: { s: Sitzung; z: ZweiterTab; team?: string }) {
   return (
     <div class="start">
       <div class="start-karte stapel" style="gap:12px;width:min(600px,100%)" data-testid="zweiter-tab">
-        <h1>ARGUS</h1>
+        <ArgusTitel hoehe={72} />
         <div>Diese Sitzung ist schon in einem <b>anderen Tab</b> dieses Browsers offen{p.team ? <> (Team <b>{p.team}</b>)</> : ""}. Ein Laptop spielt nur in einem Tab.</div>
         <div class="zeile" style="gap:8px">
           <button type="button" class="knopf weiter" onClick={() => void p.z.holen()} data-testid="tab-holen">hierher holen</button>
@@ -88,7 +89,7 @@ export function TTFenster(p: { s: Sitzung; zweiterTab?: ZweiterTab }) {
     return (
       <div class="start">
         <div class="start-karte stapel" style="gap:12px;width:min(560px,100%)" data-testid="sitzung-fehlt">
-          <h1>ARGUS</h1>
+          <ArgusTitel hoehe={72} />
           <div>Die Sitzung <b class="mono">{st.code}</b> gibt es nicht.</div>
           <a class="knopf weiter" style="align-self:flex-start;text-decoration:none" href={location.pathname}>Code neu eingeben</a>
         </div>

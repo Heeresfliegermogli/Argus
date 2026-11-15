@@ -3,8 +3,8 @@
 //   Einweisung – Lage für alle, Lagekarte, Code und Teams (vor dem Start)
 //   Lage       – Uhr und Lagekarte ohne Ziele (während des Spiels; der Raum sieht nichts Geheimes)
 //   Auflösung  – Kontrollkarte mit Ground Truth und allen Wirkungen dieses Teams (nach Spielende)
-// Die Auswertung über alle Teams (Schritt 8, auswertung.tsx) zeigt das Plenum-Fenster von selbst, sobald alle Teams
-// das Spielende erreicht haben; „Auswertung – alle Teams ›“ führt von Hand hin.
+// Das kurze Plenum über alle Teams (seit Liste O: „Gefecht beendet“, Schlüsselfälle einzeln, „Gesamt“; auswertung.tsx) zeigt das
+// Plenum-Fenster von selbst, sobald alle Teams das Spielende erreicht haben; „Auswertung – alle Teams ›“ führt von Hand hin.
 // Seit Liste J (J3.1): In allen drei Bildern steht links die ganze Karte im Seitenverhältnis 10 : 7 (volle Höhe, nichts abgeschnitten),
 // die übrige Breite rechts trägt Lage, Code und Teams bzw. Uhr und Stand bzw. die Auflösung. Geprüft in 1530 × 800 und 1920 × 1080.
 import { useMemo, useState } from "preact/hooks";
@@ -17,6 +17,7 @@ import { Panel } from "./gemeinsam/bausteine";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 import { TeamMarke } from "./gemeinsam/rahmen";
+import { Schild } from "./gemeinsam/logo";
 
 /** Was Teilnehmer zum Mitspielen brauchen (Sitzung mit Lobby): Seite, Code und die Teams bisher. */
 export interface Beitritt {
@@ -53,13 +54,13 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
   return (
     <main class="plenum" data-modus={modus}>
       <div class="plenum-kopf">
-        <h2 style="font-size:20px">{modus === "einweisung" ? sz.titel : modus === "lage" ? "Das Spiel läuft" : `Auflösung: was wirklich im ${raumName(inh)} war`}</h2>
+        <h2 style="font-size:20px">{modus === "einweisung" && <Schild hoehe={34} />}{modus === "einweisung" ? sz.titel : modus === "lage" ? "Das Spiel läuft" : `Auflösung: was wirklich im ${raumName(inh)} war`}</h2>
         <div class="reiter">
           {(Object.keys(MODUS_TEXT) as Modus[]).map((m) => (
             <button type="button" class={modus === m ? "an" : ""} onClick={() => setWahl({ modus: m, bei: auto })} data-modus-knopf={m}>{MODUS_TEXT[m]}</button>
           ))}
           {p.zurAuswertung && <button type="button" class="weiter" onClick={p.zurAuswertung} data-modus-knopf="auswertung"
-            title="Auswertung über alle Teams: Teamvergleich, Kennzahlen, Replay je Schlüsselfall">Auswertung – alle Teams ›</button>}
+            title="Über alle Teams: Gefecht beendet, Schlüsselfälle einzeln, Gesamt (weitere Kapitel über ＋)">Auswertung – alle Teams ›</button>}
         </div>
       </div>
       {modus === "einweisung" && <PlenumEinweisung inh={inh} beitritt={p.beitritt} />}
