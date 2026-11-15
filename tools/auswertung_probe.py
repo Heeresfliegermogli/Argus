@@ -512,7 +512,13 @@ def main():
         s.on("pageerror", lambda e: konsole.append(f"pageerror: {e}"))
         t0 = time.time()
         s.goto(url)
-        warte(lambda: s.locator("[data-testid=auswertung]").count() == 1, 60, "Auswertung sichtbar")
+
+        def auswertung_da():
+            # seit Liste M zeigt das Plenum einer Sitzung nach Spielende zuerst „Gefecht beendet“ – von dort „Auswertung ›“
+            if s.get_by_test_id("ab-zur-auswertung").count():
+                s.get_by_test_id("ab-zur-auswertung").click()
+            return s.locator("[data-testid=auswertung]").count() == 1
+        warte(auswertung_da, 60, "Auswertung sichtbar")
         print(f"Auswertung offen nach {time.time() - t0:.1f} s ({'Beispiel' if demo else 'Sitzung'})")
         fehler2, protokoll, schritte = pruefe_auswertung(s, plan, a.bilder, demo)
         fehler += fehler2

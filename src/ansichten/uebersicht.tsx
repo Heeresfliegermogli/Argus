@@ -16,9 +16,10 @@ import { panzer } from "../kern/verluste";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { istVeraltet } from "../sync/adapter";
 import { BestaetigenKnopf, Leer, Menue, Panel } from "./gemeinsam/bausteine";
-import { useSitzung, useTakt } from "./gemeinsam/hooks";
+import { useSitzung, useTakt, useTeamLaeufe } from "./gemeinsam/hooks";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
+import { AbschlussUebersicht } from "./gemeinsam/abschluss";
 import { DiagnoseKnopf, plenumOeffnen } from "./sl";
 
 const TEMPI = [1, 2, 5, 10, 20];
@@ -232,6 +233,13 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
   const ohne = ohneTeam(s);
   const panzerNamen = panzer(inh).map((x) => x.name);
   const vMenue = inh.regeln.spielleitung?.verstaerkung_menue ?? false;
+  // Liste M (M4.5): die Karten „Gefecht beendet“ wie im Plenum – Reiter neben „Teams“, sobald ein Team fertig ist; sind alle fertig,
+  // stehen sie von selbst vorn (von Hand zurück zur Tabelle)
+  const laeufe = useTeamLaeufe(s);
+  const endeTeams = mitLauf.filter((x) => s.spiel(x.t.id)?.stand.zustand.ende);
+  const alleEnde = mitLauf.length > 0 && endeTeams.length === mitLauf.length;
+  const [abschlussWahl, setAbschlussWahl] = useState<{ an: boolean; bei: boolean } | null>(null);
+  const zeigeAbschluss = endeTeams.length > 0 && (abschlussWahl && abschlussWahl.bei === alleEnde ? abschlussWahl.an : alleEnde);
 
   const zeitSetzen = () => {
     const m = zeit.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -316,9 +324,16 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
         </div>
       )}
 
-      <Panel titel="Teams" liste testid="team-tabelle"
-        rechts={<span class="klein sehr-leise">Name: umbenennen · Laptop: verschieben · Stand aus den Statusmeldungen der Team-Laptops (etwa alle 5 s)</span>}>
-        {st.teams.length === 0 ? (
+      <Panel titel={endeTeams.length ? (
+          <div class="reiter" data-testid="uebersicht-reiter">
+            <button type="button" class={!zeigeAbschluss ? "an" : ""} onClick={() => setAbschlussWahl({ an: false, bei: alleEnde })} data-testid="reiter-teams">Teams</button>
+            <button type="button" class={zeigeAbschluss ? "an" : ""} onClick={() => setAbschlussWahl({ an: true, bei: alleEnde })} data-testid="reiter-abschluss">
+              Gefecht beendet <span class="sehr-leise">{endeTeams.length}/{mitLauf.length}</span></button>
+          </div>) : "Teams"} liste testid="team-tabelle"
+        rechts={zeigeAbschluss ? <span class="klein sehr-leise">wie im Plenum: eine Karte je Team, Reihenfolge der Lobby · aus den hochgeladenen Protokollen</span>
+          : <span class="klein sehr-leise">Name: umbenennen · Laptop: verschieben · Stand aus den Statusmeldungen der Team-Laptops (etwa alle 5 s)</span>}>
+        {zeigeAbschluss ? <AbschlussUebersicht inh={inh} teams={laeufe.filter((x) => mitLauf.some((m) => m.t.id === x.id))} testid="sl-abschluss" />
+        : st.teams.length === 0 ? (
           <Leer>Noch keine Teams. Die Teilnehmer öffnen die Spielseite, geben den Code <b class="mono">{st.code}</b> ein und legen in der Lobby ihre Teams an.</Leer>
         ) : (
           <table class="tabelle team-tabelle">

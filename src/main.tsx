@@ -7,6 +7,7 @@
 //   ?rolle=g1&raum=kraehe        Direktaufruf ohne Lobby (ein Team, für Tests und Probeläufe)
 //   ?druck=einweisung            Einweisungskarten zum Drucken
 //   ?auswertung=demo             Auswertung mit sieben Beispielteams (Üben der Auflösung, ohne Sitzung; nur Webseite)
+//   ?abschluss=demo              „Gefecht beendet“ mit den Beispielteams (seit Liste M; &team=2: Bild am Team-Laptop)
 import { render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { AuswertungAnsicht } from "./ansichten/auswertung";
@@ -14,6 +15,7 @@ import { EinweisungDruck } from "./ansichten/einweisung";
 import { PlenumFenster, SLFenster } from "./ansichten/sl-fenster";
 import { Start } from "./ansichten/start";
 import { TTFenster } from "./ansichten/tt-fenster";
+import { AbschlussBild, AbschlussUebersicht } from "./ansichten/gemeinsam/abschluss";
 import { skalierungAnwenden } from "./ansichten/gemeinsam/fenster";
 import { type Einstellungen, leseEinstellungen, merke, merkeSitzung, merken, sitzungsAdresse } from "./config";
 import { setzeBildrateMax } from "./karte/bildrate";
@@ -22,6 +24,7 @@ import type { Inhalte } from "./inhalte/typen";
 import type { TeamLauf } from "./kern/auswertung";
 import { type Ereignis, type Rolle, zufall } from "./kern/ereignisse";
 import { ROLLEN_NAME } from "./kern/sichten";
+import { uhrzeit } from "./kern/uhr";
 import { zustandAus } from "./kern/zustand";
 import { meldeSitzung } from "./sitzung/fehlersuche";
 import { Merker } from "./sitzung/gemerkt";
@@ -211,21 +214,64 @@ function Druck(p: { e: Einstellungen }) {
  * Auswertung mit Beispielteams (…/?auswertung=demo): die fünf Modellteams des Drehbuchs (naiv, ideal, mit
  * Verstärkungen) aus public/demo/auswertung_demo.json, erzeugt mit tools/auswertung_demo.ts. Zum Üben der Auflösung.
  */
-function AuswertungDemo(p: { e: Einstellungen }) {
+function useDemoTeams(e: Einstellungen): { daten: { inh: Inhalte; teams: TeamLauf[] } | null; fehler: string | null } {
   const [daten, setDaten] = useState<{ inh: Inhalte; teams: TeamLauf[] } | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
-      const inh = await ladeInhalte(p.e.szenario);
+      const inh = await ladeInhalte(e.szenario);
       const antwort = await fetch(new URL("demo/auswertung_demo.json", document.baseURI), { cache: "no-cache" });
       if (!antwort.ok) throw new Error(`Beispieldaten: HTTP ${antwort.status}`);
       const d = (await antwort.json()) as { teams: { id: string; name: string; farbe: string; protokoll: Ereignis[] }[] };
       setDaten({ inh, teams: d.teams.map((t) => ({ id: t.id, name: t.name, farbe: t.farbe, protokoll: t.protokoll, zustand: zustandAus(t.protokoll, inh) })) });
     })().catch((err: Error) => setFehler(err.message));
   }, []);
+  return { daten, fehler };
+}
+
+function AuswertungDemo(p: { e: Einstellungen }) {
+  const { daten, fehler } = useDemoTeams(p.e);
   if (fehler) return <div class="start"><div class="start-karte warnung">Beispiel nicht verfügbar ({fehler}). Die Beispieldaten gibt es nur auf der Webseite.</div></div>;
   if (!daten) return <div class="start"><div class="leise">Beispiel wird geladen …</div></div>;
   return <AuswertungAnsicht inh={daten.inh} teams={daten.teams} art="demo" kennung="Beispiel · Modellteams" />;
+}
+
+/**
+ * Liste M (M4): Abschlussbild mit den Beispielteams (…/?abschluss=demo): „Gefecht beendet“ wie im Plenum (eine Karte je Team);
+ * mit &team=2 das Bild am Team-Laptop von Team 2. Zum Ansehen und für die Fotos in den Prüfgrößen.
+ */
+function AbschlussDemo(p: { e: Einstellungen }) {
+  const { daten, fehler } = useDemoTeams(p.e);
+  const q = new URLSearchParams(location.search);
+  const nr = Number(q.get("team") ?? 0);
+  const anzahl = Math.max(1, Math.min(8, Number(q.get("anzahl") ?? 8)));
+  if (fehler) return <div class="start"><div class="start-karte warnung">Beispiel nicht verfügbar ({fehler}). Die Beispieldaten gibt es nur auf der Webseite.</div></div>;
+  if (!daten) return <div class="start"><div class="leise">Beispiel wird geladen …</div></div>;
+  const t = nr > 0 ? daten.teams[nr - 1] : undefined;
+  return (
+    <div class="rahmen" data-rolle={t ? "zb" : "plenum"} data-ansicht="abschluss-demo">
+      <header class="kopf">
+        <div class="kopf-links">
+          <div class={`rollenband rolle-${t ? "zb" : "plenum"}`}><span class="marke">ARGUS</span><span>{t ? "Zielbearbeitung" : "Plenum"}</span></div>
+          <span class="sehr-leise klein">Beispiel · Modellteams</span>
+        </div>
+        <div />
+        <div class="kopf-rechts" />
+      </header>
+      {t ? (
+        <div class="sperre ab-flaeche" data-testid="spielende">
+          <AbschlussBild inh={daten.inh} z={t.zustand} team={t.name} farbe={t.farbe} ende={uhrzeit(daten.inh.szenario.spieluhr.start, daten.inh.szenario.spieluhr.dauer_s)}>
+            <button type="button" class="knopf" data-testid="ab-karte-ansehen">Karte ansehen</button>
+          </AbschlussBild>
+        </div>
+      ) : (
+        <main class="plenum ab-plenum">
+          <AbschlussUebersicht inh={daten.inh} teams={daten.teams.slice(0, anzahl)} titel="Gefecht beendet"
+            knoepfe={<button type="button" class="knopf weiter" data-testid="ab-zur-auswertung">Auswertung – alle Teams ›</button>} />
+        </main>
+      )}
+    </div>
+  );
 }
 
 function titel(e: Einstellungen): string {
@@ -240,6 +286,10 @@ function App() {
   if (new URLSearchParams(location.search).get("druck") === "einweisung") {
     document.title = "ARGUS · Einweisungskarten";
     return <Druck e={e} />;
+  }
+  if (new URLSearchParams(location.search).get("abschluss") === "demo") {
+    document.title = "ARGUS · Gefecht beendet (Beispiel)";
+    return <AbschlussDemo e={e} />;
   }
   if (new URLSearchParams(location.search).get("auswertung") === "demo") {
     document.title = "ARGUS · Auswertung (Beispiel)";

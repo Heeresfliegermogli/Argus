@@ -39,7 +39,8 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
    „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte) oder Zuschauen bei der Zielbearbeitung (◉, nur lesen).
 4. **Zweite Spielleitung:** Startseite → **Spielleitung** → Bestehende Sitzung öffnen → Code → **als Spielleitung**; beobachtet und kann
    „Steuerung übernehmen“ (bei Ausfall nach 20 s von selbst). In der Teamansicht **✎ Notiz** je Fall.
-5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum die Auswertung (Bild ↓ / Presenter: Teamvergleich,
+5. **Auswertung:** Nach Spielende in allen Teams zeigt das Plenum zuerst **„Gefecht beendet“** (eine Karte je Team, seit Liste M; die
+   Team-Laptops zeigen ihr Abschlussbild), dann über **Auswertung – alle Teams ›** die Auswertung (Bild ↓ / Presenter: Teamvergleich,
    Kennzahlen, Konfidenz, S3, S2, S1, S4, Preis des Abwartens, Schlussfrage; ca. 12 min). Die Spielleitung: **Auswertung ›** in der
    Übersicht; fehlt ein Protokoll (Netz), **Protokoll laden** mit der Datei, die das Team mit **⇩ Protokoll** gespeichert hat. Üben
    ohne Spiel: `…/Argus/?auswertung=demo`. Siehe [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md).

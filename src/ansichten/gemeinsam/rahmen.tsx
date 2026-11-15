@@ -17,6 +17,7 @@ import { protokollDatei, speichereDatei } from "../../sitzung/ablage";
 import type { Sicht } from "../../sitzung/sicht";
 import { UEBERNAHME_MS, istVeraltet } from "../../sync/adapter";
 import { EinweisungFenster } from "../einweisung";
+import { AbschlussBild } from "./abschluss";
 import { BestaetigenKnopf, Hinweise } from "./bausteine";
 import { VersionsBanner } from "./notbremse";
 import { fensterText, useFenster, zuKlein } from "./fenster";
@@ -365,18 +366,20 @@ export function Rahmen(p: {
       )}
       <VersionsBanner />
       {p.children}
+      {/* Liste M (M4.1): bei Spielende statt der gesperrten Ansicht das Abschlussbild „Gefecht beendet“; die Karte bleibt erreichbar */}
       {team && z.ende && !sperreZu && !st.nurLesen && (
-        <div class="sperre" data-testid="spielende">
-          <div class="sperre-karte">
-            <h2>Spielende {uhrzeit(sz.spieluhr.start, sz.spieluhr.dauer_s)}</h2>
-            <div class="leise" style="margin-bottom:14px">Eingaben sind gesperrt. Bitte zum Plenum – die Auswertung beginnt.</div>
+        <div class="sperre ab-flaeche" data-testid="spielende">
+          <AbschlussBild inh={inh} z={z} team={st.teamName} farbe={st.teamFarbe} ende={uhrzeit(sz.spieluhr.start, sz.spieluhr.dauer_s)}>
             {st.rechnet && offenHoch > 0 && (
-              <div class="warnung" style="margin-bottom:12px">Protokoll noch nicht ganz im Netz ({offenHoch} Einträge offen).
-                <button type="button" class="knopf klein" style="margin-left:8px" onClick={() => speichern()}>Protokoll speichern</button></div>
+              <span class="warnung">Protokoll noch nicht ganz im Netz ({offenHoch} Einträge offen).
+                <button type="button" class="knopf klein" style="margin-left:8px" onClick={() => speichern()}>Protokoll speichern</button></span>
             )}
-            <button type="button" class="knopf klein" onClick={() => setSperreZu(true)}>Ansicht ansehen</button>
-          </div>
+            <button type="button" class="knopf" onClick={() => setSperreZu(true)} data-testid="ab-karte-ansehen">Karte ansehen</button>
+          </AbschlussBild>
         </div>
+      )}
+      {team && z.ende && sperreZu && !st.nurLesen && (
+        <button type="button" class="knopf weiter ab-zurueck" onClick={() => setSperreZu(false)} data-testid="ab-zurueck">Gefecht beendet ›</button>
       )}
       {einweisung && rolle !== "plenum" && <EinweisungFenster inh={inh} rolle={rolle} schliessen={schliessen} />}
       <Hinweise liste={st.hinweise} />

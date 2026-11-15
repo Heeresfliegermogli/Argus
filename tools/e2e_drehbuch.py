@@ -15,8 +15,10 @@ Hier laufen dieselben Entscheidungen durch die echten Browserfenster:
      Sie wartet, bis die Meldung im Eingang ist. Die Spielleitung spielt die Verstärkungen über die Sitzung ein (an einzelne Teams).
   4. Bis zum Spielende; unterwegs Bildschirmfotos und Messung der Bildrate der Karten (Kontrollkarte SL 2, Team 1, Plenum).
      SL 2 notiert über „✎ Notiz“ eine Beobachtung zu S3 (der Fall ist vorgewählt).
-  5. Auswertung: Das Plenum schaltet nach Spielende in allen Teams selbst auf die Auswertung; sie wird wie am Smartboard
-     Kapitel für Kapitel durchgegangen (tools/auswertung_probe.py). Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
+  5. Gefecht beendet (seit Liste M): Jeder Team-Laptop zeigt sein Abschlussbild, das Plenum schaltet nach Spielende in allen Teams
+     selbst auf „Gefecht beendet“ (eine Karte je Team), die Übersicht der Spielleitung zeigt dieselben Karten – Zahlen wie im Prozess.
+  6. Auswertung: Über „Auswertung – alle Teams ›“ im Plenum; sie wird wie am Smartboard Kapitel für Kapitel durchgegangen
+     (tools/auswertung_probe.py). Die Spielleitung öffnet dieselbe Auswertung über „Auswertung ›“.
 Geprüft wird:
   • alle fünf Teams erreichen das Spielende, keine Aktion abgelehnt, je Team gleicher Stand (seq, Fingerabdruck) am Laptop und
     bei der Spielleitung (hochgeladenes Protokoll);
@@ -654,8 +656,63 @@ def main():
         notizen = sl.evaluate("(id) => window.argusSitzung.spiel(id).stand.protokoll.filter((e) => e.typ === 'notiz').map((e) => e.daten)", teams[0]["id"])
         if not any(n.get("fall") == "S3" and n.get("text") == NOTIZ_TEXT for n in notizen):
             fehler.append(f"Notiz SL 2 nicht im Protokoll von Team 1: {notizen}")
+        # Liste M (M4): Abschlussbild „Gefecht beendet“ – am Team-Laptop, im Plenum (eine Karte je Team, Reihenfolge der Lobby) und
+        # in der Übersicht der Spielleitung; Zahlen wie im Prozess (= Bilanz der Auswertung); keine Fehlgriffe einzeln
+        VERBOTEN_AB = re.compile(r"Attrappe|Sanität|PT-91|verbündet|Zivil|Kind|Kamera|Presse|Tuch|Mio|€|Fall S|S[1-8]\b|\d+:\d\d:\d\d")
+        def ab_werte(el):
+            return {"feind": int(el.get_attribute("data-feind")), "weitere": int(el.get_attribute("data-weitere")), "bereit": int(el.get_attribute("data-bereit"))}
         try:
-            warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Plenum schaltet auf die Auswertung")
+            for k, t in enumerate(teams):
+                lp = t["laptop"]
+                warte(lambda: lp.get_by_test_id("abschluss").count() == 1, 20, f"Team {k + 1}: Abschlussbild")
+                soll = t["plan"].get("abschluss")
+                ist = ab_werte(lp.get_by_test_id("abschluss"))
+                if soll and ist != {"feind": soll["feind"], "weitere": soll["weitere"], "bereit": soll["bereit"]}:
+                    fehler.append(f"Team {k + 1}: Abschlussbild {ist}, im Prozess {soll}")
+                typen = {e.get_attribute("data-typ"): int(e.get_attribute("data-n")) for e in lp.locator("[data-testid=abschluss] .ab-feind-zeile").all()}
+                if soll and typen != soll["typen"]:
+                    fehler.append(f"Team {k + 1}: Abschlussbild je Typ {typen}, im Prozess {soll['typen']}")
+                text = lp.get_by_test_id("abschluss").inner_text()
+                if VERBOTEN_AB.search(text):
+                    fehler.append(f"Team {k + 1}: Abschlussbild verrät „{VERBOTEN_AB.search(text).group(0)}“")
+                if "Gefecht beendet – Team" not in text:
+                    fehler.append(f"Team {k + 1}: Kopf „Gefecht beendet – Team …“ fehlt")
+            foto(teams[0]["laptop"], "team1_gefecht_beendet")
+            foto(teams[1]["laptop"], "team2_gefecht_beendet")
+            # Karte bleibt erreichbar
+            teams[0]["laptop"].get_by_test_id("ab-karte-ansehen").click()
+            warte(lambda: teams[0]["laptop"].get_by_test_id("ab-zurueck").count() == 1, 5, "Team 1: „Gefecht beendet ›“ über der Karte")
+            foto(teams[0]["laptop"], "team1_karte_nach_ende")
+            teams[0]["laptop"].get_by_test_id("ab-zurueck").click()
+            warte(lambda: teams[0]["laptop"].get_by_test_id("abschluss").count() == 1, 5, "Team 1: wieder das Abschlussbild")
+            # Plenum: „Gefecht beendet“ mit einer Karte je Team in der Reihenfolge der Lobby
+            warte(lambda: pl.locator("[data-ansicht=abschluss] [data-testid=abschluss-karte]").count() == len(teams), 30, "Plenum: Gefecht beendet")
+            pl.wait_for_timeout(800)
+            namen = [e.get_attribute("data-team") for e in pl.locator("[data-testid=abschluss-karte]").all()]
+            if namen != [t["name"] for t in teams]:
+                fehler.append(f"Plenum: Reihenfolge {namen}, Lobby {[t['name'] for t in teams]}")
+            for k, (e, t) in enumerate(zip(pl.locator("[data-testid=abschluss-karte]").all(), teams)):
+                soll = t["plan"].get("abschluss")
+                if soll and ab_werte(e) != {"feind": soll["feind"], "weitere": soll["weitere"], "bereit": soll["bereit"]}:
+                    fehler.append(f"Plenum, Karte {k + 1}: {ab_werte(e)}, im Prozess {soll}")
+            text = pl.locator("main").inner_text()
+            if VERBOTEN_AB.search(text):
+                fehler.append(f"Plenum „Gefecht beendet“ verrät „{VERBOTEN_AB.search(text).group(0)}“")
+            foto(pl, "plenum_gefecht_beendet")
+            # Spielleitung: dieselben Karten in der Übersicht (Reiter „Gefecht beendet“ von selbst vorn)
+            warte(lambda: sl.locator("[data-testid=sl-abschluss] [data-testid=abschluss-karte]").count() == len(teams), 20, "Übersicht: Gefecht beendet")
+            sl_werte = [ab_werte(e) for e in sl.locator("[data-testid=sl-abschluss] [data-testid=abschluss-karte]").all()]
+            pl_werte = [ab_werte(e) for e in pl.locator("[data-testid=abschluss-karte]").all()]
+            if sl_werte != pl_werte:
+                fehler.append(f"Übersicht und Plenum zeigen andere Zahlen: {sl_werte} / {pl_werte}")
+            foto(sl, "sl_uebersicht_gefecht_beendet")
+            sl.get_by_test_id("reiter-teams").click()
+            pl.get_by_test_id("ab-zur-auswertung").click()
+        except AssertionError as e:
+            fehler.append(f"Abschlussbild: {e}")
+            foto(pl, "abschluss_fehler")
+        try:
+            warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Plenum: Auswertung")
             pl.wait_for_timeout(1000)
             plan_teams = {"teams": plan["teams"]} if all("auswertung" in t for t in plan["teams"]) else None
             if not plan_teams:
@@ -688,6 +745,9 @@ def main():
 
         # Fotos zum Schluss (nach den Prüfungen)
         pl.get_by_test_id("auswertung-zurueck").click()
+        pl.wait_for_timeout(800)
+        if pl.get_by_test_id("ab-zum-spiel").count():   # seit Liste M: zurück führt zu „Gefecht beendet“, von dort zum Spiel
+            pl.get_by_test_id("ab-zum-spiel").click()
         pl.wait_for_timeout(1500)
         foto(pl, "plenum_aufloesung")
         if len(teams) > 1:

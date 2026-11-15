@@ -268,6 +268,9 @@ def main():
         sl.fill("[data-testid=sl-zeit]", "24:59")
         sl.get_by_text("Spielzeit setzen").click()
         sl.get_by_role("button", name="▶ Start").click()
+        # seit Liste M: zuerst „Gefecht beendet“, von dort die Auswertung
+        warte(lambda: pl.get_by_test_id("ab-zur-auswertung").count() == 1, 30, "Gefecht beendet im Plenum")
+        pl.get_by_test_id("ab-zur-auswertung").click()
         warte(lambda: pl.locator("[data-ansicht=auswertung] [data-testid=teamvergleich]").count() == 1, 30, "Auswertung im Plenum")
         pl.wait_for_timeout(1200)
         foto(pl, "plenum_auswertung_teamvergleich", karte_ganz=False)
@@ -279,6 +282,8 @@ def main():
             fehler.append("Auswertung S2: lange Notiz der Spielleitung fehlt")
         foto(pl, "plenum_auswertung_S2_notiz", karte_ganz=False)
         pl.get_by_test_id("auswertung-zurueck").click()
+        warte(lambda: pl.get_by_test_id("ab-zum-spiel").count() == 1, 20, "zurück zu „Gefecht beendet“")
+        pl.get_by_test_id("ab-zum-spiel").click()
         warte(lambda: pl.locator("main[data-modus=aufloesung]").count() == 1, 30, "Auflösung im Plenum")
         pl.wait_for_timeout(1800)
         foto(pl, "plenum_aufloesung_fehltreffer")

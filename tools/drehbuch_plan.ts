@@ -10,6 +10,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { argusAllein } from "../src/engine/referenzlauf";
 import { auswerten } from "../src/kern/auswertung";
+import { abschluss } from "../src/kern/abschluss";
 import { type Bilanz, bilanz } from "../src/kern/bilanz";
 import { inhalte } from "../tests/hilfen";
 import { type DrehbuchReferenz, START_MS, drehbuchTeams, spieleDurch } from "../tests/modellteam";
@@ -48,6 +49,12 @@ const plan = teams.map((m, i) => ({
       // seit 2.7 (G2): Bilanz „Das ist es wert“
       bilanz: bilanzPlan(t.bilanz),
     };
+  })(),
+  // seit Liste M (M4): Abschlussbild „Gefecht beendet“ (Team-Laptop, Plenum, Übersicht)
+  abschluss: (() => {
+    const ab = abschluss(inh, m.z)!;
+    return { feind: ab.feindSumme, typen: Object.fromEntries(ab.feind.map((f) => [f.typ, f.n])), weitere: ab.weitere, bereit: ab.bereit, gesamt: ab.gesamt,
+      verwundete: ab.verwundete, panzer: ab.panzer.map((p) => [p.name, p.zustand, p.stufe]) };
   })(),
 }));
 // Referenzlauf „ARGUS allein“ (G2.1), wie ihn die Auswertung beim Öffnen rechnet

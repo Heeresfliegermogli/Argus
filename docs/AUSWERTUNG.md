@@ -11,8 +11,10 @@ B3–B9 (25.10.), „Preis des Abwartens“ (D5, 2.3), eine Rolle (H, 2.6; Absch
 
 ## Ablauf im Hörsaal: 15 min (seit 2.7, G1)
 
-Das Plenum-Fenster schaltet von selbst auf die Auswertung, sobald **alle** Teams das Spielende erreicht haben
-(„◂ Spiel“ führt zurück zur Ansicht je Team, „Auswertung – alle Teams ›“ wieder hin). Die Spielleitung erreicht
+Das Plenum-Fenster schaltet von selbst auf **„Gefecht beendet“** (seit Liste M: eine Karte je Team – abgeschossene Feindfahrzeuge,
+Zustand der vier Panzer, neutrale Zeile „Dazu x weitere bekämpfte Ziele“; Reihenfolge der Lobby, keine Rangfolge), sobald **alle** Teams
+das Spielende erreicht haben; von dort **„Auswertung – alle Teams ›“** (aus der Auswertung führt „◂ Gefecht beendet“ zurück, von dort
+„◂ Spiel“ zur Ansicht je Team). Die Spielleitung erreicht
 dieselbe Ansicht in ihrer Übersicht über **Auswertung ›**.
 
 | Kapitel | Zeit | Inhalt |

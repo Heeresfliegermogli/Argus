@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import type { TeamLauf } from "../../kern/auswertung";
 import type { Sicht, SichtStand } from "../../sitzung/sicht";
 import { meldeSicht } from "../../sitzung/fehlersuche";
 import type { Sitzung, SitzungsStand } from "../../sitzung/sitzung";
@@ -136,4 +137,12 @@ export function useSitzungWert(s: Sitzung, schluessel: (st: SitzungsStand) => st
     return ab;
   }, [s]);
   return s.stand;
+}
+
+/** Teams mit Lauf und geladenem Protokoll, wie die Auswertung sie braucht (nur neu, wenn sich ein Protokoll ändert). */
+export function useTeamLaeufe(s: Sitzung): TeamLauf[] {
+  const st = useSitzung(s);
+  const liste = st.teams.map((t) => ({ t, sp: s.spiel(t.id) })).filter((x) => x.t.lauf && x.sp?.stand.geladen && x.sp.stand.zustand.seq > 0);
+  const schl = liste.map((x) => `${x.t.id}:${x.sp!.stand.lauf}:${x.sp!.stand.zustand.seq}:${x.t.name}:${x.t.farbe}`).join("|");
+  return useMemo(() => liste.map((x) => ({ id: x.t.id, name: x.t.name, farbe: x.t.farbe, zustand: x.sp!.stand.zustand, protokoll: x.sp!.stand.protokoll })), [schl]);
 }
