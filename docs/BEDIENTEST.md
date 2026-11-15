@@ -1,4 +1,4 @@
-# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste L vom 14.11.2026, Szenario 2.7)
+# ARGUS – Bedientest (seit Szenario 2.6: eine Rolle „Zielbearbeitung“; Stand Liste N vom 15.11.2026, Szenario 2.8)
 
 **Kriterien:** Zwei Unbeteiligte verstehen die Bedienung nach 3 min (Teil B). Startseite und Lobby sind ohne
 Erklärung bedienbar (Teil A – kommt vor Teil B, dauert ca. 6 min).
@@ -77,21 +77,31 @@ Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mi
 1. Rechner mit Edge, Browser maximiert (Dienst-Laptop 1920 × 1080 mit 125 % Skalierung: Fenster ca. 1536 × 730). Die Ansicht passt
    sich jeder Größe ab 1280 × 600 an; ist das Fenster kleiner, wird alles verkleinert und ein Hinweis bittet um Vollbild (F11). Die
    Fenstergröße steht unten in der Einweisung und bei der Spielleitung in der Übersicht.
-2. https://heeresfliegermogli.github.io/Argus/ → **Spielleitung** → Synchronisation **Lokal** → „Test ohne Lobby: ein Team“
-   aufklappen → Raum `bedientest` → **Team und Spielleitung öffnen** (seit Liste M: das Team-Fenster öffnet als neues Fenster, die
-   Spielleitung im selben Tab – Chrome lässt je Klick nur ein neues Fenster zu). Ist bei der Spielleitung kein Team-Fenster da, steht dort
-   **Team-Fenster öffnen**. Ein Plenum-Fenster ist nicht nötig.
+2. https://heeresfliegermogli.github.io/Argus/ → **Spielleitung** → „Test ohne Lobby: ein Team“ aufklappen → **Team und Spielleitung
+   öffnen** („ein Fenster, drei Reiter“). Seit Liste N öffnet das das **Testpult** im selben Tab: oben eine schmale Leiste mit den
+   Reitern **Spielleitung · Zielbearbeitung · Plenum**, vorn die Zielbearbeitung mit der Einweisung. Alle drei laufen weiter, egal welcher
+   Reiter vorn ist – die Zielbearbeitung rechnet das Spiel und behält beim Wechsel ihren Stand (geöffnete Meldung, Zoom, Einweisung).
+   Kein neues Fenster, keine Pop-up-Sperre. Das Pult rechnet immer **lokal im eigenen Raum `pult`** – Synchronisation und Raumfeld der
+   Startseite gelten dafür nicht und bleiben, wie sie sind. Rechts „◂ Startseite“; der zuletzt gewählte Reiter bleibt beim Neuladen.
    (Mit zwei Rechnern seit Liste L nicht über den Testraum, sondern: Synchronisation Firebase → **Neue Sitzung anlegen**, am
    zweiten Rechner den Code eingeben und ein Team anlegen – der Testraum ist für einen PC allein.)
-3. Der Testleiter bedient die Spielleitung. Allein geht es auch mit **Allein testen (ein Fenster)**: Die Uhr steuert dann
-   das Team selbst oben rechts (▶ Start, ×1/×5/×20).
+3. Für Tester ohne Vorkenntnis steht oben die Zeile **„So geht’s: 1 Zielbearbeitung – Einweisung lesen · 2 Spielleitung – ▶ Start ·
+   3 zurück zur Zielbearbeitung“** (der passende Schritt ist gelb, erledigte haben ✓; mit × ausblendbar). Solange ein anderer Reiter
+   vorn ist, zeigt der Reiter **Zielbearbeitung die Zahl der neuen Meldungen** im Eingang (gelb und pulsierend, wenn eine kam, seit er
+   verdeckt ist); wechselt das Plenum nach Spielende auf „Gefecht beendet“, bekommt der Reiter **Plenum einen Punkt**. In der
+   Spielleitung führt „→ Reiter Zielbearbeitung“ zum Team (einen zweiten Reiter „Zielbearbeitung (nur lesen)“ gibt es im Pult nicht),
+   „→ Reiter Plenum“ zum Plenum. Start und Tempo stehen im Pult nur bei der Spielleitung.
+   Allein geht es auch mit **Allein testen (ein Fenster)**: nur die Zielbearbeitung, die Uhr steuert das Team selbst oben rechts
+   (▶ Start, ×1/×5/×20). Die Kacheln **Zielbearbeitung / Spielleitung / Plenum** öffnen je ein eigenes Fenster im Raum aus dem Feld
+   (z. B. per Rechtsklick in einem neuen Fenster); fehlt dort das Team, bietet die Spielleitung **Team-Fenster öffnen** an.
 4. Nichts erklären. Die Testpersonen sitzen **zu zweit** am Fenster der Zielbearbeitung (wie im Seminar); die Einweisung
    (erst die Übersicht mit Pfeilen auf der Oberfläche, dann vier Folien) öffnet sich dort von selbst.
 
 ## Ablauf
 
 1. **3 min Einweisung:** Die Personen klicken die Übersicht durch und blättern die Folien (oder überspringen sie) und
-   schauen sich die Ansicht an. SL startet gleichzeitig die Uhr (▶ Start, Tempo ×1). Um 00:20 kommt Ziel 1, um 00:30 die
+   schauen sich die Ansicht an. SL startet gleichzeitig die Uhr (▶ Start, Tempo ×1 – im Testpult: Reiter Spielleitung, danach zurück
+   zur Zielbearbeitung). Um 00:20 kommt Ziel 1, um 00:30 die
    erste Lagemeldung der Brigade, um 01:15 Ziel 2, um 02:10 Ziel 3 (etwa eine Meldung pro Minute).
 2. **Aufgaben** (unten) vorlesen, eine nach der anderen, ab 02:10 (dann liegen Ziel 1–3 im Eingang); die SL hält die Uhr
    dafür an (vor Aufgabe 9 lässt sie die Uhr bis 03:00 weiterlaufen – dann kommt die Lagemeldung der Brigade zur Schule – und
@@ -115,7 +125,10 @@ Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mi
 | 11 | „Ruft die Einweisung noch einmal auf.“ | **? Einweisung** oben rechts |
 
 `tools/bedientest_probe.py` löst alle Aufgaben nur über sichtbare Beschriftungen (Knöpfe, Zeilen im Eingang, Zahlen in der
-Kopfzeile), dazu „Allein testen“: Uhr oben rechts, Ziel 1 bekämpfen – das ersetzt den Test mit Menschen nicht.
+Kopfzeile), dazu „Allein testen“: Uhr oben rechts, Ziel 1 bekämpfen – das ersetzt den Test mit Menschen nicht. Das Testpult prüft
+`tools/testpult_probe.py` (Liste N) in 1536 × 730 und 1366 × 650: Startseite → Pult im selben Tab, Einweisung, 10 s auf der
+Spielleitung (Uhr und Meldungen laufen weiter, Zahl am Reiter), eine Meldung entscheiden, Plenum „Lage“, ×20 bis Spielende
+(„Gefecht beendet“ in Zielbearbeitung und Plenum, Punkt am Reiter Plenum), kein Neuladen beim Wechsel.
 
 Zusätzlich beim Bedientest beobachten (ohne Aufgabe):
 

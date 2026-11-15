@@ -20,7 +20,7 @@ import { useSitzung, useTakt, useTeamLaeufe } from "./gemeinsam/hooks";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
 import { AbschlussUebersicht } from "./gemeinsam/abschluss";
-import { DiagnoseKnopf, plenumOeffnen } from "./sl";
+import { DiagnoseKnopf, PlenumKnopf } from "./sl";
 
 const TEMPI = [1, 2, 5, 10, 20];
 const FALL_TEXT: Record<FallStatus, string> = { wartet: "kommt noch", offen: "offen", richtig: "richtig", falsch: "falsch" };
@@ -304,7 +304,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
             </>
           )}
           <span class="trenner" />
-          <button type="button" class="knopf klein" onClick={plenumOeffnen}>Plenum öffnen</button>
+          <PlenumKnopf />
           {p.auswertung && ids.length > 0 && <button type="button" class="knopf klein weiter" onClick={p.auswertung} data-testid="auswertung-knopf"
             title="Teamvergleich, Kennzahlen, Replay je Schlüsselfall, Export – dieselbe Ansicht wie im Plenum">Auswertung ›</button>}
           {ids.length > 0 && <ProtokollLaden s={s} />}

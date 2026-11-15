@@ -27,6 +27,7 @@ import { AbschlussUebersicht } from "./gemeinsam/abschluss";
 import { BestaetigenKnopf, Hinweise, Menue } from "./gemeinsam/bausteine";
 import { useMeldeSicht, useSitzung, useSitzungWert, useTeamLaeufe } from "./gemeinsam/hooks";
 import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
+import { imPult, zuReiter } from "./gemeinsam/pult";
 import { Rahmen } from "./gemeinsam/rahmen";
 import { type Beitritt, PlenumAnsicht, PlenumEinweisung } from "./plenum";
 import { ANSICHTEN } from "./register";
@@ -102,15 +103,22 @@ function NotizKnopf(p: { s: Sitzung; team: string }) {
   );
 }
 
-/** Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder Zuschauen (Zielbearbeitung, nur lesen). */
+/**
+ * Leiste der Spielleitung in der Teamansicht: zurück zur Übersicht, Team, Steuerung oder Zuschauen (Zielbearbeitung, nur lesen).
+ * Liste N (N1.3): Im Testpult gibt es die Zielbearbeitung schon als eigenen Reiter oben – hier dann kein zweiter Reiter „Zielbearbeitung
+ * (nur lesen)“, sondern der Verweis „→ Reiter Zielbearbeitung“.
+ */
 function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; direkt: boolean }) {
   const st = useSitzung(p.s);
   const teams = st.teams.filter((t) => t.lauf);
+  const pult = imPult();
   return (
     <div class="sl-leiste" data-testid="sl-leiste">
       <button type="button" class="sl-zurueck" onClick={() => p.setze(null)} title="Übersicht aller Teams" data-testid="zur-uebersicht">◂ Übersicht</button>
       {!p.direkt && <TeamWahl teams={teams} team={p.wahl.team} setze={(team) => p.setze({ ...p.wahl, team })} testid="sl-teamwahl" />}
-      <div class="sl-rollen" role="tablist">
+      {pult && <button type="button" class="knopf klein" onClick={() => zuReiter("zb")} data-testid="pult-zur-zb"
+        title="Die Zielbearbeitung ist der Reiter oben – sie rechnet das Spiel">→ Reiter Zielbearbeitung</button>}
+      {!pult && <div class="sl-rollen" role="tablist">
         {(["sl", "zb"] as SLRolle[]).map((r) => (
           <button type="button" role="tab" key={r} aria-selected={r === p.wahl.rolle} class={`rolle-tab rolle-${r} ${r === p.wahl.rolle ? "an" : ""}`}
             onClick={() => p.setze({ ...p.wahl, rolle: r })} data-sl-rolle={r}
@@ -118,14 +126,16 @@ function SLLeiste(p: { s: Sitzung; wahl: Wahl; setze: (w: Wahl | null) => void; 
             {r === "sl" ? "Steuerung" : <><span class="auge" aria-hidden="true">◉</span>{ROLLEN_NAME.zb}</>}
           </button>
         ))}
-      </div>
+      </div>}
       <NotizKnopf s={p.s} team={p.wahl.team} />
     </div>
   );
 }
 
 function TeamAnsicht(p: { s: Sitzung; spiel: Spiel; wahl: Wahl; setze: (w: Wahl | null) => void }) {
-  const { s, spiel, wahl } = p;
+  const { s, spiel } = p;
+  // N1.3: im Testpult nur die Steuerung (die Zielbearbeitung ist der Reiter oben)
+  const wahl: Wahl = imPult() ? { ...p.wahl, rolle: "sl" } : p.wahl;
   const direkt = s.stand.direkt;
   const sicht = useMemo(() => new Sicht(s, spiel, wahl.rolle, { nurLesen: wahl.rolle !== "sl" }), [s, spiel, wahl.rolle]);
   useMeldeSicht(sicht);

@@ -8,6 +8,8 @@
 //   ?druck=einweisung            Einweisungskarten zum Drucken
 //   ?auswertung=demo             Auswertung mit sieben Beispielteams (Üben der Auflösung, ohne Sitzung; nur Webseite)
 //   ?abschluss=demo              „Gefecht beendet“ mit den Beispielteams (seit Liste M; &team=2: Bild am Team-Laptop)
+//   ?testpult=1                  Testpult (seit Liste N): ein Fenster, Reiter Spielleitung · Zielbearbeitung · Plenum (je ein Frame
+//                                …?rolle=…&raum=pult&sync=lokal&pult=1)
 import { render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { AuswertungAnsicht } from "./ansichten/auswertung";
@@ -17,6 +19,8 @@ import { Start } from "./ansichten/start";
 import { TTFenster } from "./ansichten/tt-fenster";
 import { AbschlussBild, AbschlussUebersicht } from "./ansichten/gemeinsam/abschluss";
 import { skalierungAnwenden } from "./ansichten/gemeinsam/fenster";
+import { pultAnmelden, pultMelden, zurStartseite } from "./ansichten/gemeinsam/pult";
+import { Testpult } from "./ansichten/testpult";
 import { type Einstellungen, leseEinstellungen, merke, merkeSitzung, merken, sitzungsAdresse } from "./config";
 import { setzeBildrateMax } from "./karte/bildrate";
 import { ladeInhalte } from "./inhalte/laden";
@@ -92,6 +96,7 @@ function Fenster(p: { e: Einstellungen }) {
     let s: Sitzung | null = null;
     let wache: TabWache | null = null;
     let aus = false;
+    let abmelden = () => {};
     (async () => {
       const inh = await ladeInhalte(e.szenario);
       if (aus) return;
@@ -159,10 +164,12 @@ function Fenster(p: { e: Einstellungen }) {
         }
         fenster.stoppen();
         wache?.stoppen();
-        location.href = location.pathname;
+        zurStartseite();
       });
       await s.starten();
-      merken(e);
+      // Testpult (N1.6): immer lokal im Raum „pult“ – die Wahl auf der Startseite (Sync, Raum) bleibt, wie sie war
+      if (!e.pult) merken(e);
+      if (!aus) abmelden = pultMelden(s, art);
       // Spielleitung einer Sitzung: auf der Startseite „Fortsetzen“ anbieten
       if (e.sitzung && art === "sl") merkeSitzung(e.sitzung, e.sync);
       setSitzung(s);
@@ -170,6 +177,7 @@ function Fenster(p: { e: Einstellungen }) {
     })().catch((err: Error) => setFehler(err.message));
     return () => {
       aus = true;
+      abmelden();
       s?.stoppen();
       wache?.stoppen();
       meldeSitzung(null);
@@ -282,6 +290,8 @@ function titel(e: Einstellungen): string {
 function App() {
   const e = leseEinstellungen();
   setzeBildrateMax(e.fps);
+  // Liste N: Reiter des Testpults (Frame) – meldet sich beim Pult an; verdeckt zeichnet die Karte langsamer
+  pultAnmelden(e.pult);
   if (new URLSearchParams(location.search).has("fps")) merke("fps", String(e.fps));
   if (new URLSearchParams(location.search).get("druck") === "einweisung") {
     document.title = "ARGUS · Einweisungskarten";
@@ -295,11 +305,22 @@ function App() {
     document.title = "ARGUS · Auswertung (Beispiel)";
     return <AuswertungDemo e={e} />;
   }
+  if (istTestpult()) {
+    document.title = "ARGUS · Testpult";
+    return <Testpult e={e} />;
+  }
   document.title = titel(e);
   return e.sitzung || e.rolle ? <Fenster e={e} /> : <Start e={e} />;
 }
 
-// Seit Liste J: unter 1280 × 600 wird die ganze Ansicht gleichmäßig verkleinert (nicht beim Druck der Einweisungskarten)
-if (new URLSearchParams(location.search).get("druck") !== "einweisung") skalierungAnwenden(document.getElementById("app")!);
+/** Liste N: das Testpult selbst (die Leiste mit den Reitern; die Reiter darunter sind eigene Frames). */
+function istTestpult(): boolean {
+  const q = new URLSearchParams(location.search);
+  return q.get("testpult") === "1" && !q.has("rolle") && !q.has("sitzung");
+}
+
+// Seit Liste J: unter 1280 × 600 wird die ganze Ansicht gleichmäßig verkleinert (nicht beim Druck der Einweisungskarten; nicht das
+// Testpult – dort verkleinert sich jeder Reiter in seinem Frame selbst, die Leiste bleibt)
+if (new URLSearchParams(location.search).get("druck") !== "einweisung" && !istTestpult()) skalierungAnwenden(document.getElementById("app")!);
 
 render(<App />, document.getElementById("app")!);

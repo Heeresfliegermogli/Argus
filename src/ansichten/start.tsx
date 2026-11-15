@@ -1,12 +1,13 @@
 // Startseite (Änderung B1, 25.10.2026): zuerst nur zwei große Knöpfe „Ich spiele mit“ und „Spielleitung“.
 //   • Ich spiele mit: Code eingeben (drei Zeichen), beitreten – mehr nicht. Danach kommt die Lobby.
 //   • Spielleitung: alles für die Sitzung – zuletzt genutzte Sitzung fortsetzen, neue Sitzung anlegen, bestehende
-//     öffnen (zweite Spielleitung, Plenum), Synchronisation, Test ohne Lobby (ein Team allein oder Team und Spielleitung),
-//     Auswertung üben, Einweisungskarten, Lasttest.
+//     öffnen (zweite Spielleitung, Plenum), Synchronisation, Test ohne Lobby (ein Team allein oder – seit Liste N – das Testpult:
+//     Team und Spielleitung in einem Fenster mit den Reitern Spielleitung · Zielbearbeitung · Plenum), Auswertung üben,
+//     Einweisungskarten, Lasttest.
 // Seit 2.6 rechnet jeder Team-Laptop sein Spiel selbst; die Spielleitung steuert Start und Pause für alle. Die Wahl steht im Anker
 // der Adresse (#mitspielen, #spielleitung), damit Neuladen und Zurück funktionieren.
 import { useEffect, useState } from "preact/hooks";
-import { type Einstellungen, adresseFuer, gemerkterWert, letzteSitzung, merke, merken, sitzungsAdresse, vergissSitzung } from "../config";
+import { type Einstellungen, adresseFuer, gemerkterWert, letzteSitzung, merke, merken, sitzungsAdresse, testpultAdresse, vergissSitzung } from "../config";
 import { ladeInhalte } from "../inhalte/laden";
 import type { Inhalte } from "../inhalte/typen";
 import { RAUM_MUSTER, type Rolle } from "../kern/ereignisse";
@@ -15,7 +16,6 @@ import { CODE_LAENGE, CODE_MUSTER, SPIELERNAME_MAX, codeAnzeige, codeNormalisier
 import { Sitzung } from "../sitzung/sitzung";
 import { type GemerkteSitzung, gemerkteSitzungen, selberTag, vergissAlleSitzungen } from "../sitzung/gemerkt";
 import { type SitzungsKurzinfo, adapterFuer, alleSitzungenBeenden, sitzungsKurzinfo } from "../sync/fabrik";
-import { merkePopupBlockiert, teamFensterOeffnen } from "./gemeinsam/fenster";
 import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
 import { useSelbstNeuLaden } from "./gemeinsam/version";
 
@@ -211,13 +211,11 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
     }
   };
 
-  // Liste M (M1.1): nur EIN neues Fenster je Klick – Chrome lässt je Klick nur ein Pop-up zu, ein zweites `window.open` im selben Klick
-  // wird still blockiert (bis Stand L traf das das Team-Fenster, „Start“ fand dann keinen Laptop). Das Team-Fenster öffnet als neues
-  // Fenster, die Spielleitung im aktuellen Tab. Wird auch das Team-Fenster blockiert, bietet die Spielleitung „Team-Fenster öffnen“ an.
-  const zweiFenster = () => {
-    merken(direkt);
-    if (!teamFensterOeffnen(adresseFuer(direkt, "zb"))) merkePopupBlockiert();
-    location.href = adresseFuer(direkt, "sl");
+  // Liste N (N1.1): „Team und Spielleitung öffnen“ öffnet das Testpult im selben Tab – ein Fenster, drei Reiter (Spielleitung ·
+  // Zielbearbeitung · Plenum), kein neues Fenster und damit keine Pop-up-Sperre (bis Stand M: Team-Fenster als Pop-up, Spielleitung im
+  // Tab). Das Pult rechnet immer lokal im eigenen Raum „pult“ – Raumfeld und Synchronisation hier gelten dafür nicht und bleiben, wie sie sind.
+  const testpult = () => {
+    location.href = testpultAdresse(e);
   };
   const fortsetzen = (rolle: "sl" | "plenum") => {
     if (!letzte) return;
@@ -293,8 +291,9 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
             <span style="flex:1" />
             <a class={`knopf klein weiter ${raumOk ? "" : "aus"}`} href={raumOk ? adresseFuer(direkt, "zb") : undefined} onClick={() => merken(direkt)}
               title="Ein Fenster: das Team spielt allein, die Uhr startet oben rechts" data-testid="solo">Allein testen (ein Fenster)</a>
-            <button type="button" class="knopf klein" disabled={!raumOk} onClick={zweiFenster} data-testid="team-und-sl"
-              title="Das Team-Fenster öffnet als neues Fenster, die Spielleitung in diesem Tab">Team und Spielleitung öffnen</button>
+            <button type="button" class="knopf klein mit-unter" onClick={testpult} data-testid="team-und-sl"
+              title="Testpult in diesem Tab: oben die Reiter Spielleitung · Zielbearbeitung · Plenum, alle drei laufen weiter. Immer lokal, eigener Raum „pult“ (unabhängig von Raum und Synchronisation hier).">
+              Team und Spielleitung öffnen<span>ein Fenster, drei Reiter</span></button>
           </div>
           <div class="klein hinweis-box" data-testid="test-hinweis"><b>Nur für einen PC allein.</b> Für Tests mit mehreren Laptops: Spielleitung → Neue Sitzung, Code an den Laptops eingeben.</div>
           <div class="rollenwahl">

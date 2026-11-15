@@ -21,6 +21,8 @@
 //              „Geräte“ in einem Browser nach (lokaler Sync, Proben). Ohne: ein Browser = ein Gerät – ein zweiter Tab derselben
 //              Sitzung sieht dem ersten nur zu (K1.3). Nicht für das Seminar.
 // Direktaufruf: …/?rolle=zb&raum=kraehe (Team allein, Uhr selbst starten), …/?rolle=sl&raum=kraehe (steuert dasselbe Team).
+// Testpult (seit Liste N): …/?testpult=1 – ein Fenster mit den Reitern Spielleitung · Zielbearbeitung · Plenum. Jeder Reiter ist ein
+//   Frame mit …/?rolle=…&raum=pult&sync=lokal&pult=1 (immer lokal, eigener Raum, unabhängig von der Wahl auf der Startseite).
 import { STANDARD_SZENARIO } from "./inhalte/laden";
 import { RAUM_MUSTER, ROLLEN, type Rolle } from "./kern/ereignisse";
 import { SITZUNG_MUSTER } from "./kern/sitzungen";
@@ -46,7 +48,12 @@ export interface Einstellungen {
   verzug: number;
   /** eigener Merkbereich (Tests, Vorführung: mehrere „Geräte“ in einem Browser), sonst null */
   geraet: string | null;
+  /** seit Liste N: dieses Fenster ist ein Reiter des Testpults (Frame, immer lokal, Raum „pult“) */
+  pult?: boolean;
 }
+
+/** Liste N (N1.6): Raum des Testpults – eigener Name, damit ein gleichzeitig offener Testraum „kraehe“ nicht stört. */
+export const PULT_RAUM = "pult";
 
 function gemerkt(k: string): string | null {
   try {
@@ -110,12 +117,14 @@ export function leseEinstellungen(search: string = location.search): Einstellung
   const syncRoh = q.get("sync") ?? gemerkt("sync") ?? (__ARGUS_OFFLINE__ ? "lokal" : "firebase");
   const ich = q.get("ich");
   const geraet = q.get("geraet")?.trim().toLowerCase() ?? "";
+  // N1.6: ein Reiter des Testpults ist immer lokal und im Raum „pult“ (ohne Lobby)
+  const pult = q.get("pult") === "1" && !sitzungRoh;
   return {
     rolle: rolle && ROLLEN.includes(rolle) ? rolle : null,
     sitzung: sitzungRoh && SITZUNG_MUSTER.test(sitzungRoh) ? sitzungRoh : null,
-    raum: raumRoh !== null ? (RAUM_MUSTER.test(raumRoh) ? raumRoh : "kraehe") : null,
+    raum: pult ? PULT_RAUM : raumRoh !== null ? (RAUM_MUSTER.test(raumRoh) ? raumRoh : "kraehe") : null,
     ich: ich && /^[a-z0-9]{6}$/.test(ich) ? ich : null,
-    sync: syncRoh === "lokal" ? "lokal" : "firebase",
+    sync: pult || syncRoh === "lokal" ? "lokal" : "firebase",
     db: (q.get("db") ?? FIREBASE_DB).trim().replace(/\/+$/, ""),
     transport: q.get("transport") === "auto" ? "auto" : "lp",
     name: (q.get("name") ?? "").slice(0, 40),
@@ -123,7 +132,27 @@ export function leseEinstellungen(search: string = location.search): Einstellung
     fps: Math.max(1, Math.min(30, Math.round(Number(q.get("fps") ?? gemerkt("fps") ?? 30)) || 30)),
     verzug: Math.max(0, Math.min(60000, Math.round(Number(q.get("verzug") ?? 0)) || 0)),
     geraet: /^[a-z0-9]{1,8}$/.test(geraet) ? geraet : null,
+    ...(pult ? { pult: true } : {}),
   };
+}
+
+/** Liste N (N1.1): Adresse des Testpults (ein Fenster, drei Reiter). Nimmt nur das Szenario mit – Sync und Raum stehen fest. */
+export function testpultAdresse(e: Pick<Einstellungen, "szenario">): string {
+  const q = new URLSearchParams();
+  q.set("testpult", "1");
+  if (e.szenario !== STANDARD_SZENARIO) q.set("szenario", e.szenario);
+  return `${location.pathname}?${q.toString()}`;
+}
+
+/** Liste N: Adresse eines Reiters im Testpult (Frame): immer lokal, Raum „pult“, ohne Lobby. */
+export function pultFensterAdresse(e: Pick<Einstellungen, "szenario">, rolle: Rolle): string {
+  const q = new URLSearchParams();
+  q.set("rolle", rolle);
+  q.set("raum", PULT_RAUM);
+  q.set("sync", "lokal");
+  q.set("pult", "1");
+  if (e.szenario !== STANDARD_SZENARIO) q.set("szenario", e.szenario);
+  return `${location.pathname}?${q.toString()}`;
 }
 
 function technik(e: Einstellungen, q: URLSearchParams): void {

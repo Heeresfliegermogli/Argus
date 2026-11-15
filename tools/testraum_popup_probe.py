@@ -1,17 +1,16 @@
-#!/usr/bin/env python3
-"""Probe Liste M (M1.3, 15.11.2026): „Team und Spielleitung öffnen“ mit Pop-up-Sperre wie im echten Chrome.
+"""Probe Liste M (M1.3, 15.11.2026), angepasst an Liste N: „Team und Spielleitung öffnen“ mit Pop-up-Sperre wie im echten Chrome.
 
 Playwright schaltet die Pop-up-Sperre von Chromium sonst ab (--disable-popup-blocking); hier bleibt sie an: Je Klick lässt Chromium
-nur EIN neues Fenster zu, ein zweites `window.open` im selben Klick wird still blockiert – genau der Befund von Lt Mann (bis Stand L
-öffnete der Knopf nur die Spielleitung, „Start“ fand dann „im Team ist kein Laptop“).
+nur EIN neues Fenster zu, ein zweites `window.open` im selben Klick wird still blockiert – der Befund von Lt Mann zu Stand L.
+Seit Liste N öffnet „Team und Spielleitung öffnen“ das Testpult im selben Tab (gar kein neues Fenster); „Team-Fenster öffnen“ (M1.2)
+gibt es weiter bei der Spielleitung im Testraum außerhalb des Pults.
 
   P0  Gegenprobe: Ein Klick mit zwei `window.open` öffnet in diesem Browser nur ein Fenster (die Sperre wirkt wie in Chrome).
-  P1  Startseite → Test ohne Lobby → „Team und Spielleitung öffnen“: Team-Fenster als neues Fenster, Spielleitung im selben Tab;
-      „▶ Start“ → die Uhr läuft (Team und Spielleitung), kein Hinweis „kein Laptop“.
+  P1  Startseite → Test ohne Lobby → „Team und Spielleitung öffnen“ (auch mit gesperrtem window.open): kein neues Fenster, das Testpult
+      im selben Tab; Reiter Spielleitung → „▶ Start“ → die Uhr läuft (Spielleitung und Zielbearbeitung), kein Hinweis „kein Laptop“.
   P2  Spielleitung im Testraum ohne Team-Fenster (M1.2): „Team-Fenster öffnen“ erscheint, öffnet die Zielbearbeitung desselben Raums
       als neues Fenster (eigener Klick, nicht blockiert); „▶ Start“ → Uhr läuft.
-  P3  Blockiert der Browser das Team-Fenster trotzdem: Hinweis „Bitte Pop-ups für diese Seite erlauben …“ – am Knopf der
-      Spielleitung und gleich nach „Team und Spielleitung öffnen“ auf der Startseite.
+  P3  Blockiert der Browser das Team-Fenster trotzdem: Hinweis „Bitte Pop-ups für diese Seite erlauben …“ am Knopf der Spielleitung.
 
 Aufruf (nach `npm run build` und `npx vite preview --port 4173`):
   python3 tools/testraum_popup_probe.py http://localhost:4173/ [--groesse 1366x650] [--bilder popup-bilder]
@@ -89,21 +88,6 @@ def main():
             warte(lambda: pg.get_by_role("button", name="Überspringen").count() == 1, 10, "Folien der Einweisung")
             pg.get_by_role("button", name="Überspringen").click()
 
-        def starten_und_pruefen(sl, team, name):
-            einweisung_falls(team)
-            warte(lambda: team.locator(".rahmen[data-rolle=zb][data-rechnet='1']").count() == 1, 15, "Team-Fenster rechnet")
-            warte(lambda: sl.get_by_test_id("team-fenster").count() == 0, 10, "„Team-Fenster öffnen“ verschwindet, sobald das Team rechnet")
-            knopf = sl.get_by_role("button", name="▶ Start")
-            warte(lambda: knopf.is_enabled(), 15, "„▶ Start“ bereit")
-            knopf.click()
-            t0 = time.time()
-            warte(lambda: uhr_laeuft(sl) and uhr_laeuft(team), 10, "Uhr läuft (Spielleitung und Team)")
-            print(f"    Uhr läuft nach {time.time() - t0:.1f} s", flush=True)
-            assert sl.get_by_test_id("uhr-grund").count() == 0, f"Hinweis am Knopf: {sl.get_by_test_id('uhr-grund').inner_text()}"
-            sl.wait_for_timeout(800)
-            foto(sl, f"{name}_sl_uhr_laeuft")
-            foto(team, f"{name}_zb_uhr_laeuft")
-
         raum_nr = [int(time.time()) % 100000]
 
         def neuer_raum():
@@ -129,19 +113,30 @@ def main():
         def p1():
             ctx = neuer_kontext()
             pg = ctx.new_page()
-            raum = neuer_raum()
             pg.goto(basis + "?sync=lokal#spielleitung")
             pg.get_by_text("Test ohne Lobby: ein Team").click()
-            pg.locator("#raum").fill(raum)
             foto(pg, "P1_start_test_ohne_lobby")
-            with ctx.expect_page(timeout=10000) as neu:
-                pg.get_by_role("button", name="Team und Spielleitung öffnen").click()
-            team = neu.value
-            team.wait_for_load_state()
-            warte(lambda: "rolle=sl" in pg.url, 10, "Spielleitung im selben Tab")
-            assert "rolle=zb" in team.url and f"raum={raum}" in team.url, team.url
-            assert len(ctx.pages) == 2, f"{len(ctx.pages)} Fenster"
-            starten_und_pruefen(pg, team, "P1")
+            # ein gesperrtes window.open darf nichts ausmachen – das Pult öffnet kein Fenster
+            pg.evaluate("() => { window.open = () => { throw new Error('window.open im Testpult'); }; }")
+            pg.get_by_role("button", name="Team und Spielleitung öffnen").click()
+            warte(lambda: "testpult=1" in pg.url, 10, "Testpult im selben Tab")
+            pg.wait_for_timeout(1500)
+            assert len(ctx.pages) == 1, f"{len(ctx.pages)} Fenster"
+            sl = pg.locator("[data-pult-frame=sl]").element_handle().content_frame()
+            team = pg.locator("[data-pult-frame=zb]").element_handle().content_frame()
+            einweisung_falls(team)
+            warte(lambda: team.locator(".rahmen[data-rolle=zb][data-rechnet='1']").count() == 1, 15, "Zielbearbeitung rechnet")
+            pg.locator("[data-pult-reiter=sl]").click()
+            knopf = sl.get_by_role("button", name="▶ Start")
+            warte(lambda: knopf.is_enabled(), 15, "„▶ Start“ bereit")
+            assert sl.get_by_test_id("team-fenster").count() == 0, "„Team-Fenster öffnen“ im Testpult"
+            knopf.click()
+            t0 = time.time()
+            warte(lambda: uhr_laeuft(sl) and uhr_laeuft(team), 10, "Uhr läuft (Spielleitung und Zielbearbeitung)")
+            print(f"    Uhr läuft nach {time.time() - t0:.1f} s", flush=True)
+            assert sl.get_by_test_id("uhr-grund").count() == 0, f"Hinweis am Knopf: {sl.get_by_test_id('uhr-grund').inner_text()}"
+            pg.wait_for_timeout(800)
+            foto(pg, "P1_testpult_sl_uhr_laeuft")
             ctx.close()
 
         # -------------------------------------------------------------- P2
@@ -185,22 +180,11 @@ def main():
             text = sl.get_by_test_id("popup-blockiert").inner_text()
             assert "Pop-ups für diese Seite erlauben" in text and "„Zielbearbeitung“ unter „Test ohne Lobby“" in text, text
             foto(sl, "P3_sl_popup_blockiert")
-            # (b) Startseite: Team-Fenster blockiert → die Spielleitung zeigt den Hinweis sofort
-            pg = ctx.new_page()
-            raum = neuer_raum()
-            pg.goto(basis + "?sync=lokal#spielleitung")
-            pg.get_by_text("Test ohne Lobby: ein Team").click()
-            pg.locator("#raum").fill(raum)
-            pg.evaluate("() => { window.open = () => null; }")
-            pg.get_by_role("button", name="Team und Spielleitung öffnen").click()
-            warte(lambda: "rolle=sl" in pg.url, 10, "Spielleitung im selben Tab")
-            warte(lambda: pg.get_by_test_id("popup-blockiert").count() == 1, 5, "Hinweis sofort nach der Startseite")
-            assert pg.get_by_test_id("team-fenster-oeffnen").count() == 1
             ctx.close()
 
-        print(f"Probe M1 (Pop-up-Sperre wie Chrome), {W} × {H}", flush=True)
+        print(f"Probe M1/N1 (Pop-up-Sperre wie Chrome), {W} × {H}", flush=True)
         schritt("P0 Gegenprobe: zwei window.open in einem Klick → ein Fenster", p0)
-        schritt("P1 „Team und Spielleitung öffnen“ → Start → Uhr läuft", p1)
+        schritt("P1 „Team und Spielleitung öffnen“ → Testpult im selben Tab, kein Fenster → Start → Uhr läuft", p1)
         schritt("P2 Spielleitung ohne Team: „Team-Fenster öffnen“ → Uhr läuft", p2)
         schritt("P3 Fenster blockiert: Hinweis „Pop-ups erlauben“", p3)
         browser.close()

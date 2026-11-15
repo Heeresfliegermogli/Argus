@@ -21,6 +21,7 @@ import { AbschlussBild } from "./abschluss";
 import { BestaetigenKnopf, Hinweise } from "./bausteine";
 import { VersionsBanner } from "./notbremse";
 import { fensterText, useFenster, zuKlein } from "./fenster";
+import { imPult } from "./pult";
 import { useSpielzeit, useStand } from "./hooks";
 
 /**
@@ -330,7 +331,8 @@ export function Rahmen(p: {
         <div class="kopf-rechts">
           {team ? <PanzerLeiste inh={inh} z={z} t={t} lauf={st.lauf} aufTreffer={treffer} /> : <KompanieStand inh={inh} z={z} t={t} lauf={st.lauf} />}
           {team && <BestandLeiste inh={inh} z={z} />}
-          {team && st.direkt && st.rechnet && <TestUhr s={p.s} z={z} />}
+          {/* Testpult (Liste N): Start und Tempo nur bei der Spielleitung – wie im Seminar („So geht’s: 2 Spielleitung – ▶ Start“) */}
+          {team && st.direkt && st.rechnet && !imPult() && <TestUhr s={p.s} z={z} />}
           {st.nurLesen && <span class="badge zuschauen" data-testid="nur-lesen" title="Ansicht des Teams zum Zuschauen; Eingaben sind gesperrt.">◉ Zuschauen</span>}
           {team && !st.direkt && !hostDa && <span class="badge schlecht" title="Keine Spielleitung verbunden – das Spiel läuft trotzdem weiter">Spielleitung fehlt</span>}
           <span class={`badge ${st.verbindung.verbunden ? "gut" : "schlecht"}`} data-testid="verbindung"

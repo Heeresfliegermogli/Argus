@@ -253,7 +253,7 @@ Spielleitung.
 
 | Fenster | Inhalt |
 |---|---|
-| **Startseite** (B1) | zuerst nur zwei große Knöpfe **Ich spiele mit** und **Spielleitung** (Anker `#mitspielen`, `#spielleitung`, Zurück funktioniert). „Ich spiele mit“: nur das Codefeld (drei Zeichen) und **Beitreten** („„K0“ ist kein Code. Ein Code hat 3 Zeichen, z. B. K7P.“ bzw. „Die Sitzung … gibt es nicht“). „Spielleitung“: zuletzt genutzte Sitzung **Fortsetzen als Spielleitung** / **Plenum**, **Neue Sitzung anlegen** (Name), bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; eingeklappt „Test ohne Lobby“ (Raum, **Allein testen (ein Fenster)**, **Alle vier Fenster öffnen**, einzelne Rollen); unten Auswertung üben, Einweisungskarten drucken, Lasttest |
+| **Startseite** (B1) | zuerst nur zwei große Knöpfe **Ich spiele mit** und **Spielleitung** (Anker `#mitspielen`, `#spielleitung`, Zurück funktioniert). „Ich spiele mit“: nur das Codefeld (drei Zeichen) und **Beitreten** („„K0“ ist kein Code. Ein Code hat 3 Zeichen, z. B. K7P.“ bzw. „Die Sitzung … gibt es nicht“). „Spielleitung“: zuletzt genutzte Sitzung **Fortsetzen als Spielleitung** / **Plenum**, **Neue Sitzung anlegen** (Name), bestehende Sitzung als Spielleitung oder Plenum öffnen, Synchronisation; eingeklappt „Test ohne Lobby“ (Raum, **Allein testen (ein Fenster)**, **Team und Spielleitung öffnen** – „ein Fenster, drei Reiter“: das Testpult, seit Liste N –, einzelne Rollen); unten Auswertung üben, Einweisungskarten drucken, Lasttest |
 | **Lobby** (seit 2.6) | Kopf: Sitzungscode, in der Mitte der nächste Schritt; links „Eure Namen“, „Neues Team“ (Name, 🎲, **Team anlegen** – „dieser Laptop spielt für das Team“) bzw. „Ihr seid im Team“ (rechnet / schaut zu, **Team verlassen**), „So spielt ihr“; rechts alle Teams als Karten mit den Fenstern (★ = Team-Laptop) und **beitreten** (Team ohne Laptop) bzw. **zuschauen** |
 | **Übersicht (SL)** | Kopf mit großem Code; Steuerleiste für alle Teams (Spiel öffnen, **▶ Start für alle**, Anhalten, Tempo, Spielzeit, Reserve, Plenum, **Auswertung ›**, **Protokoll laden**; das Menü „Verstärkung“ ist seit 2.6 ausgeblendet); Tabelle je Team **aus den Statusmeldungen** (Laptop als Chip mit Menü und darunter seit Liste J die **Fenstergröße** des Team-Laptops – „Fenster 1536 × 730“, rot „… – F11!“ unter 1280 × 600 –, Spielzeit, Eingang, Schlüsselfälle S1–S8, Fehl, Panzer, Protokoll im Netz und Alter der Statusmeldung, ▶/❚❚, ansehen ›). Die Teamansicht zeigt die Fenstergröße jedes Fensters beim Zeigen auf den Chip unter „Fenster“ |
 | **Teamansicht (SL)** | Leiste statt Rollenband: ◂ Übersicht, Teamwahl, **Steuerung** · **◉ Zielbearbeitung** (nur lesen, mit Verzug); **✎ Notiz** (Beobachtung der SL 2 zu einem Fall, der laufende Fall ist vorgewählt) |
@@ -262,6 +262,37 @@ Spielleitung.
 Gestaltung: Teamfarben (Rosa, Gelb, Grün, Cyan, Indigo, Magenta, Hellgrau, Braun) sind weder Rollen-
 noch Signalfarbe und stehen nie ohne Namen. Folgenreiches (neues Spiel, Team löschen) fragt im Knopf
 nach, nie mit einem Browser-Dialog (der hielte im Fenster der Spielleitung die Engine aller Teams an).
+
+## Testpult (Liste N, 15.11.2026)
+
+„Team und Spielleitung öffnen“ unter „Test ohne Lobby“ öffnet im **selben Tab** das Testpult (`…/?testpult=1`, `src/ansichten/testpult.tsx`)
+– für Tests an einem PC mit Testern, die das Spiel nicht kennen:
+
+* **Leiste oben (34 px):** „ARGUS Testpult“, drei große Reiter **Spielleitung · Zielbearbeitung · Plenum** (Rollenfarben; der gewählte
+  ausgefüllt), daneben die Zeile **„So geht’s: 1 Zielbearbeitung – Einweisung lesen · 2 Spielleitung – ▶ Start · 3 zurück zur
+  Zielbearbeitung“** (der passende Schritt gelb, nach dem Start 1 und 2 mit ✓; die Wörter wechseln den Reiter; × blendet aus, „So geht’s“
+  holt sie zurück), rechts klein „◂ Startseite“. **Startreiter Zielbearbeitung** (dort beginnt die Einweisung); der zuletzt gewählte
+  Reiter bleibt beim Neuladen (sessionStorage).
+* **Hinweise am Reiter**, solange ein anderer vorn ist: Zielbearbeitung – Zahl der neuen Meldungen im Eingang (gelb und pulsierend, wenn
+  seit dem letzten Blick eine kam; nach Spielende keine Zahl; roter Punkt bei „Testraum geleert – neu laden“); Plenum – Punkt, wenn es
+  auf „Gefecht beendet“ wechselt.
+* **Alle drei laufen weiter:** Jeder Reiter ist ein Frame derselben Seite (`?rolle=…&raum=pult&sync=lokal&pult=1`); die Frames liegen
+  übereinander, verdeckt über `visibility: hidden` (nicht `display: none` – die Karten behalten ihre Größe) und `inert` (keine Tastatur).
+  Die Zielbearbeitung rechnet das Spiel und wird beim Wechsel weder angehalten noch neu geladen – geöffnete Meldung, Zoom und Einweisung
+  bleiben. Ein verdeckter Reiter zeichnet seine Karte nur mit 2 Bildern/s; Uhr, Meldungen und Spiel laufen unverändert.
+* **Synchronisation immer „Lokal (ein Rechner)“**, eigener Raum `pult` – unabhängig von Raumfeld und Synchronisation der Startseite (die
+  bleiben, wie sie waren); ein gleichzeitig offener Testraum `kraehe` stört nicht. „Neues Spiel“ und „Testraum leeren“ wie gewohnt.
+* **Im Pult anders als in den einzelnen Fenstern:** Die Spielleitung hat keinen eigenen Reiter „Zielbearbeitung (nur lesen)“ und keinen
+  Knopf „Team-Fenster öffnen“, sondern „→ Reiter Zielbearbeitung“ (in der Leiste und, wenn kein Laptop rechnet, unter „▶ Start“);
+  „Plenum öffnen“ heißt „→ Reiter Plenum“. Start und Tempo nur bei der Spielleitung (die Zielbearbeitung hat im Pult keine Uhr-Knöpfe).
+  „Neue Version – neu laden“ und „Alle Sitzungen beenden“ wirken auf das ganze Pult.
+* **Größe:** Die Reiter haben das Fenster minus 34 px (1536 × 730 → 1536 × 696, 1366 × 650 → 1366 × 616) und folgen Layout J; unter
+  1280 × 600 verkleinert sich jeder Reiter in seinem Frame gleichmäßig. Die Spielleitung rückt unter 640 px Höhe die linke Spalte enger
+  zusammen (und lässt die Zeile „Szenario-Prüfung“ weg, solange sie nur Warnungen meldet), damit „Bedingte Lagemeldungen“ sichtbar bleibt.
+* **Unverändert:** „Allein testen (ein Fenster)“ (nur die Zielbearbeitung, Uhr und Tempo oben rechts), die Kacheln Zielbearbeitung /
+  Spielleitung / Plenum (je ein eigenes Fenster), Sitzungen mit Lobby.
+
+Probe: `tools/testpult_probe.py` (1536 × 730 und 1366 × 650; Layout aller drei Reiter auch in 1530 × 800).
 
 ## Lagekarte
 

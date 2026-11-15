@@ -1526,3 +1526,56 @@ a.start-zurueck-team, a.start-zurueck-team:visited { color: #eef4ff; }
   :is(.ab-raster.n5, .ab-raster.n6, .ab-raster.n7, .ab-raster.n8) :is(.ab-feind.kompakt .ab-reihe, .ab-panzer.kompakt .ab-pz-bild) { display: none; }
   :is(.ab-raster.n5, .ab-raster.n6, .ab-raster.n7, .ab-raster.n8) .ab-feind.kompakt .ab-feind-zeile { padding: 1px 8px; }
 }
+
+/* ---------------------------------------------------------------- Testpult (Liste N, 15.11.2026)
+   Ein Fenster, oben eine Leiste (34 px) mit drei großen Reitern, darunter drei Frames übereinander. Verdeckt über visibility (nicht
+   display: none – die Karten behalten ihre Größe), dazu inert; der gewählte liegt oben. */
+.pult { position: fixed; inset: 0; display: grid; grid-template-rows: var(--pult-leiste) minmax(0, 1fr); --pult-leiste: 34px; }
+.pult-leiste { display: flex; align-items: stretch; gap: 12px; padding: 0 12px 0 0; background: #0b0f12; border-bottom: 1px solid var(--linie);
+  min-width: 0; overflow: hidden; }
+.pult-marke { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 12px; font-weight: 700; letter-spacing: .12em; font-size: 13px; color: var(--argus); white-space: nowrap; }
+.pult-marke span { letter-spacing: .03em; color: var(--text-2); font-weight: 600; }
+.pult-reiter { display: flex; align-items: flex-end; gap: 4px; padding-top: 3px; }
+.pult-tab { --rf: var(--sl); height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 16px; border: 0; border-radius: 6px 6px 0 0;
+  background: var(--flaeche-2); color: var(--text-2); font-weight: 700; font-size: 15px; white-space: nowrap; cursor: pointer; box-shadow: inset 0 3px 0 var(--rf); }
+.pult-tab:hover { background: var(--flaeche-3); color: var(--text); }
+.pult-tab.an { background: var(--rf); color: #0e1317; box-shadow: none; font-size: 16px; cursor: default; }
+.pult-sl { --rf: var(--sl); } .pult-zb { --rf: var(--zb); } .pult-plenum { --rf: var(--plenum); }
+.pult-zahl { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--flaeche-3); color: var(--text); font: 600 13px/20px var(--mono); text-align: center; }
+.pult-zahl.neu { background: var(--argus); color: #0e1317; animation: pult-puls 1.4s ease-in-out infinite; }
+.pult-punkt { width: 10px; height: 10px; border-radius: 50%; background: var(--argus); animation: pult-puls 1.4s ease-in-out infinite; }
+.pult-punkt.achtung { background: var(--schlecht); }
+@keyframes pult-puls { 50% { opacity: .45; } }
+.pult-hilfe { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; }
+.pult-hilfe > b { color: var(--text); }
+.pult-hilfe .link-knopf { color: var(--text); text-decoration: none; font-weight: 600; border-bottom: 1px dotted var(--text-3); }
+.pult-schritt b { font-family: var(--mono); color: var(--text-3); margin-right: 1px; }
+.pult-schritt.jetzt { color: var(--text); }
+.pult-schritt.jetzt b { color: var(--argus); }
+.pult-schritt.erledigt { opacity: .55; }
+.pult-schritt.erledigt::after { content: " ✓"; color: var(--gut); }
+.pult-zu { border: 0; background: none; color: var(--text-3); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
+.pult-zu:hover { color: var(--text); }
+.pult-hilfe-an { flex: 1 1 auto; align-self: center; text-align: left; font-size: 13px; color: var(--text-3); }
+.pult-start { margin-left: auto; align-self: center; color: var(--text-2); font-size: 13px; text-decoration: none; white-space: nowrap; }
+.pult-start:hover { color: var(--text); }
+.pult-flaeche { position: relative; min-height: 0; }
+.pult-flaeche iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: var(--bg);
+  visibility: hidden; pointer-events: none; z-index: 0; }
+.pult-flaeche iframe.vorn { visibility: visible; pointer-events: auto; z-index: 1; }
+@media (max-width: 1300px) { .pult-marke span { display: none; } }
+
+/* Startseite: Knopf mit Untertitel („Team und Spielleitung öffnen“ – „ein Fenster, drei Reiter“) */
+.knopf.mit-unter { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.15; padding-top: 2px; padding-bottom: 3px; }
+.knopf.mit-unter > span { font-size: 12px; font-weight: 400; opacity: .75; }
+
+/* Liste N (N1.7): Spielleitung in niedrigen Fenstern (unter 640 px, z. B. der Reiter im Testpult bei 1366 × 650: 616 px) – linke Spalte
+   enger, damit „Bedingte Lagemeldungen“ mit mindestens einer Zeile sichtbar bleibt. Die Zeile „Szenario-Prüfung“ fällt dort weg, solange
+   sie nur Warnungen meldet (Fehler bleiben stehen). */
+@media (max-height: 640px) {
+  .ansicht-sl { padding: 8px; gap: 8px; }
+  .ansicht-sl > .stapel { gap: 6px; }
+  .ansicht-sl > .stapel > .panel > header { min-height: 30px; padding: 4px 12px; }
+  .ansicht-sl > .stapel > .panel.flach > .rumpf { padding: 7px 12px; }
+  .ansicht-sl .sl-pruefung-warnungen { display: none; }
+}

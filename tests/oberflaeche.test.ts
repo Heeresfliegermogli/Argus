@@ -184,15 +184,14 @@ describe("Liste J: ganze Karte, jede Fenstergröße", () => {
 describe("Liste M: Testraum und Einweisung", () => {
   const quelle = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf-8");
 
-  it("M1.1: „Team und Spielleitung öffnen“ ruft je Klick nur EIN window.open (Chrome blockiert ein zweites still); Spielleitung im selben Tab", () => {
+  it("M1.1 → N1.1: „Team und Spielleitung öffnen“ öffnet kein Fenster mehr (Testpult im selben Tab); window.open nur noch für „Team-Fenster öffnen“", () => {
     const start = quelle("ansichten/start.tsx");
-    expect(start).not.toMatch(/window\.open\(/);
-    const zwei = start.slice(start.indexOf("const zweiFenster"), start.indexOf("const fortsetzen"));
-    expect(zwei.match(/teamFensterOeffnen\(/g)).toHaveLength(1);
-    expect(zwei).toContain('location.href = adresseFuer(direkt, "sl")');
-    expect(zwei).not.toMatch(/forEach|for \(/);
+    expect(start).not.toMatch(/window\.open\(|teamFensterOeffnen/);
+    const pult = start.slice(start.indexOf("const testpult"), start.indexOf("const fortsetzen"));
+    expect(pult).toContain("location.href = testpultAdresse(e)");
     const fenster = quelle("ansichten/gemeinsam/fenster.ts");
     expect(fenster.match(/window\.open\(/g)).toHaveLength(1);
+    expect(quelle("ansichten/testpult.tsx")).not.toMatch(/window\.open\(/);
   });
 
   it("M1.2: Spielleitung im Testraum ohne Team-Laptop bietet „Team-Fenster öffnen“ an, mit Hinweis bei blockiertem Fenster", () => {

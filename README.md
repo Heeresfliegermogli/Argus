@@ -6,7 +6,13 @@ eine Entscheidung (BEKÄMPFEN mit Mörser / LM / Kanone, ZURÜCKSTELLEN, ABLEHNE
 Spiel selbst**; die Spielleitung startet alle Teams, sieht ihren Stand und wertet aus.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-**Neu (Liste J, 10.11.2026, Szenario 2.7):** Die ganze Karte (10 : 7) passt in jedes Fenster ab 1280 × 600 – links in voller Höhe,
+**Neu (Liste N, 15.11.2026, Szenario 2.8):** **Testpult** zum Testen an einem PC – Startseite → Spielleitung → „Test ohne Lobby“ →
+**Team und Spielleitung öffnen** öffnet im selben Tab ein Fenster mit den Reitern **Spielleitung · Zielbearbeitung · Plenum**; alle drei
+laufen weiter, egal welcher Reiter vorn ist (die Zielbearbeitung rechnet das Spiel), oben die Zeile „So geht’s“, am Reiter
+Zielbearbeitung die Zahl der neuen Meldungen. Immer lokal, eigener Raum `pult`. „Allein testen (ein Fenster)“ und die einzelnen
+Kacheln sind unverändert. Firebase-Regeln unverändert.
+
+**Liste J (10.11.2026, Szenario 2.7):** Die ganze Karte (10 : 7) passt in jedes Fenster ab 1280 × 600 – links in voller Höhe,
 Lagemeldungen als Einblendung oben links auf der Karte, rechts Wirkung unterwegs, Eingang (4 Zeilen), geöffnete Meldung mit großem
 Drohnenbild, Wirkmittel als drei Kacheln, Knöpfe immer ganz unten; darunter wird gleichmäßig verkleinert. Geprüft in 1536 × 730
 (Dienst-Laptop, Standard), 1366 × 650, 1530 × 800 und 1920 × 960 ([`docs/UI.md`](docs/UI.md)). Firebase-Regeln unverändert.
@@ -51,7 +57,8 @@ Seite: `https://heeresfliegermogli.github.io/Argus/`
 | Spielleitung | `…/Argus/?sitzung=K7P&rolle=sl` |
 | Plenum (Smartboard) | `…/Argus/?sitzung=K7P&rolle=plenum` |
 | Test ohne Lobby, allein in einem Fenster (das Team steuert die Uhr oben rechts) | `…/Argus/?rolle=zb&raum=kraehe` |
-| Test ohne Lobby, Team und Spielleitung | `…/Argus/?rolle=zb&raum=kraehe`, `…?rolle=sl&raum=kraehe` (auch `plenum`) |
+| Test ohne Lobby, Team und Spielleitung: **Testpult** (seit Liste N: ein Fenster, oben die Reiter Spielleitung · Zielbearbeitung · Plenum; alle drei laufen weiter; immer lokal, Raum `pult`) | `…/Argus/?testpult=1` (Startseite → Spielleitung → „Test ohne Lobby“ → **Team und Spielleitung öffnen**) |
+| Test ohne Lobby, einzelne Fenster (Kacheln) | `…/Argus/?rolle=zb&raum=kraehe`, `…?rolle=sl&raum=kraehe` (auch `plenum`) |
 
 Druckfassung der Einweisungskarten (Team und Spielleitung), A5 quer: `…/Argus/?druck=einweisung`. Bedientest mit
 Unbeteiligten: [`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
@@ -120,6 +127,8 @@ kein Rollbalken, nichts abgeschnitten, ganze Karte, Knöpfe ganz und an fester S
 python3 tools/ui_bilder.py http://localhost:4173/ --bilder ui-bilder      # kurzer Ablauf bis S1
 python3 tools/ui_faelle.py http://localhost:4173/ --bilder ui-faelle      # Schlüsselfälle, voller Eingang, Countdown, lange Notiz
 python3 tools/bedientest_probe.py http://localhost:4173/                  # 13 Aufgaben des Bedientests lösbar?
+python3 tools/testpult_probe.py http://localhost:4173/ --bilder pult      # Liste N: Testpult (drei Reiter), auch --groesse 1366x650
+python3 tools/testraum_popup_probe.py http://localhost:4173/              # Pop-up-Sperre wie Chrome: Pult ohne Fenster, „Team-Fenster öffnen“
 python3 tools/verluste_probe.py http://localhost:4173/ --bilder verluste  # vier Panzer, Beschuss sichtbar, Lagemeldungen, Preis
 python3 tools/livelage_probe.py http://localhost:4173/ --bilder live      # Effekte, Tracking, Verstärkung, Bildrate
 python3 tools/drohne_probe.py http://localhost:4173/ --bilder drohne      # Live-Drohnenbild: Ebenen, Schlüsselfälle, Kamera folgt, Bildrate

@@ -144,7 +144,8 @@ export function AbschlussBild(p: { inh: Inhalte; z: Spielzustand; team: string; 
   return (
     <div class="ab-bild" data-testid="abschluss" data-feind={ab.feindSumme} data-weitere={ab.weitere} data-bereit={ab.bereit}>
       <header class="ab-kopf" style={{ background: p.farbe }}>
-        <h2>Gefecht beendet – Team {p.team}</h2>
+        {/* Testraum und Testpult heißen „Team 1“ – nicht „Team Team 1“ (Befund Liste N) */}
+        <h2>Gefecht beendet – {/^Team\b/.test(p.team) ? p.team : `Team ${p.team}`}</h2>
         <span class="ab-ende">{p.ende}</span>
       </header>
       <div class="ab-unterzeile leise">Eingaben sind gesperrt. Bitte zum Plenum – die Auswertung beginnt.</div>

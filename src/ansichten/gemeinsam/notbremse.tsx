@@ -1,5 +1,6 @@
 // Notbremse „Alle Sitzungen beenden“ (Liste L, L3.1) und Banner „Neue Version“ (L4.1).
 import { useState } from "preact/hooks";
+import { seiteNeuLaden } from "./pult";
 import { useNeueVersion } from "./version";
 
 /**
@@ -55,7 +56,7 @@ export function VersionsBanner() {
   return (
     <div class="versions-banner" role="status" data-testid="versions-banner" data-neu={v}>
       <b>Neue Version – bitte neu laden.</b> <span class="klein">Dieses Fenster: {__ARGUS_COMMIT__}, aktuell: {v}. Das Spiel läuft nach dem Neuladen an derselben Stelle weiter.</span>
-      <button type="button" class="knopf klein" onClick={() => location.reload()} data-testid="neu-laden">neu laden</button>
+      <button type="button" class="knopf klein" onClick={seiteNeuLaden} data-testid="neu-laden">neu laden</button>
     </div>
   );
 }
