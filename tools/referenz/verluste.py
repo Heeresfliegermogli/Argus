@@ -401,8 +401,46 @@ def fmt(vorlage, werte):
     return "".join(out)
 
 
+def vorbereitungen(d):
+    """Feuervorbereitungen der Feindartillerie des Hintergrunds mit ihrem ersten Einschlag (auch daneben, außerhalb radius_m), seit 2.8
+    (M3.1a): Liste dict(t, quelle, panzer) nach Zeit. Panzer: `panzer` des Ereignisses, sonst je Einschlag der nächste (Reihenfolge der Kp)."""
+    sz = d["szenario"]
+    pl = panzer(sz)
+    ids_kp = [p["id"] for p in pl]
+    dauer = sz["spieluhr"]["dauer_s"]
+    out = []
+    for h in (sz.get("hintergrund") or {}).get("ereignisse", []):
+        if h.get("art") != "feindartillerie" or not h.get("einschlaege"):
+            continue
+        t = r2(min(e[0] for e in h["einschlaege"]))
+        if t >= dauer:
+            continue
+        ids = [i for i in (h.get("panzer") or []) if i in ids_kp]
+        if not ids:
+            naeher = set()
+            for _, x, y in h["einschlaege"]:
+                n = naechster(pl, [x, y], set())
+                if n:
+                    naeher.add(n["id"])
+            ids = [i for i in ids_kp if i in naeher]
+        out.append({"t": t, "quelle": h["id"], "panzer": [i for i in ids_kp if i in ids]})
+    out.sort(key=lambda v: (v["t"], v["quelle"]))
+    return out
+
+
+def panzer_liste(sz, ids):
+    """„1/1“, „1/1 und 1/2“, „1/1, 1/2 und 1/4“; alle Panzer der Kp: „1/1 bis 1/4“ (wie panzerListe in verluste.ts)."""
+    pl = panzer(sz)
+    name = {p["id"]: p["name"] for p in pl}
+    n = [name.get(i, i) for i in ids]
+    if len(n) >= 3 and len(n) == len(pl):
+        return f"{n[0]} bis {n[-1]}"
+    return "".join(n) if len(n) <= 1 else ", ".join(n[:-1]) + " und " + n[-1]
+
+
 def meldungen(d, ev):
-    """Druckmeldungen der Kp (F2.7, je Panzer) aus der Zeitlinie: Liste dict(id, t, zug, stufe, text) – `zug` ist der Panzer.
+    """Druckmeldungen der Kp (F2.7, je Panzer) aus der Zeitlinie: Liste dict(id, t, zug, stufe, text, quelle) – `zug` ist der Panzer,
+    `quelle` die Feuerquelle (seit 2.8; nicht im Protokoll).
 
     Sofort, ohne Abstand: ausgefallen (Stufe 3; beim letzten zulässigen Ausfall mit „hält mit Mühe“) und der Wechsel nach eingeschränkt
     (Stufe 2), ebenso der erste Treffer einer Art aus `sofort` (Attrappe). Sonst mit Abstand (abstand_alle_s seit der letzten Meldung
@@ -416,6 +454,11 @@ def meldungen(d, ev):
       * nur_stufenwechsel (Feindartillerie H-01, H-04, H-12): meldet sich nur beim Wechsel nach eingeschränkt oder ausgefallen.
       * artillerie (Mörser, gelenktes Feuer, Feindartillerie, Attrappe): höchstens eine Meldung je Panzer, Schütze und Stufe und
         insgesamt höchstens eine je artillerie_abstand_s; „ausgefallen“ kommt immer.
+
+    Seit 2.8 (M3.1a, erste_quelle): Jede Feuerquelle meldet sich mit ihrem ersten Einschlag bei den eigenen Panzern – die
+    Feuervorbereitung des Hintergrunds mit dem ersten Einschlag überhaupt (vorbereitungen(), Vorlage „beschuss“ mit allen Panzern, auf
+    denen sie liegt), jede andere Quelle mit ihrem ersten Schuss in der Zeitlinie. Kam dazu nach den Regeln bis 2.7 keine Meldung, kommt
+    diese erste Meldung dazu: ohne Abstand, und sie zählt für keine Drosselung – alle übrigen Meldungen bleiben genau wie bisher.
     """
     sz, vr = d["szenario"], d["regeln"]["verluste"]
     vm = (sz.get("verluste") or {}).get("meldungen")
@@ -426,6 +469,7 @@ def meldungen(d, ev):
     art_abstand = regel.get("artillerie_abstand_s", 0)
     nur_wechsel = set(regel.get("nur_stufenwechsel", []))
     erster_beschuss = bool(regel.get("erster_beschuss"))
+    erste_quelle = bool(regel.get("erste_quelle"))
     pl = panzer(sz)
     pmap = {p["id"]: p for p in pl}
     zst = {p["id"]: {"zustand": vr["zustand_start"], "aus": False, "t": None, "treffer": 0, "arten": set(), "beschossen": False,
@@ -434,7 +478,31 @@ def meldungen(d, ev):
     out = []
     t_alle = None
     t_art = None
+    vorb = vorbereitungen(d) if erste_quelle else []
+    gesehen = {v["quelle"] for v in vorb}
+    iv = [0]
+
+    def werte_fuer(pz, art, ort, extra):
+        w = {"pz": pz["name"], "waffe": vm["waffe"][art], "ort": (" " + ort) if ort else "", "forderung": vm["forderung"][art],
+             "gesamt": len(pl), "bereit": sum(1 for x in zst.values() if not x["aus"]), "schaden_e": pz.get("schaden_eingeschraenkt", ""),
+             "zug": (sz.get("eigene_truppe") or {}).get("name", "")}
+        w.update(extra)
+        return w
+
+    def vorbereitung_melden(bis):
+        while iv[0] < len(vorb) and vorb[iv[0]]["t"] <= bis:
+            v = vorb[iv[0]]
+            iv[0] += 1
+            if not v["panzer"]:
+                continue
+            pz = pmap[v["panzer"][0]]
+            werte = werte_fuer(pz, "artillerie", "", {"zustand": zst[pz["id"]]["zustand"], "verw": "", "schaden": ""})
+            werte["pz"] = panzer_liste(sz, v["panzer"])
+            out.append({"id": f"{vm['kennung']}{len(out) + 1:02d}", "t": v["t"], "zug": pz["id"], "stufe": 0,
+                        "text": fmt(vm["texte"]["beschuss"], werte), "quelle": v["quelle"]})
+
     for e in ev:
+        vorbereitung_melden(e["t"])
         s = zst[e["panzer"]]
         vorher = stufe(vr, s["zustand"], s["aus"])
         s["zustand"], s["aus"] = e["zustand"], e["ausgefallen"]
@@ -450,43 +518,79 @@ def meldungen(d, ev):
         erster = erster_beschuss and not s["beschossen"] and e["art"] not in nur_wechsel
         if e["art"] not in nur_wechsel:
             s["beschossen"] = True
+        erste_der_quelle = erste_quelle and e["quelle"] not in gesehen
+        gesehen.add(e["quelle"])
         n_aus = sum(1 for x in zst.values() if x["aus"])
+        # Regeln bis 2.7 (None: keine Meldung)
         if nachher == "ausgefallen" and vorher != "ausgefallen":
-            schl, st = ("limit" if n_aus >= hoechstens else "ausgefallen"), 3
+            wahl = ("limit" if n_aus >= hoechstens else "ausgefallen", 3)
         elif nachher == "eingeschraenkt" and vorher == "einsatzbereit":
-            schl, st = "eingeschraenkt", 2
+            wahl = ("eingeschraenkt", 2)
         elif e["art"] in nur_wechsel:
-            continue
+            wahl = None
         elif erste_art:
-            schl, st = "sofort", 1 if nachher == "einsatzbereit" else 2
+            wahl = ("sofort", 1 if nachher == "einsatzbereit" else 2)
         elif erster:
-            schl, st = ("treffer", 1) if e["ergebnis"] == "treffer" and nachher == "einsatzbereit" else \
+            wahl = ("treffer", 1) if e["ergebnis"] == "treffer" and nachher == "einsatzbereit" else \
                 ("erneut", 2) if e["ergebnis"] == "treffer" else ("beschuss", 0)
         elif e["ergebnis"] == "treffer" and nachher == "einsatzbereit" and frei_alle and frei_pz:
-            schl, st = "treffer", 1
+            wahl = ("treffer", 1)
         elif e["ergebnis"] == "treffer" and nachher == "eingeschraenkt" and frei_alle and (s["t"] is None or t - s["t"] >= regel["abstand_limit_s"]):
-            schl, st = "erneut", 2
+            wahl = ("erneut", 2)
         elif e["k"] == 1 and e["ergebnis"] != "treffer" and frei_alle and frei_pz:
-            schl, st = "beschuss", 0         # ein neuer Schütze schießt sich ein: erst daneben
+            wahl = ("beschuss", 0)         # ein neuer Schütze schießt sich ein: erst daneben
         else:
-            continue
-        if e["art"] in art_arten:
+            wahl = None
+        if wahl and e["art"] in art_arten:
             schl_art = (nachher, e["quelle"])
-            if st < 3 and (schl_art in s["art_schl"] or (t_art is not None and t - t_art < art_abstand)):
-                continue
-            s["art_schl"].add(schl_art)
-            t_art = t
+            if wahl[1] < 3 and (schl_art in s["art_schl"] or (t_art is not None and t - t_art < art_abstand)):
+                wahl = None
+            else:
+                s["art_schl"].add(schl_art)
+                t_art = t
+        # M3.1a: erster Einschlag dieser Quelle ohne Meldung nach den bisherigen Regeln – die erste Meldung kommt dazu (zählt nicht)
+        zusatz = not wahl and erste_der_quelle
+        if zusatz:
+            if nachher == "eingeschraenkt" and vorher == "einsatzbereit":
+                wahl = ("eingeschraenkt", 2)
+            elif erste_art:
+                wahl = ("sofort", 1 if nachher == "einsatzbereit" else 2)
+            elif e["ergebnis"] == "treffer":
+                wahl = ("treffer", 1) if nachher == "einsatzbereit" else ("erneut", 2)
+            else:
+                wahl = ("beschuss", 0)
+        if not wahl:
+            continue
+        schl, st = wahl
         pz = pmap[e["panzer"]]
-        bereit = sum(1 for x in zst.values() if not x["aus"])
         verw = vr["verwundete"].get(nachher, 0)
         liste = vm["schaden"].get(e["art"]) or [""]
-        werte = {"pz": pz["name"], "zustand": s["zustand"], "verw": verw_text(verw), "waffe": vm["waffe"][e["art"]],
-                 "ort": (" " + e["ort"]) if e["ort"] else "", "forderung": vm["forderung"][e["art"]], "bereit": bereit, "gesamt": len(pl),
-                 "schaden": liste[(s["treffer"] - 1) % len(liste)] if s["treffer"] else "", "schaden_e": pz.get("schaden_eingeschraenkt", ""),
-                 "zug": (sz.get("eigene_truppe") or {}).get("name", "")}
-        out.append({"id": f"{vm['kennung']}{len(out) + 1:02d}", "t": t, "zug": e["panzer"], "stufe": st, "text": fmt(vm["texte"][schl], werte)})
+        werte = werte_fuer(pz, e["art"], e["ort"], {"zustand": s["zustand"], "verw": verw_text(verw),
+                                                     "schaden": liste[(s["treffer"] - 1) % len(liste)] if s["treffer"] else ""})
+        out.append({"id": f"{vm['kennung']}{len(out) + 1:02d}", "t": t, "zug": e["panzer"], "stufe": st,
+                    "text": fmt(vm["texte"][schl], werte), "quelle": e["quelle"]})
+        if zusatz:
+            continue
         s["t"] = t
         t_alle = t
+    vorbereitung_melden(float("inf"))
+    return out
+
+
+def erstmeldungen(d, ev, ms):
+    """Prüfregel M3.1c (seit 2.8): je Feuerquelle der erste Einschlag bei den eigenen Panzern (Feuervorbereitung des Hintergrunds: ihr
+    erster Einschlag überhaupt) und die erste Meldung der Kp zu dieser Quelle. Liste dict(quelle, art, t_einschlag, t_meldung) –
+    t_meldung None, wenn keine kam."""
+    vorb = vorbereitungen(d)
+    hg = {v["quelle"] for v in vorb}
+    erst = {v["quelle"]: (v["t"], "artillerie") for v in vorb}
+    for e in ev:
+        if e["quelle"] not in erst and e["quelle"] not in hg:
+            erst[e["quelle"]] = (e["t"], e["art"])
+    out = []
+    for q, (t0, art) in sorted(erst.items(), key=lambda kv: (kv[1][0], kv[0])):
+        tm = next((m["t"] for m in ms if m.get("quelle") == q and m["t"] >= t0 - 1e-9), None)
+        out.append({"quelle": q, "art": art, "t_einschlag": t0, "t_meldung": tm})
     return out
 
 

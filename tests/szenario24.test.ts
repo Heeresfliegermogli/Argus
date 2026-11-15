@@ -34,7 +34,7 @@ const NEU = ["S5", "S6", "S7", "S8"];
 describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
   it("E1: das Menü „Verstärkung“ ist per Schalter in den Regeln aus", async () => {
     const inh = await inhalte();
-    expect(["2.4", "2.5", "2.6", "2.7"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I)
+    expect(["2.4", "2.5", "2.6", "2.7", "2.8"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I), 2.8 auf 2.7 (M)
     expect(inh.regeln.spielleitung?.verstaerkung_menue).toBe(false);
     // die Verstärkungen bleiben in den Daten (Schalter, kein Löschen)
     expect(inh.szenario.verstaerkungen?.gruppen.length).toBeGreaterThan(0);

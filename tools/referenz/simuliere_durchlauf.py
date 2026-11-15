@@ -24,7 +24,8 @@ alle Schlüssel- und Nebenfälle erreicht.
 
 Aufruf: python3 simuliere_durchlauf.py [--verstaerkung]   (mit Verstärkungen und Robustheit gegen langsamere Teams)
 
-Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.6.
+Gleich im Projekt PolBil (claude/tools/simuliere_durchlauf.py) und im Repository (tools/referenz/), Stand Szenario 2.8.
+Seit 2.8 (M3.1c): Die Kalibrierung prüft auch, dass jede Feuerquelle sich höchstens erste_quelle_s nach ihrem ersten Einschlag meldet.
 Im Repository dient sie als Referenz für die Engine: tools/referenz/erzeuge_durchlauf.py schreibt die Ergebnisse nach
 tests/referenz_durchlauf.json, tests/durchlauf.test.ts spielt dieselben Modellteams mit der echten Engine und vergleicht.
 """
@@ -381,7 +382,7 @@ def lauf(d, team, detail=None, einspielen=None):
         ev = V.zeitlinie(dw, z_end, V.r2(min(att)) if att else None, durch_g)
         for k in V.meldungen(dw, ev):
             injects.append(f"{k['id']} um {L.mmss(k['t'])}")
-            det.append({"inject": k["id"], "t": k["t"], "text": k["text"], "zug": k["zug"], "stufe": k["stufe"]})
+            det.append({"inject": k["id"], "t": k["t"], "text": k["text"], "zug": k["zug"], "stufe": k["stufe"], "quelle": k["quelle"]})
         texte = {i["id"]: i for i in sz["injects"]}
         for e in det:
             if "inject" in e and e["inject"] in texte and "{" in texte[e["inject"]]["text"]:
@@ -497,6 +498,9 @@ def kalibrierung(d):
     name_pz = {p["id"]: p["name"] for p in V.panzer(d["szenario"])}
     out, ref = [], {}
     grenze_ok, dritter_ok = True, True
+    erst_s = vr["meldungen"].get("erste_quelle_s", 3)
+    erst_n, erst_fehler = 0, []
+    pruefe_erst = bool(vr["meldungen"].get("erste_quelle"))
     for team, ein in LAEUFE_FUENF:
         v = verluste_lauf(d, team, ein)
         name = team + (f" + V-1…V-{len(ein)}" if ein else "")
@@ -511,6 +515,12 @@ def kalibrierung(d):
                 if e["ausgefallen"] and n[e["panzer"]] < 3:
                     dritter_ok = False
         out.append((name, v["zug"], pz, len(v["meldungen"])))
+        # seit 2.8 (M3.1c): jede Feuerquelle meldet sich höchstens erste_quelle_s nach ihrem ersten Einschlag
+        for x in V.erstmeldungen(d, v["zeitlinie"], v["meldungen"]):
+            erst_n += 1
+            if x["t_meldung"] is None or x["t_meldung"] - x["t_einschlag"] > erst_s + 1e-9:
+                erst_fehler.append(f"{name}: {x['quelle']} ({x['art']}) erster Einschlag {L.mmss(x['t_einschlag'])}, Meldung "
+                                   f"{L.mmss(x['t_meldung']) if x['t_meldung'] is not None else 'keine'}")
         if not ein:
             ref[team] = v
     schlechter = schwere(ref["ideal"]) > schwere(ref["naiv"])
@@ -521,10 +531,14 @@ def kalibrierung(d):
             f"{vr['hoechstens_ausgefallen']} ausgefallen, übrige ≥ {vr['untergrenze_prozent']} %) hält in allen fünf Läufen: {'ja' if grenze_ok else 'NEIN'}; "
             f"kein Ausfall vor dem dritten Treffer: {'ja' if dritter_ok else 'NEIN'}; im Vorschlag (ideal ≥ 1 ausgefallen, naiv keiner): "
             f"{'ja' if vorschlag else 'nein'}"]
+    if pruefe_erst:
+        text.append(f"Erste Meldung je Feuerquelle ≤ {erst_s} s nach dem ersten Einschlag (M3.1c, fünf Läufe, {erst_n} Quellen): "
+                    f"{'ja' if not erst_fehler else 'NEIN – ' + '; '.join(erst_fehler)}")
     for name, zg, pz, nm in out:
         text.append(f"  {name:22} {zg['bereit']}/{zg['gesamt']} einsatzbereit, {zg['verwundete']:2} Verwundete, {nm:2} Druckmeldungen | " +
                     " | ".join(f"{name_pz[k]} {zu} % {st} ({tr} Treffer)" for k, (zu, st, tr, vw, r) in pz.items()))
-    return {"ok": schlechter and grenze_ok and dritter_ok, "vorschlag": vorschlag, "laeufe": out, "text": text}
+    return {"ok": schlechter and grenze_ok and dritter_ok and not erst_fehler, "vorschlag": vorschlag, "laeufe": out, "text": text,
+            "erstmeldung_fehler": erst_fehler}
 
 
 if __name__ == "__main__":

@@ -871,6 +871,30 @@ def pruefe(d):
                 if len(lang) > MAX_LAGE:
                     fehler.append(f"Druckmeldung {st_} ({art}) bis {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
 
+    # ---------------------------------------------------------------- Seit 2.8 (M3.1): erste Meldung je Feuerquelle
+    if vr and (vr.get("meldungen") or {}).get("erste_quelle") and et and vm:
+        ids_kp = {p["id"] for p in et.get("panzer", [])}
+        for h in (sz.get("hintergrund") or {}).get("ereignisse", []):
+            if h.get("art") != "feindartillerie":
+                continue
+            if not h.get("panzer"):
+                warn.append(f"{h['id']}: Feindartillerie ohne `panzer` – die erste Meldung nennt je Einschlag den nächsten Panzer")
+            for pid in h.get("panzer") or []:
+                if pid not in ids_kp:
+                    fehler.append(f"{h['id']}: Panzer {pid} unbekannt (hintergrund.ereignisse[].panzer)")
+        # Lauf ohne Eingriff (nichts zerstört: alle Feuerquellen schießen): erste Meldung höchstens erste_quelle_s nach dem ersten Einschlag
+        grenze = vr["meldungen"].get("erste_quelle_s", 3)
+        ev = V.zeitlinie(d, {}, None, [])
+        ms = V.meldungen(d, ev)
+        for x in V.erstmeldungen(d, ev, ms):
+            if x["t_meldung"] is None or x["t_meldung"] - x["t_einschlag"] > grenze + 1e-9:
+                fehler.append(f"M3.1: {x['quelle']} ({x['art']}) erster Einschlag {L.mmss(x['t_einschlag'])} ohne Meldung der Kp binnen {grenze} s")
+        for m in ms:
+            lang = f"{vm['von']}: {m['text']}"
+            lage_max = max(lage_max, len(lang))
+            if len(lang) > MAX_LAGE:
+                fehler.append(f"Druckmeldung {m['id']} {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
+
     # ---------------------------------------------------------------- Seit 2.7 (I2.2): Meldung früh genug, kein Verschwinden ohne Erklärung
     for f in meldung_frueh(d):
         fehler.append(f)

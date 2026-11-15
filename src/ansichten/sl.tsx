@@ -20,7 +20,9 @@ import { protokollDatei, speichereDatei } from "../sitzung/ablage";
 import { diagnoseText, kopiere } from "../sitzung/diagnose";
 import type { Sicht, SichtTeilnehmer } from "../sitzung/sicht";
 import type { Sitzung } from "../sitzung/sitzung";
+import { adresseFuer, leseEinstellungen } from "../config";
 import { AktionsKnopf, BestaetigenKnopf, Leer, Panel } from "./gemeinsam/bausteine";
+import { popupWarBlockiert, teamFensterOeffnen } from "./gemeinsam/fenster";
 import { useSpielzeit, useStand } from "./gemeinsam/hooks";
 import { LagekarteAnsicht } from "./gemeinsam/lagekarte";
 
@@ -78,6 +80,27 @@ export function plenumOeffnen(): void {
   window.open(u.toString(), "argus-plenum");
 }
 
+/**
+ * Liste M (M1.2): Spielleitung im Testraum, und im Team ist kein Laptop – „Team-Fenster öffnen“ öffnet die Zielbearbeitung desselben
+ * Raums als neues Fenster (eigener Klick, wird nicht blockiert). Blockiert der Browser trotzdem (oder schon beim Knopf „Team und
+ * Spielleitung öffnen“ auf der Startseite), steht hier, was zu tun ist.
+ */
+function TeamFensterKnopf(p: { blockiert: boolean }) {
+  const [blockiert, setBlockiert] = useState(p.blockiert);
+  const oeffnen = () => setBlockiert(!teamFensterOeffnen(adresseFuer(leseEinstellungen(), "zb")));
+  return (
+    <div class="stapel team-fenster" style="gap:6px" data-testid="team-fenster">
+      <button type="button" class="knopf weiter" onClick={oeffnen} data-testid="team-fenster-oeffnen"
+        title="Öffnet die Zielbearbeitung dieses Testraums als neues Fenster – sie rechnet das Spiel">Team-Fenster öffnen</button>
+      {blockiert && (
+        <div class="uhr-grund" role="alert" data-testid="popup-blockiert">
+          Das Team-Fenster wurde vom Browser blockiert. Bitte Pop-ups für diese Seite erlauben oder „Zielbearbeitung“ unter „Test ohne Lobby“ öffnen.
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Reihenfolge in der Fensterleiste: Spielleitung, Team, Plenum. */
 function fensterRang(x: SichtTeilnehmer): number {
   return x.art === "sl" ? 0 : x.art === "plenum" ? 9 : 1;
@@ -101,6 +124,17 @@ export function SLAnsicht(p: { s: Sicht }) {
   const [reiter, setReiter] = useState<"zeitplan" | "protokoll">("zeitplan");
   const jetzt = s.adapter.serverJetzt();
   const darfSteuern = st.istHost || (!!st.host && !istVeraltet(st.host.puls, jetzt));
+  // M1.2: Testraum ohne Team-Laptop – der Knopf „Team-Fenster öffnen“ kommt nach 3 s (solange ein gerade geöffnetes Team-Fenster noch
+  // lädt, bleibt er weg), sofort, wenn die Startseite das Team-Fenster nicht öffnen konnte
+  const ohneLaptop = st.direkt && !st.rechnerGeraet;
+  const [popupBlockiert] = useState(popupWarBlockiert);
+  const [teamKnopf, setTeamKnopf] = useState(false);
+  useEffect(() => {
+    setTeamKnopf(false);
+    if (!ohneLaptop) return;
+    const h = setTimeout(() => setTeamKnopf(true), 3000);
+    return () => clearTimeout(h);
+  }, [ohneLaptop]);
   const tLage = Math.floor(Math.min(t, sz.spieluhr.dauer_s));
   const lagebild = useMemo(() => lagebildKontrolle(inh, z, tLage), [inh, z, tLage]);
   const fx = useMemo(() => effekte(inh, z, "alle"), [inh, z]);
@@ -165,6 +199,7 @@ export function SLAnsicht(p: { s: Sicht }) {
             {st.uhrGrund && (
               <div class="uhr-grund" role="status" data-testid="uhr-grund" data-befehl={st.uhrGrund.befehl}>{st.uhrGrund.text}</div>
             )}
+            {ohneLaptop && (teamKnopf || popupBlockiert) && <TeamFensterKnopf blockiert={popupBlockiert} />}
             {st.zwei && <div class="uhr-grund" role="alert" data-testid="zwei-hinweis"><b>Lauf hat zwei Verläufe – Neues Spiel empfohlen.</b></div>}
             <div class="zeile" style="gap:4px">
               <span class="klein leise" style="margin-right:4px">Tempo</span>

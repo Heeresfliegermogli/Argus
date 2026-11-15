@@ -141,7 +141,7 @@ describe("Liste J: ganze Karte, jede Fenstergröße", () => {
   it("J1.2: höchstens zwei Lagemeldungen auf der Karte, die neuesten; die übrigen stehen dahinter", () => {
     const inj = (id: string, t: number, quittiert = false) => ({ id, erschienen: { seq: 1, t_s: t }, ...(quittiert ? { quittiert: { seq: 2, t_s: t + 1 } } : {}) }) as InjectStand;
     const inh = { regeln: { anzeige: { lagemeldung_s: 30 } } } as Parameters<typeof lageEinblendung>[0];
-    const alle = [inj("I-01", 100), inj("I-02", 105), inj("I-03", 110, true), inj("I-04", 112)];
+    const alle = [inj("I-01", 100), inj("I-02", 105), inj("I-11", 110, true), inj("I-04", 112)];
     const e = lageEinblendung(inh, alle, 115);
     expect(LAGEMELDUNG_MAX).toBe(2);
     expect(e.zeigen.map((i) => i.id)).toEqual(["I-04", "I-02"]);
@@ -178,5 +178,39 @@ describe("Liste J: ganze Karte, jede Fenstergröße", () => {
     expect(css).toMatch(/section\.eingang \{[^}]*flex: 0 0 155px; height: 155px/);
     // die Regel trifft nicht die Zelle „Eingang“ in der Übersicht der Spielleitung
     expect(css).not.toMatch(/^\.eingang \{[^}]*height:/m);
+  });
+});
+
+describe("Liste M: Testraum und Einweisung", () => {
+  const quelle = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf-8");
+
+  it("M1.1: „Team und Spielleitung öffnen“ ruft je Klick nur EIN window.open (Chrome blockiert ein zweites still); Spielleitung im selben Tab", () => {
+    const start = quelle("ansichten/start.tsx");
+    expect(start).not.toMatch(/window\.open\(/);
+    const zwei = start.slice(start.indexOf("const zweiFenster"), start.indexOf("const fortsetzen"));
+    expect(zwei.match(/teamFensterOeffnen\(/g)).toHaveLength(1);
+    expect(zwei).toContain('location.href = adresseFuer(direkt, "sl")');
+    expect(zwei).not.toMatch(/forEach|for \(/);
+    const fenster = quelle("ansichten/gemeinsam/fenster.ts");
+    expect(fenster.match(/window\.open\(/g)).toHaveLength(1);
+  });
+
+  it("M1.2: Spielleitung im Testraum ohne Team-Laptop bietet „Team-Fenster öffnen“ an, mit Hinweis bei blockiertem Fenster", () => {
+    const sl = quelle("ansichten/sl.tsx");
+    expect(sl).toContain("Team-Fenster öffnen");
+    expect(sl).toContain("st.direkt && !st.rechnerGeraet");
+    expect(sl).toContain("Bitte Pop-ups für diese Seite erlauben oder „Zielbearbeitung“ unter „Test ohne Lobby“ öffnen.");
+  });
+
+  it("M2: Einweisung 1/7–3/7 mit den neuen Texten", () => {
+    const text = (i: number) => {
+      const t = TOUR[i].text as { props?: { children?: unknown } };
+      const teile = ([] as unknown[]).concat(t.props?.children ?? []);
+      return teile.map((x) => (typeof x === "string" ? x : String((x as { props?: { children?: unknown } }).props?.children ?? ""))).join("");
+    };
+    expect(text(0)).toBe("Hier kommen die Meldungen. Die älteste öffnet sich von selbst. Klicken auf eine andere öffnet diese.");
+    expect(text(1)).toBe("Die geöffnete Meldung: Drohnenbild live (Klicken vergrößert). Darunter die Informationen, die Wirkmittel und ganz unten die drei Knöpfe BEKÄMPFEN mit … ZURÜCKSTELLEN ABLEHNEN. Ohne eure Entscheidung wird nichts bekämpft.");
+    expect(text(2)).toMatch(/Rein- und Rauszoomen über das Mausrad\. Wechsel der Kartenansicht oben rechts\.$/);
+    expect(text(2)).not.toContain("Mausrad zoomt");
   });
 });

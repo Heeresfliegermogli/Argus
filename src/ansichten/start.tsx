@@ -15,6 +15,7 @@ import { CODE_LAENGE, CODE_MUSTER, SPIELERNAME_MAX, codeAnzeige, codeNormalisier
 import { Sitzung } from "../sitzung/sitzung";
 import { type GemerkteSitzung, gemerkteSitzungen, selberTag, vergissAlleSitzungen } from "../sitzung/gemerkt";
 import { type SitzungsKurzinfo, adapterFuer, alleSitzungenBeenden, sitzungsKurzinfo } from "../sync/fabrik";
+import { merkePopupBlockiert, teamFensterOeffnen } from "./gemeinsam/fenster";
 import { Notbremse, VersionsBanner } from "./gemeinsam/notbremse";
 import { useSelbstNeuLaden } from "./gemeinsam/version";
 
@@ -210,11 +211,13 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
     }
   };
 
+  // Liste M (M1.1): nur EIN neues Fenster je Klick – Chrome lässt je Klick nur ein Pop-up zu, ein zweites `window.open` im selben Klick
+  // wird still blockiert (bis Stand L traf das das Team-Fenster, „Start“ fand dann keinen Laptop). Das Team-Fenster öffnet als neues
+  // Fenster, die Spielleitung im aktuellen Tab. Wird auch das Team-Fenster blockiert, bietet die Spielleitung „Team-Fenster öffnen“ an.
   const zweiFenster = () => {
     merken(direkt);
-    (["sl", "zb"] as const).forEach((r, i) => {
-      window.open(adresseFuer(direkt, r), `argus-${r}`, `popup,width=1530,height=860,left=${40 * i},top=${30 * i}`);
-    });
+    if (!teamFensterOeffnen(adresseFuer(direkt, "zb"))) merkePopupBlockiert();
+    location.href = adresseFuer(direkt, "sl");
   };
   const fortsetzen = (rolle: "sl" | "plenum") => {
     if (!letzte) return;
@@ -290,7 +293,8 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
             <span style="flex:1" />
             <a class={`knopf klein weiter ${raumOk ? "" : "aus"}`} href={raumOk ? adresseFuer(direkt, "zb") : undefined} onClick={() => merken(direkt)}
               title="Ein Fenster: das Team spielt allein, die Uhr startet oben rechts" data-testid="solo">Allein testen (ein Fenster)</a>
-            <button type="button" class="knopf klein" disabled={!raumOk} onClick={zweiFenster}>Team und Spielleitung öffnen</button>
+            <button type="button" class="knopf klein" disabled={!raumOk} onClick={zweiFenster} data-testid="team-und-sl"
+              title="Das Team-Fenster öffnet als neues Fenster, die Spielleitung in diesem Tab">Team und Spielleitung öffnen</button>
           </div>
           <div class="klein hinweis-box" data-testid="test-hinweis"><b>Nur für einen PC allein.</b> Für Tests mit mehreren Laptops: Spielleitung → Neue Sitzung, Code an den Laptops eingeben.</div>
           <div class="rollenwahl">

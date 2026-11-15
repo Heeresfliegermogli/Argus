@@ -246,6 +246,8 @@ export interface Aufloesung {
   vermerk: string;
   inject?: string;
   getroffen?: { inject: string; name: string };
+  /** seit 2.8 (M3.3b): Größe des blauen Zeichens nach der Auflösung (Standard Kompanie) */
+  groesse?: "zug" | "kompanie";
   hinweis?: string;
 }
 
@@ -258,6 +260,8 @@ export interface HgArtillerie {
   art: "feindartillerie";
   ziel?: string;
   einschlaege: RoutenPunkt[];
+  /** seit 2.8 (M3.1): Panzer, auf denen die Feuervorbereitung liegt – die Kp meldet den ersten Einschlag für sie (sonst: je Einschlag der nächste) */
+  panzer?: string[];
   text: string;
 }
 
@@ -705,6 +709,14 @@ export interface RegelnVerluste {
     nur_stufenwechsel?: string[];
     /** seit 2.6 (H5.7): der erste Beschuss eines Panzers kommt immer als Meldung */
     erster_beschuss?: boolean;
+    /**
+     * seit 2.8 (M3.1a): Jede Feuerquelle (Feindartillerie des Hintergrunds, Mörser, Beobachter, Direktschütze, Attrappe, Durchbruch)
+     * meldet sich mit ihrem ersten Einschlag bei den eigenen Panzern. Kam dazu bisher keine Meldung, kommt eine dazu – ohne Abstand,
+     * sie zählt für keine Drosselung; alle übrigen Meldungen bleiben wie bisher. erste_quelle_s: Prüfgrenze (Meldung höchstens so
+     * viele Sekunden nach dem ersten Einschlag).
+     */
+    erste_quelle?: boolean;
+    erste_quelle_s?: number;
     hinweis?: string;
   };
 }

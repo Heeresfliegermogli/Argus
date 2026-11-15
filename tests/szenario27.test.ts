@@ -38,9 +38,9 @@ function ersteMeldung(inh: Inhalte): Map<string, number> {
 }
 
 describe("Szenario 2.7: Daten", () => {
-  it("Version 2.7, 37 Meldungen; Ziel 22 von 2.6 (M16) vor dem ersten Schuss um 16:28 gemeldet, jetzt Ziel 21", async () => {
+  it("Version 2.7 (oder 2.8, baut auf 2.7 auf), 37 Meldungen; Ziel 22 von 2.6 (M16) vor dem ersten Schuss um 16:28 gemeldet, jetzt Ziel 21", async () => {
     const inh = await inhalte();
-    expect(inh.szenario.version).toBe("2.7");
+    expect(["2.7", "2.8"]).toContain(inh.szenario.version);
     expect(inh.szenario.meldungen).toHaveLength(37);
     expect(inh.meldungen.M16.t_s).toBeLessThan(16 * 60 + 28);
     expect(zielNr(inh, null, "M16")).toBe("21");
@@ -188,7 +188,8 @@ describe("I3: die PT-91 kämpfen sichtbar mit und werden aufgelöst", () => {
     const o = lb.objekte.find((x) => x.meldungen?.includes("M20"))!;
     expect(o.verbuendet).toBe(true);
     expect(o.sidc.slice(0, 2)).toBe("SF");
-    expect(o.text).toBe("PL-PzKp (verbündet)");
+    // seit 2.8 (M3.3b) als Zug: „PL-PzZug (verbündet)“
+    expect(o.text).toMatch(/^PL-Pz(Kp|Zug) \(verbündet\)$/);
     expect(o.hervor).toBe(true);
     // keine Freigabe mehr: die Engine lehnt BEKÄMPFEN ab
     const { verarbeiteAktion } = await import("../src/engine/aktionen");
@@ -204,7 +205,7 @@ describe("I3: die PT-91 kämpfen sichtbar mit und werden aufgelöst", () => {
     expect(naiv.z.aufloesungen["A-01"]).toBeUndefined();
     const lb = lagebildZielmeldungen(weltFuer(inh, naiv.z), naiv.z, 1400);
     const o = lb.objekte.find((x) => x.meldungen?.includes("M20"))!;
-    expect(o.text).toBe("PL-PzKp (verbündet, getroffen)");
+    expect(o.text).toMatch(/^PL-Pz(Kp|Zug) \(verbündet, getroffen\)$/);
     expect(o.sidc.slice(0, 2)).toBe("SF");
     const a = auswerten(inh, teams.map((m, i) => ({ id: `t${i}`, name: m.name, farbe: "#888", zustand: m.z, protokoll: m.kanal.protokoll })));
     expect(a.teams[0].faelle.S3.ausgang).toBe("falsch");

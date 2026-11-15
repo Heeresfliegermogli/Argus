@@ -58,6 +58,38 @@ export function skalierungAnwenden(el: HTMLElement): () => void {
   };
 }
 
+/**
+ * Liste M (M1): Team-Fenster des Testraums als neues Fenster öffnen – je Klick genau EIN `window.open` (Chrome blockiert ein
+ * zweites im selben Klick still). Gibt false zurück, wenn der Browser das Fenster blockiert hat.
+ */
+export function teamFensterOeffnen(adresse: string): boolean {
+  try {
+    const w = window.open(adresse, "argus-zb", "popup,width=1530,height=860,left=40,top=30");
+    return !!w;
+  } catch {
+    return false;
+  }
+}
+
+/** M1.2: Merker „das Team-Fenster wurde blockiert“ – die Spielleitung im selben Tab zeigt dann gleich den Hinweis. */
+const POPUP_MERKER = "argus:popup-blockiert";
+export function merkePopupBlockiert(): void {
+  try {
+    sessionStorage.setItem(POPUP_MERKER, "1");
+  } catch {
+    /* privater Modus */
+  }
+}
+export function popupWarBlockiert(): boolean {
+  try {
+    const da = sessionStorage.getItem(POPUP_MERKER) === "1";
+    if (da) sessionStorage.removeItem(POPUP_MERKER);
+    return da;
+  } catch {
+    return false;
+  }
+}
+
 /** Fenstergröße als Zustand (folgt Größenänderungen). */
 export function useFenster(): { breite: number; hoehe: number } {
   const [f, setF] = useState(fensterJetzt);

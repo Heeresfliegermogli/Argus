@@ -78,7 +78,9 @@ Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mi
    sich jeder Größe ab 1280 × 600 an; ist das Fenster kleiner, wird alles verkleinert und ein Hinweis bittet um Vollbild (F11). Die
    Fenstergröße steht unten in der Einweisung und bei der Spielleitung in der Übersicht.
 2. https://heeresfliegermogli.github.io/Argus/ → **Spielleitung** → Synchronisation **Lokal** → „Test ohne Lobby: ein Team“
-   aufklappen → Raum `bedientest` → **Team und Spielleitung öffnen** (zwei Fenster). Ein Plenum-Fenster ist nicht nötig.
+   aufklappen → Raum `bedientest` → **Team und Spielleitung öffnen** (seit Liste M: das Team-Fenster öffnet als neues Fenster, die
+   Spielleitung im selben Tab – Chrome lässt je Klick nur ein neues Fenster zu). Ist bei der Spielleitung kein Team-Fenster da, steht dort
+   **Team-Fenster öffnen**. Ein Plenum-Fenster ist nicht nötig.
    (Mit zwei Rechnern seit Liste L nicht über den Testraum, sondern: Synchronisation Firebase → **Neue Sitzung anlegen**, am
    zweiten Rechner den Code eingeben und ein Team anlegen – der Testraum ist für einen PC allein.)
 3. Der Testleiter bedient die Spielleitung. Allein geht es auch mit **Allein testen (ein Fenster)**: Die Uhr steuert dann

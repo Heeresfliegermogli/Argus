@@ -1,6 +1,6 @@
 {
- "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.7). Nicht von Hand ändern.",
- "szenario": "2.7",
+ "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.8). Nicht von Hand ändern.",
+ "szenario": "2.8",
  "zeiten": {
   "naiv": 20,
   "ideal": 35,
@@ -788,34 +788,42 @@
     },
     {
      "inject": "K-01",
-     "t": 372.0
+     "t": 300.0
     },
     {
-     "inject": "I-03",
-     "t": 420.0
+     "inject": "K-02",
+     "t": 372.0
     },
     {
      "inject": "I-11",
      "t": 560.0
     },
     {
-     "inject": "K-02",
+     "inject": "K-03",
+     "t": 575.0
+    },
+    {
+     "inject": "K-04",
      "t": 585.0
+    },
+    {
+     "inject": "K-05",
+     "t": 815.0
     },
     {
      "inject": "I-12",
      "t": 880.0
     },
     {
-     "inject": "K-03",
+     "inject": "K-06",
      "t": 925.0
     },
     {
-     "inject": "K-04",
+     "inject": "K-07",
      "t": 934.0
     },
     {
-     "inject": "K-05",
+     "inject": "K-08",
      "t": 992.0
     },
     {
@@ -823,11 +831,15 @@
      "t": 1020.0
     },
     {
+     "inject": "K-09",
+     "t": 1026.0
+    },
+    {
      "inject": "I-14",
      "t": 1080.0
     },
     {
-     "inject": "K-06",
+     "inject": "K-10",
      "t": 1090.0
     },
     {
@@ -843,6 +855,10 @@
      "t": 1175.0
     },
     {
+     "inject": "K-11",
+     "t": 1190.0
+    },
+    {
      "inject": "I-06",
      "t": 1200.0
     },
@@ -855,12 +871,16 @@
      "t": 1440.0
     },
     {
-     "inject": "K-07",
+     "inject": "K-12",
      "t": 1440.9
     },
     {
      "inject": "I-13",
      "t": 1450.9
+    },
+    {
+     "inject": "K-13",
+     "t": 1453.1
     }
    ],
    "bilanz": {
@@ -1588,52 +1608,94 @@
     "meldungen": [
      {
       "inject": "K-01",
+      "t": 300.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-02",
       "t": 372.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
      },
      {
-      "inject": "K-02",
+      "inject": "K-03",
+      "t": 575.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Artilleriefeuer, Einschläge noch daneben. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-04",
       "t": 585.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Artilleriefeuer, Splitter an Optik und Antennen. Stellung offenbar aufgeklärt!"
      },
      {
-      "inject": "K-03",
+      "inject": "K-05",
+      "t": 815.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-06",
       "t": 925.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
      },
      {
-      "inject": "K-04",
+      "inject": "K-07",
       "t": 934.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-05",
+      "inject": "K-08",
       "t": 992.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-06",
+      "inject": "K-09",
+      "t": 1026.0,
+      "zug": "pz4",
+      "stufe": 0,
+      "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
       "t": 1090.0,
       "zug": "pz4",
       "stufe": 1,
       "text": "1/4 unter Mörserfeuer aus Hof RABE, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
+      "inject": "K-11",
+      "t": 1190.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-12",
       "t": 1440.9,
       "zug": "pz3",
       "stufe": 1,
       "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
+     },
+     {
+      "inject": "K-13",
+      "t": 1453.1,
+      "zug": "pz1",
+      "stufe": 1,
+      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
@@ -3454,30 +3516,34 @@
     },
     {
      "inject": "K-01",
-     "t": 372.0
+     "t": 300.0
     },
     {
-     "inject": "I-03",
-     "t": 420.0
+     "inject": "K-02",
+     "t": 372.0
     },
     {
      "inject": "I-11",
      "t": 560.0
     },
     {
+     "inject": "K-03",
+     "t": 815.0
+    },
+    {
      "inject": "I-12",
      "t": 880.0
     },
     {
-     "inject": "K-02",
+     "inject": "K-04",
      "t": 925.0
     },
     {
-     "inject": "K-03",
+     "inject": "K-05",
      "t": 934.0
     },
     {
-     "inject": "K-04",
+     "inject": "K-06",
      "t": 992.0
     },
     {
@@ -3485,11 +3551,15 @@
      "t": 1020.0
     },
     {
-     "inject": "K-05",
+     "inject": "K-07",
+     "t": 1026.0
+    },
+    {
+     "inject": "K-08",
      "t": 1043.0
     },
     {
-     "inject": "K-06",
+     "inject": "K-09",
      "t": 1090.0
     },
     {
@@ -3497,23 +3567,27 @@
      "t": 1095.0
     },
     {
-     "inject": "K-07",
+     "inject": "K-10",
      "t": 1114.0
     },
     {
-     "inject": "K-08",
+     "inject": "K-11",
      "t": 1174.0
     },
     {
-     "inject": "K-09",
+     "inject": "K-12",
      "t": 1184.0
+    },
+    {
+     "inject": "K-13",
+     "t": 1190.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
-     "inject": "K-10",
+     "inject": "K-14",
      "t": 1274.0
     },
     {
@@ -3521,11 +3595,11 @@
      "t": 1305.0
     },
     {
-     "inject": "K-11",
+     "inject": "K-15",
      "t": 1314.0
     },
     {
-     "inject": "K-12",
+     "inject": "K-16",
      "t": 1344.0
     },
     {
@@ -3533,7 +3607,7 @@
      "t": 1400.0
     },
     {
-     "inject": "K-13",
+     "inject": "K-17",
      "t": 1434.0
     },
     {
@@ -4572,90 +4646,118 @@
     "meldungen": [
      {
       "inject": "K-01",
+      "t": 300.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-02",
       "t": 372.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
      },
      {
-      "inject": "K-02",
+      "inject": "K-03",
+      "t": 815.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-04",
       "t": 925.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
      },
      {
-      "inject": "K-03",
+      "inject": "K-05",
       "t": 934.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-04",
+      "inject": "K-06",
       "t": 992.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-05",
+      "inject": "K-07",
+      "t": 1026.0,
+      "zug": "pz4",
+      "stufe": 0,
+      "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-08",
       "t": 1043.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-06",
+      "inject": "K-09",
       "t": 1090.0,
       "zug": "pz4",
       "stufe": 1,
       "text": "1/4 unter Mörserfeuer aus Hof RABE, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
+      "inject": "K-10",
       "t": 1114.0,
       "zug": "pz1",
       "stufe": 1,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Treffer am Turm, Panzerung hält. Panzer bekämpfen!"
      },
      {
-      "inject": "K-08",
+      "inject": "K-11",
       "t": 1174.0,
       "zug": "pz1",
       "stufe": 1,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Treffer an der Wanne, Panzerung hält. Panzer bekämpfen!"
      },
      {
-      "inject": "K-09",
+      "inject": "K-12",
       "t": 1184.0,
       "zug": "pz1",
       "stufe": 2,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Kette getroffen: eingeschränkt, 1 Verwundeter. Panzer bekämpfen!"
      },
      {
-      "inject": "K-10",
+      "inject": "K-13",
+      "t": 1190.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-14",
       "t": 1274.0,
       "zug": "pz1",
       "stufe": 2,
       "text": "1/1 erneut getroffen, nur noch 46 %, 1 Verwundeter. Panzer bekämpfen!"
      },
      {
-      "inject": "K-11",
+      "inject": "K-15",
       "t": 1314.0,
       "zug": "pz4",
       "stufe": 2,
       "text": "1/4 unter Mörserfeuer aus Hof RABE, Optik getroffen: eingeschränkt, 1 Verwundeter. Mörser bekämpfen!"
      },
      {
-      "inject": "K-12",
+      "inject": "K-16",
       "t": 1344.0,
       "zug": "pz1",
       "stufe": 3,
       "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Panzer bekämpfen!"
      },
      {
-      "inject": "K-13",
+      "inject": "K-17",
       "t": 1434.0,
       "zug": "pz2",
       "stufe": 1,
@@ -6642,34 +6744,42 @@
     },
     {
      "inject": "K-01",
-     "t": 372.0
+     "t": 300.0
     },
     {
-     "inject": "I-03",
-     "t": 420.0
+     "inject": "K-02",
+     "t": 372.0
     },
     {
      "inject": "I-11",
      "t": 560.0
     },
     {
-     "inject": "K-02",
+     "inject": "K-03",
+     "t": 575.0
+    },
+    {
+     "inject": "K-04",
      "t": 585.0
+    },
+    {
+     "inject": "K-05",
+     "t": 815.0
     },
     {
      "inject": "I-12",
      "t": 880.0
     },
     {
-     "inject": "K-03",
+     "inject": "K-06",
      "t": 925.0
     },
     {
-     "inject": "K-04",
+     "inject": "K-07",
      "t": 934.0
     },
     {
-     "inject": "K-05",
+     "inject": "K-08",
      "t": 992.0
     },
     {
@@ -6677,11 +6787,19 @@
      "t": 1020.0
     },
     {
+     "inject": "K-09",
+     "t": 1025.0
+    },
+    {
+     "inject": "K-10",
+     "t": 1026.0
+    },
+    {
      "inject": "I-14",
      "t": 1080.0
     },
     {
-     "inject": "K-06",
+     "inject": "K-11",
      "t": 1089.0
     },
     {
@@ -6689,7 +6807,11 @@
      "t": 1095.0
     },
     {
-     "inject": "K-07",
+     "inject": "K-12",
+     "t": 1132.0
+    },
+    {
+     "inject": "K-13",
      "t": 1139.0
     },
     {
@@ -6699,6 +6821,10 @@
     {
      "inject": "I-09",
      "t": 1175.0
+    },
+    {
+     "inject": "K-14",
+     "t": 1190.0
     },
     {
      "inject": "I-06",
@@ -6713,12 +6839,16 @@
      "t": 1440.0
     },
     {
-     "inject": "K-08",
+     "inject": "K-15",
      "t": 1440.9
     },
     {
      "inject": "I-13",
      "t": 1450.9
+    },
+    {
+     "inject": "K-16",
+     "t": 1453.1
     }
    ],
    "bilanz": {
@@ -7559,59 +7689,115 @@
     "meldungen": [
      {
       "inject": "K-01",
+      "t": 300.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-02",
       "t": 372.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
      },
      {
-      "inject": "K-02",
+      "inject": "K-03",
+      "t": 575.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Artilleriefeuer, Einschläge noch daneben. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-04",
       "t": 585.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Artilleriefeuer, Splitter an Optik und Antennen. Stellung offenbar aufgeklärt!"
      },
      {
-      "inject": "K-03",
+      "inject": "K-05",
+      "t": 815.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-06",
       "t": 925.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
      },
      {
-      "inject": "K-04",
+      "inject": "K-07",
       "t": 934.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-05",
+      "inject": "K-08",
       "t": 992.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-06",
+      "inject": "K-09",
+      "t": 1025.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1026.0,
+      "zug": "pz4",
+      "stufe": 0,
+      "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-11",
       "t": 1089.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
+      "inject": "K-12",
+      "t": 1132.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-13",
       "t": 1139.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-08",
+      "inject": "K-14",
+      "t": 1190.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-15",
       "t": 1440.9,
       "zug": "pz3",
       "stufe": 1,
       "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
+     },
+     {
+      "inject": "K-16",
+      "t": 1453.1,
+      "zug": "pz1",
+      "stufe": 1,
+      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
@@ -9510,30 +9696,34 @@
     },
     {
      "inject": "K-01",
-     "t": 372.0
+     "t": 300.0
     },
     {
-     "inject": "I-03",
-     "t": 420.0
+     "inject": "K-02",
+     "t": 372.0
     },
     {
      "inject": "I-11",
      "t": 560.0
     },
     {
+     "inject": "K-03",
+     "t": 815.0
+    },
+    {
      "inject": "I-12",
      "t": 880.0
     },
     {
-     "inject": "K-02",
+     "inject": "K-04",
      "t": 925.0
     },
     {
-     "inject": "K-03",
+     "inject": "K-05",
      "t": 934.0
     },
     {
-     "inject": "K-04",
+     "inject": "K-06",
      "t": 992.0
     },
     {
@@ -9541,11 +9731,19 @@
      "t": 1020.0
     },
     {
-     "inject": "K-05",
+     "inject": "K-07",
+     "t": 1025.0
+    },
+    {
+     "inject": "K-08",
+     "t": 1026.0
+    },
+    {
+     "inject": "K-09",
      "t": 1043.0
     },
     {
-     "inject": "K-06",
+     "inject": "K-10",
      "t": 1089.0
     },
     {
@@ -9553,31 +9751,39 @@
      "t": 1095.0
     },
     {
-     "inject": "K-07",
+     "inject": "K-11",
      "t": 1114.0
     },
     {
-     "inject": "K-08",
+     "inject": "K-12",
+     "t": 1132.0
+    },
+    {
+     "inject": "K-13",
      "t": 1139.0
     },
     {
-     "inject": "K-09",
+     "inject": "K-14",
      "t": 1174.0
     },
     {
-     "inject": "K-10",
+     "inject": "K-15",
      "t": 1184.0
+    },
+    {
+     "inject": "K-16",
+     "t": 1190.0
     },
     {
      "inject": "I-06",
      "t": 1200.0
     },
     {
-     "inject": "K-11",
+     "inject": "K-17",
      "t": 1218.0
     },
     {
-     "inject": "K-12",
+     "inject": "K-18",
      "t": 1274.0
     },
     {
@@ -9585,11 +9791,11 @@
      "t": 1305.0
     },
     {
-     "inject": "K-13",
+     "inject": "K-19",
      "t": 1344.0
     },
     {
-     "inject": "K-14",
+     "inject": "K-20",
      "t": 1378.0
     },
     {
@@ -9597,7 +9803,7 @@
      "t": 1400.0
     },
     {
-     "inject": "K-15",
+     "inject": "K-21",
      "t": 1434.0
     },
     {
@@ -10806,104 +11012,146 @@
     "meldungen": [
      {
       "inject": "K-01",
+      "t": 300.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-02",
       "t": 372.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
      },
      {
-      "inject": "K-02",
+      "inject": "K-03",
+      "t": 815.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-04",
       "t": 925.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
      },
      {
-      "inject": "K-03",
+      "inject": "K-05",
       "t": 934.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-04",
+      "inject": "K-06",
       "t": 992.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-05",
+      "inject": "K-07",
+      "t": 1025.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-08",
+      "t": 1026.0,
+      "zug": "pz4",
+      "stufe": 0,
+      "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-09",
       "t": 1043.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-06",
+      "inject": "K-10",
       "t": 1089.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
+      "inject": "K-11",
       "t": 1114.0,
       "zug": "pz1",
       "stufe": 1,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Treffer am Turm, Panzerung hält. Panzer bekämpfen!"
      },
      {
-      "inject": "K-08",
+      "inject": "K-12",
+      "t": 1132.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-13",
       "t": 1139.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-09",
+      "inject": "K-14",
       "t": 1174.0,
       "zug": "pz1",
       "stufe": 1,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Treffer an der Wanne, Panzerung hält. Panzer bekämpfen!"
      },
      {
-      "inject": "K-10",
+      "inject": "K-15",
       "t": 1184.0,
       "zug": "pz1",
       "stufe": 2,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Kette getroffen: eingeschränkt, 1 Verwundeter. Panzer bekämpfen!"
      },
      {
-      "inject": "K-11",
+      "inject": "K-16",
+      "t": 1190.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-17",
       "t": 1218.0,
       "zug": "pz4",
       "stufe": 1,
       "text": "1/4 unter Mörserfeuer aus Hof RABE, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-12",
+      "inject": "K-18",
       "t": 1274.0,
       "zug": "pz1",
       "stufe": 2,
       "text": "1/1 erneut getroffen, nur noch 46 %, 1 Verwundeter. Panzer bekämpfen!"
      },
      {
-      "inject": "K-13",
+      "inject": "K-19",
       "t": 1344.0,
       "zug": "pz1",
       "stufe": 3,
       "text": "DRINGEND: 1/1 ausgefallen, 3 Verwundete, Bergung unter Feuer. Kp 3/4 einsatzbereit. Panzer bekämpfen!"
      },
      {
-      "inject": "K-14",
+      "inject": "K-20",
       "t": 1378.0,
       "zug": "pz4",
       "stufe": 2,
       "text": "1/4 erneut getroffen, nur noch 60 %, 1 Verwundeter. Mörser bekämpfen!"
      },
      {
-      "inject": "K-15",
+      "inject": "K-21",
       "t": 1434.0,
       "zug": "pz2",
       "stufe": 1,
@@ -12914,34 +13162,42 @@
     },
     {
      "inject": "K-01",
-     "t": 372.0
+     "t": 300.0
     },
     {
-     "inject": "I-03",
-     "t": 420.0
+     "inject": "K-02",
+     "t": 372.0
     },
     {
      "inject": "I-11",
      "t": 560.0
     },
     {
-     "inject": "K-02",
+     "inject": "K-03",
+     "t": 575.0
+    },
+    {
+     "inject": "K-04",
      "t": 585.0
+    },
+    {
+     "inject": "K-05",
+     "t": 815.0
     },
     {
      "inject": "I-12",
      "t": 880.0
     },
     {
-     "inject": "K-03",
+     "inject": "K-06",
      "t": 925.0
     },
     {
-     "inject": "K-04",
+     "inject": "K-07",
      "t": 934.0
     },
     {
-     "inject": "K-05",
+     "inject": "K-08",
      "t": 992.0
     },
     {
@@ -12949,11 +13205,19 @@
      "t": 1020.0
     },
     {
+     "inject": "K-09",
+     "t": 1025.0
+    },
+    {
+     "inject": "K-10",
+     "t": 1026.0
+    },
+    {
      "inject": "I-14",
      "t": 1080.0
     },
     {
-     "inject": "K-06",
+     "inject": "K-11",
      "t": 1089.0
     },
     {
@@ -12961,7 +13225,11 @@
      "t": 1095.0
     },
     {
-     "inject": "K-07",
+     "inject": "K-12",
+     "t": 1132.0
+    },
+    {
+     "inject": "K-13",
      "t": 1139.0
     },
     {
@@ -12971,6 +13239,10 @@
     {
      "inject": "I-09",
      "t": 1175.0
+    },
+    {
+     "inject": "K-14",
+     "t": 1190.0
     },
     {
      "inject": "I-06",
@@ -12985,12 +13257,16 @@
      "t": 1440.0
     },
     {
-     "inject": "K-08",
+     "inject": "K-15",
      "t": 1440.9
     },
     {
      "inject": "I-13",
      "t": 1450.9
+    },
+    {
+     "inject": "K-16",
+     "t": 1453.1
     }
    ],
    "bilanz": {
@@ -13834,59 +14110,115 @@
     "meldungen": [
      {
       "inject": "K-01",
+      "t": 300.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-02",
       "t": 372.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
      },
      {
-      "inject": "K-02",
+      "inject": "K-03",
+      "t": 575.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Artilleriefeuer, Einschläge noch daneben. Stellung offenbar aufgeklärt!"
+     },
+     {
+      "inject": "K-04",
       "t": 585.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Artilleriefeuer, Splitter an Optik und Antennen. Stellung offenbar aufgeklärt!"
      },
      {
-      "inject": "K-03",
+      "inject": "K-05",
+      "t": 815.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-06",
       "t": 925.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
      },
      {
-      "inject": "K-04",
+      "inject": "K-07",
       "t": 934.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-05",
+      "inject": "K-08",
       "t": 992.0,
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-06",
+      "inject": "K-09",
+      "t": 1025.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-10",
+      "t": 1026.0,
+      "zug": "pz4",
+      "stufe": 0,
+      "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+     },
+     {
+      "inject": "K-11",
       "t": 1089.0,
       "zug": "pz2",
       "stufe": 1,
       "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Splitter an Optik und Antennen. Mörser bekämpfen!"
      },
      {
-      "inject": "K-07",
+      "inject": "K-12",
+      "t": 1132.0,
+      "zug": "pz2",
+      "stufe": 0,
+      "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
+     },
+     {
+      "inject": "K-13",
       "t": 1139.0,
       "zug": "pz2",
       "stufe": 0,
       "text": "1/2 unter Panzerfeuer vom Ostufer an der Furt, Einschläge noch daneben. Panzer bekämpfen!"
      },
      {
-      "inject": "K-08",
+      "inject": "K-14",
+      "t": 1190.0,
+      "zug": "pz1",
+      "stufe": 0,
+      "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+     },
+     {
+      "inject": "K-15",
       "t": 1440.9,
       "zug": "pz3",
       "stufe": 1,
       "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
+     },
+     {
+      "inject": "K-16",
+      "t": 1453.1,
+      "zug": "pz1",
+      "stufe": 1,
+      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
@@ -15741,34 +16073,42 @@
    },
    {
     "inject": "K-01",
-    "t": 372.0
+    "t": 300.0
    },
    {
-    "inject": "I-03",
-    "t": 420.0
+    "inject": "K-02",
+    "t": 372.0
    },
    {
     "inject": "I-11",
     "t": 560.0
    },
    {
-    "inject": "K-02",
+    "inject": "K-03",
+    "t": 585.0
+   },
+   {
+    "inject": "K-04",
     "t": 595.0
+   },
+   {
+    "inject": "K-05",
+    "t": 815.0
    },
    {
     "inject": "I-12",
     "t": 880.0
    },
    {
-    "inject": "K-03",
+    "inject": "K-06",
     "t": 925.0
    },
    {
-    "inject": "K-04",
+    "inject": "K-07",
     "t": 934.0
    },
    {
-    "inject": "K-05",
+    "inject": "K-08",
     "t": 992.0
    },
    {
@@ -15776,11 +16116,15 @@
     "t": 1020.0
    },
    {
+    "inject": "K-09",
+    "t": 1026.0
+   },
+   {
     "inject": "I-14",
     "t": 1050.0
    },
    {
-    "inject": "K-06",
+    "inject": "K-10",
     "t": 1090.0
    },
    {
@@ -15792,6 +16136,10 @@
     "t": 1115.0
    },
    {
+    "inject": "K-11",
+    "t": 1190.0
+   },
+   {
     "inject": "I-06",
     "t": 1200.0
    },
@@ -15800,7 +16148,7 @@
     "t": 1275.0
    },
    {
-    "inject": "K-07",
+    "inject": "K-12",
     "t": 1314.0
    },
    {
@@ -15808,12 +16156,16 @@
     "t": 1440.0
    },
    {
-    "inject": "K-08",
+    "inject": "K-13",
     "t": 1440.9
    },
    {
     "inject": "I-13",
     "t": 1450.9
+   },
+   {
+    "inject": "K-14",
+    "t": 1453.1
    }
   ],
   "bilanz": {
@@ -16565,59 +16917,101 @@
    "meldungen": [
     {
      "inject": "K-01",
+     "t": 300.0,
+     "zug": "pz1",
+     "stufe": 0,
+     "text": "1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+    },
+    {
+     "inject": "K-02",
      "t": 372.0,
      "zug": "pz2",
      "stufe": 0,
      "text": "1/2 unter Mörserfeuer vom Waldrand MARDER, Einschläge noch daneben. Mörser bekämpfen!"
     },
     {
-     "inject": "K-02",
+     "inject": "K-03",
+     "t": 585.0,
+     "zug": "pz2",
+     "stufe": 0,
+     "text": "1/2 unter Artilleriefeuer, Einschläge noch daneben. Stellung offenbar aufgeklärt!"
+    },
+    {
+     "inject": "K-04",
      "t": 595.0,
      "zug": "pz2",
      "stufe": 1,
      "text": "1/2 unter Artilleriefeuer, Splitter an Optik und Antennen. Stellung offenbar aufgeklärt!"
     },
     {
-     "inject": "K-03",
+     "inject": "K-05",
+     "t": 815.0,
+     "zug": "pz1",
+     "stufe": 0,
+     "text": "1/1 bis 1/4 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+    },
+    {
+     "inject": "K-06",
      "t": 925.0,
      "zug": "pz2",
      "stufe": 0,
      "text": "1/2 unter gelenktem Artilleriefeuer aus dem Kirchturm, Einschläge noch daneben. Beobachter bekämpfen!"
     },
     {
-     "inject": "K-04",
+     "inject": "K-07",
      "t": 934.0,
      "zug": "pz1",
      "stufe": 0,
      "text": "1/1 unter Panzerfeuer aus der Ortschaft, Einschläge noch daneben. Panzer bekämpfen!"
     },
     {
-     "inject": "K-05",
+     "inject": "K-08",
      "t": 992.0,
      "zug": "pz1",
      "stufe": 0,
      "text": "1/1 unter Panzerfeuer von der Brücke Ost, Einschläge noch daneben. Panzer bekämpfen!"
     },
     {
-     "inject": "K-06",
+     "inject": "K-09",
+     "t": 1026.0,
+     "zug": "pz4",
+     "stufe": 0,
+     "text": "1/4 unter Mörserfeuer aus Hof RABE, Einschläge noch daneben. Mörser bekämpfen!"
+    },
+    {
+     "inject": "K-10",
      "t": 1090.0,
      "zug": "pz4",
      "stufe": 1,
      "text": "1/4 unter Mörserfeuer aus Hof RABE, Splitter an Optik und Antennen. Mörser bekämpfen!"
     },
     {
-     "inject": "K-07",
+     "inject": "K-11",
+     "t": 1190.0,
+     "zug": "pz1",
+     "stufe": 0,
+     "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
+    },
+    {
+     "inject": "K-12",
      "t": 1314.0,
      "zug": "pz4",
      "stufe": 2,
      "text": "1/4 unter Mörserfeuer aus Hof RABE, Optik getroffen: eingeschränkt, 1 Verwundeter. Mörser bekämpfen!"
     },
     {
-     "inject": "K-08",
+     "inject": "K-13",
      "t": 1440.9,
      "zug": "pz3",
      "stufe": 1,
      "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
+    },
+    {
+     "inject": "K-14",
+     "t": 1453.1,
+     "zug": "pz1",
+     "stufe": 1,
+     "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
     }
    ],
    "texte": {

@@ -17,7 +17,7 @@
 // eigenen Wirkung bleibt es beim bekämpften Fahrzeug am Einschlagort (Rest eines Zuges meldet ARGUS neu).
 // Seit 2.7 (I1.2) verschwindet kein gemeldetes Ziel ohne Erklärung: Verlässt es den Raum, bleibt das Zeichen am Kartenrand stehen,
 // wo es hinausfuhr – „durchgebrochen“ (über Brücke oder Furt nach Westen) oder „abgezogen“; der Eingang zeigt einen Vermerk
-// (kern/sichten.ts, vermerke). Seit 2.7 (I3.2): Nach der Auflösung (A-01) zeigt das Zeichen der PT-91 blau „PL-PzKp (verbündet)“, nach
+// (kern/sichten.ts, vermerke). Seit 2.7 (I3.2): Nach der Auflösung (A-01) zeigt das Zeichen der PT-91 blau „PL-PzZug (verbündet)“ (2.7: PzKp), nach
 // Eigenbeschuss (I-08a) „verbündet, getroffen“.
 import type { ArgusAusgabe, GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
 import { ZEICHEN_KONTAKT, sidc, zeichenArgus, zeichenZiel } from "../karte/zeichen";
@@ -279,9 +279,12 @@ function amRand(inh: Inhalte, p: Punkt): Punkt {
   return [Math.max(RAND_M, Math.min(breite - RAND_M, p[0])), Math.max(RAND_M, Math.min(hoehe - RAND_M, p[1]))];
 }
 
-/** Zeichen einer verbündeten Kraft nach der Auflösung (seit 2.7, I3.2): Panzer-Einheit, Größe Kompanie; getroffen = beschädigt. */
-export function zeichenVerbuendet(getroffen: boolean, zerstoert = false): string {
-  return sidc("F", "UCA", { status: zerstoert ? "X" : getroffen ? "D" : "P", groesse: "E" });
+/**
+ * Zeichen einer verbündeten Kraft nach der Auflösung (seit 2.7, I3.2): Panzer-Einheit; getroffen = beschädigt. Größe Kompanie, seit 2.8
+ * (M3.3b) nach `aufloesungen[].groesse` – die drei PT-91 sind ein Zug (•••).
+ */
+export function zeichenVerbuendet(getroffen: boolean, zerstoert = false, groesse: "zug" | "kompanie" = "kompanie"): string {
+  return sidc("F", "UCA", { status: zerstoert ? "X" : getroffen ? "D" : "P", groesse: groesse === "zug" ? "D" : "E" });
 }
 
 /** Liegt die Position im Wald? Dort sieht die Drohne keine Bewegung (kein Kontakt, seit 2.2). */
@@ -342,12 +345,14 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
     const aufl = (inh.basis ?? inh).szenario.aufloesungen?.find((a) => ids.includes(a.meldung));
     const verbuendet = aufl ? (z.aufloesungen?.[aufl.id] ? { name: aufl.name, getroffen: false }
       : aufl.getroffen && z.injects[aufl.getroffen.inject] ? { name: aufl.getroffen.name, getroffen: true } : null) : null;
+    const groesseVerbuendet = aufl?.groesse ?? "kompanie";
     if (tLage !== undefined) {
       const stehend = m.ziele.filter((id) => stehtNoch(inh, z, id, tLage));
       const wracks = m.ziele.filter((id) => z.zerstoert[id] !== undefined && z.zerstoert[id] <= tLage + 1e-6);
       if (stehend.length) {
-        // C8: Das Zeichen folgt dem ersten noch stehenden Fahrzeug; Zahl = noch stehende Fahrzeuge in seiner Nähe
-        fuehrer = stehend[0];
+        // C8: Das Zeichen folgt dem ersten noch stehenden Fahrzeug; Zahl = noch stehende Fahrzeuge in seiner Nähe. Seit 2.8 (M3.3b):
+        // eine verbündete Kraft steht geschlossen als EIN Zeichen da – es folgt dem mittleren noch stehenden Fahrzeug
+        fuehrer = verbuendet ? stehend[Math.floor((stehend.length - 1) / 2)] : stehend[0];
         bahn = zielBahn(inh, z, fuehrer);
         const lage = bahn && bahnLage(bahn, tLage);
         if (lage) pos = lage.pos;
@@ -389,7 +394,7 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
       pos,
       // seit 2.4 (E4): das Zeichen zeigt, was ARGUS zur Meldezeit meldete (bei gestörtem Datenlink unsicherer); seit 2.7 nach der
       // Auflösung blau (verbündet)
-      sidc: verbuendet ? zeichenVerbuendet(verbuendet.getroffen, zerstoert)
+      sidc: verbuendet ? zeichenVerbuendet(verbuendet.getroffen, zerstoert, groesseVerbuendet)
         : zeichenArgus(inh, argusBei(inh, m, st.gestoert).klasse, argusBei(inh, m, st.gestoert).konfidenz, zeichenStatus, anzahl),
       menge: verbuendet ? undefined : menge,
       text: verbuendet ? verbuendet.name : `Ziel ${nummern.join("/")}${weg === "durchgebrochen" ? " durchgebrochen" : weg === "abgezogen" ? " abgezogen" : ""}`,
@@ -442,6 +447,12 @@ function weitereZeichen(inh: Inhalte, z: Spielzustand, t: number,
   const erledigt = new Set<string>(fuehrer);
   const bekannt = new Set(zeichen.flatMap((x) => x.fahrzeuge));
   for (const x of zeichen) {
+    // seit 2.8 (M3.3a): eine verbündete Kraft (nach der Auflösung oder dem Eigenbeschuss) ist ein Zeichen – kein Teil- oder
+    // Wrackzeichen mit dem Feindzeichen von ARGUS (bis 2.7 bekam der dritte PT-91, mehr als GRUPPE_RADIUS_M hinter dem ersten, ein rotes)
+    if (x.o.verbuendet) {
+      x.fahrzeuge.forEach((id) => erledigt.add(id));
+      continue;
+    }
     const zpos = x.o.bahn ? bahnLage(x.o.bahn, t)?.pos ?? x.o.pos : x.o.pos;
     for (const id of x.fahrzeuge) {
       if (erledigt.has(id) || !inh.ziele[id]) continue;

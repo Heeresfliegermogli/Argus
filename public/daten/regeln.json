@@ -1,5 +1,5 @@
 {
-  "version": "2.6",
+  "version": "2.8",
   "argus": {
     "schwellen": {"bekaempfen": 80, "pruefen": 60},
     "empfehlungen": {
@@ -120,7 +120,9 @@
       "artillerie_abstand_s": 120,
       "nur_stufenwechsel": ["artillerie"],
       "erster_beschuss": true,
-      "hinweis": "Seit 2.6 (H3.3, H5.7): Wegen Artillerie und Mörser (artillerie) höchstens eine Druckmeldung je Panzer, Schütze und Stufe und insgesamt höchstens eine je artillerie_abstand_s (ausgefallen kommt immer); die Feindartillerie des Hintergrunds (nur_stufenwechsel) meldet sich nur beim Stufenwechsel. Der erste Beschuss eines Panzers kommt immer (erster_beschuss)."
+      "erste_quelle": true,
+      "erste_quelle_s": 3,
+      "hinweis": "Seit 2.6 (H3.3, H5.7): Wegen Artillerie und Mörser (artillerie) höchstens eine Druckmeldung je Panzer, Schütze und Stufe und insgesamt höchstens eine je artillerie_abstand_s (ausgefallen kommt immer); die Feindartillerie des Hintergrunds (nur_stufenwechsel) meldet sich nur beim Stufenwechsel. Der erste Beschuss eines Panzers kommt immer (erster_beschuss). Seit 2.8 (M3.1a, erste_quelle): Jede Feuerquelle meldet sich mit ihrem ersten Einschlag bei den eigenen Panzern (Feuervorbereitung des Hintergrunds: erster Einschlag überhaupt, Vorlage „beschuss“ für die Panzer in hintergrund.ereignisse[].panzer). Kam dazu bisher keine Meldung, kommt eine dazu – ohne Abstand, sie zählt für keine Drosselung; alle übrigen Meldungen bleiben wie bisher. Prüfregel: Meldung höchstens erste_quelle_s nach dem ersten Einschlag."
     }
   },
   "spielleitung": {

@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.7",
-  "stand": "2026-11-10",
+  "version": "2.8",
+  "stand": "2026-11-15",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -2301,14 +2301,6 @@
       "zweck": "Stakes für das Sanitätsfahrzeug, die Achse SÜD an der Schule (N4, Z-20) und den Mörser im Hof RABE. Die Karte zeigt die Schule als No-Strike-Zone, die Belegung steht nur hier im Feed."
     },
     {
-      "id": "I-03",
-      "t_s": 420,
-      "an": "Team",
-      "von": "Brigade",
-      "text": "Zielbearbeitung dauert zu lange. Ziel sind 30 s je Meldung, sonst nimmt der Feind die Brücke.",
-      "zweck": "Tempo-Druck: Die Brigade fordert 30 s je Meldung. Für die Auswertung: Wie lange habt ihr hingeschaut (Sekunden je Entscheidung im Protokoll)?"
-    },
-    {
       "id": "I-11",
       "t_s": 560,
       "an": "Team",
@@ -2321,8 +2313,8 @@
       "t_s": 880,
       "an": "Team",
       "von": "1. Kp",
-      "text": "Starkes Artilleriefeuer auf unsere Stellungen. Feind greift mit einer Kp an: Richtung Furt, durch KRÄHE und an der Schule vorbei.",
-      "zweck": "Lagebild: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen."
+      "text": "Feind greift mit einer Kp an: Richtung Furt, durch KRÄHE und an der Schule vorbei.",
+      "zweck": "Lagebild: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen. Seit 2.8 (M3.1b) nur noch der Angriff: Den Beschuss der Feuervorbereitung H-04 meldet die Kp schon mit dem ersten Einschlag um 10:13:35."
     },
     {
       "id": "I-04",
@@ -2485,7 +2477,7 @@
     }
   ],
   "hintergrund": {
-    "hinweis": "Die eigene 1. Kp und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der Kanone kommen vom Panzer in `von` (seit 2.5; ist er ausgefallen, schießt der nächste einsatzbereite – nur Darstellung) und treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie), und nur Ziele bis zum Bach (x < 500 m). Die Feindartillerie liegt auf den Stellungen: Einschläge im Umkreis von 10 m eines Panzers treffen ihn (Verlustmodell), die übrigen sind Darstellung; Spielobjekte trifft sie nicht. Rauch ist Darstellung. Alles steht als Ereignis im Protokoll.",
+    "hinweis": "Die eigene 1. Kp und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der Kanone kommen vom Panzer in `von` (seit 2.5; ist er ausgefallen, schießt der nächste einsatzbereite – nur Darstellung) und treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie), und nur Ziele bis zum Bach (x < 500 m). Die Feindartillerie liegt auf den Stellungen: Einschläge im Umkreis von 10 m eines Panzers treffen ihn (Verlustmodell), die übrigen sind Darstellung; Spielobjekte trifft sie nicht. Rauch ist Darstellung. Alles steht als Ereignis im Protokoll. Seit 2.8 (M3.1): Die Kp meldet den ersten Einschlag jeder Feuervorbereitung (auch daneben) für die Panzer in `panzer`.",
     "ereignisse": [
       {
         "id": "H-01",
@@ -2496,6 +2488,7 @@
           [300, 150, 352], [304, 118, 425], [309, 96, 300], [313, 70, 395], [318, 40, 330], [323, 58, 361],
           [328, 33, 432]
         ],
+        "panzer": ["pz1", "pz2"],
         "text": "Feuervorbereitung der Gefechtsaufklärung: Feindartillerie liegt auf 1/1 und 1/2."
       },
       {
@@ -2526,6 +2519,7 @@
           [815, 140, 470], [819, 98, 360], [823, 120, 530], [827, 90, 412], [832, 75, 500], [836, 84, 440],
           [841, 52, 470], [845, 30, 395], [850, 62, 560], [854, 45, 520], [859, 58, 405]
         ],
+        "panzer": ["pz1", "pz2", "pz3", "pz4"],
         "text": "Feuervorbereitung des Hauptangriffs auf alle vier Panzer der 1. Kp."
       },
       {
@@ -2597,6 +2591,7 @@
         "art": "feindartillerie",
         "ziel": "1./PzBtl 613",
         "einschlaege": [[1190, 130, 410], [1198, 96, 380], [1206, 80, 440], [1214, 70, 418], [1222, 30, 400]],
+        "panzer": ["pz1"],
         "text": "Feindartillerie auf 1/1 an der Hauptstraße: Der Feind will die Brücke noch nehmen."
       }
     ]
@@ -3371,7 +3366,7 @@
         {
           "titel": "Gehorsam und Gewissen",
           "werte": ["Gehorsam"],
-          "text": "Zeitvorgabe von 30 s je Meldung, Druck der 1. Kp – wann wird der Mensch „in the loop“ zum Stempel?"
+          "text": "Druck der 1. Kp – wann wird der Mensch „in the loop“ zum Stempel?"
         },
         {
           "titel": "Mut und Bescheidenheit",
@@ -3717,11 +3712,12 @@
       "nach_s": 90,
       "als": "verbuendet",
       "fall": "S3",
-      "name": "PL-PzKp (verbündet)",
+      "name": "PL-PzZug (verbündet)",
       "vermerk": "verbündet – nicht bekämpfen",
       "inject": "I-17",
-      "getroffen": {"inject": "I-08a", "name": "PL-PzKp (verbündet, getroffen)"},
-      "hinweis": "Seit 2.7 (I3.2): Hat das Team bis nach_s nach der Meldung keine Wirkung auf die Ziele freigegeben, werden sie als verbündet markiert (Zeichen blau, Meldung verschwindet aus dem Eingang mit Vermerk, Lagemeldung). Danach ist keine Freigabe mehr möglich. Nach einer Freigabe vorher: Eigenbeschuss (I-08a), das Zeichen wird mit I-08a „verbündet, getroffen“."
+      "getroffen": {"inject": "I-08a", "name": "PL-PzZug (verbündet, getroffen)"},
+      "groesse": "zug",
+      "hinweis": "Seit 2.7 (I3.2): Hat das Team bis nach_s nach der Meldung keine Wirkung auf die Ziele freigegeben, werden sie als verbündet markiert (Zeichen blau, Meldung verschwindet aus dem Eingang mit Vermerk, Lagemeldung). Danach ist keine Freigabe mehr möglich. Nach einer Freigabe vorher: Eigenbeschuss (I-08a), das Zeichen wird mit I-08a „verbündet, getroffen“. Seit 2.8 (M3.3): Die drei PT-91 stehen danach geschlossen als ein blaues Zeichen der Größe Zug (groesse) auf der Karte – kein Teil-, Wrack- oder Kontaktzeichen mehr mit Feindzeichen. Lagemeldungen sprechen weiter von der PL-PzKp (die Kompanie greift an, auf der Karte ist ihr Zug)."
     }
   ]
 }

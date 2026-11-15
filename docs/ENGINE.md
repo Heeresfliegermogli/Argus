@@ -226,6 +226,26 @@ nirgends mehr in Daten, Beispieldaten, Oberfläche und Werkzeugen stehen.
 | `tools/e2e_drehbuch.py` (×5) | **Zwei Teams** (naiv, ideal; 9 Fenster): alle Aktionen gesendet, Protokolle wie die Engine im Prozess, **Druckmeldungen je Panzer genau wie im Prozess** (20 bzw. 25, Panzer und Stufe), größte Zeitabweichung 2,7–3,1 s, Klick → Protokoll Median 3–4 ms; Zeichenzeit je Bild ähnlich wie auf main im selben Vergleichslauf (Ø G2 12,7 gegen 13,6 ms, G3 15,3 gegen 11,2 ms, SL 2 14,8 gegen 14,4 ms, Plenum 1,7 gegen 0,8 ms – es zeichnet jetzt Panzer und Feuer; Verzug der Modellpersonen höchstens 3,1 gegen 1,6 s). **Fünf Teams** (18 Fenster an 2 Kernen ohne Grafikkarte): bis Spielende und Auswertung, aber die Modellpersonen kommen nicht hinterher (viele Aktionen nicht gesendet) – main 9967f44 brach im selben Vergleichslauf nach 17:42 ab (Fenster der SL 2 30 s ohne Antwort); Grenze der Testumgebung, nicht von F. Gemeldet werden außerdem nur vorbestehende Punkte von E-a/E-b: Teamvergleich 2244 px breit, sechs falsche Empfehlungen im Konfidenz-Kapitel, 24 statt 16 Zellen in der Übersicht der SL |
 | Gesamt | 176 automatische Tests, Build |
 
+## Szenario 2.8 (15.11.2026, Änderungsliste M, Teil M3): Nachweis
+
+Was sich geändert hat (Einzelheiten in `claude/Zwischenstand_M.md`, Bau in `tools/referenz/bau_szenario_v28.py BASIS27 OUT` – aus main
+4ad9e37 gebaut gleich `public/daten/`; gepflegt wird die JSON-Datei). Ziele, Routen, Meldungen und Bilder sind unverändert
+(`gen_assets.py` erzeugt dieselben Dateien, nur das Manifest trägt 2.8).
+
+| Teil | Umsetzung | Modul |
+|---|---|---|
+| M3.1 Erster Einschlag bei uns → sofort eine Meldung | `regeln.verluste.meldungen.erste_quelle` (Prüfgrenze `erste_quelle_s` = 3): Jede Feuerquelle meldet sich mit ihrem ersten Einschlag bei den eigenen Panzern. Die Feuervorbereitung des Hintergrunds (H-01, H-04, H-12) zählt ab ihrem **ersten Einschlag überhaupt** (auch daneben, außerhalb `radius_m`) und meldet sich für die Panzer in `hintergrund.ereignisse[].panzer` mit der Vorlage „beschuss“: H-01 05:00 „1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung.“, H-04 13:35 „1/1 bis 1/4 …“, H-12 19:50 „1/1 …“ (`vorbereitungen`, `panzerListe`). Jede andere Quelle (Mörser, Beobachter, Direktschütze, Attrappe, durchgebrochenes Fahrzeug) mit ihrem ersten Schuss in der Zeitlinie. Kam dazu nach den Regeln bis 2.7 keine Meldung, kommt diese erste Meldung **dazu** – ohne Abstand, sie zählt für keine Drosselung; alle übrigen Meldungen bleiben genau wie in 2.7 (nur die Nummern K-… verschieben sich). I-12 (14:40) spricht nur noch vom Angriff der Feind-Kp (M3.1b) | `src/kern/verluste.ts` (`druckmeldungen`), `tools/referenz/verluste.py` (`meldungen`, `erstmeldungen`) |
+| M3.2 I-03 gestrichen | „Zielbearbeitung dauert zu lange …“ (07:00) ersatzlos; die Leitfrage „Gehorsam und Gewissen“ nennt die „Zeitvorgabe von 30 s je Meldung“ nicht mehr | `public/daten/szenario_kraehe_01.json` |
+| M3.3 PT-91 nach der Auflösung | **Ursache:** Die drei PT-91 fahren in Kolonne, der dritte steht mehr als `GRUPPE_RADIUS_M` (40 m) hinter dem Zeichen. Er bekam deshalb ein eigenes Teilzeichen – mit dem Feindzeichen von ARGUS (`zeichenArgus`), auch nach der Auflösung. Seit 2.8 hat eine verbündete Kraft (aufgelöst oder nach Eigenbeschuss I-08a) kein Teil- oder Wrackzeichen mehr; die drei stehen als **ein** blaues Zeichen der Größe Zug (`aufloesungen[].groesse` = „zug“, `SFGPUCA----D---`) am mittleren Fahrzeug, „PL-PzZug (verbündet)“ bzw. „PL-PzZug (verbündet, getroffen)“. M20 ist danach nicht mehr im Eingang (keine Meldungsmarke, kein Drohnenbild-Rahmen) | `src/kern/lagebild.ts` (`zeichenVerbuendet`, `weitereZeichen`) |
+
+| Prüfung | Ergebnis |
+|---|---|
+| `pruefe_szenario.py` (neu: `panzer` der Feuervorbereitung, Regel M3.1 im Lauf ohne Eingriff, Länge jeder Druckmeldung) | OK, keine Fehler; ohne die Regel meldeten sich 14 von 20 Quellen nicht binnen 3 s (H-01, H-04, H-12, Z-42 erst nach 1:45 …) |
+| `simuliere_durchlauf.py` | Kalibrierung unverändert: naiv 4/4 (0 Verwundete, **13** Druckmeldungen statt 7), ideal 3/4 (1/1 ausgefallen, 1/4 eingeschränkt, 4 Verwundete, **17** statt 13); mit Verstärkungen 4/4 bzw. 3/4. Neu: „Erste Meldung je Feuerquelle ≤ 3 s“ in allen fünf Läufen (60 Quellen): ja |
+| `tests/szenario28.test.ts` (neu, 10) | Daten 2.8; in vier Läufen (ohne Eingriff, ARGUS allein, naiv, ideal) meldet jede Feuerquelle ≤ 3 s nach ihrem ersten Einschlag (Meldung im Protokoll der Engine); H-01/H-04/H-12 mit Text; alle Meldungen von 2.7 bleiben (Vergleich mit `erste_quelle` aus); Kalibrierung; I-03 in keinem Lauf; nach 21:45 alle 4 s bis Spielende genau ein Zeichen für die PT-91, blau, Größe Zug; naiv nach I-08a „verbündet, getroffen“ |
+| `tests/durchlauf.test.ts` (Referenz mit `erzeuge_durchlauf.py` neu) | Engine = Simulation, auch jede Druckmeldung mit Text und Zeit |
+| `tools/livelage_probe.py` A8 | Zeichen blau, ein Zug (`sidc[11]` = D), kein PT-91 mit Feindzeichen |
+
 ## Szenario 2.7 (10.11.2026, Änderungen G und I): Nachweis
 
 Was sich geändert hat (Einzelheiten im Eintrag in `claude/Entscheidungen.md` und in `claude/Zwischenstand_GI.md`, Werte im Drehbuch,

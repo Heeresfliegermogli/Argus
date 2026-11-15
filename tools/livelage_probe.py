@@ -14,7 +14,7 @@ Teil A – ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync),
   A6  Bildrate: 13:30–14:15 bei Tempo ×1 (Feindartillerie, Bewegung, Flug) in SL, Zielbearbeitung und Plenum.
   A7  Z-24 außer Gefecht (19:35): Zustands-Sprite „Kette ab“, kein Brand.
   A8  seit 2.7 (I3): die PT-91 kämpfen mit – E-01 ab 20:45 alle 20 s (Mündungsfeuer, Leuchtspur nach Norden, Treffer) auf der Karte
-      des Teams; ohne Freigabe um 21:45 als verbündet erkannt: Zeichen blau „PL-PzKp (verbündet)“, Vermerk im Eingang, I-17 im Feed.
+      des Teams; ohne Freigabe um 21:45 als verbündet erkannt: Zeichen blau „PL-PzZug (verbündet)“ (seit 2.8 ein Zug, kein Feindzeichen mehr), Vermerk im Eingang, I-17 im Feed.
   A9  seit 2.7 (I1): D-03 bricht durch, Ziel 15 (BTR-80) fährt über die Brücke und westlich aus dem Bild – das Zeichen bleibt am
       Westrand „Ziel 15 durchgebrochen“, Vermerk im Eingang, I-13; Auflösung im Plenum.
 Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung (ohne Verstärkungsmenü):
@@ -321,7 +321,12 @@ def main():
         vm = zb.locator(".eingang-zeile.vermerk[data-vermerk=M20]")
         pruefe(vm.count() == 1 and "verbündet – nicht bekämpfen" in vm.inner_text(), f"A8 Vermerk im Eingang: „{vm.inner_text() if vm.count() else '–'}“")
         o20 = zb.evaluate(objekte, "M20")
-        pruefe(o20 and o20[0]["text"] == "PL-PzKp (verbündet)" and o20[0]["sidc"][1] == "F", f"A8 Zeichen der PT-91 blau: {o20}")
+        pruefe(o20 and len(o20) == 1 and o20[0]["text"] == "PL-PzZug (verbündet)" and o20[0]["sidc"][1] == "F" and o20[0]["sidc"][11] == "D",
+               f"A8 Zeichen der PT-91 blau, ein Zug (seit 2.8, M3.3b): {o20}")
+        # seit 2.8 (M3.3a): kein PT-91 mehr mit Feindzeichen (bis 2.7 ein Teilzeichen am dritten PT-91)
+        pt_feind = zb.evaluate("() => document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte.lb.objekte"
+                               ".filter((o) => /Z-1[567]/.test(o.id) && o.sidc[1] === 'H').map((o) => o.id)")
+        pruefe(not pt_feind, f"A8 kein PT-91 mehr mit Feindzeichen: {pt_feind}")
         feed = zb.get_by_test_id("feed").inner_text()
         pruefe("Feuerstellung Feldweg Süd bezogen" in feed, "A8 I-17 im Feed")
         foto(zb, "A8_zb_verbuendet")
@@ -363,8 +368,9 @@ def main():
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()
         tt = []
-        for name in ["Team A", "Team B"]:
-            s = seite(name, url())
+        for name, geraet in [("Team A", "la"), ("Team B", "lb")]:
+            # seit Liste K ist ein Browser ein Gerät: je Team ein eigener Merkbereich (geraet=…), sonst sieht Team B nur zu
+            s = seite(name, url(geraet=geraet))
             s.get_by_role("button", name="Ich spiele mit").click()
             s.get_by_label("Code der Sitzung").fill(code)
             s.get_by_role("button", name="Beitreten").click()

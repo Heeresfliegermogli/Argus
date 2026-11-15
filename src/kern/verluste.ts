@@ -76,6 +76,45 @@ export interface Druckmeldung {
   zug: string;
   stufe: number;
   text: string;
+  /** seit 2.8 (M3.1): Feuerquelle des Einschlags (Schütze, Hintergrundereignis H-…, Attrappe, durchgebrochenes Fahrzeug); nicht im Protokoll */
+  quelle: string;
+}
+
+/** Erster Einschlag einer Feuervorbereitung des Hintergrunds (seit 2.8, M3.1a): Zeit, Ereignis, Panzer, auf denen sie liegt. */
+export interface Vorbereitung {
+  t: number;
+  quelle: string;
+  panzer: string[];
+}
+
+/**
+ * Feuervorbereitungen der Feindartillerie des Hintergrunds mit ihrem ersten Einschlag (auch daneben, außerhalb radius_m) – wie
+ * vorbereitungen in verluste.py. Panzer: `panzer` des Ereignisses, sonst je Einschlag der nächste (Reihenfolge der Kp).
+ */
+export function vorbereitungen(inh: Inhalte): Vorbereitung[] {
+  const pl = panzer(inh);
+  const dauer = inh.szenario.spieluhr.dauer_s;
+  const out: Vorbereitung[] = [];
+  for (const h of inh.szenario.hintergrund?.ereignisse ?? []) {
+    if (h.art !== "feindartillerie" || !h.einschlaege.length) continue;
+    const t = r2(Math.min(...h.einschlaege.map((e) => e[0])));
+    if (t >= dauer) continue;
+    let ids = (h.panzer ?? []).filter((id) => pl.some((p) => p.id === id));
+    if (!ids.length) {
+      const naeher = new Set(h.einschlaege.map(([, x, y]) => naechster(pl, [x, y], new Set())?.id).filter((x): x is string => !!x));
+      ids = pl.map((p) => p.id).filter((id) => naeher.has(id));
+    }
+    out.push({ t, quelle: h.id, panzer: pl.map((p) => p.id).filter((id) => ids.includes(id)) });
+  }
+  return out.sort((a, b) => a.t - b.t || (a.quelle < b.quelle ? -1 : a.quelle > b.quelle ? 1 : 0));
+}
+
+/** „1/1“, „1/1 und 1/2“, „1/1, 1/2 und 1/4“; alle Panzer der Kp: „1/1 bis 1/4“ (wie panzer_liste in verluste.py). */
+export function panzerListe(inh: Inhalte, ids: string[]): string {
+  const pl = panzer(inh);
+  const n = ids.map((id) => panzerName(inh, id));
+  if (n.length >= 3 && n.length === pl.length) return `${n[0]} bis ${n[n.length - 1]}`;
+  return n.length <= 1 ? n.join("") : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]}`;
 }
 
 /** feste Richtungen für Steilfeuer daneben (Einheitsvektoren, wie RICHTUNGEN in verluste.py) */
@@ -453,6 +492,11 @@ export function format(vorlage: string, werte: Record<string, string | number>):
  * Panzers kommt immer (erster_beschuss); Artillerie und Mörser (artillerie) höchstens einmal je Panzer, Schütze und Stufe und insgesamt
  * höchstens einmal je artillerie_abstand_s (ausgefallen immer); die Feindartillerie des Hintergrunds (nur_stufenwechsel) nur beim
  * Stufenwechsel.
+ * Seit 2.8 (M3.1a, erste_quelle): Jede Feuerquelle meldet sich mit ihrem ersten Einschlag bei den eigenen Panzern – die Feuervorbereitung
+ * des Hintergrunds mit dem ersten Einschlag überhaupt („1/1 und 1/2 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung.“),
+ * jede andere Quelle mit ihrem ersten Schuss in der Zeitlinie. Kam dazu nach den Regeln bis 2.7 keine Meldung, kommt diese erste Meldung
+ * dazu: ohne Abstand, und sie zählt für keine Drosselung (weder artillerie_abstand_s noch die Abstände je Kp und Panzer) – alle
+ * übrigen Meldungen bleiben genau wie bisher.
  */
 export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldung[] {
   const vr = inh.regeln.verluste;
@@ -464,6 +508,7 @@ export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldun
   const artAbstand = regel.artillerie_abstand_s ?? 0;
   const nurWechsel = new Set<string>(regel.nur_stufenwechsel ?? []);
   const ersterBeschuss = !!regel.erster_beschuss;
+  const ersteQuelle = !!regel.erste_quelle;
   const pl = panzer(inh);
   const pmap = new Map(pl.map((p) => [p.id, p]));
   const zst = new Map(pl.map((p) => [p.id, {
@@ -472,7 +517,26 @@ export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldun
   const out: Druckmeldung[] = [];
   let tAlle: number | null = null;
   let tArt: number | null = null;
+  // M3.1a: Feuervorbereitungen des Hintergrunds melden sich mit ihrem ersten Einschlag; ihre Einschläge in der Zeitlinie sind danach
+  // keine erste Meldung mehr
+  const vorb = ersteQuelle ? vorbereitungen(inh) : [];
+  const gesehen = new Set<string>(vorb.map((v) => v.quelle));
+  let iv = 0;
+  const werteFuer = (pz: EigenerPanzer, art: VerlustArt, ort: string, extra: Record<string, string | number>) => ({
+    pz: pz.name, waffe: vm.waffe[art], ort: ort ? ` ${ort}` : "", forderung: vm.forderung[art], gesamt: pl.length,
+    bereit: [...zst.values()].filter((x) => !x.aus).length, schaden_e: pz.schaden_eingeschraenkt ?? "", zug: sz.eigene_truppe?.name ?? "", ...extra,
+  });
+  const vorbereitungMelden = (bis: number) => {
+    for (; iv < vorb.length && vorb[iv].t <= bis; iv++) {
+      const v = vorb[iv];
+      if (!v.panzer.length) continue;
+      const pz = pmap.get(v.panzer[0])!;
+      const werte = { ...werteFuer(pz, "artillerie", "", { zustand: zst.get(pz.id)!.zustand, verw: "", schaden: "" }), pz: panzerListe(inh, v.panzer) };
+      out.push({ id: `${vm.kennung}${String(out.length + 1).padStart(2, "0")}`, t: v.t, zug: pz.id, stufe: 0, text: format(vm.texte.beschuss, werte), quelle: v.quelle });
+    }
+  };
   for (const e of ev) {
+    vorbereitungMelden(e.t);
     const s = zst.get(e.panzer)!;
     const vorher = stufe(vr, s.zustand, s.aus);
     s.zustand = e.zustand;
@@ -486,36 +550,48 @@ export function druckmeldungen(inh: Inhalte, ev: VerlustEreignis[]): Druckmeldun
     if (e.ergebnis === "treffer") s.arten.add(e.art);
     const erster = ersterBeschuss && !s.beschossen && !nurWechsel.has(e.art);
     if (!nurWechsel.has(e.art)) s.beschossen = true;
+    const ersteDerQuelle = ersteQuelle && !gesehen.has(e.quelle);
+    gesehen.add(e.quelle);
     const nAus = [...zst.values()].filter((x) => x.aus).length;
-    let schl: string;
-    let st: number;
-    if (nachher === "ausgefallen" && vorher !== "ausgefallen") [schl, st] = [nAus >= vr.hoechstens_ausgefallen ? "limit" : "ausgefallen", 3];
-    else if (nachher === "eingeschraenkt" && vorher === "einsatzbereit") [schl, st] = ["eingeschraenkt", 2];
-    else if (nurWechsel.has(e.art)) continue;
-    else if (ersteArt) [schl, st] = ["sofort", nachher === "einsatzbereit" ? 1 : 2];
-    else if (erster) [schl, st] = e.ergebnis === "treffer" ? (nachher === "einsatzbereit" ? ["treffer", 1] : ["erneut", 2]) : ["beschuss", 0];
-    else if (e.ergebnis === "treffer" && nachher === "einsatzbereit" && freiAlle && freiPz) [schl, st] = ["treffer", 1];
-    else if (e.ergebnis === "treffer" && nachher === "eingeschraenkt" && freiAlle && (s.t === null || t - s.t >= regel.abstand_limit_s)) [schl, st] = ["erneut", 2];
-    else if (e.k === 1 && e.ergebnis !== "treffer" && freiAlle && freiPz) [schl, st] = ["beschuss", 0];
-    else continue;
-    if (artArten.has(e.art)) {
+    // Regeln bis 2.7 (null: keine Meldung)
+    let wahl: [string, number] | null;
+    if (nachher === "ausgefallen" && vorher !== "ausgefallen") wahl = [nAus >= vr.hoechstens_ausgefallen ? "limit" : "ausgefallen", 3];
+    else if (nachher === "eingeschraenkt" && vorher === "einsatzbereit") wahl = ["eingeschraenkt", 2];
+    else if (nurWechsel.has(e.art)) wahl = null;
+    else if (ersteArt) wahl = ["sofort", nachher === "einsatzbereit" ? 1 : 2];
+    else if (erster) wahl = e.ergebnis === "treffer" ? (nachher === "einsatzbereit" ? ["treffer", 1] : ["erneut", 2]) : ["beschuss", 0];
+    else if (e.ergebnis === "treffer" && nachher === "einsatzbereit" && freiAlle && freiPz) wahl = ["treffer", 1];
+    else if (e.ergebnis === "treffer" && nachher === "eingeschraenkt" && freiAlle && (s.t === null || t - s.t >= regel.abstand_limit_s)) wahl = ["erneut", 2];
+    else if (e.k === 1 && e.ergebnis !== "treffer" && freiAlle && freiPz) wahl = ["beschuss", 0];
+    else wahl = null;
+    if (wahl && artArten.has(e.art)) {
       const k = `${nachher}|${e.quelle}`;
-      if (st < 3 && (s.artSchl.has(k) || (tArt !== null && t - tArt < artAbstand))) continue;
-      s.artSchl.add(k);
-      tArt = t;
+      if (wahl[1] < 3 && (s.artSchl.has(k) || (tArt !== null && t - tArt < artAbstand))) wahl = null;
+      else {
+        s.artSchl.add(k);
+        tArt = t;
+      }
     }
+    // M3.1a: erster Einschlag dieser Quelle ohne Meldung nach den bisherigen Regeln – die erste Meldung kommt dazu (zählt nicht)
+    const zusatz = !wahl && ersteDerQuelle;
+    if (zusatz) {
+      wahl = nachher === "eingeschraenkt" && vorher === "einsatzbereit" ? ["eingeschraenkt", 2]
+        : ersteArt ? ["sofort", nachher === "einsatzbereit" ? 1 : 2]
+          : e.ergebnis === "treffer" ? (nachher === "einsatzbereit" ? ["treffer", 1] : ["erneut", 2]) : ["beschuss", 0];
+    }
+    if (!wahl) continue;
+    const [schl, st] = wahl;
     const pz = pmap.get(e.panzer)!;
-    const bereit = [...zst.values()].filter((x) => !x.aus).length;
     const liste = vm.schaden?.[e.art] ?? [""];
-    const werte = {
-      pz: pz.name, zustand: s.zustand, verw: verwText(vr.verwundete[nachher] ?? 0), waffe: vm.waffe[e.art], ort: e.ort ? ` ${e.ort}` : "",
-      forderung: vm.forderung[e.art], bereit, gesamt: pl.length, schaden: s.treffer ? liste[(s.treffer - 1) % liste.length] : "",
-      schaden_e: pz.schaden_eingeschraenkt ?? "", zug: sz.eigene_truppe?.name ?? "",
-    };
-    out.push({ id: `${vm.kennung}${String(out.length + 1).padStart(2, "0")}`, t, zug: e.panzer, stufe: st, text: format(vm.texte[schl], werte) });
+    const werte = werteFuer(pz, e.art, e.ort, {
+      zustand: s.zustand, verw: verwText(vr.verwundete[nachher] ?? 0), schaden: s.treffer ? liste[(s.treffer - 1) % liste.length] : "",
+    });
+    out.push({ id: `${vm.kennung}${String(out.length + 1).padStart(2, "0")}`, t, zug: e.panzer, stufe: st, text: format(vm.texte[schl], werte), quelle: e.quelle });
+    if (zusatz) continue;
     s.t = t;
     tAlle = t;
   }
+  vorbereitungMelden(Infinity);
   return out;
 }
 
