@@ -10,7 +10,7 @@ import { TEXT_MAX } from "../kern/ereignisse";
 import { effekte } from "../kern/effekte";
 import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
 import { ROLLEN_NAME, standText } from "../kern/sichten";
-import { laptopText } from "../kern/sitzungen";
+import { geraeteName } from "../kern/sitzungen";
 import { mmss, uhrzeit } from "../kern/uhr";
 import { panzerName } from "../kern/verluste";
 import { verstaerkungStand } from "../kern/welt";
@@ -325,7 +325,7 @@ export function SLAnsicht(p: { s: Sicht }) {
               return (
                 <span key={x.client} class={`fenster ${alter > 20 ? "still" : ""}`} data-fenster={x.fenster ?? ""}
                   title={`${x.name}${x.client === st.client ? " (dieses Fenster)" : ""}${st.host?.id === x.client ? " · steuert" : ""}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""} · letzte Rückmeldung vor ${alter} s`}>
-                  <i class={`rolle-${marke}`} />{x.art === "tt" ? laptopText(x.client, x.name) : <>{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}</>}
+                  <i class={`rolle-${marke}`} />{x.art === "tt" ? geraeteName(x.client) : <>{kurz}{x.name && x.name !== ROLLEN_NAME[marke as keyof typeof ROLLEN_NAME] ? ` ${x.name}` : ""}</>}
                   {st.host?.id === x.client && <b> ★</b>}<span class="sehr-leise zahl">{alter} s</span>
                 </span>
               );

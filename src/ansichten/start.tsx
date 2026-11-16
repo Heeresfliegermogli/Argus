@@ -233,12 +233,15 @@ function Spielleitung(p: { e: Einstellungen; setE: (e: Einstellungen) => void; i
           <div class="stapel" style="gap:8px">
             <div class="klein leise" data-testid="neu-empfehlung"><b>Für jeden Durchgang eine neue Sitzung anlegen</b> – neuer Code, keine Reste. Die Spielleitung steuert dann alle Teams dieser Sitzung.</div>
             <div class="zeile" style="flex-wrap:nowrap">
-              <input class="feld" placeholder="Name, z. B. SL 1" maxLength={SPIELERNAME_MAX} value={slName}
+              {/* Liste Q (Q1.4): eine Kennung, um zwei Fenster der Spielleitung zu unterscheiden – kein Personenname */}
+              <input class="feld" placeholder="Kennung, z. B. SL 1" maxLength={SPIELERNAME_MAX} value={slName} aria-label="Kennung der Spielleitung"
+                title="Kennung der Spielleitung, z. B. SL 1 oder SL 2 – unterscheidet zwei Fenster der Spielleitung. Kein Name, kein Dienstgrad."
                 onInput={(ev) => setSlName((ev.target as HTMLInputElement).value)} data-testid="sl-name" />
               <button type="button" class="knopf weiter" style="white-space:nowrap" disabled={!p.inh || neu?.art === "laeuft"} onClick={() => void anlegen()} data-testid="sitzung-anlegen">
                 {neu?.art === "laeuft" ? "wird angelegt …" : "Neue Sitzung anlegen"}
               </button>
             </div>
+            <div class="klein sehr-leise" data-testid="sl-name-hilfe">Kennung „SL 1“, „SL 2“ – unterscheidet zwei Fenster der Spielleitung. Kein Name, kein Dienstgrad.</div>
             {neu?.art === "fehler" && <div class="warnung">{neu.text}</div>}
           </div>
           {letzte && (

@@ -406,7 +406,7 @@ def main():
         print("Teil B – zwei Teams, Übersicht der Spielleitung")
         sl = seite("SL-B", url())
         sl.get_by_role("button", name="Spielleitung").click()
-        sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
+        sl.get_by_placeholder("Kennung, z. B. SL 1").fill("SL 1")
         sl.get_by_role("button", name="Neue Sitzung anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()

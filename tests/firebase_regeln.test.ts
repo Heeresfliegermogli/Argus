@@ -18,7 +18,7 @@ import { LokalAdapter } from "../src/sync/lokal";
 import { bis, inhalte } from "./hilfen";
 import { type DrehbuchReferenz, type Modellteam, START_MS, drehbuchTeams, spieleDurch } from "./modellteam";
 
-import { ENDE_NAME, ENDE_TEAM } from "../src/kern/sitzungen";
+import { ENDE_NAME, ENDE_TEAM, geraeteName } from "../src/kern/sitzungen";
 const require = createRequire(import.meta.url);
 const targaryen = require("targaryen") as {
   database(rules: unknown, data: unknown): Db;
@@ -84,7 +84,7 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
 
   it("Teams: Form wird geprüft, Umbenennen, Lauf setzen und Löschen gehen", () => {
     const db = leer();
-    const t = db.write(`${S}/teams/${TEAM}`, team({ spieler: { abc123: { name: "Lt Anders", rollen: "zb" } } }));
+    const t = db.write(`${S}/teams/${TEAM}`, team({ spieler: { abc123: { name: "Laptop ABC1", rollen: "zb" } } }));
     expect(t.allowed, t.info.slice(-300)).toBe(true);
     const mit = t.newDatabase;
     expect(mit.update(`${S}/teams/${TEAM}`, { name: "Falke Nord" }).allowed).toBe(true);
@@ -105,7 +105,7 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
   it("Spieler: eine Rolle (zb), Teamwechsel in einem Schreibvorgang", () => {
     let db = leer().write(`${S}/teams/${TEAM}`, team()).newDatabase;
     db = db.write(`${S}/teams/tz9y8x`, team({ name: "Orion", farbe: "#e3d36b" })).newDatabase;
-    const sp = (rollen: string) => ({ name: "Lt Anders", rollen });
+    const sp = (rollen: string) => ({ name: "Laptop ABC1", rollen });
     expect(db.write(`${S}/teams/${TEAM}/spieler/abc123`, sp("zb")).allowed).toBe(true);
     // die alten Rollen G1–G3 gibt es seit 2.6 nicht mehr
     for (const r of ["", "g1", "g2,g3", "g1,g2,g3", "sl", "zb,zb", "zb;g1"]) expect(db.write(`${S}/teams/${TEAM}/spieler/abc123`, sp(r)).allowed, r).toBe(false);
@@ -128,7 +128,7 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
     expect(db.write(`${S}/host`, { id: "abc123", name: "SL 1", puls: Date.now() }).allowed).toBe(true);
     expect(db.write(`${S}/host`, { id: "abc123", name: "SL 1", puls: Date.now(), admin: true }).allowed).toBe(false);
     expect(db.write(`${S}/host`, null).allowed).toBe(true);
-    const anw = { client: "abc123", art: "tt", name: "Lt Anders", puls: Date.now(), version: "0.7.0", team: TEAM };
+    const anw = { client: "abc123", art: "tt", name: "Laptop ABC1", puls: Date.now(), version: "0.7.0", team: TEAM };
     expect(db.write(`${S}/anwesenheit/abc123`, anw).allowed).toBe(true);
     expect(db.write(`${S}/anwesenheit/abc123`, { ...anw, art: "sl", team: undefined }).allowed).toBe(true);
     expect(db.write(`${S}/anwesenheit/abc123`, { ...anw, art: "g1" }).allowed).toBe(false);
@@ -140,9 +140,9 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
 
   it("seit Liste J (J2.4): Fenstergröße reist im Feld version mit – ohne neue Regeln", () => {
     const db = leer();
-    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "0.9.0", team: TEAM, fenster: "1536x730" };
+    const t = { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "0.9.0", team: TEAM, fenster: "1536x730" };
     const eintrag = anwesenheitSchreiben(t);
-    expect(eintrag).toEqual({ client: "abc123", art: "tt", name: "Lt Anders", version: "0.9.0 1536x730", team: TEAM });
+    expect(eintrag).toEqual({ client: "abc123", art: "tt", name: "Laptop ABC1", version: "0.9.0 1536x730", team: TEAM });
     expect(db.write(`${S}/anwesenheit/abc123`, { ...eintrag, puls: Date.now() }).allowed).toBe(true);
     // ein eigenes Feld fenster lehnen die Regeln ab – deshalb der Umweg über version
     expect(db.write(`${S}/anwesenheit/abc123`, { ...t, puls: Date.now() }).allowed).toBe(false);
@@ -165,7 +165,7 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
       db = erg.newDatabase;
     };
     schreibe(`${S}/info`, info());
-    schreibe(`${S}/teams/${TEAM}`, team({ spieler: { abc123: { name: "Lt Anders", rollen: "zb", seit: jetzt } } }));
+    schreibe(`${S}/teams/${TEAM}`, team({ spieler: { abc123: { name: "Laptop ABC1", rollen: "zb", seit: jetzt } } }));
     // K4.1: Marke „Sitzung beendet“ ist ein Eintrag unter teams/ mit fester Kennung (wie setzeTeam: Mehrpfad-Update)
     expect(ENDE_TEAM).toMatch(/^t[a-z0-9]{4,8}$/);
     const ende = db.update(`${S}/teams/${ENDE_TEAM}`, { name: ENDE_NAME, farbe: "#000000", erstellt: jetzt });
@@ -176,7 +176,7 @@ describe("Firebase-Regeln: Sitzung, Teams, Spieler", () => {
     const frei = ueber.newDatabase.update(`${S}/teams`, { [`${TEAM}/spieler/abc123`]: null });
     expect(frei.allowed, frei.info.slice(-300)).toBe(true);
     // K3.4: Zeichen „!R“ in version (höchstens 20 Zeichen); ein eigenes Feld regeln würde abgewiesen
-    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "0.9.0", team: TEAM, fenster: "1536x730", regeln: true };
+    const t = { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "0.9.0", team: TEAM, fenster: "1536x730", regeln: true };
     const eintrag = anwesenheitSchreiben(t);
     expect(eintrag.version).toBe("0.9.0 !R 1536x730");
     schreibe(`${S}/anwesenheit/abc123`, { ...eintrag, puls: jetzt });
@@ -288,12 +288,18 @@ describe("Firebase-Regeln: echter Testlauf mit zwei Team-Laptops", () => {
       laptops.push(tt);
     }
     // ein zweites Fenster sieht bei Team 1 zu (zweiter Spieler im Team)
-    const zu = await neu("tt", "Lt Doppel");
+    const zu = await neu("tt");
     await bis(() => !!zu.team(teamIds[0]), 3000);
     await zu.teamBeitreten(teamIds[0]);
     await bis(() => sl.stand.teams.length === 2 && sl.team(teamIds[0])!.spieler.length === 2, 3000, "Lobby");
+    // Liste Q (Q2.1): Team 2 benennt sich in der Lobby um
+    expect(await laptops[1].teamUmbenennen(teamIds[1], "Orion Süd")).toBe(true);
     await sl.spielOeffnen(teamIds);
     await bis(() => teamIds.every((id, i) => (laptops[i].spiel(id)?.stand.zustand.seq ?? 0) >= 2), 4000, "Spiele offen");
+    // Q2.2: und noch einmal vor dem Start (Einweisung), aus dem Team-Fenster
+    await bis(() => laptops[1].teamnameAenderbar(teamIds[1]), 3000, "vor dem Start änderbar");
+    expect(await laptops[1].teamUmbenennen(teamIds[1], "Orion West")).toBe(true);
+    await bis(() => sl.team(teamIds[1])?.name === "Orion West", 3000);
     const id0 = teamIds[0];
     const zb = new Sicht(laptops[0], laptops[0].spiel(id0)!, "zb");
     await bis(() => zb.stand.geladen, 3000);
@@ -349,6 +355,9 @@ describe("Firebase-Regeln: echter Testlauf mit zwei Team-Laptops", () => {
     expect(i.allowed, i.info.slice(-300)).toBe(true);
     db = i.newDatabase;
     expect(Object.values(teamsDaten).flatMap((t) => Object.values(t.spieler ?? {})).length).toBe(3);
+    // Liste Q (Q1.2): in jedem Spieler-Eintrag steht der Gerätename, nie ein Personenname
+    for (const t of Object.values(teamsDaten)) for (const [client, sp] of Object.entries(t.spieler ?? {})) expect(sp.name).toBe(geraeteName(client));
+    expect(Object.values(teamsDaten).map((t) => t.name).sort()).toEqual(["Falke „Nord“ äöü", "Orion West"]);
     for (const [id, t] of Object.entries(teamsDaten)) {
       const { spieler, lauf, ...kopf } = t;
       // wie FirebaseAdapter.setzeTeam/setzeSpieler/aendereTeam
@@ -365,6 +374,11 @@ describe("Firebase-Regeln: echter Testlauf mit zwei Team-Laptops", () => {
       expect(c.allowed, c.info.slice(-300)).toBe(true);
       db = c.newDatabase;
     }
+    // Q2.5: Umbenennen aus einem Team-Fenster ist ein update von teams/<team>/name – mit den geltenden Regeln (Stand L) erlaubt;
+    // leer oder länger als 24 Zeichen lehnen schon die Regeln ab
+    const id = Object.keys(teamsDaten)[0];
+    for (const name of ["Wolf", "x".repeat(24), "Wölfe „Süd“ & Co"]) expect(db.update(`${B}/teams/${id}`, { name }).allowed, name).toBe(true);
+    for (const name of ["", "x".repeat(25)]) expect(db.update(`${B}/teams/${id}`, { name }).allowed, name).toBe(false);
   });
 
   it("alle Ereignistypen beider Teams werden angenommen – in Stücken hochgeladen wie vom Team-Laptop", () => {
@@ -517,15 +531,15 @@ describe("Firebase-Regeln: Liste L – Marke argus/v1/reset (neu) und alles Übr
     // neuer Beitritt mit Gerätenamen
     expect(db.update(`${raum}/teams/traum`, { name: "Team 1", farbe: "#e8839b", erstellt: jetzt, "spieler/hevmvq": { name: "Laptop HEVM", rollen: "zb", seit: jetzt + 1 } }).allowed).toBe(true);
     // Laptop abmelden in einer Sitzung mit Lobby: der Eintrag des verbundenen Laptops verschwindet
-    const mitTeam = alt().write(`${S}/teams/${TEAM}`, team({ lauf: LAUF, spieler: { abc123: { name: "Lt Anders", rollen: "zb", seit: jetzt } } })).newDatabase;
+    const mitTeam = alt().write(`${S}/teams/${TEAM}`, team({ lauf: LAUF, spieler: { abc123: { name: "Laptop ABC1", rollen: "zb", seit: jetzt } } })).newDatabase;
     expect(mitTeam.update(`${S}/teams`, { [`${TEAM}/spieler/abc123`]: null }).allowed).toBe(true);
   });
 
   it("alte Regeln: Anwesenheit mit Programmstand, Zeichen und Fenstergröße in version (≤ 20 Zeichen)", () => {
     for (const t of [
       { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "90b7bef", team: "traum", fenster: "1536x730" },
-      { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "90b7bef", team: TEAM, fenster: "1536x730", zwei: true, hintergrund: true },
-      { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "90b7bef", team: TEAM, fenster: "1920x1080", zwei: true, regeln: true },
+      { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "90b7bef", team: TEAM, fenster: "1536x730", zwei: true, hintergrund: true },
+      { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "90b7bef", team: TEAM, fenster: "1920x1080", zwei: true, regeln: true },
       { client: "abc123", art: "sl" as const, name: "SL 1", version: "lokal", fenster: "1536x730", hintergrund: true },
     ]) {
       const eintrag = { ...anwesenheitSchreiben(t), puls: Date.now() };

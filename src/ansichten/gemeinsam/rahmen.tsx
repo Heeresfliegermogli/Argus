@@ -8,22 +8,24 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Inhalte } from "../../inhalte/typen";
-import { DIREKT_TEAM } from "../../kern/sitzungen";
+import { DIREKT_TEAM, TEAMNAME_GESPERRT } from "../../kern/sitzungen";
 import { ROLLEN_NAME } from "../../kern/sichten";
 import { mmss, phaseZu, uhrzeit } from "../../kern/uhr";
 import { panzer, PANZER_STUFE_TEXT, trefferText, verlustStand, verwText } from "../../kern/verluste";
 import { type Spielzustand, fingerabdruck } from "../../kern/zustand";
 import { protokollDatei, speichereDatei } from "../../sitzung/ablage";
 import type { Sicht } from "../../sitzung/sicht";
+import type { Sitzung } from "../../sitzung/sitzung";
 import { UEBERNAHME_MS, istVeraltet } from "../../sync/adapter";
 import { EinweisungFenster } from "../einweisung";
 import { AbschlussBild } from "./abschluss";
-import { BestaetigenKnopf, Hinweise } from "./bausteine";
+import { BestaetigenKnopf, Hinweise, Menue } from "./bausteine";
 import { VersionsBanner } from "./notbremse";
 import { fensterText, useFenster, zuKlein } from "./fenster";
 import { imPult } from "./pult";
 import { useSpielzeit, useStand } from "./hooks";
 import { ArgusMarke } from "./logo";
+import { TeamnameFeld } from "./teamname";
 
 /**
  * Einweisung schon gesehen? Je Lauf – seit Liste K auch im localStorage: Wer den Tab schließt und sein Spiel wieder öffnet (K1), soll
@@ -177,6 +179,37 @@ export function TeamMarke(p: { name: string; farbe: string; klein?: boolean }) {
 }
 
 /**
+ * Teamzeichen im Kopf des Team-Fensters (Liste Q, Q2.2): bis zum Start ein Knopf – Klick öffnet darunter das Feld zum Umbenennen
+ * (Name, 🎲, Übernehmen); ab dem Start nur das Zeichen mit dem Tooltip „Teamname nach dem Start nur über die Spielleitung“.
+ */
+export function TeamMarkeAenderbar(p: { s: Sitzung; team: string; name: string; farbe: string }) {
+  const t = p.s.team(p.team);
+  const darf = !!t && p.s.teamnameAenderbar(p.team);
+  const [offen, setOffen] = useState(false);
+  useEffect(() => {
+    if (!darf) setOffen(false);
+  }, [darf]);
+  if (!t || !darf) {
+    return (
+      <span class="team-marke-kopf" data-testid="kopf-teamname" data-aenderbar="0" title={TEAMNAME_GESPERRT}>
+        <TeamMarke name={p.name} farbe={p.farbe} />
+      </span>
+    );
+  }
+  return (
+    <span class="menue-anker team-marke-kopf" data-testid="kopf-teamname" data-aenderbar="1">
+      <button type="button" class="team-name-knopf" title="Teamnamen ändern – bis zum Start" data-testid="kopf-umbenennen" onClick={() => setOffen((x) => !x)}>
+        <TeamMarke name={p.name} farbe={p.farbe} /><span class="stift" aria-hidden="true">✎</span>
+      </button>
+      <Menue offen={offen} schliessen={() => setOffen(false)} testid="kopf-teamname-menue">
+        <div class="menue-kopf"><b>Teamnamen ändern</b> <span class="sehr-leise klein">bis zum Start – danach nur über die Spielleitung</span></div>
+        <TeamnameFeld s={p.s} t={t} wuerfel fertig={() => setOffen(false)} />
+      </Menue>
+    </span>
+  );
+}
+
+/**
  * Firebase-Regeln veraltet (H1.5): roter Balken mit dem, was zu tun ist. Seit Liste K (K3.4) auch bei der Spielleitung, wenn ein
  * Team-Laptop den Fehler meldet (`bei`: Namen dieser Fenster, aus der Anwesenheit).
  */
@@ -215,7 +248,7 @@ function ZuschauBanner(p: { s: Sicht; speichern: (eigenes?: boolean) => void; zw
       </div>
     );
   }
-  // L1.3: der Laptop beim Gerätenamen („Laptop SU2A (Lt Müller)“)
+  // L1.3: der Laptop beim Gerätenamen („Laptop SU2A“; seit Liste Q ohne Personennamen)
   const name = st.rechnerGeraet ? <b>{st.rechnerGeraet}</b> : "ein anderer Laptop";
   if (st.abgeloest) {
     return (
@@ -308,14 +341,19 @@ export function Rahmen(p: {
 
   const hostDa = !!st.host && !istVeraltet(st.host.puls, p.s.adapter.serverJetzt());
   const zeigeTeam = st.team !== DIREKT_TEAM && rolle !== "sl" && rolle !== "plenum" && !p.teamImBand;
+  // Fenster eines Teams in einer Sitzung mit Lobby (nicht Spielleitung/Plenum beim Zuschauen, nicht der zweite Tab)
+  const teamFenster = team && !p.band && !st.direkt && !st.gast;
   // eigenes = Protokoll aus der Ablage dieses Laptops, wenn ein anderer das Spiel weiterführt (K2.2)
   const speichern = (eigenes?: boolean) => speichereDatei(protokollDatei({
     szenario: sz.id, version: sz.version, sitzung: st.raum, team: st.teamName, team_id: st.team, farbe: st.teamFarbe, lauf: st.lauf,
     protokoll: (eigenes ? p.s.spiel.eigenesProtokoll() : null) ?? st.protokoll,
   }));
-  // Fenster eines Teams in einer Sitzung mit Lobby (nicht Spielleitung/Plenum beim Zuschauen, nicht der zweite Tab)
-  const teamFenster = team && !p.band && !st.direkt && !st.gast;
   const up = st.upload;
+  const teamMarke = !zeigeTeam ? null : teamFenster && p.s.sitzung.stand.art === "tt"
+    ? <TeamMarkeAenderbar s={p.s.sitzung} team={st.team} name={st.teamName} farbe={st.teamFarbe} />
+    : <TeamMarke name={st.teamName} farbe={st.teamFarbe} />;
+  const geraetMarke = team && !p.band && !st.gast
+    ? <span class="geraet-marke" data-testid="geraet" title="Name dieses Laptops – so nennt ihn die Spielleitung">{st.geraet}</span> : null;
   const offenHoch = st.rechnet ? z.seq - up.hoch : 0;
   return (
     <div class={`rahmen ${st.nurLesen ? "nur-lesen" : ""} ${rot ? "treffer-rand" : ""}`} data-rolle={rolle} data-seq={z.seq} data-fp={fingerabdruck(z)} data-lauf={st.lauf ?? ""}
@@ -324,8 +362,9 @@ export function Rahmen(p: {
         <div class="kopf-links">
           {p.band ?? <div class={`rollenband rolle-${rolle}`}><ArgusMarke /><span>{ROLLEN_NAME[rolle]}</span></div>}
           {p.links}
-          {zeigeTeam && <TeamMarke name={st.teamName} farbe={st.teamFarbe} />}
-          {team && !p.band && !st.gast && <span class="geraet-marke" data-testid="geraet" title="Name dieses Laptops – so nennt ihn die Spielleitung">{st.geraet}</span>}
+          {/* Q2.2: im Team-Fenster bis zum Start umbenennen (Klick aufs Teamzeichen), danach nur über die Spielleitung. Teamname und
+              Gerätename stehen übereinander – der Teamname ist seit Liste Q der einzige Name des Teams und soll lesbar bleiben. */}
+          {teamMarke && geraetMarke ? <span class="kopf-team" data-testid="kopf-team">{teamMarke}{geraetMarke}</span> : <>{teamMarke}{geraetMarke}</>}
           {!zeigeTeam && !p.teamImBand && !team && st.name !== ROLLEN_NAME[rolle] && <span class="leise">{st.name}</span>}
         </div>
         <UhrAnzeige inh={inh} z={z} t={t} lauf={st.lauf} kurz={false} />

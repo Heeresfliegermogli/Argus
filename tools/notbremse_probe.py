@@ -186,7 +186,7 @@ def main():
             sl = ctx.new_page()
             sl.goto(url() + "#spielleitung")
             warte(lambda: sl.get_by_test_id("sitzung-anlegen").count() == 1 and sl.get_by_test_id("sitzung-anlegen").is_enabled(), 15, "Startseite Spielleitung")
-            sl.get_by_placeholder("Name, z. B. SL 1").fill(name)
+            sl.get_by_placeholder("Kennung, z. B. SL 1").fill(name)
             sl.get_by_test_id("sitzung-anlegen").click()
             warte(lambda: sl.get_by_text("steuert alle Teams").count() == 1, 20, "SL steuert")
             c = sl.get_by_test_id("code").inner_text().strip()
@@ -201,11 +201,9 @@ def main():
             pg.get_by_role("button", name="Beitreten").click()
             return pg
 
-        def anlegen(pg, name, team):
-            warte(lambda: pg.get_by_text(OHNE_TEAM).count() == 1, 15, f"Lobby {name}")
-            feld = pg.get_by_placeholder("z. B. Lt Müller, Lt Schmidt (freiwillig)")
-            feld.fill(name)
-            feld.press("Enter")
+        def anlegen(pg, team):
+            # seit Liste Q kein Feld für Personennamen mehr – nur der Teamname
+            warte(lambda: pg.get_by_text(OHNE_TEAM).count() == 1, 15, f"Lobby für {team}")
             pg.get_by_placeholder("Teamname").fill(team)
             pg.get_by_role("button", name="Team anlegen").click()
             warte(lambda: pg.get_by_test_id("lobby-ich").get_by_text(team, exact=True).count() == 1, 10, f"Team {team} angelegt")
@@ -414,7 +412,7 @@ def main():
             sl, code = neue_sitzung(haupt)
             merke["sl1"], merke["code1"] = sl, code
             pa = ueber_code("la", code)
-            anlegen(pa, "Lt Anders", "Adler")
+            anlegen(pa, "Adler")
             warte(lambda: zeile(sl, "Adler").count() == 1, 10, "Team bei der SL")
             sl.get_by_test_id("alle-oeffnen").click()
             einweisung_weg(pa)
@@ -497,7 +495,8 @@ def main():
             text = sl.evaluate("() => window.argusDiagnose")
             for muster in [rf"Sitzung {merke['code1']} ", r"steuert", r"- SL \w{6} ", r"- Adler \(t\w+\) · Lauf \S+ · rechnet: Laptop [A-Z0-9]{4} verbunden", r"Uhr läuft bei \d+:\d\d"]:
                 assert re.search(muster, text), f"Diagnose ohne „{muster}“:\n{text}"
-            assert "Lt Anders" not in text, "Diagnose enthält Namen"
+            assert not re.search(r"\bLt\b", text), "Diagnose enthält Namen"
+            assert re.search(r"Einträge im Team: Laptop [A-Z0-9]{4}", text), "Diagnose ohne Gerätenamen der Team-Fenster"
 
         def l4_neue_version():
             """version.json ändern: jedes offene Fenster zeigt „Neue Version – bitte neu laden“; die Startseite lädt selbst neu."""
@@ -562,7 +561,7 @@ def main():
             sl1, code1 = merke["sl1"], merke["code1"]
             sl2, code2 = neue_sitzung(kontext("sl2") if firebase else haupt, "SL 2")
             pd = ueber_code("ld", code2)
-            anlegen(pd, "Lt Dorn", "Dachs")
+            anlegen(pd, "Dachs")
             sl2.get_by_test_id("alle-oeffnen").click()
             einweisung_weg(pd)
             warte(lambda: rechnet(pd), 15, "Team Dachs rechnet")
@@ -614,7 +613,7 @@ def main():
             sl3, code3 = neue_sitzung(haupt, "SL 1")
             pc.get_by_label("Code der Sitzung").fill(code3)
             pc.get_by_role("button", name="Beitreten").click()
-            anlegen(pc, "Lt Clausen", "Condor")
+            anlegen(pc, "Condor")
             sl3.get_by_test_id("alle-oeffnen").click()
             einweisung_weg(pc)
             warte(lambda: rechnet(pc), 15, "neues Team rechnet")
@@ -633,7 +632,7 @@ def main():
             """Regeln von Stand H–K (ohne argus/v1/reset): Die Notbremse meldet den Regelfehler, sonst läuft alles normal."""
             sl, code = neue_sitzung(haupt)
             pa = ueber_code("ra", code)
-            anlegen(pa, "Lt Anders", "Adler")
+            anlegen(pa, "Adler")
             sl.get_by_test_id("alle-oeffnen").click()
             einweisung_weg(pa)
             warte(lambda: rechnet(pa), 15, "A rechnet")

@@ -9,7 +9,7 @@ import { fingerabdruck } from "../src/kern/zustand";
 import { Sicht } from "../src/sitzung/sicht";
 import { Sitzung } from "../src/sitzung/sitzung";
 import { LokalAdapter } from "../src/sync/lokal";
-import { bis, inhalte, warte } from "./hilfen";
+import { bis, inhalte, rohTeams, warte } from "./hilfen";
 
 let fenster: Sitzung[] = [];
 
@@ -68,15 +68,18 @@ describe("Codes und Namen", () => {
 });
 
 describe("Lobby (eine Rolle je Team)", () => {
-  it("Team anlegen, zweites Fenster sieht zu, Team wechseln, Name im Team", async () => {
+  it("Team anlegen, zweites Fenster sieht zu, Team wechseln; das Team-Fenster schreibt seinen Gerätenamen (Liste Q)", async () => {
     const { code, sl } = await neueSitzung();
     const a = await oeffne(code, "tt");
     const b = await oeffne(code, "tt");
-    await a.setzeName("Lt Anders, Lt Berg");
     const ta = await a.teamErstellen("Falke");
     expect(ta).toBeTruthy();
     await bis(() => b.stand.teams.length === 1 && sl.stand.teams.length === 1, 3000, "Team überall sichtbar");
-    expect(b.stand.teams[0].spieler[0]).toMatchObject({ name: "Lt Anders, Lt Berg", rollen: ["zb"], online: true });
+    const geraet = `Laptop ${a.client.slice(0, 4).toUpperCase()}`;
+    expect(b.stand.teams[0].spieler[0]).toMatchObject({ client: a.client, name: geraet, rollen: ["zb"], online: true });
+    // Q1.2: im Spieler-Eintrag steht der Gerätename, in der Anwesenheit auch
+    expect((await rohTeams(a))[ta!]?.spieler?.[a.client]?.name).toBe(geraet);
+    expect(sl.stand.teilnehmer.find((x) => x.client === a.client)?.name).toBe(geraet);
     expect(b.stand.teams[0].rechner).toBe(a.client);
     await bis(() => a.stand.ich.rechnet, 3000);
 

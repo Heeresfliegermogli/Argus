@@ -25,6 +25,10 @@ export const SITZUNG_MUSTER = /^[a-z0-9-]{3,32}$/;
 /** Team-Kennung, z. B. tk3x9 („traum“ ist das Team des Direktaufrufs ohne Lobby). */
 export const TEAM_MUSTER = /^t[a-z0-9]{4,8}$/;
 export const TEAMNAME_MAX = 24;
+/**
+ * Höchstlänge des Namens im Spieler-Eintrag und in der Anwesenheit (Firebase-Regeln: ≤ 40). Seit Liste Q (16.11.2026) steht dort bei
+ * Team-Fenstern nur der Gerätename („Laptop SU2A“), bei der Spielleitung ihre Kennung („SL 1“) – keine Personennamen.
+ */
 export const SPIELERNAME_MAX = 40;
 /** Team des Direktaufrufs …/?rolle=zb&raum=… bzw. ?rolle=sl&raum=… (ein Team, ohne Lobby, für Tests und Probeläufe). */
 export const DIREKT_TEAM = "traum";
@@ -43,15 +47,12 @@ export function geraeteKurz(client: string | null | undefined): string {
   return (client ?? "").slice(0, 4).toUpperCase() || "????";
 }
 
+/**
+ * Seit Liste Q (Q1.2, Q1.3) der einzige Name eines Team-Fensters: im Spieler-Eintrag, in der Anwesenheit und in jeder Anzeige. Ein noch
+ * gespeicherter Personenname (alte Sitzung, alter Stand eines Fensters) wird nirgends gezeigt.
+ */
 export function geraeteName(client: string | null | undefined): string {
   return `Laptop ${geraeteKurz(client)}`;
-}
-
-/** „Laptop SU2A (Lt Müller)“ – Gerätename, dazu der eingegebene Name, wenn er etwas sagt. */
-export function laptopText(client: string | null | undefined, name?: string | null): string {
-  const g = geraeteName(client);
-  const n = (name ?? "").trim();
-  return !n || n === g || n === "Team" || n === "Zielbearbeitung" ? g : `${g} (${n})`;
 }
 
 /**
@@ -120,6 +121,26 @@ export function teamnameVorschlag(vergeben: string[], zufallszahl: () => number 
 export function teamnameBereinigt(name: string): string | null {
   const n = name.replace(/\s+/g, " ").trim().slice(0, TEAMNAME_MAX).trim();
   return n || null;
+}
+
+/** Q2.2: Tooltip und Hinweis im Team-Fenster nach dem Start */
+export const TEAMNAME_GESPERRT = "Teamname nach dem Start nur über die Spielleitung";
+
+/** Ergebnis von teamnamePruefen: der bereinigte Name (`gleich`: wie bisher, nichts zu schreiben) oder der Grund der Ablehnung. */
+export type TeamnamePruefung = { ok: true; name: string; gleich: boolean } | { ok: false; grund: string };
+
+/**
+ * Liste Q (Q2.3): Prüfung eines Teamnamens – gemeinsam für „Team anlegen“, Umbenennen im Team und Umbenennen durch die Spielleitung.
+ * Bereinigt (≤ 24 Zeichen), nicht leer, nicht gleich einem anderen Team der Sitzung (Groß-/Kleinschreibung egal), nicht „Sitzung
+ * beendet“. `andere`: Namen der übrigen Teams; `bisher`: jetziger Name beim Umbenennen.
+ */
+export function teamnamePruefen(eingabe: string, andere: string[], bisher?: string): TeamnamePruefung {
+  const n = teamnameBereinigt(eingabe);
+  if (!n) return { ok: false, grund: bisher ? `Der Teamname darf nicht leer sein – es bleibt bei „${bisher}“.` : "Bitte einen Teamnamen eingeben (oder würfeln)." };
+  const klein = n.toLowerCase();
+  if (klein === ENDE_NAME.toLowerCase()) return { ok: false, grund: `„${n}“ geht als Teamname nicht.` };
+  if (andere.some((a) => a.replace(/\s+/g, " ").trim().toLowerCase() === klein)) return { ok: false, grund: `Den Teamnamen „${n}“ gibt es schon.` };
+  return { ok: true, name: n, gleich: n === bisher };
 }
 
 /**

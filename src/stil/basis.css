@@ -515,6 +515,20 @@ label.wahl.klein input { margin-top: 0; }
 .team-name-knopf { border: 0; background: transparent; cursor: text; padding: 2px 0; text-align: left; min-width: 0; overflow: hidden; }
 .team-name-knopf:hover .team-marke span { text-decoration: underline dotted; }
 .team-umbenennen { width: 190px; padding: 3px 7px; font-weight: 700; }
+/* Liste Q (Q2): Teamnamen ändern – Lobby, Kopf des Team-Fensters, Übersicht der Spielleitung */
+.teamname-feld { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; max-width: 100%; }
+.teamname-feld .team-umbenennen { flex: 1 1 auto; min-width: 120px; }
+.teamname-feld.kompakt .team-umbenennen { flex: 0 0 auto; }
+.lobby-teamzeile { gap: 10px; flex-wrap: nowrap; }
+.team-marke-kopf { display: inline-flex; align-items: center; min-width: 0; }
+.team-marke-kopf .team-name-knopf { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: inherit; }
+.team-marke-kopf .stift { font-size: 13px; color: var(--text-3); }
+.team-marke-kopf .team-name-knopf:hover .stift { color: var(--text); }
+.team-marke-kopf .menue { min-width: 380px; display: flex; flex-direction: column; gap: 8px; }
+.kopf-team { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 3px; min-width: 0; }
+.kopf-team > * { max-width: 100%; }
+.kopf-team .team-marke { line-height: 1.15; }
+.kopf-team .geraet-marke { line-height: 1.2; }
 .knopf.loeschen { padding: 1px 6px; color: var(--text-3); }
 .knopf.scharf, .knopf.loeschen.scharf { background: #8e2620; border-color: #c0453b; color: #fff; }
 .uebersicht-fuss { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 4px; flex-wrap: wrap; }

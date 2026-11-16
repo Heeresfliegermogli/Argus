@@ -11,7 +11,7 @@ import type { Spielzustand } from "../kern/zustand";
 import type { Abmelden, FensterArt, HostInfo, SyncAdapter, Verbindung } from "../sync/adapter";
 import type { Hinweis } from "./hinweise";
 import type { Sitzung, UhrGrund } from "./sitzung";
-import { geraeteName, laptopText } from "../kern/sitzungen";
+import { geraeteName } from "../kern/sitzungen";
 import type { Spiel, UploadStand } from "./spiel";
 
 export interface SichtTeilnehmer {
@@ -55,8 +55,6 @@ export interface SichtStand {
   regelFehler: boolean;
   /** Direktaufruf ohne Lobby (Test) */
   direkt: boolean;
-  /** Name des Fensters, das das Spiel des Teams rechnet (Team-Fenster, das nur zusieht) */
-  rechnerName: string | null;
   /** dieser Team-Laptop ist gerade verbunden */
   rechnerOnline: boolean;
   /** Liste K: Serverzeit, seit der der Team-Laptop nicht verbunden ist; ob dieses Fenster übernehmen darf (länger als 20 s weg) */
@@ -66,7 +64,7 @@ export interface SichtStand {
   abgeloest: boolean;
   /** K1.3: zweiter Tab desselben Browsers (sieht nur zu) */
   gast: boolean;
-  /** Liste L (L1.3): Gerätename dieses Fensters („Laptop SU2A“) und des Laptops, der rechnet („Laptop SU2A (Lt Müller)“) */
+  /** Liste L (L1.3): Gerätename dieses Fensters („Laptop SU2A“) und des Laptops, der rechnet (seit Liste Q nur der Gerätename) */
   geraet: string;
   rechnerGeraet: string | null;
   /** L2.1: letztes Lebenszeichen des Team-Laptops (Serverzeit) */
@@ -125,7 +123,7 @@ export class Sicht {
     const rollenVon = new Map(team?.spieler.map((x) => [x.client, x.rollen]) ?? []);
     const teilnehmer = ss.teilnehmer
       .filter((t) => t.art !== "tt" || rollenVon.has(t.client))
-      .map((t) => ({ client: t.client, art: t.art, name: t.name, puls: t.puls, rollen: rollenVon.get(t.client) ?? [], ...(t.fenster ? { fenster: t.fenster } : {}) }));
+      .map((t) => ({ client: t.client, art: t.art, name: t.art === "tt" ? geraeteName(t.client) : t.name, puls: t.puls, rollen: rollenVon.get(t.client) ?? [], ...(t.fenster ? { fenster: t.fenster } : {}) }));
     return {
       rolle: this.rolle,
       client: ss.client,
@@ -149,14 +147,13 @@ export class Sicht {
       upload: sp.upload,
       regelFehler: ss.regelFehler,
       direkt: ss.direkt,
-      rechnerName: team?.rechner ? team.spieler.find((x) => x.client === team.rechner)?.name ?? null : null,
       rechnerOnline: !!team?.rechnerOnline,
       rechnerWegSeit: team?.rechnerWegSeit ?? null,
       uebernehmbar: !!team?.uebernehmbar,
       abgeloest: ss.ich.abgeloest && ss.ich.team === sp.team,
       gast: ss.gast,
       geraet: geraeteName(ss.client),
-      rechnerGeraet: team?.rechner ? laptopText(team.rechner, team.spieler.find((x) => x.client === team.rechner)?.name) : null,
+      rechnerGeraet: team?.rechner ? geraeteName(team.rechner) : null,
       rechnerZuletzt: team?.rechnerZuletzt ?? null,
       uhrGrund: this.rolle === "sl" ? this.sitzung.uhrGrund(sp.team) : null,
       zwei: this.sitzung.zweiVerlaeufe(sp.team) || !!sp.upload.zwei,
@@ -168,7 +165,7 @@ export class Sicht {
     return [
       st.lauf, st.geladen ? 1 : 0, st.istHost ? 1 : 0, st.host?.id ?? "", st.verbindung.verbunden ? 1 : 0, st.verbindung.fehler ?? "",
       st.teamName, st.teamFarbe, st.name, st.teilnehmer.map((t) => `${t.client}${t.rollen.join("")}`).join(","),
-      st.rechnet ? 1 : 0, st.regelFehler ? 1 : 0, st.rechnerName ?? "", st.rechnerOnline ? 1 : 0,
+      st.rechnet ? 1 : 0, st.regelFehler ? 1 : 0, st.rechnerOnline ? 1 : 0,
       st.rechnerOnline ? "" : Math.floor((this.sitzung.adapter.serverJetzt() - (st.rechnerWegSeit ?? 0)) / 1000), st.uebernehmbar ? 1 : 0, st.abgeloest ? 1 : 0, st.gast ? 1 : 0,
       st.rechnerGeraet ?? "", st.uhrGrund?.text ?? "", st.zwei ? 1 : 0,
     ].join("|");

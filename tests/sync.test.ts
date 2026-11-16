@@ -143,7 +143,7 @@ describe("Team-Laptop rechnet selbst, Spielleitung steuert (lokaler Adapter, Dir
     await bis(() => !zweit.stand.rechnerOnline, 3000, "Team-Laptop nicht mehr verbunden");
     await warte(300);
     expect(zweit.stand.rechnet).toBe(false);
-    expect(zweit.stand.rechnerName).toBeTruthy();
+    expect(zweit.stand.rechnerGeraet).toMatch(/^Laptop [A-Z0-9?]{4}$/);
     await zweit.uebernehmenTeam();
     await bis(() => zweit.stand.rechnet, 3000, "übernimmt");
     const seq = zweit.stand.zustand.seq;

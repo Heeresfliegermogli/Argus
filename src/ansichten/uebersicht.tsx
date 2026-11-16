@@ -9,7 +9,7 @@
 import { useMemo, useRef, useState } from "preact/hooks";
 import { auswerten, hinschauZahl } from "../kern/auswertung";
 import type { AktionsDaten, AktionsTyp } from "../kern/ereignisse";
-import { TEAMNAME_MAX, geraeteKurz, geraeteName, laptopText } from "../kern/sitzungen";
+import { geraeteKurz, geraeteName } from "../kern/sitzungen";
 import { fensterText, leseFensterKennung, zuKlein } from "../kern/fenster";
 import { type FallStand, type FallStatus, type TeamStatus, statusFaelle, statusPanzer, statusUhr, teamStatus } from "../kern/uebersicht";
 import { mmss, spielzeit, uhrzeit } from "../kern/uhr";
@@ -22,6 +22,7 @@ import { useSitzung, useTakt, useTeamLaeufe } from "./gemeinsam/hooks";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
 import { VerstaerkungMenue } from "./gemeinsam/verstaerkung";
 import { AbschlussUebersicht } from "./gemeinsam/abschluss";
+import { TeamnameFeld } from "./gemeinsam/teamname";
 import { ZahlFuerFolie } from "./plenum-kurz";
 import { DiagnoseKnopf, PlenumKnopf } from "./sl";
 
@@ -82,7 +83,7 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
             <div class="menue-kopf"><b>Laptop für {t.name}</b></div>
             {ohne.length === 0 ? <div class="klein sehr-leise">Alle Fenster sind in Teams.</div> : ohne.map((x) => (
               <button type="button" key={x.client} class="knopf klein" style="text-align:left"
-                onClick={() => { setMenue(null); void s.spielerSetzen(x.client, t.id); }}>{x.name || "Teilnehmer"}</button>
+                onClick={() => { setMenue(null); void s.spielerSetzen(x.client, t.id); }}>{geraeteName(x.client)}</button>
             ))}
           </Menue>
         </span>
@@ -90,11 +91,11 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
       {t.spieler.map((x) => (
         <span class="menue-anker" key={x.client}>
           <button type="button" class={`spieler-chip ${x.online ? "" : "weg"}`} onClick={() => setMenue(x.client)}
-            title={`${laptopText(x.client, x.name)} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""}${x.version ? ` · Stand ${x.version}` : ""} – Klick: verschieben`}>
-            <i class="punkt" />{x.name && x.name !== geraeteName(x.client) ? x.name : "Laptop"} <span class="geraet-kurz" data-geraet={geraeteKurz(x.client)}>{geraeteKurz(x.client)}</span>{x.client === t.rechner && t.spieler.length > 1 ? " ★" : ""}
+            title={`${geraeteName(x.client)} · ${x.client === t.rechner ? "rechnet das Spiel" : "sieht zu"} · ${x.online ? "da" : "nicht verbunden"}${x.fenster ? ` · Fenster ${x.fenster.replace("x", " × ")}` : ""}${x.version ? ` · Stand ${x.version}` : ""} – Klick: verschieben`}>
+            <i class="punkt" />Laptop <span class="geraet-kurz" data-geraet={geraeteKurz(x.client)}>{geraeteKurz(x.client)}</span>{x.client === t.rechner && t.spieler.length > 1 ? " ★" : ""}
           </button>
           <Menue offen={menue === x.client} schliessen={() => setMenue(null)}>
-            <FensterMenue s={s} t={t} client={x.client} name={x.name} online={x.online} schliessen={() => setMenue(null)} />
+            <FensterMenue s={s} t={t} client={x.client} name={geraeteName(x.client)} online={x.online} schliessen={() => setMenue(null)} />
           </Menue>
         </span>
       ))}
@@ -118,7 +119,7 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
         <div class="klein laptop-weg" data-laptop-weg={t.name}>
           <span class="rot" title="Der Laptop, der das Spiel dieses Teams rechnet, ist nicht verbunden. Kommt derselbe Browser wieder, rechnet er sofort weiter; ein anderes Gerät kann nach 20 s in der Lobby übernehmen.">{geraeteName(rechner.client)} nicht verbunden seit {seitText(t.rechnerWegSeit, s.adapter.serverJetzt())}</span>{" "}
           <BestaetigenKnopf klasse="klein mini" frage="abmelden?" testid={`freigeben-${t.id}`} onClick={() => void s.laptopFreigeben(t.id)}
-            titel={`Laptop abmelden: nimmt ${laptopText(rechner.client, rechner.name)} aus Team ${t.name}. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt (ab dem hochgeladenen Protokoll).`}>
+            titel={`Laptop abmelden: nimmt ${geraeteName(rechner.client)} aus Team ${t.name}. Dann rechnet das nächste Fenster des Teams oder eines, das neu beitritt (ab dem hochgeladenen Protokoll).`}>
             Laptop abmelden
           </BestaetigenKnopf>
         </div>
@@ -127,24 +128,17 @@ function LaptopZelle(p: { s: Sitzung; t: TeamStand }) {
   );
 }
 
+/**
+ * Teamname in der Übersicht: Klick = umbenennen (jederzeit, auch im laufenden Spiel). Seit Liste Q mit derselben Prüfung wie im Team
+ * (kein doppelter, kein leerer Name, nicht „Sitzung beendet“); abgelehnt bleibt der alte Name und ein Hinweis sagt warum.
+ */
 function TeamName(p: { s: Sitzung; t: TeamStand }) {
   const { s, t } = p;
   const [bearbeiten, setBearbeiten] = useState(false);
-  const [wert, setWert] = useState(t.name);
-  if (bearbeiten) {
-    const fertig = (speichern: boolean) => {
-      setBearbeiten(false);
-      if (speichern && wert.trim() && wert.trim() !== t.name) void s.teamUmbenennen(t.id, wert);
-    };
-    return (
-      <input class="feld team-umbenennen" value={wert} maxLength={TEAMNAME_MAX} ref={(el) => el?.focus()}
-        onInput={(e) => setWert((e.target as HTMLInputElement).value)}
-        onKeyDown={(e) => { if (e.key === "Enter") fertig(true); if (e.key === "Escape") fertig(false); }} onBlur={() => fertig(true)} />
-    );
-  }
+  if (bearbeiten) return <TeamnameFeld s={s} t={t} kompakt fertig={() => setBearbeiten(false)} />;
   return (
     <span class="zeile team-name-zelle" style="flex-wrap:nowrap;gap:4px">
-      <button type="button" class="team-name-knopf" title="Umbenennen" onClick={() => { setWert(t.name); setBearbeiten(true); }}>
+      <button type="button" class="team-name-knopf" title="Umbenennen" data-umbenennen={t.id} onClick={() => setBearbeiten(true)}>
         <TeamMarke name={t.name} farbe={t.farbe} />
       </button>
       <BestaetigenKnopf klasse="klein leise loeschen" titel={`Team ${t.name} löschen${t.lauf ? " (der Spielstand bleibt gespeichert)" : ""}`} testid={`loeschen-${t.id}`}
@@ -421,7 +415,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
       <div class="uebersicht-fuss">
         <div class="zeile" style="gap:6px">
           <span class="klein leise">Ohne Team:</span>
-          {ohne.length === 0 ? <span class="klein sehr-leise">niemand</span> : ohne.map((x) => <span key={x.client} class="spieler-chip klein"><i class="punkt" />{x.name || "Teilnehmer"}</span>)}
+          {ohne.length === 0 ? <span class="klein sehr-leise">niemand</span> : ohne.map((x) => <span key={x.client} class="spieler-chip klein"><i class="punkt" />{geraeteName(x.client)}</span>)}
         </div>
         <div class="klein sehr-leise">
           Teilnehmer: Spielseite öffnen, Code <b class="mono">{st.code}</b> eingeben. · Spielzeit gesamt {mmss(dauer)} · Schlüsselfälle: <span class="fall wartet">S</span> kommt noch <span class="fall offen">S</span> offen <span class="fall richtig">S</span> richtig <span class="fall falsch">S</span> falsch

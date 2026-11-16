@@ -14,10 +14,10 @@ ging Laptop → Firebase → SL → Firebase → Laptop (Desync bis ca. 5 s im T
 
 | Wer | Schritt | Wo |
 |---|---|---|
-| SL 1 | Startseite → **Spielleitung** → Name → **Neue Sitzung anlegen**. Der Code (drei Zeichen, z. B. `K7P`) steht oben in der Mitte. **Für jeden Durchgang eine neue Sitzung** (seit Liste L); eine Sitzung von heute steht darunter klein als „Zuletzt genutzt: … fortsetzen als Spielleitung · Plenum“. | `…/Argus/` |
+| SL 1 | Startseite → **Spielleitung** → Kennung („SL 1“; seit Liste Q nur noch eine Kennung, um zwei Fenster der Spielleitung zu unterscheiden – kein Name, kein Dienstgrad) → **Neue Sitzung anlegen**. Der Code (drei Zeichen, z. B. `K7P`) steht oben in der Mitte. **Für jeden Durchgang eine neue Sitzung** (seit Liste L); eine Sitzung von heute steht darunter klein als „Zuletzt genutzt: … fortsetzen als Spielleitung · Plenum“. | `…/Argus/` |
 | SL 1 | **Plenum öffnen**: Das Smartboard zeigt Seite, Code und die Teams, die sich bilden. | Übersicht |
 | TT | Startseite → **Ich spiele mit** → Code eingeben (Groß-/Kleinschreibung, Leerzeichen und Punkte egal: `k 7 p`) → **Beitreten**. Mehr sehen Teilnehmer auf der Startseite nicht. | `…/Argus/` |
-| TT | Lobby: Namen (freiwillig, z. B. „Lt Müller, Lt Schmidt“), Teamname (≤ 24 Zeichen, 🎲 schlägt einen vor) → **Team anlegen** – „Dieser Laptop spielt für das Team.“ Keine Rollenwahl. Ein zweites Fenster desselben Teams (Knopf **zuschauen**) sieht nur zu. **Team verlassen** jederzeit (im Lauf mit Nachfrage). | Lobby |
+| TT | Lobby: Teamname (≤ 24 Zeichen, 🎲 schlägt einen vor) → **Team anlegen** – „Dieser Laptop spielt für das Team.“ Seit Liste Q **keine Personennamen**: jedes Fenster heißt nach seinem Gerät („Laptop SU2A“). Keine Rollenwahl. Ein zweites Fenster desselben Teams (Knopf **zuschauen**) sieht nur zu. **✎ umbenennen** im Kasten „Ihr seid im Team“ (jedes Fenster des Teams; bis zum Start auch im Kopf des Team-Fensters). **Team verlassen** jederzeit (im Lauf mit Nachfrage). | Lobby |
 | SL 1 | In der Übersicht prüfen (je Team ein Laptop, verbunden), ggf. umbenennen, Fenster verschieben oder einem Team ohne Laptop zuweisen, löschen. Dann **Spiel öffnen – alle Teams**: Jedes Team bekommt einen eigenen Lauf, am Team-Laptop erscheint die Ansicht mit der Einweisung (Übersicht mit Pfeilen, dann Folien), die Uhr steht. | Übersicht |
 | SL 1 | **▶ Start für alle**: Startsignal mit der Serverzeit des Klicks an alle Team-Laptops; jede Uhr läuft ab diesem Augenblick (H1.4, auch wenn das Signal später ankommt – bis 60 s holt der Laptop nach). Anhalten, Tempo, Spielzeit, Reserve ebenso für alle; einzeln über die Zeile oder die Teamansicht. | Übersicht |
 | SL 2 | Startseite → **Spielleitung** → Code bei „Bestehende Sitzung öffnen“ → **als Spielleitung**. Beobachtet, notiert (✎ Notiz), kann **Steuerung übernehmen** (ohne Puls nach 20 s von selbst). | Übersicht |
@@ -144,10 +144,14 @@ Vorführung: `verzug=5000` legt um die Verbindung des Fensters einen künstliche
 * Steuerleiste: Spiel öffnen, ▶ Start für alle / ❚❚ Anhalten – alle, Tempo ×1–×20, Spielzeit setzen, Reserve R-01–R-03 an
   alle, Plenum öffnen, **Auswertung ›**, **Protokoll laden** (Datei eines Teams, wenn der Upload nicht ging), Neues Spiel –
   alle (zweistufig). Das Menü „Verstärkung“ ist ausgeblendet (`regeln.spielleitung.verstaerkung_menue: false`, H6).
-* Je Team eine Zeile: Teamname (Klick = umbenennen, ✕ = löschen, zweistufig), Laptop mit Verbindungspunkt (★ = rechnet; Klick:
+* Je Team eine Zeile: Teamname (Klick = umbenennen – jederzeit, auch im laufenden Spiel; seit Liste Q mit derselben Prüfung wie im
+  Team: kein doppelter, kein leerer Name, nicht „Sitzung beendet“; ✕ = löschen, zweistufig), Laptop „Laptop SU2A“ mit Verbindungspunkt (★ = rechnet; Klick:
   verschieben oder herausnehmen; „frei“: Fenster ohne Team zuweisen), Spielzeit und Status, Eingang (zurückgestellte in Klammern),
   **Schlüsselfälle live** S1–S8 (grau kommt noch, blau offen, grün richtig, rot falsch), Fehltreffer, die vier Panzer, **Protokoll**
   (im Netz / beim Team · Alter der letzten Statusmeldung), ▶/❚❚ für dieses Team, **ansehen ›**.
+* Benennt sich ein Team um (oder eine zweite Spielleitung es), kommt der Hinweis „Team Orion heißt jetzt Wolf.“; Übersicht,
+  Kontrollkarte, Plenum, Auswertung und „Gefecht beendet“ zeigen den neuen Namen sofort. Protokoll, Lauf und Statusmeldung hängen
+  an der Team-Kennung – das Spiel läuft unverändert weiter (Liste Q, Q2.4).
 * Die Zahlen kommen etwa alle 5 s; bei Netzverzug später – die Uhr der Zeile läuft aus der letzten Meldung weiter. Ohne
   Statusmeldung rechnet die Übersicht aus dem hochgeladenen Protokoll.
 
@@ -163,13 +167,16 @@ Haben alle Teams das Spielende erreicht, zeigt es die **Auswertung über alle Te
 ## Teilnehmer
 
 * **Lobby** (ohne Erklärung bedienbar): oben in der Mitte steht, was zu tun ist („Team anlegen oder beitreten“ → „Warten auf die
-  Spielleitung“); links Namen, neues Team bzw. das eigene Team, „So spielt ihr“ in zwei Sätzen; rechts alle Teams als Karten mit den
-  Fenstern (★ = Team-Laptop) und dem Knopf **beitreten** (Team ohne Laptop: dieser Laptop rechnet dann) oder **zuschauen**.
-  Teamfarben werden automatisch vergeben, stehen nie ohne Namen und sind keine Signalfarbe.
+  Spielleitung“); links neues Team bzw. das eigene Team (mit **✎ umbenennen**: Feld mit dem jetzigen Namen und 🎲, Enter oder
+  „Übernehmen“ speichert, Escape bricht ab), „So spielt ihr“; rechts alle Teams als Karten mit den Fenstern („Laptop SU2A (du) ★“,
+  ★ = Team-Laptop) und dem Knopf **beitreten** (Team ohne Laptop: dieser Laptop rechnet dann) oder **zuschauen**. Seit Liste Q
+  gibt es keinen Kasten für Personennamen mehr – im Spiel stehen keine Personennamen, nur Teamnamen und Gerätenamen.
+  Teamfarben werden automatisch vergeben, stehen nie ohne Teamnamen und sind keine Signalfarbe.
 * **Ansicht:** eine für alle (siehe [`UI.md`](UI.md)). Ein zweites Fenster des Teams sieht zu („Das Spiel dieses Teams rechnet
-  Laptop SU2A (Lt Müller). Hier nur zuschauen.“). Ist der Team-Laptop länger als 20 s nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
+  Laptop SU2A. Hier nur zuschauen.“). Ist der Team-Laptop länger als 20 s nicht verbunden, bietet es **Spiel hier weiterführen** an – nur für den
   Fall, dass der Laptop aus ist.
-* Kopfzeile: Team (Farbe und Name), Uhr und Phase, die vier Panzer, Bestand, Verbindung („verbunden · n offen“ = so viele
+* Kopfzeile: Team (Farbe und Name, darunter der Gerätename „Laptop SU2A“; bis zum Start Klick aufs Teamzeichen = umbenennen, danach
+  „Teamname nach dem Start nur über die Spielleitung“), Uhr und Phase, die vier Panzer, Bestand, Verbindung („verbunden · n offen“ = so viele
   Einträge noch nicht im Netz; „offline – Spiel läuft“), **⇩ Protokoll** (als Datei speichern), **? Einweisung**.
 
 ## Technik
@@ -246,7 +253,8 @@ Offline-Datei liegt das „hochgeladene“ Protokoll ohnehin im localStorage.
 
 * lesbar ist nur `argus/v1/sitzungen/<code>` mit gültigem Code (oder Raum) – keine Sitzungsliste;
 * `info` nur anlegen; `teams/<team>` mit gültiger Kennung, Name 1–24 Zeichen, Farbe, Lauf im Laufformat, Spieler mit Rolle
-  **`zb`** (seit 2.6; vorher `g1`–`g3`), Name ≤ 40, `seit`;
+  **`zb`** (seit 2.6; vorher `g1`–`g3`), Name ≤ 40 (seit Liste Q der Gerätename „Laptop SU2A“), `seit`; den Teamnamen darf
+  jedes Fenster der Sitzung schreiben – dass ein Team nur bis zum Start umbenennt, prüft das Programm, nicht die Regeln;
 * **`status/<team>`** (neu in 2.6): nur die Felder oben, Zahlen in Grenzen, Texte ≤ 200 bzw. 100 Zeichen, keine weiteren Felder;
 * Protokoll und Aktionen je Team und Lauf nur anhängen, Formate und Textlängen geprüft; Absender `zb`, `sl`, `plenum`, `system`.
 

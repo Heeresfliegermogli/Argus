@@ -132,7 +132,10 @@ def main():
         return s.evaluate("() => window.argus.stand.protokoll")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
+        # Liste Q: Hintergrund-Tabs nicht drosseln – das Team-Fenster (Host im Test ohne Lobby) liegt hinter der Spielleitung; nach 5 min
+        # im Hintergrund liefen seine Timer sonst nur noch einmal je Minute („▶ Start“ blieb nach „Spielzeit setzen“ > 30 s gesperrt)
+        browser = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-background-timer-throttling",
+                                          "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows"])
         ctx = browser.new_context(viewport={"width": w0, "height": h0}, device_scale_factor=1)
         s = {}
         for r in ROLLEN:
@@ -250,7 +253,10 @@ def main():
         sl.get_by_role("button", name="×20").click()
         sl.get_by_role("button", name="▶ Start").click()
         warte(lambda: sum(1 for e in protokoll(sl) if e["typ"] == "wirkung") >= 4, 40, "vier Wirkungen")
-        warte(lambda: any(e["typ"] == "inject" and e["daten"].get("inject") == "I-08a" for e in protokoll(sl)), 30, "I-08a")
+        # Liste Q: bis I-08a (seit 2.9 erst 60 s nach dem ersten Treffer auf einen PT-91, ca. 22:25) mit ×5 – mit ×20 blieben bis 25:00 nur
+        # knapp 8 s Echtzeit für „❚❚ Anhalten“, auf einem langsamen Rechner lief die Uhr aus und „▶ Start“ war danach gesperrt
+        sl.get_by_role("button", name="×5", exact=True).click()
+        warte(lambda: any(e["typ"] == "inject" and e["daten"].get("inject") == "I-08a" for e in protokoll(sl)), 60, "I-08a")
         sl.get_by_role("button", name="❚❚ Anhalten").click()
         sl.wait_for_timeout(900)
         foto(sl, "sl_wirkungen")

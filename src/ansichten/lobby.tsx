@@ -2,29 +2,24 @@
 // beitreten – keine Rollenwahl. Jedes Team ist die Zielbearbeitung des Bataillons: 2–3 Personen an einem Laptop. Der Laptop, der
 // das Team anlegt, rechnet sein Spiel; ein weiteres Fenster desselben Teams sieht nur zu.
 // Sobald die Spielleitung das Spiel für das eigene Team öffnet, wechselt das Fenster in die Ansicht.
+// Seit Liste Q (16.11.2026): keine Personennamen mehr – der Kasten dafür ist weg, jedes Fenster heißt nach seinem Gerät
+// („Laptop SU2A“). Das Team kann seinen Namen im Kasten „Ihr seid im Team“ ändern (✎ umbenennen), in jedem Fenster des Teams.
 import { useEffect, useState } from "preact/hooks";
-import { SPIELERNAME_MAX, TEAMNAME_MAX, geraeteKurz, laptopText, teamnameVorschlag } from "../kern/sitzungen";
+import { TEAMNAME_MAX, geraeteName, teamnameVorschlag } from "../kern/sitzungen";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { UEBERNAHME_MS } from "../sync/adapter";
 import { BestaetigenKnopf, Hinweise, Panel } from "./gemeinsam/bausteine";
 import { useSitzung } from "./gemeinsam/hooks";
 import { VersionsBanner } from "./gemeinsam/notbremse";
 import { RegelBanner, TeamMarke, seitText } from "./gemeinsam/rahmen";
+import { TeamnameFeld } from "./gemeinsam/teamname";
 import { useSelbstNeuLaden } from "./gemeinsam/version";
 import { ArgusMarke, ArgusTitel } from "./gemeinsam/logo";
 
-/** Eigener Name je Tab (sessionStorage): übersteht Neuladen, gilt aber nicht für andere Fenster am selben PC. */
-function gemerkterName(): string {
+/** Q1.1: Den Merker „argus:name“ (Personennamen bis Liste P, sessionStorage) gibt es nicht mehr – ein alter Eintrag wird entfernt. */
+function alterNameWeg(): void {
   try {
-    return sessionStorage.getItem("argus:name") ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function merkeName(n: string): void {
-  try {
-    sessionStorage.setItem("argus:name", n);
+    sessionStorage.removeItem("argus:name");
   } catch {
     /* privater Modus */
   }
@@ -58,21 +53,22 @@ function TeamKarte(p: { s: Sitzung; t: TeamStand }) {
       </header>
       <div class="team-wer">
         {t.spieler.length === 0 ? <span class="sehr-leise">noch niemand</span> : t.spieler.map((x) => (
-          <span key={x.client} class={`spieler-chip ${x.online ? "" : "weg"}`} title={`${laptopText(x.client, x.name)} · ${x.client === t.rechner ? "Team-Laptop: rechnet das Spiel" : "sieht zu"}`}>
-            <i class="punkt" />{x.name || "Team"}{x.client === s.client ? " (du)" : ""}{x.client === t.rechner ? " ★" : ""} <span class="geraet-kurz">{geraeteKurz(x.client)}</span>
+          <span key={x.client} class={`spieler-chip ${x.online ? "" : "weg"}`} data-geraet={geraeteName(x.client)}
+            title={`${geraeteName(x.client)} · ${x.client === t.rechner ? "Team-Laptop: rechnet das Spiel" : "sieht zu"}`}>
+            <i class="punkt" />{geraeteName(x.client)}{x.client === s.client ? " (du)" : ""}{x.client === t.rechner ? " ★" : ""}
           </span>
         ))}
       </div>
       {weg && (t.uebernehmbar ? (
         <BestaetigenKnopf klasse="klein warn" gesperrt={warte} onClick={() => void uebernehmen()} testid={`weiterfuehren-${t.id}`}
           frage="Wirklich? Nur wenn der andere Laptop aus ist"
-          titel={`Der Laptop von Team ${t.name} (${laptopText(rechner!.client, rechner!.name)}) ist seit ${seitText(t.rechnerWegSeit, jetzt)} nicht verbunden. Dieser Laptop führt das Spiel dann weiter – ab dem, was im Netz steht.`}>
+          titel={`Der Laptop von Team ${t.name} (${geraeteName(rechner!.client)}) ist seit ${seitText(t.rechnerWegSeit, jetzt)} nicht verbunden. Dieser Laptop führt das Spiel dann weiter – ab dem, was im Netz steht.`}>
           Spiel hier weiterführen
         </BestaetigenKnopf>
       ) : <span class="klein leise" data-testid="karte-warten">Weiterführen hier in {Math.max(1, rest)} s möglich</span>)}
       {!eigen && (
         <button type="button" class={`knopf klein ${weg ? "leise" : "weiter"}`} disabled={warte} onClick={() => void beitreten()} data-beitreten={t.name}
-          title={rechner ? `Team ${t.name} hat schon einen Laptop (${rechner.name}${t.rechnerOnline ? "" : ", gerade nicht verbunden"}) – hier nur zuschauen` : `Team ${t.name} beitreten – dieser Laptop rechnet dann das Spiel`}>
+          title={rechner ? `Team ${t.name} hat schon einen Laptop (${geraeteName(rechner.client)}${t.rechnerOnline ? "" : ", gerade nicht verbunden"}) – hier nur zuschauen` : `Team ${t.name} beitreten – dieser Laptop rechnet dann das Spiel`}>
           {rechner ? "zuschauen" : "beitreten"}
         </button>
       )}
@@ -83,28 +79,23 @@ function TeamKarte(p: { s: Sitzung; t: TeamStand }) {
 export function Lobby(p: { s: Sitzung }) {
   const { s } = p;
   const st = useSitzung(s);
-  const [name, setName] = useState(() => st.name || gemerkterName());
   const [teamname, setTeamname] = useState("");
   const [warte, setWarte] = useState(false);
+  // Q2.1: Feld „umbenennen“ im Kasten „Ihr seid im Team“
+  const [umbenennen, setUmbenennen] = useState(false);
   const eigen = s.team(st.ich.team);
   const vergeben = st.teams.map((t) => t.name);
+  const aenderbar = !!eigen && s.teamnameAenderbar(eigen.id);
   // Liste L (L4.1): Die Lobby lädt bei einer neuen Version selbst neu (Kennung und Team bleiben, K1.1)
   useSelbstNeuLaden();
-
-  // Gemerkten Namen beim Öffnen übernehmen
+  useEffect(alterNameWeg, []);
   useEffect(() => {
-    if (name && name !== st.name) void s.setzeName(name);
-  }, []);
-  const nameSpeichern = () => {
-    const n = name.trim();
-    merkeName(n);
-    if (n !== st.name) void s.setzeName(n);
-  };
+    if (!aenderbar) setUmbenennen(false);
+  }, [aenderbar, eigen?.id]);
 
   const erstellen = async () => {
     const n = teamname.trim() || teamnameVorschlag(vergeben);
     setWarte(true);
-    nameSpeichern();
     const id = await s.teamErstellen(n);
     setWarte(false);
     if (id) setTeamname("");
@@ -129,17 +120,21 @@ export function Lobby(p: { s: Sitzung }) {
       <VersionsBanner />
       <main class="inhalt lobby-inhalt">
         <div class="stapel">
-          <Panel titel="Eure Namen" klasse="flach">
-            <input class="feld" placeholder="z. B. Lt Müller, Lt Schmidt (freiwillig)" maxLength={SPIELERNAME_MAX} value={name} data-testid="lobby-name"
-              onInput={(e) => setName((e.target as HTMLInputElement).value)} onBlur={nameSpeichern}
-              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} />
-          </Panel>
-
           {eigen ? (
             <Panel titel="Ihr seid im Team" klasse="flach lobby-ich" testid="lobby-ich">
               <div class="stapel" style="gap:10px">
-                <div class="zeile"><TeamMarke name={eigen.name} farbe={eigen.farbe} /></div>
-                <div>{st.ich.rechnet ? "Dieser Laptop spielt für das Team." : <>Das Spiel des Teams läuft am Laptop von <b>{eigen.spieler.find((x) => x.client === eigen.rechner)?.name ?? "?"}</b> – hier nur zuschauen.</>}</div>
+                {umbenennen ? (
+                  <TeamnameFeld s={s} t={eigen} wuerfel fertig={() => setUmbenennen(false)} />
+                ) : (
+                  <div class="zeile lobby-teamzeile">
+                    <TeamMarke name={eigen.name} farbe={eigen.farbe} />
+                    {aenderbar && (
+                      <button type="button" class="knopf klein leise" data-testid="lobby-umbenennen" title="Teamnamen ändern – geht bis zum Start"
+                        onClick={() => setUmbenennen(true)}>✎ umbenennen</button>
+                    )}
+                  </div>
+                )}
+                <div>{st.ich.rechnet ? "Dieser Laptop spielt für das Team." : <>Das Spiel des Teams läuft an <b>{eigen.rechner ? geraeteName(eigen.rechner) : "?"}</b> – hier nur zuschauen.</>}</div>
                 <div class="hinweis-box">Die Spielleitung öffnet das Spiel für alle Teams. Dann erscheint hier eure Ansicht mit einer kurzen Einweisung.</div>
                 {st.ich.abgeloest && <div class="hinweis-box" data-testid="lobby-abgeloest">Das Spiel wird an einem anderen Laptop weitergeführt.</div>}
                 <button type="button" class="knopf klein leise" style="align-self:flex-start" onClick={() => void s.teamVerlassen()}>Team verlassen</button>
@@ -157,7 +152,7 @@ export function Lobby(p: { s: Sitzung }) {
                 <button type="button" class="knopf weiter gross" disabled={warte} onClick={() => void erstellen()} data-testid="team-erstellen">
                   Team anlegen<span class="unterzeile">dieser Laptop spielt für das Team</span>
                 </button>
-                <div class="klein sehr-leise">Die Teamfarbe wird automatisch vergeben. Ohne Namen würfelt ARGUS einen.</div>
+                <div class="klein sehr-leise">Nur der Teamname, keine Namen von Personen. Die Teamfarbe wird automatisch vergeben; ohne Namen würfelt ARGUS einen. Umbenennen geht bis zum Start.</div>
               </div>
             </Panel>
           )}
@@ -166,7 +161,7 @@ export function Lobby(p: { s: Sitzung }) {
             <div class="rollen-erklaerung">
               <div class="klein">Ihr seid zu zweit oder zu dritt an <b>einem Laptop</b> und bildet die Zielbearbeitung: Jede ARGUS-Meldung entscheidet ihr –
                 BEKÄMPFEN (mit Mörser, Loitering Munition oder Kanone), ZURÜCKSTELLEN oder ABLEHNEN.</div>
-              <div class="klein leise">Ein Laptop je Team. Wer an einem zweiten Rechner beitritt, sieht nur zu.</div>
+              <div class="klein leise">Ein Laptop je Team. Wer an einem zweiten Rechner beitritt, sieht nur zu. Die Laptops heißen nach ihrem Gerät (z. B. „Laptop SU2A“) – Namen von Personen gibt es im Spiel nicht.</div>
             </div>
           </Panel>
         </div>

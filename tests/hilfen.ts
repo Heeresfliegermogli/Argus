@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { type JsonHoler, STANDARD_SZENARIO, ladeInhalte } from "../src/inhalte/laden";
 import type { Inhalte } from "../src/inhalte/typen";
+import type { Sitzung } from "../src/sitzung/sitzung";
+import type { TeamDaten } from "../src/sync/adapter";
 
 const DATEN = fileURLToPath(new URL("../public/daten/", import.meta.url));
 
@@ -23,4 +25,18 @@ export async function bis(bedingung: () => boolean, ms = 3000, text = "Bedingung
     if (Date.now() > ende) throw new Error(`${text} nicht erfüllt nach ${ms} ms`);
     await warte(10);
   }
+}
+
+/** Teams so, wie sie in der Datenbank stehen (ohne Aufbereitung durch teamStaende). */
+export function rohTeams(s: Sitzung): Promise<Record<string, TeamDaten>> {
+  return new Promise((fertig) => {
+    let ab: (() => void) | null = null;
+    let da = false;
+    ab = s.adapter.aufTeams((t) => {
+      if (da) return;
+      da = true;
+      fertig(t ?? {});
+      setTimeout(() => ab?.(), 0);
+    });
+  });
 }

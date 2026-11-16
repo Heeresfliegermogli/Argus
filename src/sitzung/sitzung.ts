@@ -20,6 +20,13 @@
 //    Wiederverbinden. Regelfehler eines Team-Fensters reisen in der Anwesenheit zur Spielleitung.
 //  • K4: „Sitzung beenden“ setzt eine Marke unter teams/ (ENDE_TEAM); Team-Fenster schließen ab und vergessen die Sitzung.
 //
+// Seit Liste Q (16.11.2026) – nur noch Teamnamen:
+//  • Q1: Keine Personennamen mehr. Ein Team-Fenster heißt im Spieler-Eintrag und in der Anwesenheit nach seinem Gerät („Laptop SU2A“);
+//    die Spielleitung behält ihre Kennung („SL 1“). Noch gespeicherte Personennamen werden nirgends gezeigt (teamStaende, Anwesenheit)
+//    und der eigene Eintrag wird einmal mit dem Gerätenamen überschrieben.
+//  • Q2: Ein Team kann sich umbenennen – in der Lobby und im Team-Fenster bis zum Start; danach nur die Spielleitung. Dieselbe
+//    Prüfung für Team und Spielleitung (teamnamePruefen). Protokoll, Lauf und Status hängen an der Team-Kennung, nicht am Namen.
+//
 // Direktaufruf ohne Lobby (…/?rolle=zb&raum=…, …/?rolle=sl&raum=…): ein Team. Das Team-Fenster legt Sitzung, Team und Lauf an, wenn
 // sie fehlen, und rechnet das Spiel; eine Spielleitung im selben Raum steuert und sieht zu.
 import type { Inhalte } from "../inhalte/typen";
@@ -27,8 +34,8 @@ import { type Absender, type AktionsDaten, type AktionsTyp, type Rolle, neueLauf
 import { fensterJetzt, fensterKennung } from "../kern/fenster";
 import { ROLLEN_NAME } from "../kern/sichten";
 import {
-  DIREKT_TEAM, ENDE_NAME, ENDE_TEAM, type GruppenRolle, SPIELERNAME_MAX, TESTRAUM_VERFALL_MS, codeAnzeige, freieFarbe, geraeteName, laptopText, neueTeamId,
-  rollenAus, rollenText, teamnameBereinigt,
+  DIREKT_TEAM, ENDE_NAME, ENDE_TEAM, type GruppenRolle, SPIELERNAME_MAX, TESTRAUM_VERFALL_MS, codeAnzeige, freieFarbe, geraeteName, neueTeamId,
+  TEAMNAME_GESPERRT, rollenAus, rollenText, teamnamePruefen,
 } from "../kern/sitzungen";
 import { mmss } from "../kern/uhr";
 import type { TeamStatus } from "../kern/uebersicht";
@@ -43,6 +50,7 @@ import { Spiel } from "./spiel";
 
 export interface SpielerStand {
   client: string;
+  /** seit Liste Q immer der Gerätename („Laptop SU2A“) – auch wenn im Eintrag noch ein alter Personenname steht */
   name: string;
   rollen: GruppenRolle[];
   online: boolean;
@@ -182,8 +190,9 @@ export function teamStaende(teams: Record<string, TeamDaten>, teilnehmer: Teilne
         .filter(([client, s]) => !weg?.gilt || weg.gilt(client, id, s))
         .map(([client, s]) => {
           const anw = online.get(client);
+          // Q1.3: angezeigt wird nur der Gerätename, nie ein gespeicherter Personenname
           return {
-            client, name: s.name, rollen: rollenAus(s.rollen), online: !!anw, seit: s.seit ?? 0, ...(anw?.fenster ? { fenster: anw.fenster } : {}),
+            client, name: geraeteName(client), rollen: rollenAus(s.rollen), online: !!anw, seit: s.seit ?? 0, ...(anw?.fenster ? { fenster: anw.fenster } : {}),
             ...(anw?.version ? { version: anw.version } : {}), ...(anw?.hintergrund ? { hintergrund: true } : {}), ...(anw?.zwei ? { zwei: true } : {}),
           };
         })
@@ -231,6 +240,8 @@ export class Sitzung {
   /** L3: Marke beim Öffnen des Fensters (undefined = noch keine Antwort) */
   private resetBeiStart: number | null | undefined = undefined;
   private zweiGemeldet = new Set<string>();
+  /** Q1.2: Teams, in denen dieses Fenster seinen Eintrag schon auf den Gerätenamen gesetzt hat */
+  private nameBereinigt = new Set<string>();
 
   constructor(
     readonly inh: Inhalte,
@@ -244,8 +255,10 @@ export class Sitzung {
       code: codeAnzeige(adapter.sitzung),
       art: opt.art,
       client: this.client,
-      // L1.3: Im Test ohne Lobby hießen alle Team-Fenster „Zielbearbeitung“ – jetzt trägt jedes seinen Gerätenamen („Laptop SU2A“)
-      name: (opt.name?.trim() || (opt.direkt?.rolle === "zb" ? geraeteName(this.client) : rolleName)).slice(0, SPIELERNAME_MAX),
+      // L1.3: Im Test ohne Lobby hießen alle Team-Fenster „Zielbearbeitung“ – jetzt trägt jedes seinen Gerätenamen („Laptop SU2A“).
+      // Q1.2: Ein Team-Fenster heißt immer nach seinem Gerät, auch mit Lobby; ein übergebener Name gilt nur für Spielleitung und Plenum
+      // („SL 1“ – eine Kennung, kein Personenname).
+      name: (opt.art === "tt" || opt.direkt?.rolle === "zb" ? geraeteName(this.client) : opt.name?.trim() || rolleName).slice(0, SPIELERNAME_MAX),
       verbindung: { verbunden: false, art: adapter.art },
       info: null,
       infoGeladen: false,
@@ -315,12 +328,14 @@ export class Sitzung {
         if (this.fensterTimer) clearTimeout(this.fensterTimer);
       });
     }
-    this.abos.push(this.adapter.aufAnwesenheit((liste) => {
+    this.abos.push(this.adapter.aufAnwesenheit((roh) => {
       const jetzt = this.adapter.serverJetzt();
       if (!this.beobachtetAb) this.beobachtetAb = jetzt;
+      // Q1.3: Team-Fenster heißen nach ihrem Gerät – auch wenn ein Fenster mit altem Stand noch einen Personennamen meldet
+      const liste = roh.map((t) => (t.art === "tt" && t.name !== geraeteName(t.client) ? { ...t, name: geraeteName(t.client) } : t));
       // „nicht verbunden seit“ zählt ab dem letzten Lebenszeichen (Puls, alle 5 s) – auch wenn der Eintrag erst später als veraltet gilt
       for (const t of liste) this.zuletztOnline.set(t.client, typeof t.puls === "number" ? Math.min(t.puls, jetzt) : jetzt);
-      const bei = liste.filter((t) => t.regeln).map((t) => t.name || "Team-Laptop");
+      const bei = liste.filter((t) => t.regeln).map((t) => (t.art === "tt" ? geraeteName(t.client) : t.name || "Team-Laptop"));
       this.aendern({ teilnehmer: liste, ...(bei.join("|") !== this.s.regelFehlerBei.join("|") ? { regelFehlerBei: bei } : {}) });
       this.teamsNeu();
     }));
@@ -521,9 +536,22 @@ export class Sitzung {
     const teamWechsel = ich.team !== this.s.ich.team;
     const geaendert = teamWechsel || rechnet !== this.s.ich.rechnet || abgeloest !== this.s.ich.abgeloest || ich.entfernt !== this.s.ich.entfernt;
     if (abgeloest && !this.s.ich.abgeloest) this.hinweis("warnung", "Das Spiel wird an einem anderen Laptop weitergeführt – dieser rechnet nicht mehr.");
-    if (meinEintrag && this.s.art === "tt" && meinEintrag.name !== this.s.name && !this.opt.direkt && !this.opt.gastVon) {
-      // Name aus dem Team übernehmen (z. B. nach Neuladen)
-      this.s = { ...this.s, name: meinEintrag.name };
+    // Q1.2: Steht im eigenen Eintrag noch ein anderer Name (Personenname aus einem Stand vor Liste Q), einmal mit dem Gerätenamen
+    // überschreiben – „seit“ bleibt, also bleibt auch, wer rechnet
+    const roh = eigen ? this.rohTeams[eigen.id]?.spieler?.[this.client] : undefined;
+    if (eigen && meinEintrag && roh && this.s.art === "tt" && !this.opt.gastVon && roh.name !== this.s.name
+      && !this.nameBereinigt.has(eigen.id) && this.s.beendet === null) {
+      this.nameBereinigt.add(eigen.id);
+      const team = eigen.id;
+      const eintrag: SpielerEintrag = { name: this.s.name, rollen: roh.rollen, ...(typeof roh.seit === "number" ? { seit: roh.seit } : {}) };
+      void this.schreibe(() => this.adapter.setzeSpieler(team, this.client, eintrag));
+    }
+    // Q2.4: Die Spielleitung erfährt, wenn ein Team sich umbenennt (oder eine zweite Spielleitung es tut)
+    if (this.s.art === "sl" && this.s.teams.length) {
+      for (const t of teams) {
+        const alt = this.s.teams.find((x) => x.id === t.id);
+        if (alt && alt.name !== t.name) this.hinweis("info", `Team ${alt.name} heißt jetzt ${t.name}.`);
+      }
     }
     // K4.1: Marke „Sitzung beendet“
     // L3.3: Eine Sitzung mit Lobby, die vor der Marke „Alle Sitzungen beendet“ angelegt wurde, gilt ebenfalls als beendet
@@ -728,27 +756,16 @@ export class Sitzung {
     return Object.entries(this.rohTeams).filter(([, d]) => d?.spieler?.[client]).map(([id]) => id);
   }
 
-  /** Name ändern (Lobby). Steht man schon in einem Team, wird der Eintrag dort nachgezogen. */
-  async setzeName(name: string): Promise<void> {
-    const n = name.replace(/\s+/g, " ").trim().slice(0, SPIELERNAME_MAX);
-    this.aendern({ name: n });
-    this.meldeAnwesenheit();
-    const { team } = this.s.ich;
-    if (team) await this.schreibe(() => this.adapter.setzeSpieler(team, this.client, this.eintrag(false)));
-  }
-
   /** Neues Team anlegen und beitreten (dieser Laptop wird der Team-Laptop). Gibt die Team-Kennung zurück. */
   async teamErstellen(name: string): Promise<string | null> {
     if (this.nichtMehr()) return null;
-    const n = teamnameBereinigt(name);
-    if (!n) {
-      this.hinweis("warnung", "Bitte einen Teamnamen eingeben (oder würfeln).");
+    // Q2.3: dieselbe Prüfung wie beim Umbenennen
+    const p = teamnamePruefen(name, this.s.teams.map((t) => t.name));
+    if (!p.ok) {
+      this.hinweis("warnung", p.grund);
       return null;
     }
-    if (this.s.teams.some((t) => t.name.toLowerCase() === n.toLowerCase())) {
-      this.hinweis("warnung", `Den Teamnamen „${n}“ gibt es schon.`);
-      return null;
-    }
+    const n = p.name;
     const id = neueTeamId();
     const farbe = freieFarbe(this.s.teams.map((t) => t.farbe));
     const alt = this.meineTeams();
@@ -824,13 +841,56 @@ export class Sitzung {
     return ok;
   }
 
-  // ---------------------------------------------------------------- Spielleitung: Teams verwalten
+  // ---------------------------------------------------------------- Teamnamen (Liste Q)
 
-  async teamUmbenennen(team: string, name: string): Promise<boolean> {
-    const n = teamnameBereinigt(name);
-    if (!n) return false;
-    return this.schreibe(() => this.adapter.aendereTeam(team, { name: n }));
+  /**
+   * Q2.2: Hat das Spiel dieses Teams begonnen? In der Lobby (kein Lauf) und nach „Spiel öffnen“, solange die Uhr noch nie lief
+   * (Einweisung, „Warten auf Start“): nein. Ist der Lauf in diesem Fenster noch nicht geladen, gilt es als begonnen (lieber kurz
+   * gesperrt als nach dem Start umbenannt); ebenso, wenn ein Start der Spielleitung im Kanal steht und noch nicht ausgeführt ist.
+   */
+  spielBegonnen(team: string | null | undefined): boolean {
+    const t = this.team(team);
+    if (!t?.lauf) return false;
+    const sp = this.spiele.get(t.id);
+    if (!sp || sp.stand.lauf !== t.lauf || !sp.stand.geladen) return true;
+    const z = sp.stand.zustand;
+    return z.ende || z.uhr.laeuft || z.uhr.t_s > 0 || sp.ausstehendeUhr() === "start";
   }
+
+  /**
+   * Q2.1/Q2.2: Darf dieses Fenster den Namen des Teams ändern? Die Spielleitung immer; ein Team-Fenster (Team-Laptop oder zuschauendes
+   * Fenster) nur sein eigenes Team und nur bis zum Start – nicht der zweite Tab (Gast) und nicht nach „Sitzung beendet“.
+   */
+  teamnameAenderbar(team: string | null | undefined): boolean {
+    if (!this.team(team)) return false;
+    if (this.s.art === "sl") return true;
+    if (this.s.art !== "tt" || this.opt.gastVon || this.s.beendet !== null || this.s.alleBeendet) return false;
+    return this.s.ich.team === team && !this.spielBegonnen(team);
+  }
+
+  /**
+   * Team umbenennen – Spielleitung jederzeit, das Team selbst bis zum Start (Q2). Gemeinsame Prüfung (teamnamePruefen, Q2.3): bereinigt,
+   * nicht leer, kein Name eines anderen Teams, nicht „Sitzung beendet“; Ablehnung als Hinweis, der alte Name bleibt. Gleicher Name:
+   * nichts schreiben. Geschrieben wird nur teams/<team>/name – Protokoll, Lauf und Status hängen an der Kennung und laufen weiter.
+   */
+  async teamUmbenennen(team: string, name: string): Promise<boolean> {
+    const t = this.team(team);
+    if (!t) return false;
+    if (!this.teamnameAenderbar(team)) {
+      if (this.s.art === "tt" && this.s.ich.team === team && this.spielBegonnen(team)) this.hinweis("warnung", `${TEAMNAME_GESPERRT}.`);
+      else if (this.s.art === "tt") this.nichtMehr();
+      return false;
+    }
+    const p = teamnamePruefen(name, this.s.teams.filter((x) => x.id !== team).map((x) => x.name), t.name);
+    if (!p.ok) {
+      this.hinweis("warnung", p.grund);
+      return false;
+    }
+    if (p.gleich) return true;
+    return this.schreibe(() => this.adapter.aendereTeam(team, { name: p.name }));
+  }
+
+  // ---------------------------------------------------------------- Spielleitung: Teams verwalten
 
   async teamLoeschen(team: string): Promise<boolean> {
     return this.schreibe(() => this.adapter.loescheTeam(team));
@@ -838,11 +898,10 @@ export class Sitzung {
 
   /** Spielleitung: ein Fenster in ein Team setzen, verschieben oder herausnehmen (team = null). */
   async spielerSetzen(client: string, team: string | null): Promise<boolean> {
-    const bisher = this.s.teams.flatMap((t) => t.spieler).find((x) => x.client === client);
-    const name = bisher?.name ?? this.s.teilnehmer.find((x) => x.client === client)?.name ?? "Team";
     const alt = this.meineTeams(client);
     if (!team) return this.schreibe(() => this.adapter.setzeSpieler(null, client, null, alt));
-    return this.schreibe(() => this.adapter.setzeSpieler(team, client, { name: name || "Team", rollen: rollenText(["zb"]), seit: Math.round(this.adapter.serverJetzt()) }, alt));
+    // Q1.2: der Eintrag trägt den Gerätenamen des Fensters
+    return this.schreibe(() => this.adapter.setzeSpieler(team, client, { name: geraeteName(client), rollen: rollenText(["zb"]), seit: Math.round(this.adapter.serverJetzt()) }, alt));
   }
 
   /** K2.3: Spielleitung gibt den Laptop eines Teams frei (totes Fenster aus dem Team; das nächste oder ein neu beitretendes rechnet). */
@@ -851,7 +910,7 @@ export class Sitzung {
     if (!t?.rechner) return false;
     const naechster = t.spieler[1];
     const ok = await this.spielerSetzen(t.rechner, null);
-    if (ok) this.hinweis("info", naechster ? `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – jetzt rechnet ${laptopText(naechster.client, naechster.name)}.` : `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – das nächste Fenster, das beitritt, rechnet.`);
+    if (ok) this.hinweis("info", naechster ? `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – jetzt rechnet ${geraeteName(naechster.client)}.` : `Team ${t.name}: ${geraeteName(t.rechner)} abgemeldet – das nächste Fenster, das beitritt, rechnet.`);
     return ok;
   }
 

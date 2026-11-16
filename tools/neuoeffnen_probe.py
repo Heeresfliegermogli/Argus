@@ -122,7 +122,7 @@ def main():
         def neue_sitzung(sl):
             sl.goto(start_url() + "#spielleitung")
             warte(lambda: sl.get_by_role("button", name="Neue Sitzung anlegen").count() == 1, 15, "Startseite Spielleitung")
-            sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
+            sl.get_by_placeholder("Kennung, z. B. SL 1").fill("SL 1")
             sl.get_by_role("button", name="Neue Sitzung anlegen").click()
             warte(lambda: sl.get_by_text("steuert alle Teams").count() == 1, 20, "SL steuert")
             c = sl.get_by_test_id("code").inner_text().strip()
@@ -180,11 +180,9 @@ def main():
             i = pg.get_by_test_id("lobby-ich")
             return i.get_by_text(team, exact=True).count() == 1 and i.get_by_text(RECHNET).count() == 1
 
-        def anlegen(pg, name, team):
-            warte(lambda: pg.get_by_text(OHNE_TEAM).count() == 1, 15, f"Lobby {name}")
-            feld = pg.get_by_placeholder("z. B. Lt Müller, Lt Schmidt (freiwillig)")
-            feld.fill(name)
-            feld.press("Enter")
+        def anlegen(pg, team):
+            # seit Liste Q kein Feld für Personennamen mehr – nur der Teamname
+            warte(lambda: pg.get_by_text(OHNE_TEAM).count() == 1, 15, f"Lobby für {team}")
             pg.get_by_placeholder("Teamname").fill(team)
             pg.get_by_role("button", name="Team anlegen").click()
             warte(lambda: in_lobby_rechnet(pg, team), 10, f"Team {team} angelegt")
@@ -233,7 +231,7 @@ def main():
         def k1_befund():
             """Der Befund vom 11.11.: Team anlegen, Tab schließen, über Startseite + Code neu öffnen."""
             pg = ueber_code("a")
-            anlegen(pg, "Lt Anders", "Adler")
+            anlegen(pg, "Adler")
             merke["ich_a"] = ich(pg)
             assert re.fullmatch(r"[a-z0-9]{6}", merke["ich_a"]), "Kennung in der Adresse"
             warte(lambda: zeile("Adler").count() == 1, 10, "Adler bei der SL")
@@ -368,7 +366,7 @@ def main():
         # ================================================================ K3
         def k3_start_mit_fehlendem_team():
             c = ueber_code("c")
-            anlegen(c, "Lt Claus", "Bussard")
+            anlegen(c, "Bussard")
             sl.get_by_role("button", name=re.compile("Spiel öffnen – 1 Team")).click()
             einweisung_weg(c)
             sl.get_by_role("button", name="❚❚ Anhalten – alle").click()
@@ -496,7 +494,7 @@ def main():
             assert code() != merke["alt"], "gleicher Code wie die beendete Sitzung"
             assert sl.locator("tr[data-team-zeile]").count() == 0, "Teams aus der alten Sitzung"
             pg = ueber_code("a")
-            anlegen(pg, "Lt Anders", "Adler")
+            anlegen(pg, "Adler")
             assert ich(pg) != "", "keine Kennung"
             sl.get_by_role("button", name=re.compile("Spiel öffnen – alle Teams")).click()
             einweisung_weg(pg)
@@ -519,7 +517,7 @@ def main():
             """Test mit Trennung (K2.2): Der Laptop verliert das Netz und spielt weiter (H1.3); ein anderes Gerät übernimmt; sobald der
             alte wieder Netz hat, stoppt er – nie zwei verbundene rechnende Fenster."""
             t = ueber_code("t", verzug=50)
-            anlegen(t, "Lt Tross", "Taube")
+            anlegen(t, "Taube")
             sl.get_by_role("button", name=re.compile("Spiel öffnen – 1 Team")).click()
             einweisung_weg(t)
             zeile("Taube").get_by_title("Uhr von Taube starten").click()

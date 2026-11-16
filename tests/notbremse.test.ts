@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Ereignis } from "../src/kern/ereignisse";
 import { protokollSchluessel } from "../src/kern/ereignisse";
-import { DIREKT_TEAM, geraeteName, laptopText, neuerCode } from "../src/kern/sitzungen";
+import { DIREKT_TEAM, geraeteName, neuerCode } from "../src/kern/sitzungen";
 import { diagnoseText } from "../src/sitzung/diagnose";
 import { MERKER_MAX_ALTER_MS, Merker, gemerkteSitzungen, selberTag, vergissAlleSitzungen } from "../src/sitzung/gemerkt";
 import { Sitzung, type SitzungsOptionen, resetEinmal } from "../src/sitzung/sitzung";
@@ -69,8 +69,6 @@ afterEach(() => {
 describe("L1 – Test ohne Lobby entschärfen", () => {
   it("Gerätename: „Laptop SU2A“ aus der Kennung; im Testraum heißt kein Fenster mehr „Zielbearbeitung“", async () => {
     expect(geraeteName("su2a26")).toBe("Laptop SU2A");
-    expect(laptopText("su2a26", "Zielbearbeitung")).toBe("Laptop SU2A");
-    expect(laptopText("su2a26", "Lt Anders")).toBe("Laptop SU2A (Lt Anders)");
     const a = await raumTT("kraehe", { client: "su2a26" });
     await bis(() => rechnet(a), 3000, "A rechnet");
     expect(a.stand.name).toBe("Laptop SU2A");
@@ -177,7 +175,7 @@ describe("L2 – Laptop abmelden, zwei Verläufe", () => {
   it("Lobby: verbundenen, rechnenden Laptop abmelden – er hält an („abgemeldet“), der Zuschauer rechnet ab dem hochgeladenen Protokoll; nie zwei rechnende Fenster", async () => {
     const { code, sl } = await neueSitzung();
     const speicher = new SpeicherAblage();
-    const a = await oeffne(code, "tt", { name: "Lt Anders", merker: new Merker(code, null, speicher) });
+    const a = await oeffne(code, "tt", { merker: new Merker(code, null, speicher) });
     const team = (await a.teamErstellen("Adler"))!;
     const b = await oeffne(code, "tt", { name: "Lt Berg" });
     await bis(() => b.stand.teams.length === 1, 3000);
@@ -221,7 +219,7 @@ describe("L2 – Laptop abmelden, zwei Verläufe", () => {
 
   it("In der Lobby (noch kein Spiel) aus dem Team genommen: wie bisher zurück in die Lobby, kein „abgemeldet“", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders" });
+    const a = await oeffne(code, "tt", {});
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
     await sl.spielerSetzen(a.client, null);
@@ -240,7 +238,7 @@ describe("L2 – Laptop abmelden, zwei Verläufe", () => {
   it("Zwei Verläufe (L2.4): ein anderes Fenster hat Plätze belegt, die dieser Laptop schon anders gefüllt hat – er meldet es statt endlos zu versuchen, die Spielleitung sieht es", async () => {
     const { code, sl } = await neueSitzung();
     // Upload gebündelt (wie über das Netz): erst spielen, dann hochladen
-    const a = await oeffne(code, "tt", { name: "Lt Anders", takt: { statusMs: 150, uploadMs: 300 } });
+    const a = await oeffne(code, "tt", { takt: { statusMs: 150, uploadMs: 300 } });
     const team = (await a.teamErstellen("Adler"))!;
     await sl.spielOeffnen([team]);
     await bis(() => rechnet(a) && a.spiel(team)!.stand.zustand.seq >= 2 && a.spiel(team)!.stand.upload.hoch === a.spiel(team)!.stand.zustand.seq, 3000, "A rechnet, Protokoll im Netz");
@@ -268,7 +266,7 @@ describe("L2 – Laptop abmelden, zwei Verläufe", () => {
 
   it("Einträge eines anderen Fensters weiter hinten, die dieser Laptop noch nicht erreicht hat: er lädt bis davor hoch (kein Hängen, kein Fehlalarm)", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders", takt: { statusMs: 150, uploadMs: 20 } });
+    const a = await oeffne(code, "tt", { takt: { statusMs: 150, uploadMs: 20 } });
     const team = (await a.teamErstellen("Adler"))!;
     await sl.spielOeffnen([team]);
     await bis(() => rechnet(a) && a.spiel(team)!.stand.upload.hoch >= 2, 3000);
@@ -289,7 +287,7 @@ describe("L2 – Laptop abmelden, zwei Verläufe", () => {
 
   it("K Festlegung 4 deckt den Fall „anderer, lückenloser Verlauf im Netz“ (Upload 10 von 122): der Laptop übernimmt ihn, kein Hängen", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders", takt: { statusMs: 150, uploadMs: 20 } });
+    const a = await oeffne(code, "tt", { takt: { statusMs: 150, uploadMs: 20 } });
     const team = (await a.teamErstellen("Adler"))!;
     await sl.spielOeffnen([team]);
     await bis(() => rechnet(a) && a.spiel(team)!.stand.upload.hoch >= 2, 3000);
@@ -311,7 +309,7 @@ describe("L3 – Notbremse „Alle Sitzungen beenden“", () => {
     const eins = await neueSitzung();
     const zwei = await neueSitzung();
     const speicher = new SpeicherAblage();
-    const a = await oeffne(eins.code, "tt", { name: "Lt Anders", merker: new Merker(eins.code, null, speicher) });
+    const a = await oeffne(eins.code, "tt", { merker: new Merker(eins.code, null, speicher) });
     const teamA = (await a.teamErstellen("Adler"))!;
     const b = await oeffne(zwei.code, "tt", { name: "Lt Berg" });
     const teamB = (await b.teamErstellen("Bussard"))!;
@@ -400,7 +398,7 @@ describe("L3 – Notbremse „Alle Sitzungen beenden“", () => {
     }
     const code = (await Sitzung.anlegen(await inhalte(), (c) => new AlteRegeln(c), "SL 1", neuerCode))!;
     const sl = await oeffne(code, "sl", { name: "SL 1", adapter: new AlteRegeln(code) });
-    const a = await oeffne(code, "tt", { name: "Lt Anders", adapter: new AlteRegeln(code) });
+    const a = await oeffne(code, "tt", { adapter: new AlteRegeln(code) });
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.istHost && sl.stand.teams.length === 1, 3000);
     await sl.spielOeffnen([team]);
@@ -437,7 +435,7 @@ describe("L3 – Notbremse „Alle Sitzungen beenden“", () => {
 
 describe("L4, L5, L6 – Programmstand, Merker, Diagnose", () => {
   it("Anwesenheit: Programmstand, Zeichen und Fenstergröße in version (höchstens 20 Zeichen, Regeln unverändert)", () => {
-    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "90b7bef", fenster: "1536x730" };
+    const t = { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "90b7bef", fenster: "1536x730" };
     expect(anwesenheitSchreiben(t).version).toBe("90b7bef 1536x730");
     expect(anwesenheitLesen({ ...anwesenheitSchreiben(t), puls: 1 } as never)).toMatchObject({ version: "90b7bef", fenster: "1536x730" });
     // Tab im Hintergrund: großes X
@@ -463,7 +461,9 @@ describe("L4, L5, L6 – Programmstand, Merker, Diagnose", () => {
 
   it("Spielleitung sieht Programmstand und Gerät je Laptop (aus der Anwesenheit)", async () => {
     const { code, sl } = await neueSitzung();
+    // Liste Q: ein übergebener Personenname gilt für ein Team-Fenster nicht – es heißt nach seinem Gerät
     const a = await oeffne(code, "tt", { name: "Lt Anders", client: "su2a26" });
+    expect(a.stand.name).toBe("Laptop SU2A");
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => !!sl.team(team)?.rechnerOnline, 3000);
     const r = sl.team(team)!.spieler[0];

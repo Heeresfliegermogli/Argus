@@ -57,6 +57,9 @@ from pruefgroessen import STANDARD  # noqa: E402
 
 W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch"]
+# Liste Q (Q2.1): dieses Team heißt in der Lobby zuerst so und benennt sich dann in seinen Namen aus TEAMNAMEN um
+UMBENENNEN = 3
+VORLAEUFIG = "Stern vorläufig"
 HIER = os.path.dirname(os.path.abspath(__file__))
 
 LAYOUT_JS = """
@@ -412,7 +415,7 @@ def main():
         sl = seite("SL")
         sl.goto(startseite(a.basis, a))
         sl.get_by_test_id("zur-spielleitung").click()
-        sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
+        sl.get_by_placeholder("Kennung, z. B. SL 1").fill("SL 1")
         sl.get_by_test_id("sitzung-anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, 30, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()
@@ -430,10 +433,23 @@ def main():
             s.get_by_test_id("code-eingabe").fill(code)
             s.get_by_test_id("beitreten").click()
             warte(lambda: s.locator("[data-rolle=lobby]").count() == 1, 20, f"Lobby {name}")
-            s.get_by_test_id("lobby-name").fill(f"Lt A-{i + 1}, Lt B-{i + 1}")
-            s.get_by_test_id("lobby-teamname").fill(name)
+            # Liste Q: kein Feld für Personennamen mehr. Team 4 legt einen vorläufigen Namen an und benennt sich in der Lobby um (Q2.1);
+            # SL und Plenum zeigen sofort den neuen Namen, Auswertung und Abschluss unten nur ihn
+            vorlaeufig = VORLAEUFIG if i == UMBENENNEN else name
+            s.get_by_test_id("lobby-teamname").fill(vorlaeufig)
             s.get_by_test_id("team-erstellen").click()
-            warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {name} angelegt")
+            warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, 15, f"Team {vorlaeufig} angelegt")
+            if vorlaeufig != name:
+                warte(lambda: sl.locator(f"[data-team-zeile='{vorlaeufig}']").count() == 1, 20, "vorläufiger Name bei der SL")
+                s.get_by_test_id("lobby-umbenennen").click()
+                s.get_by_test_id("teamname-eingabe").fill(name)
+                s.get_by_test_id("teamname-uebernehmen").click()
+                warte(lambda: sl.locator(f"[data-team-zeile='{name}']").count() == 1 and sl.locator(f"[data-team-zeile='{vorlaeufig}']").count() == 0,
+                      20, f"SL zeigt „{name}“")
+                warte(lambda: sl.get_by_text(f"Team {vorlaeufig} heißt jetzt {name}.").count() == 1, 10, "Hinweis an die SL")
+                warte(lambda: name in pl.get_by_test_id("beitritt").inner_text() and vorlaeufig not in pl.get_by_test_id("beitritt").inner_text(),
+                      20, f"Plenum zeigt „{name}“")
+                print(f"Team {i + 1} in der Lobby umbenannt: „{vorlaeufig}“ → „{name}“ (SL mit Hinweis, Plenum)")
             teams.append({"name": name, "laptop": s, "plan": tp})
             print(f"Team {i + 1} „{name}“ ({tp['modell']}{' + ' + ' '.join(f'{g}@{t}' for g, t in tp['einspielen'].items()) if tp['einspielen'] else ''})")
 
@@ -695,6 +711,7 @@ def main():
             warte(lambda: pl.locator("[data-ansicht=auswertung] [data-kapitel=gefecht] [data-testid=abschluss-karte]").count() == len(teams), 30, "Plenum: Gefecht beendet")
             pl.wait_for_timeout(800)
             namen = [e.get_attribute("data-team") for e in pl.locator("[data-testid=abschluss-karte]").all()]
+            # (Liste Q: das umbenannte Team steht dort mit dem neuen Namen – die Liste ist die der Lobby nach dem Umbenennen)
             if namen != [t["name"] for t in teams]:
                 fehler.append(f"Plenum: Reihenfolge {namen}, Lobby {[t['name'] for t in teams]}")
             for k, (e, t) in enumerate(zip(pl.locator("[data-testid=abschluss-karte]").all(), teams)):
@@ -763,6 +780,11 @@ def main():
             n_sl = sl.locator("[data-testid=teamvergleich] td[data-fall]").count()
             if n_sl != len(teams) * 12:
                 fehler.append(f"Auswertung SL: {n_sl} Zellen, erwartet {len(teams) * 12}")
+            # Liste Q (Q2.4): das in der Lobby umbenannte Team heißt auch in der Auswertung nur noch neu
+            if len(teams) > UMBENENNEN:
+                tv = sl.locator("[data-testid=teamvergleich]").inner_text()
+                if teams[UMBENENNEN]["name"] not in tv or VORLAEUFIG in tv:
+                    fehler.append(f"Auswertung SL: Teamvergleich ohne „{teams[UMBENENNEN]['name']}“ oder noch mit „{VORLAEUFIG}“")
             foto(sl, "sl_auswertung")
             sl.get_by_test_id("auswertung-zurueck").click()
             warte(lambda: sl.locator("[data-testid=uebersicht]").count() == 1, 10, "zurück zur Übersicht")

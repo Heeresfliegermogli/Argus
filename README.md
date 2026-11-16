@@ -52,11 +52,13 @@ V-5, Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (
 
 Seite: `https://heeresfliegermogli.github.io/Argus/`
 
-1. **Spielleitung:** **Spielleitung** → Name, **Neue Sitzung anlegen** → Übersicht mit Code (drei Zeichen,
+1. **Spielleitung:** **Spielleitung** → Kennung („SL 1“), **Neue Sitzung anlegen** → Übersicht mit Code (drei Zeichen,
    z. B. `K7P`), **Plenum öffnen** für das Smartboard. Die zuletzt genutzte Sitzung bietet die Seite unter
    **Spielleitung** zum Fortsetzen an.
-2. **Teilnehmer:** je Team ein Laptop – Seite öffnen, **Ich spiele mit**, Code eingeben, **Beitreten** → Lobby: Namen, Teamname
+2. **Teilnehmer:** je Team ein Laptop – Seite öffnen, **Ich spiele mit**, Code eingeben, **Beitreten** → Lobby: Teamname
    (🎲 schlägt einen vor), **Team anlegen** – dieser Laptop spielt für das Team. Ein zweites Fenster desselben Teams sieht nur zu.
+   Keine Personennamen: die Laptops heißen nach ihrem Gerät („Laptop SU2A“). Umbenennen kann sich das Team in der Lobby (✎) und bis
+   zum Start im Kopf des Team-Fensters, danach nur die Spielleitung (Klick auf den Teamnamen in der Übersicht).
 3. **Spielleitung:** **Spiel öffnen – alle Teams** (am Team-Laptop erscheinen Ansicht und Einweisung), dann **▶ Start für alle**.
    „ansehen ›“ öffnet ein Team: Steuerung (Kontrollkarte) oder Zuschauen bei der Zielbearbeitung (◉, nur lesen).
 4. **Zweite Spielleitung:** Startseite → **Spielleitung** → Bestehende Sitzung öffnen → Code → **als Spielleitung**; beobachtet und kann
@@ -82,7 +84,7 @@ Unbeteiligten: [`docs/BEDIENTEST.md`](docs/BEDIENTEST.md).
 
 Weitere Parameter: `sync=lokal` (alle Fenster an einem PC, ohne Netz), `transport=auto`
 (WebSocket zulassen; Standard ist Long-Polling, weil WebSocket im Hörsaalnetz gesperrt ist),
-`db=…` (andere Firebase-Datenbank), `szenario=…json`, `name=…` (Name der Spielleitung), `verzug=5000` (künstlicher Netzverzug in
+`db=…` (andere Firebase-Datenbank), `szenario=…json`, `name=…` (Kennung der Spielleitung, z. B. „SL 2“; für Team-Fenster ohne Wirkung), `verzug=5000` (künstlicher Netzverzug in
 ms je Richtung, nur für Tests und Vorführung).
 
 **Rückfall ohne Netz (Variante C):** `argus-offline.html` (liegt auf der Seite und im Build) per

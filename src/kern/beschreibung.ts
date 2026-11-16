@@ -5,6 +5,7 @@ import type { Inhalte } from "../inhalte/typen";
 import type { Ereignis } from "./ereignisse";
 import { trefferText } from "./regeln";
 import { ENTSCHEID_TEXT, ROLLEN_NAME } from "./sichten";
+import { geraeteName } from "./sitzungen";
 import { uhrzeit } from "./uhr";
 import { zielNr } from "./zielnummern";
 import type { Spielzustand } from "./zustand";
@@ -16,6 +17,8 @@ function empfaenger(an: string | undefined): string {
 
 export function absenderText(e: Ereignis): string {
   if (e.von.rolle === "system") return "System";
+  // Liste Q (Q1.3): Ein Team-Fenster heißt nach seinem Gerät – auch in älteren Protokollen, in denen noch ein Personenname steht
+  if (e.von.rolle === "zb") return e.von.client ? geraeteName(e.von.client) : ROLLEN_NAME.zb;
   return e.von.name || ROLLEN_NAME[e.von.rolle];
 }
 

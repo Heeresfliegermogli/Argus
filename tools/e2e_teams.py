@@ -40,7 +40,9 @@ from pruefgroessen import STANDARD  # noqa: E402
 W, H = STANDARD  # seit Liste J: Dienst-Laptop 1536 × 730 (tools/pruefgroessen.py)
 TEAMNAMEN = ["Falke Nord", "Löwe 2", "Team Ömer & Co", "Wega", "Kassiopeia-Süd-Ost 24 Zch", "Rigel", "Deneb"]
 # Entscheidung je Team zu Ziel 1 (M01): (entscheid, wirkmittel)
-ENTSCHEIDE = [("bekaempfen", "LM"), ("ablehnen", None), ("bekaempfen", "MRS"), ("zurueckstellen", None), ("bekaempfen", "PZA"),
+# Seit 2.9 (Liste P, P3) reicht die Kanone nur bis zum Ortsanfang KRÄHE – Ziel 1 (M01) liegt dahinter, die Kachel ist gesperrt.
+# Team 5 bekämpft deshalb mit LM (wie Team 1, aber eigener Spielstand).
+ENTSCHEIDE = [("bekaempfen", "LM"), ("ablehnen", None), ("bekaempfen", "MRS"), ("zurueckstellen", None), ("bekaempfen", "LM"),
               ("ablehnen", None), ("zurueckstellen", None)]
 
 LAYOUT_JS = """
@@ -129,7 +131,7 @@ def main():
         sl = seite("SL")
         sl.goto(startseite(a.basis, a))
         sl.get_by_test_id("zur-spielleitung").click()
-        sl.get_by_placeholder("Name, z. B. SL 1").fill("SL 1")
+        sl.get_by_placeholder("Kennung, z. B. SL 1").fill("SL 1")
         sl.get_by_test_id("sitzung-anlegen").click()
         warte(lambda: sl.locator(".rahmen[data-host='1'][data-ansicht=uebersicht]").count() == 1, nach, "SL steuert")
         code = sl.get_by_test_id("code").inner_text().strip()
@@ -156,10 +158,20 @@ def main():
             name = TEAMNAMEN[i % len(TEAMNAMEN)][:24]
             s = seite(f"{name[:8]}")
             beitreten(s, i)
-            s.get_by_test_id("lobby-name").fill(f"Lt A-{i + 1}, Lt B-{i + 1}")
-            s.get_by_test_id("lobby-teamname").fill(name)
+            # Liste Q: kein Feld für Personennamen mehr. Team 2 legt einen vorläufigen Namen an und benennt sich in der Lobby um (Q2.1)
+            vorlaeufig = "Vorläufig 2" if i == 1 else name
+            s.get_by_test_id("lobby-teamname").fill(vorlaeufig)
             s.get_by_test_id("team-erstellen").click()
-            warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, nach, f"Team {name} angelegt")
+            warte(lambda: s.get_by_test_id("lobby-ich").count() == 1, nach, f"Team {vorlaeufig} angelegt")
+            if vorlaeufig != name:
+                warte(lambda: sl.locator(f"[data-team-zeile='{vorlaeufig}']").count() == 1, nach, "vorläufiger Name bei der SL")
+                s.get_by_test_id("lobby-umbenennen").click()
+                s.get_by_test_id("teamname-eingabe").fill(name)
+                s.get_by_test_id("teamname-uebernehmen").click()
+                warte(lambda: sl.locator(f"[data-team-zeile='{name}']").count() == 1 and sl.locator(f"[data-team-zeile='{vorlaeufig}']").count() == 0,
+                      nach, f"SL zeigt „{name}“")
+                warte(lambda: name in pl.get_by_test_id("beitritt").inner_text() and vorlaeufig not in pl.get_by_test_id("beitritt").inner_text(),
+                      nach, f"Plenum zeigt „{name}“")
             teams.append({"name": name, "laptop": s})
             print(f"Team {name}: Laptop in der Lobby ({time.time() - t0:.1f} s)")
         # zweites Fenster tritt Team 1 bei (sieht nur zu)

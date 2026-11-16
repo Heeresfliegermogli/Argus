@@ -76,7 +76,7 @@ describe("K1 – derselbe Laptop findet sein Spiel wieder", () => {
     const { code, sl } = await neueSitzung();
     const speicher = new SpeicherAblage();
     const merker = () => new Merker(code, null, speicher);
-    let a = await oeffne(code, "tt", { merker: merker(), name: "Lt Anders" });
+    let a = await oeffne(code, "tt", { merker: merker() });
     const client = a.client;
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => a.stand.ich.rechnet && sl.stand.teams.length === 1, 3000);
@@ -149,7 +149,7 @@ describe("K1 – derselbe Laptop findet sein Spiel wieder", () => {
 
   it("zweiter Tab (Gast): sieht dem Team der Kennung zu, steht nicht im Team, rechnet nie", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders" });
+    const a = await oeffne(code, "tt", {});
     const team = (await a.teamErstellen("Adler"))!;
     await sl.spielOeffnen([team]);
     await bis(() => !!a.spiel(team)?.hostAktiv && a.spiel(team)!.stand.zustand.seq >= 2, 3000);
@@ -182,7 +182,7 @@ describe("K2 – ein anderes Gerät übernimmt, wenn der Laptop weg ist", () => 
   it("verwaistes Team: nicht solange der Laptop verbunden ist, danach sichtbar übernehmen; der alte Laptop kommt zurück und rechnet nicht mehr", async () => {
     const { code, sl } = await neueSitzung();
     const speicher = new SpeicherAblage();
-    let a = await oeffne(code, "tt", { name: "Lt Anders", merker: new Merker(code, null, speicher) });
+    let a = await oeffne(code, "tt", { merker: new Merker(code, null, speicher) });
     const clientA = a.client;
     const team = (await a.teamErstellen("Adler"))!;
     await sl.spielOeffnen([team]);
@@ -227,7 +227,7 @@ describe("K2 – ein anderes Gerät übernimmt, wenn der Laptop weg ist", () => 
   it("Test mit Trennung: der Laptop spielt ohne Netz weiter, ein anderer übernimmt – beim Wiederverbinden stoppt der alte sofort (nie zwei verbundene Hosts)", async () => {
     const { code, sl } = await neueSitzung();
     const netzA = new VerzugAdapter(new LokalAdapter(code), 20);
-    const a = await oeffne(code, "tt", { name: "Lt Anders", adapter: netzA });
+    const a = await oeffne(code, "tt", { adapter: netzA });
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
     await sl.spielOeffnen([team]);
@@ -264,7 +264,7 @@ describe("K2 – ein anderes Gerät übernimmt, wenn der Laptop weg ist", () => 
 
   it("Spielleitung gibt den Laptop frei: ein Zuschauer rechnet weiter; ohne Zuschauer rechnet, wer neu beitritt", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders" });
+    const a = await oeffne(code, "tt", {});
     const team = (await a.teamErstellen("Adler"))!;
     const z = await oeffne(code, "tt", { name: "Lt Zuschauer" });
     await bis(() => z.stand.teams.length === 1, 3000);
@@ -299,7 +299,7 @@ describe("K3 – keine hängenden „gesendet …“", () => {
   it("nach dem Zeitlimit kein „gesendet …“ mehr: Hinweis „antwortet nicht“, die Aktion steht aus; Start erreicht den spät verbundenen Laptop", async () => {
     const { code, sl } = await neueSitzung();
     const speicher = new SpeicherAblage();
-    let a = await oeffne(code, "tt", { name: "Lt Anders", merker: new Merker(code, null, speicher) });
+    let a = await oeffne(code, "tt", { merker: new Merker(code, null, speicher) });
     const client = a.client;
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
@@ -336,7 +336,7 @@ describe("K3 – keine hängenden „gesendet …“", () => {
 
   it("Spiel öffnen für ein Team ohne verbundenen Laptop: Hinweis statt stillem Nichts; das Spiel startet, sobald einer beitritt", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders" });
+    const a = await oeffne(code, "tt", {});
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
     schliesse(a);
@@ -384,9 +384,9 @@ describe("K3 – keine hängenden „gesendet …“", () => {
   });
 
   it("Regelfehler eines Team-Fensters reist in der Anwesenheit zur Spielleitung (Firebase: im Feld version, höchstens 20 Zeichen)", () => {
-    const t = { client: "abc123", art: "tt" as const, name: "Lt Anders", version: "0.9.0", fenster: "1536x730", regeln: true };
+    const t = { client: "abc123", art: "tt" as const, name: "Laptop ABC1", version: "0.9.0", fenster: "1536x730", regeln: true };
     const roh = anwesenheitSchreiben(t);
-    expect(roh).toEqual({ client: "abc123", art: "tt", name: "Lt Anders", version: "0.9.0 !R 1536x730" });
+    expect(roh).toEqual({ client: "abc123", art: "tt", name: "Laptop ABC1", version: "0.9.0 !R 1536x730" });
     expect((roh.version ?? "").length).toBeLessThanOrEqual(20);
     expect(anwesenheitLesen({ ...roh, puls: 1 } as never)).toMatchObject({ version: "0.9.0", fenster: "1536x730", regeln: true });
     // ohne Fehler wie seit Liste J
@@ -401,7 +401,7 @@ describe("K3 – keine hängenden „gesendet …“", () => {
 describe("K4 – Spiele und Sitzungen sauber beenden", () => {
   it("Team verlassen während des Laufs: Host hält an, Protokoll ganz im Netz; ein anderer Laptop tritt bei und führt weiter", async () => {
     const { code, sl } = await neueSitzung();
-    const a = await oeffne(code, "tt", { name: "Lt Anders" });
+    const a = await oeffne(code, "tt", {});
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
     await sl.spielOeffnen([team]);
@@ -425,7 +425,7 @@ describe("K4 – Spiele und Sitzungen sauber beenden", () => {
   it("Sitzung beenden: Team-Fenster halten an, laden hoch und vergessen die Sitzung; Protokolle bleiben; danach eine neue Sitzung ohne Reste", async () => {
     const { code, sl } = await neueSitzung();
     const speicher = new SpeicherAblage();
-    const a = await oeffne(code, "tt", { name: "Lt Anders", merker: new Merker(code, null, speicher) });
+    const a = await oeffne(code, "tt", { merker: new Merker(code, null, speicher) });
     const plenum = await oeffne(code, "plenum");
     const team = (await a.teamErstellen("Adler"))!;
     await bis(() => sl.stand.teams.length === 1, 3000);
@@ -464,7 +464,7 @@ describe("K4 – Spiele und Sitzungen sauber beenden", () => {
     expect(neu.sl.stand.beendet).toBeNull();
     const m2 = new Merker(neu.code, null, speicher);
     expect(m2.lies()).toBeNull();
-    const a2 = await oeffne(neu.code, "tt", { name: "Lt Anders", merker: m2 });
+    const a2 = await oeffne(neu.code, "tt", { merker: m2 });
     const t2 = (await a2.teamErstellen("Adler"))!;
     await bis(() => neu.sl.stand.teams.length === 1, 3000);
     await neu.sl.spielOeffnen([t2]);
