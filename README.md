@@ -6,7 +6,15 @@ eine Entscheidung (BEKÄMPFEN mit Mörser / LM / Kanone, ZURÜCKSTELLEN, ABLEHNE
 Spiel selbst**; die Spielleitung startet alle Teams, sieht ihren Stand und wertet aus.
 **Übungslage – Gelände, Einheiten, Namen und Ereignisse sind frei erfunden.**
 
-**Neu (Liste O, 15.11.2026, Szenario 2.8):** **Das Plenum ist kurz (ca. 5 min)** – Zitate und Diskussion laufen in der PowerPoint.
+**Neu (Liste P, 16.11.2026, Szenario 2.9):** Eigene Truppe ist die **2./PzBtl 613** („2. Kp“, Panzer 1/1–1/4) mit dem Zeichen
+**„Kampfpanzer, schwer“** (`SFGPEVATH`). Die **Kanone reicht nur bis zum Ortsanfang KRÄHE** (x = 500 m): dahinter ist die Kachel grau
+und nicht wählbar, bei einem Zug schießt sie nur auf die Fahrzeuge in Reichweite, jenseits wirkt sie nie. **Lagemeldungen passen zum
+Geschehen:** Nur Kräfte, die ARGUS gemeldet hat, brechen durch; nach einer Freigabe auf die PT-91 meldet ARGUS die letzten Feindkräfte an der
+Brücke Ost (bedingte Meldung, „Ziel 33a“); „eingebrochen“ (I-13) nennt sie mit Zielnummer und kommt erst, wenn der Durchbruch auf der
+Karte zu sehen ist; I-11, I-08a/b, I-06, I-17 haben Varianten je nach Lage; Reserve-Lagemeldungen nur, wenn sie zum Spiel passen. Neu:
+`tools/lagekarte_druck.py` (saubere Lagekarte 1500 × 1050 für Folien und Handzettel). Firebase-Regeln unverändert.
+
+**Liste O (15.11.2026, Szenario 2.8):** **Das Plenum ist kurz (ca. 5 min)** – Zitate und Diskussion laufen in der PowerPoint.
 Nach Spielende: „Gefecht beendet“ → die Schlüsselfälle **S3, S2, S1, S4 einzeln** (erst das Drohnenbild mit ARGUS-Zeile, auf Klick
 aufgedeckt: was es war und „x von n Teams haben das falsch behandelt – y %“) → **„Gesamt“** (richtig/falsch in %, auf Klick **die Zahl**:
 Median der Sekunden vom Öffnen bis zur Entscheidung, „Merkt euch diese Zahl.“) → **„Zurück zur Präsentation“** (ruhiger
@@ -35,8 +43,8 @@ eigenen Panzer deutlich. **Die Firebase-Regeln müssen dafür neu veröffentlich
 [`docs/AUSWERTUNG.md`](docs/AUSWERTUNG.md). Die Geschichte davor (A–F, Schritte 4b–8) steht in diesen Dateien und in
 `claude/Entscheidungen.md`.
 
-Inhalte: Szenario KRÄHE-01 **v2.6** (Konzept v2, geändert mit A1–A9, C1–C9, D, E-a, F und H): russischer Angriff in fünf Phasen,
-36 Meldungen, realistische Routen, Hintergrundgefecht, eigene 1. Kp mit vier Kampfpanzern und Verlustmodell, Verstärkungen V-1 bis
+Inhalte (seit Liste P Szenario **2.9**, Abschnitte in `docs/ENGINE.md`): Szenario KRÄHE-01 **v2.6** (Konzept v2, geändert mit A1–A9, C1–C9, D, E-a, F und H): russischer Angriff in fünf Phasen,
+36 Meldungen, realistische Routen, Hintergrundgefecht, eigene 2. Kp mit vier Kampfpanzern und Verlustmodell, Verstärkungen V-1 bis
 V-5, Wirkmittel-Spielwerte. Referenz der Engine: `tools/referenz/argus_lib.py` (`einschlag`, `wirkung`, `gt_bei`),
 `tools/referenz/verluste.py` und `tools/referenz/simuliere_durchlauf.py`.
 

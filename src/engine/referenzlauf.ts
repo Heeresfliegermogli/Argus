@@ -1,7 +1,7 @@
 // Referenzlauf „ARGUS allein“ (seit 2.7, Änderung G2.1): Wie hätte das Spiel ausgesehen, wenn niemand hingeschaut hätte?
 //
 // Jede Meldung, deren (angezeigte) Empfehlung BEKÄMPFEN lautet, wird zur Meldezeit ohne Prüfung freigegeben. Wirkmittel: Mörser, wenn er
-// am vorausberechneten Einschlagort ohne Warnung zulässig ist, sonst LM (solange Bestand), sonst die Kanone der 1. Kp. PRÜFEN, UNKLAR und
+// am vorausberechneten Einschlagort ohne Warnung zulässig ist, sonst LM (solange Bestand), sonst die Kanone der 2. Kp. PRÜFEN, UNKLAR und
 // NICHT BEKÄMPFEN bleiben liegen. Keine Verstärkungen, keine Klicks auf Lagemeldungen.
 //
 // Gerechnet mit derselben Engine wie die Teams (Host mit Zeitplan, Trefferregel, Verlustmodell, Durchbruch, E-01, Auflösung), mit
@@ -12,7 +12,7 @@ import { argusBei } from "../kern/eloka";
 import type { Absender, Aktion, AktionsDaten, AktionsTyp, Ereignis } from "../kern/ereignisse";
 import { weg } from "../kern/geometrie";
 import { offeneEinschlaege, weltFuer } from "../kern/lage";
-import { vorhersage, wirkungBeimEinschlag } from "../kern/regeln";
+import { harteGrenze, vorhersage, wirkungBeimEinschlag } from "../kern/regeln";
 import type { Spielzustand } from "../kern/zustand";
 import { naechsteFaelligkeit } from "./ablauf";
 import { Host } from "./host";
@@ -58,6 +58,8 @@ export function argusWahl(inh: Inhalte, z: Spielzustand, m: Meldung, t: number):
     const b = z.bestand[w];
     if (b !== null && b !== undefined && b <= 0) continue;
     if (w === AUSWAHL_ARGUS[0] && !vorhersage(inh, m, w, t, zp, b ?? null).pruefung.zulaessig) continue;
+    // seit 2.9 (P3): die Kanone ist jenseits des Ortsanfangs KRÄHE nicht wählbar
+    if (harteGrenze(inh.wirkmittel[w]) !== null && !vorhersage(inh, m, w, t, zp, b ?? null).waehlbar) continue;
     return w;
   }
   return null;

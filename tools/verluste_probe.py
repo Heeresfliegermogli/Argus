@@ -4,11 +4,11 @@
 Ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync), Uhr über die Steuerung der SL:
   E3.2 Knopf „BEKÄMPFEN mit LM ×2 – Bestand 20 → 18“ (Ziel 1, zwei Fahrzeuge), Bestand groß in der Kopfzeile (H5.6).
   F1   Alle Karten zeigen die vier Panzer 1/1–1/4 (Zeichen, Beschriftung), gezoomt als Sprites in Stellung.
-  F2.6 Kopfzeile: Zielbearbeitung mit den vier Panzern (Zustand je Panzer), SL und Plenum „1. Kp: b/4 einsatzbereit …“ – überall
+  F2.6 Kopfzeile: Zielbearbeitung mit den vier Panzern (Zustand je Panzer), SL und Plenum „2. Kp: b/4 einsatzbereit …“ – überall
        derselbe Stand.
   H5.7 Beschuss der eigenen Panzer deutlich sichtbar (16:45 bei Tempo ×1, direktes Feuer auf 1/1): auf der Karte Mündungsblitz
        am Schützen und Leuchtspur zum Panzer, der getroffene Panzer blinkt in der Kopfzeile, kurzer roter Rand am Bildschirm;
-       der erste Beschuss jedes Panzers kommt als Lagemeldung der 1. Kp in den Feed.
+       der erste Beschuss jedes Panzers kommt als Lagemeldung der 2. Kp in den Feed.
   H3.3 Lagemeldungen am Spielende: Druckmeldungen wegen Artillerie/Mörser mindestens 2 min auseinander (seit 2.8, M3.1a, ohne die
        erste Meldung je Feuerquelle und die drei Feuervorbereitungen, die ohne Abstand kommen; „ausgefallen“ immer), keine weiteren
        Hintergrundmeldungen der Feindartillerie (H-01, H-04, H-12) im Feed, jede Meldung ≤ 140 Zeichen mit Absender.
@@ -155,7 +155,7 @@ def main():
             stand[n] = (b.get_attribute("data-bereit"), tuple(balken), b.inner_text())
         pruefe(all(v[0] == bereit_zb and list(v[1]) == pz for v in stand.values()), f"überall derselbe Stand: {bereit_zb}/4 {pz}")
         txt = stand["SL"][2]
-        pruefe(txt.startswith("1. Kp: ") and "/4 einsatzbereit" in txt, f"SL „1. Kp: b/4 einsatzbereit …“: {txt}")
+        pruefe(txt.startswith("2. Kp: ") and "/4 einsatzbereit" in txt, f"SL „2. Kp: b/4 einsatzbereit …“: {txt}")
         bereit = int(bereit_zb)
         for s, k, n in karten:
             warte(lambda: (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("zeichen", 0) + (s.evaluate(KARTE_JS, k) or {}).get("eigene", {}).get("sprites", 0) > 0, 10, f"eigene Panzer {n}")
@@ -211,7 +211,7 @@ def main():
             const vm = (inh.basis ?? inh).szenario.verluste?.meldungen;
             const mss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
             return z.injectReihenfolge.map((id) => { const i = z.injects[id]; const plan = inh.injects[id];
-              return { id, kopf: `${mss(i.erschienen.t_s)} · ${plan?.von ?? (vm?.von || '1. Kp')}`, text: i.text ?? plan?.text ?? '' }; }); }""")
+              return { id, kopf: `${mss(i.erschienen.t_s)} · ${plan?.von ?? (vm?.von || '2. Kp')}`, text: i.text ?? plan?.text ?? '' }; }); }""")
         def sek(kopf):
             m, s_ = kopf.split(" · ")[0].split(":")
             return int(m) * 60 + int(s_)
@@ -244,10 +244,10 @@ def main():
         pruefe(all(x >= 120 for x in abst), f"Artilleriemeldungen der Kp mindestens 2 min auseinander ({len(art)} gedrosselte Meldungen, "
                f"Abstände {abst} s; dazu {len(frei)} ohne Abstand: erste je Quelle, Feuervorbereitung, ausgefallen)")
         k_texte = [t for t in texte if t["id"].startswith("K-")]
-        pruefe(all(t["kopf"].endswith("1. Kp") for t in k_texte), f"{len(k_texte)} Meldungen der „1. Kp“")
-        von_kp = [t for t in texte if t["kopf"].endswith("1. Kp")]
+        pruefe(all(t["kopf"].endswith("2. Kp") for t in k_texte), f"{len(k_texte)} Meldungen der „2. Kp“")
+        von_kp = [t for t in texte if t["kopf"].endswith("2. Kp")]
         erst = {n for n in ("1/1", "1/2", "1/3", "1/4") if any(n in (t["text"] or "") for t in von_kp)}
-        pruefe(len(erst) == 4, f"Beschuss jedes Panzers als Lagemeldung der 1. Kp ({sorted(erst)})")
+        pruefe(len(erst) == 4, f"Beschuss jedes Panzers als Lagemeldung der 2. Kp ({sorted(erst)})")
         foto(zb, "h33_feed_2450")
         b = pl.get_by_test_id("kp-stand")
         bereit2 = int(b.get_attribute("data-bereit"))

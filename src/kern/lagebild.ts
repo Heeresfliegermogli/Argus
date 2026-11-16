@@ -22,6 +22,7 @@
 import type { ArgusAusgabe, GtKategorie, Inhalte, Meldung, Punkt, RoutenPunkt } from "../inhalte/typen";
 import { ZEICHEN_KONTAKT, sidc, zeichenArgus, zeichenZiel } from "../karte/zeichen";
 import { durchbruchUeber } from "./durchbruch";
+import { durchBis } from "./behauptung";
 import { ausrichtung, dist, feinlage, gtBei, imPolygon, position, vorhanden } from "./geometrie";
 import { einschlaegeVon, offeneEinschlaege } from "./lage";
 import { gemeldetePosition } from "./regeln";
@@ -96,6 +97,8 @@ export interface KartenObjekt {
   art?: "kontakt" | "teil" | "wrack";
   /** seit 2.7 (I1.2): hat den Raum verlassen – das Zeichen steht am Kartenrand, wo das Fahrzeug hinausfuhr */
   weg?: "durchgebrochen" | "abgezogen";
+  /** seit 2.9 (P4.3): ein Fahrzeug der Meldung ist durchgebrochen und schon über dem Bach (das Zeichen folgt ihm noch) */
+  durch?: boolean;
   /** seit 2.7 (I3.2): als verbündet erkannt (blau), nicht mehr zu bekämpfen */
   verbuendet?: boolean;
   /** trotz Zustand „erledigt“ voll sichtbar (verbündet, durchgebrochen) */
@@ -130,7 +133,7 @@ export interface WirkungsMarke {
   meldung?: string;
 }
 
-/** Seit 2.5 (F1/F2.6): ein Kampfpanzer der eigenen 1. Kp auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
+/** Seit 2.5 (F1/F2.6): ein Kampfpanzer der eigenen Kp (seit 2.9 die 2. Kp) auf der Karte – alle Rollen sehen ihn und seinen Zustand. */
 export interface EigenerPanzerMarke {
   id: string;
   /** „1/1“ */
@@ -161,9 +164,12 @@ export interface Lagebild {
   eigene?: EigeneLage;
 }
 
-/** Zeichen eines eigenen Kampfpanzers (APP-6 Gerät „Kampfpanzer“, eigen); ausgefallen: beschädigt (Querstrich), grau gezeichnet. */
-export const ZEICHEN_EIGENER_PANZER = "SFGPEVAT-------";
-export const ZEICHEN_EIGENER_PANZER_AUS = "SFGDEVAT-------";
+/**
+ * Zeichen eines eigenen Kampfpanzers – seit 2.9 (P2) „Kampfpanzer, schwer“ (Leopard 2A7V; MIL-STD-2525C/APP-6 SFGPEVATH, drei Striche
+ * in der Kette); ausgefallen: beschädigt (Querstrich), grau gezeichnet.
+ */
+export const ZEICHEN_EIGENER_PANZER = "SFGPEVATH------";
+export const ZEICHEN_EIGENER_PANZER_AUS = "SFGDEVATH------";
 
 /** Eigene Panzer zur Lagezeit t (F1): Stellung, Zustand, Stufe und Verwundete aus dem Verlustmodell (kern/verluste.ts). */
 export function eigeneLage(inh: Inhalte, z: Spielzustand, t: number): EigeneLage | undefined {
@@ -383,12 +389,17 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
         menge = undefined;
       }
     }
+    // seit 2.9 (P4.3): ein gemeldetes Fahrzeug einer durchgebrochenen Gruppe ist über dem Bach – das Zeichen heißt schon jetzt
+    // „durchgebrochen“ (hervorgehoben) und folgt ihm weiter; dazu kommt I-13 mit den Namen
+    const ueberJetzt = tLage !== undefined && !weg && !verbuendet && !zerstoert
+      ? durchBis(inh, z, tLage).filter((d) => m.ziele.includes(d.ziel) && z.zerstoert[d.ziel] === undefined)
+      : [];
     const zeichenStatus = zerstoert || (bekaempft && tLage === undefined) ? "X" : "P";
     // Spieler sehen „Ziel 7“ (B7), nie die Kennung M07 oder Z-07
     const nummern = ids.map((id) => zielNr(inh, z, id));
     // bekämpft, aber Fahrzeuge stehen noch: das Zeichen der übrigen ist erledigt (blass), das Wrack trägt das Kreuz (C8)
     const objZustand: ObjektZustand = zerstoert && bekaempft ? "bekaempft" : zustand === "bekaempft" ? "erledigt" : zustand;
-    const ueber = weg === "durchgebrochen" ? durchbruchUeber(inh, z, m.ziele) : null;
+    const ueber = weg === "durchgebrochen" ? durchbruchUeber(inh, z, m.ziele) : ueberJetzt.length ? `die ${ueberJetzt[0].ueber}` : null;
     const o: KartenObjekt = {
       id: nr,
       pos,
@@ -397,13 +408,14 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
       sidc: verbuendet ? zeichenVerbuendet(verbuendet.getroffen, zerstoert, groesseVerbuendet)
         : zeichenArgus(inh, argusBei(inh, m, st.gestoert).klasse, argusBei(inh, m, st.gestoert).konfidenz, zeichenStatus, anzahl),
       menge: verbuendet ? undefined : menge,
-      text: verbuendet ? verbuendet.name : `Ziel ${nummern.join("/")}${weg === "durchgebrochen" ? " durchgebrochen" : weg === "abgezogen" ? " abgezogen" : ""}`,
+      text: verbuendet ? verbuendet.name : `Ziel ${nummern.join("/")}${weg === "durchgebrochen" || ueberJetzt.length ? " durchgebrochen" : weg === "abgezogen" ? " abgezogen" : ""}`,
       titel: verbuendet ? `${verbuendet.name} · war Ziel ${nummern.join(", ")}` : `Ziel ${nummern.join(", ")} · ${m.argus.klasse} · ${m.argus.konfidenz} %`,
       zeilen: [
         `gemeldet ${feinlage(gemeldet, inh.karte)}${tLage !== undefined && !zerstoert && !weg ? ` · jetzt ${feinlage(pos, inh.karte)}` : ""}`,
         ...liste.map((x) => `Ziel ${zielNr(inh, z, x.m.id)}: ${standText(x.st)}`),
         ...(zerstoert && !bekaempft ? ["Ziel zerstört"] : []),
         ...(weg === "durchgebrochen" ? [`über ${ueber ?? "den Bach"} durchgebrochen, westlich aus dem Raum`] : weg === "abgezogen" ? ["aus dem Raum abgezogen"] : []),
+        ...(ueberJetzt.length ? [`über ${ueber} durchgebrochen`] : []),
         ...(verbuendet ? [verbuendet.getroffen ? "verbündet – Eigenbeschuss" : (aufl?.vermerk ?? "verbündet – nicht bekämpfen")] : []),
         ...(menge && !verbuendet ? [`${menge} Fahrzeuge${anzahl < m.ziele.length ? ` (von ${m.ziele.length})` : ""}`] : []),
       ],
@@ -414,7 +426,8 @@ export function lagebildZielmeldungen(inh: Inhalte, z: Spielzustand, tLage?: num
       zerstoert: zerstoert || (bekaempft && tLage === undefined),
       ...(weg ? { weg } : {}),
       ...(verbuendet ? { verbuendet: true } : {}),
-      ...(verbuendet || weg === "durchgebrochen" ? { hervor: true } : {}),
+      ...(verbuendet || weg === "durchgebrochen" || ueberJetzt.length ? { hervor: true } : {}),
+      ...(ueberJetzt.length ? { durch: true } : {}),
     };
     objekte.push(o);
     zeichen.push({ o, fuehrer, fahrzeuge: [...new Set(liste.flatMap((x) => x.m.ziele))], m, nummern, argus: argusBei(inh, m, st.gestoert) });

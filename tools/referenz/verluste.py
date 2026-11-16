@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 1./PzBtl 613 (Absender „1. Kp“) mit vier Kampfpanzern
+"""Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 2./PzBtl 613 (Absender „2. Kp“; bis 2.8 die 1.) mit vier Kampfpanzern
 Leopard 2A7V, Zustand je Panzer. Referenz für src/kern/verluste.ts (gleiche Ergebnisse prüft tests/durchlauf.test.ts).
 
 Grundsätze (claude/Aenderungen_Panzerzug_02-11.md, F2):

@@ -97,19 +97,21 @@ describe("Auswertung: Fälle", () => {
 describe("Auswertung: Kennzahlen", () => {
   it("Fehlbekämpfungen nach Art, Bekämpfungen trotz Warnung", () => {
     const k = a.teams[0].kennzahlen;
-    expect(k.fehl.wirkungen).toBe(9);
-    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 4, verbuendet: 1, ausser_gefecht: 2 });
-    expect(k.fehl.liste.map((x) => x.meldung)).toEqual(["M08", "M12", "M32", "M33", "M18", "M35", "M20", "M21", "M26"]);
-    expect(k.trotzWarnung).toBe(4); // M17, M19, M22, M27 mit R2/R3-Warnung
-    expect(a.teams[2].kennzahlen.trotzWarnung).toBe(5);
+    // seit 2.9 (P4.2): nach der Freigabe auf die PT-91 meldet ARGUS die letzten Feindkräfte (M38); das naive Team nimmt den Mörser (R3)
+    // und trifft dabei auch die Besatzung von Z-24, die sich ergibt
+    expect(k.fehl.wirkungen).toBe(10);
+    expect(Object.fromEntries(k.fehl.arten.map((x) => [x.art, x.anzahl]))).toEqual({ attrappe: 1, geschuetzt: 1, zivil: 4, verbuendet: 1, ausser_gefecht: 3 });
+    expect(k.fehl.liste.map((x) => x.meldung)).toEqual(["M08", "M12", "M32", "M33", "M18", "M35", "M20", "M21", "M38", "M26"]);
+    expect(k.trotzWarnung).toBe(5); // M17, M19, M22, M27 und seit 2.9 M38 mit R2/R3-Warnung
+    expect(a.teams[2].kennzahlen.trotzWarnung).toBe(6);
     expect(a.teams[1].kennzahlen.fehl.wirkungen).toBe(0);
     expect(a.teams[1].kennzahlen.trotzWarnung).toBe(0);
     expect(a.teams[3].kennzahlen.trotzWarnung).toBe(0); // der Hinweis „nur k von n – Bestand reicht nicht“ ist keine Regelwarnung
     expect(regelWarnung("R3: Einschlag im Wirkradius Ortschaft – beim Einschlag 10:18:20")).toBe(true);
     expect(regelWarnung("nur 3 von 4 Fahrzeugen – Bestand LM reicht nicht")).toBe(false);
     expect(regelWarnung("Bestand LM aufgebraucht")).toBe(false);
-    expect(k.freigaben).toEqual({ gesamt: 26, wieArgus: 22 });
-    expect(k.meldungen).toEqual({ erschienen: 29, bearbeitet: 29, gesamt: 37, offenEnde: 0 });
+    expect(k.freigaben).toEqual({ gesamt: 27, wieArgus: 23 });
+    expect(k.meldungen).toEqual({ erschienen: 30, bearbeitet: 30, gesamt: 38, offenEnde: 0 }); // seit 2.9 mit M38
     expect(a.teams[1].kennzahlen.meldungen).toEqual({ erschienen: 33, bearbeitet: 28, gesamt: 37, offenEnde: 1 });
   });
 
@@ -132,7 +134,7 @@ describe("Auswertung: Kennzahlen", () => {
     expect(z.hoch.n + z.niedrig.n).toBe(z.alle.n);
     expect([z.schwelle, z.kuerzeste, z.laengste, z.unter20]).toEqual([90, 35, 130, 0]);
     const naiv = a.teams[0].kennzahlen.zeiten;
-    expect(naiv.alle).toEqual({ eingang: 20, offen: 20, n: 29 });
+    expect(naiv.alle).toEqual({ eingang: 20, offen: 20, n: 30 });
     expect(naiv.unter20).toBe(26); // seit 2.7 dichter: dreimal wartete auch das schnelle Team
     // Team 4 (ideal + Verstärkungen): mehr Meldungen, längere Wartezeit im Eingang bei gleicher Bearbeitungszeit
     expect(a.teams[3].kennzahlen.zeiten.alle).toEqual({ eingang: 55, offen: 35, n: 31 });

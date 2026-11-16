@@ -12,7 +12,8 @@ import type { AktionsDaten, AktionsTyp } from "../kern/ereignisse";
 import { TEAMNAME_MAX, geraeteKurz, geraeteName, laptopText } from "../kern/sitzungen";
 import { fensterText, leseFensterKennung, zuKlein } from "../kern/fenster";
 import { type FallStand, type FallStatus, type TeamStatus, statusFaelle, statusPanzer, statusUhr, teamStatus } from "../kern/uebersicht";
-import { mmss, uhrzeit } from "../kern/uhr";
+import { mmss, spielzeit, uhrzeit } from "../kern/uhr";
+import { behauptungText, stimmt } from "../kern/behauptung";
 import { panzer } from "../kern/verluste";
 import type { Sitzung, TeamStand } from "../sitzung/sitzung";
 import { istVeraltet } from "../sync/adapter";
@@ -292,9 +293,15 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
           <span class="trenner" />
           <span class="zeile" style="gap:4px"><span class="klein leise">Reserve an alle</span>
             {(sz.reserve_injects ?? []).map((r) => {
-              const fehlt = mitLauf.filter((x) => !s.spiel(x.t.id)?.stand.zustand.injects[r.id]).map((x) => x.t.id);
+              // seit 2.9 (P4.5): nur an Teams, in deren Spiel die Behauptung der Reserve-Lagemeldung stimmt
+              const fehlt = mitLauf.filter((x) => {
+                const zz = s.spiel(x.t.id)?.stand.zustand;
+                return !!zz && !zz.injects[r.id] && stimmt(inh, zz, r.behauptet, Math.min(spielzeit(zz.uhr, jetzt), sz.spieluhr.dauer_s));
+              }).map((x) => x.t.id);
+              const nurWenn = behauptungText(r.behauptet);
               return (
-                <button type="button" key={r.id} class="knopf klein" disabled={!darfSteuern || !fehlt.length} title={`${r.von}: „${r.text}“ – ${r.einsatz}`}
+                <button type="button" key={r.id} class="knopf klein" disabled={!darfSteuern || !fehlt.length} data-reserve-alle={r.id} data-teams={fehlt.length}
+                  title={`${r.von}: „${r.text}“ – ${r.einsatz}${nurWenn ? `\nnur an Teams, bei denen gilt: ${nurWenn} (jetzt ${fehlt.length})` : ""}`}
                   onClick={() => allen("inject_ausloesen", { inject: r.id }, fehlt)}>{r.id}</button>
               );
             })}
@@ -350,7 +357,7 @@ export function Uebersicht(p: { s: Sitzung; ansehen: (team: string) => void; aus
                 <th title="neue Meldungen im Eingang (zurückgestellte in Klammern)">Eingang</th>
                 <th title="Schlüsselfälle live: grau kommt noch, blau offen, grün richtig, rot falsch">Schlüsselfälle</th>
                 <th title="Bekämpfungen, die Geschütztes, Verbündete, Zivilpersonen oder die Attrappe treffen">Fehl</th>
-                <th title="die vier Panzer der 1. Kp (Zustand)">Panzer</th>
+                <th title="die vier Panzer der 2. Kp (Zustand)">Panzer</th>
                 <th title="Protokoll im Netz / beim Team · Alter der letzten Statusmeldung">Protokoll</th>
                 <th />
               </tr>

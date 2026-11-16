@@ -121,9 +121,9 @@ function pruefeMeldungen(m: Lauf, r: RefLauf, name: string): void {
       expect(w.verstoesse.map(code), `${ort} Verstöße beim Einschlag`).toEqual(s.verstoesse);
     }
   }
-  // keine Meldung zu viel
+  // keine Meldung zu viel; seit 2.9 (P4.2) kommt eine bedingte Meldung (M38) nur, wenn ihre Bedingung erfüllt war
   expect(Object.keys(z.meldungen).length).toBe(r.meldungen.length);
-  expect(inh.szenario.meldungen.length).toBe(r.meldungen.length);
+  expect(inh.szenario.meldungen.filter((x) => !x.bedingung || z.meldungen[x.id]).length).toBe(r.meldungen.length);
 }
 
 /** Injects, Hintergrundgefecht, E-01, Bestand, Durchbruch, Verluste und Fälle wie in der Simulation. */
@@ -276,10 +276,12 @@ describe("Referenzlauf „ARGUS allein“ wie simuliere_durchlauf.py", () => {
     expect(m.z.ende).toBe(true);
     expect(m.z.uhr.t_s).toBe(1500);
     expect(m.z.abgelehnt).toEqual([]);
+    const ohneWm = new Set(r.meldungen.filter((x) => x.ende === "kein Wirkmittel").map((x) => x.meldung));
     for (const e of m.protokoll.filter((x) => x.typ === "entscheid")) {
-      expect(e.daten.entscheid, e.daten.meldung).toBe("bekaempfen");
+      // ZURÜCKSTELLEN nur, wenn kein Wirkmittel mehr passt (seit 2.9, P3: auch die Kanone jenseits des Ortsanfangs KRÄHE nicht)
+      expect(e.daten.entscheid, e.daten.meldung).toBe(ohneWm.has(e.daten.meldung) ? "zurueckstellen" : "bekaempfen");
       expect(e.t_s, e.daten.meldung).toBeCloseTo(m.z.meldungen[e.daten.meldung].erschienen.t_s, 1);
-      expect(ref.auswahl_argus).toContain(e.daten.wirkmittel);
+      if (e.daten.wirkmittel) expect(ref.auswahl_argus).toContain(e.daten.wirkmittel);
     }
     expect(m.ms, "Rechenzeit beim Öffnen der Auswertung").toBeLessThan(5000);
   });

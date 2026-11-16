@@ -81,6 +81,8 @@ export interface EreignisDaten {
     meldung: string; entscheid: Entscheid; wirkmittel?: string; warnungen?: string[]; einschlag?: EinschlagDaten;
     /** alle Einschläge einer Zug-Bekämpfung (der erste = einschlag); fehlt bei einem einzigen Einschlag */
     einschlaege?: EinschlagFlach[];
+    /** seit 2.9 (P3): Fahrzeuge des Zuges außer Reichweite der Kanone (nicht beschossen) */
+    ausser_reichweite?: string[];
     t_offen?: number; sek_eingang?: number; sek_offen?: number;
   };
   /**
@@ -122,7 +124,8 @@ export interface EreignisDaten {
    * Lagemeldung an die Führung. Seit 2.3 (D3): Druckmeldungen der eigenen Truppe (K-01 …) und Lagemeldungen mit Platzhaltern
    * (I-07, I-06, I-13) tragen den Text mit dem Stand dieses Teams, Druckmeldungen dazu Zug und Stufe der Dringlichkeit.
    */
-  inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number };
+  /** variante (seit 2.9, P4.1): Nummer der Textvariante (0 = Text der Lagemeldung), deren Behauptung zur Zeit der Meldung stimmte */
+  inject: { inject: string; manuell?: boolean; text?: string; zug?: string; stufe?: number; variante?: number };
   /**
    * Seit 2.6: Lagemeldung im Feed angeklickt (gelesen). Seit 2.7 (I4): ohne Klick ist sie nach regeln.anzeige.lagemeldung_s (30 s
    * Spielzeit) weg – ob und nach wie vielen Sekunden sie angeklickt wurde, steht damit im Protokoll (Zeit des Klicks − Eingang).

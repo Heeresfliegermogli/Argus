@@ -17,7 +17,7 @@
 // Gleichzeitigkeit (deterministisch, wie simuliere_durchlauf.py): Zerstörungen zum Zeitpunkt T gelten für
 // Entscheidungen zum Zeitpunkt T schon. Was davon abhängt, dass bis T keine Freigabe kam (E-01, I-08b),
 // wird erst fällig, wenn die Uhr T überschritten hat – eine Freigabe genau um T zählt also noch.
-import type { HintergrundEreignis, Inhalte, Meldung } from "../inhalte/typen";
+import type { HintergrundEreignis, Inhalte, Inject, Meldung, ReserveInject } from "../inhalte/typen";
 import { durchbruchGruppen, durchbruchStand, durchbruchUeber, durchgebrochen } from "../kern/durchbruch";
 import { gtBei, position, weg } from "../kern/geometrie";
 import { alleWeg, ausserGefechtZeiten, einschlaegeVon, einschlagVon, ereignisZiel, freigaben, fruehesteFreigabe, offeneEinschlaege, wegAb, weltFuer } from "../kern/lage";
@@ -26,6 +26,8 @@ import type { Einschlag } from "../kern/regeln";
 import { verstossText, wirkungBeimEinschlag } from "../kern/regeln";
 import { uhrzeit } from "../kern/uhr";
 import { fuelle, verlustLage } from "../kern/verluste";
+import { behauptungWerte, gemeldetAb, variante } from "../kern/behauptung";
+import { format } from "../kern/verluste";
 import type { Spielzustand } from "../kern/zustand";
 
 export { alleWeg, einschlaegeVon, einschlagVon, freigaben, wegAb, weltFuer };
@@ -47,6 +49,34 @@ export function meldungEntwurf(inh: Inhalte, z: Spielzustand, m: Meldung, manuel
     ...(manuell ? { manuell: true } : {}),
     ...(gestoert && !entfaellt ? { gestoert: true } : {}),
   }, { t_geplant: manuell ? undefined : m.t_s });
+}
+
+/** Seit 2.9 (P4.2): Kommt die Meldung? Ohne Bedingung immer; bedingt nur, wenn die Bedingung zu ihrem Zeitpunkt t_s erfüllt ist. */
+export function meldungKommt(inh: Inhalte, z: Spielzustand, m: Meldung): boolean {
+  const b = m.bedingung;
+  if (!b) return true;
+  const frueh = fruehesteFreigabe(freigaben(inh, z), b.ziele);
+  return !!frueh && frueh.t <= m.t_s;
+}
+
+/**
+ * Text einer Lagemeldung zur Zeit tI (seit 2.3 mit dem Stand dieses Teams, seit 2.9 P4): die Variante, deren Behauptung stimmt
+ * (kern/behauptung.ts), dann die Platzhalter {durch} {ueber} {getroffen_zahl} und die der Verluste ({pz}, {bereit} …). Ohne Varianten und
+ * Platzhalter nur die Kennung (der Text steht dann in den Daten).
+ */
+export function lagemeldungText(basis: Inhalte, z: Spielzustand, id: string, tI: number, vl = verlustLage(basis, z)): { inject: string; text?: string; variante?: number } {
+  const inh = weltFuer(basis, z);
+  const plan = inh.injects[id] as Partial<Inject> & ReserveInject | undefined;
+  if (!plan) return { inject: id };
+  const v = variante(basis, z, plan, tI);
+  if (!plan.varianten?.length && !v.text.includes("{")) return { inject: id };
+  let text = v.text;
+  if (text.includes("{")) {
+    const b = plan.bedingung;
+    text = format(text, behauptungWerte(basis, z, tI, b && "ziele" in b ? b.ziele : []));
+    if (vl.ereignisse) text = fuelle(vl.welt, text, vl.ereignisse, tI, "verluste_panzer" in plan ? plan.verluste_panzer : undefined);
+  }
+  return { inject: id, text, ...(plan.varianten?.length ? { variante: v.nr } : {}) };
 }
 
 /** Zivilpersonen beim Einschlag dieser Freigabe? Zeit des ersten Einschlags, der welche traf (seit 2.4 je Einschlag eines Zuges). */
@@ -74,7 +104,7 @@ function hgZielStand(inh: Inhalte, z: Spielzustand, h: HintergrundEreignis): { w
     return { wirkt: false, grund: z.zerstoert[h.ziel] !== undefined ? `${h.ziel} schon zerstört (${z.zerstoertDurch[h.ziel] ?? "?"})` : `${h.ziel} nicht im Raum` };
   }
   const grenze = Object.values(inh.wirkmittel).find((w) => w.id === "PZA")?.einsatzbereich?.x_max;
-  if (grenze !== undefined && position(ziel, h.t_s)[0] >= grenze) return { wirkt: false, grund: "jenseits der Einsatzgrenze" };
+  if (grenze !== undefined && position(ziel, h.t_s)[0] >= grenze) return { wirkt: false, grund: "außer Reichweite (nur bis Ortsanfang KRÄHE)" };
   return { wirkt: true };
 }
 
@@ -184,7 +214,7 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     const ag = ausserGefechtZeiten(inh, z);
     for (const g of gruppenDb) {
       if (z.durchbrueche[g.id] || !(t > g.t_s) || g.t_s >= dauer) continue;
-      const st = durchbruchStand(g, inh, z.zerstoert, ag);
+      const st = durchbruchStand(g, inh, z.zerstoert, ag, gemeldetAb(inh, z));
       liste.push(entwurf("durchbruch", { gruppe: g.id, t_ab: g.t_s, durch: st.durch, grund: st.grund }, { t_geplant: g.t_s }));
     }
   }
@@ -206,19 +236,16 @@ export function faellig(basis: Inhalte, z: Spielzustand, t: number): Entwurf[] {
     liste.push(entwurf("meldung_entfaellt", { meldung: id, stufe: "offen", grund }, { t_geplant: ab }));
   }
 
-  // 5 neue Meldungen
+  // 5 neue Meldungen; seit 2.9 (P4.2) bedingte nur, wenn die Bedingung zu ihrem Zeitpunkt erfüllt ist (sonst nie)
   for (const m of sz.meldungen) {
     if (m.t_s > t) break;
-    if (!z.meldungen[m.id]) liste.push(meldungEntwurf(inh, z, m));
+    if (!z.meldungen[m.id] && meldungKommt(inh, z, m)) liste.push(meldungEntwurf(inh, z, m));
   }
 
-  // 6 Injects: fest und bedingt (Platzhalter mit dem Stand dieses Teams zur Zeit der Meldung, seit 2.3)
+  // 6 Injects: fest und bedingt (Platzhalter mit dem Stand dieses Teams zur Zeit der Meldung, seit 2.3; seit 2.9 die Variante, deren
+  //   Behauptung zur Zeit der Meldung stimmt)
   const vl = verlustLage(basis, z);
-  const mitText = (id: string, tI: number) => {
-    const plan = inh.injects[id];
-    if (!plan || !plan.text.includes("{") || !vl.ereignisse) return { inject: id };
-    return { inject: id, text: fuelle(vl.welt, plan.text, vl.ereignisse, tI, "verluste_panzer" in plan ? plan.verluste_panzer : undefined) };
-  };
+  const mitText = (id: string, tI: number) => lagemeldungText(basis, z, id, tI, vl);
   for (const i of sz.injects) {
     if (z.injects[i.id]) continue;
     if (i.t_s !== undefined) {
@@ -334,7 +361,7 @@ export function naechsteFaelligkeit(basis: Inhalte, z: Spielzustand, t: number):
 /** Stand eines bedingten Injects oder Skriptereignisses für die Spielleitung. */
 export interface BedingtStand {
   id: string;
-  art: "inject" | "ereignis" | "durchbruch";
+  art: "inject" | "ereignis" | "durchbruch" | "meldung";
   /** wartet: Bedingung offen · erfuellt: kommt zur Zeit t · ausgeloest · entfaellt */
   status: "wartet" | "erfuellt" | "ausgeloest" | "entfaellt";
   text: string;
@@ -434,9 +461,21 @@ export function bedingtStand(basis: Inhalte, z: Spielzustand, t: number): Beding
     if (g.t_s >= inh.szenario.spieluhr.dauer_s) continue;
     const d = z.durchbrueche[g.id];
     const name = `${g.name} (${g.ziele.length > 2 ? `${g.ziele[0]}–${g.ziele[g.ziele.length - 1].slice(2)}` : g.ziele.join(", ")})`;
-    if (!d) aus.push({ id: g.id, art: "durchbruch", status: "wartet", text: `${name}: bricht über ${g.ueber} durch, wenn bis dahin nicht aufgehalten`, t: g.t_s });
+    if (!d) aus.push({ id: g.id, art: "durchbruch", status: "wartet", text: `${name}: bricht über ${g.ueber} durch, wenn bis dahin nicht aufgehalten (und von ARGUS gemeldet)`, t: g.t_s });
     else if (d.durch) aus.push({ id: g.id, art: "durchbruch", status: "ausgeloest", text: `${name}: bricht durch über ${g.ueber} (${uhr(d.t_ab)})` });
-    else aus.push({ id: g.id, art: "durchbruch", status: "entfaellt", text: `${name}: aufgehalten (${d.grund ?? "?"})` });
+    else aus.push({ id: g.id, art: "durchbruch", status: "entfaellt", text: d.grund === "von ARGUS nicht gemeldet" ? `${name}: bleibt am Ostufer (von ARGUS nicht gemeldet)` : `${name}: aufgehalten (${d.grund ?? "?"})` });
+  }
+  // seit 2.9 (P4.2): bedingte Meldungen (M38) – wartet, kommt (Bedingung erfüllt), gekommen oder kommt nicht
+  for (const m of inh.szenario.meldungen) {
+    if (!m.bedingung || m.verstaerkung) continue;
+    const da = z.meldungen[m.id];
+    const erste = fruehesteFreigabe(frei, m.bedingung.ziele);
+    const ziele = m.bedingung.ziele.length > 1 ? `${m.bedingung.ziele[0]}–${m.bedingung.ziele[m.bedingung.ziele.length - 1].slice(2)}` : m.bedingung.ziele[0];
+    const text = `ARGUS meldet ${m.ziele.join(", ")} um ${uhr(m.t_s)}, wenn bis dahin eine Freigabe auf ${ziele} kam`;
+    if (da) aus.push({ id: m.id, art: "meldung", status: "ausgeloest", text: `${text} – gemeldet ${uhr(da.erschienen.t_s)}` });
+    else if (erste && erste.t <= m.t_s) aus.push({ id: m.id, art: "meldung", status: "erfuellt", text: `${text} – Freigabe ${erste.meldung} ${uhr(erste.t)}`, t: m.t_s });
+    else if (t > m.t_s) aus.push({ id: m.id, art: "meldung", status: "entfaellt", text: `${text} – kommt nicht (keine Freigabe)` });
+    else aus.push({ id: m.id, art: "meldung", status: "wartet", text, t: m.t_s });
   }
   return aus;
 }

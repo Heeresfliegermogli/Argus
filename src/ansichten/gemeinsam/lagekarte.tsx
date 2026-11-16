@@ -15,7 +15,7 @@ import { type AssetManifest, assetUrl, kachelnVerfuegbar, ladeManifest } from ".
 import type { Inhalte, Punkt } from "../../inhalte/typen";
 import { type Effekt, effekteSchluessel } from "../../kern/effekte";
 import type { Fahrweg } from "../../kern/fahrwege";
-import { type Lagebild, lagebildSchluessel } from "../../kern/lagebild";
+import { type Lagebild, ZEICHEN_EIGENER_PANZER, lagebildSchluessel } from "../../kern/lagebild";
 import type { MeldungsStand } from "../../kern/zustand";
 // Die PixiJS-Karte wird erst geladen, wenn eine Ansicht eine Karte zeigt.
 import type { Hintergrund, KartenBild, KartenInfo, KartenUhr, Lagekarte, Rechteck, Vorschau } from "../../karte/lagekarte";
@@ -221,6 +221,7 @@ function LegendeLeiste(p: { art: Legende }) {
           <>
             <span><MiniZeichen code={sidc("H", "EVAT")} />Meldung (ARGUS)</span>
             <span title="Bewegung erkannt, (noch) keine Meldung"><MiniZeichen code={ZEICHEN_KONTAKT} />Kontakt</span>
+            <span title="eigene Panzer 1/1–1/4 (Leopard 2A7V)"><MiniZeichen code={ZEICHEN_EIGENER_PANZER} />Kampfpanzer (schwer), eigene</span>
             <span><i class="legende-flaeche" style="border:2px dashed #d8443a;border-radius:50%;width:12px;height:12px" />bekämpft, Einschlag folgt</span>
             <span><b style="color:#d8443a">✕</b>bekämpft</span>
             {zonen}
@@ -232,6 +233,7 @@ function LegendeLeiste(p: { art: Legende }) {
   return (
     <div class="karte-legende">
       <span><MiniZeichen code={sidc("H", "EVAT")} />Feind</span>
+      <span><MiniZeichen code={ZEICHEN_EIGENER_PANZER} />Kampfpanzer (schwer), eigene</span>
       <span><MiniZeichen code={sidc("F", "EVAT")} />verbündet</span>
       <span><MiniZeichen code={sidc("N", "EVCF")} />zivil</span>
       <span><MiniZeichen code={sidc("H", "EVAT", { modifikator: MODIFIKATOR_ATTRAPPE })} />Attrappe</span>

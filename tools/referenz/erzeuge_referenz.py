@@ -20,7 +20,7 @@ ZONEN = {}      # sichtbarer Name (seit 2.1 „Schule“, „Ortschaft“) → (
 
 
 def regel_code(text):
-    if text.startswith("außerhalb Einsatzbereich"):
+    if text.startswith("außerhalb Einsatzbereich") or text.startswith("außer Reichweite"):
         return "EB", None, None
     m = re.match(r"(\S+?)(?::| im) .*\((\d+) m\)", text)
     regel, zone = ZONEN[m.group(1)]
@@ -58,7 +58,7 @@ def main():
             for wid in d["wirkmittel"]:
                 w = L.wirkung(d, m["ziele"], wid, m["t_s"] + dt, hg)
                 einschlaege.append({
-                    "meldung": m["id"], "t_freigabe": m["t_s"] + dt, "wm": wid, "t": w["t"], "pos": list(w["pos"]), "ziel": w["ziel"],
+                    "meldung": m["id"], "t_freigabe": m["t_s"] + dt, "wm": wid, "t": w["t"], "pos": list(w["pos"]) if w["pos"] is not None else None, "ziel": w["ziel"],
                     "zulaessig": w["zulaessig"], "verstoesse": [list(regel_code(v)) for v in w["verstoesse"]],
                     "getroffen": sorted(f"{g[0]}|{g[2]}" for g in w["getroffen"]),
                     # seit 2.4 (E3): je Einschlag eines Zuges (LM und PzAbw je Fahrzeug)

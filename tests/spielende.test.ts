@@ -77,12 +77,13 @@ describe("Bedingte Injects für die Spielleitung", () => {
     expect(Object.fromEntries(bedingtStand(inh, zustandAus(ereignisse(basis), inh), 1310).map((b) => [b.id, b]))["A-01"].status).toBe("erfuellt");
   });
 
-  it("BEKÄMPFEN der PT-91 vor 20:45: I-08a kommt 60 s später, I-08b, E-01 und die Auflösung entfallen", async () => {
+  it("BEKÄMPFEN der PT-91 vor 20:45: I-08a kommt 60 s nach dem Treffer (seit 2.9, P4.4), I-08b, E-01 und die Auflösung entfallen", async () => {
     const inh = await inhalte();
     const z = zustandAus(ereignisse([...basis, ["entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", sek_eingang: 28 }, 1243]]), inh);
     const st = Object.fromEntries(bedingtStand(inh, z, 1250).map((b) => [b.id, b]));
-    expect(st["I-08a"].status).toBe("erfuellt");
-    expect(st["I-08a"].t).toBe(1303);
+    // seit 2.9 (P4.4): „Eigenbeschuss! … ausgefallen“ erst, wenn eine Wirkung einen PT-91 wirklich traf – bis zum Einschlag wartet sie
+    expect(st["I-08a"].status).toBe("wartet");
+    expect(st["M38"]).toMatchObject({ art: "meldung", status: "erfuellt", t: 1335 });
     expect(st["I-08b"].status).toBe("entfaellt");
     expect(st["E-01"].status).toBe("entfaellt");
     expect(st["A-01"].status).toBe("entfaellt");

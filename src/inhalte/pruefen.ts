@@ -40,7 +40,10 @@ export function pruefeInhalte(inh: Inhalte): Pruefbericht {
     for (const zid of m.ziele) {
       if (!inh.ziele[zid]) fehler.push(`${m.id}: Ziel ${zid} unbekannt`);
       gemeldet.add(zid);
+      // seit 2.9 (P4.2): ungemeldete Ziele nur in einer bedingten Meldung (M38)
+      if (inh.ziele[zid]?.ungemeldet && !m.bedingung) fehler.push(`${zid}: ungemeldet, steht aber in ${m.id}`);
     }
+    if (m.bedingung && (m.bedingung.typ !== "freigabe" || !m.bedingung.ziele.every((zid) => !!inh.ziele[zid]))) fehler.push(`${m.id}: Bedingung ungültig`);
     if (m.fall && !faelle.has(m.fall)) fehler.push(`${m.id}: Fall ${m.fall} unbekannt`);
     if (m.folge_von && !inh.meldungen[m.folge_von]) fehler.push(`${m.id}: folge_von ${m.folge_von} unbekannt`);
     const soll = argusEmpfehlung(m.argus.konfidenz, inh.regeln);

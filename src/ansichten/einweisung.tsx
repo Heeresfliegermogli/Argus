@@ -39,9 +39,9 @@ export const TOUR: TourSchritt[] = [
   { ziel: "eingang", titel: "Hier kommen die Meldungen rein", text: <>Hier kommen die Meldungen. Die älteste öffnet sich von selbst. Klicken auf eine andere öffnet diese.</> },
   { ziel: "entscheiden", titel: "Hier entscheidet ihr", text: <>Die geöffnete Meldung: Drohnenbild live (Klicken vergrößert). Darunter die Informationen, die Wirkmittel und ganz unten die drei Knöpfe <M k="toedlich">BEKÄMPFEN mit …</M> <M>ZURÜCKSTELLEN</M> <M>ABLEHNEN</M>. Ohne eure Entscheidung wird nichts bekämpft.</> },
   { ziel: "karte", titel: "Die Lagekarte", text: <>Die ganze Karte, vom Westrand mit euren Panzern bis zu den Wäldern am Ostrand. Meldungen stehen als Marke am Ziel (Klick öffnet). Bekämpfte Ziele zeigen den Countdown bis zum Einschlag. Rot: No-Strike-Zone, orange gestrichelt: Einschränkungsgebiet. Rein- und Rauszoomen über das Mausrad. Wechsel der Kartenansicht oben rechts.</> },
-  { ziel: "panzer", titel: "Hier eure vier Panzer", text: <>Die 1. Kp am Westrand: 1/1 bis 1/4 mit ihrem Zustand. Wird ein Panzer getroffen, blinkt er rot.</> },
-  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 1. Kp melden sich oben links auf der Karte – höchstens zwei auf einmal. Eine Meldung steht 30 Sekunden oder bis ihr sie anklickt (✕). Danach ist sie weg.</> },
-  { ziel: "wirkmittel", titel: "Hier Wirkmittel und Bestand", text: <>Mörser, Loitering Munition (LM) und die Kanone der 1. Kp: je Kachel der Bestand, der Countdown bis zum Einschlag und ✓ oder ⚠ am Einschlagort. Mörser und LM sind begrenzt (wird es knapp, wird die Zahl gelb), die Kanone nicht – sie reicht aber nur bis zum Bach.</> },
+  { ziel: "panzer", titel: "Hier eure vier Panzer", text: <>Die 2. Kp am Westrand: 1/1 bis 1/4 mit ihrem Zustand. Wird ein Panzer getroffen, blinkt er rot.</> },
+  { ziel: "feed", titel: "Hier Lagemeldungen", text: <>Brigade, Nachbarn und 2. Kp melden sich oben links auf der Karte – höchstens zwei auf einmal. Eine Meldung steht 30 Sekunden oder bis ihr sie anklickt (✕). Danach ist sie weg.</> },
+  { ziel: "wirkmittel", titel: "Hier Wirkmittel und Bestand", text: <>Mörser, Loitering Munition (LM) und die Kanone der 2. Kp: je Kachel der Bestand, der Countdown bis zum Einschlag und ✓ oder ⚠ am Einschlagort. Mörser und LM sind begrenzt (wird es knapp, wird die Zahl gelb), die Kanone nicht – sie reicht aber nur bis zum Ortsanfang KRÄHE; dahinter ist sie grau.</> },
   { ziel: "uhr", titel: "Spieluhr", text: <>25 Minuten in Echtzeit, die Spielleitung startet für alle Teams gleichzeitig. Daneben die Phase.</> },
 ];
 
@@ -240,7 +240,7 @@ const smil = (a: Record<string, string>) => a as unknown as Record<string, never
 
 /**
  * Kurze Animation je Wirkmittel (H4.2, aus E7.2): Mörser trifft eine Fläche (80 m, ca. 35 s), die LM fliegt vom Westrand und trifft
- * ein Fahrzeug (10 m), die Kanone der 1. Kp schießt mit Leuchtspur – nur bis zum Bach. Gezeichnet, keine Personen.
+ * ein Fahrzeug (10 m), die Kanone der 2. Kp schießt mit Leuchtspur – seit 2.9 (P3) nur bis zum Ortsanfang KRÄHE. Gezeichnet, keine Personen.
  */
 function WirkmittelAnimation(p: { art: "MRS" | "LM" | "PZA" }) {
   const W = 260;
@@ -289,7 +289,8 @@ function WirkmittelAnimation(p: { art: "MRS" | "LM" | "PZA" }) {
       )}
       {p.art === "PZA" && (
         <>
-          {/* Fahrzeug diesseits des Bachs: Leuchtspur trifft; jenseits: Grenze */}
+          {/* Fahrzeug diesseits des Ortsanfangs: Leuchtspur trifft; dahinter (Häuser): Grenze, kein Schuss */}
+          <g fill="#b9a68a" stroke="#7d6c55" stroke-width="1"><rect x="172" y="18" width="14" height="11" /><rect x="214" y="34" width="12" height="10" /><rect x="190" y="124" width="14" height="10" /></g>
           <rect x="112" y="30" width="18" height="12" rx="2" fill="#a33b33" />
           <line x1="34" y1="64" x2="120" y2="37" stroke="#ffcf4a" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="14 200">
             <animate attributeName="stroke-dashoffset" values="0;-110;-110" keyTimes="0;0.25;1" dur="3s" repeatCount="indefinite" />
@@ -302,8 +303,8 @@ function WirkmittelAnimation(p: { art: "MRS" | "LM" | "PZA" }) {
             <animate attributeName="r" values="5;0;0" keyTimes="0;0.08;1" dur="3s" repeatCount="indefinite" />
           </circle>
           <line x1="150" y1="0" x2="150" y2="150" stroke="#d8443a" stroke-width="1.5" stroke-dasharray="5 4" />
-          <text x="156" y="16" class="wm-anim-text">Grenze</text>
-          <text x="8" y="144" class="wm-anim-text">Leuchtspur · nur bis zum Bach</text>
+          <text x="156" y="12" class="wm-anim-text">Ortsanfang</text>
+          <text x="8" y="144" class="wm-anim-text">Leuchtspur · nur bis zum Ortsanfang KRÄHE</text>
         </>
       )}
     </svg>
@@ -315,7 +316,7 @@ function WirkmittelFolie(p: { inh: Inhalte }) {
   const liste: { id: "MRS" | "LM" | "PZA"; text: string }[] = [
     { id: "MRS", text: `Wirkt auf eine Fläche (${wm.MRS?.wirkradius_m ?? 80} m). Einschlag nach ca. ${wm.MRS?.vorlauf_s ?? 35} s – das Ziel fährt so lange weiter. Bestand ${wm.MRS?.bestand ?? "?"}.` },
     { id: "LM", text: `Startet westlich der Karte, fliegt zum Ziel und trifft genau ein Fahrzeug (${wm.LM?.wirkradius_m ?? 10} m); bei einem Zug eine LM je Fahrzeug. Bestand ${wm.LM?.bestand ?? "?"}.` },
-    { id: "PZA", text: `Die Kanone der 1. Kp: schnell (ca. ${wm.PZA?.vorlauf_s ?? 5} s), kein Bestand – aber nur auf Ziele bis zum Bach ELSTER.` },
+    { id: "PZA", text: `Die Kanone der 2. Kp: schnell (ca. ${wm.PZA?.vorlauf_s ?? 5} s), kein Bestand – aber nur bis zum Ortsanfang KRÄHE; Ziele dahinter kann sie nicht bekämpfen.` },
   ];
   return (
     <div class="wm-reihe" data-testid="einweisung-wirkmittel">

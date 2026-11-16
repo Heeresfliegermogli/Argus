@@ -25,7 +25,7 @@ describe("Szenario 2.2: Daten", () => {
   it("C1: jedes Fahrzeug erscheint am Kartenrand (nur was bei Spielbeginn dasteht, steht mitten im Bild)", async () => {
     const inh = await inhalte();
     const { breite: w, hoehe: h } = inh.karte.ausdehnung_m;
-    expect(["2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5), 2.4 auf 2.3 (E-a), 2.5 auf 2.4 (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I), 2.8 auf 2.7 (M)
+    expect(["2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9"]).toContain(inh.szenario.version); // 2.3 baut auf 2.2 auf (D1–D5), 2.4 auf 2.3 (E-a), 2.5 auf 2.4 (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I), 2.8 auf 2.7 (M), 2.9 auf 2.8 (P)
     for (const z of inh.szenario.ziele) {
       const a = abS(z);
       if (a <= 0 && !z.bewegung?.route?.length) continue; // Attrappe Z-07 steht seit Spielbeginn
@@ -114,6 +114,8 @@ describe("Szenario 2.2: Kontakte auf der Karte der Spieler", () => {
     // je Meldung: kurz vor der Meldezeit steht jedes ihrer Fahrzeuge schon als Kontakt (oder im Wald / seit Spielbeginn)
     const gesehen = new Set<string>();
     for (const m of inh.szenario.meldungen) {
+      // seit 2.9 (P4.2): die bedingte Meldung M38 nennt ungemeldete Ziele (Z-27/Z-28) – die stehen nie als Kontakt da
+      if (m.bedingung) continue;
       const lb = lagebildZielmeldungen(inh, leer, m.t_s - 1);
       for (const id of m.ziele) {
         if (gesehen.has(id)) continue;

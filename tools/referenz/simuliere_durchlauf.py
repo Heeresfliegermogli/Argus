@@ -32,6 +32,7 @@ tests/referenz_durchlauf.json, tests/durchlauf.test.ts spielt dieselben Modellte
 import sys
 
 import argus_lib as L
+import behauptung as B
 import verluste as V
 from pruefe_szenario import pruefe
 
@@ -131,9 +132,36 @@ def lauf(d, team, detail=None, einspielen=None):
           if h["art"] == "panzerabwehr" and h.get("folge") == "ausser_gefecht"}
     welten = {}
 
+    # seit 2.9 (P4.2): nur gemeldete Gruppen brechen durch – Meldungen bis t_s − gemeldet_s, die erschienen sind (bedingte nur, wenn ihre
+    # Bedingung erfüllt war; nicht schon beim Erscheinen entfallen). Ausgewertet mit dem Stand des Laufs, wie bei der Meldung selbst.
+    gemeldet_s = (sz.get("durchbruch") or {}).get("gemeldet_s")
+
+    def bedingung_ok(m):
+        b = m.get("bedingung")
+        return not b or any(freigabe_t.get(x, 1e9) <= m["t_s"] for x in b["ziele"])
+
+    def gemeldet_bis(bis):
+        z = zerstoert()
+        out = {}
+        for m in sz["meldungen"]:
+            if m["t_s"] > bis or not bedingung_ok(m):
+                continue
+            zmap = {x["id"]: x for x in welt_ohne_db["szenario"]["ziele"]}
+            if all(z.get(x, 1e9) <= m["t_s"] or not L.vorhanden(zmap[x], m["t_s"]) for x in m["ziele"]):
+                continue
+            for x in m["ziele"]:
+                out[x] = min(out.get(x, 1e9), m["t_s"])
+        return out
+
+    def stand_db(g, z):
+        gm = gemeldet_bis(g["t_s"] - gemeldet_s) if gemeldet_s is not None else None
+        return L.durchbruch_stand(g, zmap0, z, ag, gm, gemeldet_s)
+
+    welt_ohne_db = d
+
     def aktive(T):
         z = zerstoert()
-        return tuple(g["id"] for g in dbg if g["t_s"] < T and L.durchbruch_stand(g, zmap0, z, ag)[0])
+        return tuple(g["id"] for g in dbg if g["t_s"] < T and stand_db(g, z)[0])
 
     def welt(T):
         akt = aktive(T)
@@ -180,6 +208,9 @@ def lauf(d, team, detail=None, einspielen=None):
                 continue
             if w == AUSWAHL_ARGUS[0] and not L.wirkung(dw, m["ziele"], w, t, z, rest(w))["zulaessig"]:
                 continue
+            # seit 2.9 (P3): die Kanone ist jenseits des Ortsanfangs KRÄHE nicht wählbar
+            if L.harte_grenze(wm[w]) is not None and not L.wirkung(dw, m["ziele"], w, t, z, rest(w))["waehlbar"]:
+                continue
             return w
         return None
 
@@ -201,13 +232,25 @@ def lauf(d, team, detail=None, einspielen=None):
         g = L.eloka_aktiv(welt(m["t_s"])["szenario"], zerstoert(), m["t_s"])
         return L.argus_bei(m, sz, regeln, g), g
 
+    erschienen = []      # seit 2.9: (Meldung, Zeit, Verstärkung, bedingt, Ziele, beim Erscheinen entfallen) – Zielnummern, Behauptungen
     for m in sz["meldungen"]:
+        if not bedingung_ok(m):
+            # seit 2.9 (P4.2): bedingte Meldung (M38) – Bedingung zu ihrem Zeitpunkt nicht erfüllt, sie kommt nie
+            log.append((m["id"], "kommt nicht (Bedingung nicht erfüllt)"))
+            continue
         a, gestoert = argus(m)
         ev = {"m": m["id"], "t_meld": m["t_s"], "gestoert": gestoert}
         det.append(ev)
         if alle_weg(m["ziele"], m["t_s"]):
             ev["ende"] = "entfällt"
             log.append((m["id"], "entfällt (Ziel schon zerstört oder weg)"))
+            erschienen.append((m["id"], m["t_s"], m.get("verstaerkung"), bool(m.get("bedingung")), m["ziele"], True))
+            continue
+        erschienen.append((m["id"], m["t_s"], m.get("verstaerkung"), bool(m.get("bedingung")), m["ziele"], False))
+        if team == "ohne":
+            # seit 2.9 (P4.5): Lauf ohne Eingriff – das Team entscheidet nichts
+            ev["ende"] = "Spielende"
+            log.append((m["id"], "bleibt liegen (ohne Eingriff)"))
             continue
         loes = m.get("loesung") or {"entscheid": "BEKÄMPFEN"}
         # seit 2.7 (I3.2): Auflösung nach Zeit – ohne Freigabe bis t_aufl ist die Meldung danach weg (als verbündet erkannt)
@@ -355,7 +398,7 @@ def lauf(d, team, detail=None, einspielen=None):
     for g in dbg:
         if g["t_s"] >= dauer:
             continue
-        durch, grund = L.durchbruch_stand(g, zmap0, z_end, ag)
+        durch, grund = stand_db(g, z_end)
         det.append({"durchbruch": g["id"], "t": g["t_s"], "durch": durch, "grund": grund})
         if not durch:
             log.append((g["id"], f"aufgehalten ({grund})"))
@@ -378,21 +421,62 @@ def lauf(d, team, detail=None, einspielen=None):
         dw = welt(dauer)
         att = [x["t"] for e in det if "m" in e and e.get("ende") == "Wirkung" for x in e.get("einschlaege", [])
                if any(g[2] == "attrappe" and g[1] == "Attrappe" for g in x["getroffen"])]
-        durch_g = [g for g in dbg if g["t_s"] < dauer and L.durchbruch_stand(g, zmap0, z_end, ag)[0]]
+        durch_g = [g for g in dbg if g["t_s"] < dauer and stand_db(g, z_end)[0]]
         ev = V.zeitlinie(dw, z_end, V.r2(min(att)) if att else None, durch_g)
         for k in V.meldungen(dw, ev):
             injects.append(f"{k['id']} um {L.mmss(k['t'])}")
             det.append({"inject": k["id"], "t": k["t"], "text": k["text"], "zug": k["zug"], "stufe": k["stufe"], "quelle": k["quelle"]})
+        # seit 2.9 (P4): Lage des Laufs für die Behauptungen der Lagemeldungen – die Variante, deren Behauptung zur Zeit der Meldung stimmt
+        lage = lage_des_laufs(dw, welt, z_end, det, freigabe_t, dbg, stand_db, erschienen, ev)
         texte = {i["id"]: i for i in sz["injects"]}
         for e in det:
-            if "inject" in e and e["inject"] in texte and "{" in texte[e["inject"]]["text"]:
-                e["text"] = V.fuelle(texte[e["inject"]]["text"], dw, ev, e["t"], texte[e["inject"]].get("verluste_panzer"))
+            if "inject" not in e or e["inject"] not in texte:
+                continue
+            plan = texte[e["inject"]]
+            text, beh, nr = lage.variante(plan, e["t"])
+            if plan.get("varianten"):
+                e["variante"] = nr
+            e["behauptet"] = beh
+            if plan.get("varianten") or "{" in text:
+                b = plan.get("bedingung") or {}
+                text = V.fmt(text, lage.werte(e["t"], b.get("ziele", [])))
+                e["text"] = V.fuelle(text, dw, ev, e["t"], plan.get("verluste_panzer"))
+        det.append({"lage": lage})
         st = V.stand(dw, ev)
         det.append({"verluste": st, "zug": V.zug(dw, st), "ereignisse": len(ev), "treffer": sum(1 for e in ev if e["ergebnis"] == "treffer"),
                     "verlauf": V.verlauf(dw, ev), "zeitlinie": ev})
     rest = {k: (v if v < 10 ** 5 else "∞") for k, v in bestand.items()}
     letzte = max([e["t_entscheid"] for e in det if e.get("entscheid") == "BEKÄMPFEN"] or [0])
     return log, treffer_schutz, injects, rest, letzte
+
+
+def lage_des_laufs(d, welt, zer, det, freigabe_t, dbg, stand_db, erschienen, verluste_ev):
+    """Lage eines Laufs für die Behauptungen (behauptung.Lage): alles mit Zeiten aus det und dem Stand am Ende."""
+    sz = d["szenario"]
+    dauer = sz["spieluhr"]["dauer_s"]
+    hg = {e["hintergrund"]: (e["t"], bool(e.get("wirkt"))) for e in det if "hintergrund" in e and e.get("wirkt") is not None}
+    e01 = {}
+    for e in det:
+        if "ereignis" in e and not e.get("entfaellt"):
+            e01.setdefault(e["ereignis"], []).append((e["t"], e["ziel"]))
+    einschl = [{"t": x["t"], "getroffen": x["getroffen"], "verstoesse": x["verstoesse"]}
+               for e in det if "m" in e and e.get("ende") == "Wirkung" for x in e.get("einschlaege", [])]
+    entscheide = sorted((e["t_entscheid"], e["entscheid"]) for e in det if "m" in e and e.get("entscheid") and e.get("t_entscheid") is not None)
+    durch = []
+    for g in dbg:
+        if g["t_s"] >= dauer or not stand_db(g, zer)[0]:
+            continue
+        for zid in g["ziele"]:
+            tc = g["ueber_s"].get(zid)
+            if tc is None or tc > dauer or zer.get(zid, 1e9) <= tc:
+                continue
+            durch.append((zid, tc, g["ueber"], g["id"]))
+    gemeldet = {}
+    for mid, tm, _, _, ziele, entf in erschienen:
+        if not entf:
+            for x in ziele:
+                gemeldet[x] = min(gemeldet.get(x, 1e9), tm)
+    return B.Lage(d, welt, zer, hg, e01, freigabe_t, einschl, entscheide, durch, gemeldet, erschienen, verluste_ev)
 
 
 def faelle_erreicht(d, team, einspielen=None):

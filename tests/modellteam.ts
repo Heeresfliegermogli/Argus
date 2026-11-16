@@ -60,6 +60,10 @@ export interface ModellOptionen {
   /** Sekunden je Entscheidung (Standard nach Team) */
   dauer?: number;
   reihenfolge?: string[];
+  /** seit 2.9 (P4.6): Meldungen, die das Team liegen lässt (öffnet sie nicht) */
+  auslassen?: string[];
+  /** seit 2.9 (P4.5): Lauf ohne Eingriff – das Team entscheidet nichts */
+  ohne?: boolean;
 }
 
 export const START_MS = 1_800_000_000_000;
@@ -269,13 +273,13 @@ export class Modellteam {
 
   /** Ist das Team frei, öffnet es die nächste Meldung in der Reihenfolge des Erscheinens (entfallene überspringt es). */
   aufnehmen(t: number): void {
-    if (this.z.ende || this.aktuell) return;
+    if (this.z.ende || this.aktuell || this.opt.ohne) return;
     const liste = this.z.reihenfolge;
     while (this.zeiger < liste.length) {
       const id = liste[this.zeiger];
       const st = this.z.meldungen[id];
       this.zeiger += 1;
-      if (st.stufe !== "offen" || st.zurueckgestellt || this.entscheidungen.has(id)) continue;
+      if (st.stufe !== "offen" || st.zurueckgestellt || this.entscheidungen.has(id) || this.opt.auslassen?.includes(id)) continue;
       this.aktuell = { meldung: id, t_offen: t, ende: t + this.dauer };
       return;
     }

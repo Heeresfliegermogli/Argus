@@ -1,5 +1,5 @@
 // Szenario 2.3 (Änderungsliste D1–D5 vom 01.11.2026, „mehr Druck“): kürzere Lagemeldungen, Druckmeldungen an die Führung,
-// Auswertung „Preis des Abwartens“. Seit 2.5 (F) ist die eigene Truppe die 1. Kp (1./PzBtl 613) mit vier Panzern: das Verlustmodell je Panzer
+// Auswertung „Preis des Abwartens“. Seit 2.5 (F) ist die eigene Truppe eine Kp (seit 2.9 2./PzBtl 613) mit vier Panzern: das Verlustmodell je Panzer
 // prüft tests/szenario25.test.ts, Engine = Simulation tests/durchlauf.test.ts; hier, was von D bleibt.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -11,16 +11,21 @@ import { type DrehbuchReferenz, drehbuchTeams, spieleDurch } from "./modellteam"
 
 const MAX_LAGE = 140;
 /** längste Werte der Platzhalter (wie pruefe_szenario.py LAENGSTE, seit 2.5 je Panzer) */
-const LAENGSTE = { pz: "1/1", zustand: 100, verw: "3 Verwundete", treffer: "noch ohne Treffer", lage: "eingeschränkt", bereit: 4, gesamt: 4, zug_verw: "8 Verwundete", zug: "1. Kp" };
+const LAENGSTE = { pz: "1/1", zustand: 100, verw: "3 Verwundete", treffer: "noch ohne Treffer", lage: "eingeschränkt", bereit: 4, gesamt: 4, zug_verw: "8 Verwundete", zug: "2. Kp",
+  // seit 2.9 (P4.3): I-13 nennt die Durchgebrochenen und den Übergang, I-08a die Zahl der getroffenen PT-91
+  durch: "KPz T-72 (Ziel 27) und SPz BMP-2 (Ziel 33a)", ueber: "die Brücke ELSTER", getroffen_zahl: "Drei" };
 const fuellen = (t: string, w: Record<string, string | number>) => t.replace(/\{(\w+)\}/g, (m, k) => (k in w ? String(w[k]) : m));
 
 describe("Szenario 2.3: Daten (D4)", () => {
   it("D4: alle Lagemeldungen mit Absender höchstens 140 Zeichen (feste, bedingte, Reserve und Druckmeldungen je Panzer)", async () => {
     const inh = await inhalte();
     for (const i of Object.values(inh.injects)) {
-      const text = `${i.von}: ${fuellen(i.text, LAENGSTE)}`;
-      expect(text.length, text).toBeLessThanOrEqual(MAX_LAGE);
-      expect(text.includes("{"), `${i.id} Platzhalter offen`).toBe(false);
+      // seit 2.9 (P4.1) jede Textvariante
+      for (const t of [i.text, ...("varianten" in i ? (i.varianten ?? []).map((v) => v.text) : [])]) {
+        const text = `${i.von}: ${fuellen(t, LAENGSTE)}`;
+        expect(text.length, text).toBeLessThanOrEqual(MAX_LAGE);
+        expect(text.includes("{"), `${i.id} Platzhalter offen`).toBe(false);
+      }
     }
     const vm = inh.szenario.verluste!.meldungen!;
     const ort = Math.max(...inh.szenario.verluste!.orte!.map((o) => o.text.length));

@@ -23,7 +23,7 @@ import { bekannteZiele, effekte } from "../kern/effekte";
 import { argusBei, bildalter } from "../kern/eloka";
 import { position } from "../kern/geometrie";
 import { lagebildZielmeldungen } from "../kern/lagebild";
-import { type ZugWirkung, vorhersage, zugArt } from "../kern/regeln";
+import { type ZugWirkung, reichweiteText, vorhersage, zugArt } from "../kern/regeln";
 import { injectsFuer, VERMERK_S, type Vermerk, vermerke, warteschlange } from "../kern/sichten";
 import { injectAnzeige } from "../kern/verluste";
 import { zielName } from "../kern/zielnummern";
@@ -59,9 +59,10 @@ export function vorschauFuer(inh: Inhalte, z: Spielzustand, m: Meldung, wmId: st
       ok: pr.zulaessig,
       zonen: pr.verstoesse.flatMap((x) => (x.zone ? [x.zone] : [])),
       grenzeX: w.einsatzbereich?.x_max,
-      grenzeVerletzt: pr.verstoesse.some((x) => x.regel === "EB"),
-      grenzeText: w.einsatzbereich ? `Einsatzgrenze ${w.kurz}` : undefined,
-      text: `${w.kurz} · Einschlag in ${mss(v.einschlag.t - t)}${pr.zulaessig ? "" : " · Warnung"}`,
+      grenzeVerletzt: !v.waehlbar || v.ausser.length > 0 || pr.verstoesse.some((x) => x.regel === "EB"),
+      // seit 2.9 (P3): Linie „Kanone nur bis Ortsanfang KRÄHE“ gestrichelt, solange die Kanone gezeigt wird
+      grenzeText: w.einsatzbereich ? `${w.kurz} ${reichweiteText(w)}` : undefined,
+      text: !v.waehlbar ? `${w.kurz} · außer Reichweite` : `${w.kurz} · Einschlag in ${mss(v.einschlag.t - t)}${pr.zulaessig ? "" : " · Warnung"}`,
     },
   };
 }
@@ -150,7 +151,7 @@ function LageEinblendung(p: { s: Sicht; injects: InjectStand[]; t: number }) {
       )}
       <div class="feed-meldung feed-beispiel" aria-hidden="true">
         <div class="feed-von"><span class="feed-titel">Lagemeldung</span> · Brigade · Beispiel<span class="feed-x">✕</span></div>
-        <div class="feed-text">So erscheinen Meldungen von Brigade, Nachbarn und 1. Kp – 30 Sekunden lang oder bis ihr sie anklickt.</div>
+        <div class="feed-text">So erscheinen Meldungen von Brigade, Nachbarn und 2. Kp – 30 Sekunden lang oder bis ihr sie anklickt.</div>
         <i class="feed-rest" style="width:62%" />
       </div>
     </section>
@@ -247,10 +248,17 @@ function UnterwegsLeiste(p: { inh: Inhalte; z: Spielzustand; t: number; unterweg
 
 // ---------------------------------------------------------------- Geöffnete Meldung
 
-/** Warnungen eines Wirkmittels am vorausberechneten Einschlagort (dazu: Bestand reicht nicht für alle Fahrzeuge). */
+/**
+ * Warnungen eines Wirkmittels am vorausberechneten Einschlagort (dazu: Bestand reicht nicht für alle Fahrzeuge). Seit 2.9 (P3): bei
+ * der Kanone „nur k von n in Reichweite“, wenn ein Teil des Zuges jenseits des Ortsanfangs KRÄHE liegt.
+ */
 function warnungen(w: Wirkmittel, v: ZugWirkung): string[] {
-  const nurK = zugArt(w) === "je_fahrzeug" && v.k < v.n;
-  return [...v.pruefung.verstoesse.map((x) => `${x.regel}: ${x.text}`), ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])];
+  if (!v.waehlbar) return [`außer Reichweite – ${reichweiteText(w)}`];
+  const nurR = v.ausser.length > 0;
+  const nurK = !nurR && zugArt(w) === "je_fahrzeug" && v.k < v.n;
+  return [...v.pruefung.verstoesse.map((x) => `${x.regel}: ${x.text}`),
+    ...(nurR ? [`nur ${v.k} von ${v.k + v.ausser.length} in Reichweite – ${reichweiteText(w)}`] : []),
+    ...(nurK ? [`nur ${v.k} von ${v.n} Fahrzeugen – Bestand reicht nicht`] : [])];
 }
 
 /**
@@ -266,19 +274,23 @@ function WirkmittelKachel(p: {
   const leer = bestand === 0;
   const v = m ? vorhersage(inh, m, wm, t, z.zerstoert, bestand ?? null) : null;
   const knapp = bestandKnapp(inh, wm, bestand);
-  const warn = v ? warnungen(w, v) : [];
+  // seit 2.9 (P3): außer Reichweite (Kanone jenseits des Ortsanfangs KRÄHE) – grau und nicht wählbar
+  const weit = !!v && !leer && !v.waehlbar;
+  const warn = v && !weit ? warnungen(w, v) : [];
   const ohneBestand = bestand === null || bestand === undefined;
-  const titel = `${w.name}${ohneBestand ? " – kein Bestand nötig" : `: ${bestand} übrig`}${v && !leer ? `\nEinschlag in ${mss(v.einschlag.t - t)}${v.k > 1 ? ` · ×${v.k}` : ""}` : ""}${warn.length ? `\n⚠ ${warn.join("\n⚠ ")}` : v && !leer ? "\n✓ keine Warnung" : ""}`;
+  const titel = weit ? `${w.name}\naußer Reichweite – ${reichweiteText(w)}`
+    : `${w.name}${ohneBestand ? " – kein Bestand nötig" : `: ${bestand} übrig`}${v && !leer ? `\nEinschlag in ${mss(v.einschlag.t - t)}${v.k > 1 ? ` · ×${v.k}` : ""}` : ""}${warn.length ? `\n⚠ ${warn.join("\n⚠ ")}` : v && !leer ? "\n✓ keine Warnung" : ""}`;
   return (
-    <label class={`wm-kachel ${p.gewaehlt ? "gewaehlt" : ""} ${leer ? "aus" : ""} ${warn.length ? "warn" : ""} ${!m ? "ohne" : ""}`} data-wm={wm} title={titel}
+    <label class={`wm-kachel ${p.gewaehlt ? "gewaehlt" : ""} ${leer || weit ? "aus" : ""} ${weit ? "weit" : ""} ${warn.length ? "warn" : ""} ${!m ? "ohne" : ""}`} data-wm={wm}
+      data-reichweite={weit ? "ausser" : undefined} title={titel}
       onMouseEnter={() => p.zeige(true)} onMouseLeave={() => p.zeige(false)}>
       <span class="wk-oben">
-        <input type="radio" name="wm" checked={p.gewaehlt} disabled={leer || p.gesperrt} onChange={p.waehle} />
+        <input type="radio" name="wm" checked={p.gewaehlt} disabled={leer || weit || p.gesperrt} onChange={p.waehle} />
         <span class="wk-name">{w.kurz}</span>
         <b class={`wk-bestand ${knapp ? "knapp" : ""} ${leer ? "leer" : ""} ${ohneBestand ? "ohne" : ""}`} data-bestand={bestand ?? ""}>{ohneBestand ? "∞" : bestand}</b>
       </span>
       <span class="wk-unten">
-        {leer ? <span class="wk-zeit">aufgebraucht</span> : v ? (
+        {leer ? <span class="wk-zeit">aufgebraucht</span> : weit ? <span class="wk-zeit wk-weit" data-testid="wk-ausser-reichweite">außer Reichweite</span> : v ? (
           <>
             <span class="wk-zeit">Einschlag <b class="zahl">{mss(v.einschlag.t - t)}</b>{v.k > 1 ? <span class="leise"> ×{v.k}</span> : null}</span>
             <span class={`wk-status ${warn.length ? "verstoss" : "ok"}`} data-status={warn.length ? "warnung" : "ok"}>{warn.length ? "⚠" : "✓"}</span>
@@ -302,6 +314,7 @@ function WarnZeile(p: { inh: Inhalte; z: Spielzustand; m: Meldung | null; wm: st
   const w = inh.wirkmittel[wm];
   if (z.bestand[wm] === 0) return <div class="wm-warnzeile leise" data-testid="wm-warnung" data-wm={wm}>{w.kurz}: aufgebraucht</div>;
   const v = vorhersage(inh, m, wm, t, z.zerstoert, z.bestand[wm] ?? null);
+  if (!v.waehlbar) return <div class="wm-warnzeile leise" data-testid="wm-warnung" data-wm={wm} data-reichweite="ausser">{w.kurz}: außer Reichweite – {reichweiteText(w)}</div>;
   const warn = warnungen(w, v);
   if (!warn.length) return <div class="wm-warnzeile ok" data-testid="wm-warnung" data-wm={wm}>✓ {w.kurz}: keine Warnung am Einschlagort</div>;
   const text = `⚠ ${w.kurz}: ${warn.join(" · ")}`;
@@ -368,9 +381,11 @@ export function ZBAnsicht(p: { s: Sicht }) {
   }, [man, naechste.join(",")]);
   // Wirkmittel zurücksetzen, wenn eine andere Meldung offen ist; aufgebrauchtes abwählen
   useEffect(() => setWm(null), [gewaehlt]);
+  // seit 2.9 (P3): fährt das Ziel über den Ortsanfang KRÄHE, ist die Kanone nicht mehr wählbar – abwählen
+  const nichtWaehlbar = !!(wm && m && !vorhersage(inh, m, wm, t, z.zerstoert, z.bestand[wm] ?? null).waehlbar);
   useEffect(() => {
-    if (wm && z.bestand[wm] === 0) setWm(null);
-  }, [wm, z.bestand[wm ?? ""]]);
+    if (wm && (z.bestand[wm] === 0 || nichtWaehlbar)) setWm(null);
+  }, [wm, z.bestand[wm ?? ""], nichtWaehlbar]);
 
   const oeffnen = (id: string | null) => {
     if (id === gewaehlt) return;
@@ -396,7 +411,8 @@ export function ZBAnsicht(p: { s: Sicht }) {
   const bestand = wm ? z.bestand[wm] : undefined;
   const k = gewaehltV?.k ?? 1;
   const bekText = !wm ? "BEKÄMPFEN" : `BEKÄMPFEN mit ${inh.wirkmittel[wm].kurz}${k > 1 ? ` ×${k}` : ""}`;
-  const bekUnter = !wm ? "erst Wirkmittel wählen" : typeof bestand === "number" ? `Bestand ${bestand} → ${Math.max(0, bestand - k)}` : "Kanone der 1. Kp";
+  const bekUnter = !wm ? "erst Wirkmittel wählen" : typeof bestand === "number" ? `Bestand ${bestand} → ${Math.max(0, bestand - k)}`
+    : `Kanone der ${inh.szenario.eigene_truppe?.name ?? "Kp"}`;
 
   return (
     <main class="inhalt ansicht-zb">
@@ -406,7 +422,10 @@ export function ZBAnsicht(p: { s: Sicht }) {
             onWahl={(id) => offen.some((x) => x.id === id) && oeffnen(id)} hintergrund="topo" legende="ziele" senkrechtMitte
             uhr={() => s.kartenUhr()} effekte={fx} marken={marken} ecke={<LageEinblendung s={s} injects={injects} t={t} />}
             banner={vs && <div class={`karte-banner unten ${vs.vorschau.ok ? "ok" : "verstoss"}`} data-testid="karte-banner">
-              {inh.wirkmittel[vorschauWm!].kurz}: Einschlag in {mss(vs.v.einschlag.t - t)} – {vs.vorschau.ok ? "keine Warnung" : `${vs.v.pruefung.verstoesse.map((x) => x.regel).join(", ")} verletzt`}
+              {!vs.v.waehlbar ? `${inh.wirkmittel[vorschauWm!].kurz}: außer Reichweite – ${reichweiteText(inh.wirkmittel[vorschauWm!])}`
+                : <>{inh.wirkmittel[vorschauWm!].kurz}: Einschlag in {mss(vs.v.einschlag.t - t)} – {vs.vorschau.ok ? "keine Warnung"
+                  : vs.v.ausser.length && !vs.v.pruefung.verstoesse.length ? `nur ${vs.v.k} von ${vs.v.k + vs.v.ausser.length} in Reichweite`
+                    : `${vs.v.pruefung.verstoesse.map((x) => x.regel).join(", ")} verletzt`}</>}
             </div>} />
         </section>
         <aside class="zb-rechts">

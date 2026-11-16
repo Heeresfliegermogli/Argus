@@ -1,5 +1,5 @@
 // Rahmen jeder Ansicht: Kopfzeile mit Rolle, Team, Spieluhr und Phase, Verbindung und dem Knopf „Einweisung“. Seit 2.6 (H2.3, H5.6,
-// H5.7) zeigt die Kopfzeile der Zielbearbeitung die vier Panzer der 1. Kp mit Zustand (ein getroffener blinkt rot, dazu kurz ein roter
+// H5.7) zeigt die Kopfzeile der Zielbearbeitung die vier Panzer der 2. Kp mit Zustand (ein getroffener blinkt rot, dazu kurz ein roter
 // Rand am Bildschirm) und den Bestand der Wirkmittel groß. Vor Spielbeginn öffnet sich die Einweisung von selbst (einmal je Tab),
 // bei Spielende sperrt eine Tafel die Eingaben.
 // Der Team-Laptop rechnet sein Spiel selbst (H1): Die Kopfzeile sagt, ob das Protokoll im Netz ist, und bietet „Protokoll speichern“
@@ -69,7 +69,7 @@ export function UhrAnzeige(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: 
 }
 
 /**
- * Zustand der eigenen Truppe (seit 2.5, F2.6; Spielleitung, Plenum): „1. Kp: 3/4 einsatzbereit · 4 Verwundete“ und je Panzer ein
+ * Zustand der eigenen Truppe (seit 2.5, F2.6; Spielleitung, Plenum): „2. Kp: 3/4 einsatzbereit · 4 Verwundete“ und je Panzer ein
  * kleiner Balken (Zustand in %, gelb eingeschränkt, grau ausgefallen).
  */
 export function KompanieStand(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: string | null }) {
@@ -103,7 +103,7 @@ export function KompanieStand(p: { inh: Inhalte; z: Spielzustand; t: number; lau
 const BLINK_MS = 4000;
 
 /**
- * Die vier Panzer der 1. Kp in der Kopfzeile der Zielbearbeitung (H2.3, H5.7): Name, Zustand in %, Stufe. Wird einer getroffen,
+ * Die vier Panzer der 2. Kp in der Kopfzeile der Zielbearbeitung (H2.3, H5.7): Name, Zustand in %, Stufe. Wird einer getroffen,
  * blinkt er rot und der Bildschirm bekommt kurz einen roten Rand. Keine Personen, keine Punkte.
  */
 export function PanzerLeiste(p: { inh: Inhalte; z: Spielzustand; t: number; lauf: string | null; aufTreffer?: () => void }) {
@@ -131,7 +131,7 @@ export function PanzerLeiste(p: { inh: Inhalte; z: Spielzustand; t: number; lauf
   if (!v) return null;
   return (
     <div class="pz-leiste" data-tour="panzer" data-testid="panzer-leiste" data-bereit={v.zug.bereit} data-verwundete={v.zug.verwundete}
-      title={`${p.inh.szenario.eigene_truppe?.einheit ?? "1. Kp"} – ${v.zug.bereit}/${v.zug.gesamt} einsatzbereit · ${verwText(v.zug.verwundete)}`}>
+      title={`${p.inh.szenario.eigene_truppe?.einheit ?? "2. Kp"} – ${v.zug.bereit}/${v.zug.gesamt} einsatzbereit · ${verwText(v.zug.verwundete)}`}>
       {pl.map((pz) => {
         const s = v.panzer[pz.id];
         const an = (blink[pz.id] ?? 0) > Date.now();

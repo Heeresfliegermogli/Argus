@@ -1695,3 +1695,7 @@ a.start-zurueck-team, a.start-zurueck-team:visited { color: #eef4ff; }
 .pk-sl-zahl { display: inline-flex; align-items: baseline; gap: 6px; font-size: 15px; }
 .pk-sl-zahl b { font-size: 21px; color: var(--argus); }
 .pk-sl-zahl .knopf { margin-left: 6px; align-self: center; }
+
+/* seit 2.9 (P3): Kanone außer Reichweite (jenseits des Ortsanfangs KRÄHE) – grau, nicht wählbar */
+.wm-kachel.weit { opacity: .45; cursor: not-allowed; }
+.wm-kachel.weit .wk-weit { color: var(--text-leise, #9aa7b4); font-size: 12px; }

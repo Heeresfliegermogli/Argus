@@ -16,7 +16,12 @@ Teil A – ein Team im Direktaufruf (SL, Zielbearbeitung, Plenum; lokaler Sync),
   A8  seit 2.7 (I3): die PT-91 kämpfen mit – E-01 ab 20:45 alle 20 s (Mündungsfeuer, Leuchtspur nach Norden, Treffer) auf der Karte
       des Teams; ohne Freigabe um 21:45 als verbündet erkannt: Zeichen blau „PL-PzZug (verbündet)“ (seit 2.8 ein Zug, kein Feindzeichen mehr), Vermerk im Eingang, I-17 im Feed.
   A9  seit 2.7 (I1): D-03 bricht durch, Ziel 15 (BTR-80) fährt über die Brücke und westlich aus dem Bild – das Zeichen bleibt am
-      Westrand „Ziel 15 durchgebrochen“, Vermerk im Eingang, I-13; Auflösung im Plenum.
+      Westrand „Ziel 15 durchgebrochen“, Vermerk im Eingang, I-13; Auflösung im Plenum. Seit 2.9 (P4.3): I-13 nennt die
+      Durchgebrochenen mit Zielnummer („… (Ziel 15) über die Brücke ELSTER eingebrochen!“).
+  P2  seit 2.9: die vier eigenen Panzer mit dem Zeichen „Kampfpanzer, schwer“ (SFGPEVATH), Legende „Kampfpanzer (schwer), eigene“.
+  P3  seit 2.9: Ziel 11 (M30, Nordrand der Ortschaft) geöffnet – Kachel „Kanone“ grau, nicht wählbar, „außer Reichweite“; beim Zeigen
+      die gestrichelte Linie „Kanone nur bis Ortsanfang KRÄHE“; BEKÄMPFEN mit Kanone wird abgelehnt (Protokoll).
+  P4  seit 2.9: I-11 „ein SPz brennt“ nur, weil H-02 wirkte (in diesem Lauf stand Z-11 noch).
 Teil B – Sitzung mit zwei Teams, Übersicht der Spielleitung (ohne Verstärkungsmenü):
   B1  V-1 an beide Teams, V-3 nur an Team B (über die Sitzung) → in den Protokollen; die Zeile zeigt „+n V“.
   B2  V-2 um 12:00 für alle gesperrt (Szenario 2.1: 11:15–17:15) – abgelehnt mit Grund.
@@ -266,6 +271,40 @@ def main():
         foto(sl, "A5_sl_bruecke_gezoomt")
         sl.evaluate("() => document.querySelector('[data-testid=kontrollkarte] .karte-leinwand').argusKarte.ganzeKarte()")
         pruefe(zustand()["h"].get("H-02", {}).get("wirkt") is True and "Z-11" in zustand()["zerstoert"], "A5 H-02 wirkt, Z-11 zerstört (Wrack brennt)")
+        # seit 2.9 (P4.4): I-11 behauptet „ein SPz brennt“ nur, wenn H-02 wirklich wirkte – hier ja (Variante 1)
+        i11 = zb.evaluate("() => window.argus.stand.zustand.injects['I-11'] ?? null")
+        pruefe(i11 and i11.get("variante") == 1 and "ein SPz brennt an der Brücke Ost" in (i11.get("text") or ""), f"P4 I-11 passend zu H-02: „{i11 and i11.get('text')}“")
+
+        # seit 2.9 (P2): eigene Panzer mit dem Zeichen „Kampfpanzer, schwer“, Legende
+        pz = zb.evaluate("() => document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte.lb.eigene?.panzer.map((p) => [p.name, p.sidc]) ?? null")
+        pruefe(pz and [x[1] for x in pz] == ["SFGPEVATH------"] * 4, f"P2 eigene Panzer SFGPEVATH: {pz}")
+        leg = zb.get_by_test_id("legende")
+        if leg.get_attribute("data-zu") == "1":
+            zb.get_by_test_id("legende-knopf").click()
+        pruefe("Kampfpanzer (schwer), eigene" in leg.inner_text(), "P2 Legende „Kampfpanzer (schwer), eigene“")
+        zb.evaluate("() => document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte.zeigeAuf([60, 450], 3)")
+        zb.wait_for_timeout(1200)
+        foto(zb, "P2_zb_eigene_panzer_schwer")
+        zb.evaluate("() => document.querySelector('[data-testid=lagekarte] .karte-leinwand').argusKarte.ganzeKarte()")
+
+        # seit 2.9 (P3): Kanone jenseits des Ortsanfangs KRÄHE nicht wählbar
+        zb.locator(".eingang-zeile[data-meldung=M30]").click()
+        warte(lambda: zb.get_by_test_id("offene-meldung").get_attribute("data-meldung") == "M30", 5, "M30 geöffnet")
+        kachel = zb.locator(".wm-kachel[data-wm=PZA]")
+        pruefe(kachel.get_attribute("data-reichweite") == "ausser" and kachel.locator("input").is_disabled() and "außer Reichweite" in kachel.inner_text(),
+               f"P3 Kachel Kanone grau, nicht wählbar: „{kachel.inner_text().strip()}“")
+        kachel.hover()
+        zb.wait_for_timeout(600)
+        banner = zb.get_by_test_id("karte-banner").inner_text() if zb.get_by_test_id("karte-banner").count() else ""
+        warnz = zb.get_by_test_id("wm-warnung").inner_text()
+        pruefe("außer Reichweite – nur bis Ortsanfang KRÄHE" in banner and "außer Reichweite" in warnz, f"P3 Hinweis „{banner}“ / „{warnz}“")
+        foto(zb, "P3_zb_kanone_ausser_reichweite")
+        zb.mouse.move(5, 5)
+        n_abg = len(abgelehnt())
+        zb.evaluate("() => window.argus.senden('entscheid', { meldung: 'M30', entscheid: 'bekaempfen', wirkmittel: 'PZA' })")
+        warte(lambda: len(abgelehnt()) > n_abg, 5, "BEKÄMPFEN mit Kanone abgelehnt")
+        pruefe(abgelehnt()[-1] == "Kanone außer Reichweite – nur bis Ortsanfang KRÄHE", f"P3 Protokoll: „{abgelehnt()[-1]}“")
+        pruefe(zb.evaluate("() => window.argus.stand.zustand.meldungen.M30.stufe") == "offen", "P3 M30 bleibt offen, keine Wirkung")
 
         # A6 Bildrate bei laufender Uhr
         zeit("13:30", tempo=1)
@@ -347,7 +386,11 @@ def main():
         pruefe(o11 and o11[0]["weg"] == "durchgebrochen" and o11[0]["text"] == "Ziel 15 durchgebrochen" and o11[0]["pos"][0] < 20,
                f"A9 Zeichen „Ziel 15 durchgebrochen“ am Westrand ({o11})")
         pruefe(vm11.count() == 1 and "über die Brücke ELSTER durchgebrochen" in vm11.inner_text(), "A9 Vermerk im Eingang „über die Brücke ELSTER durchgebrochen“")
-        pruefe(zb.evaluate("() => !!window.argus.stand.zustand.injects['I-13']"), "A9 Lagemeldung I-13")
+        i13 = zb.evaluate("() => window.argus.stand.zustand.injects['I-13'] ?? null")
+        pruefe(i13 is not None, "A9 Lagemeldung I-13")
+        # seit 2.9 (P4.3): I-13 nennt, wer durchgebrochen ist, mit Zielnummer
+        pruefe(i13 and "(Ziel 15)" in (i13.get("text") or "") and "über die Brücke ELSTER eingebrochen!" in (i13.get("text") or ""),
+               f"P4 I-13 nennt die Durchgebrochenen: „{i13 and i13.get('text')}“")
         foto(zb, "A9_zb_durchgebrochen")
         zeit("24:58", tempo=1)
         sl.get_by_role("button", name="▶ Start").click()

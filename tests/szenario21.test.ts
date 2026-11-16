@@ -1,5 +1,5 @@
 // Szenario 2.1 (Änderungsliste A1–A9 nach dem Solo-Durchlauf am 25.10.2026): Durchbruch nicht aufgehaltener Gruppen
-// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die 2. Kp (seit 2.5: die 1./PzBtl 613).
+// mit Lagemeldung I-13, Feuer nach Schussrhythmus, Staub hinter fahrenden Fahrzeugen, Zonen ohne Kürzel, nur die eigene Kp (seit 2.9: die 2./PzBtl 613).
 // Gespielt mit den Modellteams naiv und ideal (wie tools/referenz/simuliere_durchlauf.py).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -29,7 +29,7 @@ async function lauf(): Promise<Modellteam[]> {
 }
 
 describe("Szenario 2.1: Daten", () => {
-  it("nur eine eigene Kraft (seit 2.5 die 1./PzBtl 613), Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
+  it("nur eine eigene Kraft (seit 2.9 die 2./PzBtl 613), Zonen mit sichtbaren Namen, Durchbruch-Gruppen mit Lagemeldung", async () => {
     const inh = await inhalte();
     const sz = inh.szenario;
     expect(Number(sz.version)).toBeGreaterThanOrEqual(2.1); // 2.2 baut auf 2.1 auf
@@ -79,30 +79,35 @@ describe("Szenario 2.1: Durchbruch (A4)", () => {
     expect(weltFuer(inh, { ...(await lauf())[1].z, durchbrueche: {} }).ziele["Z-27"].bis_s).toBeUndefined();
   });
 
-  it("naiv: BEKÄMPFEN der PT-91 → E-01 fällt aus, die letzten Feindkräfte brechen durch und kommen über den Bach (I-13)", async () => {
+  it("naiv: BEKÄMPFEN der PT-91 → E-01 fällt aus; seit 2.9 (P4.2) meldet ARGUS die letzten Feindkräfte (M38), das Team bekämpft sie – niemand bricht durch, kein I-13", async () => {
     const [naiv, ideal, naivV] = await lauf();
-    // seit 2.7 (I3.1): ohne den Gegenangriff der PT-91 bricht D-04/D-05 auf; das naive Team ist erst nach 24:00 an M26/M27 – Z-27 und
-    // Z-28 kommen über den Bach, I-13 10 s nach dem ersten (wie simuliere_durchlauf.py, Lauf 1)
+    // seit 2.7 (I3.1): ohne den Gegenangriff der PT-91 bricht D-04/D-05 auf. Seit 2.9 (P4.2) nur gemeldete Kräfte: Nach der Freigabe auf
+    // die PT-91 meldet ARGUS Z-27/Z-28 um 22:15 (M38, „Ziel 33a“); das naive Team bekämpft sie (Mörser) vor ihrem Angriff (wie
+    // simuliere_durchlauf.py, Lauf 1) – kein Durchbruch, keine Meldung „eingebrochen“ (Befund Lt Mann, P4.6)
     expect(naiv.z.meldungen.M20.wirkung).toBeDefined();
-    expect(naiv.z.durchbrueche["D-04"].durch).toBe(true);
-    const d0 = durchgebrochen(weltFuer(naiv.inh, naiv.z), naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen);
-    expect(d0.fahrzeuge).toEqual(["Z-27", "Z-28"]);
-    expect(naiv.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d0.erstesUeber! + 10, 1);
-    // ideal: die PT-91 zerschlagen die letzten Feindkräfte an der Brücke Ost (E-01), nichts bricht durch
+    expect(naiv.z.meldungen.M38?.erschienen.t_s).toBe(1335);
+    expect(naiv.z.meldungen.M38.freigabe).toBeDefined();
+    expect(naiv.z.durchbrueche["D-04"]).toMatchObject({ durch: false });
+    expect(durchgebrochen(weltFuer(naiv.inh, naiv.z), naiv.z.durchbrueche, naiv.z.zerstoert, naiv.z.verstaerkungen).fahrzeuge).toEqual([]);
+    expect(naiv.z.injects["I-13"]).toBeUndefined();
+    // ideal: die PT-91 zerschlagen die letzten Feindkräfte an der Brücke Ost (E-01), M38 kommt nie, nichts bricht durch
+    expect(ideal.z.meldungen.M38).toBeUndefined();
     expect(durchgebrochen(weltFuer(ideal.inh, ideal.z), ideal.z.durchbrueche, ideal.z.zerstoert, ideal.z.verstaerkungen).fahrzeuge).toEqual([]);
     expect(ideal.z.injects["I-13"]).toBeUndefined();
-    // mit Verstärkungen ebenso: Z-27 und Z-28 brechen durch, I-13 kommt 10 s nach dem ersten über dem Bach
+    // mit Verstärkungen ebenso
     const inh = weltFuer(naivV.inh, naivV.z);
-    const d = durchgebrochen(inh, naivV.z.durchbrueche, naivV.z.zerstoert, naivV.z.verstaerkungen);
-    expect(d.fahrzeuge).toEqual(["Z-27", "Z-28"]); // wie simuliere_durchlauf.py (Lauf 3)
-    expect(naivV.z.injects["I-13"].erschienen.t_s).toBeCloseTo(d.erstesUeber! + 10, 1);
-    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; die Kanonen der 1. Kp)
+    expect(naivV.z.meldungen.M38?.freigabe).toBeDefined();
+    expect(durchgebrochen(inh, naivV.z.durchbrueche, naivV.z.zerstoert, naivV.z.verstaerkungen).fahrzeuge).toEqual([]);
+    expect(naivV.z.injects["I-13"]).toBeUndefined();
+    // die Achse NORD hat die eigene Truppe zerschlagen (aufgehalten; die Kanonen der 2. Kp)
     expect(naiv.z.durchbrueche["D-01"]).toMatchObject({ durch: false });
     expect(naiv.z.durchbrueche["D-01"].grund).toMatch(/zerstört/);
-    // die Spielleitung sieht den Stand je Gruppe
-    const st = bedingtStand(naivV.inh, naivV.z, 1500).filter((b) => b.art === "durchbruch");
-    expect(st.find((b) => b.id === "D-04")?.status).toBe("ausgeloest");
+    // die Spielleitung sieht den Stand je Gruppe und der bedingten Meldung
+    const st = bedingtStand(naivV.inh, naivV.z, 1500);
+    expect(st.find((b) => b.id === "D-04")?.status).toBe("entfaellt");
     expect(st.find((b) => b.id === "D-01")?.status).toBe("entfaellt");
+    expect(st.find((b) => b.id === "M38")).toMatchObject({ art: "meldung", status: "ausgeloest" });
+    expect(bedingtStand(ideal.inh, ideal.z, 1500).find((b) => b.id === "M38")).toMatchObject({ art: "meldung", status: "entfaellt" });
   });
 
   it("ideal: niemand bricht durch, kein I-13 (das Gefecht ist nicht zu „verlieren“, Durchbruch nur Kennzahl)", async () => {

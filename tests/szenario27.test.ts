@@ -40,8 +40,8 @@ function ersteMeldung(inh: Inhalte): Map<string, number> {
 describe("Szenario 2.7: Daten", () => {
   it("Version 2.7 (oder 2.8, baut auf 2.7 auf), 37 Meldungen; Ziel 22 von 2.6 (M16) vor dem ersten Schuss um 16:28 gemeldet, jetzt Ziel 21", async () => {
     const inh = await inhalte();
-    expect(["2.7", "2.8"]).toContain(inh.szenario.version);
-    expect(inh.szenario.meldungen).toHaveLength(37);
+    expect(["2.7", "2.8", "2.9"]).toContain(inh.szenario.version);
+    expect(inh.szenario.meldungen.filter((m) => !m.bedingung)).toHaveLength(37); // seit 2.9 dazu die bedingte M38 (Nummer „33a“)
     expect(inh.meldungen.M16.t_s).toBeLessThan(16 * 60 + 28);
     expect(zielNr(inh, null, "M16")).toBe("21");
     expect(zielNr(inh, null, "M11")).toBe("15");

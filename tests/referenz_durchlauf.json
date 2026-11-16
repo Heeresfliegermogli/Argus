@@ -1,6 +1,6 @@
 {
- "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.8). Nicht von Hand ändern.",
- "szenario": "2.8",
+ "hinweis": "Erzeugt mit tools/referenz/erzeuge_durchlauf.py aus simuliere_durchlauf.py (Szenario kraehe-01 v2.9). Nicht von Hand ändern.",
+ "szenario": "2.9",
  "zeiten": {
   "naiv": 20,
   "ideal": 35,
@@ -700,13 +700,38 @@
      "verstoesse": []
     },
     {
+     "meldung": "M38",
+     "t_meld": 1335,
+     "ende": "Wirkung",
+     "t_offen": 1335.0,
+     "t_entscheid": 1355.0,
+     "entscheid": "BEKÄMPFEN",
+     "sek_eingang": 20.0,
+     "sek_offen": 20.0,
+     "wm": "MRS",
+     "t_wirkung": 1390.0,
+     "ziel": "Z-27",
+     "pos": [
+      560.0,
+      348.0
+     ],
+     "getroffen": [
+      "Z-24|besatzung_ergibt_sich",
+      "Z-27|feind",
+      "Z-28|feind"
+     ],
+     "verstoesse": [
+      "Ortschaft"
+     ]
+    },
+    {
      "meldung": "M24",
      "t_meld": 1350,
      "ende": "abgelehnt",
-     "t_offen": 1350.0,
-     "t_entscheid": 1370.0,
+     "t_offen": 1355.0,
+     "t_entscheid": 1375.0,
      "entscheid": "ABLEHNEN",
-     "sek_eingang": 20.0,
+     "sek_eingang": 25.0,
      "sek_offen": 20.0,
      "wm": null,
      "t_wirkung": null,
@@ -864,27 +889,15 @@
     },
     {
      "inject": "I-08a",
-     "t": 1295.0
+     "t": 1300.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
-    },
-    {
-     "inject": "K-12",
-     "t": 1440.9
-    },
-    {
-     "inject": "I-13",
-     "t": 1450.9
-    },
-    {
-     "inject": "K-13",
-     "t": 1453.1
     }
    ],
    "bilanz": {
-    "fahrzeuge": 33,
+    "fahrzeuge": 35,
     "fahrzeug_ids": [
      "Z-01",
      "Z-02",
@@ -904,6 +917,8 @@
      "Z-21",
      "Z-25",
      "Z-26",
+     "Z-27",
+     "Z-28",
      "Z-30",
      "Z-31",
      "Z-32",
@@ -920,15 +935,15 @@
      "Z-48",
      "Z-49"
     ],
-    "wert_mio": 15.85,
+    "wert_mio": 17.35,
     "schuss": {
      "LM": 20,
-     "MRS": 7,
+     "MRS": 8,
      "PZA": 8
     },
-    "munition_eur": 2094000,
-    "median_s": 55.91,
-    "hingeschaut_s": 20,
+    "munition_eur": 2096000,
+    "median_s": 55.52,
+    "hingeschaut_s": 20.0,
     "panzer": {
      "bereit": 4,
      "gesamt": 4
@@ -1030,12 +1045,12 @@
     {
      "gruppe": "D-04",
      "t": 1413,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-05",
      "t": 1428,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-06",
@@ -1053,12 +1068,9 @@
      "durch": false
     }
    ],
-   "durchgebrochen": [
-    "Z-27",
-    "Z-28"
-   ],
+   "durchgebrochen": [],
    "rest": {
-    "MRS": 5,
+    "MRS": 4,
     "LM": 0,
     "PZA": "∞"
    },
@@ -1074,6 +1086,7 @@
     "Z-16 verbündet",
     "Z-17 verbündet",
     "Z-24 außer Gefecht",
+    "Z-24 3 Besatzung (ergibt sich)",
     "Z-24 3 Besatzung (ergibt sich)",
     "Z-43 2 Zivilpersonen"
    ],
@@ -1126,7 +1139,8 @@
     "M21: BEKÄMPFEN 21:05 mit PZA, Einschlag 21:10",
     "M22: BEKÄMPFEN 21:35 mit MRS, Einschlag 22:10 – RoE: Schule im Wirkradius (66 m)",
     "M23: entfällt (Ziel schon zerstört oder weg)",
-    "M24: ABLEHNEN 22:50",
+    "M38: BEKÄMPFEN 22:35 mit MRS, Einschlag 23:10 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M24: ABLEHNEN 22:55",
     "M19: entfällt (Ziel schon zerstört oder weg)",
     "M26: BEKÄMPFEN 24:20 mit MRS, Einschlag 24:55",
     "M27: BEKÄMPFEN 24:50 mit MRS, Einschlag 25:25 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
@@ -1134,8 +1148,8 @@
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
     "D-03: aufgehalten (Z-14 zerstört)",
-    "D-04: bricht durch ab 23:33",
-    "D-05: bricht durch ab 23:48",
+    "D-04: aufgehalten (Z-27 zerstört)",
+    "D-05: aufgehalten (Z-28 zerstört)",
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
     "D-08: aufgehalten (Z-36 zerstört)"
@@ -1143,10 +1157,10 @@
    "verluste": {
     "panzer": {
      "pz1": {
-      "zustand": 78,
-      "roh": 78,
+      "zustand": 86,
+      "roh": 86,
       "stufe": "einsatzbereit",
-      "treffer": 4,
+      "treffer": 3,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -1159,10 +1173,10 @@
       "ausgefallen": false
      },
      "pz3": {
-      "zustand": 88,
-      "roh": 88,
+      "zustand": 96,
+      "roh": 96,
       "stufe": "einsatzbereit",
-      "treffer": 2,
+      "treffer": 1,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -1182,7 +1196,7 @@
      "ausgefallen": 0,
      "verwundete": 0
     },
-    "ereignisse": 28,
+    "ereignisse": 26,
     "zeitlinie": [
      [
       323.0,
@@ -1573,36 +1587,6 @@
        48.5,
        530.0
       ]
-     ],
-     [
-      1440.9,
-      "pz3",
-      "Z-27",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      88,
-      false,
-      [
-       53.5,
-       470.0
-      ]
-     ],
-     [
-      1453.1,
-      "pz1",
-      "Z-28",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      78,
-      false,
-      [
-       53.5,
-       412.0
-      ]
      ]
     ],
     "meldungen": [
@@ -1682,26 +1666,13 @@
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
-     },
-     {
-      "inject": "K-12",
-      "t": 1440.9,
-      "zug": "pz3",
-      "stufe": 1,
-      "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
-     },
-     {
-      "inject": "K-13",
-      "t": 1453.1,
-      "zug": "pz1",
-      "stufe": 1,
-      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
+     "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, keine Verwundeten. Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Kp 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
+     "I-06": "Kp 4/4 einsatzbereit, keine Verwundeten. Feind drängt weiter zur Brücke, haltet die Brücke Ost unter Feuer!",
+     "I-08a": "Eigenbeschuss! Drei Panzer ausgefallen, Besatzungen verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!"
     },
     "verlauf": [
      [
@@ -2774,9 +2745,9 @@
      [
       1455,
       [
-       78,
+       86,
        80,
-       88,
+       96,
        88
       ],
       4,
@@ -2785,9 +2756,9 @@
      [
       1470,
       [
-       78,
+       86,
        80,
-       88,
+       96,
        88
       ],
       4,
@@ -2796,9 +2767,9 @@
      [
       1485,
       [
-       78,
+       86,
        80,
-       88,
+       96,
        88
       ],
       4,
@@ -2807,9 +2778,9 @@
      [
       1500,
       [
-       78,
+       86,
        80,
-       88,
+       96,
        88
       ],
       4,
@@ -3860,6 +3831,7 @@
     "M21: ABLEHNEN 22:25",
     "M22: ZURÜCKSTELLEN 23:00 (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)",
     "M23: ZURÜCKSTELLEN 23:35 (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)",
+    "M38: kommt nicht (Bedingung nicht erfüllt)",
     "M24: ABLEHNEN 24:10",
     "M19: entfällt (Ziel schon zerstört oder weg)",
     "M26: ZURÜCKSTELLEN 24:45 (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)",
@@ -4765,8 +4737,11 @@
      }
     ],
     "texte": {
+     "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 1 Verwundeter. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 1 Verwundeter. Feuer auf Brücke Ost!",
+     "I-08b": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen.",
+     "I-17": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, Feind an der Brücke Ost bekämpft."
     },
     "verlauf": [
      [
@@ -6656,13 +6631,38 @@
      "verstoesse": []
     },
     {
+     "meldung": "M38",
+     "t_meld": 1335,
+     "ende": "Wirkung",
+     "t_offen": 1335.0,
+     "t_entscheid": 1355.0,
+     "entscheid": "BEKÄMPFEN",
+     "sek_eingang": 20.0,
+     "sek_offen": 20.0,
+     "wm": "MRS",
+     "t_wirkung": 1390.0,
+     "ziel": "Z-27",
+     "pos": [
+      560.0,
+      348.0
+     ],
+     "getroffen": [
+      "Z-24|besatzung_ergibt_sich",
+      "Z-27|feind",
+      "Z-28|feind"
+     ],
+     "verstoesse": [
+      "Ortschaft"
+     ]
+    },
+    {
      "meldung": "M24",
      "t_meld": 1350,
      "ende": "abgelehnt",
-     "t_offen": 1350.0,
-     "t_entscheid": 1370.0,
+     "t_offen": 1355.0,
+     "t_entscheid": 1375.0,
      "entscheid": "ABLEHNEN",
-     "sek_eingang": 20.0,
+     "sek_eingang": 25.0,
      "sek_offen": 20.0,
      "wm": null,
      "t_wirkung": null,
@@ -6832,27 +6832,15 @@
     },
     {
      "inject": "I-08a",
-     "t": 1295.0
+     "t": 1300.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
-    },
-    {
-     "inject": "K-15",
-     "t": 1440.9
-    },
-    {
-     "inject": "I-13",
-     "t": 1450.9
-    },
-    {
-     "inject": "K-16",
-     "t": 1453.1
     }
    ],
    "bilanz": {
-    "fahrzeuge": 40,
+    "fahrzeuge": 42,
     "fahrzeug_ids": [
      "V1-1",
      "V1-2",
@@ -6881,6 +6869,8 @@
      "Z-21",
      "Z-25",
      "Z-26",
+     "Z-27",
+     "Z-28",
      "Z-30",
      "Z-31",
      "Z-32",
@@ -6895,15 +6885,15 @@
      "Z-48",
      "Z-49"
     ],
-    "wert_mio": 20.15,
+    "wert_mio": 21.65,
     "schuss": {
      "LM": 20,
-     "MRS": 11,
+     "MRS": 12,
      "PZA": 8
     },
-    "munition_eur": 2102000,
-    "median_s": 56.4,
-    "hingeschaut_s": 20.0,
+    "munition_eur": 2104000,
+    "median_s": 56.349999999999994,
+    "hingeschaut_s": 20,
     "panzer": {
      "bereit": 4,
      "gesamt": 4
@@ -7005,12 +6995,12 @@
     {
      "gruppe": "D-04",
      "t": 1413,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-05",
      "t": 1428,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-06",
@@ -7038,12 +7028,9 @@
      "durch": false
     }
    ],
-   "durchgebrochen": [
-    "Z-27",
-    "Z-28"
-   ],
+   "durchgebrochen": [],
    "rest": {
-    "MRS": 1,
+    "MRS": 0,
     "LM": 0,
     "PZA": "∞"
    },
@@ -7059,6 +7046,7 @@
     "Z-16 verbündet",
     "Z-17 verbündet",
     "Z-24 außer Gefecht",
+    "Z-24 3 Besatzung (ergibt sich)",
     "Z-24 3 Besatzung (ergibt sich)",
     "Z-43 2 Zivilpersonen"
    ],
@@ -7115,7 +7103,8 @@
     "M21: BEKÄMPFEN 21:05 mit PZA, Einschlag 21:10",
     "M22: BEKÄMPFEN 21:35 mit MRS, Einschlag 22:10 – RoE: Schule im Wirkradius (66 m)",
     "M23: entfällt (Ziel schon zerstört oder weg)",
-    "M24: ABLEHNEN 22:50",
+    "M38: BEKÄMPFEN 22:35 mit MRS, Einschlag 23:10 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M24: ABLEHNEN 22:55",
     "M19: entfällt (Ziel schon zerstört oder weg)",
     "M26: BEKÄMPFEN 24:20 mit MRS, Einschlag 24:55",
     "M27: BEKÄMPFEN 24:50 mit MRS, Einschlag 25:25 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
@@ -7123,8 +7112,8 @@
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
     "D-03: aufgehalten (Z-14 zerstört)",
-    "D-04: bricht durch ab 23:33",
-    "D-05: bricht durch ab 23:48",
+    "D-04: aufgehalten (Z-27 zerstört)",
+    "D-05: aufgehalten (Z-28 zerstört)",
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
     "D-08: aufgehalten (Z-36 zerstört)",
@@ -7134,10 +7123,10 @@
    "verluste": {
     "panzer": {
      "pz1": {
-      "zustand": 78,
-      "roh": 78,
+      "zustand": 86,
+      "roh": 86,
       "stufe": "einsatzbereit",
-      "treffer": 4,
+      "treffer": 3,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -7150,10 +7139,10 @@
       "ausgefallen": false
      },
      "pz3": {
-      "zustand": 88,
-      "roh": 88,
+      "zustand": 96,
+      "roh": 96,
       "stufe": "einsatzbereit",
-      "treffer": 2,
+      "treffer": 1,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -7173,7 +7162,7 @@
      "ausgefallen": 0,
      "verwundete": 0
     },
-    "ereignisse": 34,
+    "ereignisse": 32,
     "zeitlinie": [
      [
       323.0,
@@ -7654,36 +7643,6 @@
        48.5,
        530.0
       ]
-     ],
-     [
-      1440.9,
-      "pz3",
-      "Z-27",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      88,
-      false,
-      [
-       53.5,
-       470.0
-      ]
-     ],
-     [
-      1453.1,
-      "pz1",
-      "Z-28",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      78,
-      false,
-      [
-       53.5,
-       412.0
-      ]
      ]
     ],
     "meldungen": [
@@ -7784,26 +7743,13 @@
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
-     },
-     {
-      "inject": "K-15",
-      "t": 1440.9,
-      "zug": "pz3",
-      "stufe": 1,
-      "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
-     },
-     {
-      "inject": "K-16",
-      "t": 1453.1,
-      "zug": "pz1",
-      "stufe": 1,
-      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
+     "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, keine Verwundeten. Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Kp 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
+     "I-06": "Kp 4/4 einsatzbereit, keine Verwundeten. Feind drängt weiter zur Brücke, haltet die Brücke Ost unter Feuer!",
+     "I-08a": "Eigenbeschuss! Drei Panzer ausgefallen, Besatzungen verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!"
     },
     "verlauf": [
      [
@@ -8876,9 +8822,9 @@
      [
       1455,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -8887,9 +8833,9 @@
      [
       1470,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -8898,9 +8844,9 @@
      [
       1485,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -8909,9 +8855,9 @@
      [
       1500,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -10074,6 +10020,7 @@
     "M21: ABLEHNEN 23:10",
     "M22: ZURÜCKSTELLEN 23:45 (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)",
     "M23: ZURÜCKSTELLEN 24:20 (kein Wirkmittel ohne Warnung und ohne Geschütztes beim Einschlag)",
+    "M38: kommt nicht (Bedingung nicht erfüllt)",
     "M24: ABLEHNEN 24:55",
     "M19: entfällt (Ziel schon zerstört oder weg)",
     "M26: bei Spielende noch offen",
@@ -11159,8 +11106,11 @@
      }
     ],
     "texte": {
+     "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 1 Verwundeter. Feuer auf Brücke Ost!"
+     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, 1 Verwundeter. Feuer auf Brücke Ost!",
+     "I-08b": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen.",
+     "I-17": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, Feind an der Brücke Ost bekämpft."
     },
     "verlauf": [
      [
@@ -13074,13 +13024,38 @@
      "verstoesse": []
     },
     {
+     "meldung": "M38",
+     "t_meld": 1335,
+     "ende": "Wirkung",
+     "t_offen": 1335.0,
+     "t_entscheid": 1355.0,
+     "entscheid": "BEKÄMPFEN",
+     "sek_eingang": 20.0,
+     "sek_offen": 20.0,
+     "wm": "MRS",
+     "t_wirkung": 1390.0,
+     "ziel": "Z-27",
+     "pos": [
+      560.0,
+      348.0
+     ],
+     "getroffen": [
+      "Z-24|besatzung_ergibt_sich",
+      "Z-27|feind",
+      "Z-28|feind"
+     ],
+     "verstoesse": [
+      "Ortschaft"
+     ]
+    },
+    {
      "meldung": "M24",
      "t_meld": 1350,
      "ende": "abgelehnt",
-     "t_offen": 1350.0,
-     "t_entscheid": 1370.0,
+     "t_offen": 1355.0,
+     "t_entscheid": 1375.0,
      "entscheid": "ABLEHNEN",
-     "sek_eingang": 20.0,
+     "sek_eingang": 25.0,
      "sek_offen": 20.0,
      "wm": null,
      "t_wirkung": null,
@@ -13130,25 +13105,18 @@
     {
      "meldung": "M27",
      "t_meld": 1470,
-     "ende": "Wirkung",
+     "ende": "kein Wirkmittel",
      "t_offen": 1470.0,
      "t_entscheid": 1490.0,
-     "entscheid": "BEKÄMPFEN",
+     "entscheid": "ZURÜCKSTELLEN",
      "sek_eingang": 20.0,
      "sek_offen": 20.0,
-     "wm": "MRS",
-     "t_wirkung": 1525.0,
-     "ziel": "Z-26",
-     "pos": [
-      711.0,
-      40.0
-     ],
-     "getroffen": [
-      "Z-26|feind"
-     ],
-     "verstoesse": [
-      "Ortschaft"
-     ]
+     "wm": null,
+     "t_wirkung": null,
+     "ziel": null,
+     "pos": null,
+     "getroffen": [],
+     "verstoesse": []
     }
    ],
    "injects": [
@@ -13250,27 +13218,15 @@
     },
     {
      "inject": "I-08a",
-     "t": 1295.0
+     "t": 1300.0
     },
     {
      "inject": "I-10",
      "t": 1440.0
-    },
-    {
-     "inject": "K-15",
-     "t": 1440.9
-    },
-    {
-     "inject": "I-13",
-     "t": 1450.9
-    },
-    {
-     "inject": "K-16",
-     "t": 1453.1
     }
    ],
    "bilanz": {
-    "fahrzeuge": 42,
+    "fahrzeuge": 43,
     "fahrzeug_ids": [
      "V1-1",
      "V1-2",
@@ -13300,7 +13256,8 @@
      "Z-20",
      "Z-21",
      "Z-25",
-     "Z-26",
+     "Z-27",
+     "Z-28",
      "Z-30",
      "Z-31",
      "Z-32",
@@ -13315,7 +13272,7 @@
      "Z-48",
      "Z-49"
     ],
-    "wert_mio": 20.35,
+    "wert_mio": 21.7,
     "schuss": {
      "LM": 20,
      "MRS": 12,
@@ -13323,7 +13280,7 @@
     },
     "munition_eur": 2104000,
     "median_s": 56.349999999999994,
-    "hingeschaut_s": 20,
+    "hingeschaut_s": 20.0,
     "panzer": {
      "bereit": 4,
      "gesamt": 4
@@ -13425,12 +13382,12 @@
     {
      "gruppe": "D-04",
      "t": 1413,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-05",
      "t": 1428,
-     "durch": true
+     "durch": false
     },
     {
      "gruppe": "D-06",
@@ -13458,10 +13415,7 @@
      "durch": false
     }
    ],
-   "durchgebrochen": [
-    "Z-27",
-    "Z-28"
-   ],
+   "durchgebrochen": [],
    "rest": {
     "MRS": 0,
     "LM": 0,
@@ -13480,6 +13434,7 @@
     "Z-17 verbündet",
     "Z-24 außer Gefecht",
     "Z-24 3 Besatzung (ergibt sich)",
+    "Z-24 3 Besatzung (ergibt sich)",
     "Z-43 2 Zivilpersonen"
    ],
    "faelle": {
@@ -13496,7 +13451,7 @@
     "N3": true,
     "N4": false
    },
-   "letzte_bekaempfung": 1490,
+   "letzte_bekaempfung": 1460,
    "log": [
     "M01: BEKÄMPFEN 00:40 mit LM ×2, Einschlag 01:21",
     "M02: BEKÄMPFEN 01:35 mit MRS, Einschlag 02:10",
@@ -13536,16 +13491,17 @@
     "M21: BEKÄMPFEN 21:15 mit PZA, Einschlag 21:20",
     "M22: BEKÄMPFEN 21:35 mit MRS, Einschlag 22:10 – RoE: Schule im Wirkradius (66 m)",
     "M23: entfällt (Ziel schon zerstört oder weg)",
-    "M24: ABLEHNEN 22:50",
+    "M38: BEKÄMPFEN 22:35 mit MRS, Einschlag 23:10 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M24: ABLEHNEN 22:55",
     "M19: entfällt (Ziel schon zerstört oder weg)",
     "M26: BEKÄMPFEN 24:20 mit MRS, Einschlag 24:55",
-    "M27: BEKÄMPFEN 24:50 mit MRS, Einschlag 25:25 – RoE: Ortschaft: Wirkradius > 50 m (0 m)",
+    "M27: kein Wirkmittel mehr 24:50",
     "E-01: entfällt (Gegenangriff abgebrochen)",
     "D-01: aufgehalten (Z-30 zerstört)",
     "D-02: aufgehalten (Z-33 zerstört)",
     "D-03: aufgehalten (Z-14 zerstört)",
-    "D-04: bricht durch ab 23:33",
-    "D-05: bricht durch ab 23:48",
+    "D-04: aufgehalten (Z-27 zerstört)",
+    "D-05: aufgehalten (Z-28 zerstört)",
     "D-06: aufgehalten (Z-18 zerstört)",
     "D-07: aufgehalten (Z-20 zerstört)",
     "D-08: aufgehalten (Z-36 zerstört)",
@@ -13555,10 +13511,10 @@
    "verluste": {
     "panzer": {
      "pz1": {
-      "zustand": 78,
-      "roh": 78,
+      "zustand": 86,
+      "roh": 86,
       "stufe": "einsatzbereit",
-      "treffer": 4,
+      "treffer": 3,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -13571,10 +13527,10 @@
       "ausgefallen": false
      },
      "pz3": {
-      "zustand": 88,
-      "roh": 88,
+      "zustand": 96,
+      "roh": 96,
       "stufe": "einsatzbereit",
-      "treffer": 2,
+      "treffer": 1,
       "verwundete": 0,
       "ausgefallen": false
      },
@@ -13594,7 +13550,7 @@
      "ausgefallen": 0,
      "verwundete": 0
     },
-    "ereignisse": 34,
+    "ereignisse": 32,
     "zeitlinie": [
      [
       323.0,
@@ -14075,36 +14031,6 @@
        48.5,
        530.0
       ]
-     ],
-     [
-      1440.9,
-      "pz3",
-      "Z-27",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      88,
-      false,
-      [
-       53.5,
-       470.0
-      ]
-     ],
-     [
-      1453.1,
-      "pz1",
-      "Z-28",
-      "durchbruch",
-      0,
-      "treffer",
-      8,
-      78,
-      false,
-      [
-       53.5,
-       412.0
-      ]
      ]
     ],
     "meldungen": [
@@ -14205,26 +14131,13 @@
       "zug": "pz1",
       "stufe": 0,
       "text": "1/1 unter Artilleriefeuer, Einschläge noch daneben. Halten Stellung."
-     },
-     {
-      "inject": "K-15",
-      "t": 1440.9,
-      "zug": "pz3",
-      "stufe": 1,
-      "text": "1/3 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
-     },
-     {
-      "inject": "K-16",
-      "t": 1453.1,
-      "zug": "pz1",
-      "stufe": 1,
-      "text": "1/1 unter Feuer eingebrochener Panzer von der Brücke Ost, Treffer aus nächster Nähe. Binden mit der Kanone."
      }
     ],
     "texte": {
+     "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
      "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-     "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, keine Verwundeten. Feuer auf Brücke Ost!",
-     "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Kp 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
+     "I-06": "Kp 4/4 einsatzbereit, keine Verwundeten. Feind drängt weiter zur Brücke, haltet die Brücke Ost unter Feuer!",
+     "I-08a": "Eigenbeschuss! Drei Panzer ausgefallen, Besatzungen verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!"
     },
     "verlauf": [
      [
@@ -15297,9 +15210,9 @@
      [
       1455,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -15308,9 +15221,9 @@
      [
       1470,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -15319,9 +15232,9 @@
      [
       1485,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -15330,9 +15243,9 @@
      [
       1500,
       [
-       78,
+       86,
        76,
-       88,
+       96,
        88
       ],
       4,
@@ -15970,26 +15883,34 @@
    {
     "meldung": "M23",
     "t_meld": 1320,
-    "ende": "Wirkung",
+    "ende": "kein Wirkmittel",
     "t_offen": 1320.0,
     "t_entscheid": 1320.0,
-    "entscheid": "BEKÄMPFEN",
+    "entscheid": "ZURÜCKSTELLEN",
     "sek_eingang": 0.0,
     "sek_offen": 0.0,
-    "wm": "PZA",
-    "t_wirkung": 1325.0,
-    "ziel": "Z-19",
-    "pos": [
-     768.0,
-     305.0
-    ],
-    "getroffen": [
-     "Z-19|feind",
-     "Z-19|soldat"
-    ],
-    "verstoesse": [
-     "außerhalb"
-    ]
+    "wm": null,
+    "t_wirkung": null,
+    "ziel": null,
+    "pos": null,
+    "getroffen": [],
+    "verstoesse": []
+   },
+   {
+    "meldung": "M38",
+    "t_meld": 1335,
+    "ende": "kein Wirkmittel",
+    "t_offen": 1335.0,
+    "t_entscheid": 1335.0,
+    "entscheid": "ZURÜCKSTELLEN",
+    "sek_eingang": 0.0,
+    "sek_offen": 0.0,
+    "wm": null,
+    "t_wirkung": null,
+    "ziel": null,
+    "pos": null,
+    "getroffen": [],
+    "verstoesse": []
    },
    {
     "meldung": "M24",
@@ -16145,7 +16066,7 @@
    },
    {
     "inject": "I-08a",
-    "t": 1275.0
+    "t": 1310.0
    },
    {
     "inject": "K-12",
@@ -16169,7 +16090,7 @@
    }
   ],
   "bilanz": {
-   "fahrzeuge": 29,
+   "fahrzeuge": 28,
    "fahrzeug_ids": [
     "Z-01",
     "Z-02",
@@ -16182,7 +16103,6 @@
     "Z-11",
     "Z-14",
     "Z-18",
-    "Z-19",
     "Z-20",
     "Z-25",
     "Z-30",
@@ -16201,14 +16121,13 @@
     "Z-47",
     "Z-48"
    ],
-   "wert_mio": 14.65,
+   "wert_mio": 14.55,
    "schuss": {
     "LM": 20,
-    "MRS": 7,
-    "PZA": 1
+    "MRS": 7
    },
-   "munition_eur": 2024000,
-   "median_s": 35,
+   "munition_eur": 2014000,
+   "median_s": 35.625,
    "hingeschaut_s": 0.0,
    "panzer": {
     "bereit": 4,
@@ -16404,7 +16323,8 @@
    "M20: BEKÄMPFEN 20:15 mit MRS, Einschlag 20:50",
    "M21: entfällt (Ziel schon zerstört oder weg)",
    "M22: bleibt liegen (PRÜFEN)",
-   "M23: BEKÄMPFEN 22:00 mit PZA, Einschlag 22:05 – RoE: außerhalb Einsatzbereich (nur Ziele bis zum Bach ELSTER einschließlich Brücke (x < 500 m, Sicht); es schießt der nächste einsatzbereite Panzer der 1. Kp)",
+   "M23: kein Wirkmittel mehr 22:00",
+   "M38: kein Wirkmittel mehr 22:15",
    "M24: bleibt liegen (UNKLAR)",
    "M19: entfällt (Ziel schon zerstört oder weg)",
    "M26: BEKÄMPFEN 24:00 mit MRS, Einschlag 24:35",
@@ -16446,10 +16366,10 @@
      "ausgefallen": false
     },
     "pz4": {
-     "zustand": 68,
-     "roh": 68,
+     "zustand": 48,
+     "roh": 48,
      "stufe": "eingeschraenkt",
-     "treffer": 8,
+     "treffer": 13,
      "verwundete": 1,
      "ausgefallen": false
     }
@@ -16461,7 +16381,7 @@
     "ausgefallen": 0,
     "verwundete": 1
    },
-   "ereignisse": 30,
+   "ereignisse": 35,
    "zeitlinie": [
     [
      323.0,
@@ -16884,6 +16804,51 @@
      ]
     ],
     [
+     1346.0,
+     "pz4",
+     "Z-19",
+     "steil",
+     11,
+     "treffer",
+     4,
+     64,
+     false,
+     [
+      48.5,
+      530.0
+     ]
+    ],
+    [
+     1378.0,
+     "pz4",
+     "Z-19",
+     "steil",
+     12,
+     "treffer",
+     4,
+     60,
+     false,
+     [
+      48.5,
+      530.0
+     ]
+    ],
+    [
+     1410.0,
+     "pz4",
+     "Z-19",
+     "steil",
+     13,
+     "treffer",
+     4,
+     56,
+     false,
+     [
+      48.5,
+      530.0
+     ]
+    ],
+    [
      1440.9,
      "pz3",
      "Z-27",
@@ -16899,6 +16864,21 @@
      ]
     ],
     [
+     1442.0,
+     "pz4",
+     "Z-19",
+     "steil",
+     14,
+     "treffer",
+     4,
+     52,
+     false,
+     [
+      48.5,
+      530.0
+     ]
+    ],
+    [
      1453.1,
      "pz1",
      "Z-28",
@@ -16911,6 +16891,21 @@
      [
       53.5,
       412.0
+     ]
+    ],
+    [
+     1474.0,
+     "pz4",
+     "Z-19",
+     "steil",
+     15,
+     "treffer",
+     4,
+     48,
+     false,
+     [
+      48.5,
+      530.0
      ]
     ]
    ],
@@ -17015,9 +17010,11 @@
     }
    ],
    "texte": {
+    "I-11": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen.",
     "I-07": "1/4 unter Mörserfeuer aus Hof RABE, 1 Treffer. Fordere sofortige Bekämpfung des Mörsers!",
-    "I-06": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp 4/4 einsatzbereit, keine Verwundeten. Feuer auf Brücke Ost!",
-    "I-13": "Feind über den Bach ELSTER eingebrochen! 1/3 getroffen, Kp 4/4 einsatzbereit. Wir binden ihn mit der Kanone."
+    "I-06": "Kp 4/4 einsatzbereit, keine Verwundeten. Feind drängt weiter zur Brücke, haltet die Brücke Ost unter Feuer!",
+    "I-08a": "Eigenbeschuss! Drei Panzer ausgefallen, Besatzungen verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!",
+    "I-13": "Gegenangriff PL ausgefallen: KPz T-72 (Ziel 33a) über die Brücke ELSTER eingebrochen! Kp 4/4 einsatzbereit."
    },
    "verlauf": [
     [
@@ -18016,7 +18013,7 @@
       91,
       80,
       96,
-      68
+      64
      ],
      4,
      1
@@ -18027,7 +18024,7 @@
       91,
       80,
       96,
-      68
+      64
      ],
      4,
      1
@@ -18038,7 +18035,7 @@
       91,
       80,
       96,
-      68
+      60
      ],
      4,
      1
@@ -18049,7 +18046,7 @@
       91,
       80,
       96,
-      68
+      60
      ],
      4,
      1
@@ -18060,7 +18057,7 @@
       91,
       80,
       96,
-      68
+      56
      ],
      4,
      1
@@ -18071,7 +18068,7 @@
       91,
       80,
       96,
-      68
+      56
      ],
      4,
      1
@@ -18082,7 +18079,7 @@
       91,
       80,
       96,
-      68
+      56
      ],
      4,
      1
@@ -18093,7 +18090,7 @@
       83,
       80,
       88,
-      68
+      52
      ],
      4,
      1
@@ -18104,7 +18101,7 @@
       83,
       80,
       88,
-      68
+      52
      ],
      4,
      1
@@ -18115,7 +18112,7 @@
       83,
       80,
       88,
-      68
+      48
      ],
      4,
      1
@@ -18126,7 +18123,7 @@
       83,
       80,
       88,
-      68
+      48
      ],
      4,
      1

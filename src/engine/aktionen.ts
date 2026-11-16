@@ -1,15 +1,15 @@
 // Prüft eine Aktion gegen Rechte und Spielstand und macht daraus Ereignisse.
 // Was nicht passt, wird nicht verworfen, sondern als „aktion_abgelehnt“ protokolliert.
-import { fuelle, mitVerlusten, verlustLage } from "../kern/verluste";
+import { mitVerlusten } from "../kern/verluste";
 import type { Inhalte } from "../inhalte/typen";
 import {
   type Aktion, type AktionsDaten, type AktionsTyp, RECHTE, type Rolle, TEXT_MAX,
 } from "../kern/ereignisse";
-import { einschlaege, vorhersage } from "../kern/regeln";
+import { einschlaege, harteGrenze, reichweiteText, vorhersage } from "../kern/regeln";
 import { uhrzeit } from "../kern/uhr";
 import { einspielSperre, verstaerkungen } from "../kern/welt";
 import type { Spielzustand } from "../kern/zustand";
-import { meldungEntwurf, weltFuer } from "./ablauf";
+import { lagemeldungText, meldungEntwurf, weltFuer } from "./ablauf";
 import { type Entwurf, entwurf } from "./entwurf";
 
 export type Verarbeitung = { ok: true; entwuerfe: Entwurf[] } | { ok: false; grund: string };
@@ -47,6 +47,7 @@ export function warnungen(inh: Inhalte, z: Spielzustand, meldung: string, wm: st
     }
   }
   if (z.bestand[wm] === 0) w.push(`Bestand ${inh.wirkmittel[wm].kurz} aufgebraucht`);
+  else if (v.ausser.length) w.push(`nur ${v.k} von ${v.k + v.ausser.length} in Reichweite – ${inh.wirkmittel[wm].kurz} ${reichweiteText(inh.wirkmittel[wm])}`);
   else if (v.k < v.n) w.push(`nur ${v.k} von ${v.n} Fahrzeugen – Bestand ${inh.wirkmittel[wm].kurz} reicht nicht`);
   return w;
 }
@@ -77,6 +78,9 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       if (!wm || !inh.wirkmittel[wm]) return nein("Wirkmittel fehlt");
       if (z.bestand[wm] === 0) return nein(`${inh.wirkmittel[wm].kurz} aufgebraucht – anderes Wirkmittel wählen`);
       // seit 2.4 (E3): BEKÄMPFEN wirkt auf den ganzen Zug – je Fahrzeug ein Einschlag (LM, Kanone), höchstens so viele wie Bestand
+      const v = vorhersage(inh, inh.meldungen[dd.meldung], wm, t, z.zerstoert, z.bestand[wm] ?? null);
+      // seit 2.9 (P3): harte Grenze der Kanone – liegt kein Fahrzeug in Reichweite, ist sie nicht wählbar (Protokoll: aktion_abgelehnt)
+      if (!v.waehlbar) return nein(`${inh.wirkmittel[wm].kurz} außer Reichweite – ${reichweiteText(inh.wirkmittel[wm])}`);
       const liste = einschlaege(inh, inh.meldungen[dd.meldung].ziele, wm, t, z.zerstoert, z.bestand[wm] ?? null)
         .map((e) => ({ t: Math.round(e.t * 100) / 100, x: Math.round(e.pos[0] * 10) / 10, y: Math.round(e.pos[1] * 10) / 10, ziel: e.ziel }));
       const e = liste[0];
@@ -84,6 +88,8 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
         meldung: dd.meldung, entscheid: "bekaempfen", wirkmittel: wm, warnungen: warnungen(inh, z, dd.meldung, wm, t),
         einschlag: { t: e.t, pos: [e.x, e.y], ziel: e.ziel },
         ...(liste.length > 1 ? { einschlaege: liste } : {}),
+        // seit 2.9 (P3): Fahrzeuge des Zuges jenseits der Grenze – nicht beschossen, im Protokoll „außer Reichweite“
+        ...(harteGrenze(inh.wirkmittel[wm]) !== null && v.ausser.length ? { ausser_reichweite: v.ausser } : {}),
         ...tempo,
       }));
     }
@@ -129,11 +135,9 @@ export function verarbeiteAktion(basis: Inhalte, z: Spielzustand, a: Aktion, t: 
       const i = inh.injects[a.daten.inject];
       if (!i) return nein(`Inject ${a.daten.inject} gibt es nicht`);
       if (z.injects[i.id]) return nein(`Inject ${i.id} ist schon ausgelöst`);
-      // seit 2.3: Platzhalter (Verluste dieses Teams) zur Zeit des Auslösens füllen
-      if (i.text.includes("{") && mitVerlusten(inh)) {
-        const vl = verlustLage(inh, z);
-        const text = fuelle(vl.welt, i.text, vl.ereignisse, t, "verluste_panzer" in i ? i.verluste_panzer : undefined);
-        return ja(entwurf("inject", { inject: i.id, manuell: true, text }));
+      // seit 2.3: Platzhalter (Verluste dieses Teams) zur Zeit des Auslösens füllen; seit 2.9 (P4) die Variante, die zum Spiel passt
+      if ((i.text.includes("{") && mitVerlusten(inh)) || ("varianten" in i && i.varianten?.length)) {
+        return ja(entwurf("inject", { ...lagemeldungText(basis, z, i.id, t), manuell: true }));
       }
       return ja(entwurf("inject", { inject: i.id, manuell: true }));
     }

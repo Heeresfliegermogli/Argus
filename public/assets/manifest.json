@@ -1,21 +1,21 @@
 {
  "version": 1,
- "erzeugt": "2026-11-15",
+ "erzeugt": "2026-11-16",
  "generator": "tools/assets/gen_assets.py",
  "hinweis": "Alle Pfade relativ zu assets/. Übungslage, alles fiktiv und prozedural erzeugt. Drohnenbilder ohne HUD und ohne ARGUS-Markierung: Die Oberfläche zeichnet Rahmen (ziele[].box, Pixel im Bild), Klasse, Konfidenz und Uhrzeit aus Szenario und Manifest.",
  "szenario": {
   "id": "kraehe-01",
-  "version": "2.8",
+  "version": "2.9",
   "datei": "szenario_kraehe_01.json"
  },
  "koordinaten": "Meter, x nach Osten, y nach Süden, Ursprung oben links; hdg in Grad, 0 = Osten, im Uhrzeigersinn",
  "groessen_bytes": {
-  "drohne": 1914742,
+  "drohne": 1960498,
   "zielbilder": 96884,
-  "drohne_ebenen": 2035448,
+  "drohne_ebenen": 2094776,
   "karte_start": 649192,
   "karte_kacheln": 1294782,
-  "karte_sonst": 469444,
+  "karte_sonst": 467246,
   "fahrzeuge": 613686,
   "effekte": 603035
  },
@@ -64,7 +64,7 @@
    "m_pro_px": 0.6667,
    "breite": 1500,
    "hoehe": 1050,
-   "bytes": 361772,
+   "bytes": 359574,
    "hinweis": "Vorschau/Rückfall mit eingebrannter Schrift; im Spiel zeichnet die Karte Raster, Zonen und Namen selbst."
   },
   "gelaende": {
@@ -1019,7 +1019,8 @@
    ],
    "auch_in": [
     "M12",
-    "M16"
+    "M16",
+    "M38"
    ]
   },
   "Z-03": {
@@ -1115,6 +1116,7 @@
    "auch_in": [
     "M12",
     "M16",
+    "M38",
     "SL-Z28"
    ],
    "hintergrund": {
@@ -1153,6 +1155,7 @@
    ],
    "auch_in": [
     "M21",
+    "M38",
     "SL-Z27"
    ]
   },
@@ -1190,7 +1193,9 @@
    "bilder": [
     "M16"
    ],
-   "auch_in": []
+   "auch_in": [
+    "M38"
+   ]
   },
   "Z-19": {
    "typ": "moerser_trupp",
@@ -1211,6 +1216,7 @@
     "M19"
    ],
    "auch_in": [
+    "M38",
     "SL-Z28"
    ]
   },
@@ -1248,7 +1254,9 @@
    "bilder": [
     "M21"
    ],
-   "auch_in": [],
+   "auch_in": [
+    "M38"
+   ],
    "hintergrund": {
     "t_s": 1170,
     "folge": "ausser_gefecht"
@@ -1277,6 +1285,7 @@
    "sprite": "kpz_t72.png",
    "sprite_wrack": "kpz_t72_wrack.png",
    "bilder": [
+    "M38",
     "SL-Z27"
    ],
    "auch_in": [],
@@ -1287,6 +1296,7 @@
    "sprite": "spz_bmp2.png",
    "sprite_wrack": "spz_bmp2_wrack.png",
    "bilder": [
+    "M38",
     "SL-Z28"
    ],
    "auch_in": [],
@@ -1396,6 +1406,7 @@
    ],
    "auch_in": [
     "M37",
+    "M38",
     "M19",
     "SL-Z28"
    ]
@@ -1428,7 +1439,9 @@
    "bilder": [
     "M16"
    ],
-   "auch_in": []
+   "auch_in": [
+    "M38"
+   ]
   },
   "Z-48": {
    "typ": "kpz_t72",
@@ -1439,6 +1452,7 @@
     "M19"
    ],
    "auch_in": [
+    "M38",
     "SL-Z28",
     "SL-Z44"
    ]
@@ -5871,6 +5885,356 @@
     }
    },
    "bytes": 40058
+  },
+  "M38": {
+   "datei": "drohne/M38.webp",
+   "breite": 1024,
+   "hoehe": 640,
+   "t_s": 1335,
+   "uhr": "22:15",
+   "pq": "F4",
+   "ausschnitt_m": {
+    "x": 479.0,
+    "y": 335.62,
+    "breite": 150.0,
+    "hoehe": 93.75
+   },
+   "m_pro_px": 0.1465,
+   "ziele": [
+    {
+     "id": "Z-27",
+     "mitte": [
+      553.0,
+      84.5
+     ],
+     "hdg": -114.0,
+     "box": [
+      525,
+      51,
+      55,
+      66
+     ],
+     "verdeckt": 0.0
+    },
+    {
+     "id": "Z-28",
+     "mitte": [
+      471.0,
+      555.5
+     ],
+     "hdg": 7.0,
+     "box": [
+      441,
+      536,
+      59,
+      38
+     ],
+     "verdeckt": 0.0
+    }
+   ],
+   "objekte": [
+    {
+     "id": "Z-24",
+     "mitte": [
+      88.7,
+      -38.4
+     ],
+     "hdg": 188.0,
+     "zustand": "ausser_gefecht"
+    },
+    {
+     "id": "Z-14",
+     "mitte": [
+      348.2,
+      111.8
+     ],
+     "hdg": 171.0
+    },
+    {
+     "id": "Z-02",
+     "mitte": [
+      -20.5,
+      268.8
+     ],
+     "hdg": 171.0
+    },
+    {
+     "id": "Z-11",
+     "mitte": [
+      122.9,
+      282.5
+     ],
+     "hdg": 159.0,
+     "zustand": "zerstoert"
+    },
+    {
+     "id": "Z-18",
+     "mitte": [
+      6.8,
+      466.8
+     ],
+     "hdg": -173.0
+    },
+    {
+     "id": "Z-20",
+     "mitte": [
+      177.5,
+      521.4
+     ],
+     "hdg": 173.0
+    },
+    {
+     "id": "Z-36",
+     "mitte": [
+      293.5,
+      548.7
+     ],
+     "hdg": 173.0
+    },
+    {
+     "id": "Z-47",
+     "mitte": [
+      6.8,
+      589.7
+     ],
+     "hdg": -173.0
+    },
+    {
+     "id": "Z-48",
+     "mitte": [
+      553.0,
+      644.3
+     ],
+     "hdg": 132.3
+    }
+   ],
+   "personen": [
+    {
+     "bei": "Z-24",
+     "art": "besatzung_ergibt_sich",
+     "anzahl": 3,
+     "verdeckt": 0.0,
+     "punkte": [
+      [
+       61.8,
+       -16.3
+      ],
+      [
+       68.3,
+       -18.5
+      ],
+      [
+       74.8,
+       -18.5
+      ]
+     ]
+    }
+   ],
+   "sicht": [],
+   "wracks": [
+    {
+     "id": "Z-11",
+     "staerke": 1.0
+    }
+   ],
+   "ebenen": {
+    "boden": "drohne/ebenen/M38-boden.webp",
+    "kronen": "drohne/ebenen/M38-kronen.webp",
+    "stoerung": null,
+    "bytes": 59328,
+    "fahrzeuge": [
+     {
+      "id": "Z-24",
+      "sprite": "kpz_t72_kette_ab.png",
+      "zustand": "ausser_gefecht",
+      "hauptziel": false,
+      "mitte": [
+       88.7,
+       -38.4
+      ],
+      "hdg": 188.0,
+      "darstellung": "kette_ab",
+      "seit_s": 1170
+     },
+     {
+      "id": "Z-14",
+      "sprite": "kpz_t72.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       348.2,
+       111.8
+      ],
+      "hdg": 171.0
+     },
+     {
+      "id": "Z-02",
+      "sprite": "spaehpz_brdm2.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       -20.5,
+       268.8
+      ],
+      "hdg": 171.0
+     },
+     {
+      "id": "Z-11",
+      "sprite": "spz_bmp2_wrack.png",
+      "zustand": "zerstoert",
+      "hauptziel": false,
+      "mitte": [
+       122.9,
+       282.5
+      ],
+      "hdg": 159.0,
+      "seit_s": 556,
+      "effekte": [
+       "feuer",
+       "rauch"
+      ]
+     },
+     {
+      "id": "Z-18",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       6.8,
+       466.8
+      ],
+      "hdg": -173.0
+     },
+     {
+      "id": "Z-20",
+      "sprite": "kpz_t72.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       177.5,
+       521.4
+      ],
+      "hdg": 173.0
+     },
+     {
+      "id": "Z-36",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       293.5,
+       548.7
+      ],
+      "hdg": 173.0
+     },
+     {
+      "id": "Z-47",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       6.8,
+       589.7
+      ],
+      "hdg": -173.0
+     },
+     {
+      "id": "Z-48",
+      "sprite": "kpz_t72.png",
+      "zustand": "intakt",
+      "hauptziel": false,
+      "mitte": [
+       553.0,
+       644.3
+      ],
+      "hdg": 132.3
+     },
+     {
+      "id": "Z-27",
+      "sprite": "kpz_t72.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       553.0,
+       84.5
+      ],
+      "hdg": -114.0
+     },
+     {
+      "id": "Z-28",
+      "sprite": "spz_bmp2.png",
+      "zustand": "intakt",
+      "hauptziel": true,
+      "mitte": [
+       471.0,
+       555.5
+      ],
+      "hdg": 7.0
+     }
+    ],
+    "figuren": [
+     {
+      "bei": "Z-24",
+      "art": "besatzung_ergibt_sich",
+      "sprite": "person_besatzung_tuch_c0.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       -0.95,
+       0.24
+      ],
+      "hdg": 79.5,
+      "px": [
+       61.8,
+       -16.3
+      ],
+      "gruppe": 0,
+      "tuch": true,
+      "haende_hoch": true
+     },
+     {
+      "bei": "Z-24",
+      "art": "besatzung_ergibt_sich",
+      "sprite": "person_besatzung_c1.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       0.0,
+       -0.08
+      ],
+      "hdg": 269.8,
+      "px": [
+       68.3,
+       -18.5
+      ],
+      "gruppe": 0,
+      "haende_hoch": true
+     },
+     {
+      "bei": "Z-24",
+      "art": "besatzung_ergibt_sich",
+      "sprite": "person_besatzung_c1.png",
+      "bezug": "gruppe",
+      "versatz_m": [
+       0.95,
+       -0.09
+      ],
+      "hdg": 100.5,
+      "px": [
+       74.8,
+       -18.5
+      ],
+      "gruppe": 0,
+      "haende_hoch": true
+     }
+    ],
+    "verdeckt": {
+     "Z-27": 0.0,
+     "Z-28": 0.0
+    },
+    "figuren_verdeckt": {
+     "Z-24/besatzung_ergibt_sich": 0.0
+    }
+   },
+   "bytes": 45756
   },
   "M24": {
    "datei": "drohne/M24.webp",

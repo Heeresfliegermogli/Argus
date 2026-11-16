@@ -83,8 +83,9 @@ export function pruefeWirkmittel(
     }
   }
   const xMax = wm.einsatzbereich?.x_max;
-  if (xMax !== undefined && zielPos[0] >= xMax) {
-    verstoesse.push({ regel: "EB", text: `außerhalb des Einsatzbereichs (${wm.einsatzbereich!.text.split(",")[0]})` });
+  if (xMax !== undefined && zielPos[0] >= xMax - (wm.einsatzbereich?.hart ? REICHWEITE_RAND : 0)) {
+    // seit 2.9 (P3): harte Grenze der Kanone – „außer Reichweite (nur bis Ortsanfang KRÄHE)“
+    verstoesse.push({ regel: "EB", text: `außer Reichweite (${wm.einsatzbereich!.kurz ?? wm.einsatzbereich!.text.split(",")[0]})` });
   }
   const getroffen: Treffer[] = [];
   const nurZiel = !!wm.nur_zielfahrzeug;
@@ -155,6 +156,9 @@ export interface Wirkungsergebnis {
 /** Was eine Wirkung beim Einschlag trifft (wie argus_lib.wirkung, ab dem berechneten Einschlag). */
 export function wirkungBeimEinschlag(inh: Inhalte, e: Einschlag, wmId: string, zerstoert: Record<string, number> = {}): Wirkungsergebnis {
   const pruefung = pruefeWirkmittel(inh, e.pos, wmId, e.t, [], zerstoert, e.ziel);
+  // seit 2.9 (P3): jenseits der harten Grenze keine Wirkung (die Engine plant dort keinen Einschlag; nur für ältere Protokolle)
+  const grenze = harteGrenze(inh.wirkmittel[wmId]);
+  if (grenze !== null && e.pos[0] >= grenze) return { einschlag: e, pruefung: { ...pruefung, zulaessig: false, getroffen: [] }, getroffen: [] };
   const getroffen = [...pruefung.getroffen];
   const z0 = inh.ziele[e.ziel];
   if (z0 && vorhanden(z0, e.t) && !((zerstoert[z0.id] ?? Infinity) <= e.t) && !getroffen.some((g) => g.ziel === z0.id && g.was !== "personen")) {
@@ -176,27 +180,63 @@ export function stehende(inh: Inhalte, ziele: string[], t: number, zerstoert: Re
   return ziele.filter((id) => inh.ziele[id] && vorhanden(inh.ziele[id], t) && !((zerstoert[id] ?? Infinity) <= t));
 }
 
+/** Rand an der harten Grenze (m): ein Einschlag zählt als in Reichweite, wenn er mehr als so weit diesseits liegt (Rundung im Protokoll). */
+export const REICHWEITE_RAND = 0.05;
+
+/** x der harten Grenze eines Wirkmittels (seit 2.9, P3: Kanone nur bis zum Ortsanfang KRÄHE) oder null. */
+export function harteGrenze(wm: Wirkmittel | undefined): number | null {
+  const b = wm?.einsatzbereich;
+  return b?.hart && b.x_max !== undefined ? b.x_max : null;
+}
+
+/** Kurztext der Reichweite („nur bis Ortsanfang KRÄHE“). */
+export function reichweiteText(wm: Wirkmittel | undefined): string {
+  return wm?.einsatzbereich?.kurz ?? wm?.einsatzbereich?.text.split(",")[0] ?? "";
+}
+
 /**
  * Alle Einschläge einer Freigabe (wie argus_lib.einschlaege): Fläche (Mörser) ein Einschlag wie einschlag(); je Fahrzeug
  * (LM, PzAbw) ein Schuss je bei der Freigabe noch stehendem Fahrzeug, der i-te startet zug.abstand_s · i nach der Freigabe.
  * bestand (endlich): höchstens so viele Fahrzeuge, wie Munition da ist (mindestens eines).
+ * Seit 2.9 (P3): Bei einer harten Grenze (Kanone) fallen Fahrzeuge weg, deren Einschlag jenseits läge – sie werden nicht beschossen,
+ * der nächste Schuss kommt abstand_s · (bisherige Schüsse) nach der Freigabe. Liegt keines in Reichweite, ist die Liste leer.
  */
 export function einschlaege(
   inh: Inhalte, ziele: string[], wmId: string, tFreigabe: number, zerstoert: Record<string, number> = {}, bestand: number | null = null,
 ): Einschlag[] {
   const wm = inh.wirkmittel[wmId];
-  if (zugArt(wm) !== "je_fahrzeug") return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)];
+  const grenze = harteGrenze(wm);
+  // in Reichweite: diesseits der Linie, auch nach dem Runden auf 0,1 m im Protokoll (sonst läge der Einschlag dort genau auf der Linie)
+  const inReichweite = (e: Einschlag) => grenze === null || e.pos[0] < grenze - REICHWEITE_RAND;
+  if (zugArt(wm) !== "je_fahrzeug") return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)].filter(inReichweite);
   let kand = stehende(inh, ziele, tFreigabe, zerstoert);
-  if (!kand.length) return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)];
+  if (!kand.length) return [einschlag(inh, ziele, wmId, tFreigabe, zerstoert)].filter(inReichweite);
   if (bestand !== null) kand = kand.slice(0, Math.max(1, bestand));
   const abstand = wm.zug?.abstand_s ?? 0;
-  return kand.map((id, i) => {
+  const out: Einschlag[] = [];
+  for (const id of kand) {
     const z0 = inh.ziele[id];
-    const t0 = tFreigabe + i * abstand;
+    const t0 = tFreigabe + out.length * abstand;
     let t = t0 + flugzeit(wm, position(z0, t0));
     for (let k = 0; k < 4; k++) t = t0 + flugzeit(wm, position(z0, t));
-    return { t, pos: position(z0, t), ziel: id };
-  });
+    const e = { t, pos: position(z0, t), ziel: id };
+    if (inReichweite(e)) out.push(e);
+  }
+  return out;
+}
+
+/** Fahrzeuge der Meldung, die das Wirkmittel wegen der harten Grenze nicht bekämpft (wie argus_lib.ausser_reichweite). */
+export function ausserReichweite(
+  inh: Inhalte, ziele: string[], wmId: string, tFreigabe: number, zerstoert: Record<string, number> = {}, bestand: number | null = null,
+  e: Einschlag[] = einschlaege(inh, ziele, wmId, tFreigabe, zerstoert, bestand),
+): string[] {
+  const wm = inh.wirkmittel[wmId];
+  if (harteGrenze(wm) === null) return [];
+  const beschossen = new Set(e.map((x) => x.ziel));
+  let kand = stehende(inh, ziele, tFreigabe, zerstoert);
+  if (zugArt(wm) !== "je_fahrzeug" || !kand.length) return beschossen.size ? [] : kand.length ? kand : ziele.slice(0, 1);
+  if (bestand !== null) kand = kand.slice(0, Math.max(1, bestand));
+  return kand.filter((x) => !beschossen.has(x));
 }
 
 /** Ergebnis einer Freigabe über alle Einschläge (Zug): erster Einschlag, Prüfung und Treffer zusammengefasst, je Einschlag einzeln. */
@@ -207,6 +247,10 @@ export interface ZugWirkung extends Wirkungsergebnis {
   n: number;
   /** davon bekämpft (je Fahrzeug: höchstens der Bestand; Fläche: 1) */
   k: number;
+  /** seit 2.9 (P3): Fahrzeuge außer Reichweite (harte Grenze der Kanone) – nicht beschossen */
+  ausser: string[];
+  /** false: kein Fahrzeug in Reichweite – das Wirkmittel ist für diese Meldung nicht wählbar */
+  waehlbar: boolean;
 }
 
 /** Treffer zusammenfassen: ein Eintrag je Ziel und Art (Fahrzeug/Attrappe bzw. Personenart). */
@@ -223,7 +267,7 @@ export function trefferVereint(liste: Treffer[]): Treffer[] {
 }
 
 /** Was eine Freigabe mit allen ihren Einschlägen trifft (wie argus_lib.wirkung seit 2.4). */
-export function wirkungZug(inh: Inhalte, e: Einschlag[], wmId: string, zerstoert: Record<string, number> = {}, n = e.length): ZugWirkung {
+export function wirkungZug(inh: Inhalte, e: Einschlag[], wmId: string, zerstoert: Record<string, number> = {}, n = e.length, ausser: string[] = []): ZugWirkung {
   const zer = { ...zerstoert };
   const teile = e.map((x) => {
     const w = wirkungBeimEinschlag(inh, x, wmId, zer);
@@ -235,8 +279,9 @@ export function wirkungZug(inh: Inhalte, e: Einschlag[], wmId: string, zerstoert
   const getroffen = trefferVereint(teile.flatMap((w) => w.getroffen));
   return {
     einschlag: teile[0].einschlag,
-    pruefung: { zulaessig: teile.every((w) => w.pruefung.zulaessig), verstoesse, getroffen: trefferVereint(teile.flatMap((w) => w.pruefung.getroffen)) },
-    getroffen, teile, n, k: e.length,
+    // seit 2.9 (P3): nur ein Teil des Zuges in Reichweite – wie bisher eine Warnung (der Einschlag selbst verletzt nichts)
+    pruefung: { zulaessig: teile.every((w) => w.pruefung.zulaessig) && !ausser.length, verstoesse, getroffen: trefferVereint(teile.flatMap((w) => w.pruefung.getroffen)) },
+    getroffen, teile, n, k: e.length, ausser, waehlbar: true,
   };
 }
 
@@ -249,7 +294,14 @@ export function vorhersage(
 ): ZugWirkung {
   const e = einschlaege(inh, m.ziele, wmId, tFreigabe, zerstoert, bestand);
   const n = zugArt(inh.wirkmittel[wmId]) === "je_fahrzeug" ? Math.max(1, stehende(inh, m.ziele, tFreigabe, zerstoert).length) : 1;
-  return wirkungZug(inh, e, wmId, zerstoert, n);
+  const ausser = ausserReichweite(inh, m.ziele, wmId, tFreigabe, zerstoert, bestand, e);
+  if (!e.length) {
+    // seit 2.9 (P3): kein Fahrzeug in Reichweite – nicht wählbar; Ort und Zeit des ersten Fahrzeugs nur für die Anzeige
+    const x = einschlag(inh, m.ziele, wmId, tFreigabe, zerstoert);
+    const pruefung = pruefeWirkmittel(inh, x.pos, wmId, x.t, [], zerstoert, x.ziel);
+    return { einschlag: x, pruefung: { ...pruefung, zulaessig: false, getroffen: [] }, getroffen: [], teile: [], n, k: 0, ausser, waehlbar: false };
+  }
+  return wirkungZug(inh, e, wmId, zerstoert, n, ausser);
 }
 
 export function trefferText(t: Treffer): string {

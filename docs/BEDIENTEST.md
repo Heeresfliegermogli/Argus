@@ -63,14 +63,14 @@ sichtbare Beschriftungen – das ersetzt den Test mit Menschen nicht.
 ## Teil B: Ansicht Zielbearbeitung
 
 Aufbau der Ansicht (seit Liste J, Dienst-Laptop 1536 × 730): links die **ganze Lagekarte** (Marken der Meldungen, bekämpfte
-Ziele mit Countdown bis zum Einschlag), oben links auf der Karte die **Lagemeldungen** (Brigade, Nachbarn, 1. Kp; höchstens zwei
+Ziele mit Countdown bis zum Einschlag), oben links auf der Karte die **Lagemeldungen** (Brigade, Nachbarn, 2. Kp; höchstens zwei
 auf einmal; eine steht 30 s oder bis sie angeklickt wird – kleines ✕ –, danach ist sie ganz weg), unten links die Legende
 (einklappbar); rechts fest aufgeteilt (nichts verschiebt sich): oben die Zeile **„Wirkung unterwegs“** (je bekämpftem Ziel ein
 Chip mit Countdown, z. B. „Ziel 17 ×3 0:23“, mehr als drei hinter „+n“), darunter der **Eingang** mit der Wartezeit je Meldung
 (vier Zeilen, eigene Rollleiste; Vermerke wie „Ziel 15 über die Brücke durchgebrochen“ stehen dort eine Minute), darunter die
 geöffnete Meldung: Live-Drohnenbild (Klick: groß mit Lupe), ARGUS-Ausgabe („Panzer · Feind 91 %“, Empfehlung), die Wirkmittel
 als **drei Kacheln** (Bestand, Countdown, ✓ oder ⚠), eine Zeile mit der Warnung zum gewählten Wirkmittel und ganz unten die drei
-Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 1. Kp mit Zustand, der Bestand groß.
+Knöpfe an fester Stelle. Kopfzeile: Uhr und Phase, die vier Panzer der 2. Kp mit Zustand, der Bestand groß.
 
 ## Aufbau
 
@@ -138,7 +138,7 @@ Zusätzlich beim Bedientest beobachten (ohne Aufgabe):
   ca. 0,5 s mit kurzem Rauschen („◌ AUSRICHTUNG …“) zum nächsten – in Phase 1 kommt das nicht vor, erst ab ca. 18:30.
 - Erkennen die Personen die gelben **Kontakte** (Bewegung ohne Meldung) und den Countdown an bekämpften Zielen?
 - Bemerken die Personen die vier eigenen Panzer am Westrand (blau, 1/1–1/4) und ihren Zustand in der Kopfzeile? Ab ca.
-  05:20 liegt 1/2 unter Mörserfeuer: Sehen sie die Lagemeldung der 1. Kp, die Einschläge neben dem Panzer, später bei
+  05:20 liegt 1/2 unter Mörserfeuer: Sehen sie die Lagemeldung der 2. Kp, die Einschläge neben dem Panzer, später bei
   einem Treffer das rote Blinken in der Kopfzeile und den kurzen roten Rand am Bildschirm?
 - Finden sie das kleine „i“ an der Meldung (Angaben des Herstellers)? Es ist absichtlich unauffällig.
 - Nach den Aufgaben, nur mit Unbeteiligten, die nicht am Lehrgang teilnehmen: SL setzt die Spielzeit auf 18:20, die

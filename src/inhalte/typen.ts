@@ -55,6 +55,8 @@ export interface Ziel {
   gruppe?: string;
   /** Wird von ARGUS nie gemeldet; nur Spielleitung und Plenum sehen es. */
   ungemeldet?: boolean;
+  /** seit 2.9 (P4.2): ungemeldet, außer in dieser bedingten Meldung (M38 nach einer Freigabe auf die PT-91) */
+  bedingt_gemeldet?: string;
   bewegung?: Bewegung;
   personen?: Person[];
   gt: GroundTruth;
@@ -164,6 +166,41 @@ export interface Meldung {
   zweck: string;
   /** nur Meldungen einer Verstärkung: Gruppe (V-1 …), gesetzt beim Einspielen (src/kern/welt.ts) */
   verstaerkung?: string;
+  /**
+   * Seit 2.9 (P4.2): bedingte Meldung – sie kommt zu t_s nur, wenn die Bedingung dann erfüllt ist, sonst nie (z. B. M38: die letzten
+   * Feindkräfte an der Brücke Ost, wenn der polnische Gegenangriff wegen einer Freigabe auf die PT-91 ausfällt). Nummer wie bei einer
+   * Verstärkung (Buchstabe hinter der letzten Meldung), damit die Nummern aller anderen Meldungen gleich bleiben.
+   */
+  bedingung?: MeldungsBedingung;
+}
+
+/** Seit 2.9: Bedingung einer Meldung – freigabe: bis t_s gab das Team eine Wirkung auf eines der Ziele frei. */
+export type MeldungsBedingung = { typ: "freigabe"; ziele: string[] };
+
+/**
+ * Seit 2.9 (P4): was eine Lagemeldung behauptet – alle Angaben müssen zur Zeit der Meldung im Spiel des Teams stimmen (src/kern/behauptung.ts).
+ */
+export interface Behauptung {
+  zerstoert?: string[];
+  stehen?: string[];
+  hintergrund?: string[];
+  ereignis_traf?: string;
+  bereich_frei?: string;
+  feind_im_bereich?: string;
+  ereignis_aus?: string;
+  getroffen?: { ziele: string[]; min?: number; personen?: string };
+  durchbruch?: boolean | string[];
+  panzer_getroffen?: string;
+  beschuss?: { quelle: string; panzer?: string };
+  eloka?: boolean;
+  verstoss?: string;
+  letzte_nicht_bekaempft?: boolean;
+}
+
+/** Seit 2.9 (P4.1): Text einer Lagemeldung, der nur gilt, wenn seine Behauptung stimmt. */
+export interface InjectVariante {
+  behauptet: Behauptung;
+  text: string;
 }
 
 /** ARGUS-Ausgabe einer Meldung (seit 2.4: Klasse Panzer/Fahrzeug/Infanterie oder „unbekannt“, Zugehörigkeit Feind/unbekannt). */
@@ -205,6 +242,10 @@ export interface Inject {
    * Panzer, den der erste Durchbruch traf); {bereit}, {gesamt}, {zug_verw} für die Kp.
    */
   verluste_panzer?: string;
+  /** seit 2.9 (P4.1): was der Text behauptet (muss zur Zeit der Meldung stimmen) */
+  behauptet?: Behauptung;
+  /** seit 2.9 (P4.1): Texte für andere Lagen – die erste, deren Behauptung stimmt, sonst `text` */
+  varianten?: InjectVariante[];
 }
 
 export interface ReserveInject {
@@ -213,6 +254,8 @@ export interface ReserveInject {
   von: string;
   text: string;
   einsatz: string;
+  /** seit 2.9 (P4.5): was der Text behauptet – die Spielleitung sieht, ob es im Spiel dieses Teams stimmt */
+  behauptet?: Behauptung;
 }
 
 export interface Skriptereignis {
@@ -344,7 +387,7 @@ export interface Zone {
   kurz?: string;
 }
 
-/** Seit 2.5 (F1): ein Kampfpanzer der eigenen 1. Kp, einzeln in Stellung am Westrand (1/1 … 1/4). */
+/** Seit 2.5 (F1): ein Kampfpanzer der eigenen 2. Kp, einzeln in Stellung am Westrand (1/1 … 1/4). */
 export interface EigenerPanzer {
   id: string;
   /** Kennung „1/1“ */
@@ -362,12 +405,12 @@ export interface EigenerPanzer {
 
 export interface EigeneTruppe {
   hinweis?: string;
-  /** „1./PzBtl 613“ */
+  /** „2./PzBtl 613“ */
   einheit: string;
   kompanie?: string;
   /** „PzBtl 613“ */
   uebergeordnet?: string;
-  /** „1. Kp“ – Absender und Kopfzeile */
+  /** „2. Kp“ – Absender und Kopfzeile */
   name: string;
   /** Fahrzeugtyp im Katalog (Sprite in Stellung) */
   fahrzeug: string;
@@ -472,8 +515,12 @@ export interface Szenario {
   hintergrund?: { hinweis?: string; ereignisse: HintergrundEreignis[] };
   verstaerkungen?: { hinweis?: string; gruppen: Verstaerkung[] };
   /** Seit 2.1: Gruppen, die durchbrechen, wenn sie nicht aufgehalten werden */
-  durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[] };
-  /** Seit 2.3 eigene Truppe am Westrand; seit 2.5 (F1) die 1. Kp (1./PzBtl 613) mit vier Panzern */
+  /**
+   * gemeldet_s (seit 2.9, P4.2): Eine Gruppe bricht nur durch, wenn ARGUS mindestens eines ihrer Fahrzeuge spätestens so viele Sekunden
+   * vor ihrem Angriffszeitpunkt gemeldet hat; sonst bleibt sie am Ostufer.
+   */
+  durchbruch?: { hinweis?: string; gruppen: DurchbruchGruppe[]; gemeldet_s?: number };
+  /** Seit 2.3 eigene Truppe am Westrand; seit 2.5 (F1) die 2. Kp (2./PzBtl 613) mit vier Panzern */
   eigene_truppe?: EigeneTruppe;
   /** Seit 2.3 (D2): szenariobezogene Teile des Verlustmodells */
   verluste?: SzenarioVerluste;
@@ -633,7 +680,11 @@ export interface Wirkmittel {
   flug?: { start: Punkt; geschwindigkeit_mps: number; vorbereitung_s?: number };
   /** null = unbegrenzt */
   bestand: number | null;
-  einsatzbereich: { x_max?: number; text: string } | null;
+  /**
+   * Seit 2.9 (P3): hart = harte Grenze – liegt der vorausberechnete Einschlag jenseits von x_max, ist das Wirkmittel nicht wählbar
+   * (bei einem Zug werden nur die Fahrzeuge in Reichweite beschossen) und wirkt dort nicht. kurz: „nur bis Ortsanfang KRÄHE“.
+   */
+  einsatzbereich: { x_max?: number; text: string; kurz?: string; hart?: boolean } | null;
   effekt: string;
   /** Seit 2.2 (C6): trifft von den Fahrzeugen nur das bekämpfte (LM); Personen im Wirkradius schon */
   nur_zielfahrzeug?: boolean;

@@ -34,7 +34,9 @@ ABSTAND_M = 10                  # Abstand aller anderen Fahrzeuge (Sprites dürf
 KETTE = ("kpz_t72", "kpz_pt91", "spz_bmp2", "attrappe_kpz")
 # längste Werte der Platzhalter in Lagemeldungen und Druckmeldungen (seit 2.5 je Panzer, F2.7)
 LAENGSTE = {"pz": "1/1", "zustand": 100, "verw": "3 Verwundete", "treffer": "noch ohne Treffer", "lage": "eingeschränkt", "bereit": 4,
-            "gesamt": 4, "zug_verw": "8 Verwundete", "zug": "1. Kp"}
+            "gesamt": 4, "zug_verw": "8 Verwundete", "zug": "2. Kp",
+            # seit 2.9 (P4.3): I-13 nennt die Durchgebrochenen (zwei Meldungen) und den Übergang; I-08a die Zahl der getroffenen PT-91
+            "durch": "KPz T-72 (Ziel 27) und SPz BMP-2 (Ziel 33a)", "ueber": "die Brücke ELSTER", "getroffen_zahl": "Drei"}
 
 
 def strassen(karte):
@@ -120,8 +122,11 @@ def loesung_meldung(d, m, ziele, t0=None, zerstoert=None):
                           "text": f"{was if was not in ('Fahrzeug', 'Attrappe') else zid + ' ' + L.GT_TEXT[kat]} ({zid}) bei Freigabe "
                                   f"{L.uhrzeit(sz['spieluhr']['start'], min(ts))[:8]}–{L.uhrzeit(sz['spieluhr']['start'], max(ts))[:8]}"})
         res.append({"wm": wid, "zulaessig_meldung": ok_m, "verstoesse_meldung": verst_m,
-                    "zulaessig": w["zulaessig"], "verstoesse": w["verstoesse"], "einschlag_t": round(w["t"]),
-                    "einschlag_pos": [round(w["pos"][0]), round(w["pos"][1])],
+                    "zulaessig": w["zulaessig"], "verstoesse": w["verstoesse"],
+                    # seit 2.9 (P3): außer Reichweite (Kanone jenseits des Ortsanfangs KRÄHE) – kein Einschlag
+                    "einschlag_t": round(w["t"]) if w["t"] is not None else None,
+                    "einschlag_pos": [round(w["pos"][0]), round(w["pos"][1])] if w["pos"] is not None else None,
+                    "waehlbar": w.get("waehlbar", True), "ausser_reichweite": w.get("ausser_reichweite", []),
                     "fenster": fenster_text(sz["spieluhr"]["start"], werte),
                     "getroffen": [{"ziel": g[0], "was": g[1], "kategorie": g[2]} for g in w["getroffen"]],
                     "nebenwirkung": neben})
@@ -307,13 +312,23 @@ def pruefe(d):
     for z in sz["ziele"]:
         if z["typ"] not in fz:
             fehler.append(f"{z['id']}: Typ {z['typ']} fehlt im Katalog")
-    gemeldet, letzte_meldung = set(), {}
+    gemeldet, letzte_meldung, bedingt = set(), {}, {}
     for m in sz["meldungen"]:
         for zid in m["ziele"]:
             if zid not in ziele:
                 fehler.append(f"{m['id']}: Ziel {zid} unbekannt")
+            if m.get("bedingung"):
+                # seit 2.9 (P4.2): eine bedingte Meldung (M38) darf ungemeldete Ziele nennen – sie kommt nur nach ihrer Bedingung
+                bedingt.setdefault(zid, []).append(m["id"])
+                continue
             gemeldet.add(zid)
             letzte_meldung[zid] = m["t_s"]
+        b = m.get("bedingung")
+        if b:
+            if b.get("typ") != "freigabe" or not b.get("ziele") or any(x not in ziele for x in b.get("ziele", [])):
+                fehler.append(f"{m['id']}: Bedingung ungültig ({b})")
+            if not m.get("bedingt_gewollt"):
+                warn.append(f"{m['id']}: bedingte Meldung ohne Begründung (bedingt_gewollt)")
         if m.get("fall") and m["fall"] not in faelle:
             fehler.append(f"{m['id']}: Fall {m['fall']} unbekannt")
         if m.get("folge_von") and m["folge_von"] not in mids:
@@ -322,8 +337,10 @@ def pruefe(d):
         if f["meldung"] not in mids:
             fehler.append(f"{f['id']}: Meldung {f['meldung']} unbekannt")
     for zid in ziele:
-        if zid not in gemeldet and not ziele[zid].get("ungemeldet") and not ziele[zid].get("nur_kontakt"):
+        if zid not in gemeldet and zid not in bedingt and not ziele[zid].get("ungemeldet") and not ziele[zid].get("nur_kontakt"):
             warn.append(f"{zid} wird nie gemeldet")
+        if zid in bedingt and ziele[zid].get("bedingt_gemeldet") not in bedingt[zid]:
+            fehler.append(f"{zid}: in der bedingten Meldung {bedingt[zid]}, aber bedingt_gemeldet fehlt")
         if zid in gemeldet and ziele[zid].get("ungemeldet"):
             fehler.append(f"{zid}: ungemeldet, steht aber in einer Meldung")
     for e in sz.get("ereignisse", []):
@@ -514,7 +531,7 @@ def pruefe(d):
                 fehler.append(f"{h['id']}: {h['ziel']} ist um {L.mmss(h['t_s'])} nicht im Raum")
             p = L.position(z, h["t_s"])
             if pza and p[0] >= pza["einsatzbereich"]["x_max"]:
-                fehler.append(f"{h['id']}: {h['ziel']} liegt außerhalb des Einsatzbereichs der PzAbw (x = {p[0]:.0f})")
+                fehler.append(f"{h['id']}: {h['ziel']} liegt außer Reichweite der Kanone (x = {p[0]:.0f})")
             vor = L.gt_bei(z, h["t_s"] - 0.5)
             if not vor["legitim"]:
                 fehler.append(f"{h['id']}: eigene PzAbw wirkt auf {h['ziel']} ({vor['kategorie']})")
@@ -864,10 +881,14 @@ def pruefe(d):
     MAX_LAGE = 140
     lage_max = 0
     for i in sz["injects"] + sz.get("reserve_injects", []):
-        lang = lagemeldung_laengste(sz, i)
-        lage_max = max(lage_max, len(lang))
-        if len(lang) > MAX_LAGE:
-            fehler.append(f"{i['id']}: Lagemeldung {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
+        # seit 2.9 (P4.1) jede Textvariante
+        for nr, text in enumerate([i["text"]] + [v["text"] for v in i.get("varianten") or []]):
+            lang = lagemeldung_laengste(sz, dict(i, text=text))
+            lage_max = max(lage_max, len(lang))
+            if len(lang) > MAX_LAGE:
+                fehler.append(f"{i['id']}{f' Variante {nr}' if nr else ''}: Lagemeldung {len(lang)} Zeichen (höchstens {MAX_LAGE}): {lang}")
+            if "{" in V.fmt(L.anzeige_text(text, sz), LAENGSTE):
+                fehler.append(f"{i['id']}: unbekannter Platzhalter in „{text}“")
     vm = (vs or {}).get("meldungen")
     if vm:
         ort = " " + max((o["text"] for o in vs.get("orte", [])), key=len, default="")
@@ -916,10 +937,13 @@ def pruefe(d):
     fehler += auswertung_plan(d)
 
     # ---------------------------------------------------------------- Kennzahlen
-    falsch = [h for h in hilfe if h["argus_falsch"]]
+    # seit 2.9 (P4.2): ARGUS-Bilanz der Grundlage ohne bedingte Meldungen (M38 kommt nur nach einer Freigabe auf die PT-91)
+    grund = [m for m in sz["meldungen"] if not m.get("bedingung")]
+    ids_grund = {m["id"] for m in grund}
+    falsch = [h for h in hilfe if h["argus_falsch"] and h["meldung"] in ids_grund]
     bek = {h["meldung"]: h for h in hilfe}
-    konf_f = [m["argus"]["konfidenz"] for m in sz["meldungen"] if bek[m["id"]]["argus_falsch"]]
-    konf_r = [m["argus"]["konfidenz"] for m in sz["meldungen"]
+    konf_f = [m["argus"]["konfidenz"] for m in grund if bek[m["id"]]["argus_falsch"]]
+    konf_r = [m["argus"]["konfidenz"] for m in grund
               if m["argus"]["empfehlung"] == "BEKÄMPFEN" and not bek[m["id"]]["argus_falsch"]]
     steil = max(wm.values(), key=lambda w: w["wirkradius_m"])["id"]
     praez = [w for w in wm if wm[w]["wirkradius_m"] <= 50 and not wm[w].get("einsatzbereich")]
@@ -928,7 +952,7 @@ def pruefe(d):
         "artillerie_treffer": treffer_art if et and vr else 0,
         "meldungen": len(sz["meldungen"]), "zielobjekte": len(ziele),
         "fahrzeuge_gemeldet": len(gemeldet),
-        "argus_richtig": len(hilfe) - len(falsch), "argus_falsch": len(falsch),
+        "argus_richtig": len(grund) - len(falsch), "argus_falsch": len(falsch), "bedingt": [m["id"] for m in sz["meldungen"] if m.get("bedingung")],
         "falsch_meldungen": [h["meldung"] for h in falsch],
         "konfidenz_falsch_mittel": round(statistics.mean(konf_f), 1) if konf_f else None,
         "konfidenz_richtig_bekaempfen_mittel": round(statistics.mean(konf_r), 1) if konf_r else None,
@@ -956,6 +980,84 @@ def pruefe(d):
         warn.append("Kernaussage der Auswertung prüfen: ARGUS ist bei falschen Empfehlungen nicht sicherer als bei richtigen")
 
     return {"kennzahlen": kz, "meldungen": hilfe, "warnungen": warn, "fehler": fehler, "n_injects": n_inj}
+
+
+# ---------------------------------------------------------------- Seit 2.9 (P4): Lagemeldungen passend zum Geschehen
+# Wörter, an denen eine Lagemeldung ein Ergebnis behauptet (dann braucht sie `behauptet`, ggf. `varianten`)
+ERGEBNIS_WOERTER = ("brennt", "zerstört", "getroffen", "eingebrochen", "zurück", "genommen", "zerschlagen", "ausgefallen", "verletzt",
+                    "bekämpft", "Eigenbeschuss", "Einschlag", "unter Mörserfeuer", "sammelt", "hält vor", "gestört")
+
+
+def laeufe_behauptung():
+    """Die Läufe der Prüfung P4.5: ohne Eingriff, naiv, ideal, ARGUS allein und mit Verstärkungen (wie simuliere_durchlauf)."""
+    import simuliere_durchlauf as S
+    return [("ohne Eingriff", "ohne", None), ("naiv", "naiv", None), ("ideal", "ideal", None), ("ARGUS allein", "argus", None),
+            ("naiv + V-1…V-4", "naiv", S.VERSTAERKUNG_STANDARD), ("ideal + V-1…V-4", "ideal", S.VERSTAERKUNG_STANDARD),
+            ("naiv + V-1…V-5", "naiv", S.VERSTAERKUNG_ZU_SPAET)]
+
+
+def pruefe_behauptungen(d, laeufe=None):
+    """Prüfung P4.5 (seit 2.9): Jede Lagemeldung, die ein Ergebnis behauptet, stimmt zur Zeit der Meldung mit dem Stand im Spiel des Teams.
+
+    Statisch: Jede Lagemeldung (fest, bedingt, Reserve) mit einem Ergebnis-Wort trägt `behauptet`; jeder Schlüssel ist bekannt; jede Variante
+    hat `behauptet` und `text`. In den Läufen: Für jede Lagemeldung, die kommt, stimmt die Behauptung der gewählten Variante zur Zeit der
+    Meldung (behauptung.Lage); jede Druckmeldung K-… nennt eine Quelle, deren Feuer bis dahin auf einem der genannten Panzer lag.
+    Liefert dict(fehler, warnungen, tabelle={inject: {lauf: (zeit, variante)}}, k={lauf: Zahl der K-Meldungen})."""
+    import behauptung as B
+    import simuliere_durchlauf as S
+    sz = d["szenario"]
+    fehler, warn = [], []
+    alle = sz["injects"] + sz.get("reserve_injects", [])
+    for i in alle:
+        texte = [i["text"]] + [v.get("text", "") for v in i.get("varianten") or []]
+        if any(w in t for t in texte for w in ERGEBNIS_WOERTER) and "behauptet" not in i:
+            fehler.append(f"{i['id']}: Text behauptet ein Ergebnis, aber `behauptet` fehlt: {i['text'][:80]}")
+        for b in [i.get("behauptet") or {}] + [v.get("behauptet") for v in i.get("varianten") or []]:
+            if b is None:
+                fehler.append(f"{i['id']}: Variante ohne `behauptet`")
+                continue
+            for k in b:
+                if k not in B.SCHLUESSEL:
+                    fehler.append(f"{i['id']}: Behauptung „{k}“ unbekannt")
+        for v in i.get("varianten") or []:
+            if not v.get("text"):
+                fehler.append(f"{i['id']}: Variante ohne Text")
+    plan = {i["id"]: i for i in sz["injects"]}
+    tabelle, k_zahl = {}, {}
+    for name, team, ein in (laeufe or laeufe_behauptung()):
+        det = []
+        S.lauf(d, team, det, ein)
+        lage = next((e["lage"] for e in det if "lage" in e), None)
+        if lage is None:
+            fehler.append(f"{name}: Lauf ohne Lage (Verlustmodell fehlt?)")
+            continue
+        vl = next((e for e in det if "verluste" in e), {})
+        ev = vl.get("zeitlinie", [])
+        pz_name = {p["id"]: p["name"] for p in (sz.get("eigene_truppe") or {}).get("panzer", [])}
+        for e in det:
+            if "inject" not in e:
+                continue
+            iid, t = e["inject"], e["t"]
+            if "stufe" in e:
+                # Druckmeldung der Kp: aus der Zeitlinie gebaut – Feuer der Quelle lag bis t auf einem der genannten Panzer
+                k_zahl[name] = k_zahl.get(name, 0) + 1
+                namen = [x for x in pz_name.values() if x in e.get("zug", "")] or list(pz_name.values())
+                hg = next((h for h in (sz.get("hintergrund") or {}).get("ereignisse", []) if h["id"] == e.get("quelle")), None)
+                if hg is not None and hg.get("art") == "feindartillerie":
+                    # erste Meldung einer Feuervorbereitung (M3.1): ihr erster Einschlag überhaupt, auch daneben
+                    if min(x[0] for x in hg["einschlaege"]) > t + 1e-6:
+                        fehler.append(f"{name}: {iid} {L.mmss(t)} – Feuervorbereitung {hg['id']} schlägt erst später ein")
+                    continue
+                if not any(x["quelle"] == e.get("quelle") and x["t"] <= t + 1e-6 and pz_name.get(x["panzer"]) in namen for x in ev):
+                    fehler.append(f"{name}: {iid} {L.mmss(t)} – kein Feuer der Quelle {e.get('quelle')} auf {e.get('zug')} bis dahin")
+                continue
+            if iid not in plan:
+                continue
+            abw = lage.abweichungen(e.get("behauptet"), t)
+            tabelle.setdefault(iid, {})[name] = (t, e.get("variante"))
+            if abw:
+                fehler.append(f"{name}: {iid} {L.mmss(t)} behauptet {', '.join(abw)}, das stimmt nicht („{(e.get('text') or plan[iid]['text'])[:90]}“)")
+    return {"fehler": fehler, "warnungen": warn, "tabelle": tabelle, "k": k_zahl}
 
 
 def main():
@@ -1003,6 +1105,20 @@ def main():
             for w in h["wirkmittel"]:
                 if w["nebenwirkung"]:
                     print(f"      {w['wm']}: trifft auch {'; '.join(n['text'] for n in w['nebenwirkung'])}")
+    # seit 2.9 (P4.5): Lagemeldungen passend zum Geschehen – in sieben Modellläufen (nicht mit --kurz)
+    if "--kurz" not in sys.argv and not fehler:
+        rb = pruefe_behauptungen(d)
+        fehler += rb["fehler"]
+        warn += rb["warnungen"]
+        laeufe = [x[0] for x in laeufe_behauptung()]
+        print()
+        print("Lagemeldungen mit Behauptung (P4.5) – Zeit und Variante je Lauf (0 = Text der Lagemeldung, – = kommt nicht):")
+        for iid, je in sorted(rb["tabelle"].items(), key=lambda kv: kv[0]):
+            if not (plan_i := next((i for i in sz["injects"] if i["id"] == iid), None)) or not (plan_i.get("behauptet") is not None or plan_i.get("varianten")):
+                continue
+            print(f"  {iid:6}" + " | ".join(f"{n}: {L.mmss(je[n][0])} {je[n][1] if je[n][1] is not None else 'B'}" if n in je else f"{n}: –" for n in laeufe))
+        print("  Druckmeldungen K-… je Lauf (aus der Zeitlinie, Quelle geprüft): " + ", ".join(f"{n} {k}" for n, k in rb["k"].items()))
+        print(f"  Behauptungen geprüft: {'alle stimmen' if not rb['fehler'] else str(len(rb['fehler'])) + ' stimmen nicht'}")
     print()
     for w in warn:
         print("WARNUNG:", w)

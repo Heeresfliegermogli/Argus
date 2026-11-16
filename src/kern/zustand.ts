@@ -72,6 +72,8 @@ export interface InjectStand {
   /** seit 2.3: Druckmeldung – Zug und Stufe der Dringlichkeit (0–3) */
   zug?: string;
   stufe?: number;
+  /** seit 2.9 (P4.1): Nummer der Textvariante (0 = Text der Lagemeldung), deren Behauptung zur Zeit der Meldung stimmte */
+  variante?: number;
 }
 
 export interface Spielzustand {
@@ -295,7 +297,7 @@ export function anwenden(z: Spielzustand, e: Ereignis, inh: Inhalte): Spielzusta
       const d = e.daten;
       n.injects = {
         ...n.injects,
-        [id]: { id, erschienen: s, manuell: !!d.manuell, ...(d.text ? { text: d.text } : {}), ...(d.zug ? { zug: d.zug } : {}), ...(d.stufe !== undefined ? { stufe: d.stufe } : {}) },
+        [id]: { id, erschienen: s, manuell: !!d.manuell, ...(d.text ? { text: d.text } : {}), ...(d.zug ? { zug: d.zug } : {}), ...(d.stufe !== undefined ? { stufe: d.stufe } : {}), ...(d.variante !== undefined ? { variante: d.variante } : {}) },
       };
       n.injectReihenfolge = [...n.injectReihenfolge, id];
       break;

@@ -124,10 +124,18 @@ def spieluhr_im_text(text, start, dauer_s):
     return re.sub(r"\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b", f, text)
 
 
-def basis_nummern(sz):
-    """Zielnummer je Meldung des Szenarios (ohne Verstärkungen): Platz nach t_s, 1 … n (wie src/kern/zielnummern.ts)."""
-    liste = sorted(((m["t_s"], i, m["id"]) for i, m in enumerate(sz["meldungen"]) if not m.get("verstaerkung")))
-    return {mid: n for n, (_, _, mid) in enumerate(liste, 1)}
+def basis_nummern(sz, mit_bedingten=True):
+    """Zielnummer je Meldung des Szenarios (ohne Verstärkungen): Platz nach t_s, 1 … n (wie src/kern/zielnummern.ts). Seit 2.9 (P4.2)
+    zählen bedingte Meldungen (M38) nicht mit; sie heißen wie eine Verstärkung nach der Meldung davor („33a“) – mit_bedingten=True
+    gibt ihnen diese Nummer (Drehbuch, Mappe)."""
+    liste = sorted(((m["t_s"], i, m["id"]) for i, m in enumerate(sz["meldungen"]) if not m.get("verstaerkung") and not m.get("bedingung")))
+    out = {mid: n for n, (_, _, mid) in enumerate(liste, 1)}
+    if mit_bedingten:
+        for m in sz["meldungen"]:
+            if m.get("bedingung") and not m.get("verstaerkung"):
+                vorher = [out[x["id"]] for x in sz["meldungen"] if x["id"] in out and x["t_s"] <= m["t_s"]]
+                out[m["id"]] = f"{max(vorher) if vorher else 0}a"
+    return out
 
 
 def meldungen_im_text(text, basis):
@@ -409,8 +417,9 @@ def pruefe_wirkmittel(d, ziel_pos, wm_id, t_s=0, ausgenommen=(), zerstoert=None,
         if a < r + sab:
             v.append(f"eigene Kräfte {k['kurz']} zu nah ({a:.0f} m < {r + sab:.0f} m)")
     b = wm.get("einsatzbereich") or {}
-    if "x_max" in b and ziel_pos[0] >= b["x_max"]:
-        v.append(f"außerhalb Einsatzbereich ({b['text']})")
+    if "x_max" in b and ziel_pos[0] >= b["x_max"] - (REICHWEITE_RAND if b.get("hart") else 0):
+        # seit 2.9 (P3): harte Grenze – „außer Reichweite (nur bis Ortsanfang KRÄHE)“
+        v.append(f"außer Reichweite ({b.get('kurz') or b['text']})")
     getroffen = []
     zerstoert = zerstoert or {}
     nur_ziel = bool(wm.get("nur_zielfahrzeug"))
@@ -480,27 +489,61 @@ def einschlaege(d, ziele_ids, wm_id, t_freigabe, zerstoert=None, bestand=None):
     Fahrzeug, der i-te startet zug.abstand_s · i nach der Freigabe; reicht der Bestand nicht (bestand < n), nur die ersten
     `bestand` Fahrzeuge. Liefert [(t_einschlag, pos, ziel-id)] in Reihenfolge der Fahrzeuge."""
     wm = d["wirkmittel"][wm_id]
+    grenze = harte_grenze(wm)
     if zug_art(wm) != "je_fahrzeug":
-        return [einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)]
+        e = einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)
+        return [e] if grenze is None or e[1][0] < grenze - REICHWEITE_RAND else []
     kand = stehende(d, ziele_ids, t_freigabe, zerstoert)
     if not kand:
-        return [einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)]
+        e = einschlag(d, ziele_ids, wm_id, t_freigabe, zerstoert)
+        return [e] if grenze is None or e[1][0] < grenze - REICHWEITE_RAND else []
     if bestand is not None:
         kand = kand[:max(1, bestand)]
     abstand = (wm.get("zug") or {}).get("abstand_s", 0)
     out = []
-    for i, z0 in enumerate(kand):
-        t0 = t_freigabe + i * abstand
+    for z0 in kand:
+        # seit 2.9 (P3): Fahrzeuge jenseits der harten Grenze werden übersprungen (kein Schuss); der nächste Schuss im Zug kommt
+        # dann um abstand_s · (Zahl der bisherigen Schüsse) nach der Freigabe
+        t0 = t_freigabe + len(out) * abstand
         t_e = t0 + flugzeit(wm, position(z0, t0))
         for _ in range(4):
             t_e = t0 + flugzeit(wm, position(z0, t_e))
-        out.append((t_e, position(z0, t_e), z0["id"]))
+        p = position(z0, t_e)
+        if grenze is not None and p[0] >= grenze - REICHWEITE_RAND:      # auch nach dem Runden auf 0,1 m im Protokoll diesseits
+            continue
+        out.append((t_e, p, z0["id"]))
     return out
+
+
+REICHWEITE_RAND = 0.05      # m: in Reichweite heißt mehr als so weit diesseits der harten Grenze (wie regeln.ts)
+
+
+def harte_grenze(wm):
+    """x der harten Grenze eines Wirkmittels (seit 2.9, P3: Kanone nur bis zum Ortsanfang KRÄHE) oder None."""
+    b = wm.get("einsatzbereich") or {}
+    return b.get("x_max") if b.get("hart") else None
+
+
+def ausser_reichweite(d, ziele_ids, wm_id, t_freigabe, zerstoert=None, bestand=None):
+    """Fahrzeuge der Meldung, die das Wirkmittel wegen der harten Grenze nicht bekämpft (bei der Freigabe stehend, Einschlag jenseits)."""
+    wm = d["wirkmittel"][wm_id]
+    if harte_grenze(wm) is None:
+        return []
+    getroffen = {zid for _, _, zid in einschlaege(d, ziele_ids, wm_id, t_freigabe, zerstoert, bestand)}
+    kand = [z["id"] for z in stehende(d, ziele_ids, t_freigabe, zerstoert)]
+    if zug_art(wm) != "je_fahrzeug" or not kand:
+        return [] if getroffen else (kand or ziele_ids[:1])
+    if bestand is not None:
+        kand = kand[:max(1, bestand)]
+    return [x for x in kand if x not in getroffen]
 
 
 def treffer_einschlag(d, t_e, pos, zid, wm_id, zerstoert=None):
     """Was ein Einschlag trifft (Lage beim Einschlag) und welche Regeln dort verletzt sind: (zulaessig, verstoesse, getroffen)."""
     ok, verst, getr = pruefe_wirkmittel(d, pos, wm_id, t_s=t_e, zerstoert=zerstoert, ziel=zid)
+    grenze = harte_grenze(d["wirkmittel"][wm_id])
+    if grenze is not None and pos[0] >= grenze:
+        return False, verst, []          # seit 2.9 (P3): jenseits der Grenze keine Wirkung (nur ältere Protokolle)
     z0 = next(z for z in alle_ziele(d["szenario"]) if z["id"] == zid)
     if vorhanden(z0, t_e) and (zerstoert or {}).get(zid, 1e9) > t_e \
             and not any(g[0] == zid and g[1] in ("Fahrzeug", "Attrappe") for g in getr):
@@ -541,7 +584,20 @@ def wirkung(d, ziele_ids, wm_id, t_freigabe, zerstoert=None, bestand=None):
         for g in getr:
             if g[1] in ("Fahrzeug", "Attrappe"):
                 zer[g[0]] = min(zer.get(g[0], 1e9), t_e)
-    return zusammenfassen(teile)
+    # seit 2.9 (P3): harte Grenze – kein Fahrzeug in Reichweite: nicht wählbar; nur ein Teil: Hinweis „nur k von n in Reichweite“
+    aus = ausser_reichweite(d, ziele_ids, wm_id, t_freigabe, zerstoert, bestand)
+    b = d["wirkmittel"][wm_id].get("einsatzbereich") or {}
+    if not teile:
+        return {"t": None, "pos": None, "ziel": None, "zulaessig": False, "verstoesse": [f"außer Reichweite ({b.get('kurz') or b.get('text')})"],
+                "getroffen": [], "einschlaege": [], "ausser_reichweite": aus, "waehlbar": False}
+    w = zusammenfassen(teile)
+    w["ausser_reichweite"] = aus
+    w["waehlbar"] = True
+    if aus:
+        # wie bisher eine Warnung (Modellteams wählen das Wirkmittel dann nicht); beim Einschlag selbst kein Verstoß
+        w["zulaessig"] = False
+        w["hinweis"] = f"nur {len(teile)} von {len(teile) + len(aus)} in Reichweite ({b.get('kurz') or b.get('text')})"
+    return w
 
 
 # ----------------------------------------------------------------------------- EloKa (seit 2.4, E4)
@@ -747,9 +803,11 @@ def durchbruch_gruppen(sz, einspielen=None):
     return out
 
 
-def durchbruch_stand(gruppe, zmap, zerstoert, ausser_gefecht=None):
+def durchbruch_stand(gruppe, zmap, zerstoert, ausser_gefecht=None, gemeldet=None, vorher_s=None):
     """Bricht die Gruppe zu ihrem Zeitpunkt t_s durch? (durch, grund). Aufgehalten, wenn bis t_s ein Fahrzeug zerstört oder
-    außer Gefecht ist; nichts zu tun, wenn keines mehr im Raum ist."""
+    außer Gefecht ist; nichts zu tun, wenn keines mehr im Raum ist. Seit 2.9 (P4.2): Durchbrechen kann nur, wen das Team kennen
+    konnte – mit gemeldet ({ziel: Zeit der ersten Meldung}) und vorher_s (szenario.durchbruch.gemeldet_s) bricht die Gruppe nur
+    durch, wenn ARGUS mindestens eines ihrer Fahrzeuge spätestens vorher_s vor t_s gemeldet hat; sonst bleibt sie am Ostufer."""
     t = gruppe["t_s"]
     ag = ausser_gefecht or {}
     for x in gruppe["ziele"]:
@@ -759,6 +817,8 @@ def durchbruch_stand(gruppe, zmap, zerstoert, ausser_gefecht=None):
             return False, f"{x} außer Gefecht"
     if not any(x in zmap and vorhanden(zmap[x], t) for x in gruppe["ziele"]):
         return False, "nicht mehr im Raum"
+    if gemeldet is not None and vorher_s is not None and not any(gemeldet.get(x, 1e9) <= t - vorher_s for x in gruppe["ziele"]):
+        return False, "von ARGUS nicht gemeldet"
     return True, None
 
 

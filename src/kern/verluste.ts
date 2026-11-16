@@ -1,4 +1,4 @@
-// Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 1./PzBtl 613 (Kopfzeile „1. Kp“) mit vier Kampfpanzern,
+// Verlustmodell der eigenen Truppe – seit Szenario 2.5 (Änderung F2) die 2./PzBtl 613 (Kopfzeile „2. Kp“) mit vier Kampfpanzern,
 // Zustand je Panzer. Portiert aus tools/referenz/verluste.py; gleiche Ergebnisse prüft tests/durchlauf.test.ts (fünf Teams =
 // Simulation, inkl. Einschießen, Zustand je Panzer und Druckmeldungen).
 //
@@ -464,7 +464,7 @@ export function stand(inh: Inhalte, ev: VerlustEreignis[], t = Infinity): Record
   return out;
 }
 
-/** Kopfzeile: „1. Kp: 3/4 einsatzbereit · 4 Verwundete“ (einsatzbereit = nicht ausgefallen; eingeschränkte schießen weiter). */
+/** Kopfzeile: „2. Kp: 3/4 einsatzbereit · 4 Verwundete“ (einsatzbereit = nicht ausgefallen; eingeschränkte schießen weiter). */
 export function zug(st: Record<string, PanzerStand>): ZugStand {
   const w = Object.values(st);
   return {
@@ -725,7 +725,7 @@ export function injectAnzeige(inh: Inhalte, i: InjectStand): { von: string; text
   const plan = inh.injects[i.id];
   const vm = (inh.basis ?? inh).szenario.verluste?.meldungen;
   return {
-    von: plan?.von ?? (vm?.von || "1. Kp"),
+    von: plan?.von ?? (vm?.von || "2. Kp"),
     text: i.text ?? plan?.text ?? "",
     an: plan?.an ?? "Team",
   };

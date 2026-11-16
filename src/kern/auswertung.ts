@@ -778,7 +778,8 @@ export function kennzahlen(basis: Inhalte, team: TeamLauf, verlaeufe = meldungsV
     meldungen: {
       erschienen: z.reihenfolge.filter((id) => !(z.meldungen[id].stufe === "entfallen" && !z.meldungen[id].entfallen)).length,
       bearbeitet: liste.filter((mv) => mv.entscheidungen.length > 0 && (mv.stufe === "erledigt" || mv.stufe === "wirkung" || mv.zurueckgestellt)).length,
-      gesamt: inh.szenario.meldungen.length,
+      // seit 2.9 (P4.2): eine bedingte Meldung (M38) zählt nur, wenn sie bei diesem Team kam
+      gesamt: inh.szenario.meldungen.filter((m) => !m.bedingung || z.meldungen[m.id]).length,
       offenEnde: liste.filter((mv) => mv.stufe === "offen" && !mv.zurueckgestellt).length,
     },
     feind: { bekaempft: bekaempft.size, gemeldet: gemeldet.size },
@@ -856,7 +857,8 @@ function spanne(werte: number[]) {
 /** ARGUS-Bilanz der Grundlage (ohne Verstärkungen) und was die Teams daraus gemacht haben. */
 export function konfidenzBild(basis: Inhalte, verlaeufe: Map<string, MeldungsVerlauf>[], kz: Kennzahlen[]): KonfidenzBild {
   const inh = basis.basis ?? basis;
-  const punkte = inh.szenario.meldungen.map((m): KonfidenzPunkt => {
+  // seit 2.9 (P4.2): ohne bedingte Meldungen (M38 kommt nur nach einer Freigabe auf die PT-91) – wie die Verstärkungen
+  const punkte = inh.szenario.meldungen.filter((m) => !m.bedingung).map((m): KonfidenzPunkt => {
     const eloka = elokaAktiv(inh, {}, m.t_s);
     const gestoert = Math.max(eloka ? inh.szenario.eloka!.bildstoerung : 0, ...m.bild.sicht.map((s) => Math.max(s.anteil ?? 0, s.ziel_anteil ?? 0)));
     let bek = 0;

@@ -58,7 +58,7 @@ describe("Effekte (kern/effekte.ts)", () => {
         expect(Number.isFinite(mitte[0]) && Number.isFinite(mitte[1])).toBe(true);
       } else if (wm.einsatzbereich) {
         expect(f?.echtzeit_s).toBeGreaterThan(0);
-        // seit 2.5 (F1.5): Kanone eines Panzers der 1. Kp (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
+        // seit 2.5 (F1.5): Kanone eines Panzers der 2. Kp (Mündung ≤ 6 m vor dem Panzer); 2.3/2.4 aus der Stellung eines Zuges
         const vonPanzer = panzer(inh).some((p) => Math.hypot(p.pos[0] - f!.von![0], p.pos[1] - f!.von![1]) < 6);
         expect(vonPanzer, id).toBe(true);
       } else {
@@ -96,7 +96,7 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Feindfeuer auf die 1. Kp (seit 2.5, F2.6): Fehlschuss neben dem Panzer, Treffer am Panzer, ausgefallen = Rauch am Panzer", async () => {
+  it("Feindfeuer auf die eigene Kp (seit 2.5, F2.6): Fehlschuss neben dem Panzer, Treffer am Panzer, ausgefallen = Rauch am Panzer", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
       const v = verlustLage(m.inh, m.z).ereignisse;
@@ -169,10 +169,11 @@ describe("Effekte (kern/effekte.ts)", () => {
     }
   });
 
-  it("Sichtbarkeit: das Team sieht nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf die 1. Kp", async () => {
+  it("Sichtbarkeit: das Team sieht nichts zu ungemeldeten Zielen, das Plenum nur Feindartillerie, Nebel und Feuer auf die 2. Kp", async () => {
     for (const m of await lauf()) {
       const inh = weltFuer(m.inh, m.z);
-      const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id));
+      // seit 2.9 (P4.2): Z-27/Z-28 kennt ein Team, das die bedingte Meldung M38 bekam (nach einer Freigabe auf die PT-91)
+      const ungemeldet = new Set(inh.szenario.ziele.filter((z) => z.ungemeldet && !(z.bedingt_gemeldet && m.z.meldungen[z.bedingt_gemeldet])).map((z) => z.id));
       const kennt = bekannteZiele(inh, m.z);
       for (const u of ungemeldet) expect(kennt.has(u)).toBe(false);
       const fx = effekte(inh, m.z, kennt);

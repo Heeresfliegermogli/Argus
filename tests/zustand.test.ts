@@ -18,7 +18,7 @@ describe("Inhalte", () => {
     const inh = await inhalte();
     const b = pruefeInhalte(inh);
     expect(b.fehler).toEqual([]);
-    expect(inh.szenario.meldungen).toHaveLength(37); // seit 2.4: M31–M36 (E5), seit 2.7: M37 (I2.2)
+    expect(inh.szenario.meldungen).toHaveLength(38); // seit 2.4: M31–M36 (E5), seit 2.7: M37 (I2.2), seit 2.9: M38 (bedingt, P4.2)
     expect(Object.keys(inh.ziele)).toHaveLength(49); // seit 2.4: Z-38–Z-49 (E2, E5)
   });
 });
@@ -125,7 +125,7 @@ describe("Spielstand aus dem Protokoll", () => {
 });
 
 describe("Zeitplan und Aktionen", () => {
-  it("I-08b kommt nur ohne Freigabe auf die PT-91, I-08a nach Freigabe +60 s", async () => {
+  it("I-08b kommt nur ohne Freigabe auf die PT-91, I-08a seit 2.9 (P4.4) 60 s nach dem Treffer auf einen PT-91", async () => {
     const inh = await inhalte();
     seq = 0;
     const basis = [
@@ -137,9 +137,17 @@ describe("Zeitplan und Aktionen", () => {
     expect(injectsOhne).toContain("I-08b");
     expect(injectsOhne).not.toContain("I-08a");
 
-    const mit = zustandAus([...basis, e("entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", warnungen: [] }, 1250)], inh);
-    const injectsMit = faellig(inh, mit, 1311).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
+    const ent = e("entscheid", { meldung: "M20", entscheid: "bekaempfen", wirkmittel: "PZA", warnungen: [] }, 1250);
+    const mit = zustandAus([...basis, ent], inh);
+    // ohne Treffer (Einschlag steht aus) noch nicht – „Eigenbeschuss! … ausgefallen“ nur, wenn ein PT-91 wirklich getroffen wurde
+    expect(faellig(inh, mit, 1311).some((x) => x.typ === "inject" && x.daten.inject === "I-08a")).toBe(false);
+    const getroffen = zustandAus([...basis, ent,
+      e("wirkung", { meldung: "M20", wirkmittel: "PZA", pos: [480, 470], t_freigabe: 1250, t_einschlag: 1255, ziel: "Z-15", verstoesse: [],
+        getroffen: [{ ziel: "Z-15", was: "fahrzeug", kategorie: "verbuendet" }] }, 1255)], inh);
+    const injectsMit = faellig(inh, getroffen, 1316).filter((x) => x.typ === "inject").map((x) => (x.daten as { inject: string }).inject);
     expect(injectsMit).toContain("I-08a");
+    const i08a = faellig(inh, getroffen, 1316).find((x) => x.typ === "inject" && x.daten.inject === "I-08a")!;
+    expect((i08a.daten as { text?: string }).text).toBe("Eigenbeschuss! Ein Panzer ausgefallen, Besatzung verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!");
     expect(faellig(inh, mit, 1490).some((x) => x.typ === "inject" && x.daten.inject === "I-08b")).toBe(false);
   });
 

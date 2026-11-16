@@ -49,15 +49,23 @@ export function durchbruchGruppen(inh: Inhalte, eingespielt: readonly { gruppe: 
 /**
  * Bricht die Gruppe zu ihrem Zeitpunkt t_s durch? Aufgehalten, wenn bis t_s ein Fahrzeug zerstört oder außer Gefecht
  * ist; nichts zu tun, wenn keines mehr im Raum ist. inh: Welt des Teams (Verstärkungen eingespielt).
+ * Seit 2.9 (P4.2): Durchbrechen kann nur, wen das Team kennen konnte – mit `gemeldet` (Ziel → Zeit der ersten Meldung, kern/behauptung.ts
+ * gemeldetAb) bricht die Gruppe nur durch, wenn ARGUS mindestens eines ihrer Fahrzeuge spätestens durchbruch.gemeldet_s vor t_s gemeldet
+ * hat; sonst bleibt sie am Ostufer (Standardroute). Wie argus_lib.durchbruch_stand.
  */
 export function durchbruchStand(
   g: DurchbruchAbs, inh: Inhalte, zerstoert: Record<string, number>, ausserGefecht: Record<string, number> = {},
+  gemeldet?: Record<string, number>,
 ): { durch: boolean; grund?: string } {
   for (const x of g.ziele) {
     if ((zerstoert[x] ?? Infinity) <= g.t_s) return { durch: false, grund: `${x} zerstört` };
     if ((ausserGefecht[x] ?? Infinity) <= g.t_s) return { durch: false, grund: `${x} außer Gefecht` };
   }
   if (!g.ziele.some((x) => inh.ziele[x] && vorhanden(inh.ziele[x], g.t_s))) return { durch: false, grund: "nicht mehr im Raum" };
+  const vorher = (inh.basis ?? inh).szenario.durchbruch?.gemeldet_s;
+  if (gemeldet && vorher !== undefined && !g.ziele.some((x) => (gemeldet[x] ?? Infinity) <= g.t_s - vorher)) {
+    return { durch: false, grund: "von ARGUS nicht gemeldet" };
+  }
   return { durch: true };
 }
 

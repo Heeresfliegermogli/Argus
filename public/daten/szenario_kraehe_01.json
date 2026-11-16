@@ -2,8 +2,8 @@
   "id": "kraehe-01",
   "anzeige": "KRÄHE-01",
   "titel": "ARGUS – Verteidigung Brücke ELSTER",
-  "version": "2.8",
-  "stand": "2026-11-15",
+  "version": "2.9",
+  "stand": "2026-11-16",
   "fiktiv": "Gelände, Einheiten, Namen und Ereignisse sind frei erfunden. Keine Dienst- oder Personaldaten.",
   "kataloge": {
     "karte": "karte_kraehe.json",
@@ -26,7 +26,7 @@
       "name": "Gefechtsaufklärung",
       "von_s": 300,
       "bis_s": 660,
-      "absicht": "Feuervorbereitung auf die 1. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch. Ab 10:00 stört ein EloKa-Fahrzeug den Datenlink: Alle Bilder rauschen, ARGUS wird unsicherer, bis es zerstört ist oder verlegt.",
+      "absicht": "Feuervorbereitung auf die 2. Kp, dann greift ein verstärkter Zug (1 T-72, 3 BMP-2) über die Felder Richtung Brücke an, um das eigene Feuer herauszulocken. Der Mörser am Waldrand MARDER unterstützt, die Attrappe (S1) gehört zur Täuschung. Ein BMP-2 brennt an der Brücke, Rückzug unter Rauch. Ab 10:00 stört ein EloKa-Fahrzeug den Datenlink: Alle Bilder rauschen, ARGUS wird unsicherer, bis es zerstört ist oder verlegt.",
       "kurz": "Der Feind greift mit einzelnen Kräften an und tastet eure Stellungen ab."
     },
     {
@@ -50,8 +50,8 @@
       "name": "Krise",
       "von_s": 1200,
       "bis_s": 1500,
-      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 1. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist, bricht über den Bach durch (I-13). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1). Eine Familie flieht im Pkw an der Kolonne vorbei (S8); die Bewohner verlassen das Haus am Schutzschild-SPz (S5).",
-      "kurz": "Die Lage spitzt sich zu: Der Feind drängt mit allem, was er hat, zum Bach; die 1. Kp braucht Feuer."
+      "absicht": "Die Reste sammeln sich an der Brücke Ost, die 2. Kp fordert Feuer (I-06). Wer bis zu seinem Angriffszeitpunkt nicht aufgehalten ist und von ARGUS gemeldet wurde, bricht über den Bach durch (I-13 nennt ihn). Die polnische Panzerkompanie kommt von Süden (S3), ein T-72 ist außer Gefecht und die Besatzung ergibt sich (N2). Zerschlägt der Gegenangriff die letzten Feindkräfte (E-01), weicht der Feind aus (Auslaufen). Dazwischen flieht eine Landwirtsfamilie mit dem Traktor (N1). Eine Familie flieht im Pkw an der Kolonne vorbei (S8); die Bewohner verlassen das Haus am Schutzschild-SPz (S5).",
+      "kurz": "Die Lage spitzt sich zu: Der Feind drängt mit allem, was er hat, zum Bach; die 2. Kp braucht Feuer."
     }
   ],
   "vorbild": {
@@ -91,18 +91,18 @@
       "titel": "Lage für alle (Spielleitung liest vor, ca. 80 s)",
       "absaetze": [
         "Übungslage, alles fiktiv. Russische Kräfte greifen seit dem Morgen nach Westen an. Im Raum KRÄHE erwarten wir eine verstärkte Kompanie mit Kampf- und Schützenpanzern.",
-        "Unser Panzerbataillon 613 verteidigt westlich von KRÄHE. Am Westrand hält die 1./PzBtl 613 mit vier Kampfpanzern Leopard 2A7V (1/1 bis 1/4) Brücke ELSTER und Furt Nord.",
+        "Unser Panzerbataillon 613 verteidigt westlich von KRÄHE. Am Westrand hält die 2./PzBtl 613 mit vier Kampfpanzern Leopard 2A7V (1/1 bis 1/4) Brücke ELSTER und Furt Nord.",
         "Auftrag: Der Feind darf den Bach ELSTER nicht überschreiten, vor allem nicht an der Brücke ELSTER. Östlich des Bachs liegen die Ortschaft KRÄHE und die Schule; dort sind noch Zivilpersonen.",
         "Die Drohne „Milan“ klärt den Raum östlich des Bachs auf. Ihre Bilder wertet das KI-System ARGUS aus: Klasse, Konfidenz und eine Empfehlung. Laut Hersteller liegt ARGUS in 94 % der Fälle richtig.",
-        "Jedes Team ist die Zielbearbeitung des Bataillons und entscheidet jede ARGUS-Meldung: BEKÄMPFEN (mit Mörser, Loitering Munition oder der Kanone der 1. Kp), ZURÜCKSTELLEN oder ABLEHNEN. Ohne eure Entscheidung wird nichts bekämpft. Alle Teams spielen dieselbe Lage, 25 Minuten in Echtzeit."
+        "Jedes Team ist die Zielbearbeitung des Bataillons und entscheidet jede ARGUS-Meldung: BEKÄMPFEN (mit Mörser, Loitering Munition oder der Kanone der 2. Kp), ZURÜCKSTELLEN oder ABLEHNEN. Ohne eure Entscheidung wird nichts bekämpft. Alle Teams spielen dieselbe Lage, 25 Minuten in Echtzeit."
       ]
     },
     "team": {
       "titel": "Zielbearbeitung",
       "absaetze": [
         "Ihr seid zu zweit oder zu dritt an einem Laptop. Jede ARGUS-Meldung kommt in euren Eingang, die Wartezeit läuft mit. Ihr seht das Drohnenbild live mit Lupe und was ARGUS meldet: Klasse (Panzer, Fahrzeug oder Infanterie), Zugehörigkeit, Konfidenz und Empfehlung.",
-        "Ihr entscheidet: BEKÄMPFEN mit Mörser, Loitering Munition (LM) oder der Kanone der 1. Kp, ZURÜCKSTELLEN (beobachten) oder ABLEHNEN. Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt; bei einem Zug wirken LM und Kanone je Fahrzeug, der Mörser als Fläche.",
-        "Am Rand laufen die Lagemeldungen von Brigade, Nachbarn und der 1. Kp. In der Kopfzeile stehen eure vier Panzer mit ihrem Zustand und der Bestand der Wirkmittel. Ihr verantwortet jede Wirkung."
+        "Ihr entscheidet: BEKÄMPFEN mit Mörser, Loitering Munition (LM) oder der Kanone der 2. Kp, ZURÜCKSTELLEN (beobachten) oder ABLEHNEN. Die Fahrzeuge fahren weiter, während die Wirkung unterwegs ist: Das System rechnet den Einschlagort voraus und warnt bei einem Regelverstoß dort, verhindert ihn aber nicht. Wirkmittel sind begrenzt; bei einem Zug wirken LM und Kanone je Fahrzeug, der Mörser als Fläche.",
+        "Am Rand laufen die Lagemeldungen von Brigade, Nachbarn und der 2. Kp. In der Kopfzeile stehen eure vier Panzer mit ihrem Zustand und der Bestand der Wirkmittel. Ihr verantwortet jede Wirkung."
       ]
     },
     "spielleitung": {
@@ -117,12 +117,12 @@
   "kraefte": [
     {
       "id": "K-1",
-      "name": "1./PzBtl 613",
+      "name": "2./PzBtl 613",
       "kurz": "1./613",
       "zugehoerigkeit": "eigen",
       "typ": "pz_zug",
       "pos": [54, 444],
-      "text": "1./PzBtl 613 am Westrand hinter der Hecke: 1/1 (Zugführer) an der Hauptstraße, 1/2 am Waldrand FUCHS, 1/3 und 1/4 südlich der Hauptstraße"
+      "text": "2./PzBtl 613 am Westrand hinter der Hecke: 1/1 (Zugführer) an der Hauptstraße, 1/2 am Waldrand FUCHS, 1/3 und 1/4 südlich der Hauptstraße"
     }
   ],
   "zonen": [
@@ -356,7 +356,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 des verstärkten Zuges. Stößt über die Hauptstraße zur Brücke vor und wird dort um 10:09:05 von der Kanone der 1. Kp getroffen (Wrack brennt).",
+        "text": "SPz BMP-2 des verstärkten Zuges. Stößt über die Hauptstraße zur Brücke vor und wird dort um 10:09:05 von der Kanone der 2. Kp getroffen (Wrack brennt).",
         "legitim": true
       }
     },
@@ -487,7 +487,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2 der Achse SÜD. Kommt aus dem Wald DACHS, fährt zwischen Ortschaft und Schule zur Brücke ELSTER Ost und schießt von dort auf die 1. Kp.",
+        "text": "SPz BMP-2 der Achse SÜD. Kommt aus dem Wald DACHS, fährt zwischen Ortschaft und Schule zur Brücke ELSTER Ost und schießt von dort auf die 2. Kp.",
         "legitim": true
       },
       "feuert": [{"von_s": 988, "bis_s": 1210, "takt_s": 10, "salve": 3, "pause_s": 50}],
@@ -524,7 +524,7 @@
           [977.4, 758, 315], [981.6, 768, 305]
         ]
       },
-      "spaet_gewollt": "S4: Der Mörser schießt ab 10:16:46 aus dem Hof RABE; ARGUS meldet ihn erst 10:18:15 mit NICHT BEKÄMPFEN (Zivilpersonen) – der Druck der 1. Kp (I-07) gehört zum Fall."
+      "spaet_gewollt": "S4: Der Mörser schießt ab 10:16:46 aus dem Hof RABE; ARGUS meldet ihn erst 10:18:15 mit NICHT BEKÄMPFEN (Zivilpersonen) – der Druck der 2. Kp (I-07) gehört zum Fall."
     },
     {
       "id": "Z-20",
@@ -640,7 +640,7 @@
       ],
       "gt": {
         "kategorie": "ausser_gefecht",
-        "text": "KPz T-72 der zweiten Staffel, kampfunfähig: um 10:19:30 nördlich der Brücke von der Kanone der 1. Kp getroffen, Kette abgesprungen, Motor aus. Die Besatzung steht ohne Waffen 4 m neben dem Panzer und ergibt sich.",
+        "text": "KPz T-72 der zweiten Staffel, kampfunfähig: um 10:19:30 nördlich der Brücke von der Kanone der 2. Kp getroffen, Kette abgesprungen, Motor aus. Die Besatzung steht ohne Waffen 4 m neben dem Panzer und ergibt sich.",
         "legitim": false,
         "ab_s": 1170,
         "vorher": {
@@ -651,7 +651,7 @@
         "hinweis": "ARGUS klassifiziert richtig (es ist ein T-72), die Empfehlung ist trotzdem falsch: Jede Wirkung träfe die Besatzung, die sich ergibt, und der kampfunfähige Panzer bringt keinen militärischen Vorteil mehr.",
         "bezug": "Schutz des Gegners, der außer Gefecht ist (Art. 41 ZP I)."
       },
-      "spaet_gewollt": "N2: Zustandswechsel – ARGUS meldet den Panzer erst, nachdem die 1. Kp ihn getroffen hat (10:19:30)."
+      "spaet_gewollt": "N2: Zustandswechsel – ARGUS meldet den Panzer erst, nachdem die 2. Kp ihn getroffen hat (10:19:30)."
     },
     {
       "id": "Z-25",
@@ -707,10 +707,11 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72, letzte Feindkräfte, sammelt sich an der Brücke ELSTER Ost für den Angriff über den Bach. Von ARGUS nicht gemeldet; Ziel des polnischen Gegenangriffs.",
+        "text": "KPz T-72, letzte Feindkräfte, sammelt sich an der Brücke ELSTER Ost für den Angriff über den Bach. Von ARGUS nur gemeldet (M38), wenn der polnische Gegenangriff wegen einer Freigabe auf die PT-91 ausfällt; sonst Ziel des Gegenangriffs.",
         "legitim": true
       },
-      "bereitstellung": true
+      "bereitstellung": true,
+      "bedingt_gemeldet": "M38"
     },
     {
       "id": "Z-28",
@@ -727,10 +728,11 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "SPz BMP-2, letzte Feindkräfte: kommt über die Achse SÜD an der Schule vorbei und sammelt an der Brücke ELSTER Ost. Von ARGUS nicht gemeldet; Ziel des polnischen Gegenangriffs.",
+        "text": "SPz BMP-2, letzte Feindkräfte: kommt über die Achse SÜD an der Schule vorbei und sammelt an der Brücke ELSTER Ost. Von ARGUS nur gemeldet (M38), wenn der polnische Gegenangriff wegen einer Freigabe auf die PT-91 ausfällt; sonst Ziel des Gegenangriffs.",
         "legitim": true
       },
-      "bereitstellung": true
+      "bereitstellung": true,
+      "bedingt_gemeldet": "M38"
     },
     {
       "id": "Z-29",
@@ -764,7 +766,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72, Panzerzug der Achse NORD, Führungsfahrzeug. Hält in Feuerstellung am Ostufer nördlich der Furt und wird um 10:17:55 von der Kanone der 1. Kp getroffen.",
+        "text": "KPz T-72, Panzerzug der Achse NORD, Führungsfahrzeug. Hält in Feuerstellung am Ostufer nördlich der Furt und wird um 10:17:55 von der Kanone der 2. Kp getroffen.",
         "legitim": true
       }
     },
@@ -783,7 +785,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72, Panzerzug der Achse NORD. Wird um 10:16:50 vor der Furt von der Kanone der 1. Kp getroffen.",
+        "text": "KPz T-72, Panzerzug der Achse NORD. Wird um 10:16:50 vor der Furt von der Kanone der 2. Kp getroffen.",
         "legitim": true
       }
     },
@@ -802,7 +804,7 @@
       },
       "gt": {
         "kategorie": "feind",
-        "text": "KPz T-72, Panzerzug der Achse NORD. Wird um 10:17:10 von der Kanone der 1. Kp getroffen.",
+        "text": "KPz T-72, Panzerzug der Achse NORD. Wird um 10:17:10 von der Kanone der 2. Kp getroffen.",
         "legitim": true
       }
     },
@@ -899,7 +901,7 @@
       "gt": {
         "kategorie": "feind",
         "legitim": true,
-        "text": "Spähpanzer BRDM-2 mit vorgeschobenem Beobachter: kommt um 10:08:45 über die Nordstraße, lenkt vom Nordrand der Ortschaft das Feuer der Feindartillerie auf die 1. Kp und zieht sich um 10:10 mit dem Rückzug des verstärkten Zuges nach Norden zurück."
+        "text": "Spähpanzer BRDM-2 mit vorgeschobenem Beobachter: kommt um 10:08:45 über die Nordstraße, lenkt vom Nordrand der Ortschaft das Feuer der Feindartillerie auf die 2. Kp und zieht sich um 10:10 mit dem Rückzug des verstärkten Zuges nach Norden zurück."
       }
     },
     {
@@ -1348,7 +1350,7 @@
         "merkmale": []
       },
       "loesung": {"entscheid": "BEKÄMPFEN", "text": "Mörser zulässig"},
-      "zweck": "Die Feindartillerie liegt auf der 1. Kp, der Mörser am Waldrand MARDER geht in Stellung und eröffnet gleich das Feuer (10:05:52, seit 2.7 erst nach der Meldung): Beginn der Gefechtsaufklärung. Mörser zulässig."
+      "zweck": "Die Feindartillerie liegt auf der 2. Kp, der Mörser am Waldrand MARDER geht in Stellung und eröffnet gleich das Feuer (10:05:52, seit 2.7 erst nach der Meldung): Beginn der Gefechtsaufklärung. Mörser zulässig."
     },
     {
       "id": "M06",
@@ -1457,7 +1459,7 @@
         "personen": [{"bei": "Z-37", "art": "soldat", "anzahl": 1, "versatz_m": [-0.3, 0.0], "oben": true}],
         "merkmale": []
       },
-      "loesung": {"entscheid": "BEKÄMPFEN", "text": "LM: Ortschaft, Kanone außerhalb des Einsatzbereichs"},
+      "loesung": {"entscheid": "BEKÄMPFEN", "text": "LM: Ortschaft, Kanone außer Reichweite (nur bis Ortsanfang KRÄHE)"},
       "zweck": "Vorgeschobener Beobachter der Feindartillerie am Nordrand der Ortschaft: echtes Ziel, wegen der Ortschaft nur LM (R3), die Kanone reicht nicht so weit. Füllt die Pause zwischen Attrappe und Rückzug."
     },
     {
@@ -1760,7 +1762,7 @@
         "merkmale": []
       },
       "loesung": {"entscheid": "BEKÄMPFEN", "text": "Kanone oder LM"},
-      "zweck": "Druck an der Brücke: Die Achse SÜD kommt aus dem Wald DACHS und geht an der Brücke Ost in Stellung; der vordere SPz schießt ab 10:16:28 auf die 1. Kp. Seit 2.7 (I2.1) gemeldet, sobald er hält – vor dem ersten Schuss.",
+      "zweck": "Druck an der Brücke: Die Achse SÜD kommt aus dem Wald DACHS und geht an der Brücke Ost in Stellung; der vordere SPz schießt ab 10:16:28 auf die 2. Kp. Seit 2.7 (I2.1) gemeldet, sobald er hält – vor dem ersten Schuss.",
       "dicht_gewollt": "I2.1: Meldung beim Halt an der Brücke Ost (10:16:10), 10 s nach M15 – Hauptangriff, vor dem ersten Schuss 10:16:28"
     },
     {
@@ -1934,7 +1936,7 @@
         "entscheid": "ZURÜCKSTELLEN",
         "text": "ARGUS warnt zu Recht: Zivilpersonen am Mörser; Folgemeldung abwarten (Druck durch I-07)"
       },
-      "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 1. Kp freigibt, trifft die Zivilpersonen."
+      "zweck": "Schlüsselfall: ARGUS liegt richtig und warnt. Wer unter dem Druck der 2. Kp freigibt, trifft die Zivilpersonen."
     },
     {
       "id": "M37",
@@ -2101,7 +2103,7 @@
         "entscheid": "ABLEHNEN",
         "text": "außer Gefecht, Besatzung ergibt sich (weißes Tuch); Gefangennahme veranlassen"
       },
-      "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die 1. Kp hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 1. Kp (I-06), Feuer auf die Brücke Ost zu legen."
+      "zweck": "ARGUS klassifiziert richtig, empfiehlt aber falsch: Klasse ist nicht gleich Ziel. Die 2. Kp hat den Panzer kurz vorher getroffen. Kommt 30 s nach der PT-91-Meldung und kurz nach der Forderung der 2. Kp (I-06), Feuer auf die Brücke Ost zu legen."
     },
     {
       "id": "M22",
@@ -2171,6 +2173,42 @@
       },
       "loesung": {"entscheid": "BEKÄMPFEN", "text": "mit LM"},
       "zweck": "Belohnung für Abwarten: jetzt ist die Bekämpfung rechtmäßig."
+    },
+    {
+      "id": "M38",
+      "t_s": 1335,
+      "ziele": ["Z-27", "Z-28"],
+      "phase": 5,
+      "bedingung": {"typ": "freigabe", "ziele": ["Z-15", "Z-16", "Z-17"]},
+      "argus": {
+        "klasse": "Panzer",
+        "zugehoerigkeit": "Feind",
+        "konfidenz": 91,
+        "empfehlung": "BEKÄMPFEN",
+        "einzeln": [93, 89]
+      },
+      "sensor": {
+        "waerme": "heiß (2 Fahrzeuge, Motoren laufen)",
+        "bewegung": "stehen in Bereitstellung",
+        "spuren": "Kettenspuren von Osten (Hauptstraße und Achse SÜD)",
+        "kennzeichnung": "keine erkannt",
+        "personen": "–",
+        "hinweis": "nur Spielleitung (seit 2.4, E6.3)"
+      },
+      "bild": {
+        "datei": "drohne/M38.webp",
+        "beschreibung": "Ein Kampfpanzer und ein Schützenpanzer stehen an der Brücke ELSTER Ost in Bereitstellung, der Kampfpanzer nördlich, der Schützenpanzer südlich der Hauptstraße.",
+        "sicht": [],
+        "ausschnitt_m": 150,
+        "merkmale": []
+      },
+      "loesung": {
+        "entscheid": "BEKÄMPFEN",
+        "wirkmittel": ["LM"],
+        "text": "echte Ziele, die letzten Feindkräfte an der Brücke Ost; Ortschaft: nur LM (Kanone außer Reichweite)"
+      },
+      "zweck": "Seit 2.9 (P4.2): bedingte Meldung – nur wenn das Team die PT-91 bekämpft hat und der polnische Gegenangriff deshalb ausfällt. ARGUS meldet dann die letzten Feindkräfte an der Brücke Ost (Z-27 T-72, Z-28 BMP-2) 78 s vor ihrem Angriff über die Brücke (D-04 10:23:33): Das Team kann sie bekämpfen. Tut es das nicht, brechen sie durch und I-13 nennt sie. Die Folge des Fehlers bei S3 bleibt sichtbar und fair. Ohne Freigabe auf die PT-91 kommt die Meldung nie (der Gegenangriff zerschlägt die beiden).",
+      "bedingt_gewollt": "P4.2: kommt nur nach einer Freigabe auf die PT-91 (Z-15–17); Nummer wie eine Verstärkung („33a“)"
     },
     {
       "id": "M24",
@@ -2304,15 +2342,30 @@
       "id": "I-11",
       "t_s": 560,
       "an": "Team",
-      "von": "1. Kp",
-      "text": "Feind greift mit verstärktem Zug Richtung Brücke an, ein SPz brennt an der Brücke Ost. Feind nebelt ein, zieht sich zurück.",
-      "zweck": "Lagebild: Gefechtsaufklärung erkennbar (Angriff, Verluste, Rückzug unter Rauch). Die Verwundeten des Zuges sind der Anlass für die Bergung (S2)."
+      "von": "2. Kp",
+      "text": "Feind greift mit verstärktem Zug Richtung Brücke an.",
+      "zweck": "Lagebild: Gefechtsaufklärung erkennbar (Angriff, Verluste, Rückzug unter Rauch). Die Verwundeten des Zuges sind der Anlass für die Bergung (S2).",
+      "behauptet": {"stehen": ["Z-09", "Z-10", "Z-11"]},
+      "varianten": [
+        {
+          "behauptet": {"hintergrund": ["H-02"], "stehen": ["Z-09", "Z-10"]},
+          "text": "Feind greift mit verstärktem Zug Richtung Brücke an, ein SPz brennt an der Brücke Ost. Der Rest hält vor der Brücke."
+        },
+        {
+          "behauptet": {"hintergrund": ["H-02"]},
+          "text": "Feind griff mit verstärktem Zug Richtung Brücke an, ein SPz brennt an der Brücke Ost."
+        },
+        {
+          "behauptet": {"zerstoert": ["Z-09", "Z-10", "Z-11"]},
+          "text": "Angriff des verstärkten Feindzuges Richtung Brücke ist zerschlagen."
+        }
+      ]
     },
     {
       "id": "I-12",
       "t_s": 880,
       "an": "Team",
-      "von": "1. Kp",
+      "von": "2. Kp",
       "text": "Feind greift mit einer Kp an: Richtung Furt, durch KRÄHE und an der Schule vorbei.",
       "zweck": "Lagebild: Hauptangriff auf drei Achsen (Felder Nord, Ortschaft, an der Schule vorbei). Erhöht das Zielaufkommen. Seit 2.8 (M3.1b) nur noch der Angriff: Den Beschuss der Feuervorbereitung H-04 meldet die Kp schon mit dem ersten Einschlag um 10:13:35."
     },
@@ -2323,25 +2376,34 @@
       "von": "Brigade",
       "fall": "S3",
       "text": "PL-PzKp (PT-91) greift ab 10:19 entlang Feldweg Süd nach Norden an. Auftrag: Feind Brücke Ost zerschlagen.",
-      "zweck": "Die entscheidende Information für S3, gut drei Minuten vor der Meldung und mitten im Hauptangriff, kurz vor S4. Sie steht nur im Feed der Lagemeldungen und läuft unter Druck leicht unter. Ideal: Das Team merkt sich Feldweg Süd und lehnt M20 ab."
+      "zweck": "Die entscheidende Information für S3, gut drei Minuten vor der Meldung und mitten im Hauptangriff, kurz vor S4. Sie steht nur im Feed der Lagemeldungen und läuft unter Druck leicht unter. Ideal: Das Team merkt sich Feldweg Süd und lehnt M20 ab.",
+      "behauptet": {}
     },
     {
       "id": "I-07",
       "t_s": 1095,
       "an": "Team",
-      "von": "1. Kp",
+      "von": "2. Kp",
       "fall": "S4",
       "text": "{pz} unter Mörserfeuer aus Hof RABE, {treffer}. Fordere sofortige Bekämpfung des Mörsers!",
       "zweck": "Gleichzeitig mit der Mörsermeldung im Hof RABE: menschlicher Druck gegen die berechtigte Warnung von ARGUS. Seit 2.5 nennt sie die tatsächlichen Treffer an 1/4 (der Mörser Z-19 schießt sich auf ihn ein); solange der Mörser steht, folgen Druckmeldungen der Kp (K-…).",
-      "verluste_panzer": "pz4"
+      "verluste_panzer": "pz4",
+      "behauptet": {"beschuss": {"quelle": "Z-19", "panzer": "pz4"}}
     },
     {
       "id": "I-06",
       "t_s": 1200,
       "an": "Team",
-      "von": "1. Kp",
-      "text": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp {bereit}/4 einsatzbereit, {zug_verw}. Feuer auf Brücke Ost!",
-      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls. Seit 2.5 nennt sie den Zustand der Kp (einsatzbereite Panzer, Verwundete)."
+      "von": "2. Kp",
+      "text": "Kp {bereit}/4 einsatzbereit, {zug_verw}. Feind drängt weiter zur Brücke, haltet die Brücke Ost unter Feuer!",
+      "zweck": "Druck genau auf den Raum, den der polnische Gegenangriff in wenigen Minuten angreift. Wer die Feindkräfte an der Brücke Ost nicht aufhält, riskiert den Durchbruch (A4) – wer auf die Polen schießt, ebenfalls. Seit 2.5 nennt sie den Zustand der Kp (einsatzbereite Panzer, Verwundete).",
+      "behauptet": {},
+      "varianten": [
+        {
+          "behauptet": {"feind_im_bereich": "E-01"},
+          "text": "Feind sammelt KPz und SPz an der Brücke Ost, Angriff steht bevor. Kp {bereit}/4 einsatzbereit, {zug_verw}. Feuer auf Brücke Ost!"
+        }
+      ]
     },
     {
       "id": "I-10",
@@ -2349,16 +2411,24 @@
       "an": "Team",
       "von": "Brigade",
       "text": "Abschlussmeldung bis 10:25: bekämpfte Ziele, eigene Verluste, Besonderheiten.",
-      "zweck": "Überleitung in die Auswertung; das Team zieht selbst Bilanz."
+      "zweck": "Überleitung in die Auswertung; das Team zieht selbst Bilanz.",
+      "behauptet": {}
     },
     {
       "id": "I-08a",
       "an": "Team",
       "von": "PL-PzKp",
       "fall": "S3",
-      "bedingung": {"typ": "freigabe", "ziele": ["Z-15", "Z-16", "Z-17"], "verzoegerung_s": 60},
+      "bedingung": {"typ": "treffer", "ziele": ["Z-15", "Z-16", "Z-17"], "verzoegerung_s": 60},
       "text": "Eigenbeschuss! Ein Panzer ausgefallen, Besatzung verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!",
-      "zweck": "Rückmeldung zum Eigenbeschuss noch im Spiel. Der Gegenangriff bricht ab, die letzten Feindkräfte an der Brücke bleiben stehen."
+      "zweck": "Rückmeldung zum Eigenbeschuss noch im Spiel. Der Gegenangriff bricht ab, die letzten Feindkräfte an der Brücke bleiben stehen.",
+      "behauptet": {"getroffen": {"ziele": ["Z-15", "Z-16", "Z-17"]}, "ereignis_aus": "E-01"},
+      "varianten": [
+        {
+          "behauptet": {"getroffen": {"ziele": ["Z-15", "Z-16", "Z-17"], "min": 2}, "ereignis_aus": "E-01"},
+          "text": "Eigenbeschuss! {getroffen_zahl} Panzer ausgefallen, Besatzungen verwundet. Gegenangriff eingestellt. Feuer sofort einstellen!"
+        }
+      ]
     },
     {
       "id": "I-08b",
@@ -2366,8 +2436,23 @@
       "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1400},
-      "text": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen. Feind weicht nach Osten aus.",
-      "zweck": "Rückmeldung nach dem letzten Schuss der PT-91 (seit 2.7 10:23:20), wenn S3 richtig gelöst wurde: Der Gegenangriff entscheidet das Gefecht."
+      "text": "Gegenangriff an der Brücke Ost im Gange.",
+      "zweck": "Rückmeldung nach dem letzten Schuss der PT-91 (seit 2.7 10:23:20), wenn S3 richtig gelöst wurde: Der Gegenangriff entscheidet das Gefecht.",
+      "behauptet": {},
+      "varianten": [
+        {
+          "behauptet": {"ereignis_traf": "E-01", "bereich_frei": "E-01"},
+          "text": "Gegenangriff erfolgreich: Brücke Ost genommen, letzte Feindkräfte dort zerschlagen."
+        },
+        {
+          "behauptet": {"ereignis_traf": "E-01", "feind_im_bereich": "E-01"},
+          "text": "Gegenangriff an der Brücke Ost: Feind dort bekämpft, Brücke Ost noch nicht genommen."
+        },
+        {
+          "behauptet": {"bereich_frei": "E-01"},
+          "text": "Gegenangriff erfolgreich: Brücke Ost genommen, dort kein Feind mehr angetroffen."
+        }
+      ]
     },
     {
       "id": "I-09",
@@ -2376,16 +2461,31 @@
       "fall": "S4",
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-19"], "verzoegerung_s": 60},
       "text": "Meldung aus KRÄHE: Am Hof RABE vier Zivilpersonen schwer verletzt, darunter zwei Kinder.",
-      "zweck": "Rückmeldung, wenn trotz Warnung freigegeben wurde und die Zivilpersonen beim Einschlag noch im Wirkradius standen."
+      "zweck": "Rückmeldung, wenn trotz Warnung freigegeben wurde und die Zivilpersonen beim Einschlag noch im Wirkradius standen.",
+      "behauptet": {"getroffen": {"ziele": ["Z-19"], "personen": "zivil"}}
     },
     {
       "id": "I-13",
       "an": "Team",
-      "von": "1. Kp",
+      "von": "2. Kp",
       "bedingung": {"typ": "durchbruch", "verzoegerung_s": 10},
-      "text": "Feind über den Bach ELSTER eingebrochen! {pz} getroffen, Kp {bereit}/4 einsatzbereit. Wir binden ihn mit der Kanone.",
-      "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren. Seit 2.5 nennt sie den Panzer, den der Durchbruch traf, und die einsatzbereiten Panzer der Kp.",
-      "verluste_panzer": "durchbruch"
+      "text": "{durch} über {ueber} eingebrochen! Kp {bereit}/4 einsatzbereit.",
+      "zweck": "Rückmeldung, wenn eine Feindgruppe nicht aufgehalten wurde und über Brücke oder Furt durchbricht (10 s nach dem ersten Fahrzeug über dem Bach). In der Auswertung als Kennzahl, nicht als Punkte; das Gefecht ist nicht zu verlieren. Seit 2.5 nennt sie den Panzer, den der Durchbruch traf, und die einsatzbereiten Panzer der Kp. Seit 2.9 (P4.3): nennt die durchgebrochenen Fahrzeuge mit Zielnummer und den Übergang; nur gemeldete Kräfte brechen durch. Geht der Durchbruch auf die Freigabe der PT-91 zurück, sagt sie es.",
+      "verluste_panzer": "durchbruch",
+      "behauptet": {"durchbruch": true},
+      "varianten": [
+        {
+          "behauptet": {
+            "durchbruch": ["Z-02", "Z-18", "Z-47", "Z-48", "Z-20", "Z-36", "Z-27", "Z-28"],
+            "ereignis_aus": "E-01"
+          },
+          "text": "Gegenangriff PL ausgefallen: {durch} über {ueber} eingebrochen! Kp {bereit}/4 einsatzbereit."
+        },
+        {
+          "behauptet": {"durchbruch": true, "panzer_getroffen": "durchbruch"},
+          "text": "{durch} über {ueber} eingebrochen! {pz} getroffen, Kp {bereit}/4 einsatzbereit."
+        }
+      ]
     },
     {
       "id": "I-14",
@@ -2394,7 +2494,8 @@
       "fall": "S5",
       "bedingung": {"typ": "freigabe_mit_zivil", "ziele": ["Z-41"], "verzoegerung_s": 60},
       "text": "Meldung aus KRÄHE: Vor einem Wohnhaus an der Hauptstraße fünf Zivilpersonen verletzt, darunter zwei Kinder.",
-      "zweck": "Rückmeldung, wenn beim Einschlag auf den Schutzschild-SPz die Bewohner noch im Wirkradius standen (S5)."
+      "zweck": "Rückmeldung, wenn beim Einschlag auf den Schutzschild-SPz die Bewohner noch im Wirkradius standen (S5).",
+      "behauptet": {"getroffen": {"ziele": ["Z-41"], "personen": "zivil"}}
     },
     {
       "id": "I-15",
@@ -2403,7 +2504,8 @@
       "fall": "S8",
       "bedingung": {"typ": "treffer", "ziele": ["Z-43"], "verzoegerung_s": 60},
       "text": "Kamerateam bei KRÄHE getroffen, zwei Journalisten schwer verletzt. Video läuft bereits. Erklärung gefordert.",
-      "zweck": "Rückmeldung, wenn eine eigene Wirkung das Pressefahrzeug oder das Kamerateam traf (S8)."
+      "zweck": "Rückmeldung, wenn eine eigene Wirkung das Pressefahrzeug oder das Kamerateam traf (S8).",
+      "behauptet": {"getroffen": {"ziele": ["Z-43"], "personen": "zivil"}}
     },
     {
       "id": "I-16",
@@ -2412,7 +2514,8 @@
       "fall": "S8",
       "bedingung": {"typ": "treffer", "ziele": ["Z-44"], "verzoegerung_s": 60},
       "text": "Meldung aus KRÄHE: Pkw einer Familie auf der Hauptstraße getroffen, vier Insassen schwer verletzt, darunter zwei Kinder.",
-      "zweck": "Rückmeldung, wenn eine eigene Wirkung den fliehenden Pkw traf (S8)."
+      "zweck": "Rückmeldung, wenn eine eigene Wirkung den fliehenden Pkw traf (S8).",
+      "behauptet": {"getroffen": {"ziele": ["Z-44"]}}
     },
     {
       "id": "I-17",
@@ -2420,8 +2523,19 @@
       "von": "PL-PzKp",
       "fall": "S3",
       "bedingung": {"typ": "keine_freigabe_bis", "ziele": ["Z-15", "Z-16", "Z-17"], "t_s": 1305},
-      "text": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, bekämpfen Feind an der Brücke Ost.",
-      "zweck": "Seit 2.7 (I3.2): Auflösung von S3 nach Zeit – 90 s nach M20 ohne Freigabe sind die PT-91 als verbündet erkannt."
+      "text": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, beobachten Brücke Ost.",
+      "zweck": "Seit 2.7 (I3.2): Auflösung von S3 nach Zeit – 90 s nach M20 ohne Freigabe sind die PT-91 als verbündet erkannt.",
+      "behauptet": {},
+      "varianten": [
+        {
+          "behauptet": {"feind_im_bereich": "E-01"},
+          "text": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, bekämpfen Feind an der Brücke Ost."
+        },
+        {
+          "behauptet": {"ereignis_traf": "E-01"},
+          "text": "PL-PzKp: Feuerstellung Feldweg Süd bezogen, Feind an der Brücke Ost bekämpft."
+        }
+      ]
     }
   ],
   "reserve_injects": [
@@ -2430,28 +2544,32 @@
       "an": "Team",
       "von": "ARGUS-System",
       "text": "Datenlink gestört. Bildalter bis 15 s, Bildqualität eingeschränkt.",
-      "einsatz": "nur, wenn das Spiel zu leicht läuft; passt zu Z-23 (Störsender)."
+      "einsatz": "nur, wenn das Spiel zu leicht läuft; passt zu Z-23 (Störsender).",
+      "behauptet": {"eloka": true}
     },
     {
       "id": "R-02",
       "an": "Team",
       "von": "Brigade",
       "text": "Warum haben Sie das letzte Ziel nicht bekämpft? Begründen Sie das.",
-      "einsatz": "wenn ein Team viel ablehnt; erzeugt Rechtfertigungsdruck."
+      "einsatz": "wenn ein Team viel ablehnt; erzeugt Rechtfertigungsdruck.",
+      "behauptet": {"letzte_nicht_bekaempft": true}
     },
     {
       "id": "R-03",
       "an": "Team",
       "von": "Brigade (Presse)",
       "text": "Video in sozialen Medien: brennendes Fahrzeug mit Rotem Kreuz vor einer Schule in KRÄHE.",
-      "einsatz": "nur, wenn das Sanitätsfahrzeug Z-12 bekämpft wurde (60 s nach Freigabe)."
+      "einsatz": "nur, wenn das Sanitätsfahrzeug Z-12 bekämpft wurde (60 s nach Freigabe).",
+      "behauptet": {"getroffen": {"ziele": ["Z-12"]}}
     },
     {
       "id": "R-04",
       "an": "Team",
       "von": "Brigade (ZMZ)",
       "text": "Einschlag auf dem Schulgelände KRÄHE: Fenster zersplittert, mehrere Kinder durch Splitter verletzt.",
-      "einsatz": "nur, wenn eine Wirkung die Schule berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag."
+      "einsatz": "nur, wenn eine Wirkung die Schule berührt hat (z. B. beim BMP-2 an der Schule, N4); 60 s nach dem Einschlag.",
+      "behauptet": {"verstoss": "R2"}
     }
   ],
   "ereignisse": [
@@ -2470,20 +2588,20 @@
         {"t_s": 1365, "von": "Z-15"},
         {"t_s": 1385, "von": "Z-16"}
       ],
-      "regel": "Seit 2.7 (I3.1): Die PT-91 schießen ab 10:20:45, sobald sie im ersten Halt südlich der Brücke stehen, alle 20 s auf die Feindkräfte an der Brücke Ost – je Schuss auf das erste Fahrzeug in ziele_reihenfolge (Reihenfolge der Ankunft), das dann im Bereich steht, nicht zerstört und ein legitimes Ziel ist; steht keines da, geht der Schuss nicht hinaus. Bekämpft das Team vorher Z-15–17, entfällt E-01 bzw. bricht ab: Der Angriff endet und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen (nicht in der Liste).",
+      "regel": "Seit 2.7 (I3.1): Die PT-91 schießen ab 10:20:45, sobald sie im ersten Halt südlich der Brücke stehen, alle 20 s auf die Feindkräfte an der Brücke Ost – je Schuss auf das erste Fahrzeug in ziele_reihenfolge (Reihenfolge der Ankunft), das dann im Bereich steht, nicht zerstört und ein legitimes Ziel ist; steht keines da, geht der Schuss nicht hinaus. Bekämpft das Team vorher Z-15–17, entfällt E-01 bzw. bricht ab: Der Angriff endet und die Panzer bleiben stehen. Der Panzer Z-24 (außer Gefecht, Besatzung ergibt sich) wird nicht beschossen (nicht in der Liste). Seit 2.9 (P4): Fällt E-01 aus (Freigabe auf die PT-91), meldet ARGUS die letzten Feindkräfte an der Brücke Ost mit M38 (10:22:15); nur gemeldete Kräfte brechen durch.",
       "papier": "SL 1 trägt die Wirkungen ab 10:20:45 auf der Kontrollkarte ein (Schuss alle 20 s) und gibt I-08b um 10:23:20.",
       "ziele_reihenfolge": ["Z-02", "Z-18", "Z-47", "Z-48", "Z-20", "Z-36", "Z-27", "Z-28"],
       "bereich": {"x": [450, 610], "y": [320, 450], "name": "Brücke ELSTER Ost"}
     }
   ],
   "hintergrund": {
-    "hinweis": "Die eigene 1. Kp und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der Kanone kommen vom Panzer in `von` (seit 2.5; ist er ausgefallen, schießt der nächste einsatzbereite – nur Darstellung) und treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie), und nur Ziele bis zum Bach (x < 500 m). Die Feindartillerie liegt auf den Stellungen: Einschläge im Umkreis von 10 m eines Panzers treffen ihn (Verlustmodell), die übrigen sind Darstellung; Spielobjekte trifft sie nicht. Rauch ist Darstellung. Alles steht als Ereignis im Protokoll. Seit 2.8 (M3.1): Die Kp meldet den ersten Einschlag jeder Feuervorbereitung (auch daneben) für die Panzer in `panzer`.",
+    "hinweis": "Die eigene 2. Kp und die Feindartillerie wirken nach Drehbuch, unabhängig von den Teams. Wirkungen der Kanone kommen vom Panzer in `von` (seit 2.5; ist er ausgefallen, schießt der nächste einsatzbereite – nur Darstellung) und treffen nur, wenn das Ziel dann noch steht (sonst entfallen sie), und nur Ziele bis zum Ortsanfang KRÄHE (x < 500 m). Die Feindartillerie liegt auf den Stellungen: Einschläge im Umkreis von 10 m eines Panzers treffen ihn (Verlustmodell), die übrigen sind Darstellung; Spielobjekte trifft sie nicht. Rauch ist Darstellung. Alles steht als Ereignis im Protokoll. Seit 2.8 (M3.1): Die Kp meldet den ersten Einschlag jeder Feuervorbereitung (auch daneben) für die Panzer in `panzer`.",
     "ereignisse": [
       {
         "id": "H-01",
         "t_s": 300,
         "art": "feindartillerie",
-        "ziel": "1./PzBtl 613",
+        "ziel": "2./PzBtl 613",
         "einschlaege": [
           [300, 150, 352], [304, 118, 425], [309, 96, 300], [313, 70, 395], [318, 40, 330], [323, 58, 361],
           [328, 33, 432]
@@ -2514,13 +2632,13 @@
         "id": "H-04",
         "t_s": 815,
         "art": "feindartillerie",
-        "ziel": "1./PzBtl 613",
+        "ziel": "2./PzBtl 613",
         "einschlaege": [
           [815, 140, 470], [819, 98, 360], [823, 120, 530], [827, 90, 412], [832, 75, 500], [836, 84, 440],
           [841, 52, 470], [845, 30, 395], [850, 62, 560], [854, 45, 520], [859, 58, 405]
         ],
         "panzer": ["pz1", "pz2", "pz3", "pz4"],
-        "text": "Feuervorbereitung des Hauptangriffs auf alle vier Panzer der 1. Kp."
+        "text": "Feuervorbereitung des Hauptangriffs auf alle vier Panzer der 2. Kp."
       },
       {
         "id": "H-05",
@@ -2589,7 +2707,7 @@
         "id": "H-12",
         "t_s": 1190,
         "art": "feindartillerie",
-        "ziel": "1./PzBtl 613",
+        "ziel": "2./PzBtl 613",
         "einschlaege": [[1190, 130, 410], [1198, 96, 380], [1206, 80, 440], [1214, 70, 418], [1222, 30, 400]],
         "panzer": ["pz1"],
         "text": "Feindartillerie auf 1/1 an der Hauptstraße: Der Feind will die Brücke noch nehmen."
@@ -3022,7 +3140,7 @@
       "ziele": ["Z-15", "Z-16", "Z-17"],
       "info_bei": "Lagemeldung I-04 im Feed (17:00); ab 20:45 auf der Karte: sie schießen auf den Feind; im Bild nicht erkennbar",
       "info_kurz": "nur im Feed (I-04)",
-      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. Im Bild ist der Fehler nicht zu erkennen; die Information stand gut drei Minuten vorher im Feed der Lagemeldungen (I-04) – mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE. Ab 10:20:45 schießen die PT-91 aus Feuerstellungen südlich der Brücke sichtbar auf die Feindkräfte an der Brücke Ost (auf der Karte und im Drohnenbild); wer bis 10:21:45 nicht bekämpft hat, sieht sie dann als verbündet markiert. Wer vorher bekämpft, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen.",
+      "kern": "Als Finale stößt eine polnische Panzerkompanie von Süden vor, um die letzten Feindkräfte an der Brücke zu zerschlagen. ARGUS meldet sie mit 96 % als drei T-72. PT-91 sind eine polnische Weiterentwicklung des T-72, ARGUS wurde laut Kleingedrucktem überwiegend auf russische Fahrzeuge trainiert. Im Bild ist der Fehler nicht zu erkennen; die Information stand gut drei Minuten vorher im Feed der Lagemeldungen (I-04) – mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE. Ab 10:20:45 schießen die PT-91 aus Feuerstellungen südlich der Brücke sichtbar auf die Feindkräfte an der Brücke Ost (auf der Karte und im Drohnenbild); wer bis 10:21:45 nicht bekämpft hat, sieht sie dann als verbündet markiert. Wer vorher bekämpft, trifft den eigenen Entsatz, und die letzten Feindkräfte bleiben stehen: ARGUS meldet sie um 10:22:15 (Ziel 33a); bekämpft das Team sie nicht, brechen sie um 10:24 über die Brücke durch (I-13).",
       "gut": "Das Team liest I-04, merkt sich Feldweg Süd und lehnt M20 ab. Der Gegenangriff entscheidet das Gefecht (I-08b).",
       "leitfragen": [
         "Wann habt ihr I-04 gesehen, mitten im Hauptangriff und kurz vor dem Mörser im Hof RABE? Wie lange stand die Meldung im Feed, bevor ihr weitergearbeitet habt?",
@@ -3086,7 +3204,7 @@
       "ziele": ["Z-19"],
       "info_bei": "ARGUS-Warnung NICHT BEKÄMPFEN, Zivilpersonen im Bild; Druck im Feed (I-07) und an 1/4",
       "info_kurz": "ARGUS warnt; Druck im Feed",
-      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 1. Kp unter Beschuss sofortiges Feuer, und solange der Mörser steht, schießt er sich auf 1/4 ein und trifft. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
+      "kern": "Ein legitimes Ziel, das den Hauptangriff unterstützt, aber vier Zivilpersonen stehen daneben. ARGUS warnt. Gleichzeitig fordert die 2. Kp unter Beschuss sofortiges Feuer, und solange der Mörser steht, schießt er sich auf 1/4 ein und trifft. Nach gut drei Minuten sind die Personen weg (Folgemeldung M23). Neu mit der Trefferregel: Entscheidend ist, wo die Personen beim Einschlag stehen, nicht bei der Freigabe.",
       "gut": "Das Team stellt zurück und bekämpft erst die Folgemeldung M23 (LM).",
       "leitfragen": [
         "Hier lag die Maschine richtig und der Druck kam von Menschen. Wem habt ihr geglaubt?",
@@ -3196,7 +3314,7 @@
       "titel": "T-72 außer Gefecht, Besatzung ergibt sich",
       "meldung": "M21",
       "ziele": ["Z-24"],
-      "kurz": "Klasse richtig, Empfehlung falsch (Art. 41 ZP I). Die 1. Kp hat den Panzer kurz vorher getroffen. Das weiße Tuch sieht nur, wer das Bild ansieht."
+      "kurz": "Klasse richtig, Empfehlung falsch (Art. 41 ZP I). Die 2. Kp hat den Panzer kurz vorher getroffen. Das weiße Tuch sieht nur, wer das Bild ansieht."
     },
     {
       "id": "N3",
@@ -3228,7 +3346,7 @@
     },
     {
       "schritt": "6b/7 Live-Lage",
-      "text": "Bewegung entlang route, Objekte nur zwischen ab_s und bis_s. Trefferregel nach der Lage beim Einschlag (regeln.json wirkung, argus_lib.einschlag/wirkung): Einschlagzeit = Freigabe + Flugzeit (LM: flug.start, flug.geschwindigkeit_mps, flug.vorbereitung_s; sonst vorlauf_s), Ort = Position des ersten noch stehenden Fahrzeugs der Meldung zum Einschlag. Warnungen am vorausberechneten Einschlagort. I-09 (freigabe_mit_zivil) zählt die Zivilpersonen beim Einschlag. Hintergrundgefecht aus szenario.hintergrund (Kanone der 1. Kp nur, wenn das Ziel dann noch steht; folge zerstoert oder ausser_gefecht). Eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört ist."
+      "text": "Bewegung entlang route, Objekte nur zwischen ab_s und bis_s. Trefferregel nach der Lage beim Einschlag (regeln.json wirkung, argus_lib.einschlag/wirkung): Einschlagzeit = Freigabe + Flugzeit (LM: flug.start, flug.geschwindigkeit_mps, flug.vorbereitung_s; sonst vorlauf_s), Ort = Position des ersten noch stehenden Fahrzeugs der Meldung zum Einschlag. Warnungen am vorausberechneten Einschlagort. I-09 (freigabe_mit_zivil) zählt die Zivilpersonen beim Einschlag. Hintergrundgefecht aus szenario.hintergrund (Kanone der 2. Kp nur, wenn das Ziel dann noch steht; folge zerstoert oder ausser_gefecht). Eine Meldung entfällt, wenn jedes ihrer Fahrzeuge zerstört ist."
     },
     {
       "schritt": "8 Auswertung",
@@ -3377,7 +3495,7 @@
         {
           "titel": "Gehorsam und Gewissen",
           "werte": ["Gehorsam"],
-          "text": "Druck der 1. Kp – wann wird der Mensch „in the loop“ zum Stempel?"
+          "text": "Druck der 2. Kp – wann wird der Mensch „in the loop“ zum Stempel?"
         },
         {
           "titel": "Mut und Bescheidenheit",
@@ -3416,7 +3534,7 @@
     }
   },
   "durchbruch": {
-    "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; das Team bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung.",
+    "hinweis": "Wird eine Gruppe bis zu ihrem Angriffszeitpunkt t_s nicht aufgehalten (kein Fahrzeug zerstört oder außer Gefecht), setzt sie über Brücke oder Furt und fährt westlich aus dem Bild (Route je Fahrzeug ab t_s, ueber_s = über dem Bach). Sonst bleibt sie stehen (Standardroute). Wer über den Bach ist, ist durchgebrochen; das Team bekommt I-13 (10 s nach dem ersten Fahrzeug). Späher und Unterstützung (Mörser, Lkw, EloKa) brechen nicht durch. In der Auswertung Kennzahl, keine Wertung. Seit 2.9 (P4.2): Durchbrechen kann nur, wen das Team kennen konnte – eine Gruppe bricht nur durch, wenn ARGUS mindestens eines ihrer Fahrzeuge spätestens gemeldet_s vor t_s gemeldet hat (Meldung erschienen, nicht schon beim Erscheinen entfallen); sonst bleibt sie am Ostufer. I-13 nennt, wer durchgebrochen ist, und kommt erst, wenn das erste Fahrzeug sichtbar über dem Bach ist.",
     "gruppen": [
       {
         "id": "D-01",
@@ -3424,7 +3542,7 @@
         "ziele": ["Z-30", "Z-31", "Z-32"],
         "t_s": 1160,
         "ueber": "Furt Nord",
-        "zweck": "Hält am Ostufer in Feuerstellung; die 1. Kp zerschlägt ihn bis 10:17:55 (H-05–H-07). Nur wenn das ausbliebe, setzte er über die Furt.",
+        "zweck": "Hält am Ostufer in Feuerstellung; die 2. Kp zerschlägt ihn bis 10:17:55 (H-05–H-07). Nur wenn das ausbliebe, setzte er über die Furt.",
         "routen": {
           "Z-30": [
             [1160, 462, 250], [1280.0, 462, 250], [1292.3, 415, 258], [1301.3, 397, 288], [1307.0, 380, 302],
@@ -3453,7 +3571,7 @@
         "ziele": ["Z-33", "Z-34", "Z-35"],
         "t_s": 1165,
         "ueber": "Furt Nord",
-        "zweck": "Folgt dem Panzerzug; die 1. Kp zerschlägt ihn bis 10:19:10 (H-08–H-10).",
+        "zweck": "Folgt dem Panzerzug; die 2. Kp zerschlägt ihn bis 10:19:10 (H-08–H-10).",
         "routen": {
           "Z-33": [
             [1165, 402, 291], [1285.0, 402, 291], [1294.1, 415, 258], [1303.1, 397, 288], [1308.8, 380, 302],
@@ -3514,7 +3632,7 @@
         "ziele": ["Z-27"],
         "t_s": 1413,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), meldet ARGUS es seit 2.9 mit M38 (10:22:15) – bekämpft das Team es nicht, greift es über die Brücke an. Ohne M38 (Gegenangriff läuft) bricht es nie durch (P4.2).",
         "routen": {
           "Z-27": [
             [1413, 560, 348], [1421.8, 563, 382], [1426.1, 533, 385], [1430.4, 503, 388], [1434.7, 473, 391],
@@ -3532,7 +3650,7 @@
         "ziele": ["Z-28"],
         "t_s": 1428,
         "ueber": "Brücke ELSTER",
-        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), greift es über die Brücke an.",
+        "zweck": "Letzte Feindkräfte an der Brücke Ost: Läuft der polnische Gegenangriff (E-01, seit 2.7 ab 10:20:45 alle 20 s), ist das Fahrzeug vorher zerschlagen; fällt E-01 aus (Freigabe auf die PT-91), meldet ARGUS es seit 2.9 mit M38 (10:22:15) – bekämpft das Team es nicht, greift es über die Brücke an. Ohne M38 (Gegenangriff läuft) bricht es nie durch (P4.2).",
         "routen": {
           "Z-28": [
             [1428, 548, 417], [1436.5, 545, 384], [1440.7, 516, 386], [1444.9, 487, 390], [1449.1, 458, 393],
@@ -3595,14 +3713,15 @@
         },
         "ueber_s": {"Z-36": 1488.7}
       }
-    ]
+    ],
+    "gemeldet_s": 60
   },
   "eigene_truppe": {
-    "hinweis": "Seit 2.5 (F1): Eigene Truppe ist die 1./PzBtl 613 (fiktiv) mit vier Kampfpanzern Leopard 2A7V, jeder einzeln auf der Karte (1/1–1/4), ganz am Westrand hinter der Hecke, Blick nach Osten. Übergeordnet PzBtl 613. Team, Spielleitung und Plenum sehen die Panzer und ihren Zustand (einsatzbereit, eingeschränkt, ausgefallen; Verlustmodell in `verluste` und regeln.json). Position in Metern; hdg = Blickrichtung (0 = Osten). Bis 2.4: eine Kompanie mit drei Zügen.",
-    "einheit": "1./PzBtl 613",
-    "kompanie": "1. Kompanie Panzerbataillon 613",
+    "hinweis": "Seit 2.5 (F1): Eigene Truppe ist die 2./PzBtl 613 (fiktiv) mit vier Kampfpanzern Leopard 2A7V, jeder einzeln auf der Karte (1/1–1/4), ganz am Westrand hinter der Hecke, Blick nach Osten. Übergeordnet PzBtl 613. Team, Spielleitung und Plenum sehen die Panzer und ihren Zustand (einsatzbereit, eingeschränkt, ausgefallen; Verlustmodell in `verluste` und regeln.json). Position in Metern; hdg = Blickrichtung (0 = Osten). Bis 2.4: eine Kompanie mit drei Zügen. Seit 2.9 (P1): die 2. Kompanie (die 1. ist üblicherweise die Versorgung); die Panzer heißen weiter 1/1–1/4 (erster Zug der Kompanie). Zeichen seit 2.9 (P2): Kampfpanzer, schwer (Leopard 2A7V, SFGPEVATH).",
+    "einheit": "2./PzBtl 613",
+    "kompanie": "2. Kompanie Panzerbataillon 613",
     "uebergeordnet": "PzBtl 613",
-    "name": "1. Kp",
+    "name": "2. Kp",
     "fahrzeug": "kpz_leo2a7v",
     "panzer": [
       {
@@ -3662,7 +3781,7 @@
       {"text": "von den Feldern Nord", "pos": [790, 190], "radius_m": 170}
     ],
     "meldungen": {
-      "von": "1. Kp",
+      "von": "2. Kp",
       "kennung": "K-",
       "texte": {
         "beschuss": "{pz} unter {waffe}{ort}, Einschläge noch daneben. {forderung}",

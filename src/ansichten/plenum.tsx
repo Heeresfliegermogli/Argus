@@ -76,7 +76,7 @@ export function PlenumAnsicht(p: { s: Sicht; beitritt?: Beitritt; zurAuswertung?
               <div class="leise" style="text-align:center;margin-top:6px;font-size:17px">Phase {phaseZu(sz, tAnzeige).nr}: {phaseZu(sz, tAnzeige).name}</div>
             </Panel>
             <Panel titel="Stand" klasse="flach">
-              <div class="plenum-zahl"><span>ARGUS-Meldungen bisher</span><b>{z.reihenfolge.length} / {sz.meldungen.length}</b></div>
+              <div class="plenum-zahl"><span>ARGUS-Meldungen bisher</span><b>{z.reihenfolge.length} / {sz.meldungen.filter((m) => !m.bedingung || z.meldungen[m.id]).length}</b></div>
               <div class="plenum-zahl"><span>Wirkungen</span><b>{z.reihenfolge.filter((id) => z.meldungen[id].wirkung).length}</b></div>
               <div class="plenum-zahl"><span>Lagemeldungen</span><b>{z.injectReihenfolge.length}</b></div>
             </Panel>
@@ -95,7 +95,7 @@ export function PlenumEinweisung(p: { inh: Sicht["inh"]; beitritt?: Beitritt }) 
   const sz = inh.szenario;
   const b = p.beitritt;
   const lage = sz.lage.plenum;
-  // seit 2.5 (F1): die vier Panzer der 1. Kp in Stellung, wie in der Lage beschrieben (Spielbeginn, alle einsatzbereit)
+  // seit 2.5 (F1): die vier Panzer der 2. Kp in Stellung, wie in der Lage beschrieben (Spielbeginn, alle einsatzbereit)
   const start = useMemo(() => ({ ...LEER, eigene: eigeneLage(inh, zustandAus([], inh), 0) }), [inh]);
   return (
     <div class="plenum-raster plenum-einweisung karte-links">
@@ -138,7 +138,9 @@ function Aufloesung(p: { s: Sicht; t: number }) {
   const wirkungen = lb.wirkungen.filter((w) => !w.geplant);
   const bearbeitet = z.reihenfolge.filter((id) => z.meldungen[id].ergebnis).length;
   const trotzWarnung = z.reihenfolge.filter((id) => (z.meldungen[id].freigabe?.warnungen ?? []).some((w) => !/^(Bestand |nur \d+ von \d+ )/.test(w))).length;
-  const ungemeldet = inh.szenario.ziele.filter((x) => x.ungemeldet);
+  // seit 2.9 (P4.2): Z-27/Z-28 meldet ARGUS nur nach einer Freigabe auf die PT-91 (M38) – „nie gemeldet“ nur, was dieses Team nicht bekam
+  const bekommen = new Set(z.reihenfolge.flatMap((id) => inh.meldungen[id]?.ziele ?? []));
+  const ungemeldet = inh.szenario.ziele.filter((x) => x.ungemeldet && !bekommen.has(x.id));
   return (
     <div class="plenum-raster plenum-aufloesung karte-links">
       <div class="karte-raster">
@@ -149,7 +151,7 @@ function Aufloesung(p: { s: Sicht; t: number }) {
       </Panel>
       <div class="stapel">
         <Panel titel="Auf einen Blick" klasse="flach">
-          <div class="plenum-zahl"><span>Meldungen abgeschlossen</span><b>{bearbeitet} / {inh.szenario.meldungen.length}</b></div>
+          <div class="plenum-zahl"><span>Meldungen abgeschlossen</span><b>{bearbeitet} / {z.reihenfolge.length}</b></div>
           <div class="plenum-zahl"><span>Wirkungen</span><b>{wirkungen.length}</b></div>
           <div class="plenum-zahl"><span>davon mit Fehltreffer</span><b style={wirkungen.some((w) => w.fehl) ? "color:#ff8f86" : ""}>{wirkungen.filter((w) => w.fehl).length}</b></div>
           <div class="plenum-zahl"><span>Bekämpft trotz Regelwarnung</span><b>{trotzWarnung}</b></div>

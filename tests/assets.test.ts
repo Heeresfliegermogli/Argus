@@ -135,11 +135,14 @@ describe("Assets Raum KRÄHE", () => {
 
   it("ungemeldete Ziele erscheinen nur in Bildern der Spielleitung", async () => {
     const inh = await inhalte();
-    const ungemeldet = inh.szenario.ziele.filter((z) => z.ungemeldet).map((z) => z.id);
-    for (const b of Object.values(man.drohne)) {
-      for (const o of [...b.ziele, ...b.objekte]) expect(ungemeldet).not.toContain(o.id);
+    const ungemeldet = inh.szenario.ziele.filter((z) => z.ungemeldet);
+    // seit 2.9 (P4.2): Z-27/Z-28 auch im Bild der bedingten Meldung M38 (kommt nur nach einer Freigabe auf die PT-91)
+    for (const [id, b] of Object.entries(man.drohne)) {
+      for (const o of [...b.ziele, ...b.objekte]) expect(ungemeldet.filter((z) => z.bedingt_gemeldet !== id).map((z) => z.id), `${id}`).not.toContain(o.id);
     }
-    for (const id of ungemeldet) expect(man.ziele[id].bilder.every((b) => man.zielbilder[b]?.nur_spielleitung)).toBe(true);
+    for (const z of ungemeldet) {
+      expect(man.ziele[z.id].bilder.filter((b) => b !== z.bedingt_gemeldet).every((b) => man.zielbilder[b]?.nur_spielleitung)).toBe(true);
+    }
   });
 
   it("Effekte für alle Wirkmittel, Atlas-Bilder passen zu den JSON-Dateien", async () => {

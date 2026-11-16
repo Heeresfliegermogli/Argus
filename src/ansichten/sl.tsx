@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { bedingtStand } from "../engine/ablauf";
 import { pruefeInhalte } from "../inhalte/pruefen";
 import { absenderText, beschreibe } from "../kern/beschreibung";
+import { behauptungText, stimmt } from "../kern/behauptung";
 import { TEXT_MAX } from "../kern/ereignisse";
 import { effekte } from "../kern/effekte";
 import { GT_NAME, lagebildKontrolle } from "../kern/lagebild";
@@ -169,7 +170,9 @@ export function SLAnsicht(p: { s: Sicht }) {
   const plan = useMemo<Plan[]>(() => {
     const liste: Plan[] = sz.meldungen.map((m) => {
       const gt = [...new Set(m.ziele.map((id) => GT_NAME[inh.ziele[id].gt.kategorie]))].join("/");
-      return { art: "meldung", id: m.id, t: m.t_s, text: `${m.argus.klasse} ${m.argus.konfidenz} % ${m.argus.empfehlung}`, zusatz: `Ground Truth: ${gt}`, fall: m.fall };
+      // seit 2.9 (P4.2): bedingte Meldung (M38) – nur nach einer Freigabe auf die PT-91
+      const bedingt = m.bedingung ? ` · nur nach Freigabe auf ${m.bedingung.ziele.join(", ")}` : "";
+      return { art: "meldung", id: m.id, t: m.t_s, text: `${m.argus.klasse} ${m.argus.konfidenz} % ${m.argus.empfehlung}`, zusatz: `Ground Truth: ${gt}${bedingt}`, fall: m.fall };
     });
     for (const i of sz.injects) {
       if (i.t_s === undefined) continue;
@@ -265,7 +268,8 @@ export function SLAnsicht(p: { s: Sicht }) {
             {bedingt.map((b) => {
               const inj = inh.injects[b.id];
               const ereignis = b.art === "ereignis" ? sz.ereignisse.find((e) => e.id === b.id) : undefined;
-              const titel = b.art === "durchbruch" ? `Durchbruch: ${b.text}` : ereignis?.name ?? `${inj?.von}: „${inj?.text}“`;
+              const titel = b.art === "durchbruch" ? `Durchbruch: ${b.text}` : b.art === "meldung" ? `bedingte Meldung (Ziel ${zielNr(inh, z, b.id)}): ${b.text}`
+                : ereignis?.name ?? `${inj?.von}: „${inj?.text}“`;
               return (
                 <div class={`bedingt ${b.status}`} key={b.id} data-bedingt={b.id} title={titel}>
                   <div>
@@ -280,13 +284,18 @@ export function SLAnsicht(p: { s: Sicht }) {
             })}
             {(sz.reserve_injects ?? []).map((r) => {
               const da = z.injects[r.id];
+              // seit 2.9 (P4.5): eine Reserve-Lagemeldung behauptet etwas – auslösen nur, wenn es im Spiel dieses Teams stimmt
+              const passt = stimmt(inh, z, r.behauptet, Math.min(t, sz.spieluhr.dauer_s));
+              const nurWenn = behauptungText(r.behauptet);
               return (
-                <div class={`bedingt ${da ? "ausgeloest" : ""}`} key={r.id} data-reserve={r.id} title={`${r.von}: „${r.text}“`}>
+                <div class={`bedingt ${da ? "ausgeloest" : !passt ? "entfaellt" : ""}`} key={r.id} data-reserve={r.id} data-passt={passt ? "ja" : "nein"}
+                  title={`${r.von}: „${r.text}“${nurWenn ? `\nnur, wenn: ${nurWenn}` : ""}`}>
                   <div>
-                    <div><b>{r.id}</b> <span class="status">· Reserve{da ? ` · ausgelöst ${uhrzeit(start, da.erschienen.t_s)}` : ""}</span></div>
-                    <div class="status">{r.einsatz}</div>
+                    <div><b>{r.id}</b> <span class="status">· Reserve{da ? ` · ausgelöst ${uhrzeit(start, da.erschienen.t_s)}` : !passt ? " · passt nicht zum Spiel" : ""}</span></div>
+                    <div class="status">{r.einsatz}{nurWenn && !da ? ` (nur, wenn: ${nurWenn})` : ""}</div>
                   </div>
-                  {!da && <button type="button" class="knopf klein" disabled={!darfSteuern} onClick={() => s.senden("inject_ausloesen", { inject: r.id })}>auslösen</button>}
+                  {!da && <button type="button" class="knopf klein" disabled={!darfSteuern || !passt} onClick={() => s.senden("inject_ausloesen", { inject: r.id })}
+                    title={passt ? undefined : `stimmt im Spiel dieses Teams nicht: ${nurWenn}`}>auslösen</button>}
                 </div>
               );
             })}

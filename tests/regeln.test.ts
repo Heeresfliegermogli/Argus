@@ -12,7 +12,7 @@ interface Referenz {
   raster: { p: Punkt; pq: string }[];
   zonen: { p: Punkt; zone: string; abstand: number }[];
   einschlaege: {
-    meldung: string; t_freigabe: number; wm: string; t: number; pos: Punkt; ziel: string; zulaessig: boolean;
+    meldung: string; t_freigabe: number; wm: string; t: number | null; pos: Punkt; ziel: string; zulaessig: boolean;
     verstoesse: [string, string | null, number | null][]; getroffen: string[]; teile?: [number, number, number, string][];
   }[];
   zerstoert_hintergrund: Record<string, number>;
@@ -105,6 +105,16 @@ describe("Trefferregel beim Einschlag wie argus_lib.py (einschlag, wirkung)", ()
     for (const f of ref.einschlaege) {
       const ort = `${f.meldung} ${f.wm} frei ${f.t_freigabe}`;
       const v = vorhersage(inh, inh.meldungen[f.meldung], f.wm, f.t_freigabe, zerstoert);
+      if (f.t === null) {
+        // seit 2.9 (P3): Kanone außer Reichweite (Einschlag jenseits des Ortsanfangs KRÄHE) – nicht wählbar, kein Einschlag
+        expect(v.waehlbar, ort).toBe(false);
+        expect(v.teile, ort).toHaveLength(0);
+        expect(v.pruefung.zulaessig, ort).toBe(false);
+        expect(v.pruefung.verstoesse.map((x) => x.regel), ort).toContain("EB");
+        expect(f.verstoesse.map((x) => x[0]), ort).toEqual(["EB"]);
+        continue;
+      }
+      expect(v.waehlbar, ort).toBe(true);
       expect(v.einschlag.t, ort).toBeCloseTo(f.t, 6);
       expect(v.einschlag.pos[0], ort).toBeCloseTo(f.pos[0], 6);
       expect(v.einschlag.pos[1], ort).toBeCloseTo(f.pos[1], 6);
@@ -123,7 +133,7 @@ describe("Trefferregel beim Einschlag wie argus_lib.py (einschlag, wirkung)", ()
     }
   });
 
-  it("LM: Flugzeit hängt vom Ziel ab (5 s Start, 30 m/s ab Startpunkt westlich der Karte), Mörser 35 s, Kanone der 1. Kp 5 s", async () => {
+  it("LM: Flugzeit hängt vom Ziel ab (5 s Start, 30 m/s ab Startpunkt westlich der Karte), Mörser 35 s, Kanone der 2. Kp 5 s", async () => {
     const inh = await inhalte();
     const lm = inh.wirkmittel.LM;
     expect(flugzeit(lm, [lm.flug!.start[0] + 300, lm.flug!.start[1]])).toBeCloseTo(15, 6);

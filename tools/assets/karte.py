@@ -195,14 +195,17 @@ def beschriftet(d, welt, breite_px=1500):
                 stroke_width=2, stroke_fill=(0, 0, 0, 180))
     et = d.szenario.get("eigene_truppe")
     if et:
-        # Seit Szenario 2.5 (F1): vier Kampfpanzer der eigenen 1. Kp einzeln ganz am Westrand – Zeichen Kampfpanzer (eigen, blau)
-        # mit Kennung 1/1 … 1/4, darüber die Einheit mit Größenangabe Kompanie (I, seit dem Folgeauftrag F5: 1./PzBtl 613). Kein Gefechtsstand mehr.
+        # Seit Szenario 2.5 (F1): vier Kampfpanzer der eigenen Kp einzeln ganz am Westrand – Zeichen Kampfpanzer (eigen, blau)
+        # mit Kennung 1/1 … 1/4, darüber die Einheit mit Größenangabe Kompanie (I; seit 2.9, P1: 2./PzBtl 613). Kein Gefechtsstand mehr.
+        # Seit 2.9 (P2): Kampfpanzer, schwer (Leopard 2A7V, APP-6/2525C SFGPEVATH) – Kette mit drei senkrechten Strichen.
         blau, rand, weiss = (128, 176, 232, 240), (10, 20, 40, 255), (255, 255, 255, 255)
         for pz in et.get("panzer", []):
             X, Y = P(pz["pos"])
             w, h = 26, 18
             dr.rectangle([X - w / 2, Y - h / 2, X + w / 2, Y + h / 2], fill=blau, outline=rand, width=2)
             dr.rounded_rectangle([X - 9, Y - 4.5, X + 9, Y + 4.5], radius=4.5, outline=rand, width=2)      # Kette: Kampfpanzer
+            for dx in (-3, 0, 3):                                                                         # schwer: drei Striche
+                dr.line([(X + dx, Y - 4), (X + dx, Y + 4)], fill=rand, width=1)
             dr.text((X + w / 2 + 5, Y - 8), pz["name"], font=f_pq, fill=weiss, stroke_width=2, stroke_fill=(0, 0, 0, 220))
         if et.get("panzer"):
             top = min(pz["pos"][1] for pz in et["panzer"])

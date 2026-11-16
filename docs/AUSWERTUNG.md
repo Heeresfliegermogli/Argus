@@ -1,6 +1,6 @@
 # ARGUS – Auswertung im Plenum (Schritt 8)
 
-**Stand 15.11.2026 (Liste O, Szenario 2.8): das kurze Plenum, ca. 5 min.** Zitate, Diskussion und Abschluss laufen in der PowerPoint;
+**Stand 16.11.2026 (Liste P, Szenario 2.9; Plenum wie Liste O): das kurze Plenum, ca. 5 min.** Zitate, Diskussion und Abschluss laufen in der PowerPoint;
 das Programm zeigt nach dem Spiel nur noch „Gefecht beendet“, die Schlüsselfälle einzeln und eine Gesamtübersicht mit **der einen
 Zahl**. Die Kapitel von 2.7 (15 min, unten beschrieben) bleiben erhalten und sind über **＋** zuschaltbar. Davor: 10.11.2026 (Szenario
 2.7, Änderungen G und I): 15 min in sechs Kapiteln; 22.10.2026 (Schritt 8), B3–B9 (25.10.), „Preis des Abwartens“ (D5, 2.3), eine Rolle
@@ -48,8 +48,13 @@ Werte der Modellteams (`tests/plenum_kurz.test.ts`, `tools/drehbuch_plan.ts`):
 
 | Teams | S3 | S2 | S1 | S4 | Gesamt | die Zahl |
 |---|---|---|---|---|---|---|
-| fünf Drehbuch-Teams (naiv, ideal, naiv+V, ideal+V, naiv+V5) | 3 von 5 – 60 % | 60 % | 60 % | 60 % | 60 % falsch · 40 % richtig (20 Entscheidungen) | **20 s** (155 Entscheidungen) |
-| `?auswertung=demo` (7 Beispielteams) | 4 von 7 – 57 % | 57 % | 57 % | 57 % | 57 % · 43 % (28) | **25 s** (213) |
+| fünf Drehbuch-Teams (naiv, ideal, naiv+V, ideal+V, naiv+V5) | 3 von 5 – 60 % | 60 % | 60 % | 60 % | 60 % falsch · 40 % richtig (20 Entscheidungen) | **20 s** (158 Entscheidungen; 2.8: 155) |
+| `?auswertung=demo` (7 Beispielteams) | 4 von 7 – 57 % | 57 % | 57 % | 57 % | 57 % · 43 % (28) | **25 s** (217; 2.8: 213) |
+
+Seit 2.9 (Liste P) kommt die bedingte Meldung M38 („Ziel 33a“, Z-27/Z-28 an der Brücke Ost) nur bei Teams, die die PT-91 freigegeben
+haben; deren Entscheidung zählt in die Zahl (daher 158 statt 155). In Kennzahlen, Konfidenz und „gesamt“ der Bilanz zählen bedingte
+Meldungen nur bei den Teams, bei denen sie erschienen sind; in der ARGUS-Bilanz („ARGUS allein“) zählen sie nicht. Der Durchbruch
+steht weiter als Kennzahl je Team, nicht als Punkte.
 | nur naiv / nur ideal | – | – | – | – | – | 20 s / 35 s |
 
 ### Üben ohne Spiel
@@ -227,6 +232,7 @@ Protokoll: `notiz` hat ein optionales Feld `fall` (S1–S8, N1–N4; der Host pr
 | automatisch | 114 Tests (12 neu in `tests/auswertung.test.ts`), Build; `tools/auswertung_probe.py` auf `?auswertung=demo`, `ui_faelle.py` (22 Bilder), `bedientest_probe.py` 15/15, `lobby_probe.py` 19/19 |
 | **G+I (10.11.2026, Szenario 2.7)** | `tests/auswertung.test.ts` (Kapitelplan 15:00, Zuschalten, S3 aufgelöst = richtig, I-04 gelesen/ungelesen, Export mit Bilanz), `tests/durchlauf.test.ts` (Referenzlauf „ARGUS allein“ zweimal gleich, = Python, Bilanz = `bilanz.py`), `tests/szenario27.test.ts`; `tools/auswertung_probe.py` auf `?auswertung=demo` mit 7 Teams: alle Kapitel in 1530 × 800, kleinste Schrift 13 px, Zitate wörtlich, Bilanz und Impuls aufdecken, „weitere Zitate“, Zuschalten von Kennzahlen, Konfidenz, Preis und S1, Export mit Bilanz und „ARGUS allein“; `tools/e2e_drehbuch.py` (5 Team-Laptops, SL, SL 2, Plenum, ×5): Auswertung im Plenum mit Bilanz aller Teams und „ARGUS allein“ (14,65 Mio €) wie im Prozess, Notiz der SL 2 bei S3, 11 Bedienschritte, Zeitbudget 15:00 |
 | **H (09.11.2026, Szenario 2.6)** | `tests/auswertung.test.ts` für eine Rolle (Ausgang je Fall, Sekunden ab Eingang/Öffnen, Widerspruch, Export mit `sekunden_ab_eingang`); `tools/auswertung_probe.py` auf `?auswertung=demo` mit **7 Teams**: Teamvergleich gedreht in 1530 × 800 ohne Rollbalken (bisher 2244 px breit), Sekunden in jeder Zelle, Kennzahlen kompakt, kleinste Schrift 13 px; `tools/e2e_drehbuch.py` (5 Team-Laptops, SL, SL 2, Plenum): Plenum schaltet selbst auf die Auswertung, Teamvergleich und Kennzahlen = Auswertung im Prozess, Notiz der SL 2 bei S3 |
+| **P (16.11.2026, Szenario 2.9)** | Plenum unverändert; `tests/plenum_kurz.test.ts`, `tests/auswertung.test.ts` mit M38 (bedingte Meldung zählt nur, wo sie erschien), Beispieldaten mit `tools/auswertung_demo.ts` neu erzeugt (die Zahl 25 s über 217 Entscheidungen); `tools/auswertung_probe.py` auf `?auswertung=demo` und `tools/e2e_drehbuch.py` wie bei O |
 | **O (15.11.2026, Szenario 2.8, kurzes Plenum)** | `tests/plenum_kurz.test.ts` (Kapitelplan 5:00, Standard S3, S2, S1, S4, Zählregel, je Fall und gesamt in %, die Zahl aus dem Protokoll: Drehbuch 20 s, naiv allein 20 s, ideal allein 35 s, Beispiel 25 s; n = 0 → „kein Team hat diesen Fall entschieden“), `tests/logo.test.ts`; `tools/auswertung_probe.py` auf `?auswertung=demo` (7 Teams): 11 Bedienschritte bis „Zurück zur Präsentation“, je Fall „4 von 7 Teams haben das falsch behandelt – 57 %“, Gesamt 57 %/43 % aus 28 Entscheidungen, die Zahl 25 s über 213 Entscheidungen = `demo.plenum` aus `tools/drehbuch_plan.ts`; 1366 × 650, 1530 × 800, 1920 × 960 ohne Rollbalken; `tools/e2e_drehbuch.py` (5 Team-Laptops): Plenum schaltet auf „Gefecht beendet“, je Fall 3 von 5 – 60 % wie im Prozess, die Zahl in Plenum, Auswertung der SL und Übersicht gleich (im Browser 20–21 s, im Prozess 20 s: die Modellpersonen klicken im Browser 1–2 s später) |
 
 Prüfen: `python3 tools/auswertung_probe.py http://localhost:4173/` (Beispiel) bzw. mit `--erwartet plan.json` und der

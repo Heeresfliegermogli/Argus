@@ -98,7 +98,7 @@ Klicks, nicht die der Verarbeitung. `aktion`/`ts_aktion` nur bei Ereignissen aus
 | `durchbruch` | gruppe, t_ab, durch, grund? | Zeitplan (seit 2.1) |
 | `ereignis` | ereignis, nr?, von?, ziel?, wirkt?, entfaellt?, grund? | Zeitplan (E-01) |
 | `verstaerkung` | gruppe, t_ab | SL (Verstärkung V-1–V-5; Menü seit 2.6 ausgeblendet, Werkzeuge spielen sie über die Sitzung ein) |
-| `inject` | inject, manuell?, text?, zug?, stufe? | Zeitplan (fest und bedingt, Druckmeldungen der 1. Kp) oder SL |
+| `inject` | inject, manuell?, text?, zug?, stufe? | Zeitplan (fest und bedingt, Druckmeldungen der 2. Kp) oder SL |
 | `inject_quittiert` | inject | Zielbearbeitung (Lagemeldung im Feed angeklickt) |
 | `notiz` | text, fall? | SL (Beobachtung, optional zu einem Fall S1–S8/N1–N4, erscheint in der Auswertung) |
 | `spielende` | grund | Zeitplan (Spielzeit abgelaufen) |

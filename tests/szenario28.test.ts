@@ -43,9 +43,9 @@ function ersteEinschlaege(inh: Inhalte, z: Spielzustand): Map<string, number> {
 describe("Szenario 2.8: Daten", () => {
   it("Version 2.8; I-03 gestrichen (auch „30 s je Meldung“ in der Diskussion); I-12 nur noch der Angriff; erste_quelle an", async () => {
     const inh = await inhalte();
-    expect(inh.szenario.version).toBe("2.8");
-    expect(inh.regeln.version).toBe("2.8");
-    expect(inh.szenario.meldungen).toHaveLength(37);
+    expect(["2.8", "2.9"]).toContain(inh.szenario.version); // 2.9 baut auf 2.8 auf (P)
+    expect(inh.regeln.version).toBe(inh.szenario.version);
+    expect(inh.szenario.meldungen.filter((m) => !m.bedingung)).toHaveLength(37);
     expect(inh.szenario.injects.map((i) => i.id)).not.toContain("I-03");
     expect(inh.injects["I-03"]).toBeUndefined();
     const roh = JSON.stringify(inh.szenario);

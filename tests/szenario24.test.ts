@@ -34,7 +34,7 @@ const NEU = ["S5", "S6", "S7", "S8"];
 describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
   it("E1: das Menü „Verstärkung“ ist per Schalter in den Regeln aus", async () => {
     const inh = await inhalte();
-    expect(["2.4", "2.5", "2.6", "2.7", "2.8"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I), 2.8 auf 2.7 (M)
+    expect(["2.4", "2.5", "2.6", "2.7", "2.8", "2.9"]).toContain(inh.szenario.version); // 2.5 baut auf 2.4 auf (F), 2.6 auf 2.5 (H), 2.7 auf 2.6 (G+I), 2.8 auf 2.7 (M)
     expect(inh.regeln.spielleitung?.verstaerkung_menue).toBe(false);
     // die Verstärkungen bleiben in den Daten (Schalter, kein Löschen)
     expect(inh.szenario.verstaerkungen?.gruppen.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe("Szenario 2.4: Daten (E1, E2, E6)", () => {
     // 2.3: 37 Ziele, 30 Meldungen
     expect(sz.ziele.length / 37).toBeGreaterThanOrEqual(1.3);
     expect(sz.ziele.length / 37).toBeLessThanOrEqual(1.5);
-    expect(sz.meldungen).toHaveLength(37); // seit 2.7 (I2.2) M37: Z-20 und Z-48 einzeln gemeldet
+    expect(sz.meldungen.filter((m) => !m.bedingung)).toHaveLength(37); // seit 2.9 dazu die bedingte Meldung M38 // seit 2.7 (I2.2) M37: Z-20 und Z-48 einzeln gemeldet
     // die neuen Fahrzeuge (Z-38–Z-49) gehören zu Meldungen ab dem Hauptangriff (Phase 4, ab 14:00)
     const erste = (id: string) => sz.meldungen.find((m) => m.ziele.includes(id))?.t_s;
     const neu = sz.ziele.filter((z) => Number(z.id.slice(2)) >= 38);
@@ -120,7 +120,9 @@ describe("Szenario 2.4: BEKÄMPFEN wirkt auf den Zug (E3)", () => {
   it("PzAbw: ein Schuss je Fahrzeug, nacheinander; Mörser: eine Fläche", async () => {
     const inh = await inhalte();
     const m = inh.meldungen.M15; // drei Fahrzeuge
-    const t = m.t_s + 40;
+    // seit 2.9 (P3): die Kanone reicht nur bis zum Ortsanfang KRÄHE – bei der Meldung (+40 s) stehen alle drei noch dahinter
+    expect(einschlaege(inh, m.ziele, "PZA", m.t_s + 40)).toEqual([]);
+    const t = m.t_s + 120; // jetzt alle drei am Ostufer vor der Furt (x < 500 m)
     const pza = einschlaege(inh, m.ziele, "PZA", t);
     expect(pza.map((x) => x.ziel)).toEqual(stehende(inh, m.ziele, t).map((x) => x));
     expect(pza[1].t - pza[0].t).toBeCloseTo(inh.wirkmittel.PZA.zug!.abstand_s!, 0);

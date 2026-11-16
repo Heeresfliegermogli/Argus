@@ -11,11 +11,15 @@ import type { Spielzustand } from "./zustand";
 
 const BASIS = new WeakMap<Szenario, Map<string, number>>();
 
-/** Nummer je Meldung des Szenarios (ohne Verstärkungen): Platz nach t_s, 1 … n. */
+/**
+ * Nummer je Meldung des Szenarios (ohne Verstärkungen): Platz nach t_s, 1 … n. Seit 2.9 (P4.2) ohne bedingte Meldungen (M38): Sie kommen
+ * nicht in jedem Spiel und heißen wie eine Verstärkung nach der zuletzt erschienenen Meldung („Ziel 33a“) – so bleiben alle anderen
+ * Nummern in allen Teams gleich.
+ */
 export function basisNummern(sz: Szenario): Map<string, number> {
   let m = BASIS.get(sz);
   if (!m) {
-    const liste = sz.meldungen.filter((x) => !x.verstaerkung).map((x, i) => ({ id: x.id, t: x.t_s, i }));
+    const liste = sz.meldungen.filter((x) => !x.verstaerkung && !x.bedingung).map((x, i) => ({ id: x.id, t: x.t_s, i }));
     liste.sort((a, b) => a.t - b.t || a.i - b.i);
     m = new Map(liste.map((x, i) => [x.id, i + 1]));
     BASIS.set(sz, m);
@@ -58,7 +62,18 @@ export function zielNummern(inh: Inhalte, z: Spielzustand): Map<string, string> 
 /** Nummer einer Meldung (ohne „Ziel“), z. B. „7“ oder „8a“; ohne Lauf die Nummer im Szenario. */
 export function zielNr(inh: Inhalte, z: Spielzustand | null, id: string): string {
   const n = z ? zielNummern(inh, z).get(id) : undefined;
-  return n ?? String(basisNummern(basisSzenario(inh)).get(id) ?? id);
+  if (n) return n;
+  const sz = basisSzenario(inh);
+  const basis = basisNummern(sz);
+  const b = basis.get(id);
+  if (b !== undefined) return String(b);
+  // seit 2.9: bedingte Meldung ohne Lauf (Spielleitung, Drehbuch) – Nummer der letzten Meldung davor mit „a“
+  const m = sz.meldungen.find((x) => x.id === id);
+  if (m?.bedingung) {
+    const vorher = sz.meldungen.filter((x) => basis.has(x.id) && x.t_s <= m.t_s).map((x) => basis.get(x.id)!);
+    return `${vorher.length ? Math.max(...vorher) : 0}a`;
+  }
+  return id;
 }
 
 /** „Ziel 7“ bzw. bei einer Gruppe „Ziel 7 (3 Fz)“. */

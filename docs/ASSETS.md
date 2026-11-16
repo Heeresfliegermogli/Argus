@@ -51,16 +51,22 @@ Pressefahrzeug. **EloKa** (E4): Die Standbilder zur EloKa-Zeit (M09, M25, M10, M
 mit Lupe) und Teil 7 (EloKa).
 
 Szenario 2.5 (02.11.2026, Änderungen F1, F2.6, F3): neuer Sprite **`kpz_leo2a7v.png`** (Kampfpanzer Leopard 2A7V der eigenen
-1. Kp, fiktiv gestaltet: lange Wanne mit Seitenschürzen, keilförmige Turmfront, Rohr 120 mm, dreifarbiger Flecktarn; Katalog 1.6,
+2. Kp, fiktiv gestaltet: lange Wanne mit Seitenschürzen, keilförmige Turmfront, Rohr 120 mm, dreifarbiger Flecktarn; Katalog 1.6,
 nie Ziel, nie gemeldet) in drei Zuständen – Gerät, keine Personen: **intakt**, **eingeschränkt** (`_eingeschraenkt`: Kette neben der
 Wanne, zerschlagene Optik) und **ausgefallen** (`_ausgefallen`: Turm verdreht, Rußflecken, Kette ab – kein ausgebranntes Wrack,
 kein Feuer; auf der Karte nur Rauch). Neue Effekte im Effekt-Atlas: **`einschlag_staub`** (Fehlschuss neben dem Panzer: Erdfontäne
 und Staub, 12 × 16 fps, 12 m) und **`treffer_panzer`** (Treffer am Panzer: Funken und kleines Rauchwölkchen, 12 × 18 fps, 7 m);
 `zuordnung.hintergrund.fehlschuss`/`treffer_panzer`, Wrack `eigen_ausgefallen` → `rauch`. Die beschriftete Lagekarte zeigt statt
-der drei Züge und des Gefechtsstands die vier Panzer 1/1–1/4 mit Zeichen und „1./PzBtl 613“ mit Größenangabe Kompanie (seit F5), die Zone heißt „SCHULE“ (F3). Die
+der drei Züge und des Gefechtsstands die vier Panzer 1/1–1/4 mit Zeichen und „2./PzBtl 613“ mit Größenangabe Kompanie (seit F5), die Zone heißt „SCHULE“ (F3). Die
 Luftbild-Kacheln tragen keine Schrift, die Kartenbeschriftung im Spiel kommt aus den Daten. Drohnenbilder byte-gleich neu erzeugt
 (die Panzer stehen in keinem Drohnenbild, dort steht kein Schriftzug). `spz_eigen` (eigener SPz bis 2.4) ist aus Katalog und Atlas
 entfallen, sein Zeichner bleibt in `fahrzeuge.py`.
+
+Szenario 2.9 (16.11.2026, Liste P): neues Drohnenbild **M38** (bedingte Meldung: T-72 Z-27 und BMP-2 Z-28 an der Brücke Ost, kommt nur
+nach einer Freigabe auf die PT-91; Standbild und Ebenen), alle anderen Drohnenbilder byte-gleich. Die beschriftete Lagekarte zeigt die
+Kompanie als **2./PzBtl 613** und die vier Panzer mit dem Zeichen **Kampfpanzer, schwer** (drei Striche in der Kette, P2). Dazu
+`tools/lagekarte_druck.py`: saubere Lagekarte 1500 × 1050 (Luftbild, Raster, Zonen, Namen, Brücke, Furt, eigene Panzer mit
+milsymbol-Zeichen, keine Feindzeichen) für Folien und Handzettel (`docs/bilder/liste-p/lagekarte_druck_1500x1050.png`).
 
 ## Inhalt von `public/assets/`
 
